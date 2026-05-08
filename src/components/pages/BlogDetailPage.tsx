@@ -113,7 +113,7 @@ export default function BlogDetailPage() {
       </section>
 
       {/* Content */}
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-white dark:bg-slate-900">
         <div className="container-main">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* Article */}
@@ -126,7 +126,7 @@ export default function BlogDetailPage() {
                 </div>
               ) : (
                 <motion.article
-                  className="prose max-w-none"
+                  className="prose max-w-none prose-slate dark:prose-invert prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-strong:text-slate-900 dark:prose-strong:text-white"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
@@ -140,7 +140,7 @@ export default function BlogDetailPage() {
               <Button
                 onClick={() => navigate('blog')}
                 variant="outline"
-                className="border-emerald-300 text-emerald-600 hover:bg-emerald-50"
+                className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
               >
                 <ArrowLeft className="size-4 mr-2" />
                 Back to Blog
@@ -151,32 +151,32 @@ export default function BlogDetailPage() {
             <aside className="lg:col-span-1">
               <div className="sticky top-28 space-y-8">
                 {/* Author card */}
-                <Card className="border-slate-200">
+                <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                   <CardContent className="p-6 text-center">
-                    <div className="size-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3 text-xl font-bold text-emerald-700">
+                    <div className="size-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-3 text-xl font-bold text-emerald-700 dark:text-emerald-300">
                       {post.author.charAt(0)}
                     </div>
-                    <h4 className="font-semibold">{post.author}</h4>
-                    <p className="text-xs text-slate-500 mt-1">Contributing Writer</p>
+                    <h4 className="font-semibold text-slate-900 dark:text-white">{post.author}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Contributing Writer</p>
                   </CardContent>
                 </Card>
 
                 {/* Related Posts */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-4">Related Articles</h3>
+                  <h3 className="font-semibold text-lg mb-4 text-slate-900 dark:text-white">Related Articles</h3>
                   <div className="space-y-3">
                     {relatedPosts.map((related) => (
                       <Card
                         key={related.id}
-                        className="border-slate-200 hover:border-emerald-200 hover:shadow-sm transition-all cursor-pointer"
+                        className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-sm transition-all cursor-pointer"
                         onClick={() => navigate('blog-detail', related.slug)}
                       >
                         <CardContent className="p-4">
-                          <Badge variant="secondary" className="text-xs mb-2">{related.category}</Badge>
-                          <h4 className="text-sm font-medium line-clamp-2 hover:text-emerald-600 transition-colors">
+                          <Badge variant="secondary" className="text-xs mb-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{related.category}</Badge>
+                          <h4 className="text-sm font-medium line-clamp-2 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-slate-900 dark:text-white">
                             {related.title}
                           </h4>
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                             {new Date(related.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                           </p>
                         </CardContent>

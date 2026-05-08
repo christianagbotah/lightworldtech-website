@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/lib/store';
+import { toast } from 'sonner';
 
 const quickLinks = [
   { label: 'Home', page: 'home' as const },
@@ -46,14 +47,16 @@ export default function Footer() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email }),
         });
+        toast.success('Successfully subscribed!', {
+          description: 'You\'ll receive our latest updates and insights.',
+        });
         setSubscribed(true);
         setEmail('');
         setTimeout(() => setSubscribed(false), 3000);
       } catch {
-        // Still show subscribed state even if API fails
-        setSubscribed(true);
-        setEmail('');
-        setTimeout(() => setSubscribed(false), 3000);
+        toast.error('Subscription failed', {
+          description: 'Please try again later.',
+        });
       }
     }
   };

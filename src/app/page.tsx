@@ -5,6 +5,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BackToTop from '@/components/layout/BackToTop';
+import WhatsAppButton from '@/components/layout/WhatsAppButton';
+import CookieConsent from '@/components/layout/CookieConsent';
+import PageLoader from '@/components/ui/page-loader';
 import HomePage from '@/components/pages/HomePage';
 import AboutPage from '@/components/pages/AboutPage';
 import ServicesPage from '@/components/pages/ServicesPage';
@@ -112,12 +115,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <PageLoader />
       <Header />
       <main className="flex-1">
         <PublicRouter />
       </main>
       <Footer />
       <BackToTop />
+      <WhatsAppButton />
+      <CookieConsent />
     </div>
   );
 }

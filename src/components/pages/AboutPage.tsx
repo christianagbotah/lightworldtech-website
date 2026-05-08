@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight } from 'lucide-react';
+import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight, Rocket, UserCheck, Calendar, UsersRound } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,6 +31,13 @@ const awards = [
   { title: '2021 MEA Awards Winner', organization: 'Middle East & Africa IT Awards', year: '2021' },
   { title: 'Top 10 IT Companies in Ghana', organization: 'TechReview Africa', year: '2023' },
   { title: 'Best Web Development Agency', organization: 'Africa Digital Excellence Awards', year: '2022' },
+];
+
+const stats = [
+  { value: '100+', label: 'Projects Delivered', icon: Rocket },
+  { value: '100+', label: 'Happy Clients', icon: UserCheck },
+  { value: '8+', label: 'Years Experience', icon: Calendar },
+  { value: '50+', label: 'Team Members', icon: UsersRound },
 ];
 
 const containerVariants = {
@@ -94,7 +101,7 @@ export default function AboutPage() {
       </section>
 
       {/* Company Story */}
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-white dark:bg-slate-900">
         <div className="container-main">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -103,9 +110,9 @@ export default function AboutPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Our Story</span>
-              <h2 className="text-3xl font-bold mt-2 mb-6">Building the Future of Technology in Africa</h2>
-              <div className="space-y-4 text-slate-600 leading-relaxed">
+              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Our Story</span>
+              <h2 className="text-3xl font-bold mt-2 mb-6 text-slate-900 dark:text-white">Building the Future of Technology in Africa</h2>
+              <div className="space-y-4 text-slate-600 dark:text-slate-300 leading-relaxed">
                 <p>
                   Founded with a vision to bridge the technology gap in Africa, Lightworld Technologies has grown from a small startup to a leading IT solutions provider. Our journey began with a simple belief: that every business, regardless of size, deserves access to world-class technology solutions.
                 </p>
@@ -124,17 +131,14 @@ export default function AboutPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {[
-                { value: '100+', label: 'Projects Delivered', icon: '🚀' },
-                { value: '100+', label: 'Happy Clients', icon: '😊' },
-                { value: '8+', label: 'Years Experience', icon: '📅' },
-                { value: '50+', label: 'Team Members', icon: '👥' },
-              ].map((stat) => (
-                <Card key={stat.label} className="border-slate-200">
+              {stats.map((stat) => (
+                <Card key={stat.label} className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                   <CardContent className="p-6 text-center">
-                    <div className="text-2xl mb-2">{stat.icon}</div>
-                    <div className="text-2xl font-bold text-emerald-600">{stat.value}</div>
-                    <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
+                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-2">
+                      <stat.icon className="size-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stat.value}</div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">{stat.label}</div>
                   </CardContent>
                 </Card>
               ))}
@@ -144,7 +148,7 @@ export default function AboutPage() {
       </section>
 
       {/* Mission & Vision */}
-      <section className="section-padding bg-slate-50">
+      <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
         <div className="container-main">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.div
@@ -153,13 +157,13 @@ export default function AboutPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Card className="h-full border-emerald-200 bg-gradient-to-br from-emerald-50 to-white">
+              <Card className="h-full border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-slate-800">
                 <CardContent className="p-8">
-                  <div className="size-12 rounded-lg bg-emerald-100 flex items-center justify-center mb-4">
-                    <Target className="size-6 text-emerald-600" />
+                  <div className="size-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mb-4">
+                    <Target className="size-6 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Our Mission</h3>
-                  <p className="text-slate-600 leading-relaxed">
+                  <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Our Mission</h3>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
                     To deliver innovative, reliable, and scalable IT solutions that empower businesses across Africa to achieve digital transformation, drive growth, and compete effectively in the global marketplace.
                   </p>
                 </CardContent>
@@ -171,13 +175,13 @@ export default function AboutPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <Card className="h-full border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+              <Card className="h-full border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800">
                 <CardContent className="p-8">
-                  <div className="size-12 rounded-lg bg-amber-100 flex items-center justify-center mb-4">
-                    <Eye className="size-6 text-amber-600" />
+                  <div className="size-12 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mb-4">
+                    <Eye className="size-6 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Our Vision</h3>
-                  <p className="text-slate-600 leading-relaxed">
+                  <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Our Vision</h3>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
                     To be Africa&apos;s most trusted technology partner, recognized globally for our commitment to innovation, quality, and the positive impact we create for businesses and communities through technology.
                   </p>
                 </CardContent>
@@ -188,7 +192,7 @@ export default function AboutPage() {
       </section>
 
       {/* Core Values */}
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-white dark:bg-slate-900">
         <div className="container-main">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-12"
@@ -197,9 +201,9 @@ export default function AboutPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Our Values</span>
-            <h2 className="text-3xl font-bold mt-2 mb-4">Core Values That Drive Us</h2>
-            <p className="text-slate-600">The principles that guide everything we do at Lightworld Technologies.</p>
+            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Our Values</span>
+            <h2 className="text-3xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Core Values That Drive Us</h2>
+            <p className="text-slate-600 dark:text-slate-300">The principles that guide everything we do at Lightworld Technologies.</p>
           </motion.div>
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -210,13 +214,13 @@ export default function AboutPage() {
           >
             {values.map((value) => (
               <motion.div key={value.title} variants={itemVariants}>
-                <Card className="h-full border-slate-200 hover:border-emerald-200 hover:shadow-md transition-all">
+                <Card className="h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-md transition-all">
                   <CardContent className="p-6">
-                    <div className="size-11 rounded-lg bg-emerald-50 flex items-center justify-center mb-4">
-                      <value.icon className="size-5 text-emerald-600" />
+                    <div className="size-11 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
+                      <value.icon className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <h3 className="font-semibold mb-2">{value.title}</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">{value.description}</p>
+                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white">{value.title}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{value.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -226,7 +230,7 @@ export default function AboutPage() {
       </section>
 
       {/* Team */}
-      <section className="section-padding bg-slate-50">
+      <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
         <div className="container-main">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-12"
@@ -235,14 +239,14 @@ export default function AboutPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Our Team</span>
-            <h2 className="text-3xl font-bold mt-2 mb-4">Meet the Experts</h2>
-            <p className="text-slate-600">The talented people behind our success.</p>
+            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Our Team</span>
+            <h2 className="text-3xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Meet the Experts</h2>
+            <p className="text-slate-600 dark:text-slate-300">The talented people behind our success.</p>
           </motion.div>
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i}>
+                <Card key={i} className="bg-white dark:bg-slate-800">
                   <Skeleton className="h-48 w-full rounded-t-lg" />
                   <div className="p-5">
                     <Skeleton className="h-5 w-2/3 mb-2" />
@@ -262,19 +266,19 @@ export default function AboutPage() {
             >
               {team.map((member) => (
                 <motion.div key={member.id} variants={itemVariants}>
-                  <Card className="overflow-hidden border-slate-200 hover:shadow-lg transition-all group">
-                    <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 relative overflow-hidden">
+                  <Card className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg transition-all group">
+                    <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
                       <div className="absolute inset-0 grid-pattern opacity-30" />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="size-20 rounded-full bg-emerald-300/50 flex items-center justify-center text-2xl font-bold text-emerald-700">
+                        <div className="size-20 rounded-full bg-emerald-300/50 dark:bg-emerald-700/40 flex items-center justify-center text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                           {member.name.charAt(0)}
                         </div>
                       </div>
                     </div>
                     <CardContent className="p-5">
-                      <h3 className="font-semibold text-lg">{member.name}</h3>
-                      <p className="text-sm text-emerald-600 font-medium mb-2">{member.role}</p>
-                      <p className="text-xs text-slate-500 leading-relaxed">{member.bio}</p>
+                      <h3 className="font-semibold text-lg text-slate-900 dark:text-white">{member.name}</h3>
+                      <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium mb-2">{member.role}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{member.bio}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -285,7 +289,7 @@ export default function AboutPage() {
       </section>
 
       {/* Awards */}
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-white dark:bg-slate-900">
         <div className="container-main">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-12"
@@ -294,8 +298,8 @@ export default function AboutPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Recognition</span>
-            <h2 className="text-3xl font-bold mt-2 mb-4">Awards & Achievements</h2>
+            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Recognition</span>
+            <h2 className="text-3xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Awards & Achievements</h2>
           </motion.div>
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
@@ -306,14 +310,14 @@ export default function AboutPage() {
           >
             {awards.map((award) => (
               <motion.div key={award.title} variants={itemVariants}>
-                <Card className="h-full border-amber-200 bg-gradient-to-br from-amber-50 to-white text-center">
+                <Card className="h-full border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800 text-center">
                   <CardContent className="p-6">
-                    <div className="size-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
-                      <Award className="size-6 text-amber-600" />
+                    <div className="size-12 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mx-auto mb-3">
+                      <Award className="size-6 text-amber-600 dark:text-amber-400" />
                     </div>
-                    <Badge className="bg-amber-100 text-amber-800 border-amber-200 mb-3">{award.year}</Badge>
-                    <h3 className="font-semibold text-sm mb-1">{award.title}</h3>
-                    <p className="text-xs text-slate-500">{award.organization}</p>
+                    <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700 mb-3">{award.year}</Badge>
+                    <h3 className="font-semibold text-sm mb-1 text-slate-900 dark:text-white">{award.title}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{award.organization}</p>
                   </CardContent>
                 </Card>
               </motion.div>

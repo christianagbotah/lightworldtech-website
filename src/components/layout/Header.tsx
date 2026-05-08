@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, Zap, Phone, Mail } from 'lucide-react';
+import ThemeToggle from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { useAppStore } from '@/lib/store';
@@ -108,8 +109,9 @@ export default function Header() {
             ))}
           </div>
 
-          {/* CTA + Mobile menu */}
-          <div className="flex items-center gap-3">
+          {/* Theme Toggle + CTA + Mobile menu */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button
               onClick={() => handleNav('contact')}
               className="hidden sm:inline-flex bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all"

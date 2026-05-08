@@ -21,7 +21,7 @@ export default function AboutSection() {
   const { navigate } = useAppStore();
 
   return (
-    <section className="section-padding bg-slate-50" id="about">
+    <section className="section-padding bg-slate-50 dark:bg-slate-900/50" id="about">
       <div className="container-main">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: Text content */}
@@ -31,28 +31,28 @@ export default function AboutSection() {
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Who We Are</span>
-            <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-6">
+            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Who We Are</span>
+            <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-6 text-slate-900 dark:text-white">
               Innovating the Future of{' '}
               <span className="text-gradient">Technology</span>
             </h2>
-            <p className="text-slate-600 leading-relaxed mb-6">
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
               Lightworld Technologies is a premier IT solutions company based in Ghana. Since our founding, we have been committed to delivering world-class technology services that help businesses of all sizes achieve their goals.
             </p>
-            <p className="text-slate-600 leading-relaxed mb-8">
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
               Our team of skilled developers, designers, and digital strategists work collaboratively to craft solutions that are not only technically excellent but also aligned with our clients&apos; business objectives. We believe in building lasting partnerships through trust, transparency, and tangible results.
             </p>
 
             {/* Mission & Vision */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {highlights.map((item) => (
-                <div key={item.title} className="flex gap-3 p-4 rounded-lg bg-white border border-slate-200">
-                  <div className="size-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-                    <item.icon className="size-5 text-emerald-600" />
+                <div key={item.title} className="flex gap-3 p-4 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-700 transition-colors duration-300">
+                  <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
+                    <item.icon className="size-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm mb-1">{item.title}</h4>
-                    <p className="text-xs text-slate-500 leading-relaxed">{item.text}</p>
+                    <h4 className="font-semibold text-sm mb-1 text-slate-900 dark:text-white">{item.title}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{item.text}</p>
                   </div>
                 </div>
               ))}
@@ -60,7 +60,7 @@ export default function AboutSection() {
 
             <Button
               onClick={() => navigate('about')}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white"
             >
               Learn More About Us
               <ArrowRight className="size-4 ml-1" />
@@ -78,31 +78,34 @@ export default function AboutSection() {
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
-                  className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm text-center"
-                  whileHover={{ y: -4, shadow: 'lg' }}
+                  className="relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-white via-white to-emerald-50/50 dark:from-slate-800 dark:via-slate-800 dark:to-emerald-900/20 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg dark:hover:shadow-emerald-900/20 text-center transition-all duration-300"
+                  whileHover={{ y: -4 }}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
                 >
-                  <div className="text-3xl sm:text-4xl font-bold text-emerald-600 mb-1">{stat.value}</div>
-                  <div className="text-sm text-slate-500">{stat.label}</div>
+                  <div className="text-3xl sm:text-4xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">{stat.value}</div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</div>
                 </motion.div>
               ))}
             </div>
 
             {/* Trust indicators */}
-            <div className="mt-6 p-6 rounded-xl bg-emerald-600 text-white">
+            <motion.div
+              className="mt-6 p-6 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-700 dark:to-emerald-800 text-white shadow-lg shadow-emerald-900/20 dark:shadow-emerald-950/40 hover:shadow-xl dark:hover:shadow-emerald-950/50 transition-shadow duration-300"
+              whileHover={{ scale: 1.01 }}
+            >
               <h4 className="font-semibold mb-3">Why Choose Us?</h4>
               <ul className="space-y-2">
                 {['Award-winning IT solutions', 'Dedicated support team', 'Agile development methodology', 'Competitive pricing'].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-emerald-50">
+                  <li key={item} className="flex items-center gap-2 text-sm text-emerald-50 dark:text-emerald-100">
                     <CheckCircle2 className="size-4 shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </div>

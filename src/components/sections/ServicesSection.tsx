@@ -51,7 +51,7 @@ export default function ServicesSection() {
   }, []);
 
   return (
-    <section className="section-padding bg-white" id="services">
+    <section className="section-padding bg-white dark:bg-slate-900" id="services">
       <div className="container-main">
         {/* Section header */}
         <motion.div
@@ -61,9 +61,9 @@ export default function ServicesSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Our Expertise</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4">What We Do</h2>
-          <p className="text-slate-600">
+          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Our Expertise</span>
+          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">What We Do</h2>
+          <p className="text-slate-600 dark:text-slate-300">
             We offer a comprehensive range of IT solutions designed to help your business grow, innovate, and stay ahead of the competition.
           </p>
         </motion.div>
@@ -92,20 +92,24 @@ export default function ServicesSection() {
               const IconComp = iconMap[service.icon] || Globe;
               return (
                 <motion.div key={service.id} variants={itemVariants}>
-                  <Card className="group h-full border-slate-200 hover:border-emerald-300 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  <Card className="group h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-lg dark:hover:shadow-emerald-900/20 transition-all duration-300 cursor-pointer overflow-hidden relative"
                     onClick={() => navigate('services')}
                   >
-                    <CardContent className="p-6">
-                      <div className="size-12 rounded-lg bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center mb-4 transition-colors">
-                        <IconComp className="size-6 text-emerald-600" />
+                    {/* Accent bar */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    {/* Gradient overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/0 to-emerald-50/50 dark:from-emerald-900/0 dark:to-emerald-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-lg" />
+                    <CardContent className="p-6 relative">
+                      <div className="size-12 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/60 flex items-center justify-center mb-4 transition-colors">
+                        <IconComp className="size-6 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <h3 className="text-lg font-semibold mb-2 group-hover:text-emerald-600 transition-colors">
+                      <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                         {service.title}
                       </h3>
-                      <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
                         {service.description}
                       </p>
-                      <span className="text-sm font-medium text-emerald-600 inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                      <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1 group-hover:gap-2 transition-all">
                         Learn More <ArrowRight className="size-3.5" />
                       </span>
                     </CardContent>

@@ -36,7 +36,7 @@ export default function ProcessSection() {
   }, []);
 
   return (
-    <section className="section-padding bg-slate-50">
+    <section className="section-padding bg-slate-50 dark:bg-slate-900/50">
       <div className="container-main">
         {/* Section header */}
         <motion.div
@@ -46,9 +46,9 @@ export default function ProcessSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">How We Work</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4">Our Development Process</h2>
-          <p className="text-slate-600">
+          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">How We Work</span>
+          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Our Development Process</h2>
+          <p className="text-slate-600 dark:text-slate-300">
             A proven, structured approach that ensures every project is delivered on time, within budget, and exceeds expectations.
           </p>
         </motion.div>
@@ -66,32 +66,35 @@ export default function ProcessSection() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+            {/* Connecting line - desktop only */}
+            <div className="hidden lg:block absolute top-8 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-emerald-200 via-emerald-300 to-emerald-200 dark:from-emerald-800 dark:via-emerald-700 dark:to-emerald-800 z-0" />
+
             {steps.map((step, index) => {
               const IconComp = iconMap[step.icon] || Code;
               return (
                 <motion.div
                   key={step.id}
-                  className="relative"
+                  className="relative z-10"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
                 >
-                  <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-300 h-full">
-                    {/* Step number */}
+                  <div className="p-6 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md dark:hover:shadow-emerald-900/20 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300 h-full">
+                    {/* Step number with gradient */}
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="size-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm border border-emerald-200">
+                      <div className="size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-500/25 dark:shadow-emerald-900/40">
                         {step.number || index + 1}
                       </div>
-                      <div className="h-px flex-1 bg-slate-200" />
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
                     </div>
                     {/* Icon */}
-                    <div className="size-11 rounded-lg bg-emerald-50 flex items-center justify-center mb-3">
-                      <IconComp className="size-5 text-emerald-600" />
+                    <div className="size-11 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center mb-3">
+                      <IconComp className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <h3 className="font-semibold mb-2">{step.title}</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">{step.description}</p>
+                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white">{step.title}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{step.description}</p>
                   </div>
                 </motion.div>
               );

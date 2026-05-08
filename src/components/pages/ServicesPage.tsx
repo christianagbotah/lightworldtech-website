@@ -86,12 +86,12 @@ export default function ServicesPage() {
       </section>
 
       {/* Services Grid */}
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-white dark:bg-slate-900">
         <div className="container-main">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i}>
+                <Card key={i} className="bg-white dark:bg-slate-800">
                   <div className="p-6">
                     <Skeleton className="size-12 rounded-lg mb-4" />
                     <Skeleton className="h-6 w-3/4 mb-2" />
@@ -115,20 +115,20 @@ export default function ServicesPage() {
                 const isExpanded = expandedId === service.id;
                 return (
                   <motion.div key={service.id} variants={itemVariants}>
-                    <Card className={`h-full border-slate-200 hover:shadow-lg transition-all duration-300 ${isExpanded ? 'border-emerald-300 shadow-md ring-1 ring-emerald-200' : ''}`}>
+                    <Card className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 ${isExpanded ? 'border-emerald-300 dark:border-emerald-600 shadow-md ring-1 ring-emerald-200 dark:ring-emerald-700' : ''}`}>
                       <CardContent className="p-6">
-                        <div className="size-12 rounded-lg bg-emerald-50 flex items-center justify-center mb-4">
-                          <IconComp className="size-6 text-emerald-600" />
+                        <div className="size-12 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
+                          <IconComp className="size-6 text-emerald-600 dark:text-emerald-400" />
                         </div>
-                        <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
-                        <p className="text-sm text-slate-500 leading-relaxed mb-4">{service.description}</p>
+                        <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-white">{service.title}</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">{service.description}</p>
 
                         {/* Features list */}
                         {service.features && (
                           <div className="space-y-2">
                             <div className="flex flex-wrap gap-1.5 mb-3">
                               {service.features.slice(0, isExpanded ? undefined : 3).map((feature: string) => (
-                                <Badge key={feature} variant="secondary" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 gap-1">
+                                <Badge key={feature} variant="secondary" className="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 gap-1">
                                   <CheckCircle2 className="size-3" />
                                   {feature}
                                 </Badge>
@@ -137,7 +137,7 @@ export default function ServicesPage() {
                             {service.features.length > 3 && (
                               <button
                                 onClick={() => setExpandedId(isExpanded ? null : service.id)}
-                                className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+                                className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                               >
                                 {isExpanded ? 'Show less' : `+${service.features.length - 3} more`}
                               </button>
@@ -162,7 +162,7 @@ export default function ServicesPage() {
       </section>
 
       {/* Development Process */}
-      <section className="section-padding bg-slate-50">
+      <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
         <div className="container-main">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-12"
@@ -171,9 +171,9 @@ export default function ServicesPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Process</span>
-            <h2 className="text-3xl font-bold mt-2 mb-4">How We Deliver Excellence</h2>
-            <p className="text-slate-600">Our proven methodology ensures consistent, high-quality results for every project.</p>
+            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Process</span>
+            <h2 className="text-3xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">How We Deliver Excellence</h2>
+            <p className="text-slate-600 dark:text-slate-300">Our proven methodology ensures consistent, high-quality results for every project.</p>
           </motion.div>
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
@@ -196,9 +196,9 @@ export default function ServicesPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <div className="text-4xl font-bold text-emerald-100 mb-2">{item.step}</div>
-                <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
-                <p className="text-sm text-slate-500">{item.desc}</p>
+                <div className="text-4xl font-bold text-emerald-200 dark:text-emerald-800 mb-2">{item.step}</div>
+                <h3 className="font-semibold text-lg mb-2 text-slate-900 dark:text-white">{item.title}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{item.desc}</p>
               </motion.div>
             ))}
           </motion.div>

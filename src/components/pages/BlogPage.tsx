@@ -101,7 +101,7 @@ export default function BlogPage() {
       </section>
 
       {/* Blog Content */}
-      <section className="section-padding bg-slate-50">
+      <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
         <div className="container-main">
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -122,7 +122,7 @@ export default function BlogPage() {
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors capitalize ${
                     blogCategory === cat
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-white text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 border border-slate-200'
+                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600'
                   }`}
                 >
                   {cat}
@@ -135,7 +135,7 @@ export default function BlogPage() {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i}>
+                <Card key={i} className="bg-white dark:bg-slate-800">
                   <Skeleton className="h-48 w-full rounded-t-lg" />
                   <div className="p-5">
                     <Skeleton className="h-4 w-20 mb-3" />
@@ -162,23 +162,23 @@ export default function BlogPage() {
                     transition={{ duration: 0.5, delay: index * 0.05 }}
                   >
                     <Card
-                      className="group overflow-hidden border-slate-200 hover:shadow-lg transition-all duration-300 cursor-pointer h-full"
+                      className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 cursor-pointer h-full"
                       onClick={() => handlePostClick(post.slug)}
                     >
-                      <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 relative overflow-hidden">
+                      <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
                         <div className="absolute inset-0 grid-pattern opacity-30" />
                         <div className="absolute top-3 left-3">
-                          <Badge className="bg-white/90 text-slate-800 text-xs">{post.category}</Badge>
+                          <Badge className="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 text-xs backdrop-blur-sm">{post.category}</Badge>
                         </div>
                       </div>
                       <CardContent className="p-5 flex flex-col h-full">
-                        <h3 className="font-semibold text-lg mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                        <h3 className="font-semibold text-lg mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 text-slate-900 dark:text-white">
                           {post.title}
                         </h3>
-                        <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1 line-clamp-2">
+                        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1 line-clamp-2">
                           {post.excerpt}
                         </p>
-                        <div className="flex items-center justify-between text-xs text-slate-400 pt-4 border-t">
+                        <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 pt-4 border-t border-slate-100 dark:border-slate-700">
                           <div className="flex items-center gap-3">
                             <span className="flex items-center gap-1">
                               <Calendar className="size-3" />
@@ -231,7 +231,7 @@ export default function BlogPage() {
             </>
           ) : (
             <div className="text-center py-16">
-              <div className="text-slate-400 mb-4">
+              <div className="text-slate-400 dark:text-slate-500 mb-4">
                 <Search className="size-12 mx-auto mb-4 opacity-30" />
                 <h3 className="text-lg font-medium">No articles found</h3>
                 <p className="text-sm">Try adjusting your search or filter criteria.</p>

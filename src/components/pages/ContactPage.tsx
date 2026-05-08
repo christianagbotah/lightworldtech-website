@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/lib/store';
+import { toast } from 'sonner';
 
 export default function ContactPage() {
   const { navigate } = useAppStore();
@@ -35,12 +36,21 @@ export default function ContactPage() {
         body: JSON.stringify(formData),
       });
       if (res.ok) {
+        toast.success('Message sent successfully!', {
+          description: 'We\'ll get back to you within 24 hours.',
+        });
         setSubmitted(true);
         setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
       } else {
+        toast.error('Failed to send message', {
+          description: 'Something went wrong. Please try again.',
+        });
         setError('Something went wrong. Please try again.');
       }
     } catch {
+      toast.error('Network error', {
+        description: 'Please check your connection and try again.',
+      });
       setError('Network error. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
@@ -87,7 +97,7 @@ export default function ContactPage() {
       </section>
 
       {/* Contact Content */}
-      <section className="section-padding bg-slate-50">
+      <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
         <div className="container-main">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             {/* Contact Form */}
@@ -98,7 +108,7 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Card className="border-slate-200">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <CardContent className="p-6 sm:p-8">
                   {submitted ? (
                     <motion.div
@@ -107,26 +117,26 @@ export default function ContactPage() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <div className="size-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 className="size-8 text-emerald-600" />
+                      <div className="size-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <h3 className="text-xl font-semibold mb-2">Message Sent!</h3>
-                      <p className="text-slate-500 mb-6">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
+                      <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">Message Sent!</h3>
+                      <p className="text-slate-500 dark:text-slate-400 mb-6">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
                       <Button
                         onClick={() => setSubmitted(false)}
                         variant="outline"
-                        className="border-emerald-300 text-emerald-600"
+                        className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400"
                       >
                         Send Another Message
                       </Button>
                     </motion.div>
                   ) : (
                     <>
-                      <h2 className="text-2xl font-bold mb-1">Send Us a Message</h2>
-                      <p className="text-sm text-slate-500 mb-6">Fill out the form below and we&apos;ll respond promptly.</p>
+                      <h2 className="text-2xl font-bold mb-1 text-slate-900 dark:text-white">Send Us a Message</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Fill out the form below and we&apos;ll respond promptly.</p>
 
                       {error && (
-                        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
+                        <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
                           {error}
                         </div>
                       )}
@@ -134,7 +144,7 @@ export default function ContactPage() {
                       <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div className="space-y-2">
-                            <Label htmlFor="name">Full Name *</Label>
+                            <Label htmlFor="name" className="text-slate-900 dark:text-slate-100">Full Name *</Label>
                             <Input
                               id="name"
                               name="name"
@@ -145,7 +155,7 @@ export default function ContactPage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="email">Email Address *</Label>
+                            <Label htmlFor="email" className="text-slate-900 dark:text-slate-100">Email Address *</Label>
                             <Input
                               id="email"
                               name="email"
@@ -159,7 +169,7 @@ export default function ContactPage() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number</Label>
+                            <Label htmlFor="phone" className="text-slate-900 dark:text-slate-100">Phone Number</Label>
                             <Input
                               id="phone"
                               name="phone"
@@ -170,7 +180,7 @@ export default function ContactPage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="subject">Subject *</Label>
+                            <Label htmlFor="subject" className="text-slate-900 dark:text-slate-100">Subject *</Label>
                             <Input
                               id="subject"
                               name="subject"
@@ -182,7 +192,7 @@ export default function ContactPage() {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="message">Message *</Label>
+                          <Label htmlFor="message" className="text-slate-900 dark:text-slate-100">Message *</Label>
                           <Textarea
                             id="message"
                             name="message"
@@ -225,73 +235,73 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <Card className="border-slate-200">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-                      <Phone className="size-5 text-emerald-600" />
+                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                      <Phone className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">Phone</h3>
-                      <p className="text-sm text-slate-500">+233 (024) 361 8186</p>
-                      <p className="text-sm text-slate-500">+233 (055) 467 2081</p>
+                      <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Phone</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">+233 (024) 361 8186</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">+233 (055) 467 2081</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-                      <Mail className="size-5 text-emerald-600" />
+                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                      <Mail className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">Email</h3>
-                      <p className="text-sm text-slate-500">mail@lightworldtech.com</p>
+                      <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Email</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">mail@lightworldtech.com</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-                      <MapPin className="size-5 text-emerald-600" />
+                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                      <MapPin className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">Office</h3>
-                      <p className="text-sm text-slate-500">Accra<br />Ghana</p>
+                      <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Office</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Accra<br />Ghana</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-                      <Clock className="size-5 text-emerald-600" />
+                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                      <Clock className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">Office Hours</h3>
-                      <p className="text-sm text-slate-500">Mon - Fri: 08:00 - 17:00</p>
-                      <p className="text-sm text-slate-500">Sat: 09:00 - 13:00</p>
-                      <p className="text-sm text-slate-500">Sun: Closed</p>
+                      <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Office Hours</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Mon - Fri: 08:00 - 17:00</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Sat: 09:00 - 13:00</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Sun: Closed</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Map Placeholder */}
-              <Card className="border-slate-200 overflow-hidden">
-                <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 relative flex items-center justify-center">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+                <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative flex items-center justify-center">
                   <div className="absolute inset-0 grid-pattern opacity-30" />
                   <div className="text-center relative z-10">
-                    <MapPin className="size-8 text-emerald-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-emerald-700">Interactive Map</p>
-                    <p className="text-xs text-emerald-600">Accra, Ghana</p>
+                    <MapPin className="size-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Interactive Map</p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400">Accra, Ghana</p>
                   </div>
                 </div>
               </Card>
