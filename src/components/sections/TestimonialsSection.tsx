@@ -1,19 +1,31 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Star, Quote, ChevronLeft, ChevronRight, Users, Award } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star, Quote, ChevronLeft, ChevronRight, Users, Award, MessageSquarePlus, CheckCircle2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
 } from '@/components/ui/carousel';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
+import { useAppStore } from '@/lib/store';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -33,8 +45,18 @@ const trustedLogos = [
   { name: 'MediConnect', initials: 'MC' },
 ];
 
+const reviewSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  company: z.string().optional(),
+  role: z.string().optional(),
+  rating: z.number().min(1, 'Please select a rating').max(5),
+  content: z.string().min(20, 'Review must be at least 20 characters'),
+});
+
+type ReviewFormData = z.infer<typeof reviewSchema>;
+
 function ClientsCounter() {
-  const { displayValue, ref } = useAnimatedCounter({ end: 150, suffix: '+', startOnView: true });
+  const { displayValue, ref } = useAnimatedCounter({ end: 150, suffix: '+', startOnView: false });
   return (
     <div ref={ref} className="text-center">
       <div className="text-3xl md:text-4xl font-extrabold text-white tabular-nums">{displayValue}</div>
@@ -43,10 +65,265 @@ function ClientsCounter() {
   );
 }
 
+function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [formData, setFormData] = useState<ReviewFormData>({
+    name: '',
+    company: '',
+    role: '',
+    rating: 0,
+    content: '',
+  });
+  const [hoverRating, setHoverRating] = useState(0);
+  const [errors, setErrors] = useState<Partial<Record<keyof ReviewFormData, string>>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const validateField = (field: keyof ReviewFormData, value: unknown) => {
+    try {
+      const partial = reviewSchema.shape[field];
+      partial.parse(value);
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+      return true;
+    } catch {
+      setErrors(prev => ({ ...prev, [field]: 'Invalid value' }));
+      return false;
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const result = reviewSchema.safeParse(formData);
+      if (!result.success) {
+        const fieldErrors: Partial<Record<keyof ReviewFormData, string>> = {};
+        result.error.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof ReviewFormData;
+          if (!fieldErrors[field]) {
+            fieldErrors[field] = issue.message;
+          }
+        });
+        setErrors(fieldErrors);
+        return;
+      }
+
+      setSubmitting(true);
+      const response = await fetch('/api/testimonials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(result.data),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSubmitted(true);
+        toast.success('Thank you for your review! Your feedback is invaluable to us.');
+        setTimeout(() => {
+          handleClose();
+        }, 3000);
+      } else {
+        toast.error('Failed to submit review. Please try again.');
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
+    setTimeout(() => {
+      setFormData({ name: '', company: '', role: '', rating: 0, content: '' });
+      setErrors({});
+      setSubmitted(false);
+      setHoverRating(0);
+    }, 300);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
+        <AnimatePresence mode="wait">
+          {submitted ? (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="p-8 text-center"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', duration: 0.6, delay: 0.2 }}
+                className="size-20 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30"
+              >
+                <CheckCircle2 className="size-10 text-white" />
+              </motion.div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Thank You!</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">
+                Your review has been submitted successfully. We appreciate your feedback and will publish it after review.
+              </p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 dark:from-emerald-700 dark:to-emerald-800 p-6">
+                <DialogHeader>
+                  <DialogTitle className="text-xl text-white flex items-center gap-2">
+                    <MessageSquarePlus className="size-5" />
+                    Share Your Experience
+                  </DialogTitle>
+                  <DialogDescription className="text-emerald-100 text-sm">
+                    Tell us about your experience working with Lightworld Technologies.
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="review-name" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                    Full Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="review-name"
+                    placeholder="Enter your full name"
+                    value={formData.name}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, name: e.target.value }));
+                      if (errors.name) validateField('name', e.target.value);
+                    }}
+                    onBlur={() => validateField('name', formData.name)}
+                    className={errors.name ? 'border-red-400 dark:border-red-500' : ''}
+                  />
+                  {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+                </div>
+
+                {/* Company & Role */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="review-company" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Company
+                    </Label>
+                    <Input
+                      id="review-company"
+                      placeholder="Your company"
+                      value={formData.company}
+                      onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="review-role" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Role
+                    </Label>
+                    <Input
+                      id="review-role"
+                      placeholder="Your role"
+                      value={formData.role}
+                      onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                {/* Star Rating */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                    Rating <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, rating: star }));
+                          if (errors.rating) validateField('rating', star);
+                        }}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="p-0.5 transition-transform hover:scale-110 focus:outline-none"
+                        aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                      >
+                        <Star
+                          className={`size-7 transition-colors duration-150 ${
+                            star <= (hoverRating || formData.rating)
+                              ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]'
+                              : 'text-slate-300 dark:text-slate-600'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    {(formData.rating > 0 || hoverRating > 0) && (
+                      <span className="text-sm text-slate-500 dark:text-slate-400 ml-2">
+                        {hoverRating || formData.rating}/5
+                      </span>
+                    )}
+                  </div>
+                  {errors.rating && <p className="text-xs text-red-500">{errors.rating}</p>}
+                </div>
+
+                {/* Review Text */}
+                <div className="space-y-2">
+                  <Label htmlFor="review-content" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                    Your Review <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                    id="review-content"
+                    placeholder="Tell us about your experience (minimum 20 characters)..."
+                    value={formData.content}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, content: e.target.value }));
+                      if (errors.content) validateField('content', e.target.value);
+                    }}
+                    onBlur={() => validateField('content', formData.content)}
+                    rows={4}
+                    className={errors.content ? 'border-red-400 dark:border-red-500' : ''}
+                  />
+                  <div className="flex justify-between items-center">
+                    {errors.content && <p className="text-xs text-red-500">{errors.content}</p>}
+                    <p className="text-xs text-slate-400 ml-auto">{formData.content.length} characters</p>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="size-4 mr-2" />
+                      Submit Review
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function TestimonialsSection() {
+  const { navigate } = useAppStore();
   const [testimonials, setTestimonials] = useState(defaultTestimonials);
   const [loading, setLoading] = useState(true);
   const [activeDot, setActiveDot] = useState(0);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const carouselApiRef = useRef<ReturnType<typeof Object> | null>(null);
 
@@ -272,7 +549,34 @@ export default function TestimonialsSection() {
             </Carousel>
           </motion.div>
         )}
+
+        {/* Action Buttons */}
+        <motion.div
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <Button
+            onClick={() => setReviewOpen(true)}
+            className="bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6"
+          >
+            <MessageSquarePlus className="size-4 mr-2" />
+            Share Your Experience
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('home')}
+            className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-300 px-6"
+          >
+            Read More Reviews
+          </Button>
+        </motion.div>
       </div>
+
+      {/* Review Form Modal */}
+      <ReviewFormModal open={reviewOpen} onOpenChange={setReviewOpen} />
     </section>
   );
 }

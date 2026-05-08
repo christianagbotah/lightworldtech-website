@@ -7,7 +7,7 @@ import { useAppStore } from '@/lib/store';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 
 function CTAStatCounter({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
-  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: true, startDelay: delay });
+  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
   return (
     <div className="text-center" ref={ref}>
       <Icon className="size-5 mx-auto mb-2 text-amber-300/70" />
@@ -130,7 +130,7 @@ export default function CTASection() {
             {/* Main heading */}
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-5 max-w-4xl mx-auto leading-tight text-center">
               Ready to{' '}
-              <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 bg-clip-text text-transparent" aria-label="Transform">
                 Transform
               </span>{' '}
               Your Business?

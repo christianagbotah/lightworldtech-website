@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { ChevronRight, Calendar, Clock, User, ArrowLeft, Share2, List, ChevronDown } from 'lucide-react';
+import { ChevronRight, Calendar, Clock, User, ArrowLeft, Share2, List, ChevronDown, Tag } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -160,20 +160,25 @@ export default function BlogDetailPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 mb-4">{post.category}</Badge>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">{post.title}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-5 leading-tight">{post.title}</h1>
+            <div className="flex flex-wrap items-center gap-2.5 mb-5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/20 text-xs font-medium">
+                <Tag className="size-3" />
+                {post.category}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/30 text-xs font-medium">
+                <Calendar className="size-3" />
+                {new Date(post.date).toLocaleDateString('en-GB', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/30 text-xs font-medium">
+                <Clock className="size-3" />
+                {post.readTime}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-400">
               <span className="flex items-center gap-1.5">
                 <User className="size-4" />
                 {post.author}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Calendar className="size-4" />
-                {new Date(post.date).toLocaleDateString('en-GB', { month: 'long', day: 'numeric', year: 'numeric' })}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="size-4" />
-                {post.readTime}
               </span>
             </div>
           </motion.div>

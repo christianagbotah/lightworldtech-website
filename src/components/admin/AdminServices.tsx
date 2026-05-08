@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -196,8 +196,8 @@ export default function AdminServices() {
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="text-xs font-semibold">Title</TableHead>
+              <TableRow className="bg-gradient-to-r from-muted/80 to-muted/30 dark:from-slate-800/80 dark:to-slate-800/30">
+                <TableHead className="text-xs font-semibold">Service</TableHead>
                 <TableHead className="text-xs font-semibold">Slug</TableHead>
                 <TableHead className="text-xs font-semibold hidden md:table-cell">Icon</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Order</TableHead>
@@ -214,13 +214,22 @@ export default function AdminServices() {
                 </TableRow>
               ) : (
                 services.map((service) => (
-                  <TableRow key={service.id}>
-                    <TableCell className="font-medium text-sm">{service.title}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{service.slug}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{service.icon}</TableCell>
+                  <TableRow key={service.id} className="hover:bg-emerald-50/50 dark:hover:bg-emerald-900/5 transition-colors duration-200">
+                    <TableCell className="font-medium text-sm">
+                      <div className="flex items-center gap-2.5">
+                        <div className="size-8 rounded-lg bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/40 dark:to-emerald-900/20 flex items-center justify-center shrink-0">
+                          <Briefcase className="size-4 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        {service.title}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground font-mono text-xs">{service.slug}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground hidden md:table-cell">
+                      <code className="px-2 py-0.5 rounded bg-muted text-xs font-mono">{service.icon}</code>
+                    </TableCell>
                     <TableCell className="text-sm text-center">{service.order}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className={service.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}>
+                      <Badge className={service.active ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-white border-0 shadow-sm' : 'bg-gradient-to-r from-slate-400 to-slate-300 dark:from-slate-600 dark:to-slate-500 text-white border-0'}>
                         {service.active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
@@ -278,8 +287,10 @@ export default function AdminServices() {
                 <Input id="svc-order" type="number" value={form.order} onChange={(e) => setForm(f => ({ ...f, order: parseInt(e.target.value) || 0 }))} />
               </div>
               <div className="flex items-center gap-2 pt-6">
-                <Switch checked={form.active} onCheckedChange={(checked) => setForm(f => ({ ...f, active: checked }))} />
-                <Label>Active</Label>
+                <div className={`relative ${form.active ? '' : ''}`}>
+                  <Switch checked={form.active} onCheckedChange={(checked) => setForm(f => ({ ...f, active: checked }))} className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-emerald-400" />
+                </div>
+                <Label className={form.active ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}>Active</Label>
               </div>
             </div>
           </div>

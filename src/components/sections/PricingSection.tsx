@@ -104,6 +104,15 @@ const itemVariants = {
   },
 };
 
+const featureVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: (i: number) => ({
+    opacity: 1,
+    x: 0,
+    transition: { delay: 0.4 + i * 0.05, duration: 0.3, ease: 'easeOut' },
+  }),
+};
+
 export default function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(false);
   const { navigate } = useAppStore();
@@ -118,6 +127,12 @@ export default function PricingSection() {
 
   return (
     <section id="pricing" className="section-padding bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden">
+      {/* Dotted pattern background */}
+      <div className="absolute inset-0 opacity-[0.15] dark:opacity-[0.08]" style={{
+        backgroundImage: 'radial-gradient(circle, #059669 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+      }} />
+
       {/* Background decoration */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
@@ -138,7 +153,7 @@ export default function PricingSection() {
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
             Transparent Pricing for{' '}
-            <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent" aria-label="Every Business">
               Every Business
             </span>
           </h2>
@@ -147,38 +162,46 @@ export default function PricingSection() {
           </p>
         </motion.div>
 
-        {/* Monthly/Annual Toggle */}
+        {/* Monthly/Annual Toggle - larger and more prominent with gradient */}
         <motion.div
-          className="flex items-center justify-center gap-3 mb-12"
+          className="flex items-center justify-center gap-4 mb-12"
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 0.2 }}
         >
-          <span className={`text-sm font-medium transition-colors ${!isAnnual ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+          <span className={`text-sm font-medium transition-colors duration-300 ${!isAnnual ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
             Monthly
           </span>
           <button
             onClick={() => setIsAnnual(!isAnnual)}
-            className="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            className="relative inline-flex h-9 w-16 items-center rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 shadow-inner"
             style={{
-              backgroundColor: isAnnual ? '#059669' : '#e2e8f0',
+              background: isAnnual
+                ? 'linear-gradient(to right, #059669, #d97706)'
+                : '#e2e8f0',
             }}
             aria-label={`Switch to ${isAnnual ? 'monthly' : 'annual'} billing`}
           >
             <motion.span
-              className="inline-block h-5 w-5 rounded-full bg-white shadow-md"
-              animate={{ x: isAnnual ? 22 : 2 }}
+              className="inline-block h-7 w-7 rounded-full bg-white shadow-lg ring-1 ring-black/5"
+              animate={{ x: isAnnual ? 30 : 2 }}
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
             />
           </button>
-          <span className={`text-sm font-medium transition-colors ${isAnnual ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+          <span className={`text-sm font-medium transition-colors duration-300 ${isAnnual ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
             Annual
           </span>
           {isAnnual && (
-            <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700">
-              Save 20%
-            </Badge>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+            >
+              <Badge className="bg-gradient-to-r from-amber-500 to-amber-400 text-white border-0 shadow-md">
+                Save 20%
+              </Badge>
+            </motion.div>
           )}
         </motion.div>
 
@@ -193,6 +216,7 @@ export default function PricingSection() {
           {tiers.map((tier) => {
             const Icon = tier.icon;
             const price = isAnnual ? tier.annualPrice : tier.monthlyPrice;
+            const isEnterprise = tier.id === 'enterprise';
 
             return (
               <motion.div key={tier.id} variants={itemVariants}>
@@ -200,20 +224,37 @@ export default function PricingSection() {
                   className={`relative h-full overflow-hidden transition-all duration-300 group ${
                     tier.popular
                       ? 'ring-2 ring-emerald-500 dark:ring-emerald-400 shadow-xl dark:shadow-emerald-900/20 hover:shadow-2xl dark:hover:shadow-emerald-900/40 hover:scale-[1.03] bg-gradient-to-b from-white to-emerald-50/50 dark:from-slate-800 dark:to-emerald-950/30'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-xl dark:hover:shadow-emerald-900/20 hover:-translate-y-2 hover:scale-[1.02]'
+                      : isEnterprise
+                        ? 'bg-white dark:bg-slate-800 hover:shadow-2xl dark:hover:shadow-amber-900/20 hover:-translate-y-2 hover:scale-[1.02] p-[2px] rounded-2xl'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-xl dark:hover:shadow-emerald-900/20 hover:-translate-y-2 hover:scale-[1.02]'
                   }`}
                 >
+                  {/* Animated gradient border for enterprise */}
+                  {isEnterprise && (
+                    <div className="absolute inset-0 rounded-2xl p-[2px] overflow-hidden pointer-events-none">
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-amber-500 to-emerald-500 animate-[spin-slow_8s_linear_infinite] opacity-60 group-hover:opacity-100 transition-opacity duration-500" style={{
+                        backgroundSize: '200% 200%',
+                      }} />
+                    </div>
+                  )}
+
                   {/* Popular badge */}
                   {tier.popular && (
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-amber-500" />
                   )}
 
-                  <CardContent className="p-6 sm:p-8 flex flex-col h-full">
+                  <CardContent className="p-6 sm:p-8 flex flex-col h-full relative z-10">
                     {/* Badge */}
                     {tier.popular && (
                       <Badge className="absolute top-4 right-4 bg-gradient-to-r from-emerald-500 to-amber-500 text-white border-0 text-xs font-semibold shadow-lg">
                         <Star className="size-3 mr-1" />
                         Most Popular
+                      </Badge>
+                    )}
+                    {isEnterprise && (
+                      <Badge className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-400 text-white border-0 text-xs font-semibold shadow-lg">
+                        <Building2 className="size-3 mr-1" />
+                        Premium
                       </Badge>
                     )}
 
@@ -223,10 +264,12 @@ export default function PricingSection() {
                         className={`size-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 ${
                           tier.popular
                             ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25'
-                            : 'bg-emerald-100 dark:bg-emerald-900/40 group-hover:bg-gradient-to-br group-hover:from-emerald-500 group-hover:to-amber-500 group-hover:shadow-lg group-hover:shadow-emerald-500/25'
+                            : isEnterprise
+                              ? 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/25 group-hover:shadow-amber-500/40'
+                              : 'bg-emerald-100 dark:bg-emerald-900/40 group-hover:bg-gradient-to-br group-hover:from-emerald-500 group-hover:to-amber-500 group-hover:shadow-lg group-hover:shadow-emerald-500/25'
                         }`}
                       >
-                        <Icon className={`size-6 transition-colors duration-300 ${tier.popular ? 'text-white' : 'text-emerald-600 dark:text-emerald-400 group-hover:text-white'}`} />
+                        <Icon className={`size-6 transition-colors duration-300 ${tier.popular || isEnterprise ? 'text-white' : 'text-emerald-600 dark:text-emerald-400 group-hover:text-white'}`} />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white">{tier.name}</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{tier.description}</p>
@@ -268,25 +311,35 @@ export default function PricingSection() {
                       className={`w-full mb-6 ${
                         tier.popular
                           ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/25 h-11'
-                          : 'border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
+                          : isEnterprise
+                            ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-500/25 h-11'
+                            : 'border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
                       }`}
-                      variant={tier.popular ? 'default' : 'outline'}
+                      variant={tier.popular || isEnterprise ? 'default' : 'outline'}
                     >
                       {tier.cta}
                       <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
 
-                    {/* Features */}
+                    {/* Features with staggered animation */}
                     <div className="flex-1">
                       <p className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
                         What&apos;s included
                       </p>
                       <ul className="space-y-3">
-                        {tier.features.map((feature) => (
-                          <li key={feature} className="flex items-start gap-2.5 text-sm">
-                            <CheckCircle className="size-4 flex-shrink-0 mt-0.5 text-emerald-500 dark:text-emerald-400" />
+                        {tier.features.map((feature, idx) => (
+                          <motion.li
+                            key={feature}
+                            className="flex items-start gap-2.5 text-sm"
+                            custom={idx}
+                            variants={featureVariants}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true }}
+                          >
+                            <CheckCircle className={`size-4 flex-shrink-0 mt-0.5 ${isEnterprise ? 'text-amber-500 dark:text-amber-400' : tier.popular ? 'text-emerald-500 dark:text-emerald-400' : 'text-emerald-500 dark:text-emerald-400'}`} />
                             <span className="text-slate-600 dark:text-slate-300">{feature}</span>
-                          </li>
+                          </motion.li>
                         ))}
                       </ul>
                     </div>

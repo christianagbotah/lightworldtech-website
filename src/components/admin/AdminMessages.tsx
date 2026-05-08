@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Trash2, Mail, MailOpen, Eye, EyeOff } from 'lucide-react';
+import { Trash2, Mail, MailOpen, Eye, EyeOff, Phone, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,6 +41,25 @@ interface ContactMessage {
   message: string;
   read: boolean;
   createdAt: string;
+}
+
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success(`${label} copied to clipboard`);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors ml-1"
+      aria-label={`Copy ${label}`}
+    >
+      {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+    </button>
+  );
 }
 
 export default function AdminMessages() {
@@ -120,7 +139,7 @@ export default function AdminMessages() {
           <p className="text-muted-foreground text-sm mt-1">
             {messages.length} total messages
             {unreadCount > 0 && (
-              <Badge className="ml-2 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+              <Badge className="ml-2 bg-gradient-to-r from-amber-500 to-amber-400 text-white border-0 shadow-sm">
                 {unreadCount} unread
               </Badge>
             )}
@@ -132,8 +151,8 @@ export default function AdminMessages() {
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="text-xs font-semibold">Name</TableHead>
+              <TableRow className="bg-gradient-to-r from-muted/80 to-muted/30 dark:from-slate-800/80 dark:to-slate-800/30">
+                <TableHead className="text-xs font-semibold">Sender</TableHead>
                 <TableHead className="text-xs font-semibold hidden sm:table-cell">Email</TableHead>
                 <TableHead className="text-xs font-semibold hidden md:table-cell">Subject</TableHead>
                 <TableHead className="text-xs font-semibold hidden lg:table-cell">Date</TableHead>
@@ -150,14 +169,34 @@ export default function AdminMessages() {
                 </TableRow>
               ) : (
                 messages.map((msg) => (
-                  <TableRow key={msg.id} className={!msg.read ? 'bg-emerald-50/50 dark:bg-emerald-900/5' : ''}>
+                  <TableRow
+                    key={msg.id}
+                    className={`hover:bg-emerald-50/50 dark:hover:bg-emerald-900/5 transition-colors duration-200 ${
+                      !msg.read ? 'border-l-[3px] border-l-emerald-500 dark:border-l-emerald-400 bg-emerald-50/30 dark:bg-emerald-900/5' : 'border-l-[3px] border-l-transparent'
+                    }`}
+                  >
                     <TableCell className="font-medium text-sm">
                       <div className="flex items-center gap-2">
-                        {!msg.read && <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />}
-                        {msg.name}
+                        {!msg.read ? (
+                          <span className="relative flex size-2 shrink-0">
+                            <span className="animate-ping absolute inline-flex size-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+                          </span>
+                        ) : (
+                          <Mail className="size-3 text-slate-400 shrink-0" />
+                        )}
+                        <span className={msg.read ? '' : 'font-bold'}>{msg.name}</span>
+                        {msg.phone && (
+                          <Phone className="size-3 text-muted-foreground ml-1" title="Phone inquiry" />
+                        )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">{msg.email}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">
+                      <span className="flex items-center gap-1">
+                        <span className="truncate max-w-[150px]">{msg.email}</span>
+                        <CopyButton text={msg.email} label="email" />
+                      </span>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground hidden md:table-cell max-w-[200px] truncate">{msg.subject || '—'}</TableCell>
                     <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">
                       {new Date(msg.createdAt).toLocaleDateString()} {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -166,8 +205,8 @@ export default function AdminMessages() {
                       <button onClick={() => markRead(msg, !msg.read)} className="cursor-pointer">
                         <Badge className={
                           msg.read
-                            ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                            ? 'bg-gradient-to-r from-slate-400 to-slate-300 dark:from-slate-600 dark:to-slate-500 text-white border-0'
+                            : 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-white border-0 shadow-sm'
                         }>
                           {msg.read ? 'Read' : 'Unread'}
                         </Badge>
@@ -198,7 +237,10 @@ export default function AdminMessages() {
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{viewing?.subject || 'Message Details'}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {viewing?.phone ? <Phone className="size-4 text-emerald-500" /> : <Mail className="size-4 text-emerald-500" />}
+              {viewing?.subject || 'Message Details'}
+            </DialogTitle>
           </DialogHeader>
           {viewing && (
             <div className="space-y-4 py-2">
@@ -209,12 +251,18 @@ export default function AdminMessages() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Email:</span>
-                  <p className="font-medium">{viewing.email}</p>
+                  <p className="font-medium flex items-center">
+                    {viewing.email}
+                    <CopyButton text={viewing.email} label="email" />
+                  </p>
                 </div>
                 {viewing.phone && (
                   <div>
                     <span className="text-muted-foreground">Phone:</span>
-                    <p className="font-medium">{viewing.phone}</p>
+                    <p className="font-medium flex items-center">
+                      {viewing.phone}
+                      <CopyButton text={viewing.phone} label="phone number" />
+                    </p>
                   </div>
                 )}
                 <div>

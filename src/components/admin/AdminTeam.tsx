@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Pencil, Trash2, Eye, EyeOff, Upload, ImageIcon, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, Upload, ImageIcon, Loader2, Linkedin, Twitter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -223,8 +223,8 @@ export default function AdminTeam() {
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="text-xs font-semibold">Name</TableHead>
+              <TableRow className="bg-gradient-to-r from-muted/80 to-muted/30 dark:from-slate-800/80 dark:to-slate-800/30">
+                <TableHead className="text-xs font-semibold">Member</TableHead>
                 <TableHead className="text-xs font-semibold hidden sm:table-cell">Role</TableHead>
                 <TableHead className="text-xs font-semibold hidden md:table-cell">Email</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Order</TableHead>
@@ -241,13 +241,26 @@ export default function AdminTeam() {
                 </TableRow>
               ) : (
                 members.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell className="font-medium text-sm">{member.name}</TableCell>
+                  <TableRow key={member.id} className="hover:bg-emerald-50/50 dark:hover:bg-emerald-900/5 transition-colors duration-200">
+                    <TableCell className="font-medium text-sm">
+                      <div className="flex items-center gap-2.5">
+                        {member.image ? (
+                          <div className="relative shrink-0">
+                            <img src={member.image} alt={member.name} className="size-8 rounded-full object-cover ring-2 ring-emerald-500/30 dark:ring-emerald-400/30" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                          </div>
+                        ) : (
+                          <div className="size-8 rounded-full bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center shrink-0 ring-2 ring-emerald-500/20 dark:ring-emerald-400/20">
+                            <span className="text-xs font-bold text-white">{member.name.charAt(0)}</span>
+                          </div>
+                        )}
+                        {member.name}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">{member.role}</TableCell>
                     <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{member.email || '—'}</TableCell>
                     <TableCell className="text-sm text-center">{member.order}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className={member.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}>
+                      <Badge className={member.active ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-white border-0 shadow-sm' : 'bg-gradient-to-r from-slate-400 to-slate-300 dark:from-slate-600 dark:to-slate-500 text-white border-0'}>
                         {member.active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
@@ -320,7 +333,7 @@ export default function AdminTeam() {
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md"
                   aria-label="Upload image"
                 >
                   {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
@@ -353,17 +366,17 @@ export default function AdminTeam() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>LinkedIn</Label>
-                <Input value={form.linkedin} onChange={(e) => setForm(f => ({ ...f, linkedin: e.target.value }))} placeholder="LinkedIn URL" />
+                <Label className="flex items-center gap-1.5">LinkedIn <Linkedin className="size-3.5 text-blue-600" /></Label>
+                <Input value={form.linkedin} onChange={(e) => setForm(f => ({ ...f, linkedin: e.target.value }))} placeholder="LinkedIn URL" className="focus-visible:ring-blue-500/30" />
               </div>
               <div className="grid gap-2">
-                <Label>Twitter</Label>
-                <Input value={form.twitter} onChange={(e) => setForm(f => ({ ...f, twitter: e.target.value }))} placeholder="Twitter URL" />
+                <Label className="flex items-center gap-1.5">Twitter <Twitter className="size-3.5 text-sky-500" /></Label>
+                <Input value={form.twitter} onChange={(e) => setForm(f => ({ ...f, twitter: e.target.value }))} placeholder="Twitter URL" className="focus-visible:ring-sky-500/30" />
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Switch checked={form.active} onCheckedChange={(checked) => setForm(f => ({ ...f, active: checked }))} />
-              <Label>Active</Label>
+              <Switch checked={form.active} onCheckedChange={(checked) => setForm(f => ({ ...f, active: checked }))} className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-emerald-400" />
+              <Label className={form.active ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}>Active</Label>
             </div>
           </div>
           <DialogFooter>

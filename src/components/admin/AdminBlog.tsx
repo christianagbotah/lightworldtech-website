@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Pencil, Trash2, Eye, Star, StarOff } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plus, Pencil, Trash2, Eye, Star, StarOff, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -38,13 +39,31 @@ interface BlogPost {
   category?: { name: string } | null;
 }
 
+const categoryColors: Record<string, string> = {
+  'Technology': 'border-l-blue-500 dark:border-l-blue-400',
+  'Web Development': 'border-l-emerald-500 dark:border-l-emerald-400',
+  'Mobile Apps': 'border-l-violet-500 dark:border-l-violet-400',
+  'Digital Marketing': 'border-l-amber-500 dark:border-l-amber-400',
+  'Cloud Solutions': 'border-l-cyan-500 dark:border-l-cyan-400',
+  'Design': 'border-l-pink-500 dark:border-l-pink-400',
+};
+
+const defaultCategoryBorder = 'border-l-slate-400 dark:border-l-slate-500';
+
 export default function AdminBlog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState<BlogPost | null>(null);
+  const [search, setSearch] = useState('');
   const { navigate, blogPostSlug } = useAppStore();
+
+  const filteredPosts = posts.filter((p) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return p.title.toLowerCase().includes(q) || (p.category?.name || '').toLowerCase().includes(q);
+  });
 
   const fetchPosts = useCallback(async (f: string = filter) => {
     setLoading(true);
@@ -125,9 +144,23 @@ export default function AdminBlog() {
           <h1 className="text-2xl font-bold text-foreground">Blog Posts</h1>
           <p className="text-muted-foreground text-sm mt-1">{posts.length} posts</p>
         </div>
-        <Button onClick={handleCreate} className="bg-emerald-600 hover:bg-emerald-700">
-          <Plus className="h-4 w-4 mr-2" /> New Post
-        </Button>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+          <Button onClick={handleCreate} className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/25 h-11">
+            <Plus className="h-4 w-4 mr-2" /> New Post
+          </Button>
+        </motion.div>
+      </div>
+
+      {/* Search input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search posts by title or category..."
+          className="w-full h-10 pl-10 pr-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 dark:focus:ring-emerald-400/20 transition-all duration-200"
+        />
       </div>
 
       <Tabs value={filter} onValueChange={handleTabChange}>
@@ -146,7 +179,7 @@ export default function AdminBlog() {
           <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
+                <TableRow className="bg-gradient-to-r from-muted/80 to-muted/30 dark:from-slate-800/80 dark:to-slate-800/30">
                   <TableHead className="text-xs font-semibold">Title</TableHead>
                   <TableHead className="text-xs font-semibold hidden sm:table-cell">Category</TableHead>
                   <TableHead className="text-xs font-semibold text-center">Status</TableHead>
@@ -156,15 +189,15 @@ export default function AdminBlog() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {posts.length === 0 ? (
+                {filteredPosts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No posts found. Create your first blog post!
+                      {search ? 'No posts match your search.' : 'No posts found. Create your first blog post!'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  posts.map((post) => (
-                    <TableRow key={post.id}>
+                  filteredPosts.map((post) => (
+                    <TableRow key={post.id} className={`hover:bg-emerald-50/50 dark:hover:bg-emerald-900/5 transition-colors duration-200 border-l-[3px] ${categoryColors[post.category?.name || ''] || defaultCategoryBorder}`}>
                       <TableCell className="font-medium text-sm max-w-[250px] truncate">{post.title}</TableCell>
                       <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">
                         {post.category?.name || '—'}
@@ -173,10 +206,10 @@ export default function AdminBlog() {
                         <button onClick={() => togglePublished(post)} className="cursor-pointer">
                           <Badge className={
                             post.published
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                              : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                              ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-white border-0 shadow-sm'
+                              : 'bg-gradient-to-r from-slate-400 to-slate-300 dark:from-slate-600 dark:to-slate-500 text-white border-0'
                           }>
-                            {post.published ? 'Published' : 'Draft'}
+                            {post.published ? 'Active' : 'Draft'}
                           </Badge>
                         </button>
                       </TableCell>

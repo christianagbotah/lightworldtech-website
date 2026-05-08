@@ -42,15 +42,59 @@ const stats = [
   { value: 50, suffix: '+', label: 'Team Members', icon: UsersRound },
 ];
 
-function AnimatedStatCard({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
-  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
+function AnimatedStatCard({ value, suffix, label, icon: Icon, delay = 0, maxValue = 100 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number; maxValue?: number }) {
+  const { count, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
+  const progress = Math.min(count / maxValue, 1);
+  const size = 80;
+  const strokeWidth = 4;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - progress * circumference;
+
   return (
     <Card ref={ref} className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-lg dark:hover:shadow-emerald-900/20 transition-all duration-300 group">
       <CardContent className="p-6 text-center">
-        <div className="size-12 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center mx-auto mb-3 group-hover:shadow-md transition-shadow duration-300">
-          <Icon className="size-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="relative mx-auto mb-3" style={{ width: size, height: size }}>
+          {/* SVG Circular Progress Ring */}
+          <svg className="absolute inset-0 -rotate-90" width={size} height={size}>
+            <defs>
+              <linearGradient id={`ring-gradient-${label.replace(/\s+/g, '-')}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#f59e0b" />
+              </linearGradient>
+            </defs>
+            {/* Background circle */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={strokeWidth}
+              className="text-slate-100 dark:text-slate-700"
+            />
+            {/* Progress circle with gradient */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke={`url(#ring-gradient-${label.replace(/\s+/g, '-')})`}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              className="transition-all duration-100 ease-out"
+            />
+          </svg>
+          {/* Icon in center */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="size-10 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center group-hover:shadow-md transition-shadow duration-300">
+              <Icon className="size-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          </div>
         </div>
-        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{displayValue}</div>
+        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{count}{suffix}</div>
         <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">{label}</div>
       </CardContent>
     </Card>
@@ -179,7 +223,7 @@ export default function AboutPage() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <AnimatedStatCard value={stat.value} suffix={stat.suffix} label={stat.label} icon={stat.icon} delay={index * 200} />
+                  <AnimatedStatCard value={stat.value} suffix={stat.suffix} label={stat.label} icon={stat.icon} delay={index * 200} maxValue={stat.value} />
                 </motion.div>
               ))}
             </motion.div>

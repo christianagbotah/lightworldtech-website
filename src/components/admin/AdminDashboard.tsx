@@ -51,12 +51,12 @@ interface ContactMessage {
 }
 
 const statCards = [
-  { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30', trend: '+12%', up: true },
-  { key: 'activeServices' as const, label: 'Services', icon: Briefcase, color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30', trend: '+3%', up: true },
-  { key: 'activeTeam' as const, label: 'Team Members', icon: Users, color: 'text-violet-600 bg-violet-100 dark:bg-violet-900/30', trend: '0%', up: true },
-  { key: 'unreadMessages' as const, label: 'Unread Messages', icon: Mail, color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', trend: '+5', up: true },
-  { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30', trend: '+2', up: true },
-  { key: 'activeTestimonials' as const, label: 'Testimonials', icon: MessageSquare, color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30', trend: '+1', up: true },
+  { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30', trend: '+12%', up: true, borderAccent: 'border-l-[3px] border-l-emerald-500 dark:border-l-emerald-400' },
+  { key: 'activeServices' as const, label: 'Services', icon: Briefcase, color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30', trend: '+3%', up: true, borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
+  { key: 'activeTeam' as const, label: 'Team Members', icon: Users, color: 'text-teal-600 bg-teal-100 dark:bg-teal-900/30', trend: '0%', up: true, borderAccent: 'border-l-[3px] border-l-teal-500 dark:border-l-teal-400' },
+  { key: 'unreadMessages' as const, label: 'Unread Messages', icon: Mail, color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', trend: '+5', up: true, borderAccent: 'border-l-[3px] border-l-rose-500 dark:border-l-rose-400' },
+  { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30', trend: '+2', up: true, borderAccent: 'border-l-[3px] border-l-cyan-500 dark:border-l-cyan-400' },
+  { key: 'activeTestimonials' as const, label: 'Testimonials', icon: MessageSquare, color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30', trend: '+1', up: true, borderAccent: 'border-l-[3px] border-l-orange-500 dark:border-l-orange-400' },
 ];
 
 const monthlyInquiries = [
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="border-border/50 hover:shadow-md transition-shadow">
+              <Card className={`border-border/50 hover:shadow-md transition-all duration-300 ${card.borderAccent}`}>
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -236,10 +236,15 @@ export default function AdminDashboard() {
                   const isCurrentMonth = i === monthlyInquiries.length - 1;
                   return (
                     <div key={item.month} className="flex-1 flex flex-col items-center gap-1.5">
-                      <span className="text-xs font-medium text-muted-foreground">{item.value}</span>
+                      <span className="text-xs font-medium text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">{item.value}</span>
                       <div className="w-full relative group">
+                        {/* Tooltip */}
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-800 text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                          {item.value} inquiries
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-200" />
+                        </div>
                         <motion.div
-                          className={`w-full rounded-t-md ${isCurrentMonth ? 'bg-gradient-to-t from-emerald-600 to-emerald-400' : 'bg-slate-200 dark:bg-slate-700 group-hover:bg-emerald-300 dark:group-hover:bg-emerald-600'} transition-colors`}
+                          className={`w-full rounded-t-lg ${isCurrentMonth ? 'bg-gradient-to-t from-emerald-600 to-emerald-400' : 'bg-slate-200 dark:bg-slate-700 group-hover:bg-gradient-to-t group-hover:from-emerald-600 group-hover:to-emerald-400'} transition-all duration-300 cursor-pointer`}
                           initial={{ height: 0 }}
                           animate={{ height: `${height}%` }}
                           transition={{ duration: 0.6, delay: i * 0.08, ease: 'easeOut' }}
@@ -268,19 +273,25 @@ export default function AdminDashboard() {
               <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-3">
-              {quickActions.map((action) => {
+              {quickActions.map((action, i) => {
                 const Icon = action.icon;
                 return (
-                  <Button
+                  <motion.button
                     key={action.label}
-                    variant="outline"
-                    className="w-full justify-start gap-3 h-12 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-colors"
+                    className="w-full flex items-center justify-start gap-3 h-14 px-4 rounded-xl border border-border/50 bg-gradient-to-r from-white to-slate-50/50 dark:from-slate-800/80 dark:to-slate-800/40 hover:from-emerald-50 hover:to-amber-50/30 dark:hover:from-emerald-900/20 dark:hover:to-amber-900/10 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all duration-300 text-left"
                     onClick={() => navigate(action.action as Parameters<typeof navigate>[0])}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + i * 0.05 }}
                   >
-                    <Icon className={`size-4 ${action.color}`} />
-                    <span className="text-sm">{action.label}</span>
-                    <ArrowUpRight className="size-3 ml-auto text-muted-foreground" />
-                  </Button>
+                    <div className={`p-2 rounded-lg bg-gradient-to-br ${i === 0 ? 'from-emerald-100 to-emerald-50 dark:from-emerald-900/40 dark:to-emerald-900/20' : i === 1 ? 'from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/20' : 'from-rose-100 to-rose-50 dark:from-rose-900/40 dark:to-rose-900/20'}`}>
+                      <Icon className={`size-4 ${action.color}`} />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">{action.label}</span>
+                    <ArrowUpRight className="size-3.5 ml-auto text-muted-foreground" />
+                  </motion.button>
                 );
               })}
             </CardContent>
@@ -312,7 +323,7 @@ export default function AdminDashboard() {
                 </TableHeader>
                 <TableBody>
                   {recentPosts.map((post) => (
-                    <TableRow key={post.id}>
+                    <TableRow key={post.id} className="hover:bg-emerald-50/50 dark:hover:bg-emerald-900/5 transition-colors duration-200">
                       <TableCell className="font-medium text-sm max-w-[180px] truncate">{post.title}</TableCell>
                       <TableCell>
                         {post.published ? (
@@ -354,9 +365,12 @@ export default function AdminDashboard() {
                 </TableHeader>
                 <TableBody>
                   {recentMessages.map((msg) => (
-                    <TableRow key={msg.id}>
+                    <TableRow key={msg.id} className={`hover:bg-emerald-50/50 dark:hover:bg-emerald-900/5 transition-colors duration-200 ${!msg.read ? 'border-l-[3px] border-l-emerald-500 dark:border-l-emerald-400' : ''}`}>
                       <TableCell className="font-medium text-sm">
-                        <span className={msg.read ? '' : 'font-bold'}>{msg.name}</span>
+                        <span className="flex items-center gap-2">
+                          {!msg.read && <span className="relative flex size-2 shrink-0"><span className="animate-ping absolute inline-flex size-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex rounded-full size-2 bg-emerald-500" /></span>}
+                          <span className={msg.read ? '' : 'font-bold'}>{msg.name}</span>
+                        </span>
                       </TableCell>
                       <TableCell className="text-sm max-w-[160px] truncate text-muted-foreground">{msg.subject || 'No subject'}</TableCell>
                       <TableCell className="text-xs text-muted-foreground text-right">

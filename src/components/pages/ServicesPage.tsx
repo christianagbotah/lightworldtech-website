@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAppStore } from '@/lib/store';
 import CTASection from '@/components/sections/CTASection';
+import QuotationForm from '@/components/ui/quotation-form';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -103,6 +104,8 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const [quoteServiceId, setQuoteServiceId] = useState<string>('');
 
   useEffect(() => {
     fetcher('/api/services')
@@ -236,7 +239,7 @@ export default function ServicesPage() {
 
                         <div className="flex gap-2 mt-4">
                           <Button
-                            onClick={(e) => { e.stopPropagation(); navigate('contact'); }}
+                            onClick={(e) => { e.stopPropagation(); setQuoteServiceId(service.id); setQuoteOpen(true); }}
                             className={`flex-1 transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} group/btn`}
                           >
                             Get a Quote <ArrowRight className="size-4 ml-1 group-hover/btn:translate-x-1 transition-transform duration-200" />
@@ -352,7 +355,7 @@ export default function ServicesPage() {
                   {/* CTA */}
                   <div className="flex gap-3 pt-2">
                     <Button
-                      onClick={() => { setSelectedService(null); navigate('contact'); }}
+                      onClick={() => { setSelectedService(null); setQuoteServiceId(selectedService.id); setQuoteOpen(true); }}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 shadow-md"
                     >
                       Request a Quote
@@ -419,6 +422,9 @@ export default function ServicesPage() {
 
       {/* CTA */}
       <CTASection />
+
+      {/* Quotation Form Modal */}
+      <QuotationForm open={quoteOpen} onOpenChange={setQuoteOpen} preselectedService={quoteServiceId} />
     </main>
   );
 }
