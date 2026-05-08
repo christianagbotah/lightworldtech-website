@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== CMS MODELS ====================
+
+// Site-wide settings (hero, about, contact info, etc.)
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  type  String @default("text") // text, richText, json, image
+  group String @default("general") // general, hero, about, contact, social, seo
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Navigation menu items
+model NavItem {
+  id     String @id @default(cuid())
+  label  String
+  href   String @default("/")
+  order  Int    @default(0)
+  target String @default("_self") // _self, _blank
+  active Boolean @default(true)
+  parentId String?
+
+  parent NavItem? @relation("NavSubItems", fields: [parentId], references: [id])
+  children NavItem[] @relation("NavSubItems")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Services offered
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  icon        String   @default("")
+  image       String   @default("")
+  features    String   @default("[]") // JSON array of feature strings
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Team members
+model TeamMember {
+  id        String @id @default(cuid())
+  name      String
+  role      String
+  bio       String  @default("")
+  image     String  @default("")
+  email     String  @default("")
+  linkedin  String  @default("")
+  twitter   String  @default("")
+  order     Int     @default(0)
+  active    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Testimonials
+model Testimonial {
+  id       String @id @default(cuid())
+  name     String
+  company  String  @default("")
+  role     String  @default("")
+  content  String
+  image    String  @default("")
+  rating   Int     @default(5)
+  active   Boolean @default(true)
+  order    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Blog categories
+model BlogCategory {
+  id    String     @id @default(cuid())
+  name  String
+  slug  String     @unique
+  description String @default("")
+
+  posts BlogPost[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Blog posts
+model BlogPost {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  excerpt     String        @default("")
+  content     String        @default("")
+  coverImage  String        @default("")
+  author      String        @default("Lightworld Technologies")
+  published   Boolean       @default(false)
+  featured    Boolean       @default(false)
+  readTime    Int           @default(5)
+
+  categoryId  String?
+  category    BlogCategory? @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Portfolio projects
+model PortfolioProject {
+  id          String  @id @default(cuid())
+  title       String
+  description String  @default("")
+  image       String  @default("")
+  url         String  @default("")
+  category    String  @default("")
+  technologies String @default("[]") // JSON array
+  featured    Boolean @default(false)
+  active      Boolean @default(true)
+  order       Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Client logos / partners
+model Client {
+  id     String @id @default(cuid())
+  name   String
+  logo   String @default("")
+  url    String @default("")
+  order  Int    @default(0)
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Contact form submissions
+model ContactMessage {
+  id      String   @id @default(cuid())
+  name    String
+  email   String
+  phone   String   @default("")
+  subject String   @default("")
+  message String
+  read    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Newsletter subscribers
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// FAQ items
+model FAQ {
+  id       String @id @default(cuid())
+  question String
+  answer   String
+  order    Int    @default(0)
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Development process steps (from services page)
+model ProcessStep {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  icon        String @default("")
+  order       Int    @default(0)
+  active      Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Admin user for CMS
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String   @default("")
+  role      String   @default("admin")
+  active    Boolean  @default(true)
+  lastLogin DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
