@@ -37,7 +37,7 @@ export default function AboutSection() {
               <span className="text-gradient">Technology</span>
             </h2>
             <p className="text-slate-600 leading-relaxed mb-6">
-              Lightworld Technologies is a premier IT solutions company based in South Africa. Since our founding, we have been committed to delivering world-class technology services that help businesses of all sizes achieve their goals.
+              Lightworld Technologies is a premier IT solutions company based in Ghana. Since our founding, we have been committed to delivering world-class technology services that help businesses of all sizes achieve their goals.
             </p>
             <p className="text-slate-600 leading-relaxed mb-8">
               Our team of skilled developers, designers, and digital strategists work collaboratively to craft solutions that are not only technically excellent but also aligned with our clients&apos; business objectives. We believe in building lasting partnerships through trust, transparency, and tangible results.

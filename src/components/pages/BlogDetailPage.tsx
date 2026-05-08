@@ -15,46 +15,48 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 const defaultPost = {
   id: '1',
-  title: 'The Future of Web Development in South Africa',
+  title: 'Why Every Business Needs a Professional Website in 2025',
   content: `## Introduction
 
-South Africa's digital landscape is evolving at an unprecedented pace. With increasing internet penetration and a growing tech-savvy population, the demand for innovative web solutions has never been higher.
+In today's digital age, having a professional website is no longer a luxury but a necessity for businesses of all sizes. For businesses in Ghana and across Africa, establishing a strong online presence is key to growth.
 
-## Key Trends Shaping the Industry
+## Key Benefits of a Professional Website
 
-### 1. Progressive Web Apps (PWAs)
-PWAs are revolutionizing how South African businesses engage with their customers online. These apps offer the best of both web and mobile experiences, providing fast loading times, offline capabilities, and push notifications.
+### 1. Credibility and Trust
+A professional website immediately builds trust with potential customers. It shows that you are a legitimate business committed to serving your clients.
 
-### 2. AI-Powered Development
-Artificial intelligence is transforming the development process itself. From code generation to automated testing, AI tools are helping developers work smarter and deliver better results in less time.
+### 2. 24/7 Accessibility
+Unlike a physical store, your website works for you around the clock, allowing customers to learn about your products and services at any time.
 
-### 3. Cloud-First Architecture
-With the growth of cloud infrastructure in Africa, more businesses are adopting cloud-first strategies. This approach offers scalability, cost-efficiency, and improved collaboration.
+### 3. Marketing Hub
+Your website serves as the central hub for all your digital marketing efforts, from SEO to social media.
 
-## What This Means for Your Business
+### 4. Competitive Advantage
+In Ghana's growing digital economy, businesses with professional websites have a significant advantage over those without.
 
-Staying ahead of these trends is crucial for maintaining a competitive edge. Here are some key takeaways:
+## What Makes a Great Website
 
-- **Invest in mobile-first design** - Over 60% of South African internet users access the web primarily through mobile devices
-- **Embrace cloud technologies** - Reduce infrastructure costs and improve scalability
-- **Prioritize performance** - Fast-loading websites significantly improve user engagement and conversion rates
-- **Focus on accessibility** - Ensure your website is usable by all South Africans, regardless of ability
+- **Mobile-responsive design** - Over 70% of internet users in Ghana access the web via mobile devices
+- **Fast loading speed** - Users expect pages to load in under 3 seconds
+- **Clear calls-to-action** - Guide visitors toward conversion
+- **Search engine optimization** - Ensure your business can be found on Google
+- **Regular updates** - Keep your content fresh and relevant
 
 ## Conclusion
 
-The future of web development in South Africa is bright, driven by innovation and a commitment to digital excellence. Partnering with an experienced development team can help you navigate this evolving landscape and build solutions that drive real business results.`,
-  excerpt: 'Discover the latest trends and technologies shaping the web development landscape in South Africa and beyond.',
-  category: 'Web Development',
-  author: 'Thabo Molefe',
-  date: '2024-12-15',
+Investing in a professional website is one of the smartest business decisions you can make in 2025. Contact Lightworld Technologies today to get started.`,
+  excerpt: 'Discover why having a professional website is essential for businesses in Ghana and across Africa.',
+  category: 'Business',
+  author: 'Lightworld Technologies',
+  date: '2025-01-15',
   readTime: '5 min read',
-  slug: 'future-web-development',
+  slug: 'why-every-business-needs-professional-website-2025',
 };
 
 const relatedPosts = [
-  { id: '2', title: 'Why Mobile Apps Are Essential for Business Growth', category: 'Mobile Apps', date: '2024-12-10', slug: 'mobile-apps-business-growth' },
-  { id: '5', title: 'The Rise of Cloud Computing in Africa', category: 'Technology', date: '2024-11-20', slug: 'cloud-computing-africa' },
-  { id: '6', title: 'Building Accessible Websites: A Complete Guide', category: 'Web Development', date: '2024-11-15', slug: 'accessible-websites-guide' },
+  { id: '2', title: 'The Complete Guide to Mobile App Development', category: 'Mobile Apps', date: '2025-01-10', slug: 'complete-guide-mobile-app-development-business' },
+  { id: '4', title: 'How School Management Software Transforms Education', category: 'Technology', date: '2024-12-28', slug: 'school-management-software-transforms-education-ghana' },
+  { id: '6', title: 'SEO Strategies to Grow Your Business Online in Ghana', category: 'SEO & Marketing', date: '2024-12-15', slug: 'seo-strategies-grow-business-online-ghana' },
 ];
 
 export default function BlogDetailPage() {
@@ -99,7 +101,7 @@ export default function BlogDetailPage() {
               </span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="size-4" />
-                {new Date(post.date).toLocaleDateString('en-ZA', { month: 'long', day: 'numeric', year: 'numeric' })}
+                {new Date(post.date).toLocaleDateString('en-GB', { month: 'long', day: 'numeric', year: 'numeric' })}
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock className="size-4" />
@@ -175,7 +177,7 @@ export default function BlogDetailPage() {
                             {related.title}
                           </h4>
                           <p className="text-xs text-slate-400 mt-1">
-                            {new Date(related.date).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' })}
+                            {new Date(related.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                           </p>
                         </CardContent>
                       </Card>

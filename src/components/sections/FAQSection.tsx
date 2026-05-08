@@ -13,7 +13,7 @@ const defaultFaqs = [
   { id: '3', question: 'Do you offer ongoing support and maintenance?', answer: 'Yes, we offer comprehensive support and maintenance packages to ensure your solutions remain up-to-date, secure, and performing optimally. Our support plans are flexible and can be tailored to your needs.' },
   { id: '4', question: 'What technologies do you work with?', answer: 'We work with a wide range of modern technologies including React, Next.js, Node.js, Python, React Native, Flutter, and more. We select the best technology stack for each project based on requirements.' },
   { id: '5', question: 'How much do your services cost?', answer: 'Our pricing is competitive and depends on the specific requirements of your project. We provide detailed, transparent quotes after understanding your needs. Contact us for a free consultation and personalized quote.' },
-  { id: '6', question: 'Can you work with clients outside South Africa?', answer: 'Absolutely! While we are based in South Africa, we work with clients globally. Our team is experienced in remote collaboration and we use modern project management tools to ensure smooth communication.' },
+  { id: '6', question: 'Can you work with clients outside Ghana?', answer: 'Absolutely! While we are based in Ghana, we work with clients globally across Africa and beyond. Our team is experienced in remote collaboration and we use modern project management tools to ensure smooth communication.' },
 ];
 
 export default function FAQSection() {

@@ -183,6 +183,13 @@ export default function Footer() {
           <div className="flex items-center gap-4">
             <button className="hover:text-emerald-400 transition-colors">Privacy Policy</button>
             <button className="hover:text-emerald-400 transition-colors">Terms of Service</button>
+            <button
+              onClick={() => navigate('admin-dashboard')}
+              className="hover:text-emerald-400 transition-colors"
+              aria-label="Admin Panel"
+            >
+              Admin
+            </button>
           </div>
         </div>
       </div>

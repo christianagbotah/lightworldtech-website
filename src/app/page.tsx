@@ -4,6 +4,7 @@ import { useAppStore } from '@/lib/store';
 import { AnimatePresence, motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import BackToTop from '@/components/layout/BackToTop';
 import HomePage from '@/components/pages/HomePage';
 import AboutPage from '@/components/pages/AboutPage';
 import ServicesPage from '@/components/pages/ServicesPage';
@@ -116,6 +117,7 @@ export default function Home() {
         <PublicRouter />
       </main>
       <Footer />
+      <BackToTop />
     </div>
   );
 }

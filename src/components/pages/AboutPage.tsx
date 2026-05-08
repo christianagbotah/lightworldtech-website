@@ -20,17 +20,17 @@ const values = [
 ];
 
 const defaultTeam = [
-  { id: '1', name: 'Thabo Molefe', role: 'Founder & CEO', bio: 'Visionary leader with 15+ years in IT solutions and digital transformation.' },
-  { id: '2', name: 'Naledi Dlamini', role: 'CTO', bio: 'Technology expert specializing in cloud architecture and enterprise systems.' },
-  { id: '3', name: 'Pieter van Wyk', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web and mobile technologies.' },
-  { id: '4', name: 'Aisha Patel', role: 'UX/UI Director', bio: 'Award-winning designer passionate about creating intuitive user experiences.' },
+  { id: '1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with 10+ years in IT solutions and digital transformation across Africa.' },
+  { id: '2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web and mobile technologies.' },
+  { id: '3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Award-winning designer passionate about creating intuitive user experiences.' },
+  { id: '4', name: 'Kofi Amponsah', role: 'Digital Marketing Lead', bio: 'Digital marketing expert specializing in SEO, social media, and growth strategies.' },
 ];
 
 const awards = [
-  { title: '2024 Business Excellence Award', organization: 'SA Business Awards', year: '2024' },
+  { title: '2024 Business Excellence Award', organization: 'Ghana Business Excellence Awards', year: '2024' },
   { title: '2021 MEA Awards Winner', organization: 'Middle East & Africa IT Awards', year: '2021' },
-  { title: 'Top 10 IT Companies in SA', organization: 'TechReview Africa', year: '2023' },
-  { title: 'Best Web Development Agency', organization: 'Digital Excellence Awards', year: '2022' },
+  { title: 'Top 10 IT Companies in Ghana', organization: 'TechReview Africa', year: '2023' },
+  { title: 'Best Web Development Agency', organization: 'Africa Digital Excellence Awards', year: '2022' },
 ];
 
 const containerVariants = {

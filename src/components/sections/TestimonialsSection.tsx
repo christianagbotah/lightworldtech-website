@@ -19,35 +19,35 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 const defaultTestimonials = [
   {
     id: '1',
-    name: 'John Mokoena',
-    company: 'TechVentures SA',
-    role: 'CEO',
+    name: 'Rev. Samuel Owusu',
+    company: 'Grace Tabernacle Church',
+    role: 'Senior Pastor',
     rating: 5,
-    quote: 'Lightworld Technologies transformed our online presence completely. Their team delivered a stunning website that increased our leads by 300%. Professional, responsive, and truly exceptional.',
+    content: 'Lightworld Technologies transformed our online presence completely. Their team delivered a stunning website with live streaming and donation integration. Professional and exceptional.',
   },
   {
     id: '2',
-    name: 'Sarah van der Merwe',
-    company: 'GreenLeaf Hospitality',
-    role: 'Marketing Director',
+    name: 'Beatrice Ofori',
+    company: 'EduPrime Academy',
+    role: 'Director',
     rating: 5,
-    quote: 'The mobile app they built for us is incredible. Our guests love the seamless booking experience. The team went above and beyond to meet our deadlines.',
+    content: 'The school management system they built has streamlined our operations significantly. From enrollment to grades, everything is now automated and efficient. Highly recommended!',
   },
   {
     id: '3',
-    name: 'David Nkosi',
-    company: 'EduPro Academy',
-    role: 'Founder',
+    name: 'Kwabena Danso',
+    company: 'FreshBite Restaurant',
+    role: 'Owner',
     rating: 5,
-    quote: 'Their skills training program upskilled our entire IT department. The trainers were knowledgeable and the curriculum was perfectly tailored to our needs.',
+    content: 'Our e-commerce food ordering platform is amazing! Customers can order and pay online. Our revenue has increased by 40% since launching.',
   },
   {
     id: '4',
-    name: 'Lisa Pretorius',
-    company: 'Urban Properties',
-    role: 'Operations Manager',
+    name: 'Ama Boateng',
+    company: 'Premier Hotels',
+    role: 'General Manager',
     rating: 5,
-    quote: 'From concept to launch, the Lightworld team was outstanding. Their SEO strategies doubled our organic traffic within three months. Highly recommended!',
+    content: 'The booking system developed by Lightworld is seamless. Guests can book rooms and make payments online. Excellent service and support!',
   },
 ];
 
@@ -122,7 +122,7 @@ export default function TestimonialsSection() {
                       <CardContent className="p-6 flex flex-col h-full">
                         <Quote className="size-8 text-emerald-400/40 mb-4" />
                         <p className="text-slate-300 text-sm leading-relaxed flex-1 mb-6">
-                          &ldquo;{testimonial.quote}&rdquo;
+                          &ldquo;{testimonial.content || testimonial.quote}&rdquo;
                         </p>
                         {/* Rating */}
                         <div className="flex gap-0.5 mb-4">

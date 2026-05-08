@@ -166,7 +166,7 @@ export default function ContactPage() {
                               type="tel"
                               value={formData.phone}
                               onChange={handleChange}
-                              placeholder="+27 12 345 6789"
+                              placeholder="+233 XX XXX XXXX"
                             />
                           </div>
                           <div className="space-y-2">
@@ -233,8 +233,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1">Phone</h3>
-                      <p className="text-sm text-slate-500">+27 (0) 12 345 6789</p>
-                      <p className="text-sm text-slate-500">+27 (0) 82 123 4567</p>
+                      <p className="text-sm text-slate-500">+233 (024) 361 8186</p>
+                      <p className="text-sm text-slate-500">+233 (055) 467 2081</p>
                     </div>
                   </div>
                 </CardContent>
@@ -248,8 +248,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1">Email</h3>
-                      <p className="text-sm text-slate-500">info@lightworldtechnologies.co.za</p>
-                      <p className="text-sm text-slate-500">support@lightworldtechnologies.co.za</p>
+                      <p className="text-sm text-slate-500">mail@lightworldtech.com</p>
                     </div>
                   </div>
                 </CardContent>
@@ -263,7 +262,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1">Office</h3>
-                      <p className="text-sm text-slate-500">123 Innovation Drive<br />Centurion, Pretoria<br />South Africa</p>
+                      <p className="text-sm text-slate-500">Accra<br />Ghana</p>
                     </div>
                   </div>
                 </CardContent>
@@ -292,7 +291,7 @@ export default function ContactPage() {
                   <div className="text-center relative z-10">
                     <MapPin className="size-8 text-emerald-600 mx-auto mb-2" />
                     <p className="text-sm font-medium text-emerald-700">Interactive Map</p>
-                    <p className="text-xs text-emerald-600">Centurion, Pretoria</p>
+                    <p className="text-xs text-emerald-600">Accra, Ghana</p>
                   </div>
                 </div>
               </Card>

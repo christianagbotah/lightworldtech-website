@@ -13,12 +13,12 @@ import { useAppStore } from '@/lib/store';
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 const defaultPosts = [
-  { id: '1', title: 'The Future of Web Development in South Africa', excerpt: 'Discover the latest trends and technologies shaping the web development landscape in South Africa and beyond.', category: 'Web Development', author: 'Thabo Molefe', date: '2024-12-15', readTime: '5 min read', slug: 'future-web-development' },
-  { id: '2', title: 'Why Mobile Apps Are Essential for Business Growth', excerpt: 'Learn how a well-designed mobile app can significantly boost your business revenue and customer engagement.', category: 'Mobile Apps', author: 'Naledi Dlamini', date: '2024-12-10', readTime: '4 min read', slug: 'mobile-apps-business-growth' },
-  { id: '3', title: 'SEO Strategies for South African Businesses in 2025', excerpt: 'Practical SEO tips and strategies specifically tailored for the South African market to improve your online visibility.', category: 'SEO & Marketing', author: 'Aisha Patel', date: '2024-12-05', readTime: '6 min read', slug: 'seo-strategies-2025' },
-  { id: '4', title: 'Cybersecurity Best Practices for Small Businesses', excerpt: 'Protect your business from cyber threats with these essential security measures and best practices.', category: 'Security', author: 'Pieter van Wyk', date: '2024-11-28', readTime: '7 min read', slug: 'cybersecurity-best-practices' },
-  { id: '5', title: 'The Rise of Cloud Computing in Africa', excerpt: 'How cloud technology is transforming businesses across Africa and leveling the playing field for SMEs.', category: 'Technology', author: 'Thabo Molefe', date: '2024-11-20', readTime: '5 min read', slug: 'cloud-computing-africa' },
-  { id: '6', title: 'Building Accessible Websites: A Complete Guide', excerpt: 'Why web accessibility matters and how to ensure your website is inclusive for all users.', category: 'Web Development', author: 'Aisha Patel', date: '2024-11-15', readTime: '8 min read', slug: 'accessible-websites-guide' },
+  { id: '1', title: 'Why Every Business Needs a Professional Website in 2025', excerpt: 'In today\'s digital age, having a professional website is no longer a luxury but a necessity for businesses of all sizes.', category: 'Business', author: 'Lightworld Technologies', date: '2025-01-15', readTime: '5 min read', slug: 'why-every-business-needs-professional-website-2025' },
+  { id: '2', title: 'The Complete Guide to Mobile App Development', excerpt: 'Learn everything you need to know about developing a mobile app for your business, from planning to launch.', category: 'Mobile Apps', author: 'Lightworld Technologies', date: '2025-01-10', readTime: '7 min read', slug: 'complete-guide-mobile-app-development-business' },
+  { id: '3', title: 'Top 10 Web Development Trends to Watch in 2025', excerpt: 'Stay ahead of the curve with these essential web development trends that are shaping the future of the internet.', category: 'Web Development', author: 'Lightworld Technologies', date: '2025-01-05', readTime: '6 min read', slug: 'top-10-web-development-trends-2025' },
+  { id: '4', title: 'How School Management Software Transforms Education', excerpt: 'Discover how digital school management systems are revolutionizing education administration in Ghana and across Africa.', category: 'Technology', author: 'Lightworld Technologies', date: '2024-12-28', readTime: '8 min read', slug: 'school-management-software-transforms-education-ghana' },
+  { id: '5', title: 'UI/UX Design Principles Every Business Owner Should Know', excerpt: 'Understanding basic UI/UX design principles can help you make better decisions about your website and app projects.', category: 'Design', author: 'Lightworld Technologies', date: '2024-12-20', readTime: '5 min read', slug: 'ui-ux-design-principles-business-owners' },
+  { id: '6', title: 'SEO Strategies to Grow Your Business Online in Ghana', excerpt: 'Learn effective SEO strategies specifically tailored for businesses operating in Ghana and the West African market.', category: 'SEO & Marketing', author: 'Lightworld Technologies', date: '2024-12-15', readTime: '6 min read', slug: 'seo-strategies-grow-business-online-ghana' },
 ];
 
 const categories = ['all', 'Web Development', 'Mobile Apps', 'SEO & Marketing', 'Technology', 'Security'];
@@ -33,7 +33,23 @@ export default function BlogPage() {
   useEffect(() => {
     fetcher('/api/blog')
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) setPosts(data);
+        if (data.success && data.data?.posts) {
+          const mapped = data.data.posts.map((p: Record<string, unknown>) => ({
+            ...p,
+            category: typeof p.category === 'object' ? (p.category as { name?: string }).name || 'Technology' : p.category,
+            readTime: typeof p.readTime === 'number' ? `${p.readTime} min read` : p.readTime,
+            date: p.date || p.createdAt,
+          }));
+          setPosts(mapped);
+        } else if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((p: Record<string, unknown>) => ({
+            ...p,
+            category: typeof p.category === 'object' ? (p.category as { name?: string }).name || 'Technology' : p.category,
+            readTime: typeof p.readTime === 'number' ? `${p.readTime} min read` : p.readTime,
+            date: p.date || p.createdAt,
+          }));
+          setPosts(mapped);
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -166,7 +182,7 @@ export default function BlogPage() {
                           <div className="flex items-center gap-3">
                             <span className="flex items-center gap-1">
                               <Calendar className="size-3" />
-                              {new Date(post.date).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              {new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="size-3" />
