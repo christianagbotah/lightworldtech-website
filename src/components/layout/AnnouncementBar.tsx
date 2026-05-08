@@ -33,11 +33,11 @@ function useAnnouncementState() {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  return { dismissed, mounted };
+  return { dismissed, setDismissed, mounted };
 }
 
 export default function AnnouncementBar() {
-  const { dismissed, mounted } = useAnnouncementState();
+  const { dismissed, setDismissed, mounted } = useAnnouncementState();
   const [paused, setPaused] = useState(false);
   const offsetRef = useRef<HTMLDivElement[]>([]);
   const frameRef = useRef<number>(0);
@@ -45,7 +45,7 @@ export default function AnnouncementBar() {
   const handleDismiss = useCallback(() => {
     setDismissed(true);
     try { localStorage.setItem('lw-announcement-dismissed', Date.now().toString()); } catch {}
-  }, []);
+  }, [setDismissed]);
 
   // Marquee animation using DOM manipulation
   useEffect(() => {

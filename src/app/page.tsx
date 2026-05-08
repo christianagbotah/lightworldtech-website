@@ -139,6 +139,8 @@ export default function Home() {
       <AnnouncementBar />
       <PageLoader />
       <Header />
+      {/* Spacer to push content below fixed header (nav h-16 + top-bar ~h-10 = ~104px) */}
+      <div className="h-[104px] shrink-0" />
       <main className="flex-1">
         <PublicRouter />
       </main>
