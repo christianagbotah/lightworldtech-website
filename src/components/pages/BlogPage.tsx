@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Clock, ChevronRight, Calendar, User, Tag, ArrowRight } from 'lucide-react';
+import { Search, Clock, ChevronRight, Calendar, FileX, Keyboard } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,9 @@ export default function BlogPage() {
   const [posts, setPosts] = useState(defaultPosts);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [localSearch, setLocalSearch] = useState(blogSearch);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const postsPerPage = 6;
 
   useEffect(() => {
@@ -54,6 +57,33 @@ export default function BlogPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Keyboard shortcut: Ctrl/Cmd + K to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Debounced search
+  const handleSearchChange = useCallback((value: string) => {
+    setLocalSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setBlogSearch(value);
+      setPage(1);
+    }, 300);
+  }, [setBlogSearch]);
+
+  // Sync local search with store on category change
+  useEffect(() => {
+    setLocalSearch(blogSearch);
+  }, [blogSearch]);
 
   const filteredPosts = posts.filter((post) => {
     const matchesCategory = blogCategory === 'all' || post.category === blogCategory;
@@ -104,15 +134,20 @@ export default function BlogPage() {
       <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
         <div className="container-main">
           {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
               <Input
+                ref={searchInputRef}
                 placeholder="Search articles..."
-                value={blogSearch}
-                onChange={(e) => { setBlogSearch(e.target.value); setPage(1); }}
-                className="pl-10"
+                value={localSearch}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-10 pr-16"
               />
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-1 rounded border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 px-1.5 font-mono text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                <Keyboard className="size-2.5" />
+                ⌘K
+              </kbd>
             </div>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
@@ -130,6 +165,17 @@ export default function BlogPage() {
               ))}
             </div>
           </div>
+
+          {/* Result count */}
+          {!loading && (
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              Showing <span className="font-medium text-slate-700 dark:text-slate-200">{paginatedPosts.length}</span> of{' '}
+              <span className="font-medium text-slate-700 dark:text-slate-200">{filteredPosts.length}</span> articles
+              {blogSearch && (
+                <span> matching &ldquo;<span className="text-emerald-600 dark:text-emerald-400">{blogSearch}</span>&rdquo;</span>
+              )}
+            </p>
+          )}
 
           {/* Blog Grid */}
           {loading ? (
@@ -230,13 +276,34 @@ export default function BlogPage() {
               )}
             </>
           ) : (
-            <div className="text-center py-16">
-              <div className="text-slate-400 dark:text-slate-500 mb-4">
-                <Search className="size-12 mx-auto mb-4 opacity-30" />
-                <h3 className="text-lg font-medium">No articles found</h3>
-                <p className="text-sm">Try adjusting your search or filter criteria.</p>
+            <motion.div
+              className="text-center py-16"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="max-w-sm mx-auto">
+                <div className="size-16 rounded-full bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-4">
+                  <FileX className="size-8 text-slate-400 dark:text-slate-500" />
+                </div>
+                <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">No results found</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                  We couldn&apos;t find any articles matching your search. Try different keywords or clear the filters.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setBlogSearch('');
+                    setLocalSearch('');
+                    setBlogCategory('all');
+                    setPage(1);
+                  }}
+                  className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400"
+                >
+                  Clear Filters
+                </Button>
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       </section>

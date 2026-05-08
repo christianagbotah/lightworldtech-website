@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Smartphone, GraduationCap, TrendingUp, Code, Server, ChevronRight, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Globe, Smartphone, GraduationCap, TrendingUp, Code, Server, ChevronRight, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -110,36 +110,49 @@ export default function ServicesPage() {
               whileInView="visible"
               viewport={{ once: true }}
             >
-              {services.map((service) => {
+              {services.map((service, index) => {
                 const IconComp = iconMap[service.icon] || Globe;
                 const isExpanded = expandedId === service.id;
+                const isPopular = index === 1;
                 return (
                   <motion.div key={service.id} variants={itemVariants}>
-                    <Card className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 ${isExpanded ? 'border-emerald-300 dark:border-emerald-600 shadow-md ring-1 ring-emerald-200 dark:ring-emerald-700' : ''}`}>
-                      <CardContent className="p-6">
-                        <div className="size-12 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
-                          <IconComp className="size-6 text-emerald-600 dark:text-emerald-400" />
+                    <Card className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-all duration-300 group relative overflow-hidden ${isPopular ? 'border-emerald-300 dark:border-emerald-600 ring-1 ring-emerald-200/50 dark:ring-emerald-700/50' : ''} ${isExpanded ? 'border-emerald-300 dark:border-emerald-600 shadow-md ring-1 ring-emerald-200 dark:ring-emerald-700' : ''}`}>
+                      {/* Gradient top border */}
+                      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 transition-transform duration-500 origin-left ${isPopular ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                      {/* Most Popular badge */}
+                      {isPopular && (
+                        <div className="absolute top-3 right-3 z-10">
+                          <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-semibold shadow-md gap-1">
+                            <Sparkles className="size-3" />
+                            Most Popular
+                          </Badge>
                         </div>
-                        <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-white">{service.title}</h3>
+                      )}
+                      <CardContent className="p-6">
+                        <div className="size-14 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow duration-300">
+                          <IconComp className="size-6 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
+                        </div>
+                        <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{service.title}</h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">{service.description}</p>
 
                         {/* Features list */}
                         {service.features && (
                           <div className="space-y-2">
-                            <div className="flex flex-wrap gap-1.5 mb-3">
+                            <ul className="space-y-2">
                               {service.features.slice(0, isExpanded ? undefined : 3).map((feature: string) => (
-                                <Badge key={feature} variant="secondary" className="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 gap-1">
-                                  <CheckCircle2 className="size-3" />
-                                  {feature}
-                                </Badge>
+                                <li key={feature} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                  <CheckCircle2 className="size-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                  <span>{feature}</span>
+                                </li>
                               ))}
-                            </div>
+                            </ul>
                             {service.features.length > 3 && (
                               <button
                                 onClick={() => setExpandedId(isExpanded ? null : service.id)}
-                                className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                                className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors inline-flex items-center gap-1"
                               >
-                                {isExpanded ? 'Show less' : `+${service.features.length - 3} more`}
+                                {isExpanded ? 'Show less' : `+${service.features.length - 3} more features`}
+                                <ArrowRight className={`size-3 transition-transform duration-200 ${isExpanded ? '-rotate-90' : ''}`} />
                               </button>
                             )}
                           </div>
@@ -147,9 +160,10 @@ export default function ServicesPage() {
 
                         <Button
                           onClick={() => navigate('contact')}
-                          className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                          className={`mt-4 w-full transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} group/btn`
+                        }
                         >
-                          Get a Quote <ArrowRight className="size-4 ml-1" />
+                          Get a Quote <ArrowRight className="size-4 ml-1 group-hover/btn:translate-x-1 transition-transform duration-200" />
                         </Button>
                       </CardContent>
                     </Card>

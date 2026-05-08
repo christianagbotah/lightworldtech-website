@@ -1,12 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Zap, Phone, Mail, MapPin, ArrowRight, Facebook, Twitter, Linkedin, Instagram, Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Zap, Phone, Mail, MapPin, ArrowRight, Facebook, Twitter, Linkedin, Instagram, Send, CheckCircle2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+const emailSchema = z.string().email('Please enter a valid email address');
 
 const quickLinks = [
   { label: 'Home', page: 'home' as const },
@@ -37,27 +41,57 @@ export default function Footer() {
   const { navigate } = useAppStore();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const validateEmail = (value: string) => {
+    const result = emailSchema.safeParse(value);
+    if (!result.success) {
+      return result.error.issues[0].message;
+    }
+    return '';
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (emailTouched) {
+      setEmailError(validateEmail(value));
+    }
+  };
+
+  const handleEmailBlur = () => {
+    setEmailTouched(true);
+    setEmailError(validateEmail(email));
+  };
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      try {
-        await fetch('/api/newsletter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-        toast.success('Successfully subscribed!', {
-          description: 'You\'ll receive our latest updates and insights.',
-        });
-        setSubscribed(true);
-        setEmail('');
-        setTimeout(() => setSubscribed(false), 3000);
-      } catch {
-        toast.error('Subscription failed', {
-          description: 'Please try again later.',
-        });
-      }
+
+    const error = validateEmail(email);
+    if (error) {
+      setEmailError(error);
+      setEmailTouched(true);
+      return;
+    }
+
+    try {
+      await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      toast.success('Successfully subscribed!', {
+        description: 'You\'ll receive our latest updates and insights.',
+      });
+      setSubscribed(true);
+      setEmail('');
+      setEmailError('');
+      setEmailTouched(false);
+      setTimeout(() => setSubscribed(false), 4000);
+    } catch {
+      toast.error('Subscription failed', {
+        description: 'Please try again later.',
+      });
     }
   };
 
@@ -68,7 +102,13 @@ export default function Footer() {
         <div className="container-main py-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-center md:text-left">
             <h3 className="text-lg font-semibold text-white">Subscribe to Our Newsletter</h3>
-            <p className="text-emerald-100 text-sm">Get the latest insights, tips, and updates delivered to your inbox.</p>
+            <p className="text-emerald-100 text-sm flex items-center gap-1.5">
+              Get the latest insights, tips, and updates delivered to your inbox.
+              <span className="inline-flex items-center gap-1 text-xs font-medium bg-emerald-700/50 px-2 py-0.5 rounded-full text-emerald-100 ml-1">
+                <Users className="size-3" />
+                500+ subscribers
+              </span>
+            </p>
           </div>
           <form onSubmit={handleSubscribe} className="flex w-full md:w-auto gap-2">
             <div className="relative flex-1 md:w-72">
@@ -77,17 +117,79 @@ export default function Footer() {
                 type="email"
                 placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15"
+                onChange={(e) => handleEmailChange(e.target.value)}
+                onBlur={handleEmailBlur}
+                className={`pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 ${
+                  emailError ? 'border-red-400' : 'border-white/20'
+                }`}
                 required
               />
             </div>
-            <Button type="submit" variant="secondary" className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold whitespace-nowrap">
-              {subscribed ? 'Subscribed!' : 'Subscribe'}
-              {!subscribed && <Send className="size-4 ml-1" />}
-            </Button>
+            <AnimatePresence mode="wait">
+              {subscribed ? (
+                <motion.div
+                  key="success"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                >
+                  <Button
+                    type="button"
+                    disabled
+                    className="bg-amber-500 text-slate-900 font-semibold whitespace-nowrap h-10 px-4"
+                  >
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.1 }}
+                    >
+                      <CheckCircle2 className="size-5 mr-1 text-emerald-700" />
+                    </motion.div>
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      Subscribed!
+                    </motion.span>
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="button"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                >
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold whitespace-nowrap h-10"
+                  >
+                    Subscribe
+                    <Send className="size-4 ml-1" />
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </form>
         </div>
+        {/* Inline email error */}
+        <AnimatePresence>
+          {emailError && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="container-main pb-4">
+                <p className="text-xs text-red-200">{emailError}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Main footer content */}

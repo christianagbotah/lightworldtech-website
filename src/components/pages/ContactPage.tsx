@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Phone, Mail, MapPin, Clock, ChevronRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { Send, Phone, Mail, MapPin, Clock, ChevronRight, CheckCircle2, Loader2, Copy, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,52 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
+
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success('Copied to clipboard', { description: `${label} copied successfully.` });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Copy failed', { description: 'Could not copy to clipboard.' });
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all duration-200 shrink-0"
+      aria-label={`Copy ${label}`}
+    >
+      {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+    </button>
+  );
+}
+
+function useOfficeStatus() {
+  const status = useMemo(() => {
+    const now = new Date();
+    // Ghana is UTC+0, but we use the local timezone calculation
+    const utcHours = now.getUTCHours();
+    const day = now.getUTCDay(); // 0=Sun, 6=Sat
+    // Ghana (Accra) is UTC+0, so UTC hours = local Ghana hours
+    const ghHour = utcHours;
+
+    // Mon-Fri: 08:00 - 17:00, Sat: 09:00 - 13:00
+    if (day === 0) return { open: false, label: 'Currently Closed' };
+    if (day === 6) {
+      if (ghHour >= 9 && ghHour < 13) return { open: true, label: 'Currently Open' };
+      return { open: false, label: 'Currently Closed' };
+    }
+    // Mon-Fri
+    if (ghHour >= 8 && ghHour < 17) return { open: true, label: 'Currently Open' };
+    return { open: false, label: 'Currently Closed' };
+  }, []);
+  return status;
+}
 
 export default function ContactPage() {
   const { navigate } = useAppStore();
@@ -23,6 +69,7 @@ export default function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const officeStatus = useOfficeStatus();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +155,7 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
                 <CardContent className="p-6 sm:p-8">
                   {submitted ? (
                     <motion.div
@@ -152,6 +199,7 @@ export default function ContactPage() {
                               onChange={handleChange}
                               placeholder="John Doe"
                               required
+                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
                             />
                           </div>
                           <div className="space-y-2">
@@ -164,6 +212,7 @@ export default function ContactPage() {
                               onChange={handleChange}
                               placeholder="john@example.com"
                               required
+                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
                             />
                           </div>
                         </div>
@@ -177,6 +226,7 @@ export default function ContactPage() {
                               value={formData.phone}
                               onChange={handleChange}
                               placeholder="+233 XX XXX XXXX"
+                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
                             />
                           </div>
                           <div className="space-y-2">
@@ -188,6 +238,7 @@ export default function ContactPage() {
                               onChange={handleChange}
                               placeholder="How can we help?"
                               required
+                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
                             />
                           </div>
                         </div>
@@ -201,12 +252,13 @@ export default function ContactPage() {
                             placeholder="Tell us about your project..."
                             rows={5}
                             required
+                            className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all resize-none"
                           />
                         </div>
                         <Button
                           type="submit"
                           disabled={submitting}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto px-8"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto px-8 shadow-md hover:shadow-lg transition-shadow"
                         >
                           {submitting ? (
                             <>
@@ -235,39 +287,41 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0">
                       <Phone className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Phone</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">+233 (024) 361 8186</p>
                       <p className="text-sm text-slate-500 dark:text-slate-400">+233 (055) 467 2081</p>
                     </div>
+                    <CopyButton text="+233 (024) 361 8186" label="phone number" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0">
                       <Mail className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Email</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">mail@lightworldtech.com</p>
                     </div>
+                    <CopyButton text="mail@lightworldtech.com" label="email address" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0">
                       <MapPin className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
@@ -278,14 +332,28 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0">
                       <Clock className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Office Hours</h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-slate-900 dark:text-white">Office Hours</h3>
+                        {/* Pulsing dot */}
+                        <span className="flex items-center gap-1.5">
+                          <span className={`relative flex size-2.5 ${officeStatus.open ? '' : 'opacity-50'}`}>
+                            {officeStatus.open && (
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            )}
+                            <span className={`relative inline-flex rounded-full size-2.5 ${officeStatus.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                          </span>
+                          <span className={`text-xs font-medium ${officeStatus.open ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                            {officeStatus.label}
+                          </span>
+                        </span>
+                      </div>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Mon - Fri: 08:00 - 17:00</p>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Sat: 09:00 - 13:00</p>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Sun: Closed</p>
@@ -295,7 +363,7 @@ export default function ContactPage() {
               </Card>
 
               {/* Map Placeholder */}
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
                 <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative flex items-center justify-center">
                   <div className="absolute inset-0 grid-pattern opacity-30" />
                   <div className="text-center relative z-10">

@@ -2,26 +2,44 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, ExternalLink } from 'lucide-react';
+import { ChevronRight, ExternalLink, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { useAppStore } from '@/lib/store';
 import CTASection from '@/components/sections/CTASection';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-const defaultPortfolio = [
-  { id: '1', title: 'E-Commerce Platform', description: 'Full-featured online store with payment integration, inventory management, and analytics dashboard.', category: 'Web Development', tags: ['React', 'Node.js', 'PostgreSQL', 'Stripe'], featured: true },
-  { id: '2', title: 'Healthcare Mobile App', description: 'Patient management app with telemedicine features, appointment scheduling, and health records.', category: 'Mobile App', tags: ['React Native', 'Firebase', 'WebRTC'], featured: true },
-  { id: '3', title: 'Corporate ERP System', description: 'Enterprise resource planning system for a manufacturing company with supply chain management.', category: 'Software Development', tags: ['Python', 'Django', 'React', 'AWS'], featured: true },
-  { id: '4', title: 'Real Estate Portal', description: 'Property listing and management platform with virtual tours and advanced search filters.', category: 'Web Development', tags: ['Next.js', 'Prisma', 'MapBox', 'Cloudinary'], featured: true },
-  { id: '5', title: 'Restaurant Ordering App', description: 'Table reservation and food ordering system with real-time updates and payment processing.', category: 'Mobile App', tags: ['Flutter', 'Supabase', 'Stripe'], featured: false },
-  { id: '6', title: 'Learning Management System', description: 'Comprehensive LMS for corporate training with course management, progress tracking, and certifications.', category: 'Software Development', tags: ['Vue.js', 'Laravel', 'MySQL'], featured: false },
-  { id: '7', title: 'Travel Booking Website', description: 'Full-service travel booking platform with flight, hotel, and activity reservations.', category: 'Web Development', tags: ['Next.js', 'Tailwind', 'Prisma', 'Amadeus API'], featured: false },
-  { id: '8', title: 'Fitness Tracker App', description: 'Health and fitness tracking application with workout plans, nutrition logging, and social features.', category: 'Mobile App', tags: ['React Native', 'Node.js', 'MongoDB'], featured: false },
-  { id: '9', title: 'Security Monitoring Dashboard', description: 'Real-time security monitoring and alerting system for corporate campuses.', category: 'Software Development', tags: ['Python', 'React', 'WebSocket', 'PostgreSQL'], featured: false },
+interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  tags: string[];
+  featured: boolean;
+  clientUrl?: string;
+  fullDescription?: string;
+}
+
+const defaultPortfolio: PortfolioItem[] = [
+  { id: '1', title: 'E-Commerce Platform', description: 'Full-featured online store with payment integration, inventory management, and analytics dashboard.', category: 'Web Development', tags: ['React', 'Node.js', 'PostgreSQL', 'Stripe'], featured: true, clientUrl: '#', fullDescription: 'A comprehensive e-commerce platform built for a leading retail client in Ghana. The solution includes multi-vendor support, real-time inventory management, integrated payment gateways (MTN MoMo, Visa), and a powerful analytics dashboard for business intelligence.' },
+  { id: '2', title: 'Healthcare Mobile App', description: 'Patient management app with telemedicine features, appointment scheduling, and health records.', category: 'Mobile App', tags: ['React Native', 'Firebase', 'WebRTC'], featured: true, clientUrl: '#', fullDescription: 'A cross-platform healthcare application that connects patients with doctors virtually. Features include appointment scheduling, electronic health records, prescription management, telemedicine video calls, and push notifications for appointment reminders.' },
+  { id: '3', title: 'Corporate ERP System', description: 'Enterprise resource planning system for a manufacturing company with supply chain management.', category: 'Software Development', tags: ['Python', 'Django', 'React', 'AWS'], featured: true, clientUrl: '#', fullDescription: 'A full-scale ERP system designed for a Ghanaian manufacturing company. Modules include inventory management, supply chain optimization, HR management, financial accounting, and production planning with real-time reporting dashboards.' },
+  { id: '4', title: 'Real Estate Portal', description: 'Property listing and management platform with virtual tours and advanced search filters.', category: 'Web Development', tags: ['Next.js', 'Prisma', 'MapBox', 'Cloudinary'], featured: true, clientUrl: '#', fullDescription: 'A modern real estate listing platform serving the Ghanaian property market. Features include interactive map-based search, virtual property tours, mortgage calculator, agent management, and automated lead generation for property agents.' },
+  { id: '5', title: 'Restaurant Ordering App', description: 'Table reservation and food ordering system with real-time updates and payment processing.', category: 'Mobile App', tags: ['Flutter', 'Supabase', 'Stripe'], featured: false, clientUrl: '#', fullDescription: 'A food ordering and table reservation app for a restaurant chain. Features include real-time menu updates, order tracking, QR code menu scanning, loyalty program integration, and seamless payment processing.' },
+  { id: '6', title: 'Learning Management System', description: 'Comprehensive LMS for corporate training with course management, progress tracking, and certifications.', category: 'Software Development', tags: ['Vue.js', 'Laravel', 'MySQL'], featured: false, clientUrl: '#', fullDescription: 'An enterprise learning management system built for corporate training organizations. Features include course authoring tools, video conferencing integration, progress analytics, certificate generation, and SCORM compliance.' },
+  { id: '7', title: 'Travel Booking Website', description: 'Full-service travel booking platform with flight, hotel, and activity reservations.', category: 'Web Development', tags: ['Next.js', 'Tailwind', 'Prisma', 'Amadeus API'], featured: false, clientUrl: '#', fullDescription: 'A comprehensive travel booking platform for a Ghanaian travel agency. Integrates with Amadeus API for flight search and booking, hotel reservations, local activity bookings, and a personalized itinerary builder.' },
+  { id: '8', title: 'Fitness Tracker App', description: 'Health and fitness tracking application with workout plans, nutrition logging, and social features.', category: 'Mobile App', tags: ['React Native', 'Node.js', 'MongoDB'], featured: false, clientUrl: '#', fullDescription: 'A health and fitness tracking app with workout plan customization, nutrition logging with barcode scanning, social challenges, progress analytics with charts, and integration with wearable devices.' },
+  { id: '9', title: 'Security Monitoring Dashboard', description: 'Real-time security monitoring and alerting system for corporate campuses.', category: 'Software Development', tags: ['Python', 'React', 'WebSocket', 'PostgreSQL'], featured: false, clientUrl: '#', fullDescription: 'A real-time security monitoring system for a corporate campus. Features include live camera feeds, AI-powered threat detection, incident reporting, guard patrol tracking, and automated alert escalation.' },
 ];
 
 const categories = ['all', 'Web Development', 'Mobile App', 'Software Development'];
@@ -38,9 +56,10 @@ const itemVariants = {
 
 export default function PortfolioPage() {
   const { navigate } = useAppStore();
-  const [portfolio, setPortfolio] = useState(defaultPortfolio);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>(defaultPortfolio);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [selectedProject, setSelectedProject] = useState<PortfolioItem | null>(null);
 
   useEffect(() => {
     fetcher('/api/portfolio')
@@ -138,7 +157,9 @@ export default function PortfolioPage() {
             >
               {filtered.map((project) => (
                 <motion.div key={project.id} variants={itemVariants}>
-                  <Card className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl transition-all duration-300">
+                  <Card className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                    onClick={() => setSelectedProject(project)}
+                  >
                     {/* Image placeholder */}
                     <div className="relative h-56 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 overflow-hidden">
                       <div className="absolute inset-0 grid-pattern opacity-30" />
@@ -192,6 +213,70 @@ export default function PortfolioPage() {
           )}
         </div>
       </section>
+
+      {/* Quick View Modal */}
+      <Dialog open={!!selectedProject} onOpenChange={() => setSelectedProject(null)}>
+        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
+          {selectedProject && (
+            <>
+              {/* Modal header with gradient */}
+              <div className="relative h-40 bg-gradient-to-br from-emerald-500 to-emerald-700 dark:from-emerald-600 dark:to-emerald-900 flex items-center justify-center">
+                <div className="absolute inset-0 grid-pattern opacity-20" />
+                <span className="text-white font-bold text-xl opacity-40 relative z-10">{selectedProject.title}</span>
+                <button
+                  onClick={() => setSelectedProject(null)}
+                  className="absolute top-3 right-3 size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <Badge className="mb-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+                    {selectedProject.category}
+                  </Badge>
+                  {selectedProject.featured && (
+                    <Badge className="mb-2 ml-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                      Featured
+                    </Badge>
+                  )}
+                  <DialogHeader className="mt-2">
+                    <DialogTitle className="text-xl">{selectedProject.title}</DialogTitle>
+                  </DialogHeader>
+                </div>
+
+                <DialogDescription className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {selectedProject.fullDescription || selectedProject.description}
+                </DialogDescription>
+
+                {/* Technologies */}
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Technologies</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedProject.tags?.map((tag: string) => (
+                      <Badge key={tag} variant="secondary" className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-2">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1">
+                    <ExternalLink className="size-4 mr-2" />
+                    Visit Project
+                  </Button>
+                  <Button variant="outline" onClick={() => setSelectedProject(null)} className="flex-1">
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* CTA */}
       <CTASection />

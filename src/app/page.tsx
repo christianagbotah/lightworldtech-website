@@ -8,6 +8,7 @@ import BackToTop from '@/components/layout/BackToTop';
 import WhatsAppButton from '@/components/layout/WhatsAppButton';
 import CookieConsent from '@/components/layout/CookieConsent';
 import PageLoader from '@/components/ui/page-loader';
+import ScrollProgress from '@/components/ui/scroll-progress';
 import HomePage from '@/components/pages/HomePage';
 import AboutPage from '@/components/pages/AboutPage';
 import ServicesPage from '@/components/pages/ServicesPage';
@@ -107,14 +108,18 @@ export default function Home() {
 
   if (isAdminPage) {
     return (
-      <AdminLayout>
-        <AdminRouter />
-      </AdminLayout>
+      <div className="min-h-screen flex flex-col">
+        <ScrollProgress />
+        <AdminLayout>
+          <AdminRouter />
+        </AdminLayout>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col">
+      <ScrollProgress />
       <PageLoader />
       <Header />
       <main className="flex-1">

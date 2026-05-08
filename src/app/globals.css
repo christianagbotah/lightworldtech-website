@@ -209,6 +209,33 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes blink-fast {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+.animate-blink-fast {
+  animation: blink-fast 0.5s step-end infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
 /* Grid pattern */
 .grid-pattern {
   background-image: 

@@ -67,8 +67,8 @@ export default function ProcessSection() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-            {/* Connecting line - desktop only */}
-            <div className="hidden lg:block absolute top-8 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-emerald-200 via-emerald-300 to-emerald-200 dark:from-emerald-800 dark:via-emerald-700 dark:to-emerald-800 z-0" />
+            {/* Connecting dashed line - desktop */}
+            <div className="hidden lg:block absolute top-8 left-[calc(12.5%+20px)] right-[calc(12.5%+20px)] h-0 border-t-2 border-dashed border-emerald-200 dark:border-emerald-800 z-0" />
 
             {steps.map((step, index) => {
               const IconComp = iconMap[step.icon] || Code;
@@ -81,16 +81,22 @@ export default function ProcessSection() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
                 >
-                  <div className="p-6 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md dark:hover:shadow-emerald-900/20 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300 h-full">
-                    {/* Step number with gradient */}
+                  <div className="p-6 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg dark:hover:shadow-emerald-900/20 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300 h-full hover:-translate-y-1">
+                    {/* Step number with gradient and scale animation */}
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-500/25 dark:shadow-emerald-900/40">
+                      <motion.div
+                        className="size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-500/25 dark:shadow-emerald-900/40"
+                        initial={{ scale: 0 }}
+                        whileInView={{ scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: index * 0.08 + 0.2, type: 'spring', stiffness: 200 }}
+                      >
                         {step.number || index + 1}
-                      </div>
-                      <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+                      </motion.div>
+                      <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent dark:from-slate-700 dark:to-transparent" />
                     </div>
                     {/* Icon */}
-                    <div className="size-11 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center mb-3">
+                    <div className="size-11 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/40 dark:to-emerald-900/20 flex items-center justify-center mb-3 shadow-sm">
                       <IconComp className="size-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <h3 className="font-semibold mb-2 text-slate-900 dark:text-white">{step.title}</h3>

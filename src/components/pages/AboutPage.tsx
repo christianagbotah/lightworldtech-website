@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight, Rocket, UserCheck, Calendar, UsersRound } from 'lucide-react';
+import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Globe } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
+import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -34,11 +35,26 @@ const awards = [
 ];
 
 const stats = [
-  { value: '100+', label: 'Projects Delivered', icon: Rocket },
-  { value: '100+', label: 'Happy Clients', icon: UserCheck },
-  { value: '8+', label: 'Years Experience', icon: Calendar },
-  { value: '50+', label: 'Team Members', icon: UsersRound },
+  { value: 100, suffix: '+', label: 'Projects Delivered', icon: Rocket },
+  { value: 100, suffix: '+', label: 'Happy Clients', icon: UserCheck },
+  { value: 8, suffix: '+', label: 'Years Experience', icon: Calendar },
+  { value: 50, suffix: '+', label: 'Team Members', icon: UsersRound },
 ];
+
+function AnimatedStatCard({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
+  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: true, startDelay: delay });
+  return (
+    <Card ref={ref} className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-lg dark:hover:shadow-emerald-900/20 transition-all duration-300 group">
+      <CardContent className="p-6 text-center">
+        <div className="size-12 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center mx-auto mb-3 group-hover:shadow-md transition-shadow duration-300">
+          <Icon className="size-5 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{displayValue}</div>
+        <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">{label}</div>
+      </CardContent>
+    </Card>
+  );
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -131,16 +147,16 @@ export default function AboutPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {stats.map((stat) => (
-                <Card key={stat.label} className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-                  <CardContent className="p-6 text-center">
-                    <div className="size-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-2">
-                      <stat.icon className="size-5 text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stat.value}</div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">{stat.label}</div>
-                  </CardContent>
-                </Card>
+              {stats.map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <AnimatedStatCard value={stat.value} suffix={stat.suffix} label={stat.label} icon={stat.icon} delay={index * 200} />
+                </motion.div>
               ))}
             </motion.div>
           </div>
@@ -214,12 +230,12 @@ export default function AboutPage() {
           >
             {values.map((value) => (
               <motion.div key={value.title} variants={itemVariants}>
-                <Card className="h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-md transition-all">
+                <Card className="h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-lg dark:hover:shadow-emerald-900/20 hover:-translate-y-1 transition-all duration-300 group">
                   <CardContent className="p-6">
-                    <div className="size-11 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
-                      <value.icon className="size-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="size-12 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow duration-300">
+                      <value.icon className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
                     </div>
-                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white">{value.title}</h3>
+                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{value.title}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{value.description}</p>
                   </CardContent>
                 </Card>
@@ -266,12 +282,30 @@ export default function AboutPage() {
             >
               {team.map((member) => (
                 <motion.div key={member.id} variants={itemVariants}>
-                  <Card className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg transition-all group">
+                  <Card className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 hover:-translate-y-1 transition-all duration-300 group">
                     <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
                       <div className="absolute inset-0 grid-pattern opacity-30" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="size-20 rounded-full bg-emerald-300/50 dark:bg-emerald-700/40 flex items-center justify-center text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                           {member.name.charAt(0)}
+                        </div>
+                      </div>
+                      {/* Social links overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div className="flex gap-2">
+                          {[
+                            { icon: Twitter, label: 'Twitter' },
+                            { icon: Linkedin, label: 'LinkedIn' },
+                            { icon: Globe, label: 'Website' },
+                          ].map(({ icon: SocialIcon, label }) => (
+                            <button
+                              key={label}
+                              aria-label={label}
+                              className="size-8 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-colors duration-200"
+                            >
+                              <SocialIcon className="size-3.5" />
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -310,12 +344,14 @@ export default function AboutPage() {
           >
             {awards.map((award) => (
               <motion.div key={award.title} variants={itemVariants}>
-                <Card className="h-full border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800 text-center">
-                  <CardContent className="p-6">
-                    <div className="size-12 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mx-auto mb-3">
+                <Card className="h-full border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 via-white to-amber-50/30 dark:from-amber-900/20 dark:via-slate-800 dark:to-amber-900/10 text-center hover:shadow-lg dark:hover:shadow-amber-900/20 hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+                  {/* Decorative corner gradient */}
+                  <div className="absolute -top-8 -right-8 w-20 h-20 bg-amber-200/30 dark:bg-amber-700/10 rounded-full blur-2xl group-hover:bg-amber-200/50 dark:group-hover:bg-amber-700/20 transition-colors duration-500" />
+                  <CardContent className="p-6 relative">
+                    <div className="size-14 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center mx-auto mb-3 group-hover:shadow-md transition-shadow duration-300">
                       <Award className="size-6 text-amber-600 dark:text-amber-400" />
                     </div>
-                    <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700 mb-3">{award.year}</Badge>
+                    <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700 mb-3 font-semibold">{award.year}</Badge>
                     <h3 className="font-semibold text-sm mb-1 text-slate-900 dark:text-white">{award.title}</h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">{award.organization}</p>
                   </CardContent>

@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { ChevronRight, Calendar, Clock, User, Tag, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ChevronRight, Calendar, Clock, User, Tag, ArrowLeft, ArrowRight, Share2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/lib/store';
+import ShareButtons from '@/components/ui/share-buttons';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -135,16 +136,29 @@ export default function BlogDetailPage() {
                 </motion.article>
               )}
 
-              {/* Back button */}
+              {/* Share section */}
               <Separator className="my-10" />
-              <Button
-                onClick={() => navigate('blog')}
-                variant="outline"
-                className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
-              >
-                <ArrowLeft className="size-4 mr-2" />
-                Back to Blog
-              </Button>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <Button
+                  onClick={() => navigate('blog')}
+                  variant="outline"
+                  className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
+                >
+                  <ArrowLeft className="size-4 mr-2" />
+                  Back to Blog
+                </Button>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                    <Share2 className="size-4" />
+                    <span className="font-medium">Share this article</span>
+                  </div>
+                  <ShareButtons
+                    url={typeof window !== 'undefined' ? window.location.href : ''}
+                    title={post.title}
+                    description={post.excerpt}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Sidebar */}

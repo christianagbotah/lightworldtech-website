@@ -8,6 +8,7 @@ interface UseAnimatedCounterOptions {
   startOnView?: boolean;
   prefix?: string;
   suffix?: string;
+  startDelay?: number;
 }
 
 export function useAnimatedCounter({
@@ -16,6 +17,7 @@ export function useAnimatedCounter({
   startOnView = true,
   prefix = '',
   suffix = '',
+  startDelay = 0,
 }: UseAnimatedCounterOptions) {
   const [count, setCount] = useState(0);
   const hasStartedRef = useRef(false);
@@ -25,30 +27,34 @@ export function useAnimatedCounter({
     if (hasStartedRef.current) return;
     hasStartedRef.current = true;
 
-    const startTime = performance.now();
+    const timer = setTimeout(() => {
+      const startTime = performance.now();
 
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
+      const animate = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
 
-      // Ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(end * eased);
+        // Ease-out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(end * eased);
 
-      setCount(current);
+        setCount(current);
 
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
 
-    requestAnimationFrame(animate);
-  }, [end, duration]);
+      requestAnimationFrame(animate);
+    }, startDelay);
+
+    return () => clearTimeout(timer);
+  }, [end, duration, startDelay]);
 
   useEffect(() => {
     if (!startOnView) {
-      startAnimation();
-      return;
+      const cleanup = startAnimation();
+      return cleanup;
     }
 
     const element = ref.current;
@@ -57,8 +63,9 @@ export function useAnimatedCounter({
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          startAnimation();
+          const cleanup = startAnimation();
           observer.disconnect();
+          return cleanup;
         }
       },
       { threshold: 0.3 }

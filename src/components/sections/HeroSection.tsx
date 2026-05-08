@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
+import { useTypedText } from '@/hooks/use-typed-text';
 
-function StatCounter({ value, suffix, label }: { value: number; suffix: string; label: string }) {
-  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix });
+function StatCounter({ value, suffix, label, delay = 0 }: { value: number; suffix: string; label: string; delay?: number }) {
+  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
   return (
     <div className="text-center" ref={ref}>
-      <div className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400">{displayValue}</div>
+      <div className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{displayValue}</div>
       <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">{label}</div>
     </div>
   );
@@ -19,11 +20,20 @@ function StatCounter({ value, suffix, label }: { value: number; suffix: string; 
 
 export default function HeroSection() {
   const { navigate } = useAppStore();
+  const { displayText, isDeleting } = useTypedText({
+    strings: ['Web Development', 'Mobile Apps', 'Cloud Solutions', 'Digital Marketing', 'Software Solutions'],
+    typeSpeed: 80,
+    deleteSpeed: 40,
+    pauseDuration: 2000,
+  });
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-emerald-50 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950">
-      {/* Grid pattern */}
+      {/* Decorative mesh/grid background */}
       <div className="absolute inset-0 grid-pattern opacity-60 dark:opacity-20" />
+      <div className="absolute inset-0 [background-size:60px_60px] [background-image:linear-gradient(to_right,rgba(16,185,129,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.06)_1px,transparent_1px)] dark:[background-image:linear-gradient(to_right,rgba(16,185,129,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.08)_1px,transparent_1px)]" />
+      {/* Radial mesh gradient */}
+      <div className="absolute inset-0 [background-image:radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.04)_0%,transparent_70%)] dark:[background-image:radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.06)_0%,transparent_70%)]" />
 
       {/* Animated gradient orbs */}
       <motion.div
@@ -70,7 +80,7 @@ export default function HeroSection() {
 
           {/* Main heading */}
           <motion.h1
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-4"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15 }}
@@ -81,12 +91,25 @@ export default function HeroSection() {
             </span>
           </motion.h1>
 
+          {/* Typed text animation */}
+          <motion.div
+            className="h-10 sm:h-12 flex items-center justify-center mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+          >
+            <span className="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-700 dark:text-slate-200">
+              {displayText}
+              <span className={`inline-block w-0.5 h-6 sm:h-7 ml-1 bg-emerald-500 dark:bg-emerald-400 align-middle ${isDeleting ? 'animate-blink-fast' : 'animate-blink'}`} />
+            </span>
+          </motion.div>
+
           {/* Subtitle */}
           <motion.p
             className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
+            transition={{ duration: 0.7, delay: 0.45 }}
           >
             A team of dynamic minds shaping the digital future through innovative IT solutions, creative design, and cutting-edge technology that empowers businesses to thrive.
           </motion.p>
@@ -96,16 +119,20 @@ export default function HeroSection() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.45 }}
+            transition={{ duration: 0.7, delay: 0.55 }}
           >
-            <Button
-              onClick={() => navigate('services')}
-              size="lg"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all px-8 h-12 text-base group"
-            >
-              Explore Our Services
-              <ArrowRight className="size-4 ml-1 group-hover:translate-x-1 transition-transform" />
-            </Button>
+            {/* Primary CTA with animated glow border */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 rounded-lg opacity-60 group-hover:opacity-100 blur-sm transition-opacity duration-500 animate-glow-pulse" />
+              <Button
+                onClick={() => navigate('services')}
+                size="lg"
+                className="relative bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all px-8 h-12 text-base group"
+              >
+                Explore Our Services
+                <ArrowRight className="size-4 ml-1 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
             <Button
               onClick={() => navigate('contact')}
               size="lg"
@@ -121,12 +148,12 @@ export default function HeroSection() {
             className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.6 }}
+            transition={{ duration: 0.7, delay: 0.7 }}
           >
-            <StatCounter value={100} suffix="+" label="Projects Delivered" />
-            <StatCounter value={100} suffix="+" label="Happy Clients" />
-            <StatCounter value={8} suffix="+" label="Years Experience" />
-            <StatCounter value={100} suffix="%" label="Satisfaction Rate" />
+            <StatCounter value={100} suffix="+" label="Projects Delivered" delay={0} />
+            <StatCounter value={100} suffix="+" label="Happy Clients" delay={200} />
+            <StatCounter value={8} suffix="+" label="Years Experience" delay={400} />
+            <StatCounter value={100} suffix="%" label="Satisfaction Rate" delay={600} />
           </motion.div>
         </div>
       </div>
