@@ -41,7 +41,7 @@ export default function Header() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-[60] transition-all duration-300',
+        'w-full transition-all duration-300',
         scrolled
           ? 'glass shadow-lg gradient-border-animated'
           : 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-sm border-b border-slate-200/50 dark:border-slate-700/50'

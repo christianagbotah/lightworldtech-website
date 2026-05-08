@@ -136,11 +136,12 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Preloader />
       <ScrollProgress />
-      <AnnouncementBar />
       <PageLoader />
-      <Header />
-      {/* Spacer to push content below fixed header (nav h-16 + top-bar ~h-10 = ~104px) */}
-      <div className="h-[104px] shrink-0" />
+      {/* Sticky wrapper keeps announcement bar + header at top when scrolling */}
+      <div className="sticky top-0 z-[60]">
+        <AnnouncementBar />
+        <Header />
+      </div>
       <main className="flex-1">
         <PublicRouter />
       </main>
