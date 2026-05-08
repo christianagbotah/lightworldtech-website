@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Quote, ChevronLeft, ChevronRight, Users, Award, MessageSquarePlus, CheckCircle2, Send } from 'lucide-react';
+import { Star, Quote, ChevronLeft, ChevronRight, Users, Award, MessageSquarePlus, CheckCircle2, Send, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,7 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi,
 } from '@/components/ui/carousel';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 import { useAppStore } from '@/lib/store';
@@ -324,8 +325,9 @@ export default function TestimonialsSection() {
   const [loading, setLoading] = useState(true);
   const [activeDot, setActiveDot] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const carouselApiRef = useRef<ReturnType<typeof Object> | null>(null);
+  const carouselApiRef = useRef<CarouselApi | null>(null);
 
   useEffect(() => {
     fetcher('/api/testimonials')
@@ -336,40 +338,74 @@ export default function TestimonialsSection() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Auto-play carousel
+  // Sync active dot with carousel scroll position
+  const syncActiveDot = useCallback(() => {
+    const api = carouselApiRef.current;
+    if (!api) return;
+    const scrollProgress = api.scrollProgress();
+    const newIndex = Math.round(scrollProgress * testimonials.length) % testimonials.length;
+    setActiveDot(newIndex < 0 ? 0 : newIndex);
+  }, [testimonials.length]);
+
+  // Hook into the carousel API
+  const handleApi = useCallback((api: CarouselApi) => {
+    if (!api) return;
+    carouselApiRef.current = api;
+    api.on('select', syncActiveDot);
+    api.on('scroll', syncActiveDot);
+  }, [syncActiveDot]);
+
+  // Auto-play carousel with pause-on-hover support
   const startAutoPlay = useCallback(() => {
     if (autoPlayRef.current) clearInterval(autoPlayRef.current);
     autoPlayRef.current = setInterval(() => {
-      setActiveDot((prev) => (prev + 1) % testimonials.length);
-      const api = carouselApiRef.current;
-      if (api) {
-        api.scrollNext();
+      if (!isPaused) {
+        const api = carouselApiRef.current;
+        if (api) api.scrollNext();
       }
     }, 5000);
-  }, [testimonials.length]);
+  }, [isPaused]);
 
   useEffect(() => {
-    if (!loading) {
-      startAutoPlay();
-    }
+    if (!loading) startAutoPlay();
     return () => {
       if (autoPlayRef.current) clearInterval(autoPlayRef.current);
     };
   }, [loading, startAutoPlay]);
 
   const handlePrev = () => {
-    const api = carouselApiRef.current;
-    if (api) api.scrollPrev();
-    setActiveDot((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    carouselApiRef.current?.scrollPrev();
     startAutoPlay();
   };
 
   const handleNext = () => {
-    const api = carouselApiRef.current;
-    if (api) api.scrollNext();
-    setActiveDot((prev) => (prev + 1) % testimonials.length);
+    carouselApiRef.current?.scrollNext();
     startAutoPlay();
   };
+
+  const handleDotClick = (index: number) => {
+    carouselApiRef.current?.scrollTo(index);
+    setActiveDot(index);
+    startAutoPlay();
+  };
+
+  // Keyboard navigation for carousel
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      handlePrev();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleNext();
+    }
+  }, [handlePrev, handleNext]);
+
+  const handleMouseEnter = useCallback(() => setIsPaused(true), []);
+  const handleMouseLeave = useCallback(() => setIsPaused(false), []);
+
+  const togglePause = useCallback(() => {
+    setIsPaused(prev => !prev);
+  }, []);
 
   return (
     <section className="section-padding bg-gradient-dark relative overflow-hidden">
@@ -443,11 +479,16 @@ export default function TestimonialsSection() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.6, delay: 0.4 }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
             <Carousel
               opts={{ align: 'start', loop: true }}
               className="w-full"
-              style={{ scrollBehavior: 'smooth' }}
+              setApi={handleApi}
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+              aria-label="Client testimonials carousel - use arrow keys to navigate"
             >
               <CarouselContent className="-ml-4">
                 {testimonials.map((testimonial) => (
@@ -493,24 +534,27 @@ export default function TestimonialsSection() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
+
+              {/* Navigation Controls */}
               <div className="flex items-center justify-center gap-4 mt-8">
                 <Button
                   onClick={handlePrev}
                   variant="outline"
                   size="icon"
                   className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+                  aria-label="Previous testimonial"
                 >
                   <ChevronLeft className="size-4" />
                 </Button>
-                <div className="flex gap-2">
+                <div className="flex gap-2" role="tablist" aria-label="Testimonial navigation">
                   {testimonials.map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => {
-                        setActiveDot(i);
-                        startAutoPlay();
-                      }}
-                      className={`rounded-full transition-all duration-300 ${
+                      onClick={() => handleDotClick(i)}
+                      aria-label={`Go to testimonial ${i + 1}`}
+                      aria-selected={i === activeDot}
+                      role="tab"
+                      className={`rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
                         i === activeDot
                           ? 'w-6 h-2 bg-gradient-to-r from-emerald-400 to-amber-400'
                           : 'w-2 h-2 bg-slate-600 hover:bg-slate-500'
@@ -523,9 +567,28 @@ export default function TestimonialsSection() {
                   variant="outline"
                   size="icon"
                   className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+                  aria-label="Next testimonial"
                 >
                   <ChevronRight className="size-4" />
                 </Button>
+              </div>
+
+              {/* Pause/Play button and auto-play indicator */}
+              <div className="flex justify-center mt-3">
+                <button
+                  onClick={togglePause}
+                  className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                  aria-label={isPaused ? 'Resume auto-play' : 'Pause auto-play'}
+                >
+                  {isPaused ? <Play className="size-3" /> : <Pause className="size-3" />}
+                  <span>{isPaused ? 'Paused' : 'Auto-playing'}</span>
+                  {!isPaused && (
+                    <span className="relative flex size-1.5 ml-1">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full size-1.5 bg-emerald-500" />
+                    </span>
+                  )}
+                </button>
               </div>
             </Carousel>
           </motion.div>

@@ -62,12 +62,19 @@ export default function AnnouncementBar() {
     <AnimatePresence>
       {!dismissed && (
         <motion.div
-          className="relative z-[51] bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 overflow-hidden"
+          className="relative z-[51] bg-gradient-to-r from-emerald-700 via-emerald-600 to-amber-600 overflow-hidden animate-gradient-shift"
+          style={{ backgroundSize: '200% 100%' }}
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 36, opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
+          {/* Subtle noise overlay */}
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            backgroundSize: '128px 128px',
+          }} />
+
           {/* Scrolling marquee content */}
           <div
             className="flex items-center h-9"
@@ -100,12 +107,12 @@ export default function AnnouncementBar() {
 
           {/* Gradient edge fades */}
           <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-emerald-700 to-transparent pointer-events-none z-10" />
-          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-emerald-700 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-amber-600 to-transparent pointer-events-none z-10" />
 
           {/* Close button */}
           <button
             onClick={handleDismiss}
-            className="absolute right-2 top-1/2 -translate-y-1/2 size-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-20"
+            className="absolute right-2 top-1/2 -translate-y-1/2 size-6 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110 z-20"
             aria-label="Dismiss announcement"
           >
             <X className="size-3 text-white" />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Quote, Star, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Play, Quote, Star, ChevronLeft, ChevronRight, X, ThumbsUp, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
@@ -21,6 +21,7 @@ interface VideoTestimonial {
   initials: string;
   gradient: string;
   rating: number;
+  duration: string;
 }
 
 const videoTestimonials: VideoTestimonial[] = [
@@ -33,6 +34,7 @@ const videoTestimonials: VideoTestimonial[] = [
     initials: 'SO',
     gradient: 'from-emerald-500 to-teal-600',
     rating: 5,
+    duration: '2:30',
   },
   {
     id: '2',
@@ -43,6 +45,7 @@ const videoTestimonials: VideoTestimonial[] = [
     initials: 'BO',
     gradient: 'from-amber-500 to-orange-600',
     rating: 5,
+    duration: '3:15',
   },
   {
     id: '3',
@@ -51,8 +54,9 @@ const videoTestimonials: VideoTestimonial[] = [
     company: 'FreshBite Restaurant',
     quote: 'Our e-commerce food ordering platform is amazing! Customers can order and pay online seamlessly. Our revenue has increased by 40% since launching. Lightworld Technologies truly understands how technology can transform business operations.',
     initials: 'KD',
-    gradient: 'from-violet-500 to-purple-600',
+    gradient: 'from-emerald-500 to-emerald-700',
     rating: 5,
+    duration: '1:45',
   },
 ];
 
@@ -98,9 +102,12 @@ export default function VideoTestimonialsSection() {
 
   return (
     <section className="section-padding bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl" />
+      {/* Decorative mesh background */}
+      <div className="absolute inset-0 mesh-pattern opacity-30 dark:opacity-15" />
+
+      {/* Floating orbs */}
+      <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl animate-breathe" />
+      <div className="absolute bottom-0 left-0 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl animate-breathe" style={{ animationDelay: '-3s' }} />
 
       <div className="container-main relative z-10">
         {/* Section header */}
@@ -113,7 +120,7 @@ export default function VideoTestimonialsSection() {
         >
           <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Video Testimonials</span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
-            Hear It From Our <span className="text-emerald-600 dark:text-emerald-400">Clients</span>
+            Hear It From Our <span className="text-gradient-amber">Clients</span>
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
             Watch what our satisfied clients have to say about their experience working with Lightworld Technologies.
@@ -141,14 +148,14 @@ export default function VideoTestimonialsSection() {
                     className={index === activeIndex ? 'md:scale-105 md:z-10' : ''}
                   >
                     <Card
-                      className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-all duration-500 group h-full"
+                      className="overflow-hidden border-slate-200/80 dark:border-slate-700/80 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm cursor-pointer hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-all duration-500 group h-full shimmer-sweep"
                       onClick={() => openVideoModal(testimonial)}
                     >
                       {/* Video placeholder with gradient */}
                       <div className={`relative h-48 bg-gradient-to-br ${testimonial.gradient} overflow-hidden`}>
                         <div className="absolute inset-0 grid-pattern opacity-20" />
-                        {/* Company logo placeholder */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                        {/* Decorative large initials */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-20">
                           <div className="size-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold text-white">
                             {testimonial.initials}
                           </div>
@@ -158,40 +165,43 @@ export default function VideoTestimonialsSection() {
                           <motion.div
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.95 }}
-                            className="size-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/40 group-hover:bg-white/30 group-hover:border-white/60 transition-all duration-300"
+                            className="size-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/40 group-hover:bg-white/30 group-hover:border-white/60 group-hover:shadow-lg group-hover:shadow-white/10 transition-all duration-300"
                           >
                             <Play className="size-7 text-white ml-1" />
                           </motion.div>
                         </div>
                         {/* Duration badge */}
-                        <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-0.5 rounded">
-                          2:30
+                        <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <Clock className="size-3" />
+                          {testimonial.duration}
                         </div>
                         {/* Active indicator */}
                         {index === activeIndex && (
-                          <div className="absolute top-3 left-3 bg-emerald-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                          <div className="absolute top-3 left-3 bg-emerald-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-lg shadow-emerald-500/20">
                             <span className="size-1.5 rounded-full bg-white animate-pulse" />
                             Featured
                           </div>
                         )}
                       </div>
                       <CardContent className="p-5">
-                        {/* Stars */}
+                        {/* Stars with glow */}
                         <div className="flex gap-0.5 mb-3">
                           {Array.from({ length: testimonial.rating }).map((_, i) => (
-                            <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
+                            <Star key={i} className="size-4 fill-amber-400 text-amber-400 drop-shadow-sm" />
                           ))}
                         </div>
-                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3 mb-3">
-                          &ldquo;{testimonial.quote}&rdquo;
+                        {/* Quote */}
+                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3 mb-3 relative">
+                          <Quote className="size-4 text-emerald-300 dark:text-emerald-700 absolute -top-0.5 -left-0.5 opacity-50" />
+                          <span className="pl-5">&ldquo;{testimonial.quote}&rdquo;</span>
                         </p>
-                        <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-                          <div className={`size-9 rounded-full bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+                        <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-700/80">
+                          <div className={`size-9 rounded-full bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm`}>
                             {testimonial.initials}
                           </div>
-                          <div>
-                            <div className="font-semibold text-sm text-slate-900 dark:text-white">{testimonial.name}</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">{testimonial.role}, {testimonial.company}</div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-sm text-slate-900 dark:text-white truncate">{testimonial.name}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{testimonial.role}, {testimonial.company}</div>
                           </div>
                         </div>
                       </CardContent>
@@ -206,7 +216,7 @@ export default function VideoTestimonialsSection() {
           <div className="flex items-center justify-center gap-4 mt-8">
             <button
               onClick={goPrev}
-              className="size-10 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
+              className="size-10 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all shadow-sm hover:shadow-md"
               aria-label="Previous testimonial"
             >
               <ChevronLeft className="size-5" />
@@ -218,7 +228,7 @@ export default function VideoTestimonialsSection() {
                   onClick={() => goToSlide(i)}
                   className={`rounded-full transition-all duration-300 ${
                     i === activeIndex
-                      ? 'w-8 h-2.5 bg-gradient-to-r from-emerald-500 to-emerald-400'
+                      ? 'w-8 h-2.5 bg-gradient-to-r from-emerald-500 to-amber-400 shadow-sm'
                       : 'w-2.5 h-2.5 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500'
                   }`}
                   aria-label={`Go to testimonial ${i + 1}`}
@@ -227,7 +237,7 @@ export default function VideoTestimonialsSection() {
             </div>
             <button
               onClick={goNext}
-              className="size-10 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
+              className="size-10 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all shadow-sm hover:shadow-md"
               aria-label="Next testimonial"
             >
               <ChevronRight className="size-5" />
@@ -256,7 +266,7 @@ export default function VideoTestimonialsSection() {
                       animate={{ scale: 1 }}
                       className="text-center"
                     >
-                      <div className="size-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/40 mx-auto mb-4">
+                      <div className="size-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/40 mx-auto mb-4 shadow-xl">
                         <div className="size-8 border-4 border-white/30 border-t-white rounded-full animate-spin" />
                       </div>
                       <p className="text-white/90 text-sm font-medium">Video loading...</p>
@@ -265,7 +275,7 @@ export default function VideoTestimonialsSection() {
                     <motion.div
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      className="size-20 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center border-2 border-white/50 cursor-pointer"
+                      className="size-20 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center border-2 border-white/50 cursor-pointer shadow-xl"
                       onClick={() => setIsPlaying(true)}
                     >
                       <Play className="size-9 text-white ml-1" />
@@ -275,7 +285,7 @@ export default function VideoTestimonialsSection() {
                 {/* Close button */}
                 <button
                   onClick={() => { setSelectedVideo(null); setIsPlaying(false); }}
-                  className="absolute top-3 right-3 size-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors z-10"
+                  className="absolute top-3 right-3 size-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors z-10 backdrop-blur-sm"
                   aria-label="Close video"
                 >
                   <X className="size-4" />
@@ -286,26 +296,35 @@ export default function VideoTestimonialsSection() {
               <div className="p-6">
                 <div className="flex items-center gap-1 mb-4">
                   {Array.from({ length: selectedVideo.rating }).map((_, i) => (
-                    <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
+                    <Star key={i} className="size-4 fill-amber-400 text-amber-400 drop-shadow-sm" />
                   ))}
                 </div>
-                <div className="flex items-start gap-3 mb-5">
-                  <Quote className="size-8 text-emerald-300 dark:text-emerald-700 shrink-0 mt-1" />
-                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic">
+                <div className="flex items-start gap-3 mb-5 relative">
+                  <div className="absolute top-0 left-0 opacity-10 pointer-events-none">
+                    <Quote className="size-16 text-emerald-500" />
+                  </div>
+                  <Quote className="size-8 text-emerald-300 dark:text-emerald-700 shrink-0 mt-1 relative" />
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic relative">
                     &ldquo;{selectedVideo.quote}&rdquo;
                   </p>
                 </div>
-                <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                  <div className={`size-11 rounded-full bg-gradient-to-br ${selectedVideo.gradient} flex items-center justify-center text-white font-bold`}>
-                    {selectedVideo.initials}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <div className={`size-11 rounded-full bg-gradient-to-br ${selectedVideo.gradient} flex items-center justify-center text-white font-bold shadow-md`}>
+                      {selectedVideo.initials}
+                    </div>
+                    <div>
+                      <DialogHeader>
+                        <DialogTitle className="text-base">{selectedVideo.name}</DialogTitle>
+                        <DialogDescription>
+                          {selectedVideo.role}, {selectedVideo.company}
+                        </DialogDescription>
+                      </DialogHeader>
+                    </div>
                   </div>
-                  <div>
-                    <DialogHeader>
-                      <DialogTitle className="text-base">{selectedVideo.name}</DialogTitle>
-                      <DialogDescription>
-                        {selectedVideo.role}, {selectedVideo.company}
-                      </DialogDescription>
-                    </DialogHeader>
+                  <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                    <ThumbsUp className="size-4" />
+                    <span className="text-xs">Helpful</span>
                   </div>
                 </div>
               </div>

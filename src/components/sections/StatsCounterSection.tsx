@@ -69,8 +69,8 @@ const stats: StatItem[] = [
     suffix: '+',
     label: 'Countries Served',
     description: 'Delivering solutions across West Africa and beyond',
-    gradient: 'from-sky-500 to-emerald-500',
-    iconBg: 'bg-sky-100 dark:bg-sky-900/30',
+    gradient: 'from-teal-500 to-emerald-500',
+    iconBg: 'bg-teal-100 dark:bg-teal-900/30',
     delay: 400,
   },
   {
@@ -79,8 +79,8 @@ const stats: StatItem[] = [
     suffix: '+',
     label: 'Awards Won',
     description: 'Recognized for innovation and service quality',
-    gradient: 'from-amber-400 to-orange-500',
-    iconBg: 'bg-rose-100 dark:bg-rose-900/30',
+    gradient: 'from-amber-400 to-amber-500',
+    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
     delay: 500,
   },
 ];
@@ -119,7 +119,7 @@ function AnimatedNumber({ end, suffix, delay, inView }: { end: number; suffix: s
   }, [inView, end, delay]);
 
   return (
-    <span className="tabular-nums">
+    <span className={`tabular-nums ${inView ? 'animate-count-reveal' : ''}`} style={{ animationDelay: `${delay}ms` }}>
       {count}{suffix}
     </span>
   );
@@ -152,10 +152,15 @@ export default function StatsCounterSection() {
       {/* Decorative grid pattern */}
       <div className="absolute inset-0 grid-pattern opacity-[0.04] dark:opacity-[0.06]" />
 
-      {/* Decorative blurred orbs */}
-      <div className="absolute top-10 left-10 w-64 h-64 bg-emerald-400/15 rounded-full blur-3xl dark:bg-emerald-600/10" />
-      <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-400/10 rounded-full blur-3xl dark:bg-amber-600/8" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-300/10 rounded-full blur-3xl dark:bg-emerald-500/5" />
+      {/* Decorative morphing blobs */}
+      <div className="absolute top-10 left-10 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl animate-morph-blob dark:bg-emerald-600/10" />
+      <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-400/10 rounded-full blur-3xl animate-morph-blob dark:bg-amber-600/8" style={{ animationDelay: '-6s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-300/10 rounded-full blur-3xl animate-breathe dark:bg-emerald-500/5" />
+
+      {/* Decorative floating geometric shapes */}
+      <div className="absolute top-16 right-1/4 w-3 h-3 rounded-full bg-emerald-400/30 dark:bg-emerald-400/20 animate-float-shape-1" />
+      <div className="absolute bottom-20 left-1/3 w-2 h-2 rounded-full bg-amber-400/30 dark:bg-amber-400/20 animate-float-shape-2" />
+      <div className="absolute top-1/3 right-20 w-4 h-4 rounded-sm bg-emerald-300/20 dark:bg-emerald-300/10 rotate-45 animate-float-shape-3" />
 
       <div className="container-main relative z-10">
         {/* Section header */}
@@ -171,7 +176,7 @@ export default function StatsCounterSection() {
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
             Delivering Results That{' '}
-            <span className="bg-gradient-to-r from-emerald-600 to-amber-500 bg-clip-text text-transparent">
+            <span className="text-gradient-amber">
               Speak for Themselves
             </span>
           </h2>
@@ -193,21 +198,40 @@ export default function StatsCounterSection() {
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                {/* Glassmorphism card */}
-                <div className="relative rounded-2xl p-6 md:p-8 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-slate-200/80 dark:border-white/10 hover:border-emerald-300/60 dark:hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-emerald-500/5 transition-all duration-500 h-full">
+                {/* Glassmorphism card with shimmer */}
+                <div className="relative rounded-2xl p-6 md:p-8 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-slate-200/80 dark:border-white/10 hover:border-emerald-300/60 dark:hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-emerald-500/5 transition-all duration-500 h-full shimmer-sweep">
                   {/* Gradient border on hover */}
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 p-[1.5px] -z-10`}>
                     <div className="w-full h-full rounded-2xl bg-white dark:bg-slate-900" />
                   </div>
 
-                  {/* Icon */}
-                  <div className={`inline-flex items-center justify-center size-14 rounded-xl ${stat.iconBg} mb-5 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="size-6 text-emerald-600 dark:text-emerald-400" />
+                  {/* Icon with orbit dot */}
+                  <div className="relative inline-flex items-center justify-center mb-5">
+                    <div className={`size-14 rounded-xl ${stat.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="size-6 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    {/* Orbiting decorative dot */}
+                    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+                      <div className="size-1.5 rounded-full bg-emerald-400/50 dark:bg-emerald-400/30 animate-orbit" />
+                    </div>
                   </div>
 
                   {/* Number */}
-                  <div className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-2 leading-none">
-                    <AnimatedNumber end={stat.end} suffix={stat.suffix} delay={stat.delay} inView={inView} />
+                  <div className="text-4xl md:text-5xl font-extrabold mb-2 leading-none">
+                    <span className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 dark:from-white dark:via-white dark:to-slate-200 bg-clip-text text-transparent">
+                      <AnimatedNumber end={stat.end} suffix={stat.suffix} delay={stat.delay} inView={inView} />
+                    </span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="w-full h-1 rounded-full bg-slate-100 dark:bg-slate-700/50 mb-3 overflow-hidden">
+                    <motion.div
+                      className={`h-full rounded-full bg-gradient-to-r ${stat.gradient}`}
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${Math.min(stat.end / 2.5, 100)}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1.5, delay: 0.3 + index * 0.1, ease: 'easeOut' }}
+                    />
                   </div>
 
                   {/* Label */}

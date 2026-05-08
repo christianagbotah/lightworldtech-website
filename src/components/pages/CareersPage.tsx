@@ -6,6 +6,7 @@ import {
   ChevronRight, MapPin, Clock, DollarSign, Briefcase,
   ChevronDown, ChevronUp, Send, Loader2, CheckCircle2,
   X, Building2, Users, Sparkles, Upload, FileText, GraduationCap,
+  Rocket, Globe, TrendingUp, HeartHandshake,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -253,13 +254,14 @@ export default function CareersPage() {
       {/* Hero Banner */}
       <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-10" />
+        <div className="absolute inset-0 mesh-pattern opacity-20" />
         <motion.div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"
+          className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-morph-blob"
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 8, repeat: Infinity }}
         />
         <motion.div
-          className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl"
+          className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl animate-morph-blob"
           animate={{ scale: [1, 1.3, 1] }}
           transition={{ duration: 10, repeat: Infinity, delay: 2 }}
         />
@@ -299,8 +301,8 @@ export default function CareersPage() {
               { icon: Building2, label: 'Office Locations', value: 'Accra' },
               { icon: GraduationCap, label: 'Training Budget', value: 'GHS 3K/yr' },
             ].map((stat) => (
-              <div key={stat.label} className="flex items-center gap-3">
-                <div className="size-10 rounded-lg bg-white/10 flex items-center justify-center">
+              <div key={stat.label} className="flex items-center gap-3 group">
+                <div className="size-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
                   <stat.icon className="size-5 text-emerald-400" />
                 </div>
                 <div>
@@ -314,19 +316,27 @@ export default function CareersPage() {
       </section>
 
       {/* Job Listings */}
-      <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
-        <div className="container-main">
+      <section className="section-padding bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 dot-pattern opacity-30 dark:opacity-15" />
+        <div className="container-main relative z-10">
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-10">
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 mb-10"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+          >
             <div className="flex flex-wrap gap-2 flex-1">
               {departments.map((dept) => (
                 <button
                   key={dept}
                   onClick={() => setActiveDepartment(dept)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                     activeDepartment === dept
                       ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25'
-                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600'
+                      : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-700'
                   }`}
                 >
                   {dept}
@@ -338,17 +348,17 @@ export default function CareersPage() {
                 <button
                   key={type}
                   onClick={() => setActiveType(type)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                     activeType === type
                       ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25'
-                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600'
+                      : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-700'
                   }`}
                 >
                   {type}
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Results info */}
           <div className="flex items-center justify-between mb-6">
@@ -370,7 +380,7 @@ export default function CareersPage() {
               const isExpanded = expandedId === job.id;
               return (
                 <motion.div key={job.id} variants={itemVariants}>
-                  <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg dark:hover:shadow-emerald-900/20 transition-all duration-300 overflow-hidden">
+                  <Card className="border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:shadow-lg dark:hover:shadow-emerald-900/20 hover:border-emerald-300/50 dark:hover:border-emerald-600/30 transition-all duration-300 overflow-hidden shimmer-sweep">
                     <CardContent className="p-0">
                       {/* Job header - clickable */}
                       <button
@@ -518,25 +528,38 @@ export default function CareersPage() {
           )}
 
           {/* Why Work With Us */}
-          <div className="mt-16 p-8 rounded-2xl bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 border border-emerald-200 dark:border-emerald-800">
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 text-center">
-              Why Work at Lightworld Technologies?
+          <motion.div
+            className="mt-16 p-8 rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-amber-50 dark:from-emerald-900/20 dark:via-slate-800/50 dark:to-amber-900/20 border border-emerald-200/80 dark:border-emerald-800/60 relative overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Decorative background shapes */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute inset-0 diagonal-stripes opacity-30" />
+
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 text-center relative">
+              Why Work at <span className="text-gradient-amber">Lightworld Technologies</span>?
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
               {[
-                { icon: '🚀', title: 'Innovation', desc: 'Work with cutting-edge technologies and solve real challenges' },
-                { icon: '🌍', title: 'Impact', desc: 'Build solutions that transform businesses across Africa' },
-                { icon: '📈', title: 'Growth', desc: 'Continuous learning with dedicated budgets and mentorship' },
-                { icon: '🤝', title: 'Culture', desc: 'Collaborative, inclusive environment that values your voice' },
+                { icon: Rocket, title: 'Innovation', desc: 'Work with cutting-edge technologies and solve real challenges', gradient: 'from-emerald-400 to-teal-500' },
+                { icon: Globe, title: 'Impact', desc: 'Build solutions that transform businesses across Africa', gradient: 'from-emerald-500 to-emerald-600' },
+                { icon: TrendingUp, title: 'Growth', desc: 'Continuous learning with dedicated budgets and mentorship', gradient: 'from-amber-400 to-amber-500' },
+                { icon: HeartHandshake, title: 'Culture', desc: 'Collaborative, inclusive environment that values your voice', gradient: 'from-teal-400 to-emerald-500' },
               ].map((item) => (
-                <div key={item.title} className="text-center p-4">
-                  <div className="text-3xl mb-3">{item.icon}</div>
+                <div key={item.title} className="text-center p-5 rounded-xl bg-white/50 dark:bg-white/5 backdrop-blur-sm border border-slate-100 dark:border-white/5 hover:border-emerald-200 dark:hover:border-emerald-700/50 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300 group">
+                  <div className={`inline-flex size-12 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                    <item.icon className="size-6 text-white" />
+                  </div>
                   <h4 className="font-semibold text-slate-900 dark:text-white mb-1">{item.title}</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-300">{item.desc}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 

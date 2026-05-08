@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { ChevronRight, Calendar, Clock, User, ArrowLeft, Share2, List, ChevronDown, Tag } from 'lucide-react';
+import { ChevronRight, Calendar, Clock, User, ArrowLeft, Share2, List, ChevronDown, Tag, BookOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -85,6 +85,12 @@ function parseTOC(content: string): TOCItem[] {
   return items;
 }
 
+function estimateReadTime(content: string): number {
+  // Average reading speed: ~200 words per minute
+  const words = content.split(/\s+/).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
 export default function BlogDetailPage() {
   const { navigate, blogPostSlug } = useAppStore();
   useSEO({
@@ -98,7 +104,13 @@ export default function BlogDetailPage() {
   const [activeHeading, setActiveHeading] = useState('');
   const [tocOpen, setTocOpen] = useState(false);
 
+  // Reading progress state
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [remainingTime, setRemainingTime] = useState(0);
+  const articleRef = useRef<HTMLElement>(null);
+
   const tocItems = useMemo(() => parseTOC(post.content), [post.content]);
+  const totalReadTime = useMemo(() => estimateReadTime(post.content), [post.content]);
 
   useEffect(() => {
     const slug = blogPostSlug || 'future-web-development';
@@ -109,6 +121,32 @@ export default function BlogDetailPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [blogPostSlug]);
+
+  // Scroll-based reading progress and remaining time
+  const handleScroll = useCallback(() => {
+    const article = articleRef.current;
+    if (!article) return;
+
+    const rect = article.getBoundingClientRect();
+    const articleTop = rect.top + window.scrollY;
+    const articleHeight = rect.height;
+    const scrollY = window.scrollY;
+    const viewportHeight = window.innerHeight;
+
+    // Calculate progress (0-100)
+    const scrolled = scrollY - articleTop + viewportHeight * 0.3;
+    const progress = Math.min(Math.max(scrolled / articleHeight, 0), 1);
+    setReadingProgress(Math.round(progress * 100));
+
+    // Calculate remaining time based on remaining content
+    const remainingProgress = Math.max(1 - progress, 0);
+    setRemainingTime(Math.ceil(remainingProgress * totalReadTime));
+  }, [totalReadTime]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   // IntersectionObserver for active heading tracking
   useEffect(() => {
@@ -122,10 +160,8 @@ export default function BlogDetailPage() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // Find the topmost visible heading
         const visible = entries.filter((entry) => entry.isIntersecting);
         if (visible.length > 0) {
-          // Sort by top position to find the one closest to the top
           const sorted = [...visible].sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
           setActiveHeading(sorted[0].target.id);
         }
@@ -192,9 +228,39 @@ export default function BlogDetailPage() {
         </div>
       </section>
 
+      {/* Reading Progress Bar - Fixed at top of content */}
+      <div className="sticky top-16 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-700/50">
+        <div className="h-1 w-full bg-slate-100 dark:bg-slate-800">
+          <motion.div
+            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400"
+            initial={{ width: '0%' }}
+            style={{ width: `${readingProgress}%` }}
+            transition={{ duration: 0.15, ease: 'linear' }}
+          />
+        </div>
+        <div className="container-main flex items-center justify-between py-2 px-4">
+          <div className="flex items-center gap-3">
+            <BookOpen className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300 tabular-nums">{readingProgress}% read</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {readingProgress < 100 ? (
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                <Clock className="size-3 inline mr-1" />
+                {remainingTime} min remaining
+              </span>
+            ) : (
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                ✓ Article complete
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Mobile TOC toggle */}
       {tocItems.length > 0 && (
-        <div className="lg:hidden sticky top-16 z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4">
+        <div className="lg:hidden sticky top-[88px] z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4">
           <button
             onClick={() => setTocOpen(!tocOpen)}
             className="flex items-center justify-between w-full py-3 text-sm font-medium text-slate-700 dark:text-slate-200"
@@ -239,7 +305,7 @@ export default function BlogDetailPage() {
         <div className="container-main">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* Article */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2" ref={articleRef}>
               {loading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 8 }).map((_, i) => (
@@ -311,6 +377,29 @@ export default function BlogDetailPage() {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* Reading progress card */}
+                <Card className="border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-slate-800">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <BookOpen className="size-4 text-emerald-600 dark:text-emerald-400" />
+                      <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Reading Progress</h3>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-700 mb-2">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-300"
+                        style={{ width: `${readingProgress}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{readingProgress}%</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {readingProgress < 100 ? `${remainingTime} min left` : 'Complete ✓'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Author card */}
                 <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">

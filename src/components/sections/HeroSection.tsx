@@ -85,8 +85,8 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15 }}
           >
-            {'The World of\u00A0'}
-            <span className="text-gradient bg-gradient-to-r from-emerald-600 via-emerald-500 to-amber-500 dark:from-emerald-400 dark:via-emerald-300 dark:to-amber-400 bg-clip-text text-transparent">
+            <span className="inline-flex flex-wrap">The World of{' '}</span>
+            <span className="text-gradient bg-gradient-to-r from-emerald-600 via-emerald-500 to-amber-500 dark:from-emerald-400 dark:via-emerald-300 dark:to-amber-400 bg-clip-text text-transparent whitespace-nowrap">
               Possibilities
             </span>
           </motion.h1>

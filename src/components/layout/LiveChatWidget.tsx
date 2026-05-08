@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Minimize2 } from 'lucide-react';
+import { MessageCircle, X, Send, Minimize2, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ChatMessage {
@@ -52,14 +52,14 @@ function saveChatHistory(messages: ChatMessage[]) {
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-2 mb-3">
-      <div className="size-7 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0">
-        <MessageCircle className="size-3.5 text-white" />
+      <div className="size-7 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
+        <Bot className="size-3.5 text-white" />
       </div>
-      <div className="bg-slate-100 dark:bg-slate-700 rounded-2xl rounded-tl-sm px-4 py-3">
+      <div className="bg-slate-100 dark:bg-slate-700 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
         <div className="flex gap-1">
-          <span className="size-2 rounded-full bg-slate-400 dark:bg-slate-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-          <span className="size-2 rounded-full bg-slate-400 dark:bg-slate-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-          <span className="size-2 rounded-full bg-slate-400 dark:bg-slate-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+          <span className="size-2 rounded-full bg-emerald-400 dark:bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+          <span className="size-2 rounded-full bg-emerald-400 dark:bg-emerald-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+          <span className="size-2 rounded-full bg-emerald-400 dark:bg-emerald-500 animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
       </div>
     </div>
@@ -172,12 +172,14 @@ export default function LiveChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="w-[340px] sm:w-[380px] h-[480px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden"
+            className="w-[340px] sm:w-[380px] h-[480px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-700/80 flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 dark:from-emerald-700 dark:to-emerald-800 px-5 py-4 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <div className="bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 dark:from-emerald-700 dark:via-emerald-700 dark:to-teal-800 px-5 py-4 flex items-center justify-between shrink-0 relative overflow-hidden">
+              {/* Subtle pattern overlay */}
+              <div className="absolute inset-0 grid-pattern opacity-10" />
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="size-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg ring-1 ring-white/10">
                   <MessageCircle className="size-5 text-white" />
                 </div>
                 <div>
@@ -191,7 +193,7 @@ export default function LiveChatWidget() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 relative z-10">
                 <button
                   onClick={() => setIsMinimized(true)}
                   className="size-8 rounded-full hover:bg-white/10 text-white/80 hover:text-white flex items-center justify-center transition-colors"
@@ -210,21 +212,21 @@ export default function LiveChatWidget() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-900/50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/80 dark:bg-slate-900/50">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex items-start gap-2 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
                 >
                   {msg.sender === 'bot' && (
-                    <div className="size-7 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0">
-                      <MessageCircle className="size-3.5 text-white" />
+                    <div className="size-7 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
+                      <Bot className="size-3.5 text-white" />
                     </div>
                   )}
                   <div
                     className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                       msg.sender === 'user'
-                        ? 'bg-emerald-600 text-white rounded-tr-sm'
+                        ? 'bg-gradient-to-br from-emerald-600 to-emerald-500 text-white rounded-tr-sm shadow-md shadow-emerald-500/20'
                         : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-sm rounded-tl-sm border border-slate-100 dark:border-slate-600'
                     }`}
                   >
@@ -239,7 +241,7 @@ export default function LiveChatWidget() {
                     <button
                       key={reply.label}
                       onClick={() => handleQuickReply(reply.text)}
-                      className="px-3 py-1.5 rounded-full text-xs font-medium border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
+                      className="px-3 py-1.5 rounded-full text-xs font-medium border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-sm hover:shadow-md"
                     >
                       {reply.label}
                     </button>
@@ -250,7 +252,7 @@ export default function LiveChatWidget() {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSubmit} className="p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
+            <form onSubmit={handleSubmit} className="p-3 border-t border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800 shrink-0">
               <div className="flex items-center gap-2">
                 <input
                   ref={inputRef}
@@ -258,13 +260,13 @@ export default function LiveChatWidget() {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Type your message..."
-                  className="flex-1 h-10 px-4 rounded-full bg-slate-100 dark:bg-slate-700 text-sm text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 border-none"
+                  className="flex-1 h-10 px-4 rounded-full bg-slate-100 dark:bg-slate-700/50 text-sm text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 border border-slate-200 dark:border-slate-600 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all duration-200"
                   aria-label="Chat message input"
                 />
                 <Button
                   type="submit"
                   size="icon"
-                  className="size-10 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 shadow-md"
+                  className="size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shrink-0 shadow-md shadow-emerald-500/20 hover:shadow-lg disabled:opacity-50 transition-all duration-200"
                   disabled={!inputValue.trim()}
                 >
                   <Send className="size-4" />
@@ -293,7 +295,7 @@ export default function LiveChatWidget() {
           className={`size-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 relative group ${
             isOpen && !isMinimized
               ? 'bg-slate-600 hover:bg-slate-700 text-white'
-              : 'bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white'
+              : 'bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white animate-pulse-shadow'
           }`}
           size="icon"
           aria-label={isOpen && !isMinimized ? 'Close live chat' : 'Open live chat'}
