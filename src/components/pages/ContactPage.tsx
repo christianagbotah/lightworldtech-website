@@ -219,8 +219,11 @@ export default function ContactPage() {
 
                       <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                          <div className="space-y-2">
-                            <Label htmlFor="name" className="text-slate-900 dark:text-slate-100">Full Name *</Label>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="name" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                              Full Name
+                            </Label>
                             <Input
                               id="name"
                               name="name"
@@ -229,11 +232,14 @@ export default function ContactPage() {
                               placeholder="John Doe"
                               required
                               disabled={submitting}
-                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
+                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all h-11"
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="email" className="text-slate-900 dark:text-slate-100">Email Address *</Label>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="email" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                              Email Address
+                            </Label>
                             <Input
                               id="email"
                               name="email"
@@ -243,13 +249,16 @@ export default function ContactPage() {
                               placeholder="john@example.com"
                               required
                               disabled={submitting}
-                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
+                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all h-11"
                             />
                           </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                          <div className="space-y-2">
-                            <Label htmlFor="phone" className="text-slate-900 dark:text-slate-100">Phone Number</Label>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="phone" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                              Phone Number
+                            </Label>
                             <Input
                               id="phone"
                               name="phone"
@@ -258,11 +267,14 @@ export default function ContactPage() {
                               onChange={handleChange}
                               placeholder="+233 XX XXX XXXX"
                               disabled={submitting}
-                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
+                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all h-11"
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="subject" className="text-slate-900 dark:text-slate-100">Subject *</Label>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="subject" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                              Subject
+                            </Label>
                             <Input
                               id="subject"
                               name="subject"
@@ -271,12 +283,15 @@ export default function ContactPage() {
                               placeholder="How can we help?"
                               required
                               disabled={submitting}
-                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
+                              className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all h-11"
                             />
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="message" className="text-slate-900 dark:text-slate-100">Message *</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="message" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                            <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                            Message
+                          </Label>
                           <Textarea
                             id="message"
                             name="message"
@@ -323,11 +338,14 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300">
-                <CardContent className="p-6">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
+                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                </div>
+                <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0">
-                      <Phone className="size-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0 group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300">
+                      <Phone className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Phone</h3>
@@ -339,11 +357,14 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300">
-                <CardContent className="p-6">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
+                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                </div>
+                <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0">
-                      <Mail className="size-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0 group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300">
+                      <Mail className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Email</h3>
@@ -354,11 +375,14 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300">
-                <CardContent className="p-6">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
+                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                </div>
+                <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0">
-                      <MapPin className="size-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0 group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300">
+                      <MapPin className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Office</h3>
@@ -368,11 +392,14 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300">
-                <CardContent className="p-6">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
+                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                </div>
+                <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0">
-                      <Clock className="size-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0 group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300">
+                      <Clock className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -397,34 +424,34 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
 
-              {/* Schedule a Call */}
-              <Card className="border-emerald-200 dark:border-emerald-700 bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 shadow-sm overflow-hidden relative">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-amber-400" />
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="size-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0">
-                      <CalendarDays className="size-5 text-emerald-600 dark:text-emerald-400" />
+              {/* Schedule a Call - Prominent design */}
+              <Card className="border-0 shadow-lg overflow-hidden relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700">
+                <div className="absolute inset-0 grid-pattern opacity-10" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-emerald-300/10 rounded-full blur-3xl" />
+                <CardContent className="p-6 relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="size-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0">
+                      <CalendarDays className="size-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-white">Schedule a Call</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Book a 30-minute consultation</p>
+                      <h3 className="font-bold text-lg text-white">Schedule a Call</h3>
+                      <p className="text-xs text-emerald-200/80">Free 30-minute consultation</p>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
-                    Not sure where to start? Schedule a free consultation call with our team to discuss your project requirements.
+                  <p className="text-sm text-emerald-100/80 mb-5 leading-relaxed">
+                    Not sure where to start? Book a free consultation call with our team to discuss your project requirements.
                   </p>
-                  <div className="flex gap-2">
-                    <Button
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm"
-                      onClick={() => {
-                        const message = 'Hello! I would like to schedule a consultation call to discuss a project.';
-                        window.open(`https://wa.me/233243618186?text=${encodeURIComponent(message)}`, '_blank');
-                      }}
-                    >
-                      <MessageCircle className="size-4 mr-2" />
-                      WhatsApp Us
-                    </Button>
-                  </div>
+                  <Button
+                    className="w-full bg-white text-emerald-700 hover:bg-emerald-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]"
+                    onClick={() => {
+                      const message = 'Hello! I would like to schedule a consultation call to discuss a project.';
+                      window.open(`https://wa.me/233243618186?text=${encodeURIComponent(message)}`, '_blank');
+                    }}
+                  >
+                    <MessageCircle className="size-4 mr-2" />
+                    WhatsApp Us Now
+                  </Button>
                 </CardContent>
               </Card>
 

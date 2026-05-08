@@ -1,0 +1,320 @@
+'use client';
+
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { CheckCircle, Sparkles, ArrowRight, Zap, Crown, Building2, Star } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useAppStore } from '@/lib/store';
+
+interface PricingTier {
+  id: string;
+  name: string;
+  icon: React.ElementType;
+  monthlyPrice: number | null;
+  annualPrice: number | null;
+  description: string;
+  features: string[];
+  popular: boolean;
+  cta: string;
+}
+
+const tiers: PricingTier[] = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    icon: Zap,
+    monthlyPrice: 499,
+    annualPrice: 399,
+    description: 'Perfect for small businesses getting started with their online presence.',
+    features: [
+      'Responsive Website Design',
+      'Up to 5 Pages',
+      'Basic SEO Setup',
+      'Contact Form Integration',
+      'Mobile Optimization',
+      '1 Month Free Support',
+      'SSL Certificate',
+      'Google Analytics Setup',
+    ],
+    popular: false,
+    cta: 'Get Started',
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    icon: Crown,
+    monthlyPrice: 999,
+    annualPrice: 799,
+    description: 'Ideal for growing businesses that need advanced features and functionality.',
+    features: [
+      'Everything in Starter',
+      'Up to 15 Pages',
+      'Custom Web Application',
+      'Advanced SEO & Analytics',
+      'Content Management System',
+      'E-commerce Integration',
+      'Email Marketing Setup',
+      'Social Media Integration',
+      '3 Months Free Support',
+      'Performance Optimization',
+    ],
+    popular: true,
+    cta: 'Get Started',
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    icon: Building2,
+    monthlyPrice: null,
+    annualPrice: null,
+    description: 'Tailored solutions for large organizations with complex requirements.',
+    features: [
+      'Everything in Professional',
+      'Unlimited Pages',
+      'Custom Software Development',
+      'Dedicated Project Manager',
+      'Advanced Security Features',
+      'API Integrations',
+      'Cloud Hosting & Deployment',
+      '24/7 Priority Support',
+      'Regular Updates & Maintenance',
+      'Training & Documentation',
+    ],
+    popular: false,
+    cta: 'Contact Us',
+  },
+];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' },
+  },
+};
+
+export default function PricingSection() {
+  const [isAnnual, setIsAnnual] = useState(false);
+  const { navigate } = useAppStore();
+
+  const handleCTA = (tier: PricingTier) => {
+    if (tier.id === 'enterprise') {
+      navigate('contact');
+    } else {
+      navigate('contact');
+    }
+  };
+
+  return (
+    <section id="pricing" className="section-padding bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/3 rounded-full blur-3xl" />
+
+      <div className="container-main relative z-10">
+        {/* Header */}
+        <motion.div
+          className="text-center max-w-2xl mx-auto mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <Badge className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 mb-4">
+            <Sparkles className="size-3 mr-1" />
+            Pricing Plans
+          </Badge>
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
+            Transparent Pricing for{' '}
+            <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+              Every Business
+            </span>
+          </h2>
+          <p className="text-slate-600 dark:text-slate-300 text-lg">
+            Choose the plan that best fits your needs. All plans include professional design and quality support.
+          </p>
+        </motion.div>
+
+        {/* Monthly/Annual Toggle */}
+        <motion.div
+          className="flex items-center justify-center gap-3 mb-12"
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <span className={`text-sm font-medium transition-colors ${!isAnnual ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+            Monthly
+          </span>
+          <button
+            onClick={() => setIsAnnual(!isAnnual)}
+            className="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            style={{
+              backgroundColor: isAnnual ? '#059669' : '#e2e8f0',
+            }}
+            aria-label={`Switch to ${isAnnual ? 'monthly' : 'annual'} billing`}
+          >
+            <motion.span
+              className="inline-block h-5 w-5 rounded-full bg-white shadow-md"
+              animate={{ x: isAnnual ? 22 : 2 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
+          </button>
+          <span className={`text-sm font-medium transition-colors ${isAnnual ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+            Annual
+          </span>
+          {isAnnual && (
+            <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700">
+              Save 20%
+            </Badge>
+          )}
+        </motion.div>
+
+        {/* Pricing Cards */}
+        <motion.div
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto items-start"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
+          {tiers.map((tier) => {
+            const Icon = tier.icon;
+            const price = isAnnual ? tier.annualPrice : tier.monthlyPrice;
+
+            return (
+              <motion.div key={tier.id} variants={itemVariants}>
+                <Card
+                  className={`relative h-full overflow-hidden transition-all duration-300 group ${
+                    tier.popular
+                      ? 'ring-2 ring-emerald-500 dark:ring-emerald-400 shadow-xl dark:shadow-emerald-900/20 hover:shadow-2xl dark:hover:shadow-emerald-900/40 hover:scale-[1.03] bg-gradient-to-b from-white to-emerald-50/50 dark:from-slate-800 dark:to-emerald-950/30'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-xl dark:hover:shadow-emerald-900/20 hover:-translate-y-2 hover:scale-[1.02]'
+                  }`}
+                >
+                  {/* Popular badge */}
+                  {tier.popular && (
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-amber-500" />
+                  )}
+
+                  <CardContent className="p-6 sm:p-8 flex flex-col h-full">
+                    {/* Badge */}
+                    {tier.popular && (
+                      <Badge className="absolute top-4 right-4 bg-gradient-to-r from-emerald-500 to-amber-500 text-white border-0 text-xs font-semibold shadow-lg">
+                        <Star className="size-3 mr-1" />
+                        Most Popular
+                      </Badge>
+                    )}
+
+                    {/* Icon and Name */}
+                    <div className="mb-6">
+                      <div
+                        className={`size-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 ${
+                          tier.popular
+                            ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25'
+                            : 'bg-emerald-100 dark:bg-emerald-900/40 group-hover:bg-gradient-to-br group-hover:from-emerald-500 group-hover:to-amber-500 group-hover:shadow-lg group-hover:shadow-emerald-500/25'
+                        }`}
+                      >
+                        <Icon className={`size-6 transition-colors duration-300 ${tier.popular ? 'text-white' : 'text-emerald-600 dark:text-emerald-400 group-hover:text-white'}`} />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">{tier.name}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{tier.description}</p>
+                    </div>
+
+                    {/* Price */}
+                    <div className="mb-6">
+                      {price !== null ? (
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-sm text-slate-500 dark:text-slate-400">$</span>
+                          <motion.span
+                            className="text-4xl font-bold text-slate-900 dark:text-white tabular-nums"
+                            key={price}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            {price}
+                          </motion.span>
+                          <span className="text-sm text-slate-500 dark:text-slate-400">/month</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-baseline">
+                          <span className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-amber-500 bg-clip-text text-transparent">
+                            Custom
+                          </span>
+                        </div>
+                      )}
+                      {price !== null && isAnnual && (
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                          Billed annually (${price! * 12}/year)
+                        </p>
+                      )}
+                    </div>
+
+                    {/* CTA Button */}
+                    <Button
+                      onClick={() => handleCTA(tier)}
+                      className={`w-full mb-6 ${
+                        tier.popular
+                          ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/25 h-11'
+                          : 'border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
+                      }`}
+                      variant={tier.popular ? 'default' : 'outline'}
+                    >
+                      {tier.cta}
+                      <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+
+                    {/* Features */}
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+                        What&apos;s included
+                      </p>
+                      <ul className="space-y-3">
+                        {tier.features.map((feature) => (
+                          <li key={feature} className="flex items-start gap-2.5 text-sm">
+                            <CheckCircle className="size-4 flex-shrink-0 mt-0.5 text-emerald-500 dark:text-emerald-400" />
+                            <span className="text-slate-600 dark:text-slate-300">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        {/* Bottom note */}
+        <motion.p
+          className="text-center text-sm text-slate-500 dark:text-slate-400 mt-10"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.5 }}
+        >
+          All prices are in USD. Custom payment plans available.{' '}
+          <button
+            onClick={() => navigate('contact')}
+            className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+          >
+            Contact us
+          </button>{' '}
+          for details.
+        </motion.p>
+      </div>
+    </section>
+  );
+}

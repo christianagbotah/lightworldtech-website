@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { ChevronRight, Calendar, Clock, User, Tag, ArrowLeft, ArrowRight, Share2 } from 'lucide-react';
+import { ChevronRight, Calendar, Clock, User, ArrowLeft, Share2, List, ChevronDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,12 @@ import { useAppStore } from '@/lib/store';
 import ShareButtons from '@/components/ui/share-buttons';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
+
+interface TOCItem {
+  id: string;
+  text: string;
+  level: number;
+}
 
 const defaultPost = {
   id: '1',
@@ -24,7 +30,7 @@ In today's digital age, having a professional website is no longer a luxury but 
 ## Key Benefits of a Professional Website
 
 ### 1. Credibility and Trust
-A professional website immediately builds trust with potential customers. It shows that you are a legitimate business committed to serving your clients.
+A professional website immediately builds trust with potential customers. It shows that you are a legitimate business committed to serving its clients.
 
 ### 2. 24/7 Accessibility
 Unlike a physical store, your website works for you around the clock, allowing customers to learn about your products and services at any time.
@@ -60,10 +66,32 @@ const relatedPosts = [
   { id: '6', title: 'SEO Strategies to Grow Your Business Online in Ghana', category: 'SEO & Marketing', date: '2024-12-15', slug: 'seo-strategies-grow-business-online-ghana' },
 ];
 
+function parseTOC(content: string): TOCItem[] {
+  const items: TOCItem[] = [];
+  const lines = content.split('\n');
+  for (const line of lines) {
+    const match = line.match(/^(#{2,3})\s+(.+)/);
+    if (match) {
+      const level = match[1].length;
+      const text = match[2].replace(/[*_`]/g, '').trim();
+      const id = text
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-');
+      items.push({ id, text, level });
+    }
+  }
+  return items;
+}
+
 export default function BlogDetailPage() {
   const { navigate, blogPostSlug } = useAppStore();
   const [post, setPost] = useState(defaultPost);
   const [loading, setLoading] = useState(true);
+  const [activeHeading, setActiveHeading] = useState('');
+  const [tocOpen, setTocOpen] = useState(false);
+
+  const tocItems = useMemo(() => parseTOC(post.content), [post.content]);
 
   useEffect(() => {
     const slug = blogPostSlug || 'future-web-development';
@@ -74,6 +102,45 @@ export default function BlogDetailPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [blogPostSlug]);
+
+  // IntersectionObserver for active heading tracking
+  useEffect(() => {
+    if (tocItems.length === 0) return;
+
+    const headingElements = tocItems
+      .map((item) => document.getElementById(item.id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (headingElements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Find the topmost visible heading
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (visible.length > 0) {
+          // Sort by top position to find the one closest to the top
+          const sorted = [...visible].sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+          setActiveHeading(sorted[0].target.id);
+        }
+      },
+      {
+        rootMargin: '-80px 0px -60% 0px',
+        threshold: 0.1,
+      }
+    );
+
+    headingElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [tocItems]);
+
+  const scrollToHeading = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 90;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
 
   return (
     <main>
@@ -112,6 +179,48 @@ export default function BlogDetailPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Mobile TOC toggle */}
+      {tocItems.length > 0 && (
+        <div className="lg:hidden sticky top-16 z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4">
+          <button
+            onClick={() => setTocOpen(!tocOpen)}
+            className="flex items-center justify-between w-full py-3 text-sm font-medium text-slate-700 dark:text-slate-200"
+          >
+            <span className="flex items-center gap-2">
+              <List className="size-4 text-emerald-600 dark:text-emerald-400" />
+              Table of Contents ({tocItems.length})
+            </span>
+            <ChevronDown className={`size-4 transition-transform duration-200 ${tocOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {tocOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="pb-3 max-h-48 overflow-y-auto"
+            >
+              {tocItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    scrollToHeading(item.id);
+                    setTocOpen(false);
+                  }}
+                  className={`block text-left w-full py-1.5 px-3 text-sm rounded-md transition-colors ${
+                    activeHeading === item.id
+                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
+                >
+                  {item.text}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* Content */}
       <section className="section-padding bg-white dark:bg-slate-900">
@@ -162,8 +271,35 @@ export default function BlogDetailPage() {
             </div>
 
             {/* Sidebar */}
-            <aside className="lg:col-span-1">
+            <aside className="hidden lg:block lg:col-span-1">
               <div className="sticky top-28 space-y-8">
+                {/* Table of Contents */}
+                {tocItems.length > 0 && (
+                  <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                    <CardContent className="p-5">
+                      <h3 className="font-semibold text-sm mb-3 text-slate-900 dark:text-white flex items-center gap-2">
+                        <List className="size-4 text-emerald-600 dark:text-emerald-400" />
+                        Table of Contents
+                      </h3>
+                      <nav className="space-y-1">
+                        {tocItems.map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => scrollToHeading(item.id)}
+                            className={`block text-left w-full py-1.5 text-sm rounded-md transition-colors ${
+                              activeHeading === item.id
+                                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                            } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
+                          >
+                            {item.text}
+                          </button>
+                        ))}
+                      </nav>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Author card */}
                 <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                   <CardContent className="p-6 text-center">

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Globe } from 'lucide-react';
+import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight, ChevronLeft, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Globe, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
@@ -70,6 +71,29 @@ export default function AboutPage() {
   const { navigate } = useAppStore();
   const [team, setTeam] = useState(defaultTeam);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current) return;
+    const scrollLeft = scrollRef.current.scrollLeft;
+    const cardWidth = 296; // 280px + 16px gap
+    const slide = Math.round(scrollLeft / cardWidth);
+    setCurrentSlide(slide);
+  }, []);
+
+  const scrollCarousel = useCallback((direction: number) => {
+    if (!scrollRef.current) return;
+    const cardWidth = 296;
+    const newScroll = scrollRef.current.scrollLeft + direction * cardWidth;
+    scrollRef.current.scrollTo({ left: newScroll, behavior: 'smooth' });
+  }, []);
+
+  const scrollToSlide = useCallback((index: number) => {
+    if (!scrollRef.current) return;
+    const cardWidth = 296;
+    scrollRef.current.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     fetcher('/api/team')
@@ -228,12 +252,22 @@ export default function AboutPage() {
             whileInView="visible"
             viewport={{ once: true }}
           >
-            {values.map((value) => (
+            {values.map((value, idx) => (
               <motion.div key={value.title} variants={itemVariants}>
-                <Card className="h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-lg dark:hover:shadow-emerald-900/20 hover:-translate-y-1 transition-all duration-300 group">
-                  <CardContent className="p-6">
-                    <div className="size-12 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow duration-300">
-                      <value.icon className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
+                <Card className="h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-lg dark:hover:shadow-emerald-900/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
+                  {/* Gradient corner decoration */}
+                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${
+                    idx % 3 === 0 ? 'bg-emerald-200/40 dark:bg-emerald-500/10' : idx % 3 === 1 ? 'bg-amber-200/40 dark:bg-amber-500/10' : 'bg-teal-200/40 dark:bg-teal-500/10'
+                  }`} />
+                  <CardContent className="p-6 relative">
+                    <div className={`size-12 rounded-xl flex items-center justify-center mb-4 group-hover:shadow-md transition-all duration-300 group-hover:scale-110 ${
+                      idx % 3 === 0
+                        ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20'
+                        : idx % 3 === 1
+                          ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20'
+                          : 'bg-gradient-to-br from-teal-500 to-teal-600 shadow-md shadow-teal-500/20'
+                    }`}>
+                      <value.icon className="size-5 text-white" />
                     </div>
                     <h3 className="font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{value.title}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{value.description}</p>
@@ -273,51 +307,136 @@ export default function AboutPage() {
               ))}
             </div>
           ) : (
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              {team.map((member) => (
-                <motion.div key={member.id} variants={itemVariants}>
-                  <Card className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 hover:-translate-y-1 transition-all duration-300 group">
-                    <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
-                      <div className="absolute inset-0 grid-pattern opacity-30" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="size-20 rounded-full bg-emerald-300/50 dark:bg-emerald-700/40 flex items-center justify-center text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-                          {member.name.charAt(0)}
+            <>
+              {/* Desktop Grid */}
+              <motion.div
+                className="hidden lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+              >
+                {team.map((member) => (
+                  <motion.div key={member.id} variants={itemVariants}>
+                    <Card className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 hover:-translate-y-1 transition-all duration-300 group">
+                      <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
+                        <div className="absolute inset-0 grid-pattern opacity-30" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="size-20 rounded-full bg-emerald-300/50 dark:bg-emerald-700/40 flex items-center justify-center text-2xl font-bold text-emerald-700 dark:text-emerald-300 transition-transform duration-300 group-hover:scale-110">
+                            {member.name.charAt(0)}
+                          </div>
+                        </div>
+                        {/* Overlay slide-up effect with bio and social links */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-gradient-to-t from-emerald-900/90 via-emerald-900/70 to-emerald-800/40 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+                          <p className="text-sm text-white/90 text-center leading-relaxed mb-4 line-clamp-3">{member.bio}</p>
+                          <div className="flex gap-2">
+                            {[
+                              { icon: Linkedin, label: 'LinkedIn', href: member.linkedin || '#' },
+                              { icon: Twitter, label: 'Twitter', href: member.twitter || '#' },
+                              { icon: Mail, label: 'Email', href: member.email ? `mailto:${member.email}` : '#' },
+                              { icon: Globe, label: 'Website', href: '#' },
+                            ].map(({ icon: SocialIcon, label, href }) => (
+                              <a
+                                key={label}
+                                href={href}
+                                aria-label={label}
+                                className="size-8 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-emerald-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110"
+                              >
+                                <SocialIcon className="size-3.5" />
+                              </a>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      {/* Social links overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <div className="flex gap-2">
-                          {[
-                            { icon: Twitter, label: 'Twitter' },
-                            { icon: Linkedin, label: 'LinkedIn' },
-                            { icon: Globe, label: 'Website' },
-                          ].map(({ icon: SocialIcon, label }) => (
-                            <button
-                              key={label}
-                              aria-label={label}
-                              className="size-8 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-colors duration-200"
-                            >
-                              <SocialIcon className="size-3.5" />
-                            </button>
-                          ))}
+                      <CardContent className="p-5">
+                        <h3 className="font-semibold text-lg text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{member.name}</h3>
+                        <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{member.role}</p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {/* Mobile Carousel */}
+              <div className="lg:hidden">
+                <div
+                  className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 px-1"
+                  ref={scrollRef}
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  onScroll={handleScroll}
+                >
+                  {team.map((member) => (
+                    <div key={member.id} className="flex-shrink-0 w-[280px] snap-center">
+                      <Card className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 h-full">
+                        <div className="h-40 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
+                          <div className="absolute inset-0 grid-pattern opacity-30" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="size-16 rounded-full bg-emerald-300/50 dark:bg-emerald-700/40 flex items-center justify-center text-xl font-bold text-emerald-700 dark:text-emerald-300">
+                              {member.name.charAt(0)}
+                            </div>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/80 to-transparent pt-6 pb-2 px-3">
+                            <div className="flex justify-center gap-1.5">
+                              {[
+                                { icon: Linkedin, label: 'LinkedIn' },
+                                { icon: Twitter, label: 'Twitter' },
+                                { icon: Mail, label: 'Email' },
+                                { icon: Globe, label: 'Website' },
+                              ].map(({ icon: SocialIcon, label }) => (
+                                <button
+                                  key={label}
+                                  aria-label={label}
+                                  className="size-7 rounded-full bg-white/15 backdrop-blur-sm text-white hover:bg-emerald-500 flex items-center justify-center transition-colors duration-200"
+                                >
+                                  <SocialIcon className="size-3" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                        <CardContent className="p-4">
+                          <h3 className="font-semibold text-base text-slate-900 dark:text-white">{member.name}</h3>
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mb-1">{member.role}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{member.bio}</p>
+                        </CardContent>
+                      </Card>
                     </div>
-                    <CardContent className="p-5">
-                      <h3 className="font-semibold text-lg text-slate-900 dark:text-white">{member.name}</h3>
-                      <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium mb-2">{member.role}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{member.bio}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
+                  ))}
+                </div>
+                <div className="flex justify-center gap-3 mt-4">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-9 rounded-full border-slate-300 dark:border-slate-600"
+                    onClick={() => scrollCarousel(-1)}
+                    aria-label="Previous team member"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                  <div className="flex items-center gap-1.5">
+                    {team.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => scrollToSlide(index)}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          index === currentSlide ? 'w-6 bg-emerald-500' : 'w-1.5 bg-slate-300 dark:bg-slate-600'
+                        }`}
+                        aria-label={`Go to slide ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-9 rounded-full border-slate-300 dark:border-slate-600"
+                    onClick={() => scrollCarousel(1)}
+                    aria-label="Next team member"
+                  >
+                    <ChevronRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </section>

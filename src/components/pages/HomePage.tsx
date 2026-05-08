@@ -3,6 +3,7 @@
 import HeroSection from '@/components/sections/HeroSection';
 import ClientLogoCarousel from '@/components/sections/ClientLogoCarousel';
 import ServicesSection from '@/components/sections/ServicesSection';
+import PricingSection from '@/components/sections/PricingSection';
 import AboutSection from '@/components/sections/AboutSection';
 import IndustriesSection from '@/components/sections/IndustriesSection';
 import ProcessSection from '@/components/sections/ProcessSection';
@@ -17,6 +18,7 @@ export default function HomePage() {
       <HeroSection />
       <ClientLogoCarousel />
       <ServicesSection />
+      <PricingSection />
       <AboutSection />
       <IndustriesSection />
       <ProcessSection />

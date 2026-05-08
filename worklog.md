@@ -760,6 +760,120 @@ VERIFICATION:
 - Command palette opens with Cmd+K and closes with Esc
 
 Stage Summary:
+- 6 major new features added (admin auth, command palette, blog categories, service modal, contact map, portfolio filter)
+- 1 new file created, 6 files modified (store.ts, page.tsx, AdminLayout.tsx, BlogPage, ServicesPage, ContactPage, PortfolioPage)
+- Zero lint errors, zero compilation errors
+
+---
+Task ID: 7-b
+Agent: Features Developer
+Task: New features Round 5 - Pricing, Newsletter Popup, Image Upload, Blog TOC, Team Carousel
+
+Work Log:
+- Read worklog.md to understand full project history (12+ rounds of previous development)
+- Read key files: HomePage.tsx, page.tsx, BlogDetailPage.tsx, AboutPage.tsx, AdminTeam.tsx, newsletter API
+- Analyzed existing component patterns, theme, and coding conventions
+- Implemented 5 new features across frontend and backend
+
+NEW FEATURES:
+1. **Animated Pricing Plans Section** (HIGH PRIORITY)
+   - Created `src/components/sections/PricingSection.tsx`
+   - 3 pricing tiers: Starter ($499/$399), Professional ($999/$799), Enterprise (Custom)
+   - Professional card highlighted as "Most Popular" with emerald ring, badge, and scale effect
+   - Monthly/Annual toggle switch with spring animation (annual = 20% discount)
+   - Each tier has icon, description, feature checklist with check icons, CTA button
+   - Responsive: stack on mobile, 3-column grid on desktop
+   - Background decorative blurred orbs, emerald gradient accents
+   - Added to HomePage between ServicesSection and AboutSection
+
+2. **Newsletter Popup with Timer** (MEDIUM PRIORITY)
+   - Created `src/components/layout/NewsletterPopup.tsx`
+   - Modal appears after 15 seconds of browsing (sessionStorage flag)
+   - Clean design with emerald-to-amber gradient header, bell icon
+   - Email input with validation, subscribe button with loading spinner
+   - Success state with checkmark animation and "Continue Browsing" button
+   - "Don't show again" link sets localStorage flag
+   - Close (X) button, AnimatePresence for smooth entrance/exit
+   - Backdrop with blur effect, spring animation on modal
+   - Wired into page.tsx after CookieConsent
+   - Calls existing POST /api/newsletter endpoint
+
+3. **Image Upload for CMS Admin** (MEDIUM PRIORITY)
+   - Created `src/app/api/upload/route.ts` - API route accepting multipart form data
+   - File validation: jpg, png, gif, webp only; max 5MB
+   - Unique filenames with timestamp prefix (e.g., 1706123456789-a1b2c3.jpg)
+   - Saves to /home/z/my-project/public/uploads/ directory
+   - Returns public URL path (/uploads/filename.ext)
+   - Enhanced `src/components/admin/AdminTeam.tsx`:
+     - "Upload Image" button next to image URL input
+     - Hidden file input triggered by upload button
+     - Progress bar showing upload percentage (simulated)
+     - Loading spinner on button during upload
+     - Thumbnail preview of uploaded image with green checkmark badge
+     - Client-side file type and size validation before upload
+
+4. **Blog Post Table of Contents** (MEDIUM PRIORITY)
+   - Enhanced `src/components/pages/BlogDetailPage.tsx`
+   - Parses blog post markdown content for ## and ### headings
+   - Desktop: Sticky TOC sidebar in right column (below existing sidebar content)
+   - Mobile: Collapsible TOC with toggle button (List icon + count), sticky below header
+   - Each TOC item is clickable and smooth-scrolls to that heading
+   - Active heading highlighted with emerald accent using IntersectionObserver
+   - Indentation for h3 sub-headings (pl-6 vs pl-3)
+   - Heading IDs generated from text content
+
+5. **Team Member Detail Cards Enhancement** (LOW PRIORITY)
+   - Enhanced `src/components/pages/AboutPage.tsx` team section
+   - Added Mail (Email) social link to existing LinkedIn, Twitter, Globe
+   - Desktop: Social links use actual hrefs (member.linkedin, member.twitter, mailto:member.email)
+   - Desktop: Social overlay slides up on hover with backdrop blur (existing behavior preserved)
+   - Mobile: Swipeable team member carousel (snap-x, snap-mandatory)
+   - Mobile: Navigation arrows (prev/next) and dot indicators
+   - Dot indicators expand for active slide with emerald color
+   - Mobile: Social links always visible at bottom of card
+   - Desktop grid layout preserved (hidden lg:grid)
+
+FILES CREATED (4 new):
+- src/components/sections/PricingSection.tsx
+- src/components/layout/NewsletterPopup.tsx
+- src/app/api/upload/route.ts
+- public/uploads/ (directory)
+
+FILES MODIFIED (5):
+- src/components/pages/HomePage.tsx (added PricingSection import and render)
+- src/app/page.tsx (added NewsletterPopup import and render)
+- src/components/admin/AdminTeam.tsx (upload button, progress, preview, file validation)
+- src/components/pages/BlogDetailPage.tsx (TOC parsing, sidebar, mobile collapsible, IntersectionObserver)
+- src/components/pages/AboutPage.tsx (mobile carousel, Email social link, navigation arrows/dots)
+
+VERIFICATION:
+- Zero ESLint errors (confirmed via `bun run lint`)
+- Dev server compiles successfully (verified via dev.log: ✓ Compiled, GET / 200)
+- All API routes return 200 status codes
+- All components maintain dark mode support (dark: variants throughout)
+- All components maintain responsive design (mobile-first approach)
+- Zustand store not modified (as required)
+- Prisma schema not modified (as required)TED (2 new):
+- src/components/admin/AdminLogin.tsx
+- src/components/ui/command-palette.tsx
+
+FILES MODIFIED (6):
+- src/lib/store.ts (admin auth state: isAdminLoggedIn, adminName, loginAdmin, logoutAdmin)
+- src/app/page.tsx (AdminLogin import, auth gating, CommandPalette import)
+- src/components/admin/AdminLayout.tsx (admin name display, logout function, aria-label)
+- src/components/pages/BlogPage.tsx (sidebar, featured badge, author avatar, categories with counts, animations)
+- src/components/pages/ServicesPage.tsx (service detail modal, tech stack badges, pricing, API merge)
+- src/components/pages/ContactPage.tsx (OpenStreetMap embed, schedule call card, form states)
+- src/components/pages/PortfolioPage.tsx (count badges, load more, layout animations)
+
+VERIFICATION:
+- Zero ESLint errors (confirmed via `bun run lint`)
+- Dev server compiles successfully (verified via dev.log: ✓ Compiled, GET / 200)
+- All API routes return 200 status codes
+- Admin login flow: unauthenticated → login form → authenticated → dashboard
+- Command palette opens with Cmd+K and closes with Esc
+
+Stage Summary:
 - 6 major features implemented (3 HIGH, 3 MEDIUM priority)
 - 2 new files created, 7 files modified
 - Zero lint errors, zero compilation errors

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Clock, ChevronRight, Calendar, FileX, Keyboard, Star, ArrowRight, User, Tag } from 'lucide-react';
+import { Search, Clock, ChevronRight, Calendar, FileX, Keyboard, Star, ArrowRight, User, Tag, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -142,8 +142,17 @@ export default function BlogPage() {
     return matchesCategory && matchesSearch;
   });
 
+  // Separate featured and regular posts, only show featured hero on first page with no filters
+  const featuredPosts = filteredPosts.filter(p => p.featured);
+  const regularPosts = filteredPosts.filter(p => !p.featured);
+  const showFeaturedHero = page === 1 && !blogSearch && blogCategory === 'all' && featuredPosts.length > 0;
+  const mainFeatured = showFeaturedHero ? featuredPosts[0] : null;
+  const otherPostsForGrid = showFeaturedHero
+    ? [...featuredPosts.slice(1), ...regularPosts]
+    : filteredPosts;
+
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
-  const paginatedPosts = filteredPosts.slice((page - 1) * postsPerPage, page * postsPerPage);
+  const paginatedPosts = otherPostsForGrid.slice(0, showFeaturedHero ? postsPerPage - 1 : postsPerPage);
 
   const handlePostClick = (slug: string) => {
     navigate('blog-detail', slug);
@@ -206,15 +215,15 @@ export default function BlogPage() {
                     ⌘K
                   </kbd>
                 </div>
-                {/* Mobile category pills */}
+                {/* Mobile category pills with emerald gradient when active */}
                 <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
                   {categories.map((cat) => (
                     <button
                       key={cat.name}
                       onClick={() => { setBlogCategory(cat.name); setPage(1); }}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors capitalize whitespace-nowrap flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all capitalize whitespace-nowrap flex items-center gap-1.5 ${
                         blogCategory === cat.name
-                          ? 'bg-emerald-600 text-white'
+                          ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25'
                           : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600'
                       }`}
                     >
@@ -228,7 +237,7 @@ export default function BlogPage() {
               {/* Result count */}
               {!loading && (
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                  Showing <span className="font-medium text-slate-700 dark:text-slate-200">{paginatedPosts.length}</span> of{' '}
+                  Showing <span className="font-medium text-slate-700 dark:text-slate-200">{(showFeaturedHero ? 1 : 0) + paginatedPosts.length}</span> of{' '}
                   <span className="font-medium text-slate-700 dark:text-slate-200">{filteredPosts.length}</span> articles
                   {blogSearch && (
                     <span> matching &ldquo;<span className="text-emerald-600 dark:text-emerald-400">{blogSearch}</span>&rdquo;</span>
@@ -255,8 +264,82 @@ export default function BlogPage() {
                     </Card>
                   ))}
                 </div>
-              ) : paginatedPosts.length > 0 ? (
+              ) : paginatedPosts.length > 0 || mainFeatured ? (
                 <>
+                  {/* Featured Hero Card - full width, large layout */}
+                  {mainFeatured && (
+                    <motion.div
+                      className="mb-8"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Card
+                        className="group overflow-hidden cursor-pointer border-0 shadow-lg hover:shadow-2xl transition-all duration-500 h-full"
+                        onClick={() => handlePostClick(mainFeatured.slug)}
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2">
+                          {/* Image placeholder with gradient overlay */}
+                          <div className="relative h-64 md:h-full min-h-[280px] bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 overflow-hidden">
+                            <div className="absolute inset-0 grid-pattern opacity-20" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="size-20 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                                <Sparkles className="size-10 text-white/80" />
+                              </div>
+                            </div>
+                            {/* Featured badge */}
+                            <div className="absolute top-4 left-4">
+                              <Badge className="bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 text-xs font-bold gap-1 shadow-lg">
+                                <Star className="size-3 fill-amber-400" />
+                                Featured
+                              </Badge>
+                            </div>
+                          </div>
+                          {/* Content */}
+                          <div className="p-6 sm:p-8 flex flex-col justify-center bg-white dark:bg-slate-800">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Badge className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
+                                {mainFeatured.category}
+                              </Badge>
+                              <span className="text-xs text-slate-400 dark:text-slate-500">Editor&apos;s Pick</span>
+                            </div>
+                            <h2 className="text-2xl sm:text-3xl font-bold mb-3 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 text-slate-900 dark:text-white leading-snug">
+                              {mainFeatured.title}
+                            </h2>
+                            <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-5 line-clamp-3">
+                              {mainFeatured.excerpt}
+                            </p>
+                            {/* Author row */}
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="size-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-md">
+                                <span className="text-white text-sm font-bold">{mainFeatured.author?.charAt(0) || 'L'}</span>
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white">{mainFeatured.author}</p>
+                                <div className="flex items-center gap-3 text-xs text-slate-400">
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="size-3" />
+                                    {new Date(mainFeatured.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="size-3" />
+                                    {mainFeatured.readTime}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                              Read Article
+                              <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  )}
+
+                  {/* Regular blog cards grid */}
                   <motion.div
                     className="grid grid-cols-1 md:grid-cols-2 gap-6"
                     key={`${blogCategory}-${blogSearch}`}
@@ -273,56 +356,69 @@ export default function BlogPage() {
                           layout
                         >
                           <Card
-                            className={`group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 cursor-pointer h-full ${post.featured ? 'ring-1 ring-emerald-200 dark:ring-emerald-700/50' : ''}`}
+                            className={`group overflow-hidden bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 cursor-pointer h-full relative ${
+                              post.featured ? 'ring-1 ring-emerald-200 dark:ring-emerald-700/50' : ''
+                            }`}
+                            style={{
+                              borderImage: undefined,
+                              border: '1px solid',
+                              borderImageSlice: undefined,
+                            }}
                             onClick={() => handlePostClick(post.slug)}
                           >
-                            <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
-                              <div className="absolute inset-0 grid-pattern opacity-30" />
-                              <div className="absolute top-3 left-3">
-                                <Badge className="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 text-xs backdrop-blur-sm">
-                                  {post.category}
-                                </Badge>
-                              </div>
-                              {/* Featured badge */}
-                              {post.featured && (
-                                <div className="absolute top-3 right-3">
-                                  <Badge className="bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 text-xs font-semibold gap-1 shadow-sm">
-                                    <Star className="size-3" />
-                                    Featured
+                            {/* Subtle gradient border on hover - implemented with a pseudo-element approach via wrapper */}
+                            <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
+                              <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                            </div>
+                            <div className="relative">
+                              <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
+                                <div className="absolute inset-0 grid-pattern opacity-30" />
+                                <div className="absolute top-3 left-3">
+                                  <Badge className="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 text-xs backdrop-blur-sm">
+                                    {post.category}
                                   </Badge>
                                 </div>
-                              )}
+                                {/* Featured badge */}
+                                {post.featured && (
+                                  <div className="absolute top-3 right-3">
+                                    <Badge className="bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 text-xs font-semibold gap-1 shadow-sm">
+                                      <Star className="size-3" />
+                                      Featured
+                                    </Badge>
+                                  </div>
+                                )}
+                              </div>
+                              <CardContent className="p-5 flex flex-col h-full">
+                                <h3 className="font-semibold text-lg mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 text-slate-900 dark:text-white">
+                                  {post.title}
+                                </h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1 line-clamp-2">
+                                  {post.excerpt}
+                                </p>
+                                {/* Author row */}
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div className="size-7 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shrink-0">
+                                    <span className="text-white text-[10px] font-bold">{post.author?.charAt(0) || 'L'}</span>
+                                  </div>
+                                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{post.author}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-700">
+                                  <div className="flex items-center gap-3">
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="size-3" />
+                                      {new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="size-3" />
+                                      {post.readTime}
+                                    </span>
+                                  </div>
+                                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Read <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
+                                  </span>
+                                </div>
+                              </CardContent>
                             </div>
-                            <CardContent className="p-5 flex flex-col h-full">
-                              <h3 className="font-semibold text-lg mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 text-slate-900 dark:text-white">
-                                {post.title}
-                              </h3>
-                              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1 line-clamp-2">
-                                {post.excerpt}
-                              </p>
-                              {/* Author row */}
-                              <div className="flex items-center gap-2 mb-3">
-                                <div className="size-7 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shrink-0">
-                                  <span className="text-white text-[10px] font-bold">{post.author?.charAt(0) || 'L'}</span>
-                                </div>
-                                <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{post.author}</span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-700">
-                                <div className="flex items-center gap-3">
-                                  <span className="flex items-center gap-1">
-                                    <Calendar className="size-3" />
-                                    {new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="size-3" />
-                                    {post.readTime}
-                                  </span>
-                                </div>
-                                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                                  Read <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
-                                </span>
-                              </div>
-                            </CardContent>
                           </Card>
                         </motion.div>
                       ))}
@@ -346,7 +442,7 @@ export default function BlogPage() {
                           variant={page === i + 1 ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setPage(i + 1)}
-                          className={page === i + 1 ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+                          className={page === i + 1 ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md shadow-emerald-600/25' : ''}
                         >
                           {i + 1}
                         </Button>
@@ -394,11 +490,11 @@ export default function BlogPage() {
               )}
             </div>
 
-            {/* Sidebar - Categories */}
+            {/* Sidebar - Categories with glass card effect */}
             <aside className="lg:w-72 shrink-0 hidden lg:block">
               <div className="sticky top-24 space-y-6">
-                {/* Categories */}
-                <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                {/* Categories - glass card */}
+                <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border border-white/50 dark:border-slate-700/50 shadow-sm">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <Tag className="size-4 text-emerald-600 dark:text-emerald-400" />
@@ -413,8 +509,8 @@ export default function BlogPage() {
                             onClick={() => { setBlogCategory(cat.name); setPage(1); }}
                             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
                               isActive
-                                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200'
+                                ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium shadow-md shadow-emerald-600/25'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200'
                             }`}
                           >
                             <span className="capitalize">{cat.name === 'all' ? 'All Articles' : cat.name}</span>
@@ -422,7 +518,7 @@ export default function BlogPage() {
                               variant="secondary"
                               className={`text-xs h-5 min-w-[24px] justify-center px-1.5 ${
                                 isActive
-                                  ? 'bg-emerald-100 dark:bg-emerald-800/50 text-emerald-700 dark:text-emerald-300'
+                                  ? 'bg-white/20 text-white border-0'
                                   : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                               }`}
                             >
@@ -435,8 +531,8 @@ export default function BlogPage() {
                   </CardContent>
                 </Card>
 
-                {/* Popular Posts */}
-                <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                {/* Popular Posts - glass card */}
+                <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border border-white/50 dark:border-slate-700/50 shadow-sm">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <Star className="size-4 text-amber-500" />
@@ -465,8 +561,8 @@ export default function BlogPage() {
                   </CardContent>
                 </Card>
 
-                {/* About Widget */}
-                <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                {/* About Widget - glass card */}
+                <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border border-white/50 dark:border-slate-700/50 shadow-sm">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <User className="size-4 text-emerald-600 dark:text-emerald-400" />

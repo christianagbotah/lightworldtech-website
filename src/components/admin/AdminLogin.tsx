@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, Loader2, Eye, EyeOff, Shield } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, Eye, EyeOff, Shield, Zap, Globe, Code, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +49,123 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted/30">
-      <div className="flex-1 flex items-center justify-center p-4">
+    <div className="min-h-screen flex bg-muted/30">
+      {/* Left Panel - Decorative Branding */}
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 overflow-hidden">
+        {/* Background patterns */}
+        <div className="absolute inset-0 grid-pattern opacity-10" />
+        <div className="absolute inset-0 mesh-pattern opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/50 via-transparent to-emerald-600/20" />
+
+        {/* Animated decorative shapes */}
+        <div className="absolute top-20 left-16">
+          <motion.div
+            className="size-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20"
+            animate={{ rotate: [0, 10, -5, 10, 0], y: [0, -15, 0] }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <div className="size-full flex items-center justify-center">
+              <Code className="size-7 text-white/70" />
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="absolute top-40 right-20">
+          <motion.div
+            className="size-20 rounded-full bg-white/10 backdrop-blur-sm border border-white/20"
+            animate={{ scale: [1, 1.1, 1], y: [0, -20, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+          >
+            <div className="size-full flex items-center justify-center">
+              <Globe className="size-8 text-white/70" />
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="absolute bottom-32 left-24">
+          <motion.div
+            className="size-14 rounded-xl bg-amber-400/20 backdrop-blur-sm border border-amber-300/20"
+            animate={{ rotate: [0, -10, 5, -10, 0], x: [0, 10, 0] }}
+            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          >
+            <div className="size-full flex items-center justify-center">
+              <Zap className="size-6 text-amber-300/80" />
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="absolute bottom-20 right-32">
+          <motion.div
+            className="size-12 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20"
+            animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+          >
+            <div className="size-full flex items-center justify-center">
+              <Users className="size-5 text-white/60" />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Large blurred orbs */}
+        <div className="absolute top-1/4 right-0 w-64 h-64 bg-emerald-400/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl" />
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center p-12 xl:p-16">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7 }}
+          >
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-12">
+              <div className="size-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-lg">
+                <Shield className="size-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">Lightworld Technologies</h1>
+                <p className="text-xs text-emerald-200/70">Content Management System</p>
+              </div>
+            </div>
+
+            <h2 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
+              Manage Your{' '}
+              <span className="bg-gradient-to-r from-amber-200 to-amber-300 bg-clip-text text-transparent">
+                Digital Presence
+              </span>
+            </h2>
+            <p className="text-lg text-emerald-100/80 max-w-md mb-10 leading-relaxed">
+              Access your CMS dashboard to manage blog posts, services, portfolio projects, and more.
+            </p>
+
+            {/* Trust indicators */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 text-emerald-100/70">
+                <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <Shield className="size-4 text-amber-300" />
+                </div>
+                <span className="text-sm">Secure admin panel with role-based access</span>
+              </div>
+              <div className="flex items-center gap-3 text-emerald-100/70">
+                <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <Zap className="size-4 text-amber-300" />
+                </div>
+                <span className="text-sm">Real-time content editing and preview</span>
+              </div>
+              <div className="flex items-center gap-3 text-emerald-100/70">
+                <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <Globe className="size-4 text-amber-300" />
+                </div>
+                <span className="text-sm">Manage services, team, and portfolio</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Right Panel - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
         <motion.div
           className="w-full max-w-md"
           initial={{ opacity: 0, y: 20 }}
@@ -95,40 +211,62 @@ export default function AdminLogin() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="admin-email" className="text-foreground">Email</Label>
+                  <Label htmlFor="admin-email" className="text-foreground flex items-center gap-1.5">
+                    <Mail className="size-3.5 text-emerald-500" />
+                    Email
+                  </Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                       id="admin-email"
                       type="email"
                       placeholder="admin@lightworldtech.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onFocus={() => setFocusedField('email')}
+                      onBlur={() => setFocusedField(null)}
                       required
-                      className="pl-10 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400"
+                      className={`pl-10 transition-all duration-300 ${
+                        focusedField === 'email'
+                          ? 'border-emerald-400 ring-2 ring-emerald-400/20 shadow-sm shadow-emerald-400/10'
+                          : 'focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400'
+                      }`}
                       autoComplete="email"
                     />
+                    <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 size-4 transition-colors duration-300 ${
+                      focusedField === 'email' ? 'text-emerald-500' : 'text-muted-foreground'
+                    }`} />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="admin-password" className="text-foreground">Password</Label>
+                  <Label htmlFor="admin-password" className="text-foreground flex items-center gap-1.5">
+                    <Lock className="size-3.5 text-emerald-500" />
+                    Password
+                  </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                       id="admin-password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      onFocus={() => setFocusedField('password')}
+                      onBlur={() => setFocusedField(null)}
                       required
-                      className="pl-10 pr-10 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400"
+                      className={`pl-10 pr-10 transition-all duration-300 ${
+                        focusedField === 'password'
+                          ? 'border-emerald-400 ring-2 ring-emerald-400/20 shadow-sm shadow-emerald-400/10'
+                          : 'focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400'
+                      }`}
                       autoComplete="current-password"
                     />
+                    <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 size-4 transition-colors duration-300 ${
+                      focusedField === 'password' ? 'text-emerald-500' : 'text-muted-foreground'
+                    }`} />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -139,7 +277,7 @@ export default function AdminLogin() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-shadow"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-600/25 hover:shadow-xl hover:shadow-emerald-600/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
                 >
                   {loading ? (
                     <>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { ChevronRight, ExternalLink, X, Layers } from 'lucide-react';
+import { ChevronRight, ExternalLink, X, Layers, SearchX, ChevronDown, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -135,22 +135,22 @@ export default function PortfolioPage() {
       {/* Portfolio Grid */}
       <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
         <div className="container-main">
-          {/* Filter tabs with count badges */}
+          {/* Filter tabs with count badges - gradient when active */}
           <div className="flex flex-wrap gap-2 mb-10 justify-center">
             {categories.map((cat) => (
               <button
                 key={cat.name}
                 onClick={() => setActiveCategory(cat.name)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize flex items-center gap-2 ${
+                className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all capitalize flex items-center gap-2 ${
                   activeCategory === cat.name
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25'
                     : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600'
                 }`}
               >
                 {cat.name === 'all' ? 'All Projects' : cat.name}
-                <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
+                <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center font-medium ${
                   activeCategory === cat.name
-                    ? 'bg-emerald-700 text-white'
+                    ? 'bg-white/20 text-white'
                     : 'bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-300'
                 }`}>
                   {cat.count}
@@ -267,7 +267,7 @@ export default function PortfolioPage() {
             </LayoutGroup>
           )}
 
-          {/* Load More Button */}
+          {/* Load More Button - polished design */}
           {hasMore && !loading && (
             <motion.div
               className="flex justify-center mt-10"
@@ -278,31 +278,41 @@ export default function PortfolioPage() {
               <Button
                 variant="outline"
                 onClick={() => setVisibleCount(prev => prev + itemsPerPage)}
-                className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 px-8"
+                className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 px-8 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md dark:hover:shadow-emerald-900/20 transition-all duration-300"
               >
                 Load More Projects
-                <ChevronRight className="size-4 ml-1" />
+                <ChevronDown className="size-4 ml-1" />
               </Button>
             </motion.div>
           )}
 
           {filtered.length === 0 && !loading && (
             <motion.div
-              className="text-center py-16"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              className="text-center py-20"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              <div className="size-16 rounded-full bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-4">
-                <Layers className="size-8 text-slate-400 dark:text-slate-500" />
+              {/* Empty state illustration */}
+              <div className="max-w-sm mx-auto">
+                <div className="relative size-24 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/30 dark:to-emerald-800/20 rotate-6" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/20 dark:to-amber-800/10 -rotate-3" />
+                  <div className="relative size-24 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-lg">
+                    <SearchX className="size-10 text-slate-300 dark:text-slate-600" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">No projects found</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                  There are no projects in this category yet. Check back soon or browse all our projects.
+                </p>
+                <Button
+                  onClick={() => setActiveCategory('all')}
+                  className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md shadow-emerald-600/25 hover:shadow-lg transition-all duration-300"
+                >
+                  <Sparkles className="size-4 mr-2" />
+                  View All Projects
+                </Button>
               </div>
-              <h3 className="text-lg font-medium text-slate-400 dark:text-slate-500 mb-2">No projects found in this category.</h3>
-              <Button
-                variant="outline"
-                onClick={() => setActiveCategory('all')}
-                className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 mt-4"
-              >
-                View All Projects
-              </Button>
             </motion.div>
           )}
         </div>

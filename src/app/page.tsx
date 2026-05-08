@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import BackToTop from '@/components/layout/BackToTop';
 import WhatsAppButton from '@/components/layout/WhatsAppButton';
 import CookieConsent from '@/components/layout/CookieConsent';
+import NewsletterPopup from '@/components/layout/NewsletterPopup';
 import PageLoader from '@/components/ui/page-loader';
 import ScrollProgress from '@/components/ui/scroll-progress';
 import CommandPalette from '@/components/ui/command-palette';
@@ -138,6 +139,7 @@ export default function Home() {
       <BackToTop />
       <WhatsAppButton />
       <CookieConsent />
+      <NewsletterPopup />
       <CommandPalette />
     </div>
   );
