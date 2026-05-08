@@ -4,9 +4,7 @@ import { useAppStore } from '@/lib/store';
 import { AnimatePresence, motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import BackToTop from '@/components/layout/BackToTop';
-import WhatsAppButton from '@/components/layout/WhatsAppButton';
-import LiveChatWidget from '@/components/layout/LiveChatWidget';
+import FloatingWidgets from '@/components/layout/FloatingWidgets';
 import CookieConsent from '@/components/layout/CookieConsent';
 import NewsletterPopup from '@/components/layout/NewsletterPopup';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
@@ -145,9 +143,7 @@ export default function Home() {
         <PublicRouter />
       </main>
       <Footer />
-      <BackToTop />
-      <WhatsAppButton />
-      <LiveChatWidget />
+      <FloatingWidgets />
       <CookieConsent />
       <NewsletterPopup />
       <CommandPalette />

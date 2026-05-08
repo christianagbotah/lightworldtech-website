@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Lightbulb, PenTool, Code, TestTube, Rocket, BarChart3, Wrench, MessageSquare } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -56,82 +57,87 @@ export default function ProcessSection() {
           </p>
         </motion.div>
 
-        {/* Process steps */}
+        {/* Two-column: Image + Process steps */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="p-6">
-                <Skeleton className="size-12 rounded-full mb-4" />
-                <Skeleton className="h-5 w-2/3 mb-2" />
-                <Skeleton className="h-4 w-full mb-1" />
-                <Skeleton className="h-4 w-4/5" />
-              </div>
-            ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            <Skeleton className="w-full h-80 rounded-2xl" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="p-5">
+                  <Skeleton className="size-10 rounded-full mb-3" />
+                  <Skeleton className="h-5 w-2/3 mb-2" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-            {/* Connecting gradient line - desktop (SVG for self-drawing animation) */}
-            <svg className="hidden lg:block absolute top-[28px] left-[calc(12.5%+20px)] right-[calc(12.5%+20px)] h-2 z-0 pointer-events-none" preserveAspectRatio="none">
-              <line
-                x1="0" y1="4" x2="100%" y2="4"
-                stroke="url(#process-gradient)"
-                strokeWidth="2"
-                strokeDasharray="8 6"
-                className="animate-draw-line"
-              />
-              <defs>
-                <linearGradient id="process-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="oklch(0.696 0.17 162.48)" />
-                  <stop offset="50%" stopColor="oklch(0.769 0.188 70.08)" />
-                  <stop offset="100%" stopColor="oklch(0.696 0.17 162.48)" />
-                </linearGradient>
-              </defs>
-            </svg>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            {/* Left: Process workflow image */}
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="rounded-2xl overflow-hidden shadow-xl">
+                <Image
+                  src="/images/process-workflow.png"
+                  alt="Our technology development process workflow"
+                  width={1152}
+                  height={864}
+                  className="w-full h-auto object-cover"
+                  priority
+                />
+              </div>
+              {/* Decorative gradient accent below image */}
+              <div className="mt-4 h-1.5 rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500 opacity-60" />
+            </motion.div>
 
-            {steps.map((step, index) => {
-              const IconComp = iconMap[step.icon] || Code;
-              return (
-                <motion.div
-                  key={step.id}
-                  className="relative z-10"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.08 }}
-                >
-                  <div className="p-6 rounded-xl bg-white dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-xl dark:hover:shadow-amber-900/20 hover:border-amber-300 dark:hover:border-emerald-500/50 transition-all duration-500 h-full hover:-translate-y-2 group relative overflow-hidden">
-                    {/* Subtle gradient overlay on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-amber-50/0 to-amber-50/50 dark:from-amber-900/0 dark:to-amber-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-xl" />
+            {/* Right: Process steps in 2-column grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {steps.map((step, index) => {
+                const IconComp = iconMap[step.icon] || Code;
+                return (
+                  <motion.div
+                    key={step.id}
+                    className="relative"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.08 }}
+                  >
+                    <div className="p-5 rounded-xl bg-white dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-xl dark:hover:shadow-amber-900/20 hover:border-amber-300 dark:hover:border-emerald-500/50 transition-all duration-500 h-full hover:-translate-y-1 group relative overflow-hidden">
+                      {/* Subtle gradient overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-amber-50/0 to-amber-50/50 dark:from-amber-900/0 dark:to-amber-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-xl" />
 
-                    {/* Step number with gradient, pulse, and scale animation */}
-                    <div className="flex items-center gap-3 mb-4 relative">
-                      <motion.div
-                        className="relative size-10"
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: index * 0.08 + 0.2, type: 'spring', stiffness: 200 }}
-                      >
-                        {/* Pulse ring effect */}
-                        <div className="absolute inset-0 rounded-full bg-amber-500/20 animate-pulse" />
-                        <div className="relative size-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 dark:from-amber-500 dark:to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-emerald-500/25 dark:shadow-amber-900/40 group-hover:shadow-emerald-500/40 transition-shadow duration-300">
-                          {step.number || index + 1}
+                      {/* Step number + icon row */}
+                      <div className="flex items-center gap-3 mb-3 relative">
+                        <motion.div
+                          className="relative size-10 shrink-0"
+                          initial={{ scale: 0 }}
+                          whileInView={{ scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.4, delay: index * 0.08 + 0.2, type: 'spring', stiffness: 200 }}
+                        >
+                          <div className="absolute inset-0 rounded-full bg-amber-500/20 animate-pulse" />
+                          <div className="relative size-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 dark:from-amber-500 dark:to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-emerald-500/25 dark:shadow-amber-900/40">
+                            {step.number || index + 1}
+                          </div>
+                        </motion.div>
+                        <div className="size-9 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/40 dark:to-amber-900/20 flex items-center justify-center group-hover:shadow-md transition-all duration-500">
+                          <IconComp className="size-4.5 text-emerald-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:scale-110 transition-all duration-500" />
                         </div>
-                      </motion.div>
-                      <div className="h-px flex-1 bg-gradient-to-r from-amber-200 dark:from-amber-800 to-transparent" />
-                    </div>
+                      </div>
 
-                    {/* Icon with hover animation */}
-                    <div className="size-11 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/40 dark:to-amber-900/20 flex items-center justify-center mb-3 shadow-sm group-hover:shadow-md group-hover:from-amber-100 group-hover:to-amber-100 dark:group-hover:from-amber-800/40 dark:group-hover:to-amber-900/20 transition-all duration-500 relative">
-                      <IconComp className="size-5 text-emerald-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                      <h3 className="font-semibold text-sm mb-1.5 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors duration-300">{step.title}</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed relative">{step.description}</p>
                     </div>
-
-                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors duration-300">{step.title}</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed relative">{step.description}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

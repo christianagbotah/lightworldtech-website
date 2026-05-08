@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
+import Image from 'next/image';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -70,6 +71,38 @@ export default function ServicesSection() {
           <p className="text-slate-600 dark:text-slate-300">
             We offer a comprehensive range of IT solutions designed to help your business grow, innovate, and stay ahead of the competition.
           </p>
+        </motion.div>
+
+        {/* Showcase image - visual break */}
+        <motion.div
+          className="mb-14"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+        >
+          <div className="relative rounded-2xl overflow-hidden shadow-xl group">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-700/90 via-emerald-600/80 to-amber-600/70 dark:from-emerald-900/95 dark:via-emerald-800/90 dark:to-amber-900/85 z-10" />
+            <Image
+              src="/images/services-showcase.png"
+              alt="Full-Stack IT Solutions showcase"
+              width={1152}
+              height={864}
+              className="w-full h-auto object-cover"
+              priority
+            />
+            <div className="absolute inset-0 z-20 flex items-center px-6 sm:px-12">
+              <div className="max-w-lg">
+                <span className="inline-block text-xs font-semibold text-amber-300 uppercase tracking-widest mb-3">End-to-End Solutions</span>
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 leading-tight">
+                  Full-Stack IT Solutions
+                </h3>
+                <p className="text-amber-100/90 text-sm sm:text-base leading-relaxed">
+                  From concept to deployment, we deliver comprehensive technology solutions that drive growth and innovation for businesses across Africa.
+                </p>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Services grid */}

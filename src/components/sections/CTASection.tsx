@@ -5,6 +5,7 @@ import { ArrowRight, Sparkles, Triangle, Circle, Hexagon, Star, CheckCircle2, Cl
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/lib/store';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
+import Image from 'next/image';
 
 function CTAStatCounter({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
   const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
@@ -37,11 +38,23 @@ export default function CTASection() {
       />
 
       <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-amber-600 dark:from-emerald-800 dark:via-emerald-900 dark:to-amber-900 py-20 md:py-28 relative overflow-hidden animate-gradient-shift" style={{ backgroundSize: '200% 200%' }}>
+        {/* Background image with heavy overlay */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/hero-slide-2.png"
+            alt=""
+            fill
+            className="object-cover"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-700/92 via-emerald-800/88 to-amber-700/85 dark:from-emerald-900/95 dark:via-slate-900/92 dark:to-amber-900/90" />
+        </div>
+
         {/* Mesh pattern overlay */}
-        <div className="absolute inset-0 mesh-pattern opacity-20" />
+        <div className="absolute inset-0 mesh-pattern opacity-20 z-[1]" />
 
         {/* Grid pattern overlay */}
-        <div className="absolute inset-0 grid-pattern opacity-10" />
+        <div className="absolute inset-0 grid-pattern opacity-10 z-[1]" />
 
         {/* Floating geometric shapes - more elaborate */}
         <motion.div
