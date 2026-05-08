@@ -52,7 +52,7 @@ export default function Header() {
         'transition-all duration-300 overflow-hidden',
         scrolled ? 'max-h-0 opacity-0' : 'max-h-10 opacity-100'
       )}>
-        <div className="container-main flex items-center justify-between py-1.5 text-xs text-slate-600 dark:text-slate-400">
+        <div className="container-main flex items-center justify-between py-1.5 text-xs text-slate-600 dark:text-slate-400 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <Phone className="size-3 text-emerald-600 dark:text-emerald-400" />

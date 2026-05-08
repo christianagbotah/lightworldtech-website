@@ -51,7 +51,7 @@ export default function AnnouncementBar() {
   useEffect(() => {
     if (dismissed || paused || !mounted) return;
 
-    const speed = 0.5;
+    const speed = 0.18;
     let lastTime = performance.now();
     let pos = 0;
 
@@ -80,10 +80,10 @@ export default function AnnouncementBar() {
     <AnimatePresence>
       {!dismissed && (
         <motion.div
-          className="relative z-[51] bg-gradient-to-r from-amber-700 via-amber-600 to-yellow-500 overflow-hidden"
+          className="relative z-[51] bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 overflow-hidden"
           style={{ backgroundSize: '200% 100%' }}
           initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 36, opacity: 1 }}
+          animate={{ height: 40, opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
@@ -95,7 +95,7 @@ export default function AnnouncementBar() {
 
           {/* Scrolling marquee content */}
           <div
-            className="flex items-center h-9"
+            className="flex items-center h-10"
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
           >
@@ -111,11 +111,11 @@ export default function AnnouncementBar() {
                   return (
                     <span
                       key={`${setIndex}-${announcement.id}`}
-                      className="inline-flex items-center gap-2 px-8 text-xs font-medium text-white/90"
+                      className="inline-flex items-center gap-2 px-8 text-sm font-medium text-white/90"
                     >
-                      <Icon className="size-3.5 text-yellow-200 shrink-0" />
+                      <Icon className="size-4 text-amber-300 shrink-0" />
                       <span>{announcement.text}</span>
-                      <span className="text-white/30 mx-2">•</span>
+                      <span className="text-amber-400/40 mx-3">✦</span>
                     </span>
                   );
                 })}
@@ -124,8 +124,8 @@ export default function AnnouncementBar() {
           </div>
 
           {/* Gradient edge fades */}
-          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-amber-700 to-transparent pointer-events-none z-10" />
-          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-yellow-500 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-emerald-900 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-emerald-900 to-transparent pointer-events-none z-10" />
 
           {/* Close button */}
           <button
