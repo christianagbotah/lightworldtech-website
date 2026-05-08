@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { GraduationCap, ShoppingBag, Hotel, Building2, HeartPulse, Shield, Home, Plane, UtensilsCrossed, Factory, HandHeart } from 'lucide-react';
 
 const industries = [
@@ -41,21 +42,79 @@ export default function IndustriesSection() {
       <div className="absolute bottom-20 left-10 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-breathe" style={{ animationDelay: '-2s' }} />
 
       <div className="container-main relative z-10">
-        {/* Section header */}
+        {/* Two-column intro: text left, image right */}
         <motion.div
-          className="text-center max-w-2xl mx-auto mb-12"
-          initial={{ opacity: 0, y: 20 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center mb-14 lg:mb-18"
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">Industries</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
-            Industries We <span className="text-gradient-amber">Serve</span>
-          </h2>
-          <p className="text-slate-600 dark:text-slate-300">
-            We deliver tailored technology solutions across diverse industries, helping organizations innovate and achieve their unique business objectives.
-          </p>
+          {/* Left column: header + description */}
+          <div className="order-2 lg:order-1">
+            <motion.span
+              className="inline-block text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider mb-3 px-3 py-1 rounded-full bg-emerald-50 dark:bg-amber-400/10 border border-emerald-200 dark:border-amber-400/20"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              Our Expertise
+            </motion.span>
+
+            <motion.h2
+              className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-2 mb-5 text-slate-900 dark:text-white leading-tight"
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Industries We{' '}
+              <span className="text-gradient-amber">Serve</span>
+            </motion.h2>
+
+            <motion.p
+              className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed max-w-lg"
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.6, delay: 0.35 }}
+            >
+              We deliver tailored technology solutions across diverse industries, helping organizations innovate and achieve their unique business objectives. From education to healthcare, our expertise spans every sector that drives progress.
+            </motion.p>
+          </div>
+
+          {/* Right column: technology image with gradient border */}
+          <div className="order-1 lg:order-2 flex justify-center lg:justify-end">
+            <motion.div
+              className="relative w-full max-w-md lg:max-w-lg"
+              initial={{ opacity: 0, scale: 0.92, x: 30 }}
+              whileInView={{ opacity: 1, scale: 1, x: 0 }}
+              viewport={{ once: true, margin: '-100px' }}
+              transition={{ duration: 0.7, delay: 0.15, ease: 'easeOut' }}
+            >
+              {/* Gradient border wrapper */}
+              <div className="relative rounded-2xl p-[3px] bg-gradient-to-br from-emerald-400 via-amber-400 to-emerald-600 dark:from-emerald-500 dark:via-amber-400 dark:to-emerald-400">
+                <div className="relative rounded-2xl overflow-hidden bg-white dark:bg-slate-800">
+                  <Image
+                    src="/images/hero-slide-4.png"
+                    alt="Lightworld Technologies delivering digital marketing and technology solutions across industries"
+                    width={576}
+                    height={432}
+                    className="w-full h-auto rounded-2xl object-cover"
+                    priority={false}
+                  />
+                </div>
+              </div>
+
+              {/* Decorative gradient accent bar below the image */}
+              <div className="mt-3 h-1.5 rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500 opacity-70" />
+
+              {/* Floating decorative element */}
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-amber-400/10 dark:bg-amber-400/5 rounded-2xl -z-10 rotate-6" />
+              <div className="absolute -top-3 -left-3 w-16 h-16 bg-emerald-400/10 dark:bg-emerald-400/5 rounded-xl -z-10 -rotate-6" />
+            </motion.div>
+          </div>
         </motion.div>
 
         {/* Industries grid */}

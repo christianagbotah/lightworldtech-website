@@ -142,7 +142,7 @@ export default function HeroSection() {
       </button>
 
       {/* ===== Content (overlaid on slider) ===== */}
-      <div className="container-main relative z-10 pt-24 pb-16">
+      <div className="container-main relative z-10 pt-8 pb-16">
         <div className="max-w-4xl mx-auto text-center">
           {/* Award badges */}
           <motion.div
