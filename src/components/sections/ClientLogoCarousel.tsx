@@ -48,7 +48,7 @@ export default function ClientLogoCarousel() {
           {allLogos.slice(0, 12).map((logo, i) => (
             <div
               key={`row1-${i}`}
-              className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/50 hover:border-amber-300 dark:hover:border-amber-700/50 transition-all duration-300 group cursor-default"
+              className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/50 hover:border-amber-300 dark:hover:border-emerald-500/50 transition-all duration-300 group cursor-default"
             >
               <div className={`size-9 rounded-lg bg-gradient-to-br ${logo.color} flex items-center justify-center text-white font-bold text-xs shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300`}>
                 {logo.initials}
@@ -70,7 +70,7 @@ export default function ClientLogoCarousel() {
           {allLogos.slice(3, 15).map((logo, i) => (
             <div
               key={`row2-${i}`}
-              className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/50 hover:border-amber-300 dark:hover:border-amber-700/50 transition-all duration-300 group cursor-default"
+              className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/50 hover:border-amber-300 dark:hover:border-emerald-500/50 transition-all duration-300 group cursor-default"
             >
               <div className={`size-9 rounded-lg bg-gradient-to-br ${logo.color} flex items-center justify-center text-white font-bold text-xs shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300`}>
                 {logo.initials}

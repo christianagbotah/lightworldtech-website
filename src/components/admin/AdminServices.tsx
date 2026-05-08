@@ -187,7 +187,7 @@ export default function AdminServices() {
           <h1 className="text-2xl font-bold text-foreground">Services</h1>
           <p className="text-muted-foreground text-sm mt-1">{services.length} services total</p>
         </div>
-        <Button onClick={openCreate} className="bg-amber-600 hover:bg-amber-700">
+        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="h-4 w-4 mr-2" /> Add Service
         </Button>
       </div>
@@ -214,11 +214,11 @@ export default function AdminServices() {
                 </TableRow>
               ) : (
                 services.map((service) => (
-                  <TableRow key={service.id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
+                  <TableRow key={service.id} className="hover:bg-emerald-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
                     <TableCell className="font-medium text-sm">
                       <div className="flex items-center gap-2.5">
                         <div className="size-8 rounded-lg bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/20 flex items-center justify-center shrink-0">
-                          <Briefcase className="size-4 text-amber-600 dark:text-amber-400" />
+                          <Briefcase className="size-4 text-emerald-600 dark:text-amber-400" />
                         </div>
                         {service.title}
                       </div>
@@ -290,13 +290,13 @@ export default function AdminServices() {
                 <div className={`relative ${form.active ? '' : ''}`}>
                   <Switch checked={form.active} onCheckedChange={(checked) => setForm(f => ({ ...f, active: checked }))} className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-amber-500 data-[state=checked]:to-amber-400" />
                 </div>
-                <Label className={form.active ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}>Active</Label>
+                <Label className={form.active ? 'text-emerald-600 dark:text-amber-400 font-medium' : ''}>Active</Label>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-amber-600 hover:bg-amber-700">
+            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
               {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>

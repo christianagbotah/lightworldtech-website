@@ -12,7 +12,7 @@ function StatCounter({ value, suffix, label, delay = 0 }: { value: number; suffi
   const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
   return (
     <div className="text-center" ref={ref}>
-      <div className="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400 tabular-nums">{displayValue}</div>
+      <div className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-amber-400 tabular-nums">{displayValue}</div>
       <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">{label}</div>
     </div>
   );
@@ -85,8 +85,8 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15 }}
           >
-            <span className="inline-flex flex-wrap">The World of{' '}</span>
-            <span className="text-gradient bg-gradient-to-r from-amber-600 via-amber-500 to-amber-500 dark:from-amber-400 dark:via-amber-300 dark:to-amber-400 bg-clip-text text-transparent whitespace-nowrap">
+            The World of{' '}
+            <span className="text-gradient bg-gradient-to-r from-emerald-600 via-emerald-500 to-amber-400 dark:from-emerald-400 dark:via-emerald-300 dark:to-amber-400 bg-clip-text text-transparent whitespace-nowrap">
               Possibilities
             </span>
           </motion.h1>
@@ -123,11 +123,11 @@ export default function HeroSection() {
           >
             {/* Primary CTA with animated glow border */}
             <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 rounded-lg opacity-60 group-hover:opacity-100 blur-sm transition-opacity duration-500 animate-glow-pulse" />
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 via-amber-400 to-amber-400 rounded-lg opacity-60 group-hover:opacity-100 blur-sm transition-opacity duration-500 animate-glow-pulse" />
               <Button
                 onClick={() => navigate('services')}
                 size="lg"
-                className="relative bg-amber-600 hover:bg-amber-700 text-white shadow-lg hover:shadow-xl transition-all px-8 h-12 text-base group"
+                className="relative bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all px-8 h-12 text-base group"
               >
                 Explore Our Services
                 <ArrowRight className="size-4 ml-1 group-hover:translate-x-1 transition-transform" />
@@ -137,7 +137,7 @@ export default function HeroSection() {
               onClick={() => navigate('contact')}
               size="lg"
               variant="outline"
-              className="border-slate-300 dark:border-slate-600 hover:bg-amber-50 dark:hover:bg-amber-950 hover:border-amber-300 dark:hover:border-amber-700 hover:text-amber-700 dark:hover:text-amber-400 transition-all px-8 h-12 text-base"
+              className="border-slate-300 dark:border-slate-600 hover:bg-emerald-50 dark:hover:bg-amber-950 hover:border-amber-300 dark:hover:border-emerald-500 hover:text-amber-500 dark:hover:text-amber-400 transition-all px-8 h-12 text-base"
             >
               Contact Us Today
             </Button>

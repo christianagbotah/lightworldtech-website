@@ -159,7 +159,7 @@ export default function NewsletterPopup() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Enter your email address"
-                            className="pl-10 h-11 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 focus:border-transparent focus:ring-2 focus:ring-amber-500/40 focus-visible:ring-amber-500/40 transition-all duration-300"
+                            className="pl-10 h-11 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 focus:border-transparent focus:ring-2 focus:ring-emerald-500/40 focus-visible:ring-emerald-500/40 transition-all duration-300"
                             disabled={loading}
                             autoFocus
                           />
@@ -167,7 +167,7 @@ export default function NewsletterPopup() {
                         </div>
                         <Button
                           type="submit"
-                          className="w-full h-11 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-shadow duration-300"
+                          className="w-full h-11 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-shadow duration-300"
                           disabled={loading}
                         >
                           {loading ? (
@@ -241,7 +241,7 @@ export default function NewsletterPopup() {
                         animate={{ scale: 1 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
                       >
-                        <div className="size-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/25">
+                        <div className="size-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/25">
                           <CheckCircle className="size-7 text-white" />
                         </div>
                       </motion.div>
@@ -268,7 +268,7 @@ export default function NewsletterPopup() {
                       >
                         <Button
                           onClick={handleClose}
-                          className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-500/25"
+                          className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg shadow-emerald-500/25"
                         >
                           Continue Browsing
                         </Button>

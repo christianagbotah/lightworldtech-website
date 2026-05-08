@@ -64,7 +64,7 @@ function CellValue({ value, highlight }: { value: string | boolean; highlight: b
       </span>
     );
   }
-  return <span className={`text-sm font-medium ${highlight ? 'text-amber-700 dark:text-amber-300' : 'text-slate-700 dark:text-slate-300'}`}>{value}</span>;
+  return <span className={`text-sm font-medium ${highlight ? 'text-amber-500 dark:text-amber-300' : 'text-slate-700 dark:text-slate-300'}`}>{value}</span>;
 }
 
 // Mobile stacked card view for a single service
@@ -84,10 +84,10 @@ function MobileServiceCard({ serviceKey, data }: { serviceKey: string; data: Com
     >
       <Card className={`border-2 overflow-hidden ${info?.popular ? 'border-amber-400 dark:border-amber-600' : 'border-slate-200 dark:border-slate-700'}`}>
         {/* Header */}
-        <div className={`relative p-5 ${info?.popular ? 'bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700' : 'bg-slate-100 dark:bg-slate-800'}`}>
+        <div className={`relative p-5 ${info?.popular ? 'bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-500' : 'bg-slate-100 dark:bg-slate-800'}`}>
           <div className="flex items-center gap-3">
             <div className={`size-10 rounded-lg flex items-center justify-center ${info?.popular ? 'bg-white/20' : 'bg-white dark:bg-slate-700'}`}>
-              <IconComp className={`size-5 ${info?.popular ? 'text-white' : 'text-amber-600 dark:text-amber-400'}`} />
+              <IconComp className={`size-5 ${info?.popular ? 'text-white' : 'text-emerald-600 dark:text-amber-400'}`} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -159,7 +159,7 @@ function MobileServiceCard({ serviceKey, data }: { serviceKey: string; data: Com
                   style={{ width: `${total > 0 ? (included / total) * 100 : 0}%` }}
                 />
               </div>
-              <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+              <span className="text-xs font-medium text-emerald-600 dark:text-amber-400">
                 {total > 0 ? Math.round((included / total) * 100) : 0}%
               </span>
             </div>
@@ -193,9 +193,9 @@ export default function ServicesComparison() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Compare</span>
+          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">Compare</span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
-            Service <span className="text-amber-600 dark:text-amber-400">Comparison</span>
+            Service <span className="text-emerald-600 dark:text-amber-400">Comparison</span>
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
             See how our top services compare. Choose the solution that fits your needs best.
@@ -250,7 +250,7 @@ export default function ServicesComparison() {
                             <span className="text-sm font-semibold text-slate-900 dark:text-white">Web Development</span>
                           </div>
                         </th>
-                        <th className="text-center py-4 px-4 border-b-2 border-amber-300 dark:border-amber-700 relative">
+                        <th className="text-center py-4 px-4 border-b-2 border-amber-300 dark:border-emerald-500 relative">
                           <div className="flex flex-col items-center gap-1.5">
                             <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-semibold gap-1 px-2 py-0.5">
                               <Sparkles className="size-2.5" />
@@ -278,7 +278,7 @@ export default function ServicesComparison() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.3, delay: index * 0.02 }}
-                            className={`group transition-colors ${isDiff ? 'bg-amber-50/40 dark:bg-amber-900/5 hover:bg-amber-50/70 dark:hover:bg-amber-900/10' : 'hover:bg-amber-50/50 dark:hover:bg-amber-900/10'}`}
+                            className={`group transition-colors ${isDiff ? 'bg-amber-50/40 dark:bg-amber-900/5 hover:bg-emerald-50/70 dark:hover:bg-amber-900/10' : 'hover:bg-emerald-50/50 dark:hover:bg-amber-900/10'}`}
                           >
                             <td className="py-3.5 px-4 border-b border-slate-100 dark:border-slate-800">
                               <div className="flex items-center gap-2">
@@ -401,7 +401,7 @@ export default function ServicesComparison() {
           transition={{ duration: 0.4, delay: 0.4 }}
         >
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">Still not sure? Let us help you decide.</p>
-          <Button className="bg-amber-600 hover:bg-amber-700 text-white shadow-md hover:shadow-lg transition-all duration-300">
+          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-300">
             Get a Free Consultation
             <ArrowRight className="size-4 ml-1" />
           </Button>

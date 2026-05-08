@@ -36,7 +36,7 @@ export default function CTASection() {
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      <div className="bg-gradient-to-br from-amber-600 via-amber-700 to-amber-700 dark:from-amber-800 dark:via-amber-900 dark:to-amber-900 py-20 md:py-28 relative overflow-hidden animate-gradient-shift" style={{ backgroundSize: '200% 200%' }}>
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-amber-600 dark:from-emerald-800 dark:via-emerald-900 dark:to-amber-900 py-20 md:py-28 relative overflow-hidden animate-gradient-shift" style={{ backgroundSize: '200% 200%' }}>
         {/* Mesh pattern overlay */}
         <div className="absolute inset-0 mesh-pattern opacity-20" />
 
@@ -145,7 +145,7 @@ export default function CTASection() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
               {/* Primary CTA with glow shadow */}
               <div className="relative group">
-                <div className="absolute -inset-1.5 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 rounded-xl opacity-40 group-hover:opacity-80 blur-xl transition-all duration-700 animate-glow-pulse" />
+                <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-400 via-amber-400 to-amber-400 rounded-xl opacity-40 group-hover:opacity-80 blur-xl transition-all duration-700 animate-glow-pulse" />
                 <Button
                   onClick={() => navigate('contact')}
                   size="lg"

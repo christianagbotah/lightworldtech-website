@@ -51,7 +51,7 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen flex bg-muted/30">
       {/* Left Panel - Decorative Branding */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative bg-gradient-to-br from-amber-600 via-amber-700 to-yellow-800 overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative bg-gradient-to-br from-amber-600 via-amber-500 to-yellow-800 overflow-hidden">
         {/* Background patterns */}
         <div className="absolute inset-0 grid-pattern opacity-10" />
         <div className="absolute inset-0 mesh-pattern opacity-20" />
@@ -185,7 +185,7 @@ export default function AdminLogin() {
             <CardContent className="p-8">
               {/* Logo */}
               <div className="flex items-center gap-3 mb-8">
-                <div className="size-11 rounded-xl bg-gradient-to-br from-amber-600 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-600/20">
+                <div className="size-11 rounded-xl bg-gradient-to-br from-amber-600 to-amber-500 flex items-center justify-center shadow-lg shadow-amber-600/20">
                   <Shield className="size-5 text-white" />
                 </div>
                 <div>
@@ -228,7 +228,7 @@ export default function AdminLogin() {
                       className={`pl-10 transition-all duration-300 ${
                         focusedField === 'email'
                           ? 'border-amber-400 ring-2 ring-amber-400/20 shadow-sm shadow-amber-400/10'
-                          : 'focus-visible:ring-amber-500/30 focus-visible:border-amber-400'
+                          : 'focus-visible:ring-emerald-500/30 focus-visible:border-amber-400'
                       }`}
                       autoComplete="email"
                     />
@@ -256,7 +256,7 @@ export default function AdminLogin() {
                       className={`pl-10 pr-10 transition-all duration-300 ${
                         focusedField === 'password'
                           ? 'border-amber-400 ring-2 ring-amber-400/20 shadow-sm shadow-amber-400/10'
-                          : 'focus-visible:ring-amber-500/30 focus-visible:border-amber-400'
+                          : 'focus-visible:ring-emerald-500/30 focus-visible:border-amber-400'
                       }`}
                       autoComplete="current-password"
                     />
@@ -266,7 +266,7 @@ export default function AdminLogin() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-600 dark:hover:text-amber-400 transition-colors"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -277,7 +277,7 @@ export default function AdminLogin() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-600/25 hover:shadow-xl hover:shadow-amber-600/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg shadow-emerald-600/25 hover:shadow-xl hover:shadow-amber-600/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
                 >
                   {loading ? (
                     <>
@@ -292,11 +292,11 @@ export default function AdminLogin() {
 
               {/* Demo credentials hint */}
               <div className="mt-6 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                <p className="text-xs text-amber-700 dark:text-amber-400 font-medium mb-1">Demo Credentials</p>
-                <p className="text-xs text-amber-600 dark:text-amber-500">
+                <p className="text-xs text-amber-500 dark:text-amber-400 font-medium mb-1">Demo Credentials</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
                   Email: admin@lightworldtech.com
                 </p>
-                <p className="text-xs text-amber-600 dark:text-amber-500">
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
                   Password: admin123
                 </p>
               </div>

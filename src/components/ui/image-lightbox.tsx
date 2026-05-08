@@ -123,7 +123,7 @@ export default function ImageLightbox({
             transition={{ duration: 0.35, ease: 'easeOut' }}
           >
             {/* Image placeholder */}
-            <div className="relative w-full aspect-video max-h-[60vh] rounded-2xl overflow-hidden bg-gradient-to-br from-amber-800 via-amber-700 to-yellow-800">
+            <div className="relative w-full aspect-video max-h-[60vh] rounded-2xl overflow-hidden bg-gradient-to-br from-amber-800 via-amber-500 to-yellow-800">
               <div className="absolute inset-0 grid-pattern opacity-15" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">

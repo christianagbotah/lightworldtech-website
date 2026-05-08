@@ -153,8 +153,8 @@ export default function StatsCounterSection() {
       <div className="absolute inset-0 grid-pattern opacity-[0.04] dark:opacity-[0.06]" />
 
       {/* Decorative morphing blobs */}
-      <div className="absolute top-10 left-10 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl animate-morph-blob dark:bg-amber-600/10" />
-      <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-400/10 rounded-full blur-3xl animate-morph-blob dark:bg-amber-600/8" style={{ animationDelay: '-6s' }} />
+      <div className="absolute top-10 left-10 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl animate-morph-blob dark:bg-emerald-600/10" />
+      <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-400/10 rounded-full blur-3xl animate-morph-blob dark:bg-emerald-600/8" style={{ animationDelay: '-6s' }} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-300/10 rounded-full blur-3xl animate-breathe dark:bg-amber-500/5" />
 
       {/* Decorative floating geometric shapes */}
@@ -171,7 +171,7 @@ export default function StatsCounterSection() {
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">
             Our Impact in Numbers
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
@@ -199,7 +199,7 @@ export default function StatsCounterSection() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 {/* Glassmorphism card with shimmer */}
-                <div className="relative rounded-2xl p-6 md:p-8 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-slate-200/80 dark:border-white/10 hover:border-amber-300/60 dark:hover:border-amber-500/30 hover:shadow-xl hover:shadow-amber-500/10 dark:hover:shadow-amber-500/5 transition-all duration-500 h-full shimmer-sweep">
+                <div className="relative rounded-2xl p-6 md:p-8 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-slate-200/80 dark:border-white/10 hover:border-amber-300/60 dark:hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-emerald-500/5 transition-all duration-500 h-full shimmer-sweep">
                   {/* Gradient border on hover */}
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 p-[1.5px] -z-10`}>
                     <div className="w-full h-full rounded-2xl bg-white dark:bg-slate-900" />
@@ -208,7 +208,7 @@ export default function StatsCounterSection() {
                   {/* Icon with orbit dot */}
                   <div className="relative inline-flex items-center justify-center mb-5">
                     <div className={`size-14 rounded-xl ${stat.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="size-6 text-amber-600 dark:text-amber-400" />
+                      <Icon className="size-6 text-emerald-600 dark:text-amber-400" />
                     </div>
                     {/* Orbiting decorative dot */}
                     <div className="absolute inset-0 pointer-events-none" aria-hidden="true">

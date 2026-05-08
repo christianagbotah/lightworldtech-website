@@ -205,7 +205,7 @@ export default function BlogDetailPage() {
           >
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-5 leading-tight">{post.title}</h1>
             <div className="flex flex-wrap items-center gap-2.5 mb-5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/20 text-xs font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-emerald-500/20 text-xs font-medium">
                 <Tag className="size-3" />
                 {post.category}
               </span>
@@ -240,7 +240,7 @@ export default function BlogDetailPage() {
         </div>
         <div className="container-main flex items-center justify-between py-2 px-4">
           <div className="flex items-center gap-3">
-            <BookOpen className="size-4 text-amber-600 dark:text-amber-400" />
+            <BookOpen className="size-4 text-emerald-600 dark:text-amber-400" />
             <span className="text-xs font-medium text-slate-600 dark:text-slate-300 tabular-nums">{readingProgress}% read</span>
           </div>
           <div className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export default function BlogDetailPage() {
                 {remainingTime} min remaining
               </span>
             ) : (
-              <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+              <span className="text-xs text-emerald-600 dark:text-amber-400 font-medium">
                 ✓ Article complete
               </span>
             )}
@@ -266,7 +266,7 @@ export default function BlogDetailPage() {
             className="flex items-center justify-between w-full py-3 text-sm font-medium text-slate-700 dark:text-slate-200"
           >
             <span className="flex items-center gap-2">
-              <List className="size-4 text-amber-600 dark:text-amber-400" />
+              <List className="size-4 text-emerald-600 dark:text-amber-400" />
               Table of Contents ({tocItems.length})
             </span>
             <ChevronDown className={`size-4 transition-transform duration-200 ${tocOpen ? 'rotate-180' : ''}`} />
@@ -288,7 +288,7 @@ export default function BlogDetailPage() {
                   }}
                   className={`block text-left w-full py-1.5 px-3 text-sm rounded-md transition-colors ${
                     activeHeading === item.id
-                      ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-medium'
+                      ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 font-medium'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
                 >
@@ -329,7 +329,7 @@ export default function BlogDetailPage() {
                 <Button
                   onClick={() => navigate('blog')}
                   variant="outline"
-                  className="border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30"
+                  className="border-amber-300 dark:border-emerald-500 text-emerald-600 dark:text-amber-400 hover:bg-emerald-50 dark:hover:bg-amber-900/30"
                 >
                   <ArrowLeft className="size-4 mr-2" />
                   Back to Blog
@@ -356,7 +356,7 @@ export default function BlogDetailPage() {
                   <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                     <CardContent className="p-5">
                       <h3 className="font-semibold text-sm mb-3 text-slate-900 dark:text-white flex items-center gap-2">
-                        <List className="size-4 text-amber-600 dark:text-amber-400" />
+                        <List className="size-4 text-emerald-600 dark:text-amber-400" />
                         Table of Contents
                       </h3>
                       <nav className="space-y-1">
@@ -366,7 +366,7 @@ export default function BlogDetailPage() {
                             onClick={() => scrollToHeading(item.id)}
                             className={`block text-left w-full py-1.5 text-sm rounded-md transition-colors ${
                               activeHeading === item.id
-                                ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-medium'
+                                ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 font-medium'
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                             } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
                           >
@@ -382,7 +382,7 @@ export default function BlogDetailPage() {
                 <Card className="border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <BookOpen className="size-4 text-amber-600 dark:text-amber-400" />
+                      <BookOpen className="size-4 text-emerald-600 dark:text-amber-400" />
                       <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Reading Progress</h3>
                     </div>
                     {/* Progress bar */}
@@ -404,7 +404,7 @@ export default function BlogDetailPage() {
                 {/* Author card */}
                 <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                   <CardContent className="p-6 text-center">
-                    <div className="size-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-3 text-xl font-bold text-amber-700 dark:text-amber-300">
+                    <div className="size-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-3 text-xl font-bold text-amber-500 dark:text-amber-300">
                       {post.author.charAt(0)}
                     </div>
                     <h4 className="font-semibold text-slate-900 dark:text-white">{post.author}</h4>
@@ -419,12 +419,12 @@ export default function BlogDetailPage() {
                     {relatedPosts.map((related) => (
                       <Card
                         key={related.id}
-                        className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-200 dark:hover:border-amber-700 hover:shadow-sm transition-all cursor-pointer"
+                        className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-200 dark:hover:border-emerald-500 hover:shadow-sm transition-all cursor-pointer"
                         onClick={() => navigate('blog-detail', related.slug)}
                       >
                         <CardContent className="p-4">
                           <Badge variant="secondary" className="text-xs mb-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{related.category}</Badge>
-                          <h4 className="text-sm font-medium line-clamp-2 hover:text-amber-600 dark:hover:text-amber-400 transition-colors text-slate-900 dark:text-white">
+                          <h4 className="text-sm font-medium line-clamp-2 hover:text-emerald-600 dark:hover:text-amber-400 transition-colors text-slate-900 dark:text-white">
                             {related.title}
                           </h4>
                           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">

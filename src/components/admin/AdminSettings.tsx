@@ -211,7 +211,7 @@ export default function AdminSettings() {
                 <Button
                   onClick={() => saveGroup(group)}
                   disabled={saving === group.id}
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="bg-emerald-600 hover:bg-emerald-700"
                 >
                   {saving === group.id ? (
                     <>

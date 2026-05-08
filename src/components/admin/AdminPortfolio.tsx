@@ -178,7 +178,7 @@ export default function AdminPortfolio() {
           <h1 className="text-2xl font-bold text-foreground">Portfolio</h1>
           <p className="text-muted-foreground text-sm mt-1">{projects.length} projects</p>
         </div>
-        <Button onClick={openCreate} className="bg-amber-600 hover:bg-amber-700">
+        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="h-4 w-4 mr-2" /> Add Project
         </Button>
       </div>
@@ -217,7 +217,7 @@ export default function AdminPortfolio() {
                       </button>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={p.active ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}>
+                      <Badge className={p.active ? 'bg-amber-100 text-amber-500 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}>
                         {p.active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
@@ -294,7 +294,7 @@ export default function AdminPortfolio() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-amber-600 hover:bg-amber-700">
+            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
               {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>

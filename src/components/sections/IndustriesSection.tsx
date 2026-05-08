@@ -49,7 +49,7 @@ export default function IndustriesSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Industries</span>
+          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">Industries</span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
             Industries We <span className="text-gradient-amber">Serve</span>
           </h2>
@@ -72,7 +72,7 @@ export default function IndustriesSection() {
               variants={itemVariants}
               whileHover={{ y: -6 }}
             >
-              <div className="group relative flex flex-col items-center p-6 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-800 hover:border-amber-300 dark:hover:border-amber-600 transition-all duration-300 cursor-default overflow-hidden shimmer-sweep">
+              <div className="group relative flex flex-col items-center p-6 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-800 hover:border-amber-300 dark:hover:border-emerald-500 transition-all duration-300 cursor-default overflow-hidden shimmer-sweep">
                 {/* Background glow effect */}
                 <div className={`absolute -inset-px bg-gradient-to-br ${industry.color} opacity-0 group-hover:opacity-[0.07] rounded-xl transition-opacity duration-500`} />
                 <div className={`absolute -inset-2 bg-gradient-to-r ${industry.color} opacity-0 group-hover:opacity-10 rounded-xl blur-xl transition-all duration-500`} />
@@ -80,9 +80,9 @@ export default function IndustriesSection() {
                 {/* Icon with gradient on hover */}
                 <div className="size-12 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center mb-3 group-hover:shadow-md transition-all duration-300 relative">
                   <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${industry.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                  <industry.icon className="size-6 text-amber-600 dark:text-amber-400 group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 relative z-10" />
+                  <industry.icon className="size-6 text-emerald-600 dark:text-amber-400 group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 relative z-10" />
                 </div>
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200 relative group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-200 relative group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-colors">
                   {industry.name}
                 </span>
               </div>

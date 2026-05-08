@@ -49,7 +49,7 @@ export default function ProcessSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">How We Work</span>
+          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">How We Work</span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Our Development Process</h2>
           <p className="text-slate-600 dark:text-slate-300">
             A proven, structured approach that ensures every project is delivered on time, within budget, and exceeds expectations.
@@ -99,7 +99,7 @@ export default function ProcessSection() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
                 >
-                  <div className="p-6 rounded-xl bg-white dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-xl dark:hover:shadow-amber-900/20 hover:border-amber-300 dark:hover:border-amber-600/50 transition-all duration-500 h-full hover:-translate-y-2 group relative overflow-hidden">
+                  <div className="p-6 rounded-xl bg-white dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-xl dark:hover:shadow-amber-900/20 hover:border-amber-300 dark:hover:border-emerald-500/50 transition-all duration-500 h-full hover:-translate-y-2 group relative overflow-hidden">
                     {/* Subtle gradient overlay on hover */}
                     <div className="absolute inset-0 bg-gradient-to-b from-amber-50/0 to-amber-50/50 dark:from-amber-900/0 dark:to-amber-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-xl" />
 
@@ -114,7 +114,7 @@ export default function ProcessSection() {
                       >
                         {/* Pulse ring effect */}
                         <div className="absolute inset-0 rounded-full bg-amber-500/20 animate-pulse" />
-                        <div className="relative size-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 dark:from-amber-500 dark:to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-amber-500/25 dark:shadow-amber-900/40 group-hover:shadow-amber-500/40 transition-shadow duration-300">
+                        <div className="relative size-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 dark:from-amber-500 dark:to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-emerald-500/25 dark:shadow-amber-900/40 group-hover:shadow-emerald-500/40 transition-shadow duration-300">
                           {step.number || index + 1}
                         </div>
                       </motion.div>
@@ -123,10 +123,10 @@ export default function ProcessSection() {
 
                     {/* Icon with hover animation */}
                     <div className="size-11 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/40 dark:to-amber-900/20 flex items-center justify-center mb-3 shadow-sm group-hover:shadow-md group-hover:from-amber-100 group-hover:to-amber-100 dark:group-hover:from-amber-800/40 dark:group-hover:to-amber-900/20 transition-all duration-500 relative">
-                      <IconComp className="size-5 text-amber-600 dark:text-amber-400 group-hover:text-amber-700 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                      <IconComp className="size-5 text-emerald-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
                     </div>
 
-                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">{step.title}</h3>
+                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors duration-300">{step.title}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed relative">{step.description}</p>
                   </div>
                 </motion.div>

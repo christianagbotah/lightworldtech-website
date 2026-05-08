@@ -135,7 +135,7 @@ export default function QuoteCalculator() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-sm mb-4 px-4 py-1 font-medium">
+          <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-300 text-sm mb-4 px-4 py-1 font-medium">
             <Calculator className="size-4 mr-1.5" />
             Instant Estimate
           </Badge>
@@ -165,7 +165,7 @@ export default function QuoteCalculator() {
                     Service Type
                   </Label>
                   <Select value={selectedService} onValueChange={setSelectedService}>
-                    <SelectTrigger className="h-11 bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600">
+                    <SelectTrigger className="h-11 bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500">
                       <SelectValue placeholder="Select a service..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -191,22 +191,22 @@ export default function QuoteCalculator() {
                         onClick={() => setSelectedComplexity(opt.id)}
                         className={`relative p-4 rounded-xl border-2 text-left transition-all duration-300 group ${
                           selectedComplexity === opt.id
-                            ? 'border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-900/20 shadow-md shadow-amber-500/10'
-                            : 'border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-amber-700 hover:bg-slate-50 dark:hover:bg-slate-700/30'
+                            ? 'border-emerald-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-900/20 shadow-md shadow-emerald-500/10'
+                            : 'border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-700/30'
                         }`}
                       >
                         {selectedComplexity === opt.id && (
                           <div className="absolute top-2 right-2">
-                            <Check className="size-4 text-amber-600 dark:text-amber-400" />
+                            <Check className="size-4 text-emerald-600 dark:text-amber-400" />
                           </div>
                         )}
-                        <div className={`font-semibold text-sm mb-1 ${selectedComplexity === opt.id ? 'text-amber-700 dark:text-amber-300' : 'text-slate-700 dark:text-slate-200'}`}>
+                        <div className={`font-semibold text-sm mb-1 ${selectedComplexity === opt.id ? 'text-amber-500 dark:text-amber-300' : 'text-slate-700 dark:text-slate-200'}`}>
                           {opt.label}
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
                           {opt.description}
                         </div>
-                        <div className="mt-2 text-xs font-medium text-amber-600 dark:text-amber-400">
+                        <div className="mt-2 text-xs font-medium text-emerald-600 dark:text-amber-400">
                           {opt.multiplier}x base price
                         </div>
                       </button>
@@ -238,7 +238,7 @@ export default function QuoteCalculator() {
                         <Checkbox
                           checked={selectedFeatures.includes(feature.id)}
                           onCheckedChange={() => toggleFeature(feature.id)}
-                          className="data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                          className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-amber-600"
                         />
                         <div className="flex-1 min-w-0">
                           <span className="text-sm text-slate-700 dark:text-slate-200">{feature.label}</span>
@@ -255,7 +255,7 @@ export default function QuoteCalculator() {
                 {selectedService && (
                   <button
                     onClick={() => setShowDetails(!showDetails)}
-                    className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
+                    className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors"
                   >
                     <Info className="size-3.5" />
                     {showDetails ? 'Hide' : 'Show'} price breakdown
@@ -301,7 +301,7 @@ export default function QuoteCalculator() {
               </div>
 
               {/* Right: Price Display */}
-              <div className="relative bg-gradient-to-br from-amber-600 via-amber-700 to-yellow-700 p-6 sm:p-8 flex flex-col items-center justify-center text-center">
+              <div className="relative bg-gradient-to-br from-amber-600 via-amber-500 to-yellow-700 p-6 sm:p-8 flex flex-col items-center justify-center text-center">
                 <div className="absolute inset-0 grid-pattern opacity-10" />
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-300/10 rounded-full blur-3xl" />
@@ -323,7 +323,7 @@ export default function QuoteCalculator() {
                       </p>
                       <Button
                         onClick={handleGetQuote}
-                        className="w-full bg-white text-amber-700 hover:bg-amber-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]"
+                        className="w-full bg-white text-amber-500 hover:bg-emerald-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]"
                       >
                         Get Detailed Quote
                         <ArrowRight className="size-4 ml-2" />

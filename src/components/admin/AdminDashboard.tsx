@@ -51,8 +51,8 @@ interface ContactMessage {
 }
 
 const statCards = [
-  { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30', trend: '+12%', up: true, borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
-  { key: 'activeServices' as const, label: 'Services', icon: Briefcase, color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30', trend: '+3%', up: true, borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
+  { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', trend: '+12%', up: true, borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
+  { key: 'activeServices' as const, label: 'Services', icon: Briefcase, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', trend: '+3%', up: true, borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
   { key: 'activeTeam' as const, label: 'Team Members', icon: Users, color: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30', trend: '0%', up: true, borderAccent: 'border-l-[3px] border-l-yellow-500 dark:border-l-yellow-400' },
   { key: 'unreadMessages' as const, label: 'Unread Messages', icon: Mail, color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', trend: '+5', up: true, borderAccent: 'border-l-[3px] border-l-rose-500 dark:border-l-rose-400' },
   { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30', trend: '+2', up: true, borderAccent: 'border-l-[3px] border-l-cyan-500 dark:border-l-cyan-400' },
@@ -70,8 +70,8 @@ const monthlyInquiries = [
 ];
 
 const quickActions = [
-  { label: 'New Blog Post', icon: Pencil, action: 'admin-blog-editor', color: 'text-amber-600 dark:text-amber-400' },
-  { label: 'New Service', icon: Plus, action: 'admin-services', color: 'text-amber-600 dark:text-amber-400' },
+  { label: 'New Blog Post', icon: Pencil, action: 'admin-blog-editor', color: 'text-emerald-600 dark:text-amber-400' },
+  { label: 'New Service', icon: Plus, action: 'admin-services', color: 'text-emerald-600 dark:text-amber-400' },
   { label: 'View Messages', icon: Inbox, action: 'admin-messages', color: 'text-rose-600 dark:text-rose-400' },
 ];
 
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-600 via-amber-700 to-yellow-700" />
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-700" />
         <div className="absolute inset-0 grid-pattern opacity-10" />
         <div className="absolute -top-8 -right-8 w-40 h-40 bg-amber-400/15 rounded-full blur-2xl" />
         <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
@@ -188,8 +188,8 @@ export default function AdminDashboard() {
       {/* Quick Stats Row - Analytics Mini Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Visitors', value: '3.2K', trend: '+12.5%', up: true, icon: BarChart3, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-          { label: 'Bounce Rate', value: '34%', trend: '-2.1%', up: false, icon: MousePointerClick, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          { label: 'Total Visitors', value: '3.2K', trend: '+12.5%', up: true, icon: BarChart3, color: 'text-emerald-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          { label: 'Bounce Rate', value: '34%', trend: '-2.1%', up: false, icon: MousePointerClick, color: 'text-emerald-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
           { label: 'Avg Session', value: '2m 45s', trend: '+8.3%', up: true, icon: Timer, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30' },
           { label: 'Conversion Rate', value: '4.8%', trend: '+1.2%', up: true, icon: TrendingUp, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/30' },
         ].map((item, i) => {
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
                     <div className={`p-2 rounded-lg ${item.bg}`}>
                       <Icon className={`size-4 ${item.color}`} />
                     </div>
-                    <span className={`flex items-center gap-0.5 text-xs font-semibold ${item.up ? 'text-amber-600 dark:text-amber-400' : 'text-red-500 dark:text-red-400'}`}>
+                    <span className={`flex items-center gap-0.5 text-xs font-semibold ${item.up ? 'text-emerald-600 dark:text-amber-400' : 'text-red-500 dark:text-red-400'}`}>
                       {item.up ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
                       {item.trend}
                     </span>
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
                       <p className="text-sm text-muted-foreground">{card.label}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <p className="text-2xl font-bold text-foreground">{value}</p>
-                        <span className={`flex items-center gap-0.5 text-xs font-medium ${card.up ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
+                        <span className={`flex items-center gap-0.5 text-xs font-medium ${card.up ? 'text-emerald-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
                           {card.up ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
                           {card.trend}
                         </span>
@@ -298,7 +298,7 @@ export default function AdminDashboard() {
                           style={{ minHeight: '4px' }}
                         />
                       </div>
-                      <span className={`text-xs ${isCurrentMonth ? 'font-semibold text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                      <span className={`text-xs ${isCurrentMonth ? 'font-semibold text-emerald-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
                         {item.month}
                       </span>
                     </div>
@@ -325,7 +325,7 @@ export default function AdminDashboard() {
                 return (
                   <motion.button
                     key={action.label}
-                    className="w-full flex items-center justify-start gap-3 h-14 px-4 rounded-xl border border-border/50 bg-gradient-to-r from-white to-slate-50/50 dark:from-slate-800/80 dark:to-slate-800/40 hover:from-amber-50 hover:to-amber-50/30 dark:hover:from-amber-900/20 dark:hover:to-amber-900/10 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-md transition-all duration-300 text-left"
+                    className="w-full flex items-center justify-start gap-3 h-14 px-4 rounded-xl border border-border/50 bg-gradient-to-r from-white to-slate-50/50 dark:from-slate-800/80 dark:to-slate-800/40 hover:from-amber-50 hover:to-amber-50/30 dark:hover:from-amber-900/20 dark:hover:to-amber-900/10 hover:border-amber-300 dark:hover:border-emerald-500 hover:shadow-md transition-all duration-300 text-left"
                     onClick={() => navigate(action.action as Parameters<typeof navigate>[0])}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -370,11 +370,11 @@ export default function AdminDashboard() {
                 </TableHeader>
                 <TableBody>
                   {recentPosts.map((post) => (
-                    <TableRow key={post.id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
+                    <TableRow key={post.id} className="hover:bg-emerald-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
                       <TableCell className="font-medium text-sm max-w-[180px] truncate">{post.title}</TableCell>
                       <TableCell>
                         {post.published ? (
-                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 hover:bg-amber-100">Published</Badge>
+                          <Badge className="bg-amber-100 text-amber-500 dark:bg-amber-900/30 dark:text-amber-300 hover:bg-amber-100">Published</Badge>
                         ) : (
                           <Badge variant="secondary">Draft</Badge>
                         )}
@@ -412,7 +412,7 @@ export default function AdminDashboard() {
                 </TableHeader>
                 <TableBody>
                   {recentMessages.map((msg) => (
-                    <TableRow key={msg.id} className={`hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200 ${!msg.read ? 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' : ''}`}>
+                    <TableRow key={msg.id} className={`hover:bg-emerald-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200 ${!msg.read ? 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' : ''}`}>
                       <TableCell className="font-medium text-sm">
                         <span className="flex items-center gap-2">
                           {!msg.read && <span className="relative flex size-2 shrink-0"><span className="animate-ping absolute inline-flex size-full rounded-full bg-amber-400 opacity-75" /><span className="relative inline-flex rounded-full size-2 bg-amber-500" /></span>}

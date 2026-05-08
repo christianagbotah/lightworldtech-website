@@ -65,7 +65,7 @@ export default function FAQSection() {
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">FAQ</span>
+            <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">FAQ</span>
             <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Frequently Asked Questions</h2>
             <p className="text-slate-600 dark:text-slate-300">
               Find answers to common questions about our services and processes.
@@ -85,7 +85,7 @@ export default function FAQSection() {
               placeholder="Search questions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600 h-11"
+              className="pl-11 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 h-11"
             />
           </motion.div>
 
@@ -114,11 +114,11 @@ export default function FAQSection() {
                       <AccordionItem
                         key={faq.id}
                         value={faq.id}
-                        className="border rounded-xl bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/50 px-6 data-[state=open]:shadow-lg data-[state=open]:shadow-amber-500/5 data-[state=open]:border-amber-300 dark:data-[state=open]:border-amber-600/50 data-[state=open]:bg-gradient-to-r data-[state=open]:from-amber-50/60 data-[state=open]:to-white dark:data-[state=open]:from-amber-900/10 dark:data-[state=open]:to-slate-800/80 transition-all duration-300 overflow-hidden"
+                        className="border rounded-xl bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/50 px-6 data-[state=open]:shadow-lg data-[state=open]:shadow-emerald-500/5 data-[state=open]:border-amber-300 dark:data-[state=open]:border-amber-600/50 data-[state=open]:bg-gradient-to-r data-[state=open]:from-amber-50/60 data-[state=open]:to-white dark:data-[state=open]:from-amber-900/10 dark:data-[state=open]:to-slate-800/80 transition-all duration-300 overflow-hidden"
                       >
-                        <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline py-4 text-slate-900 dark:text-white data-[state=open]:text-amber-700 dark:data-[state=open]:text-amber-400 transition-colors [&>svg]:text-slate-400 [&>svg]:data-[state=open]:text-amber-600 dark:[&>svg]:data-[state=open]:text-amber-400">
+                        <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline py-4 text-slate-900 dark:text-white data-[state=open]:text-amber-500 dark:data-[state=open]:text-amber-400 transition-colors [&>svg]:text-slate-400 [&>svg]:data-[state=open]:text-emerald-600 dark:[&>svg]:data-[state=open]:text-amber-400">
                           <span className="flex items-center gap-3">
-                            <span className="size-7 rounded-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center text-xs font-bold text-amber-600 dark:text-amber-400 shrink-0 shadow-sm">
+                            <span className="size-7 rounded-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-amber-400 shrink-0 shadow-sm">
                               {String(index + 1).padStart(2, '0')}
                             </span>
                             {faq.question}
@@ -156,11 +156,11 @@ export default function FAQSection() {
           >
             <div className="bg-gradient-to-br from-amber-50 to-amber-50 dark:from-amber-900/20 dark:to-amber-900/10 rounded-2xl p-8 md:p-10 border border-amber-100 dark:border-amber-800/30 relative overflow-hidden">
               {/* Decorative background */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/30 dark:bg-amber-700/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-200/30 dark:bg-amber-700/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/30 dark:bg-amber-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-200/30 dark:bg-amber-500/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
 
               <div className="relative">
-                <div className="size-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/25">
+                <div className="size-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/25">
                   <MessageCircle className="size-7 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Still Have Questions?</h3>
@@ -170,7 +170,7 @@ export default function FAQSection() {
                 <Button
                   onClick={() => navigate('contact')}
                   size="lg"
-                  className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all px-8 h-12"
+                  className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all px-8 h-12"
                 >
                   Contact Us
                   <ArrowRight className="size-4 ml-2" />

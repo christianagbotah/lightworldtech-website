@@ -157,7 +157,7 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', duration: 0.6, delay: 0.2 }}
-                className="size-20 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30"
+                className="size-20 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30"
               >
                 <CheckCircle2 className="size-10 text-white" />
               </motion.div>
@@ -174,7 +174,7 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
               exit={{ opacity: 0, x: -20 }}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-amber-600 to-amber-700 dark:from-amber-700 dark:to-amber-800 p-6">
+              <div className="bg-gradient-to-r from-amber-600 to-amber-500 dark:from-amber-500 dark:to-amber-800 p-6">
                 <DialogHeader>
                   <DialogTitle className="text-xl text-white flex items-center gap-2">
                     <MessageSquarePlus className="size-5" />
@@ -296,7 +296,7 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
                 >
                   {submitting ? (
                     <>
@@ -442,8 +442,8 @@ export default function TestimonialsSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <div className="inline-flex items-center gap-4 bg-gradient-to-r from-amber-600/20 to-amber-600/20 rounded-2xl px-8 py-4 border border-amber-500/20 backdrop-blur-sm">
-            <div className="size-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <div className="inline-flex items-center gap-4 bg-gradient-to-r from-amber-600/20 to-amber-600/20 rounded-2xl px-8 py-4 border border-emerald-500/20 backdrop-blur-sm">
+            <div className="size-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <Users className="size-6 text-white" />
             </div>
             <div className="text-left">
@@ -493,7 +493,7 @@ export default function TestimonialsSection() {
               <CarouselContent className="-ml-4">
                 {testimonials.map((testimonial) => (
                   <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/2">
-                    <Card className="bg-slate-800/40 border-slate-700/40 backdrop-blur-md h-full relative overflow-hidden group hover:border-amber-500/40 hover:shadow-xl hover:shadow-amber-900/30 transition-all duration-500">
+                    <Card className="bg-slate-800/40 border-slate-700/40 backdrop-blur-md h-full relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-xl hover:shadow-amber-900/30 transition-all duration-500">
                       {/* Top gradient accent bar */}
                       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <CardContent className="p-6 flex flex-col h-full relative">
@@ -521,7 +521,7 @@ export default function TestimonialsSection() {
                         </div>
                         {/* Author */}
                         <div className="flex items-center gap-3 pt-4 border-t border-slate-700/40 relative">
-                          <div className="size-11 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-amber-500/25 group-hover:shadow-amber-500/40 transition-shadow duration-300">
+                          <div className="size-11 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-emerald-500/25 group-hover:shadow-emerald-500/40 transition-shadow duration-300">
                             {testimonial.name.charAt(0)}
                           </div>
                           <div>
@@ -541,7 +541,7 @@ export default function TestimonialsSection() {
                   onClick={handlePrev}
                   variant="outline"
                   size="icon"
-                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-amber-600 hover:border-amber-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
                   aria-label="Previous testimonial"
                 >
                   <ChevronLeft className="size-4" />
@@ -566,7 +566,7 @@ export default function TestimonialsSection() {
                   onClick={handleNext}
                   variant="outline"
                   size="icon"
-                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-amber-600 hover:border-amber-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
                   aria-label="Next testimonial"
                 >
                   <ChevronRight className="size-4" />
@@ -609,7 +609,7 @@ export default function TestimonialsSection() {
                 key={logo.name}
                 className="flex items-center gap-2 text-slate-500 hover:text-amber-400 transition-all duration-300 hover:-translate-y-0.5"
               >
-                <div className="size-9 rounded-lg bg-slate-800 border border-slate-700 hover:border-amber-600/40 flex items-center justify-center text-[10px] font-bold text-amber-400 transition-colors duration-300">
+                <div className="size-9 rounded-lg bg-slate-800 border border-slate-700 hover:border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-amber-400 transition-colors duration-300">
                   {logo.initials}
                 </div>
                 <span className="text-xs font-medium hidden sm:block">{logo.name}</span>

@@ -55,15 +55,15 @@ export default function Header() {
         <div className="container-main flex items-center justify-between py-1.5 text-xs text-slate-600 dark:text-slate-400">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <Phone className="size-3 text-amber-600 dark:text-amber-400" />
+              <Phone className="size-3 text-emerald-600 dark:text-emerald-400" />
               +233 (024) 361 8186
             </span>
             <span className="hidden sm:flex items-center gap-1">
-              <Mail className="size-3 text-amber-600 dark:text-amber-400" />
+              <Mail className="size-3 text-emerald-600 dark:text-emerald-400" />
               mail@lightworldtech.com
             </span>
           </div>
-          <span className="hidden sm:block font-medium text-amber-600 dark:text-amber-400">
+          <span className="hidden sm:block font-medium text-emerald-600 dark:text-emerald-400">
             Trusted by 100+ Businesses
           </span>
         </div>
@@ -77,14 +77,14 @@ export default function Header() {
             onClick={() => handleNav('home')}
             className="flex items-center gap-2.5 group"
           >
-            <div className="size-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-amber-500/30 transition-all overflow-hidden">
+            <div className="size-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-amber-400/30 transition-all overflow-hidden">
               <Image src="/logo.png" alt="Lightworld Technologies" width={32} height={32} className="object-contain p-0.5" />
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold leading-tight text-foreground">
                 Lightworld
               </span>
-              <span className="text-[10px] font-medium leading-tight text-amber-600 dark:text-amber-400 tracking-wider uppercase">
+              <span className="text-[10px] font-medium leading-tight text-emerald-600 dark:text-emerald-400 tracking-wider uppercase">
                 Technologies
               </span>
             </div>
@@ -99,15 +99,15 @@ export default function Header() {
                 className={cn(
                   'px-4 py-2 rounded-md text-sm font-medium transition-colors relative',
                   currentPage === link.page
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
                 )}
               >
                 {link.label}
                 {currentPage === link.page && (
                   <motion.div
                     layoutId="activeNav"
-                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full"
+                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-emerald-500 to-amber-400 rounded-full"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -120,12 +120,12 @@ export default function Header() {
             <ThemeToggle />
             <Button
               onClick={() => handleNav('contact')}
-              className="hidden sm:inline-flex bg-amber-600 hover:bg-amber-700 text-white shadow-md hover:shadow-lg hover:shadow-amber-500/25 transition-all relative group"
+              className="hidden sm:inline-flex bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg hover:shadow-emerald-500/25 transition-all relative group"
             >
               {/* Notification badge dot */}
               <span className="absolute -top-1 -right-1 flex items-center justify-center">
                 <span className="absolute size-3 rounded-full bg-white animate-pulse-ring" />
-                <span className="relative size-2 rounded-full bg-white border-2 border-amber-600 dark:border-amber-700" />
+                <span className="relative size-2 rounded-full bg-white border-2 border-emerald-600 dark:border-emerald-700" />
               </span>
               Get a Quote
             </Button>
@@ -142,7 +142,7 @@ export default function Header() {
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex flex-col h-full">
                   <div className="flex items-center gap-2 px-6 py-5 border-b border-slate-200 dark:border-slate-700">
-                    <div className="size-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center overflow-hidden">
+                    <div className="size-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center overflow-hidden">
                       <Image src="/logo.png" alt="Lightworld Technologies" width={24} height={24} className="object-contain p-0.5" />
                     </div>
                     <span className="font-bold text-foreground">Lightworld Technologies</span>
@@ -159,15 +159,15 @@ export default function Header() {
                           className={cn(
                             'w-full text-left px-6 py-3 text-sm font-medium transition-all relative',
                             currentPage === link.page
-                              ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-r-2 border-amber-500'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                              ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-r-2 border-emerald-500'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                           )}
                         >
                           <span className="flex items-center gap-3">
                             {currentPage === link.page && (
                               <motion.span
                                 layoutId="mobile-active-indicator"
-                                className="size-1.5 rounded-full bg-amber-500"
+                                className="size-1.5 rounded-full bg-emerald-500"
                               />
                             )}
                             {link.label}
@@ -179,22 +179,22 @@ export default function Header() {
                   <div className="p-6 border-t border-slate-200 dark:border-slate-700">
                     <Button
                       onClick={() => handleNav('contact')}
-                      className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-md relative"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md relative"
                     >
                       {/* Notification badge */}
                       <span className="absolute -top-1 -right-1 flex items-center justify-center">
                         <span className="absolute size-3 rounded-full bg-white animate-pulse-ring" />
-                        <span className="relative size-2 rounded-full bg-white border-2 border-amber-600 dark:border-amber-700" />
+                        <span className="relative size-2 rounded-full bg-white border-2 border-emerald-600 dark:border-emerald-700" />
                       </span>
                       Get a Quote
                     </Button>
                     <div className="mt-4 space-y-2 text-xs text-slate-500">
                       <p className="flex items-center gap-2">
-                        <Phone className="size-3 text-amber-500" />
+                        <Phone className="size-3 text-emerald-500" />
                         +233 (024) 361 8186
                       </p>
                       <p className="flex items-center gap-2">
-                        <Mail className="size-3 text-amber-500" />
+                        <Mail className="size-3 text-emerald-500" />
                         mail@lightworldtech.com
                       </p>
                     </div>

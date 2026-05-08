@@ -229,8 +229,8 @@ export default function BlogPage() {
                       onClick={() => { setBlogCategory(cat.name); setPage(1); }}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all capitalize whitespace-nowrap flex items-center gap-1.5 ${
                         blogCategory === cat.name
-                          ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-amber-600/25'
-                          : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-600'
+                          ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-emerald-600/25'
+                          : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-amber-900/30 hover:text-emerald-600 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-600'
                       }`}
                     >
                       {cat.name === 'all' ? 'All' : cat.name}
@@ -246,7 +246,7 @@ export default function BlogPage() {
                   Showing <span className="font-medium text-slate-700 dark:text-slate-200">{(showFeaturedHero ? 1 : 0) + paginatedPosts.length}</span> of{' '}
                   <span className="font-medium text-slate-700 dark:text-slate-200">{filteredPosts.length}</span> articles
                   {blogSearch && (
-                    <span> matching &ldquo;<span className="text-amber-600 dark:text-amber-400">{blogSearch}</span>&rdquo;</span>
+                    <span> matching &ldquo;<span className="text-emerald-600 dark:text-amber-400">{blogSearch}</span>&rdquo;</span>
                   )}
                 </p>
               )}
@@ -305,12 +305,12 @@ export default function BlogPage() {
                           {/* Content */}
                           <div className="p-6 sm:p-8 flex flex-col justify-center bg-white dark:bg-slate-800">
                             <div className="flex items-center gap-2 mb-3">
-                              <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium">
+                              <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-300 text-xs font-medium">
                                 {mainFeatured.category}
                               </Badge>
                               <span className="text-xs text-slate-400 dark:text-slate-500">Editor&apos;s Pick</span>
                             </div>
-                            <h2 className="text-2xl sm:text-3xl font-bold mb-3 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 text-slate-900 dark:text-white leading-snug">
+                            <h2 className="text-2xl sm:text-3xl font-bold mb-3 group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 text-slate-900 dark:text-white leading-snug">
                               {mainFeatured.title}
                             </h2>
                             <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-5 line-clamp-3">
@@ -335,7 +335,7 @@ export default function BlogPage() {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
+                            <div className="flex items-center gap-1 text-emerald-600 dark:text-amber-400 font-semibold">
                               Read Article
                               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                             </div>
@@ -363,7 +363,7 @@ export default function BlogPage() {
                         >
                           <Card
                             className={`group overflow-hidden bg-white dark:bg-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer h-full relative ${
-                              post.featured ? 'ring-2 ring-amber-400/60 dark:ring-amber-500/50' : ''
+                              post.featured ? 'ring-2 ring-amber-400/60 dark:ring-emerald-500/50' : ''
                             }`}
                             style={{
                               borderImage: undefined,
@@ -403,7 +403,7 @@ export default function BlogPage() {
                                 </div>
                               </div>
                               <CardContent className="p-5 flex flex-col h-full">
-                                <h3 className="font-semibold text-lg mb-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 text-slate-900 dark:text-white">
+                                <h3 className="font-semibold text-lg mb-2 group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 text-slate-900 dark:text-white">
                                   {post.title}
                                 </h3>
                                 <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1 line-clamp-2">
@@ -427,7 +427,7 @@ export default function BlogPage() {
                                       {post.readTime}
                                     </span>
                                   </div>
-                                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <span className="flex items-center gap-1 text-emerald-600 dark:text-amber-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                                     Read <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                                   </span>
                                 </div>
@@ -449,7 +449,7 @@ export default function BlogPage() {
                     >
                       <Button
                         onClick={() => setPage(p => p + 1)}
-                        className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300 px-8 gap-2"
+                        className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300 px-8 gap-2"
                       >
                         <ArrowRight className="size-4" />
                         Load More Articles
@@ -474,7 +474,7 @@ export default function BlogPage() {
                           variant={page === i + 1 ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setPage(i + 1)}
-                          className={page === i + 1 ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md shadow-amber-600/25' : ''}
+                          className={page === i + 1 ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-md shadow-emerald-600/25' : ''}
                         >
                           {i + 1}
                         </Button>
@@ -513,7 +513,7 @@ export default function BlogPage() {
                         setBlogCategory('all');
                         setPage(1);
                       }}
-                      className="border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400"
+                      className="border-amber-300 dark:border-emerald-500 text-emerald-600 dark:text-amber-400"
                     >
                       Clear Filters
                     </Button>
@@ -529,7 +529,7 @@ export default function BlogPage() {
                 <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border border-white/50 dark:border-slate-700/50 shadow-sm">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-4">
-                      <Tag className="size-4 text-amber-600 dark:text-amber-400" />
+                      <Tag className="size-4 text-emerald-600 dark:text-amber-400" />
                       <h3 className="font-semibold text-slate-900 dark:text-white">Categories</h3>
                     </div>
                     <nav className="space-y-1" aria-label="Blog categories">
@@ -541,7 +541,7 @@ export default function BlogPage() {
                             onClick={() => { setBlogCategory(cat.name); setPage(1); }}
                             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
                               isActive
-                                ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white font-medium shadow-md shadow-amber-600/25'
+                                ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white font-medium shadow-md shadow-emerald-600/25'
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200'
                             }`}
                           >
@@ -577,7 +577,7 @@ export default function BlogPage() {
                           onClick={() => handlePostClick(post.slug)}
                           className="block w-full text-left group"
                         >
-                          <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 mb-1">
+                          <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 mb-1">
                             {post.title}
                           </h4>
                           <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
@@ -597,7 +597,7 @@ export default function BlogPage() {
                 <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border border-white/50 dark:border-slate-700/50 shadow-sm">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <User className="size-4 text-amber-600 dark:text-amber-400" />
+                      <User className="size-4 text-emerald-600 dark:text-amber-400" />
                       <h3 className="font-semibold text-slate-900 dark:text-white">About Our Blog</h3>
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">

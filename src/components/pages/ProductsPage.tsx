@@ -102,7 +102,7 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
     return (
       <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
         <Zap className="size-4 text-amber-500 shrink-0" />
-        <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">Launching now!</span>
+        <span className="text-sm text-amber-500 dark:text-amber-300 font-medium">Launching now!</span>
       </div>
     );
   }
@@ -242,7 +242,7 @@ export default function ProductsPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 mb-4 backdrop-blur-sm">
+            <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-300 border-amber-200 dark:border-emerald-500 mb-4 backdrop-blur-sm">
               <Clock className="size-3 mr-1" />
               Coming Soon
             </Badge>
@@ -277,7 +277,7 @@ export default function ProductsPage() {
                         <div className={`size-14 rounded-2xl bg-gradient-to-br ${product.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                           <Icon className="size-7 text-white" />
                         </div>
-                        <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-semibold flex items-center gap-1.5 backdrop-blur-sm">
+                        <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-500 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-semibold flex items-center gap-1.5 backdrop-blur-sm">
                           <span className="relative flex size-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
                             <span className="relative inline-flex rounded-full size-2 bg-amber-400" />
@@ -287,7 +287,7 @@ export default function ProductsPage() {
                       </div>
 
                       {/* Title & Description */}
-                      <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                      <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors">
                         {product.title}
                       </h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
@@ -323,7 +323,7 @@ export default function ProductsPage() {
                           animate={{ opacity: 1, scale: 1 }}
                         >
                           <CheckCircle2 className="size-4 text-amber-500 shrink-0" />
-                          <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                          <span className="text-sm text-amber-500 dark:text-amber-300 font-medium">
                             You&apos;ll be notified when this launches!
                           </span>
                         </motion.div>
@@ -344,7 +344,7 @@ export default function ProductsPage() {
                             <Button
                               onClick={() => handleSubscribe(product.id)}
                               disabled={subscribing === product.id}
-                              className="bg-amber-600 hover:bg-amber-700 text-white text-sm px-4 shrink-0 shadow-md shadow-amber-500/20 hover:shadow-lg"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 shrink-0 shadow-md shadow-emerald-500/20 hover:shadow-lg"
                             >
                               {subscribing === product.id ? (
                                 <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -379,7 +379,7 @@ export default function ProductsPage() {
             <p className="text-slate-500 dark:text-slate-400 mb-4">Need a custom solution right now?</p>
             <Button
               onClick={() => navigate('contact')}
-              className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 shadow-amber-500/20"
+              className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 shadow-emerald-500/20"
             >
               Get a Custom Solution
               <ArrowRight className="size-4 ml-2" />

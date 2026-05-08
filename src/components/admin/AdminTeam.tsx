@@ -214,7 +214,7 @@ export default function AdminTeam() {
           <h1 className="text-2xl font-bold text-foreground">Team Members</h1>
           <p className="text-muted-foreground text-sm mt-1">{members.length} members</p>
         </div>
-        <Button onClick={openCreate} className="bg-amber-600 hover:bg-amber-700">
+        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="h-4 w-4 mr-2" /> Add Member
         </Button>
       </div>
@@ -381,7 +381,7 @@ export default function AdminTeam() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-amber-600 hover:bg-amber-700">
+            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
               {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>

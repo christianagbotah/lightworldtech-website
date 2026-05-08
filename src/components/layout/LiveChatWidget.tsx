@@ -175,7 +175,7 @@ export default function LiveChatWidget() {
             className="w-[340px] sm:w-[380px] h-[480px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-700/80 flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-amber-600 via-amber-600 to-yellow-600 dark:from-amber-700 dark:via-amber-700 dark:to-yellow-800 px-5 py-4 flex items-center justify-between shrink-0 relative overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-600 via-amber-600 to-yellow-600 dark:from-amber-500 dark:via-amber-500 dark:to-yellow-800 px-5 py-4 flex items-center justify-between shrink-0 relative overflow-hidden">
               {/* Subtle pattern overlay */}
               <div className="absolute inset-0 grid-pattern opacity-10" />
               <div className="flex items-center gap-3 relative z-10">
@@ -226,7 +226,7 @@ export default function LiveChatWidget() {
                   <div
                     className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                       msg.sender === 'user'
-                        ? 'bg-gradient-to-br from-amber-600 to-amber-500 text-white rounded-tr-sm shadow-md shadow-amber-500/20'
+                        ? 'bg-gradient-to-br from-amber-600 to-amber-500 text-white rounded-tr-sm shadow-md shadow-emerald-500/20'
                         : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-sm rounded-tl-sm border border-slate-100 dark:border-slate-600'
                     }`}
                   >
@@ -241,7 +241,7 @@ export default function LiveChatWidget() {
                     <button
                       key={reply.label}
                       onClick={() => handleQuickReply(reply.text)}
-                      className="px-3 py-1.5 rounded-full text-xs font-medium border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shadow-sm hover:shadow-md"
+                      className="px-3 py-1.5 rounded-full text-xs font-medium border border-amber-300 dark:border-emerald-500 text-amber-500 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shadow-sm hover:shadow-md"
                     >
                       {reply.label}
                     </button>
@@ -260,13 +260,13 @@ export default function LiveChatWidget() {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Type your message..."
-                  className="flex-1 h-10 px-4 rounded-full bg-slate-100 dark:bg-slate-700/50 text-sm text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 border border-slate-200 dark:border-slate-600 focus:border-amber-400 dark:focus:border-amber-500 transition-all duration-200"
+                  className="flex-1 h-10 px-4 rounded-full bg-slate-100 dark:bg-slate-700/50 text-sm text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 border border-slate-200 dark:border-slate-600 focus:border-amber-400 dark:focus:border-emerald-500 transition-all duration-200"
                   aria-label="Chat message input"
                 />
                 <Button
                   type="submit"
                   size="icon"
-                  className="size-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shrink-0 shadow-md shadow-amber-500/20 hover:shadow-lg disabled:opacity-50 transition-all duration-200"
+                  className="size-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white shrink-0 shadow-md shadow-emerald-500/20 hover:shadow-lg disabled:opacity-50 transition-all duration-200"
                   disabled={!inputValue.trim()}
                 >
                   <Send className="size-4" />
@@ -295,7 +295,7 @@ export default function LiveChatWidget() {
           className={`size-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 relative group ${
             isOpen && !isMinimized
               ? 'bg-slate-600 hover:bg-slate-700 text-white'
-              : 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white animate-pulse-shadow'
+              : 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white animate-pulse-shadow'
           }`}
           size="icon"
           aria-label={isOpen && !isMinimized ? 'Close live chat' : 'Open live chat'}

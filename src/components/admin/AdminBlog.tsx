@@ -145,7 +145,7 @@ export default function AdminBlog() {
           <p className="text-muted-foreground text-sm mt-1">{posts.length} posts</p>
         </div>
         <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-          <Button onClick={handleCreate} className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-500/25 h-11">
+          <Button onClick={handleCreate} className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-emerald-500/25 h-11">
             <Plus className="h-4 w-4 mr-2" /> New Post
           </Button>
         </motion.div>
