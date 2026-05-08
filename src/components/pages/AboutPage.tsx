@@ -42,7 +42,7 @@ const stats = [
 ];
 
 function AnimatedStatCard({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
-  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: true, startDelay: delay });
+  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
   return (
     <Card ref={ref} className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-lg dark:hover:shadow-emerald-900/20 transition-all duration-300 group">
       <CardContent className="p-6 text-center">

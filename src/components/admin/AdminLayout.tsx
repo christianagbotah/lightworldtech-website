@@ -35,7 +35,7 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { currentPage, adminTab, setAdminTab, navigate } = useAppStore();
+  const { currentPage, adminTab, setAdminTab, navigate, adminName, logoutAdmin } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
@@ -137,15 +137,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <span className="text-emerald-700 dark:text-emerald-300 text-xs font-bold">A</span>
+                  <span className="text-emerald-700 dark:text-emerald-300 text-xs font-bold">{(adminName || 'A').charAt(0).toUpperCase()}</span>
                 </div>
-                <span className="text-sm font-medium text-foreground">Admin</span>
+                <span className="text-sm font-medium text-foreground">{adminName || 'Admin'}</span>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate('home')}
+                onClick={() => { logoutAdmin(); navigate('home'); }}
                 title="Logout"
+                aria-label="Logout"
               >
                 <LogOut className="h-4 w-4" />
               </Button>

@@ -9,6 +9,7 @@ import WhatsAppButton from '@/components/layout/WhatsAppButton';
 import CookieConsent from '@/components/layout/CookieConsent';
 import PageLoader from '@/components/ui/page-loader';
 import ScrollProgress from '@/components/ui/scroll-progress';
+import CommandPalette from '@/components/ui/command-palette';
 import HomePage from '@/components/pages/HomePage';
 import AboutPage from '@/components/pages/AboutPage';
 import ServicesPage from '@/components/pages/ServicesPage';
@@ -16,6 +17,7 @@ import BlogPage from '@/components/pages/BlogPage';
 import BlogDetailPage from '@/components/pages/BlogDetailPage';
 import ContactPage from '@/components/pages/ContactPage';
 import PortfolioPage from '@/components/pages/PortfolioPage';
+import AdminLogin from '@/components/admin/AdminLogin';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import AdminServices from '@/components/admin/AdminServices';
@@ -91,7 +93,7 @@ function PublicRouter() {
 }
 
 export default function Home() {
-  const { currentPage } = useAppStore();
+  const { currentPage, isAdminLoggedIn } = useAppStore();
 
   const isAdminPage =
     currentPage === 'admin' ||
@@ -107,6 +109,13 @@ export default function Home() {
     currentPage === 'admin-portfolio';
 
   if (isAdminPage) {
+    if (!isAdminLoggedIn) {
+      return (
+        <div className="min-h-screen flex flex-col">
+          <AdminLogin />
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex flex-col">
         <ScrollProgress />
@@ -129,6 +138,7 @@ export default function Home() {
       <BackToTop />
       <WhatsAppButton />
       <CookieConsent />
+      <CommandPalette />
     </div>
   );
 }

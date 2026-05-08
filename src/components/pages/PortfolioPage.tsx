@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronRight, ExternalLink, X } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { ChevronRight, ExternalLink, X, Layers } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,7 @@ const defaultPortfolio: PortfolioItem[] = [
   { id: '9', title: 'Security Monitoring Dashboard', description: 'Real-time security monitoring and alerting system for corporate campuses.', category: 'Software Development', tags: ['Python', 'React', 'WebSocket', 'PostgreSQL'], featured: false, clientUrl: '#', fullDescription: 'A real-time security monitoring system for a corporate campus. Features include live camera feeds, AI-powered threat detection, incident reporting, guard patrol tracking, and automated alert escalation.' },
 ];
 
-const categories = ['all', 'Web Development', 'Mobile App', 'Software Development'];
+const allCategories = ['all', 'Web Development', 'Mobile App', 'Software Development'];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -50,8 +50,8 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  hidden: { opacity: 0, scale: 0.9, y: 10 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4 } },
 };
 
 export default function PortfolioPage() {
@@ -60,6 +60,15 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedProject, setSelectedProject] = useState<PortfolioItem | null>(null);
+  const [visibleCount, setVisibleCount] = useState(6);
+  const itemsPerPage = 6;
+
+  // Reset visible count when category changes
+  const prevCategoryRef = useState(activeCategory);
+  if (prevCategoryRef[0] !== activeCategory) {
+    prevCategoryRef[1](activeCategory);
+    setVisibleCount(6);
+  }
 
   useEffect(() => {
     fetcher('/api/portfolio')
@@ -73,6 +82,20 @@ export default function PortfolioPage() {
   const filtered = activeCategory === 'all'
     ? portfolio
     : portfolio.filter(p => p.category === activeCategory);
+
+  const visibleItems = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  const categories = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of portfolio) {
+      counts[p.category] = (counts[p.category] || 0) + 1;
+    }
+    return allCategories.map(cat => ({
+      name: cat,
+      count: cat === 'all' ? portfolio.length : (counts[cat] || 0),
+    }));
+  }, [portfolio]);
 
   return (
     <main>
@@ -112,22 +135,46 @@ export default function PortfolioPage() {
       {/* Portfolio Grid */}
       <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
         <div className="container-main">
-          {/* Filter tabs */}
+          {/* Filter tabs with count badges */}
           <div className="flex flex-wrap gap-2 mb-10 justify-center">
             {categories.map((cat) => (
               <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
-                  activeCategory === cat
-                    ? 'bg-emerald-600 text-white shadow-md'
+                key={cat.name}
+                onClick={() => setActiveCategory(cat.name)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize flex items-center gap-2 ${
+                  activeCategory === cat.name
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
                     : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600'
                 }`}
               >
-                {cat}
+                {cat.name === 'all' ? 'All Projects' : cat.name}
+                <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
+                  activeCategory === cat.name
+                    ? 'bg-emerald-700 text-white'
+                    : 'bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-300'
+                }`}>
+                  {cat.count}
+                </span>
               </button>
             ))}
           </div>
+
+          {/* Results info */}
+          {!loading && (
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Showing <span className="font-medium text-slate-700 dark:text-slate-200">{visibleItems.length}</span> of{' '}
+                <span className="font-medium text-slate-700 dark:text-slate-200">{filtered.length}</span> projects
+                {activeCategory !== 'all' && (
+                  <span> in <span className="text-emerald-600 dark:text-emerald-400">{activeCategory}</span></span>
+                )}
+              </p>
+              <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                <Layers className="size-4" />
+                <span className="text-xs">{filtered.length} total</span>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -148,68 +195,115 @@ export default function PortfolioPage() {
               ))}
             </div>
           ) : (
+            <LayoutGroup>
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <AnimatePresence mode="popLayout">
+                  {visibleItems.map((project) => (
+                    <motion.div
+                      key={project.id}
+                      variants={itemVariants}
+                      layout
+                      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                    >
+                      <Card
+                        className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                        onClick={() => setSelectedProject(project)}
+                      >
+                        {/* Image placeholder */}
+                        <div className="relative h-56 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 overflow-hidden">
+                          <div className="absolute inset-0 grid-pattern opacity-30" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold text-lg opacity-40">{project.title}</span>
+                          </div>
+                          {/* Hover overlay */}
+                          <div className="absolute inset-0 bg-emerald-900/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <motion.div
+                              className="text-center text-white"
+                              initial={false}
+                              animate={{ y: [5, 0] }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <ExternalLink className="size-8 mx-auto mb-2" />
+                              <span className="font-medium">View Details</span>
+                            </motion.div>
+                          </div>
+                          {/* Category badge */}
+                          <div className="absolute top-3 left-3">
+                            <Badge className="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 text-xs backdrop-blur-sm">
+                              {project.category}
+                            </Badge>
+                          </div>
+                          {project.featured && (
+                            <div className="absolute top-3 right-3">
+                              <Badge className="bg-amber-400 text-amber-900 text-xs font-semibold">Featured</Badge>
+                            </div>
+                          )}
+                        </div>
+                        <CardContent className="p-5">
+                          <h3 className="text-lg font-semibold mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors text-slate-900 dark:text-white">
+                            {project.title}
+                          </h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-3 line-clamp-2">
+                            {project.description}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {project.tags?.map((tag: string) => (
+                              <Badge key={tag} variant="secondary" className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            </LayoutGroup>
+          )}
+
+          {/* Load More Button */}
+          {hasMore && !loading && (
             <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              key={activeCategory}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
+              className="flex justify-center mt-10"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
             >
-              {filtered.map((project) => (
-                <motion.div key={project.id} variants={itemVariants}>
-                  <Card className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                    onClick={() => setSelectedProject(project)}
-                  >
-                    {/* Image placeholder */}
-                    <div className="relative h-56 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 overflow-hidden">
-                      <div className="absolute inset-0 grid-pattern opacity-30" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-lg opacity-40">{project.title}</span>
-                      </div>
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 bg-emerald-900/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <div className="text-center text-white">
-                          <ExternalLink className="size-8 mx-auto mb-2" />
-                          <span className="font-medium">View Details</span>
-                        </div>
-                      </div>
-                      {/* Category badge */}
-                      <div className="absolute top-3 left-3">
-                        <Badge className="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 text-xs backdrop-blur-sm">
-                          {project.category}
-                        </Badge>
-                      </div>
-                      {project.featured && (
-                        <div className="absolute top-3 right-3">
-                          <Badge className="bg-amber-400 text-amber-900 text-xs font-semibold">Featured</Badge>
-                        </div>
-                      )}
-                    </div>
-                    <CardContent className="p-5">
-                      <h3 className="text-lg font-semibold mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors text-slate-900 dark:text-white">
-                        {project.title}
-                      </h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-3 line-clamp-2">
-                        {project.description}
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {project.tags?.map((tag: string) => (
-                          <Badge key={tag} variant="secondary" className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+              <Button
+                variant="outline"
+                onClick={() => setVisibleCount(prev => prev + itemsPerPage)}
+                className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 px-8"
+              >
+                Load More Projects
+                <ChevronRight className="size-4 ml-1" />
+              </Button>
             </motion.div>
           )}
 
           {filtered.length === 0 && !loading && (
-            <div className="text-center py-16">
-              <h3 className="text-lg font-medium text-slate-400 dark:text-slate-500">No projects found in this category.</h3>
-            </div>
+            <motion.div
+              className="text-center py-16"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <div className="size-16 rounded-full bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-4">
+                <Layers className="size-8 text-slate-400 dark:text-slate-500" />
+              </div>
+              <h3 className="text-lg font-medium text-slate-400 dark:text-slate-500 mb-2">No projects found in this category.</h3>
+              <Button
+                variant="outline"
+                onClick={() => setActiveCategory('all')}
+                className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 mt-4"
+              >
+                View All Projects
+              </Button>
+            </motion.div>
           )}
         </div>
       </section>
@@ -226,6 +320,7 @@ export default function PortfolioPage() {
                 <button
                   onClick={() => setSelectedProject(null)}
                   className="absolute top-3 right-3 size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10"
+                  aria-label="Close"
                 >
                   <X className="size-4" />
                 </button>

@@ -1,24 +1,86 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Globe, Smartphone, GraduationCap, TrendingUp, Code, Server, ChevronRight, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Globe, Smartphone, GraduationCap, TrendingUp, Code, Server,
+  ChevronRight, CheckCircle2, ArrowRight, Sparkles, X, DollarSign,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { useAppStore } from '@/lib/store';
 import CTASection from '@/components/sections/CTASection';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-const defaultServices = [
-  { id: '1', title: 'Web Development', description: 'Custom, responsive websites and web applications built with cutting-edge technologies for optimal user experience and business growth.', icon: 'Globe', features: ['Custom Website Design', 'E-Commerce Solutions', 'CMS Development', 'Progressive Web Apps', 'API Integration'] },
-  { id: '2', title: 'Mobile App Development', description: 'Native and cross-platform mobile applications that deliver exceptional user experiences on iOS and Android devices.', icon: 'Smartphone', features: ['iOS App Development', 'Android App Development', 'Cross-Platform (React Native)', 'App Store Optimization', 'Push Notifications'] },
-  { id: '3', title: 'Skills Training', description: 'Comprehensive IT skills development programs designed to empower individuals and organizations with modern technical expertise.', icon: 'GraduationCap', features: ['Web Development Bootcamps', 'Data Science Training', 'Cloud Computing Courses', 'Cybersecurity Training', 'Corporate Training Programs'] },
-  { id: '4', title: 'SEO & Marketing', description: 'Data-driven digital marketing strategies and search engine optimization to boost online visibility and drive organic growth.', icon: 'TrendingUp', features: ['Search Engine Optimization', 'Pay-Per-Click Advertising', 'Social Media Marketing', 'Content Marketing', 'Email Marketing'] },
-  { id: '5', title: 'Software Development', description: 'Bespoke software solutions tailored to your unique business requirements, from automation tools to enterprise-grade systems.', icon: 'Code', features: ['Custom Software Solutions', 'Enterprise Applications', 'SaaS Development', 'System Integration', 'Process Automation'] },
-  { id: '6', title: 'Web Hosting', description: 'Reliable, secure, and high-performance hosting solutions with guaranteed uptime and round-the-clock technical support.', icon: 'Server', features: ['Shared Hosting', 'VPS Hosting', 'Dedicated Servers', 'Cloud Hosting', 'SSL Certificates'] },
+interface ServiceItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  features: string[];
+  techStack?: string[];
+  priceRange?: string;
+}
+
+const defaultServices: ServiceItem[] = [
+  {
+    id: '1', title: 'Web Development',
+    description: 'Custom, responsive websites and web applications built with cutting-edge technologies for optimal user experience and business growth.',
+    icon: 'Globe',
+    features: ['Custom Website Design', 'E-Commerce Solutions', 'CMS Development', 'Progressive Web Apps', 'API Integration'],
+    techStack: ['Next.js', 'React', 'Node.js', 'TypeScript', 'PostgreSQL', 'Tailwind CSS'],
+    priceRange: 'From GHS 5,000',
+  },
+  {
+    id: '2', title: 'Mobile App Development',
+    description: 'Native and cross-platform mobile applications that deliver exceptional user experiences on iOS and Android devices.',
+    icon: 'Smartphone',
+    features: ['iOS App Development', 'Android App Development', 'Cross-Platform (React Native)', 'App Store Optimization', 'Push Notifications'],
+    techStack: ['React Native', 'Flutter', 'Swift', 'Kotlin', 'Firebase'],
+    priceRange: 'From GHS 8,000',
+  },
+  {
+    id: '3', title: 'Skills Training',
+    description: 'Comprehensive IT skills development programs designed to empower individuals and organizations with modern technical expertise.',
+    icon: 'GraduationCap',
+    features: ['Web Development Bootcamps', 'Data Science Training', 'Cloud Computing Courses', 'Cybersecurity Training', 'Corporate Training Programs'],
+    techStack: ['Python', 'JavaScript', 'AWS', 'Azure', 'Docker'],
+    priceRange: 'From GHS 1,500',
+  },
+  {
+    id: '4', title: 'SEO & Marketing',
+    description: 'Data-driven digital marketing strategies and search engine optimization to boost online visibility and drive organic growth.',
+    icon: 'TrendingUp',
+    features: ['Search Engine Optimization', 'Pay-Per-Click Advertising', 'Social Media Marketing', 'Content Marketing', 'Email Marketing'],
+    techStack: ['Google Analytics', 'SEMrush', 'Meta Ads', 'Google Ads', 'Mailchimp'],
+    priceRange: 'From GHS 2,000/mo',
+  },
+  {
+    id: '5', title: 'Software Development',
+    description: 'Bespoke software solutions tailored to your unique business requirements, from automation tools to enterprise-grade systems.',
+    icon: 'Code',
+    features: ['Custom Software Solutions', 'Enterprise Applications', 'SaaS Development', 'System Integration', 'Process Automation'],
+    techStack: ['Python', 'Django', 'React', 'PostgreSQL', 'Docker', 'AWS'],
+    priceRange: 'From GHS 10,000',
+  },
+  {
+    id: '6', title: 'Web Hosting',
+    description: 'Reliable, secure, and high-performance hosting solutions with guaranteed uptime and round-the-clock technical support.',
+    icon: 'Server',
+    features: ['Shared Hosting', 'VPS Hosting', 'Dedicated Servers', 'Cloud Hosting', 'SSL Certificates'],
+    techStack: ['cPanel', 'Nginx', 'CloudLinux', 'LiteSpeed', 'Let\'s Encrypt'],
+    priceRange: 'From GHS 50/yr',
+  },
 ];
 
 const iconMap: Record<string, React.ElementType> = {
@@ -40,11 +102,23 @@ export default function ServicesPage() {
   const [services, setServices] = useState(defaultServices);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
 
   useEffect(() => {
     fetcher('/api/services')
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) setServices(data);
+        if (Array.isArray(data) && data.length > 0) {
+          // Merge API data with default tech stacks and pricing
+          const merged = data.map((s: Record<string, unknown>) => {
+            const defaults = defaultServices.find(d => d.title === s.title);
+            return {
+              ...s,
+              techStack: s.techStack || defaults?.techStack || [],
+              priceRange: s.priceRange || defaults?.priceRange || 'Contact us',
+            } as ServiceItem;
+          });
+          setServices(merged);
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -116,7 +190,9 @@ export default function ServicesPage() {
                 const isPopular = index === 1;
                 return (
                   <motion.div key={service.id} variants={itemVariants}>
-                    <Card className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-all duration-300 group relative overflow-hidden ${isPopular ? 'border-emerald-300 dark:border-emerald-600 ring-1 ring-emerald-200/50 dark:ring-emerald-700/50' : ''} ${isExpanded ? 'border-emerald-300 dark:border-emerald-600 shadow-md ring-1 ring-emerald-200 dark:ring-emerald-700' : ''}`}>
+                    <Card className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-all duration-300 group relative overflow-hidden cursor-pointer ${isPopular ? 'border-emerald-300 dark:border-emerald-600 ring-1 ring-emerald-200/50 dark:ring-emerald-700/50' : ''} ${isExpanded ? 'border-emerald-300 dark:border-emerald-600 shadow-md ring-1 ring-emerald-200 dark:ring-emerald-700' : ''}`}
+                      onClick={() => setSelectedService(service)}
+                    >
                       {/* Gradient top border */}
                       <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 transition-transform duration-500 origin-left ${isPopular ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
                       {/* Most Popular badge */}
@@ -148,7 +224,7 @@ export default function ServicesPage() {
                             </ul>
                             {service.features.length > 3 && (
                               <button
-                                onClick={() => setExpandedId(isExpanded ? null : service.id)}
+                                onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : service.id); }}
                                 className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors inline-flex items-center gap-1"
                               >
                                 {isExpanded ? 'Show less' : `+${service.features.length - 3} more features`}
@@ -158,13 +234,23 @@ export default function ServicesPage() {
                           </div>
                         )}
 
-                        <Button
-                          onClick={() => navigate('contact')}
-                          className={`mt-4 w-full transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} group/btn`
-                        }
-                        >
-                          Get a Quote <ArrowRight className="size-4 ml-1 group-hover/btn:translate-x-1 transition-transform duration-200" />
-                        </Button>
+                        <div className="flex gap-2 mt-4">
+                          <Button
+                            onClick={(e) => { e.stopPropagation(); navigate('contact'); }}
+                            className={`flex-1 transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} group/btn`}
+                          >
+                            Get a Quote <ArrowRight className="size-4 ml-1 group-hover/btn:translate-x-1 transition-transform duration-200" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); setSelectedService(service); }}
+                            className="border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-600 hover:text-emerald-600 dark:hover:text-emerald-400 shrink-0"
+                            aria-label={`View details for ${service.title}`}
+                          >
+                            <ChevronRight className="size-4" />
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -174,6 +260,118 @@ export default function ServicesPage() {
           )}
         </div>
       </section>
+
+      {/* Service Detail Modal */}
+      <Dialog open={!!selectedService} onOpenChange={() => setSelectedService(null)}>
+        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
+          <AnimatePresence mode="wait">
+            {selectedService && (
+              <motion.div
+                key={selectedService.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Gradient Header */}
+                <div className="relative h-36 bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 dark:from-emerald-600 dark:via-emerald-700 dark:to-emerald-900 flex items-center justify-center">
+                  <div className="absolute inset-0 grid-pattern opacity-20" />
+                  <div className="text-center relative z-10">
+                    <div className="size-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
+                      {(() => {
+                        const IconComp = iconMap[selectedService.icon] || Globe;
+                        return <IconComp className="size-7 text-white" />;
+                      })()}
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">{selectedService.title}</h2>
+                  </div>
+                  <button
+                    onClick={() => setSelectedService(null)}
+                    className="absolute top-3 right-3 size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10"
+                    aria-label="Close"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-5 max-h-[calc(90vh-9rem)] overflow-y-auto">
+                  {/* Description */}
+                  <DialogHeader>
+                    <DialogTitle className="text-xl">{selectedService.title}</DialogTitle>
+                    <DialogDescription className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {selectedService.description}
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  {/* Features */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                      <CheckCircle2 className="size-4 text-emerald-500" />
+                      What&apos;s Included
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {selectedService.features?.map((feature: string) => (
+                        <div key={feature} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                          <CheckCircle2 className="size-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Technology Stack */}
+                  {selectedService.techStack && selectedService.techStack.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Technology Stack</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedService.techStack.map((tech: string) => (
+                          <Badge
+                            key={tech}
+                            variant="secondary"
+                            className="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                          >
+                            {tech}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pricing */}
+                  {selectedService.priceRange && (
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 border border-emerald-200 dark:border-emerald-800">
+                      <div className="flex items-center gap-2 mb-1">
+                        <DollarSign className="size-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-sm font-semibold text-slate-900 dark:text-white">Starting Price</span>
+                      </div>
+                      <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{selectedService.priceRange}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Custom quotes available for complex projects</p>
+                    </div>
+                  )}
+
+                  {/* CTA */}
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      onClick={() => { setSelectedService(null); navigate('contact'); }}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 shadow-md"
+                    >
+                      Request a Quote
+                      <ArrowRight className="size-4 ml-2" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedService(null)}
+                      className="flex-1 border-slate-200 dark:border-slate-600"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </DialogContent>
+      </Dialog>
 
       {/* Development Process */}
       <section className="section-padding bg-slate-50 dark:bg-slate-800/50">

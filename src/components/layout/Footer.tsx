@@ -31,10 +31,10 @@ const serviceLinks = [
 ];
 
 const socialLinks = [
-  { icon: Facebook, href: '#', label: 'Facebook' },
-  { icon: Twitter, href: '#', label: 'Twitter' },
-  { icon: Linkedin, href: '#', label: 'LinkedIn' },
-  { icon: Instagram, href: '#', label: 'Instagram' },
+  { icon: Facebook, href: '#', label: 'Facebook', hoverColor: 'hover:bg-blue-600 hover:border-blue-600' },
+  { icon: Twitter, href: '#', label: 'Twitter', hoverColor: 'hover:bg-sky-500 hover:border-sky-500' },
+  { icon: Linkedin, href: '#', label: 'LinkedIn', hoverColor: 'hover:bg-blue-700 hover:border-blue-700' },
+  { icon: Instagram, href: '#', label: 'Instagram', hoverColor: 'hover:bg-pink-600 hover:border-pink-600' },
 ];
 
 export default function Footer() {
@@ -96,10 +96,18 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-slate-900 text-slate-300">
+    <footer className="bg-slate-900 text-slate-300 relative wave-border-top">
+      {/* Gradient top border */}
+      <div className="h-1 bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500" />
+
       {/* Newsletter bar */}
-      <div className="bg-emerald-600">
-        <div className="container-main py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 grid-pattern opacity-10" />
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-400/10 rounded-full blur-2xl" />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-400/10 rounded-full blur-2xl" />
+
+        <div className="container-main py-8 flex flex-col md:flex-row items-center justify-between gap-4 relative">
           <div className="text-center md:text-left">
             <h3 className="text-lg font-semibold text-white">Subscribe to Our Newsletter</h3>
             <p className="text-emerald-100 text-sm flex items-center gap-1.5">
@@ -198,7 +206,7 @@ export default function Footer() {
           {/* Company Info */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="size-9 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+              <div className="size-9 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                 <Zap className="size-5 text-white" />
               </div>
               <div className="flex flex-col">
@@ -206,26 +214,31 @@ export default function Footer() {
                 <span className="text-[10px] font-medium leading-tight text-emerald-400 tracking-wider uppercase">Technologies</span>
               </div>
             </div>
-            <p className="text-sm text-slate-400 mb-4 leading-relaxed">
+            <p className="text-sm text-slate-400 mb-5 leading-relaxed">
               We are a dynamic team of professionals dedicated to delivering innovative IT solutions that drive business growth and digital transformation.
             </p>
             <div className="flex items-center gap-3">
               {socialLinks.map((social) => (
-                <a
+                <motion.a
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
-                  className="size-9 rounded-full bg-slate-800 hover:bg-emerald-600 flex items-center justify-center transition-colors"
+                  className={`size-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 transition-all duration-300 ${social.hoverColor} hover:text-white hover:scale-110 hover:shadow-lg hover:-translate-y-0.5`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <social.icon className="size-4" />
-                </a>
+                </motion.a>
               ))}
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Quick Links</h4>
+            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5 relative">
+              Quick Links
+              <span className="absolute -bottom-1 left-0 w-8 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent rounded-full" />
+            </h4>
             <ul className="space-y-2.5">
               {quickLinks.map((link) => (
                 <li key={link.page}>
@@ -233,7 +246,7 @@ export default function Footer() {
                     onClick={() => navigate(link.page)}
                     className="text-sm text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1.5 group"
                   >
-                    <ArrowRight className="size-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                    <ArrowRight className="size-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all text-emerald-400" />
                     {link.label}
                   </button>
                 </li>
@@ -243,7 +256,10 @@ export default function Footer() {
 
           {/* Services */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Services</h4>
+            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5 relative">
+              Services
+              <span className="absolute -bottom-1 left-0 w-8 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent rounded-full" />
+            </h4>
             <ul className="space-y-2.5">
               {serviceLinks.map((service) => (
                 <li key={service}>
@@ -251,7 +267,7 @@ export default function Footer() {
                     onClick={() => navigate('services')}
                     className="text-sm text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1.5 group"
                   >
-                    <ArrowRight className="size-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                    <ArrowRight className="size-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all text-emerald-400" />
                     {service}
                   </button>
                 </li>
@@ -261,19 +277,28 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Contact Info</h4>
+            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5 relative">
+              Contact Info
+              <span className="absolute -bottom-1 left-0 w-8 h-0.5 bg-gradient-to-r from-emerald-500 to-transparent rounded-full" />
+            </h4>
             <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <MapPin className="size-4 text-emerald-400 mt-0.5 shrink-0" />
-                <span className="text-sm text-slate-400">Accra, Ghana</span>
+              <li className="flex items-start gap-3 group">
+                <div className="size-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-all duration-300">
+                  <MapPin className="size-4 text-emerald-400 group-hover:text-white transition-colors" />
+                </div>
+                <span className="text-sm text-slate-400 pt-1">Accra, Ghana</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone className="size-4 text-emerald-400 shrink-0" />
-                <span className="text-sm text-slate-400">+233 (024) 361 8186</span>
+              <li className="flex items-start gap-3 group">
+                <div className="size-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-all duration-300">
+                  <Phone className="size-4 text-emerald-400 group-hover:text-white transition-colors" />
+                </div>
+                <span className="text-sm text-slate-400 pt-1">+233 (024) 361 8186</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Mail className="size-4 text-emerald-400 shrink-0" />
-                <span className="text-sm text-slate-400">mail@lightworldtech.com</span>
+              <li className="flex items-start gap-3 group">
+                <div className="size-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-all duration-300">
+                  <Mail className="size-4 text-emerald-400 group-hover:text-white transition-colors" />
+                </div>
+                <span className="text-sm text-slate-400 pt-1">mail@lightworldtech.com</span>
               </li>
             </ul>
           </div>

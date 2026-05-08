@@ -36,11 +36,14 @@ export default function ProcessSection() {
   }, []);
 
   return (
-    <section className="section-padding bg-slate-50 dark:bg-slate-900/50">
-      <div className="container-main">
+    <section className="section-padding bg-slate-50 dark:bg-slate-900/50 relative overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-100/30 dark:bg-emerald-900/10 rounded-full blur-3xl" />
+
+      <div className="container-main relative z-10">
         {/* Section header */}
         <motion.div
-          className="text-center max-w-2xl mx-auto mb-12"
+          className="text-center max-w-2xl mx-auto mb-14"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -67,8 +70,23 @@ export default function ProcessSection() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-            {/* Connecting dashed line - desktop */}
-            <div className="hidden lg:block absolute top-8 left-[calc(12.5%+20px)] right-[calc(12.5%+20px)] h-0 border-t-2 border-dashed border-emerald-200 dark:border-emerald-800 z-0" />
+            {/* Connecting gradient line - desktop (SVG for self-drawing animation) */}
+            <svg className="hidden lg:block absolute top-[28px] left-[calc(12.5%+20px)] right-[calc(12.5%+20px)] h-2 z-0 pointer-events-none" preserveAspectRatio="none">
+              <line
+                x1="0" y1="4" x2="100%" y2="4"
+                stroke="url(#process-gradient)"
+                strokeWidth="2"
+                strokeDasharray="8 6"
+                className="animate-draw-line"
+              />
+              <defs>
+                <linearGradient id="process-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="oklch(0.696 0.17 162.48)" />
+                  <stop offset="50%" stopColor="oklch(0.769 0.188 70.08)" />
+                  <stop offset="100%" stopColor="oklch(0.696 0.17 162.48)" />
+                </linearGradient>
+              </defs>
+            </svg>
 
             {steps.map((step, index) => {
               const IconComp = iconMap[step.icon] || Code;
@@ -81,26 +99,35 @@ export default function ProcessSection() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
                 >
-                  <div className="p-6 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg dark:hover:shadow-emerald-900/20 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-300 h-full hover:-translate-y-1">
-                    {/* Step number with gradient and scale animation */}
-                    <div className="flex items-center gap-3 mb-4">
+                  <div className="p-6 rounded-xl bg-white dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-xl dark:hover:shadow-emerald-900/20 hover:border-emerald-300 dark:hover:border-emerald-600/50 transition-all duration-500 h-full hover:-translate-y-2 group relative overflow-hidden">
+                    {/* Subtle gradient overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/0 to-emerald-50/50 dark:from-emerald-900/0 dark:to-emerald-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-xl" />
+
+                    {/* Step number with gradient, pulse, and scale animation */}
+                    <div className="flex items-center gap-3 mb-4 relative">
                       <motion.div
-                        className="size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-500/25 dark:shadow-emerald-900/40"
+                        className="relative size-10"
                         initial={{ scale: 0 }}
                         whileInView={{ scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.4, delay: index * 0.08 + 0.2, type: 'spring', stiffness: 200 }}
                       >
-                        {step.number || index + 1}
+                        {/* Pulse ring effect */}
+                        <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-pulse" />
+                        <div className="relative size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-500 dark:to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-emerald-500/25 dark:shadow-emerald-900/40 group-hover:shadow-emerald-500/40 transition-shadow duration-300">
+                          {step.number || index + 1}
+                        </div>
                       </motion.div>
-                      <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent dark:from-slate-700 dark:to-transparent" />
+                      <div className="h-px flex-1 bg-gradient-to-r from-emerald-200 dark:from-emerald-800 to-transparent" />
                     </div>
-                    {/* Icon */}
-                    <div className="size-11 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/40 dark:to-emerald-900/20 flex items-center justify-center mb-3 shadow-sm">
-                      <IconComp className="size-5 text-emerald-600 dark:text-emerald-400" />
+
+                    {/* Icon with hover animation */}
+                    <div className="size-11 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/40 dark:to-emerald-900/20 flex items-center justify-center mb-3 shadow-sm group-hover:shadow-md group-hover:from-emerald-100 group-hover:to-amber-100 dark:group-hover:from-emerald-800/40 dark:group-hover:to-amber-900/20 transition-all duration-500 relative">
+                      <IconComp className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
                     </div>
-                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white">{step.title}</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{step.description}</p>
+
+                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">{step.title}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed relative">{step.description}</p>
                   </div>
                 </motion.div>
               );

@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search, ChevronDown, MessageCircle, HelpCircle, ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useAppStore } from '@/lib/store';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -22,6 +24,7 @@ export default function FAQSection() {
   const [faqs, setFaqs] = useState(defaultFaqs);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const { navigate } = useAppStore();
 
   useEffect(() => {
     fetcher('/api/faqs')
@@ -43,8 +46,16 @@ export default function FAQSection() {
   }, [faqs, searchQuery]);
 
   return (
-    <section className="section-padding bg-slate-50 dark:bg-slate-900/50" id="faq">
-      <div className="container-main">
+    <section className="section-padding bg-slate-50 dark:bg-slate-900/50 relative overflow-hidden" id="faq">
+      {/* Subtle background decorations */}
+      <div className="absolute top-10 right-10 text-emerald-200/20 dark:text-emerald-800/20">
+        <HelpCircle className="size-40" />
+      </div>
+      <div className="absolute bottom-10 left-10 text-amber-200/15 dark:text-amber-800/15">
+        <HelpCircle className="size-24" />
+      </div>
+
+      <div className="container-main relative z-10">
         <div className="max-w-3xl mx-auto">
           {/* Section header */}
           <motion.div
@@ -103,11 +114,11 @@ export default function FAQSection() {
                       <AccordionItem
                         key={faq.id}
                         value={faq.id}
-                        className="border rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 px-6 data-[state=open]:shadow-md data-[state=open]:border-emerald-300 dark:data-[state=open]:border-emerald-600 data-[state=open]:bg-gradient-to-r data-[state=open]:from-emerald-50/50 data-[state=open]:to-white dark:data-[state=open]:from-emerald-900/10 dark:data-[state=open]:to-slate-800 transition-all duration-300 overflow-hidden"
+                        className="border rounded-xl bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/50 px-6 data-[state=open]:shadow-lg data-[state=open]:shadow-emerald-500/5 data-[state=open]:border-emerald-300 dark:data-[state=open]:border-emerald-600/50 data-[state=open]:bg-gradient-to-r data-[state=open]:from-emerald-50/60 data-[state=open]:to-white dark:data-[state=open]:from-emerald-900/10 dark:data-[state=open]:to-slate-800/80 transition-all duration-300 overflow-hidden"
                       >
-                        <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline py-4 text-slate-900 dark:text-white data-[state=open]:text-emerald-700 dark:data-[state=open]:text-emerald-400 transition-colors [&>svg]:text-slate-400 [&>svg]:data-[state=open]:text-emerald-600 [&>svg]:dark:[&>svg]:data-[state=open]:text-emerald-400">
+                        <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline py-4 text-slate-900 dark:text-white data-[state=open]:text-emerald-700 dark:data-[state=open]:text-emerald-400 transition-colors [&>svg]:text-slate-400 [&>svg]:data-[state=open]:text-emerald-600 dark:[&>svg]:data-[state=open]:text-emerald-400">
                           <span className="flex items-center gap-3">
-                            <span className="size-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                            <span className="size-7 rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-emerald-900/60 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0 shadow-sm">
                               {String(index + 1).padStart(2, '0')}
                             </span>
                             {faq.question}
@@ -134,6 +145,39 @@ export default function FAQSection() {
               </AnimatePresence>
             </motion.div>
           )}
+
+          {/* Still have questions CTA */}
+          <motion.div
+            className="mt-14 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <div className="bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/10 rounded-2xl p-8 md:p-10 border border-emerald-100 dark:border-emerald-800/30 relative overflow-hidden">
+              {/* Decorative background */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200/30 dark:bg-emerald-700/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-200/30 dark:bg-amber-700/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+
+              <div className="relative">
+                <div className="size-14 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/25">
+                  <MessageCircle className="size-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Still Have Questions?</h3>
+                <p className="text-slate-600 dark:text-slate-300 mb-6 max-w-md mx-auto">
+                  Can&apos;t find what you&apos;re looking for? Our team is happy to help. Reach out to us and we&apos;ll get back to you within 24 hours.
+                </p>
+                <Button
+                  onClick={() => navigate('contact')}
+                  size="lg"
+                  className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all px-8 h-12"
+                >
+                  Contact Us
+                  <ArrowRight className="size-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>

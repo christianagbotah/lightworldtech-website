@@ -14,6 +14,10 @@ interface AppState {
   setBlogSearch: (search: string) => void;
   blogCategory: string;
   setBlogCategory: (category: string) => void;
+  isAdminLoggedIn: boolean;
+  adminName: string;
+  loginAdmin: (name: string) => void;
+  logoutAdmin: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -35,4 +39,8 @@ export const useAppStore = create<AppState>((set) => ({
   setBlogSearch: (search) => set({ blogSearch: search }),
   blogCategory: 'all',
   setBlogCategory: (category) => set({ blogCategory: category }),
+  isAdminLoggedIn: false,
+  adminName: '',
+  loginAdmin: (name) => set({ isAdminLoggedIn: true, adminName: name }),
+  logoutAdmin: () => set({ isAdminLoggedIn: false, adminName: '', adminTab: 'dashboard' }),
 }));

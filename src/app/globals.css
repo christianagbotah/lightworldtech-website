@@ -161,11 +161,17 @@
   .text-gradient {
     @apply bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent;
   }
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-emerald-400 via-emerald-300 to-amber-400 bg-clip-text text-transparent;
+  }
   .bg-gradient-primary {
     @apply bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900;
   }
   .bg-gradient-dark {
     @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900;
+  }
+  .bg-gradient-cta {
+    @apply bg-gradient-to-br from-emerald-600 via-emerald-700 to-amber-600;
   }
   .section-padding {
     @apply py-16 md:py-24 px-4 sm:px-6 lg:px-8;
@@ -190,12 +196,17 @@
   background: oklch(0.5 0 0 / 50%);
 }
 
-/* Animations */
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+/* Float animation */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
 }
 
+/* Pulse glow animation */
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 20px oklch(0.596 0.145 163.225 / 20%); }
   50% { box-shadow: 0 0 40px oklch(0.596 0.145 163.225 / 40%); }
@@ -209,6 +220,7 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* Cursor blink */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -219,11 +231,6 @@
   50% { opacity: 0; }
 }
 
-@keyframes glow-pulse {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.02); }
-}
-
 .animate-blink {
   animation: blink 1s step-end infinite;
 }
@@ -232,9 +239,91 @@
   animation: blink-fast 0.5s step-end infinite;
 }
 
+/* Glow pulse */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
 .animate-glow-pulse {
   animation: glow-pulse 2s ease-in-out infinite;
 }
+
+/* Shimmer / Shine effect */
+@keyframes shimmer {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+/* Gradient shift for backgrounds */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+/* Pulse ring for notification dots */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  80%, 100% { transform: scale(2); opacity: 0; }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+/* Subtle scale breathe for decorative elements */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.08); opacity: 0.8; }
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* Draw line for timeline connectors */
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-draw-line {
+  stroke-dasharray: 8 6;
+  stroke-dashoffset: 100;
+  animation: draw-line 2s ease-out forwards;
+}
+
+/* Spin slow for decorative elements */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* Marquee scroll for logos */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* ============================================
+   PATTERNS & BACKGROUNDS
+   ============================================ */
 
 /* Grid pattern */
 .grid-pattern {
@@ -250,6 +339,18 @@
   background-size: 24px 24px;
 }
 
+/* Mesh gradient pattern */
+.mesh-pattern {
+  background-image: 
+    radial-gradient(at 20% 30%, oklch(0.765 0.177 163.223 / 15%) 0px, transparent 60%),
+    radial-gradient(at 80% 70%, oklch(0.828 0.189 84.429 / 12%) 0px, transparent 60%),
+    radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 8%) 0px, transparent 70%);
+}
+
+/* ============================================
+   GLASS & GLASSMORPHISM EFFECTS
+   ============================================ */
+
 /* Glass effect */
 .glass {
   background: oklch(1 0 0 / 80%);
@@ -261,7 +362,69 @@
   background: oklch(0.145 0 0 / 80%);
 }
 
-/* Markdown content styling */
+/* Glassmorphism card */
+.glass-card {
+  background: oklch(1 0 0 / 60%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid oklch(1 0 0 / 30%);
+}
+
+.dark .glass-card {
+  background: oklch(0.205 0 0 / 60%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid oklch(1 0 0 / 8%);
+}
+
+/* ============================================
+   DARK MODE VARIANTS
+   ============================================ */
+
+/* Dark mode grid pattern - more subtle */
+.dark .grid-pattern {
+  background-image: 
+    linear-gradient(oklch(0.765 0.177 163.223 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.765 0.177 163.223 / 5%) 1px, transparent 1px);
+}
+
+/* Dark mode dot pattern */
+.dark .dot-pattern {
+  background-image: radial-gradient(oklch(0.765 0.177 163.223 / 10%) 1px, transparent 1px);
+}
+
+/* Dark mode mesh pattern */
+.dark .mesh-pattern {
+  background-image: 
+    radial-gradient(at 20% 30%, oklch(0.765 0.177 163.223 / 10%) 0px, transparent 60%),
+    radial-gradient(at 80% 70%, oklch(0.828 0.189 84.429 / 8%) 0px, transparent 60%),
+    radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 5%) 0px, transparent 70%);
+}
+
+/* ============================================
+   SMOOTH DARK MODE TRANSITIONS
+   ============================================ */
+
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Opt-out for elements that need instant response */
+.no-transition, .no-transition *,
+[data-radix-collection-item],
+svg,
+canvas,
+video,
+img {
+  transition: none !important;
+}
+
+/* ============================================
+   MARKDOWN / PROSE CONTENT
+   ============================================ */
+
 .prose h1 { @apply text-3xl font-bold mt-8 mb-4 text-foreground; }
 .prose h2 { @apply text-2xl font-bold mt-6 mb-3 text-foreground; }
 .prose h3 { @apply text-xl font-semibold mt-4 mb-2 text-foreground; }
@@ -275,14 +438,46 @@
 .prose code { @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono; }
 .prose pre { @apply bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto my-4; }
 
-/* Dark mode grid pattern - more subtle */
-.dark .grid-pattern {
-  background-image: 
-    linear-gradient(oklch(0.765 0.177 163.223 / 5%) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.765 0.177 163.223 / 5%) 1px, transparent 1px);
+/* ============================================
+   WAVE BORDER FOR FOOTER
+   ============================================ */
+
+.wave-border-top {
+  position: relative;
+}
+.wave-border-top::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(135deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.666 0.179 58.318), oklch(0.828 0.189 84.429));
+  clip-path: polygon(0 60%, 15% 45%, 30% 55%, 45% 40%, 60% 50%, 75% 35%, 90% 45%, 100% 30%, 100% 100%, 0 100%);
+  opacity: 0.15;
 }
 
-/* Dark mode dot pattern */
-.dark .dot-pattern {
-  background-image: radial-gradient(oklch(0.765 0.177 163.223 / 10%) 1px, transparent 1px);
+/* ============================================
+   GRADIENT BORDER ANIMATION
+   ============================================ */
+
+.gradient-border-animated {
+  position: relative;
+}
+.gradient-border-animated::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.596 0.145 163.225), transparent);
+  background-size: 200% 100%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.dark .gradient-border-animated::after {
+  background: linear-gradient(90deg, transparent, oklch(0.769 0.188 70.08), oklch(0.696 0.17 162.48), oklch(0.769 0.188 70.08), transparent);
+  background-size: 200% 100%;
+  animation: gradient-shift 3s ease infinite;
 }

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Phone, Mail, MapPin, Clock, ChevronRight, CheckCircle2, Loader2, Copy, Check } from 'lucide-react';
+import { Send, Phone, Mail, MapPin, Clock, ChevronRight, CheckCircle2, Loader2, Copy, Check, CalendarDays, MessageCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,19 +38,15 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 function useOfficeStatus() {
   const status = useMemo(() => {
     const now = new Date();
-    // Ghana is UTC+0, but we use the local timezone calculation
     const utcHours = now.getUTCHours();
-    const day = now.getUTCDay(); // 0=Sun, 6=Sat
-    // Ghana (Accra) is UTC+0, so UTC hours = local Ghana hours
+    const day = now.getUTCDay();
     const ghHour = utcHours;
 
-    // Mon-Fri: 08:00 - 17:00, Sat: 09:00 - 13:00
     if (day === 0) return { open: false, label: 'Currently Closed' };
     if (day === 6) {
       if (ghHour >= 9 && ghHour < 13) return { open: true, label: 'Currently Open' };
       return { open: false, label: 'Currently Closed' };
     }
-    // Mon-Fri
     if (ghHour >= 8 && ghHour < 17) return { open: true, label: 'Currently Open' };
     return { open: false, label: 'Currently Closed' };
   }, []);
@@ -164,28 +160,61 @@ export default function ContactPage() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <div className="size-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">Message Sent!</h3>
-                      <p className="text-slate-500 dark:text-slate-400 mb-6">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
-                      <Button
-                        onClick={() => setSubmitted(false)}
-                        variant="outline"
-                        className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400"
+                      <motion.div
+                        className="size-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
                       >
-                        Send Another Message
-                      </Button>
+                        <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
+                      </motion.div>
+                      <h3 className="text-2xl font-semibold mb-2 text-slate-900 dark:text-white">Message Sent!</h3>
+                      <p className="text-slate-500 dark:text-slate-400 mb-2">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
+                      <p className="text-sm text-slate-400 dark:text-slate-500 mb-6">
+                        Check your email for a confirmation.
+                      </p>
+                      <div className="flex gap-3 justify-center">
+                        <Button
+                          onClick={() => setSubmitted(false)}
+                          variant="outline"
+                          className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400"
+                        >
+                          Send Another Message
+                        </Button>
+                        <Button
+                          onClick={() => navigate('home')}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          Back to Home
+                        </Button>
+                      </div>
                     </motion.div>
                   ) : (
                     <>
                       <h2 className="text-2xl font-bold mb-1 text-slate-900 dark:text-white">Send Us a Message</h2>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Fill out the form below and we&apos;ll respond promptly.</p>
 
+                      {/* Form status indicator */}
+                      {submitting && (
+                        <motion.div
+                          className="mb-4 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                        >
+                          <Loader2 className="size-4 animate-spin" />
+                          Sending your message...
+                        </motion.div>
+                      )}
+
                       {error && (
-                        <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
+                        <motion.div
+                          className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 flex items-center gap-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                        >
+                          <CheckCircle2 className="size-4" />
                           {error}
-                        </div>
+                        </motion.div>
                       )}
 
                       <form onSubmit={handleSubmit} className="space-y-5">
@@ -199,6 +228,7 @@ export default function ContactPage() {
                               onChange={handleChange}
                               placeholder="John Doe"
                               required
+                              disabled={submitting}
                               className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
                             />
                           </div>
@@ -212,6 +242,7 @@ export default function ContactPage() {
                               onChange={handleChange}
                               placeholder="john@example.com"
                               required
+                              disabled={submitting}
                               className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
                             />
                           </div>
@@ -226,6 +257,7 @@ export default function ContactPage() {
                               value={formData.phone}
                               onChange={handleChange}
                               placeholder="+233 XX XXX XXXX"
+                              disabled={submitting}
                               className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
                             />
                           </div>
@@ -238,6 +270,7 @@ export default function ContactPage() {
                               onChange={handleChange}
                               placeholder="How can we help?"
                               required
+                              disabled={submitting}
                               className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all"
                             />
                           </div>
@@ -252,26 +285,29 @@ export default function ContactPage() {
                             placeholder="Tell us about your project..."
                             rows={5}
                             required
+                            disabled={submitting}
                             className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all resize-none"
                           />
                         </div>
-                        <Button
-                          type="submit"
-                          disabled={submitting}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto px-8 shadow-md hover:shadow-lg transition-shadow"
-                        >
-                          {submitting ? (
-                            <>
-                              <Loader2 className="size-4 mr-2 animate-spin" />
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              Send Message
-                              <Send className="size-4 ml-2" />
-                            </>
-                          )}
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button
+                            type="submit"
+                            disabled={submitting}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto px-8 shadow-md hover:shadow-lg transition-shadow"
+                          >
+                            {submitting ? (
+                              <>
+                                <Loader2 className="size-4 mr-2 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                Send Message
+                                <Send className="size-4 ml-2" />
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </form>
                     </>
                   )}
@@ -341,7 +377,6 @@ export default function ContactPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-slate-900 dark:text-white">Office Hours</h3>
-                        {/* Pulsing dot */}
                         <span className="flex items-center gap-1.5">
                           <span className={`relative flex size-2.5 ${officeStatus.open ? '' : 'opacity-50'}`}>
                             {officeStatus.open && (
@@ -362,15 +397,57 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
 
-              {/* Map Placeholder */}
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
-                <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative flex items-center justify-center">
-                  <div className="absolute inset-0 grid-pattern opacity-30" />
-                  <div className="text-center relative z-10">
-                    <MapPin className="size-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Interactive Map</p>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400">Accra, Ghana</p>
+              {/* Schedule a Call */}
+              <Card className="border-emerald-200 dark:border-emerald-700 bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 shadow-sm overflow-hidden relative">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-amber-400" />
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="size-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0">
+                      <CalendarDays className="size-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 dark:text-white">Schedule a Call</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Book a 30-minute consultation</p>
+                    </div>
                   </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
+                    Not sure where to start? Schedule a free consultation call with our team to discuss your project requirements.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm"
+                      onClick={() => {
+                        const message = 'Hello! I would like to schedule a consultation call to discuss a project.';
+                        window.open(`https://wa.me/233243618186?text=${encodeURIComponent(message)}`, '_blank');
+                      }}
+                    >
+                      <MessageCircle className="size-4 mr-2" />
+                      WhatsApp Us
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Google Maps Embed */}
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
+                <div className="p-3 pb-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Our Location</h3>
+                  </div>
+                </div>
+                <div className="h-56 rounded-b-lg overflow-hidden">
+                  <iframe
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3770%2C5.5837%2C-0.0070%2C5.6237&layer=mapnik&marker=5.6037%2C-0.1870"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Lightworld Technologies Office Location - Accra, Ghana"
+                    className="grayscale-[30%] contrast-[1.1] dark:grayscale-[60%] dark:brightness-[0.8]"
+                  />
                 </div>
               </Card>
             </motion.div>

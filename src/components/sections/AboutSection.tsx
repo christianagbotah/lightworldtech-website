@@ -7,7 +7,7 @@ import { useAppStore } from '@/lib/store';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 
 function AnimatedStat({ value, suffix, label, delay = 0 }: { value: number; suffix: string; label: string; delay?: number }) {
-  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: true, startDelay: delay });
+  const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
   return (
     <div className="text-center" ref={ref}>
       <div className="text-3xl sm:text-4xl font-bold text-emerald-600 dark:text-emerald-400 mb-1 tabular-nums">{displayValue}</div>
