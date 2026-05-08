@@ -15,7 +15,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { useAppStore } from '@/lib/store';
+import { useSEO } from '@/hooks/use-seo';
 import CTASection from '@/components/sections/CTASection';
+import ImageLightbox from '@/components/ui/image-lightbox';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -56,10 +58,17 @@ const itemVariants = {
 
 export default function PortfolioPage() {
   const { navigate } = useAppStore();
+  useSEO({
+    title: 'Portfolio',
+    description: 'Explore our portfolio of web development, mobile app, and software projects. See how Lightworld Technologies delivers innovative solutions for businesses in Ghana and Africa.',
+    keywords: ['portfolio Ghana', 'web development projects', 'mobile app showcase', 'software solutions', 'IT projects Africa', 'Lightworld Technologies work'],
+  });
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(defaultPortfolio);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedProject, setSelectedProject] = useState<PortfolioItem | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(6);
   const itemsPerPage = 6;
 
@@ -78,6 +87,12 @@ export default function PortfolioPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const handleCardClick = (project: PortfolioItem, index: number) => {
+    setSelectedProject(project);
+    setLightboxOpen(true);
+    setLightboxIndex(index);
+  };
 
   const filtered = activeCategory === 'all'
     ? portfolio
@@ -212,7 +227,7 @@ export default function PortfolioPage() {
                     >
                       <Card
                         className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                        onClick={() => setSelectedProject(project)}
+                        onClick={() => handleCardClick(project, visibleItems.indexOf(project))}
                       >
                         {/* Image placeholder */}
                         <div className="relative h-56 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 overflow-hidden">
@@ -319,7 +334,7 @@ export default function PortfolioPage() {
       </section>
 
       {/* Quick View Modal */}
-      <Dialog open={!!selectedProject} onOpenChange={() => setSelectedProject(null)}>
+      <Dialog open={!!selectedProject && !lightboxOpen} onOpenChange={() => setSelectedProject(null)}>
         <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
           {selectedProject && (
             <>
@@ -337,19 +352,33 @@ export default function PortfolioPage() {
               </div>
 
               <div className="p-6 space-y-4">
-                <div>
-                  <Badge className="mb-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
-                    {selectedProject.category}
-                  </Badge>
-                  {selectedProject.featured && (
-                    <Badge className="mb-2 ml-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-                      Featured
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Badge className="mb-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+                      {selectedProject.category}
                     </Badge>
-                  )}
-                  <DialogHeader className="mt-2">
-                    <DialogTitle className="text-xl">{selectedProject.title}</DialogTitle>
-                  </DialogHeader>
+                    {selectedProject.featured && (
+                      <Badge className="mb-2 ml-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                        Featured
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      const idx = filtered.findIndex(p => p.id === selectedProject.id);
+                      setLightboxIndex(idx >= 0 ? idx : 0);
+                      setLightboxOpen(true);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                  >
+                    <ExternalLink className="size-3 mr-1" />
+                    Full View
+                  </Button>
                 </div>
+                <DialogHeader className="mt-1">
+                  <DialogTitle className="text-xl">{selectedProject.title}</DialogTitle>
+                </DialogHeader>
 
                 <DialogDescription className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                   {selectedProject.fullDescription || selectedProject.description}
@@ -382,6 +411,25 @@ export default function PortfolioPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        items={filtered.map(p => ({
+          id: p.id,
+          title: p.title,
+          description: p.fullDescription || p.description,
+          category: p.category,
+          tags: p.tags,
+          featured: p.featured,
+        }))}
+        currentIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        onNavigate={(index) => {
+          setLightboxIndex(index);
+          setSelectedProject(filtered[index] || null);
+        }}
+      />
 
       {/* CTA */}
       <CTASection />

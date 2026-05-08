@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
+import { useSEO } from '@/hooks/use-seo';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -113,6 +114,11 @@ const itemVariants = {
 
 export default function AboutPage() {
   const { navigate } = useAppStore();
+  useSEO({
+    title: 'About Us',
+    description: 'Learn about Lightworld Technologies - a passionate team of innovators dedicated to transforming businesses through technology in Ghana and across Africa.',
+    keywords: ['about Lightworld Technologies', 'IT company Ghana', 'tech team Accra', 'web development company', 'digital transformation Africa'],
+  });
   const [team, setTeam] = useState(defaultTeam);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);

@@ -8,9 +8,11 @@ import BackToTop from '@/components/layout/BackToTop';
 import WhatsAppButton from '@/components/layout/WhatsAppButton';
 import CookieConsent from '@/components/layout/CookieConsent';
 import NewsletterPopup from '@/components/layout/NewsletterPopup';
+import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import PageLoader from '@/components/ui/page-loader';
 import ScrollProgress from '@/components/ui/scroll-progress';
 import CommandPalette from '@/components/ui/command-palette';
+import Preloader from '@/components/ui/preloader';
 import HomePage from '@/components/pages/HomePage';
 import AboutPage from '@/components/pages/AboutPage';
 import ServicesPage from '@/components/pages/ServicesPage';
@@ -18,6 +20,7 @@ import BlogPage from '@/components/pages/BlogPage';
 import BlogDetailPage from '@/components/pages/BlogDetailPage';
 import ContactPage from '@/components/pages/ContactPage';
 import PortfolioPage from '@/components/pages/PortfolioPage';
+import CareersPage from '@/components/pages/CareersPage';
 import AdminLogin from '@/components/admin/AdminLogin';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminDashboard from '@/components/admin/AdminDashboard';
@@ -88,6 +91,7 @@ function PublicRouter() {
         {currentPage === 'blog-detail' && <BlogDetailPage />}
         {currentPage === 'contact' && <ContactPage />}
         {currentPage === 'portfolio' && <PortfolioPage />}
+        {currentPage === 'careers' && <CareersPage />}
       </motion.div>
     </AnimatePresence>
   );
@@ -129,7 +133,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Preloader />
       <ScrollProgress />
+      <AnnouncementBar />
       <PageLoader />
       <Header />
       <main className="flex-1">

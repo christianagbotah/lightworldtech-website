@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
+import { useSEO } from '@/hooks/use-seo';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -62,6 +63,11 @@ const itemVariants = {
 
 export default function BlogPage() {
   const { navigate, blogSearch, setBlogSearch, blogCategory, setBlogCategory } = useAppStore();
+  useSEO({
+    title: 'Blog',
+    description: 'Insights, tips, and trends from the Lightworld Technologies team. Expert articles on web development, mobile apps, SEO, digital marketing, and technology in Ghana.',
+    keywords: ['tech blog Ghana', 'web development blog', 'mobile app trends', 'SEO tips', 'digital marketing Africa', 'IT insights'],
+  });
   const [posts, setPosts] = useState<BlogPost[]>(defaultPosts);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -356,12 +362,11 @@ export default function BlogPage() {
                           layout
                         >
                           <Card
-                            className={`group overflow-hidden bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 cursor-pointer h-full relative ${
-                              post.featured ? 'ring-1 ring-emerald-200 dark:ring-emerald-700/50' : ''
+                            className={`group overflow-hidden bg-white dark:bg-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer h-full relative ${
+                              post.featured ? 'ring-2 ring-amber-400/60 dark:ring-amber-500/50' : ''
                             }`}
                             style={{
                               borderImage: undefined,
-                              border: '1px solid',
                               borderImageSlice: undefined,
                             }}
                             onClick={() => handlePostClick(post.slug)}
@@ -371,8 +376,10 @@ export default function BlogPage() {
                               <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
                             </div>
                             <div className="relative">
-                              <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
+                              <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden transition-transform duration-500 group-hover:scale-[1.03]">
                                 <div className="absolute inset-0 grid-pattern opacity-30" />
+                                {/* Gradient overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-emerald-600/20 via-transparent to-transparent" />
                                 <div className="absolute top-3 left-3">
                                   <Badge className="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 text-xs backdrop-blur-sm">
                                     {post.category}
@@ -387,6 +394,13 @@ export default function BlogPage() {
                                     </Badge>
                                   </div>
                                 )}
+                                {/* Read time badge */}
+                                <div className="absolute bottom-3 right-3">
+                                  <Badge className="bg-black/40 backdrop-blur-sm text-white text-[10px] gap-1 border-0">
+                                    <Clock className="size-2.5" />
+                                    {post.readTime}
+                                  </Badge>
+                                </div>
                               </div>
                               <CardContent className="p-5 flex flex-col h-full">
                                 <h3 className="font-semibold text-lg mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 text-slate-900 dark:text-white">

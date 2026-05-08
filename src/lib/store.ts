@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'admin' | 'admin-dashboard' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
+export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'careers' | 'admin' | 'admin-dashboard' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
 
 interface AppState {
   currentPage: Page;
@@ -14,6 +14,8 @@ interface AppState {
   setBlogSearch: (search: string) => void;
   blogCategory: string;
   setBlogCategory: (category: string) => void;
+  contactSubject: string;
+  setContactSubject: (subject: string) => void;
   isAdminLoggedIn: boolean;
   adminName: string;
   loginAdmin: (name: string) => void;
@@ -39,6 +41,8 @@ export const useAppStore = create<AppState>((set) => ({
   setBlogSearch: (search) => set({ blogSearch: search }),
   blogCategory: 'all',
   setBlogCategory: (category) => set({ blogCategory: category }),
+  contactSubject: '',
+  setContactSubject: (subject) => set({ contactSubject: subject }),
   isAdminLoggedIn: false,
   adminName: '',
   loginAdmin: (name) => set({ isAdminLoggedIn: true, adminName: name }),

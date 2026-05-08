@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Globe, Smartphone, GraduationCap, TrendingUp, Code, Server,
@@ -18,8 +18,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { useAppStore } from '@/lib/store';
+import { useSEO } from '@/hooks/use-seo';
 import CTASection from '@/components/sections/CTASection';
 import QuotationForm from '@/components/ui/quotation-form';
+import QuoteCalculator from '@/components/ui/quote-calculator';
+import { useTilt } from '@/hooks/use-tilt';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -98,8 +101,145 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
+function ServiceCard({
+  service,
+  index,
+  expandedId,
+  setExpandedId,
+  setSelectedService,
+  setQuoteServiceId,
+  setQuoteOpen,
+}: {
+  service: ServiceItem;
+  index: number;
+  expandedId: string | null;
+  setExpandedId: (id: string | null) => void;
+  setSelectedService: (s: ServiceItem) => void;
+  setQuoteServiceId: (id: string) => void;
+  setQuoteOpen: (open: boolean) => void;
+}) {
+  const IconComp = iconMap[service.icon] || Globe;
+  const isExpanded = expandedId === service.id;
+  const isPopular = index === 1;
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -8;
+    const rotateY = ((x - centerX) / centerX) * 8;
+    const percentX = (x / rect.width) * 100;
+    const percentY = (y / rect.height) * 100;
+
+    el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+    el.style.transition = 'transform 400ms cubic-bezier(0.03, 0.98, 0.52, 0.99)';
+
+    const highlight = el.querySelector('[data-tilt-highlight]') as HTMLElement;
+    if (highlight) {
+      highlight.style.background = `radial-gradient(circle at ${percentX}% ${percentY}%, oklch(0.765 0.177 163.223 / 0.12), transparent 60%)`;
+      highlight.style.opacity = '1';
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+    el.style.transition = 'transform 400ms cubic-bezier(0.03, 0.98, 0.52, 0.99)';
+    const highlight = el.querySelector('[data-tilt-highlight]') as HTMLElement;
+    if (highlight) {
+      highlight.style.opacity = '0';
+    }
+  }, []);
+
+  return (
+    <Card
+      ref={cardRef}
+      className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-shadow duration-300 group relative overflow-hidden cursor-pointer ${isPopular ? 'border-emerald-300 dark:border-emerald-600 ring-1 ring-emerald-200/50 dark:ring-emerald-700/50' : ''} ${isExpanded ? 'border-emerald-300 dark:border-emerald-600 shadow-md ring-1 ring-emerald-200 dark:ring-emerald-700' : ''}`}
+      onClick={() => setSelectedService(service)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Tilt gradient highlight */}
+      <div
+        data-tilt-highlight
+        className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-300 pointer-events-none z-10"
+      />
+      {/* Gradient top border */}
+      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 transition-transform duration-500 origin-left z-20 ${isPopular ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+      {/* Most Popular badge */}
+      {isPopular && (
+        <div className="absolute top-3 right-3 z-20">
+          <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-semibold shadow-md gap-1">
+            <Sparkles className="size-3" />
+            Most Popular
+          </Badge>
+        </div>
+      )}
+      <CardContent className="p-6 relative z-[5]">
+        <div className="size-14 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow duration-300">
+          <IconComp className="size-6 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
+        </div>
+        <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{service.title}</h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">{service.description}</p>
+
+        {/* Features list */}
+        {service.features && (
+          <div className="space-y-2">
+            <ul className="space-y-2">
+              {service.features.slice(0, isExpanded ? undefined : 3).map((feature: string) => (
+                <li key={feature} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                  <CheckCircle2 className="size-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+            {service.features.length > 3 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : service.id); }}
+                className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors inline-flex items-center gap-1"
+              >
+                {isExpanded ? 'Show less' : `+${service.features.length - 3} more features`}
+                <ArrowRight className={`size-3 transition-transform duration-200 ${isExpanded ? '-rotate-90' : ''}`} />
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className="flex gap-2 mt-4">
+          <Button
+            onClick={(e) => { e.stopPropagation(); setQuoteServiceId(service.id); setQuoteOpen(true); }}
+            className={`flex-1 transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} group/btn`}
+          >
+            Get a Quote <ArrowRight className="size-4 ml-1 group-hover/btn:translate-x-1 transition-transform duration-200" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={(e) => { e.stopPropagation(); setSelectedService(service); }}
+            className="border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-600 hover:text-emerald-600 dark:hover:text-emerald-400 shrink-0"
+            aria-label={`View details for ${service.title}`}
+          >
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ServicesPage() {
   const { navigate } = useAppStore();
+  useSEO({
+    title: 'Services',
+    description: 'Professional IT services in Ghana: Web Development, Mobile App Development, SEO & Marketing, Software Development, IT Training, and Web Hosting. Get a free quote today.',
+    keywords: ['web development Ghana', 'mobile app development', 'SEO services', 'software development', 'IT training Ghana', 'web hosting', 'digital marketing Accra'],
+  });
   const [services, setServices] = useState(defaultServices);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -188,74 +328,17 @@ export default function ServicesPage() {
               viewport={{ once: true }}
             >
               {services.map((service, index) => {
-                const IconComp = iconMap[service.icon] || Globe;
-                const isExpanded = expandedId === service.id;
-                const isPopular = index === 1;
                 return (
                   <motion.div key={service.id} variants={itemVariants}>
-                    <Card className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-all duration-300 group relative overflow-hidden cursor-pointer ${isPopular ? 'border-emerald-300 dark:border-emerald-600 ring-1 ring-emerald-200/50 dark:ring-emerald-700/50' : ''} ${isExpanded ? 'border-emerald-300 dark:border-emerald-600 shadow-md ring-1 ring-emerald-200 dark:ring-emerald-700' : ''}`}
-                      onClick={() => setSelectedService(service)}
-                    >
-                      {/* Gradient top border */}
-                      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 transition-transform duration-500 origin-left ${isPopular ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
-                      {/* Most Popular badge */}
-                      {isPopular && (
-                        <div className="absolute top-3 right-3 z-10">
-                          <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-semibold shadow-md gap-1">
-                            <Sparkles className="size-3" />
-                            Most Popular
-                          </Badge>
-                        </div>
-                      )}
-                      <CardContent className="p-6">
-                        <div className="size-14 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow duration-300">
-                          <IconComp className="size-6 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
-                        </div>
-                        <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{service.title}</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">{service.description}</p>
-
-                        {/* Features list */}
-                        {service.features && (
-                          <div className="space-y-2">
-                            <ul className="space-y-2">
-                              {service.features.slice(0, isExpanded ? undefined : 3).map((feature: string) => (
-                                <li key={feature} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
-                                  <CheckCircle2 className="size-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
-                                  <span>{feature}</span>
-                                </li>
-                              ))}
-                            </ul>
-                            {service.features.length > 3 && (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : service.id); }}
-                                className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors inline-flex items-center gap-1"
-                              >
-                                {isExpanded ? 'Show less' : `+${service.features.length - 3} more features`}
-                                <ArrowRight className={`size-3 transition-transform duration-200 ${isExpanded ? '-rotate-90' : ''}`} />
-                              </button>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="flex gap-2 mt-4">
-                          <Button
-                            onClick={(e) => { e.stopPropagation(); setQuoteServiceId(service.id); setQuoteOpen(true); }}
-                            className={`flex-1 transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} group/btn`}
-                          >
-                            Get a Quote <ArrowRight className="size-4 ml-1 group-hover/btn:translate-x-1 transition-transform duration-200" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={(e) => { e.stopPropagation(); setSelectedService(service); }}
-                            className="border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-600 hover:text-emerald-600 dark:hover:text-emerald-400 shrink-0"
-                            aria-label={`View details for ${service.title}`}
-                          >
-                            <ChevronRight className="size-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <ServiceCard
+                      service={service}
+                      index={index}
+                      expandedId={expandedId}
+                      setExpandedId={setExpandedId}
+                      setSelectedService={setSelectedService}
+                      setQuoteServiceId={setQuoteServiceId}
+                      setQuoteOpen={setQuoteOpen}
+                    />
                   </motion.div>
                 );
               })}
@@ -375,6 +458,9 @@ export default function ServicesPage() {
           </AnimatePresence>
         </DialogContent>
       </Dialog>
+
+      {/* Quote Calculator */}
+      <QuoteCalculator />
 
       {/* Development Process */}
       <section className="section-padding bg-slate-50 dark:bg-slate-800/50">

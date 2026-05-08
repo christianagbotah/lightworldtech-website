@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/lib/store';
+import { useSEO } from '@/hooks/use-seo';
 import ShareButtons from '@/components/ui/share-buttons';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -86,6 +87,12 @@ function parseTOC(content: string): TOCItem[] {
 
 export default function BlogDetailPage() {
   const { navigate, blogPostSlug } = useAppStore();
+  useSEO({
+    title: 'Blog Article',
+    description: 'Read this article on the Lightworld Technologies blog - insights on technology, web development, and digital innovation in Ghana.',
+    keywords: ['blog post', 'technology article', 'web development', 'Ghana tech', 'digital innovation'],
+    ogType: 'article',
+  });
   const [post, setPost] = useState(defaultPost);
   const [loading, setLoading] = useState(true);
   const [activeHeading, setActiveHeading] = useState('');

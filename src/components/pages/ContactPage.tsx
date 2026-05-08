@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Phone, Mail, MapPin, Clock, ChevronRight, CheckCircle2, Loader2, Copy, Check, CalendarDays, MessageCircle } from 'lucide-react';
+import { Send, Phone, Mail, MapPin, Clock, ChevronRight, CheckCircle2, Loader2, Copy, Check, CalendarDays, MessageCircle, Facebook, Twitter, Linkedin, Instagram, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { useSEO } from '@/hooks/use-seo';
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -55,6 +56,11 @@ function useOfficeStatus() {
 
 export default function ContactPage() {
   const { navigate } = useAppStore();
+  useSEO({
+    title: 'Contact',
+    description: 'Get in touch with Lightworld Technologies. Contact us for web development, mobile apps, SEO, and IT solutions in Accra, Ghana. +233 (024) 361 8186.',
+    keywords: ['contact Lightworld Technologies', 'IT company Accra', 'web development contact', 'tech support Ghana', 'free consultation'],
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -151,8 +157,10 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-                <CardContent className="p-6 sm:p-8">
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden relative">
+                {/* Gradient accent strip on left */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-amber-400 hidden lg:block" />
+                <CardContent className="p-6 sm:p-8 relative">
                   {submitted ? (
                     <motion.div
                       className="text-center py-12"
@@ -420,6 +428,42 @@ export default function ContactPage() {
                       <p className="text-sm text-slate-500 dark:text-slate-400">Sat: 09:00 - 13:00</p>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Sun: Closed</p>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Social Media Links */}
+              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0">
+                      <ExternalLink className="size-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 dark:text-white">Follow Us</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Stay connected on social media</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {[
+                      { icon: Facebook, label: 'Facebook', color: 'hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-blue-600/25', link: '#' },
+                      { icon: Twitter, label: 'Twitter', color: 'hover:bg-sky-500 hover:text-white hover:border-sky-500 hover:shadow-sky-500/25', link: '#' },
+                      { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-blue-700 hover:text-white hover:border-blue-700 hover:shadow-blue-700/25', link: '#' },
+                      { icon: Instagram, label: 'Instagram', color: 'hover:bg-pink-600 hover:text-white hover:border-pink-600 hover:shadow-pink-600/25', link: '#' },
+                    ].map((social) => {
+                      const SocialIcon = social.icon;
+                      return (
+                        <button
+                          key={social.label}
+                          onClick={() => window.open(social.link, '_blank')}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${social.color}`}
+                          aria-label={social.label}
+                        >
+                          <SocialIcon className="size-5" />
+                          <span className="text-[10px] font-medium">{social.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>

@@ -13,7 +13,9 @@ const navLinks = [
   { label: 'Home', page: 'home' as const },
   { label: 'About', page: 'about' as const },
   { label: 'Services', page: 'services' as const },
+  { label: 'Portfolio', page: 'portfolio' as const },
   { label: 'Blog', page: 'blog' as const },
+  { label: 'Careers', page: 'careers' as const },
   { label: 'Contact', page: 'contact' as const },
 ];
 
@@ -29,7 +31,7 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleNav = (page: 'home' | 'about' | 'services' | 'blog' | 'contact') => {
+  const handleNav = (page: 'home' | 'about' | 'services' | 'portfolio' | 'blog' | 'careers' | 'contact') => {
     navigate(page);
     setMobileMenuOpen(false);
   };
