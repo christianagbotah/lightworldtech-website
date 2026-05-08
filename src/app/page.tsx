@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BackToTop from '@/components/layout/BackToTop';
 import WhatsAppButton from '@/components/layout/WhatsAppButton';
+import LiveChatWidget from '@/components/layout/LiveChatWidget';
 import CookieConsent from '@/components/layout/CookieConsent';
 import NewsletterPopup from '@/components/layout/NewsletterPopup';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
@@ -21,6 +22,7 @@ import BlogDetailPage from '@/components/pages/BlogDetailPage';
 import ContactPage from '@/components/pages/ContactPage';
 import PortfolioPage from '@/components/pages/PortfolioPage';
 import CareersPage from '@/components/pages/CareersPage';
+import ProductsPage from '@/components/pages/ProductsPage';
 import AdminLogin from '@/components/admin/AdminLogin';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminDashboard from '@/components/admin/AdminDashboard';
@@ -92,6 +94,7 @@ function PublicRouter() {
         {currentPage === 'contact' && <ContactPage />}
         {currentPage === 'portfolio' && <PortfolioPage />}
         {currentPage === 'careers' && <CareersPage />}
+        {currentPage === 'products' && <ProductsPage />}
       </motion.div>
     </AnimatePresence>
   );
@@ -144,6 +147,7 @@ export default function Home() {
       <Footer />
       <BackToTop />
       <WhatsAppButton />
+      <LiveChatWidget />
       <CookieConsent />
       <NewsletterPopup />
       <CommandPalette />

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'careers' | 'admin' | 'admin-dashboard' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
+export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'careers' | 'products' | 'admin' | 'admin-dashboard' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
 
 interface AppState {
   currentPage: Page;

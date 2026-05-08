@@ -439,8 +439,26 @@ export default function BlogPage() {
                     </AnimatePresence>
                   </motion.div>
 
-                  {/* Pagination */}
-                  {totalPages > 1 && (
+                  {/* Load More Button */}
+                  {filteredPosts.length > paginatedPosts.length + (mainFeatured ? 1 : 0) && (
+                    <motion.div
+                      className="flex justify-center mt-10"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      <Button
+                        onClick={() => setPage(p => p + 1)}
+                        className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg transition-all duration-300 px-8 gap-2"
+                      >
+                        <ArrowRight className="size-4" />
+                        Load More Articles
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  {/* Pagination fallback */}
+                  {totalPages > 1 && filteredPosts.length <= paginatedPosts.length + (mainFeatured ? 1 : 0) && (
                     <div className="flex items-center justify-center gap-2 mt-10">
                       <Button
                         variant="outline"

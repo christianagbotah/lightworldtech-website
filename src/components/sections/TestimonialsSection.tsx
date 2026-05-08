@@ -373,6 +373,10 @@ export default function TestimonialsSection() {
 
   return (
     <section className="section-padding bg-gradient-dark relative overflow-hidden">
+      {/* Parallax-like slow-moving gradient background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/50 via-slate-900 to-amber-950/30 animate-[gradient-shift_20s_ease-in-out_infinite] bg-[length:200%_200%]" />
+      </div>
       {/* Decorative elements */}
       <div className="absolute inset-0 dot-pattern opacity-10" />
       <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
@@ -381,7 +385,7 @@ export default function TestimonialsSection() {
       <div className="container-main relative z-10">
         {/* Section header */}
         <motion.div
-          className="text-center max-w-2xl mx-auto mb-6"
+          className="text-center max-w-2xl mx-auto mb-8"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
@@ -416,30 +420,6 @@ export default function TestimonialsSection() {
           </div>
         </motion.div>
 
-        {/* Trusted by logos */}
-        <motion.div
-          className="flex flex-wrap items-center justify-center gap-6 md:gap-10 mb-12"
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <span className="text-xs uppercase tracking-wider text-slate-500 font-medium">Trusted by</span>
-          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
-            {trustedLogos.map((logo) => (
-              <div
-                key={logo.name}
-                className="flex items-center gap-2 text-slate-500 hover:text-slate-300 transition-colors duration-300"
-              >
-                <div className="size-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-emerald-400">
-                  {logo.initials}
-                </div>
-                <span className="text-xs font-medium hidden sm:block">{logo.name}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
         {/* Testimonials carousel */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -467,6 +447,7 @@ export default function TestimonialsSection() {
             <Carousel
               opts={{ align: 'start', loop: true }}
               className="w-full"
+              style={{ scrollBehavior: 'smooth' }}
             >
               <CarouselContent className="-ml-4">
                 {testimonials.map((testimonial) => (
@@ -549,6 +530,30 @@ export default function TestimonialsSection() {
             </Carousel>
           </motion.div>
         )}
+
+        {/* Trusted by Leading Companies strip */}
+        <motion.div
+          className="mt-12 pt-8 border-t border-slate-700/40"
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <p className="text-center text-xs uppercase tracking-wider text-slate-500 font-medium mb-5">Trusted by Leading Companies</p>
+          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+            {trustedLogos.map((logo) => (
+              <div
+                key={logo.name}
+                className="flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-all duration-300 hover:-translate-y-0.5"
+              >
+                <div className="size-9 rounded-lg bg-slate-800 border border-slate-700 hover:border-emerald-600/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 transition-colors duration-300">
+                  {logo.initials}
+                </div>
+                <span className="text-xs font-medium hidden sm:block">{logo.name}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
 
         {/* Action Buttons */}
         <motion.div

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Phone, Mail, MapPin, ArrowRight, Facebook, Twitter, Linkedin, Instagram, Send, CheckCircle2, Users } from 'lucide-react';
+import { Zap, Phone, Mail, MapPin, ArrowRight, Facebook, Twitter, Linkedin, Instagram, Send, CheckCircle2, Users, Clock, Heart, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -200,6 +200,48 @@ export default function Footer() {
         </AnimatePresence>
       </div>
 
+      {/* Request a Free Consultation CTA Card */}
+      <div className="container-main pt-8 pb-2">
+        <motion.div
+          className="relative rounded-2xl overflow-hidden"
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700" />
+          <div className="absolute inset-0 grid-pattern opacity-10" />
+          <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-400/15 rounded-full blur-2xl" />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
+          <div className="relative z-10 px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Request a Free Consultation</h3>
+              <p className="text-emerald-100 text-sm md:text-base max-w-lg mb-4">
+                Let&apos;s discuss how we can help transform your business with innovative IT solutions. Our experts are ready to assist you.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-3 text-sm text-emerald-100">
+                <div className="flex items-center gap-2">
+                  <Phone className="size-4 text-amber-300" />
+                  <span className="font-semibold text-white">+233 (024) 361 8186</span>
+                </div>
+                <div className="hidden sm:block text-emerald-300/40">|</div>
+                <div className="flex items-center gap-2">
+                  <Clock className="size-4 text-amber-300" />
+                  <span>Mon - Fri: 8:00 AM - 5:00 PM GMT</span>
+                </div>
+              </div>
+            </div>
+            <Button
+              onClick={() => navigate('contact')}
+              className="bg-white text-emerald-700 hover:bg-emerald-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 px-8 h-12 text-base rounded-xl whitespace-nowrap"
+            >
+              Get Started
+              <ArrowRight className="size-4 ml-2" />
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+
       {/* Main footer content */}
       <div className="container-main py-12 md:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
@@ -275,7 +317,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact Info + Map */}
           <div>
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-5 relative">
               Contact Info
@@ -300,19 +342,49 @@ export default function Footer() {
                 </div>
                 <span className="text-sm text-slate-400 pt-1">mail@lightworldtech.com</span>
               </li>
+              <li className="flex items-start gap-3 group">
+                <div className="size-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-all duration-300">
+                  <Clock className="size-4 text-emerald-400 group-hover:text-white transition-colors" />
+                </div>
+                <span className="text-sm text-slate-400 pt-1">Mon-Fri: 8AM - 5PM GMT</span>
+              </li>
             </ul>
+            {/* Map placeholder */}
+            <div className="mt-4 rounded-xl overflow-hidden border border-slate-700/50">
+              <div className="h-24 bg-gradient-to-br from-slate-800 to-slate-800/80 flex items-center justify-center relative">
+                <div className="absolute inset-0 grid-pattern opacity-10" />
+                <div className="text-center relative z-10">
+                  <MapPin className="size-5 text-emerald-400 mx-auto mb-1" />
+                  <p className="text-[10px] text-slate-400 font-medium">Our Location - Accra, Ghana</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Copyright */}
+      {/* Copyright Bottom Bar */}
       <Separator className="bg-slate-800" />
       <div className="container-main py-5">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-          <p>&copy; {new Date().getFullYear()} Lightworld Technologies. All rights reserved.</p>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5">
+            <p>&copy; {new Date().getFullYear()} Lightworld Technologies. All rights reserved.</p>
+            <span className="hidden sm:inline text-slate-600">·</span>
+            <span className="hidden sm:inline-flex items-center gap-1 text-slate-400">
+              Made with <Heart className="size-3 text-red-400 fill-red-400" /> in Ghana
+            </span>
+          </div>
           <div className="flex items-center gap-4">
             <button className="hover:text-emerald-400 transition-colors">Privacy Policy</button>
             <button className="hover:text-emerald-400 transition-colors">Terms of Service</button>
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="hover:text-emerald-400 transition-colors flex items-center gap-1"
+              aria-label="Back to top"
+            >
+              <ArrowUp className="size-3" />
+              Top
+            </button>
             <button
               onClick={() => navigate('admin-dashboard')}
               className="hover:text-emerald-400 transition-colors"

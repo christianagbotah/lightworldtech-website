@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Code,
   Server,
+  Package,
   ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
@@ -56,6 +57,8 @@ export default function CommandPalette() {
       { title: 'Blog', desc: 'Read our latest articles', icon: FileText, page: 'blog' },
       { title: 'Contact', desc: 'Get in touch with us', icon: Mail, page: 'contact' },
       { title: 'Portfolio', desc: 'View our work', icon: FolderOpen, page: 'portfolio' },
+      { title: 'Careers', desc: 'Join our team', icon: Briefcase, page: 'careers' },
+      { title: 'Products', desc: 'Upcoming products', icon: Package, page: 'products' },
     ];
 
     for (const p of pages) {

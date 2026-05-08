@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight, ChevronLeft, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Globe, Mail } from 'lucide-react';
+import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight, ChevronLeft, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Globe, Mail, Github } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,10 +23,10 @@ const values = [
 ];
 
 const defaultTeam = [
-  { id: '1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with 10+ years in IT solutions and digital transformation across Africa.' },
-  { id: '2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web and mobile technologies.' },
-  { id: '3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Award-winning designer passionate about creating intuitive user experiences.' },
-  { id: '4', name: 'Kofi Amponsah', role: 'Digital Marketing Lead', bio: 'Digital marketing expert specializing in SEO, social media, and growth strategies.' },
+  { id: '1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with 10+ years in IT solutions and digital transformation across Africa.', linkedin: 'https://linkedin.com/in/emmanuel-osei', twitter: 'https://twitter.com/emmanuel_osei', github: 'https://github.com/emmanuel-osei', email: 'emmanuel@lightworldtech.com' },
+  { id: '2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web and mobile technologies.', linkedin: 'https://linkedin.com/in/kwame-asante', twitter: 'https://twitter.com/kwame_asante', github: 'https://github.com/kwame-asante', email: 'kwame@lightworldtech.com' },
+  { id: '3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Award-winning designer passionate about creating intuitive user experiences.', linkedin: 'https://linkedin.com/in/abena-mensah', twitter: 'https://twitter.com/abena_mensah', github: 'https://github.com/abena-mensah', email: 'abena@lightworldtech.com' },
+  { id: '4', name: 'Kofi Amponsah', role: 'Digital Marketing Lead', bio: 'Digital marketing expert specializing in SEO, social media, and growth strategies.', linkedin: 'https://linkedin.com/in/kofi-amponsah', twitter: 'https://twitter.com/kofi_amponsah', github: 'https://github.com/kofi-amponsah', email: 'kofi@lightworldtech.com' },
 ];
 
 const awards = [
@@ -378,19 +378,21 @@ export default function AboutPage() {
                         </div>
                         {/* Overlay slide-up effect with bio and social links */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-gradient-to-t from-emerald-900/90 via-emerald-900/70 to-emerald-800/40 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+                          <p className="text-[11px] text-emerald-200 font-medium mb-1 tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300">Connect with me</p>
                           <p className="text-sm text-white/90 text-center leading-relaxed mb-4 line-clamp-3">{member.bio}</p>
                           <div className="flex gap-2">
                             {[
-                              { icon: Linkedin, label: 'LinkedIn', href: member.linkedin || '#' },
-                              { icon: Twitter, label: 'Twitter', href: member.twitter || '#' },
-                              { icon: Mail, label: 'Email', href: member.email ? `mailto:${member.email}` : '#' },
-                              { icon: Globe, label: 'Website', href: '#' },
-                            ].map(({ icon: SocialIcon, label, href }) => (
+                              { icon: Linkedin, label: 'LinkedIn', href: member.linkedin || '#', color: 'hover:bg-[#0077B5]' },
+                              { icon: Twitter, label: 'Twitter', href: member.twitter || '#', color: 'hover:bg-[#1DA1F2]' },
+                              { icon: Github, label: 'GitHub', href: member.github || '#', color: 'hover:bg-[#333]' },
+                              { icon: Mail, label: 'Email', href: member.email ? `mailto:${member.email}` : '#', color: 'hover:bg-emerald-500' },
+                            ].map(({ icon: SocialIcon, label, href, color }) => (
                               <a
                                 key={label}
                                 href={href}
-                                aria-label={label}
-                                className="size-8 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-emerald-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110"
+                                aria-label={`${label} - ${member.name}`}
+                                title={`${label} - ${member.name}`}
+                                className={`size-8 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
                               >
                                 <SocialIcon className="size-3.5" />
                               </a>
@@ -428,18 +430,19 @@ export default function AboutPage() {
                           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/80 to-transparent pt-6 pb-2 px-3">
                             <div className="flex justify-center gap-1.5">
                               {[
-                                { icon: Linkedin, label: 'LinkedIn' },
-                                { icon: Twitter, label: 'Twitter' },
-                                { icon: Mail, label: 'Email' },
-                                { icon: Globe, label: 'Website' },
-                              ].map(({ icon: SocialIcon, label }) => (
-                                <button
+                                { icon: Linkedin, label: 'LinkedIn', href: member.linkedin || '#' },
+                                { icon: Twitter, label: 'Twitter', href: member.twitter || '#' },
+                                { icon: Github, label: 'GitHub', href: member.github || '#' },
+                                { icon: Mail, label: 'Email', href: member.email ? `mailto:${member.email}` : '#' },
+                              ].map(({ icon: SocialIcon, label, href }) => (
+                                <a
                                   key={label}
+                                  href={href}
                                   aria-label={label}
                                   className="size-7 rounded-full bg-white/15 backdrop-blur-sm text-white hover:bg-emerald-500 flex items-center justify-center transition-colors duration-200"
                                 >
                                   <SocialIcon className="size-3" />
-                                </button>
+                                </a>
                               ))}
                             </div>
                           </div>

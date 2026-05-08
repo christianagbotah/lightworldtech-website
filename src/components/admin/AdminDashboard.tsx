@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
   Plus, ExternalLink, Inbox, Activity, ArrowUpRight, ArrowDownRight,
-  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp
+  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -159,19 +159,66 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome + System Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Welcome back, Admin</h1>
-          <p className="text-muted-foreground mt-1">Here&apos;s what&apos;s happening with your website today.</p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
-          <div className="relative">
-            <div className="size-2 rounded-full bg-emerald-500" />
-            <div className="size-2 rounded-full bg-emerald-500 absolute inset-0 animate-ping opacity-75" />
+      {/* Welcome Banner */}
+      <motion.div
+        className="relative rounded-2xl overflow-hidden"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700" />
+        <div className="absolute inset-0 grid-pattern opacity-10" />
+        <div className="absolute -top-8 -right-8 w-40 h-40 bg-amber-400/15 rounded-full blur-2xl" />
+        <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
+        <div className="relative z-10 px-6 py-6 md:px-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Welcome back, Admin!</h1>
+            <p className="text-emerald-100 mt-1 text-sm md:text-base">Here&apos;s what&apos;s happening today.</p>
           </div>
-          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">All Systems Operational</span>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+            <div className="relative">
+              <div className="size-2 rounded-full bg-emerald-300" />
+              <div className="size-2 rounded-full bg-emerald-300 absolute inset-0 animate-ping opacity-75" />
+            </div>
+            <span className="text-sm font-medium text-white">All Systems Operational</span>
+          </div>
         </div>
+      </motion.div>
+
+      {/* Quick Stats Row - Analytics Mini Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Visitors', value: '3.2K', trend: '+12.5%', up: true, icon: BarChart3, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+          { label: 'Bounce Rate', value: '34%', trend: '-2.1%', up: false, icon: MousePointerClick, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          { label: 'Avg Session', value: '2m 45s', trend: '+8.3%', up: true, icon: Timer, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30' },
+          { label: 'Conversion Rate', value: '4.8%', trend: '+1.2%', up: true, icon: TrendingUp, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/30' },
+        ].map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <motion.div
+              key={item.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 + i * 0.05 }}
+            >
+              <Card className="border-border/50 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800 transition-all duration-300">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`p-2 rounded-lg ${item.bg}`}>
+                      <Icon className={`size-4 ${item.color}`} />
+                    </div>
+                    <span className={`flex items-center gap-0.5 text-xs font-semibold ${item.up ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                      {item.up ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
+                      {item.trend}
+                    </span>
+                  </div>
+                  <p className="text-xl font-bold text-foreground">{item.value}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Stats grid */}
