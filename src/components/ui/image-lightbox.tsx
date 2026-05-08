@@ -123,7 +123,7 @@ export default function ImageLightbox({
             transition={{ duration: 0.35, ease: 'easeOut' }}
           >
             {/* Image placeholder */}
-            <div className="relative w-full aspect-video max-h-[60vh] rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800">
+            <div className="relative w-full aspect-video max-h-[60vh] rounded-2xl overflow-hidden bg-gradient-to-br from-amber-800 via-amber-700 to-yellow-800">
               <div className="absolute inset-0 grid-pattern opacity-15" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
@@ -162,7 +162,7 @@ export default function ImageLightbox({
                   {item.tags?.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium"
+                      className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-medium"
                     >
                       {tag}
                     </span>

@@ -140,9 +140,9 @@ export default function PricingSection() {
       }} />
 
       {/* Morphing decorative blobs */}
-      <div className="absolute -top-20 -left-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl animate-morph-blob" />
+      <div className="absolute -top-20 -left-20 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl animate-morph-blob" />
       <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-amber-400/8 rounded-full blur-3xl animate-morph-blob" style={{ animationDelay: '-4s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl animate-breathe" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl animate-breathe" />
 
       {/* Diagonal stripe accent */}
       <div className="absolute top-0 right-0 w-72 h-72 diagonal-stripes opacity-40 dark:opacity-20 rounded-bl-full" />
@@ -156,7 +156,7 @@ export default function PricingSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <Badge className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 mb-4 backdrop-blur-sm">
+          <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 mb-4 backdrop-blur-sm">
             <Sparkles className="size-3 mr-1" />
             Pricing Plans
           </Badge>
@@ -184,7 +184,7 @@ export default function PricingSection() {
           </span>
           <button
             onClick={() => setIsAnnual(!isAnnual)}
-            className="relative inline-flex h-9 w-16 items-center rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 shadow-inner gradient-border-all"
+            className="relative inline-flex h-9 w-16 items-center rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 shadow-inner gradient-border-all"
             style={{
               background: isAnnual
                 ? 'linear-gradient(to right, #059669, #d97706)'
@@ -232,16 +232,16 @@ export default function PricingSection() {
                 <Card
                   className={`relative h-full overflow-hidden transition-all duration-500 group shimmer-sweep ${
                     tier.popular
-                      ? 'ring-2 ring-emerald-500 dark:ring-emerald-400 shadow-xl dark:shadow-emerald-900/20 hover:shadow-2xl dark:hover:shadow-emerald-900/40 hover:scale-[1.03] bg-gradient-to-b from-white to-emerald-50/50 dark:from-slate-800 dark:to-emerald-950/30'
+                      ? 'ring-2 ring-amber-500 dark:ring-amber-400 shadow-xl dark:shadow-amber-900/20 hover:shadow-2xl dark:hover:shadow-amber-900/40 hover:scale-[1.03] bg-gradient-to-b from-white to-amber-50/50 dark:from-slate-800 dark:to-amber-950/30'
                       : isEnterprise
                         ? 'bg-white dark:bg-slate-800 hover:shadow-2xl dark:hover:shadow-amber-900/20 hover:-translate-y-2 hover:scale-[1.02] p-[2px] rounded-2xl'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 backdrop-blur-sm hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-xl dark:hover:shadow-emerald-900/20 hover:-translate-y-2 hover:scale-[1.02]'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 backdrop-blur-sm hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-xl dark:hover:shadow-amber-900/20 hover:-translate-y-2 hover:scale-[1.02]'
                   }`}
                 >
                   {/* Animated gradient border for enterprise */}
                   {isEnterprise && (
                     <div className="absolute inset-0 rounded-2xl p-[2px] overflow-hidden pointer-events-none">
-                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-amber-500 to-emerald-500 animate-gradient-shift opacity-60 group-hover:opacity-100 transition-opacity duration-500" style={{
+                      <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-amber-500 to-amber-500 animate-gradient-shift opacity-60 group-hover:opacity-100 transition-opacity duration-500" style={{
                         backgroundSize: '200% 200%',
                       }} />
                     </div>
@@ -249,13 +249,13 @@ export default function PricingSection() {
 
                   {/* Popular badge gradient top */}
                   {tier.popular && (
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500 animate-gradient-shift" style={{ backgroundSize: '200% 100%' }} />
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 animate-gradient-shift" style={{ backgroundSize: '200% 100%' }} />
                   )}
 
                   <CardContent className="p-6 sm:p-8 flex flex-col h-full relative z-10">
                     {/* Badge */}
                     {tier.popular && (
-                      <Badge className="absolute top-4 right-4 bg-gradient-to-r from-emerald-500 to-amber-500 text-white border-0 text-xs font-semibold shadow-lg shadow-emerald-500/20">
+                      <Badge className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-500 text-white border-0 text-xs font-semibold shadow-lg shadow-amber-500/20">
                         <Star className="size-3 mr-1" />
                         Most Popular
                       </Badge>
@@ -272,13 +272,13 @@ export default function PricingSection() {
                       <div
                         className={`size-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 ${
                           tier.popular
-                            ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25'
+                            ? 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/25'
                             : isEnterprise
                               ? 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/25 group-hover:shadow-amber-500/40'
-                              : 'bg-emerald-100 dark:bg-emerald-900/40 group-hover:bg-gradient-to-br group-hover:from-emerald-500 group-hover:to-amber-500 group-hover:shadow-lg group-hover:shadow-emerald-500/25'
+                              : 'bg-amber-100 dark:bg-amber-900/40 group-hover:bg-gradient-to-br group-hover:from-amber-500 group-hover:to-amber-500 group-hover:shadow-lg group-hover:shadow-amber-500/25'
                         }`}
                       >
-                        <Icon className={`size-6 transition-all duration-300 ${tier.popular || isEnterprise ? 'text-white' : 'text-emerald-600 dark:text-emerald-400 group-hover:text-white group-hover:rotate-6'}`} />
+                        <Icon className={`size-6 transition-all duration-300 ${tier.popular || isEnterprise ? 'text-white' : 'text-amber-600 dark:text-amber-400 group-hover:text-white group-hover:rotate-6'}`} />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white">{tier.name}</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{tier.description}</p>
@@ -308,7 +308,7 @@ export default function PricingSection() {
                         </div>
                       )}
                       {price !== null && isAnnual && (
-                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
                           Billed annually (${price! * 12}/year)
                         </p>
                       )}
@@ -319,10 +319,10 @@ export default function PricingSection() {
                       onClick={() => handleCTA(tier)}
                       className={`w-full mb-6 transition-all duration-300 group/btn ${
                         tier.popular
-                          ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 h-11'
+                          ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 h-11'
                           : isEnterprise
                             ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-500/25 hover:shadow-xl h-11'
-                            : 'border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-300 dark:hover:border-emerald-600'
+                            : 'border-amber-200 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:border-amber-300 dark:hover:border-amber-600'
                       }`}
                       variant={tier.popular || isEnterprise ? 'default' : 'outline'}
                     >
@@ -346,7 +346,7 @@ export default function PricingSection() {
                             whileInView="visible"
                             viewport={{ once: true }}
                           >
-                            <CheckCircle className={`size-4 flex-shrink-0 mt-0.5 ${isEnterprise ? 'text-amber-500 dark:text-amber-400' : 'text-emerald-500 dark:text-emerald-400'}`} />
+                            <CheckCircle className={`size-4 flex-shrink-0 mt-0.5 ${isEnterprise ? 'text-amber-500 dark:text-amber-400' : 'text-amber-500 dark:text-amber-400'}`} />
                             <span className="text-slate-600 dark:text-slate-300">{feature}</span>
                           </motion.li>
                         ))}
@@ -386,7 +386,7 @@ export default function PricingSection() {
           All prices are in USD. Custom payment plans available.{' '}
           <button
             onClick={() => navigate('contact')}
-            className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium underline-offset-2"
+            className="text-amber-600 dark:text-amber-400 hover:underline font-medium underline-offset-2"
           >
             Contact us
           </button>{' '}

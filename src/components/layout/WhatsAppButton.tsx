@@ -37,7 +37,7 @@ export default function WhatsAppButton() {
               </div>
               <div>
                 <h4 className="font-semibold text-sm text-foreground">Chat with us</h4>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">Lightworld Technologies</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400">Lightworld Technologies</p>
               </div>
             </div>
 
@@ -47,7 +47,7 @@ export default function WhatsAppButton() {
                 { icon: Shield, text: 'Your data is safe & secure' },
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                  <item.icon className="size-3.5 text-emerald-500 shrink-0" />
+                  <item.icon className="size-3.5 text-amber-500 shrink-0" />
                   <span>{item.text}</span>
                 </div>
               ))}

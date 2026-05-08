@@ -135,7 +135,7 @@ export default function QuoteCalculator() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <Badge className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-sm mb-4 px-4 py-1 font-medium">
+          <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-sm mb-4 px-4 py-1 font-medium">
             <Calculator className="size-4 mr-1.5" />
             Instant Estimate
           </Badge>
@@ -161,11 +161,11 @@ export default function QuoteCalculator() {
                 {/* Service Selection */}
                 <div className="space-y-2">
                   <Label className="text-slate-900 dark:text-slate-100 font-semibold text-sm flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                     Service Type
                   </Label>
                   <Select value={selectedService} onValueChange={setSelectedService}>
-                    <SelectTrigger className="h-11 bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600">
+                    <SelectTrigger className="h-11 bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600">
                       <SelectValue placeholder="Select a service..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -181,7 +181,7 @@ export default function QuoteCalculator() {
                 {/* Complexity Selection */}
                 <div className="space-y-2">
                   <Label className="text-slate-900 dark:text-slate-100 font-semibold text-sm flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                     Project Complexity
                   </Label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -191,22 +191,22 @@ export default function QuoteCalculator() {
                         onClick={() => setSelectedComplexity(opt.id)}
                         className={`relative p-4 rounded-xl border-2 text-left transition-all duration-300 group ${
                           selectedComplexity === opt.id
-                            ? 'border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 shadow-md shadow-emerald-500/10'
-                            : 'border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-slate-50 dark:hover:bg-slate-700/30'
+                            ? 'border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-900/20 shadow-md shadow-amber-500/10'
+                            : 'border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-amber-700 hover:bg-slate-50 dark:hover:bg-slate-700/30'
                         }`}
                       >
                         {selectedComplexity === opt.id && (
                           <div className="absolute top-2 right-2">
-                            <Check className="size-4 text-emerald-600 dark:text-emerald-400" />
+                            <Check className="size-4 text-amber-600 dark:text-amber-400" />
                           </div>
                         )}
-                        <div className={`font-semibold text-sm mb-1 ${selectedComplexity === opt.id ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-200'}`}>
+                        <div className={`font-semibold text-sm mb-1 ${selectedComplexity === opt.id ? 'text-amber-700 dark:text-amber-300' : 'text-slate-700 dark:text-slate-200'}`}>
                           {opt.label}
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
                           {opt.description}
                         </div>
-                        <div className="mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                        <div className="mt-2 text-xs font-medium text-amber-600 dark:text-amber-400">
                           {opt.multiplier}x base price
                         </div>
                       </button>
@@ -218,7 +218,7 @@ export default function QuoteCalculator() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-slate-900 dark:text-slate-100 font-semibold text-sm flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                       Additional Features
                     </Label>
                     <span className="text-xs text-slate-400">
@@ -231,14 +231,14 @@ export default function QuoteCalculator() {
                         key={feature.id}
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
                           selectedFeatures.includes(feature.id)
-                            ? 'border-emerald-300 dark:border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20'
+                            ? 'border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20'
                             : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/30'
                         }`}
                       >
                         <Checkbox
                           checked={selectedFeatures.includes(feature.id)}
                           onCheckedChange={() => toggleFeature(feature.id)}
-                          className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                          className="data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
                         />
                         <div className="flex-1 min-w-0">
                           <span className="text-sm text-slate-700 dark:text-slate-200">{feature.label}</span>
@@ -255,7 +255,7 @@ export default function QuoteCalculator() {
                 {selectedService && (
                   <button
                     onClick={() => setShowDetails(!showDetails)}
-                    className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                    className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
                   >
                     <Info className="size-3.5" />
                     {showDetails ? 'Hide' : 'Show'} price breakdown
@@ -301,29 +301,29 @@ export default function QuoteCalculator() {
               </div>
 
               {/* Right: Price Display */}
-              <div className="relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700 p-6 sm:p-8 flex flex-col items-center justify-center text-center">
+              <div className="relative bg-gradient-to-br from-amber-600 via-amber-700 to-yellow-700 p-6 sm:p-8 flex flex-col items-center justify-center text-center">
                 <div className="absolute inset-0 grid-pattern opacity-10" />
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-emerald-300/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-300/10 rounded-full blur-3xl" />
 
                 <div className="relative z-10">
                   <Sparkles className="size-8 text-amber-300 mx-auto mb-4" />
-                  <p className="text-emerald-200 text-sm font-medium mb-1">Estimated Price Range</p>
+                  <p className="text-amber-200 text-sm font-medium mb-1">Estimated Price Range</p>
 
                   {selectedService ? (
                     <>
                       <div className="text-3xl sm:text-4xl font-bold text-white mb-1">
                         <AnimatedPrice value={priceEstimate.min} />
                       </div>
-                      <p className="text-emerald-200/80 text-sm mb-4">
+                      <p className="text-amber-200/80 text-sm mb-4">
                         to <AnimatedPrice value={priceEstimate.max} />
                       </p>
-                      <p className="text-emerald-200/60 text-xs mb-6 max-w-[200px] mx-auto">
+                      <p className="text-amber-200/60 text-xs mb-6 max-w-[200px] mx-auto">
                         Final price may vary based on detailed requirements
                       </p>
                       <Button
                         onClick={handleGetQuote}
-                        className="w-full bg-white text-emerald-700 hover:bg-emerald-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]"
+                        className="w-full bg-white text-amber-700 hover:bg-amber-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]"
                       >
                         Get Detailed Quote
                         <ArrowRight className="size-4 ml-2" />
@@ -334,11 +334,11 @@ export default function QuoteCalculator() {
                       <div className="text-2xl sm:text-3xl font-bold text-white/60 mb-2">
                         GHS 0
                       </div>
-                      <p className="text-emerald-200/60 text-sm mb-4">
+                      <p className="text-amber-200/60 text-sm mb-4">
                         Select a service to see the estimate
                       </p>
                       <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-                        <p className="text-emerald-100 text-xs leading-relaxed">
+                        <p className="text-amber-100 text-xs leading-relaxed">
                           Prices are estimates based on Ghana market rates. Contact us for a detailed, custom quote.
                         </p>
                       </div>

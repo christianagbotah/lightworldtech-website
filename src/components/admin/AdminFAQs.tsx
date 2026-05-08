@@ -183,7 +183,7 @@ export default function AdminFAQs() {
           <h1 className="text-2xl font-bold text-foreground">FAQs</h1>
           <p className="text-muted-foreground text-sm mt-1">{faqs.length} questions</p>
         </div>
-        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={openCreate} className="bg-amber-600 hover:bg-amber-700">
           <Plus className="h-4 w-4 mr-2" /> Add FAQ
         </Button>
       </div>
@@ -282,7 +282,7 @@ export default function AdminFAQs() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleSave} disabled={saving} className="bg-amber-600 hover:bg-amber-700">
               {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>

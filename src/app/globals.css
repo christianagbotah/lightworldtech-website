@@ -41,17 +41,6 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-emerald-50: oklch(0.979 0.021 166.113);
-  --color-emerald-100: oklch(0.950 0.052 163.051);
-  --color-emerald-200: oklch(0.905 0.093 164.15);
-  --color-emerald-300: oklch(0.845 0.143 164.978);
-  --color-emerald-400: oklch(0.765 0.177 163.223);
-  --color-emerald-500: oklch(0.696 0.17 162.48);
-  --color-emerald-600: oklch(0.596 0.145 163.225);
-  --color-emerald-700: oklch(0.508 0.118 165.612);
-  --color-emerald-800: oklch(0.432 0.095 166.913);
-  --color-emerald-900: oklch(0.378 0.077 168.94);
-  --color-emerald-950: oklch(0.262 0.051 172.552);
   --color-amber-50: oklch(0.987 0.022 95.277);
   --color-amber-100: oklch(0.962 0.059 95.617);
   --color-amber-200: oklch(0.924 0.12 95.946);
@@ -177,19 +166,19 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-transparent;
   }
   .text-gradient-gold {
-    @apply bg-gradient-to-r from-emerald-400 via-emerald-300 to-amber-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 bg-clip-text text-transparent;
   }
   .bg-gradient-primary {
-    @apply bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900;
+    @apply bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900;
   }
   .bg-gradient-dark {
     @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900;
   }
   .bg-gradient-cta {
-    @apply bg-gradient-to-br from-emerald-600 via-emerald-700 to-amber-600;
+    @apply bg-gradient-to-br from-amber-600 via-amber-700 to-amber-600;
   }
   .section-padding {
     @apply py-16 md:py-24 px-4 sm:px-6 lg:px-8;
@@ -199,7 +188,7 @@
   }
 }
 
-/* Custom scrollbar - emerald tinted */
+/* Custom scrollbar - amber tinted */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -463,7 +452,7 @@ img {
 .prose ol { @apply list-decimal pl-6 mb-4 space-y-1 text-slate-600 dark:text-slate-300; }
 .prose li { @apply leading-relaxed text-slate-600 dark:text-slate-300; }
 .prose strong { @apply font-semibold text-foreground; }
-.prose a { @apply text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 underline; }
+.prose a { @apply text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 underline; }
 .prose blockquote { /* Enhanced blockquote styling is in the dedicated section below */ }
 .prose code { @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono; }
 .prose pre { @apply bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto my-4; }
@@ -697,7 +686,7 @@ img {
 
 /* Gradient text with amber accent */
 .text-gradient-amber {
-  @apply bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 bg-clip-text text-transparent;
 }
 
 /* Animated gradient text */

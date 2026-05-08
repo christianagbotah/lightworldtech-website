@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 
 const partnerLogos = [
-  { name: 'TechGhana Inc.', initials: 'TG', color: 'from-emerald-400 to-emerald-600' },
+  { name: 'TechGhana Inc.', initials: 'TG', color: 'from-amber-400 to-amber-600' },
   { name: 'Accra Digital Hub', initials: 'AD', color: 'from-amber-400 to-amber-600' },
   { name: 'AfricanBiz Corp', initials: 'AB', color: 'from-slate-500 to-slate-700' },
   { name: 'DataFlow Systems', initials: 'DF', color: 'from-cyan-400 to-cyan-600' },
@@ -11,9 +11,9 @@ const partnerLogos = [
   { name: 'MediConnect Health', initials: 'MC', color: 'from-rose-400 to-rose-600' },
   { name: 'EduPrime Academy', initials: 'EP', color: 'from-violet-400 to-violet-600' },
   { name: 'FreshBite Foods', initials: 'FB', color: 'from-orange-400 to-orange-600' },
-  { name: 'Premier Hotels', initials: 'PH', color: 'from-teal-400 to-teal-600' },
+  { name: 'Premier Hotels', initials: 'PH', color: 'from-yellow-400 to-yellow-600' },
   { name: 'BuildRight Ltd.', initials: 'BR', color: 'from-blue-400 to-blue-600' },
-  { name: 'SwiftPay Ghana', initials: 'SP', color: 'from-emerald-500 to-teal-500' },
+  { name: 'SwiftPay Ghana', initials: 'SP', color: 'from-amber-500 to-yellow-500' },
   { name: 'AgriTech Solutions', initials: 'AT', color: 'from-lime-500 to-green-600' },
 ];
 
@@ -48,7 +48,7 @@ export default function ClientLogoCarousel() {
           {allLogos.slice(0, 12).map((logo, i) => (
             <div
               key={`row1-${i}`}
-              className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/50 hover:border-emerald-300 dark:hover:border-emerald-700/50 transition-all duration-300 group cursor-default"
+              className="flex-shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/50 hover:border-amber-300 dark:hover:border-amber-700/50 transition-all duration-300 group cursor-default"
             >
               <div className={`size-9 rounded-lg bg-gradient-to-br ${logo.color} flex items-center justify-center text-white font-bold text-xs shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300`}>
                 {logo.initials}

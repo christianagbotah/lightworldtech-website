@@ -107,7 +107,7 @@ export default function PortfolioSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Portfolio</span>
+          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Portfolio</span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Our Work</h2>
           <p className="text-slate-600 dark:text-slate-300">
             Explore a selection of our recent projects that showcase our expertise and commitment to excellence.
@@ -143,17 +143,17 @@ export default function PortfolioSection() {
             >
               {portfolio.slice(0, 4).map((project) => (
                 <motion.div key={project.id} variants={itemVariants}>
-                  <Card className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg dark:hover:shadow-emerald-900/20 transition-all duration-300 cursor-pointer"
+                  <Card className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg dark:hover:shadow-amber-900/20 transition-all duration-300 cursor-pointer"
                     onClick={() => setSelectedProject(project)}
                   >
                     {/* Image placeholder with zoom on hover */}
-                    <div className="relative h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/40 overflow-hidden">
+                    <div className="relative h-48 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/40 overflow-hidden">
                       <div className="absolute inset-0 grid-pattern opacity-40 dark:opacity-20 transition-transform duration-500 group-hover:scale-105" />
                       <div className="absolute inset-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                        <div className="text-emerald-600 dark:text-emerald-400 font-bold text-lg opacity-50 dark:opacity-70">{project.title}</div>
+                        <div className="text-amber-600 dark:text-amber-400 font-bold text-lg opacity-50 dark:opacity-70">{project.title}</div>
                       </div>
                       {/* Enhanced hover overlay with gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/95 via-emerald-800/80 to-emerald-700/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+                      <div className="absolute inset-0 bg-gradient-to-t from-amber-900/95 via-amber-800/80 to-amber-700/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
                         <div className="flex flex-col items-center gap-2 text-white translate-y-6 group-hover:translate-y-0 transition-transform duration-500">
                           <div className="size-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mb-1">
                             <ExternalLink className="size-5" />
@@ -169,7 +169,7 @@ export default function PortfolioSection() {
                       </div>
                     </div>
                     <CardContent className="p-6">
-                      <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                         {project.title}
                       </h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
@@ -177,7 +177,7 @@ export default function PortfolioSection() {
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {project.tags?.map((tag: string) => (
-                          <Badge key={tag} className="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors">
+                          <Badge key={tag} className="text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors">
                             {tag}
                           </Badge>
                         ))}
@@ -199,7 +199,7 @@ export default function PortfolioSection() {
               <Button
                 onClick={() => navigate('portfolio')}
                 variant="outline"
-                className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                className="border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20"
               >
                 View All Projects
                 <ArrowRight className="size-4 ml-1" />
@@ -215,7 +215,7 @@ export default function PortfolioSection() {
           {selectedProject && (
             <>
               {/* Modal header with gradient */}
-              <div className="relative h-40 bg-gradient-to-br from-emerald-500 to-emerald-700 dark:from-emerald-600 dark:to-emerald-900 flex items-center justify-center">
+              <div className="relative h-40 bg-gradient-to-br from-amber-500 to-amber-700 dark:from-amber-600 dark:to-amber-900 flex items-center justify-center">
                 <div className="absolute inset-0 grid-pattern opacity-20" />
                 <span className="text-white font-bold text-xl opacity-40 relative z-10">{selectedProject.title}</span>
                 <button
@@ -228,7 +228,7 @@ export default function PortfolioSection() {
 
               <div className="p-6 space-y-4">
                 <div>
-                  <Badge className="mb-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+                  <Badge className="mb-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
                     {selectedProject.category}
                   </Badge>
                   {selectedProject.featured && (
@@ -259,7 +259,7 @@ export default function PortfolioSection() {
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-2">
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1">
+                  <Button className="bg-amber-600 hover:bg-amber-700 text-white flex-1">
                     <ExternalLink className="size-4 mr-2" />
                     Visit Project
                   </Button>

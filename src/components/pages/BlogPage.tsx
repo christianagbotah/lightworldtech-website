@@ -176,9 +176,9 @@ export default function BlogPage() {
         <div className="absolute inset-0 grid-pattern opacity-10" />
         <div className="container-main relative z-10">
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-emerald-400 transition-colors">Home</button>
+            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
             <ChevronRight className="size-3" />
-            <span className="text-emerald-400">Blog</span>
+            <span className="text-amber-400">Blog</span>
           </nav>
           <motion.h1
             className="text-4xl sm:text-5xl font-bold text-white mb-4"
@@ -186,7 +186,7 @@ export default function BlogPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            Our <span className="text-emerald-400">Blog</span>
+            Our <span className="text-amber-400">Blog</span>
           </motion.h1>
           <motion.p
             className="text-lg text-slate-300 max-w-2xl"
@@ -221,7 +221,7 @@ export default function BlogPage() {
                     ⌘K
                   </kbd>
                 </div>
-                {/* Mobile category pills with emerald gradient when active */}
+                {/* Mobile category pills with amber gradient when active */}
                 <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
                   {categories.map((cat) => (
                     <button
@@ -229,8 +229,8 @@ export default function BlogPage() {
                       onClick={() => { setBlogCategory(cat.name); setPage(1); }}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all capitalize whitespace-nowrap flex items-center gap-1.5 ${
                         blogCategory === cat.name
-                          ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25'
-                          : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600'
+                          ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-amber-600/25'
+                          : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-600'
                       }`}
                     >
                       {cat.name === 'all' ? 'All' : cat.name}
@@ -246,7 +246,7 @@ export default function BlogPage() {
                   Showing <span className="font-medium text-slate-700 dark:text-slate-200">{(showFeaturedHero ? 1 : 0) + paginatedPosts.length}</span> of{' '}
                   <span className="font-medium text-slate-700 dark:text-slate-200">{filteredPosts.length}</span> articles
                   {blogSearch && (
-                    <span> matching &ldquo;<span className="text-emerald-600 dark:text-emerald-400">{blogSearch}</span>&rdquo;</span>
+                    <span> matching &ldquo;<span className="text-amber-600 dark:text-amber-400">{blogSearch}</span>&rdquo;</span>
                   )}
                 </p>
               )}
@@ -286,7 +286,7 @@ export default function BlogPage() {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2">
                           {/* Image placeholder with gradient overlay */}
-                          <div className="relative h-64 md:h-full min-h-[280px] bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 overflow-hidden">
+                          <div className="relative h-64 md:h-full min-h-[280px] bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-700 overflow-hidden">
                             <div className="absolute inset-0 grid-pattern opacity-20" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -305,12 +305,12 @@ export default function BlogPage() {
                           {/* Content */}
                           <div className="p-6 sm:p-8 flex flex-col justify-center bg-white dark:bg-slate-800">
                             <div className="flex items-center gap-2 mb-3">
-                              <Badge className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
+                              <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium">
                                 {mainFeatured.category}
                               </Badge>
                               <span className="text-xs text-slate-400 dark:text-slate-500">Editor&apos;s Pick</span>
                             </div>
-                            <h2 className="text-2xl sm:text-3xl font-bold mb-3 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 text-slate-900 dark:text-white leading-snug">
+                            <h2 className="text-2xl sm:text-3xl font-bold mb-3 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 text-slate-900 dark:text-white leading-snug">
                               {mainFeatured.title}
                             </h2>
                             <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-5 line-clamp-3">
@@ -318,7 +318,7 @@ export default function BlogPage() {
                             </p>
                             {/* Author row */}
                             <div className="flex items-center gap-3 mb-4">
-                              <div className="size-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-md">
+                              <div className="size-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 shadow-md">
                                 <span className="text-white text-sm font-bold">{mainFeatured.author?.charAt(0) || 'L'}</span>
                               </div>
                               <div>
@@ -335,7 +335,7 @@ export default function BlogPage() {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                            <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
                               Read Article
                               <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                             </div>
@@ -373,13 +373,13 @@ export default function BlogPage() {
                           >
                             {/* Subtle gradient border on hover - implemented with a pseudo-element approach via wrapper */}
                             <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                              <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                              <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-400 via-transparent to-amber-400 dark:from-amber-500 dark:via-transparent dark:to-amber-500" />
                             </div>
                             <div className="relative">
-                              <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden transition-transform duration-500 group-hover:scale-[1.03]">
+                              <div className="h-48 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/30 relative overflow-hidden transition-transform duration-500 group-hover:scale-[1.03]">
                                 <div className="absolute inset-0 grid-pattern opacity-30" />
                                 {/* Gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-emerald-600/20 via-transparent to-transparent" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-amber-600/20 via-transparent to-transparent" />
                                 <div className="absolute top-3 left-3">
                                   <Badge className="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 text-xs backdrop-blur-sm">
                                     {post.category}
@@ -403,7 +403,7 @@ export default function BlogPage() {
                                 </div>
                               </div>
                               <CardContent className="p-5 flex flex-col h-full">
-                                <h3 className="font-semibold text-lg mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 text-slate-900 dark:text-white">
+                                <h3 className="font-semibold text-lg mb-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 text-slate-900 dark:text-white">
                                   {post.title}
                                 </h3>
                                 <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1 line-clamp-2">
@@ -411,7 +411,7 @@ export default function BlogPage() {
                                 </p>
                                 {/* Author row */}
                                 <div className="flex items-center gap-2 mb-3">
-                                  <div className="size-7 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shrink-0">
+                                  <div className="size-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0">
                                     <span className="text-white text-[10px] font-bold">{post.author?.charAt(0) || 'L'}</span>
                                   </div>
                                   <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{post.author}</span>
@@ -427,7 +427,7 @@ export default function BlogPage() {
                                       {post.readTime}
                                     </span>
                                   </div>
-                                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                                     Read <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
                                   </span>
                                 </div>
@@ -449,7 +449,7 @@ export default function BlogPage() {
                     >
                       <Button
                         onClick={() => setPage(p => p + 1)}
-                        className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg transition-all duration-300 px-8 gap-2"
+                        className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300 px-8 gap-2"
                       >
                         <ArrowRight className="size-4" />
                         Load More Articles
@@ -474,7 +474,7 @@ export default function BlogPage() {
                           variant={page === i + 1 ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setPage(i + 1)}
-                          className={page === i + 1 ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md shadow-emerald-600/25' : ''}
+                          className={page === i + 1 ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md shadow-amber-600/25' : ''}
                         >
                           {i + 1}
                         </Button>
@@ -513,7 +513,7 @@ export default function BlogPage() {
                         setBlogCategory('all');
                         setPage(1);
                       }}
-                      className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400"
+                      className="border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400"
                     >
                       Clear Filters
                     </Button>
@@ -529,7 +529,7 @@ export default function BlogPage() {
                 <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border border-white/50 dark:border-slate-700/50 shadow-sm">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-4">
-                      <Tag className="size-4 text-emerald-600 dark:text-emerald-400" />
+                      <Tag className="size-4 text-amber-600 dark:text-amber-400" />
                       <h3 className="font-semibold text-slate-900 dark:text-white">Categories</h3>
                     </div>
                     <nav className="space-y-1" aria-label="Blog categories">
@@ -541,7 +541,7 @@ export default function BlogPage() {
                             onClick={() => { setBlogCategory(cat.name); setPage(1); }}
                             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
                               isActive
-                                ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium shadow-md shadow-emerald-600/25'
+                                ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white font-medium shadow-md shadow-amber-600/25'
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200'
                             }`}
                           >
@@ -577,7 +577,7 @@ export default function BlogPage() {
                           onClick={() => handlePostClick(post.slug)}
                           className="block w-full text-left group"
                         >
-                          <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2 mb-1">
+                          <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2 mb-1">
                             {post.title}
                           </h4>
                           <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
@@ -597,7 +597,7 @@ export default function BlogPage() {
                 <Card className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg border border-white/50 dark:border-slate-700/50 shadow-sm">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <User className="size-4 text-emerald-600 dark:text-emerald-400" />
+                      <User className="size-4 text-amber-600 dark:text-amber-400" />
                       <h3 className="font-semibold text-slate-900 dark:text-white">About Our Blog</h3>
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">

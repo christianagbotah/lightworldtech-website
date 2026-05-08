@@ -208,7 +208,7 @@ const departments = ['All Departments', 'Engineering', 'Design', 'Marketing', 'T
 const jobTypes = ['All Types', 'Full-time', 'Part-time', 'Contract'];
 
 const typeColors: Record<string, string> = {
-  'Full-time': 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+  'Full-time': 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
   'Part-time': 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
   'Contract': 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
 };
@@ -256,7 +256,7 @@ export default function CareersPage() {
         <div className="absolute inset-0 grid-pattern opacity-10" />
         <div className="absolute inset-0 mesh-pattern opacity-20" />
         <motion.div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-morph-blob"
+          className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-morph-blob"
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 8, repeat: Infinity }}
         />
@@ -267,9 +267,9 @@ export default function CareersPage() {
         />
         <div className="container-main relative z-10">
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-emerald-400 transition-colors">Home</button>
+            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
             <ChevronRight className="size-3" />
-            <span className="text-emerald-400">Careers</span>
+            <span className="text-amber-400">Careers</span>
           </nav>
           <motion.h1
             className="text-4xl sm:text-5xl font-bold text-white mb-4"
@@ -277,7 +277,7 @@ export default function CareersPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            Join Our <span className="text-emerald-400">Team</span>
+            Join Our <span className="text-amber-400">Team</span>
           </motion.h1>
           <motion.p
             className="text-lg text-slate-300 max-w-2xl"
@@ -302,8 +302,8 @@ export default function CareersPage() {
               { icon: GraduationCap, label: 'Training Budget', value: 'GHS 3K/yr' },
             ].map((stat) => (
               <div key={stat.label} className="flex items-center gap-3 group">
-                <div className="size-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
-                  <stat.icon className="size-5 text-emerald-400" />
+                <div className="size-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                  <stat.icon className="size-5 text-amber-400" />
                 </div>
                 <div>
                   <div className="text-lg font-bold text-white">{stat.value}</div>
@@ -335,8 +335,8 @@ export default function CareersPage() {
                   onClick={() => setActiveDepartment(dept)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                     activeDepartment === dept
-                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25'
-                      : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-700'
+                      ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-amber-600/25'
+                      : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-amber-700'
                   }`}
                 >
                   {dept}
@@ -350,8 +350,8 @@ export default function CareersPage() {
                   onClick={() => setActiveType(type)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                     activeType === type
-                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25'
-                      : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-700'
+                      ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-amber-600/25'
+                      : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-amber-700'
                   }`}
                 >
                   {type}
@@ -380,7 +380,7 @@ export default function CareersPage() {
               const isExpanded = expandedId === job.id;
               return (
                 <motion.div key={job.id} variants={itemVariants}>
-                  <Card className="border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:shadow-lg dark:hover:shadow-emerald-900/20 hover:border-emerald-300/50 dark:hover:border-emerald-600/30 transition-all duration-300 overflow-hidden shimmer-sweep">
+                  <Card className="border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:shadow-lg dark:hover:shadow-amber-900/20 hover:border-amber-300/50 dark:hover:border-amber-600/30 transition-all duration-300 overflow-hidden shimmer-sweep">
                     <CardContent className="p-0">
                       {/* Job header - clickable */}
                       <button
@@ -402,19 +402,19 @@ export default function CareersPage() {
                             </div>
                             <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
                               <span className="flex items-center gap-1">
-                                <Building2 className="size-3.5 text-emerald-500" />
+                                <Building2 className="size-3.5 text-amber-500" />
                                 {job.department}
                               </span>
                               <span className="flex items-center gap-1">
-                                <MapPin className="size-3.5 text-emerald-500" />
+                                <MapPin className="size-3.5 text-amber-500" />
                                 {job.location}
                               </span>
                               <span className="flex items-center gap-1">
-                                <Clock className="size-3.5 text-emerald-500" />
+                                <Clock className="size-3.5 text-amber-500" />
                                 {job.type}
                               </span>
                               <span className="flex items-center gap-1">
-                                <DollarSign className="size-3.5 text-emerald-500" />
+                                <DollarSign className="size-3.5 text-amber-500" />
                                 {job.salaryRange}
                               </span>
                             </div>
@@ -458,7 +458,7 @@ export default function CareersPage() {
                                   <ul className="space-y-1.5">
                                     {job.requirements.map((req) => (
                                       <li key={req} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
-                                        <CheckCircle2 className="size-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                        <CheckCircle2 className="size-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                                         <span>{req}</span>
                                       </li>
                                     ))}
@@ -471,7 +471,7 @@ export default function CareersPage() {
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {job.benefits.map((benefit) => (
                                       <div key={benefit} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
-                                        <span className="text-emerald-500 shrink-0 mt-0.5">✓</span>
+                                        <span className="text-amber-500 shrink-0 mt-0.5">✓</span>
                                         <span>{benefit}</span>
                                       </div>
                                     ))}
@@ -482,7 +482,7 @@ export default function CareersPage() {
                                 <div className="flex flex-col sm:flex-row gap-3 pt-3">
                                   <Button
                                     onClick={() => handleApplyClick(job)}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
+                                    className="bg-amber-600 hover:bg-amber-700 text-white shadow-md hover:shadow-lg transition-all"
                                   >
                                     <Send className="size-4 mr-2" />
                                     Apply Now
@@ -520,7 +520,7 @@ export default function CareersPage() {
               <Button
                 variant="outline"
                 onClick={() => { setActiveDepartment('All Departments'); setActiveType('All Types'); }}
-                className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400"
+                className="border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400"
               >
                 Clear Filters
               </Button>
@@ -529,14 +529,14 @@ export default function CareersPage() {
 
           {/* Why Work With Us */}
           <motion.div
-            className="mt-16 p-8 rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-amber-50 dark:from-emerald-900/20 dark:via-slate-800/50 dark:to-amber-900/20 border border-emerald-200/80 dark:border-emerald-800/60 relative overflow-hidden"
+            className="mt-16 p-8 rounded-2xl bg-gradient-to-br from-amber-50 via-white to-amber-50 dark:from-amber-900/20 dark:via-slate-800/50 dark:to-amber-900/20 border border-amber-200/80 dark:border-amber-800/60 relative overflow-hidden"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
             {/* Decorative background shapes */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
             <div className="absolute inset-0 diagonal-stripes opacity-30" />
 
@@ -545,12 +545,12 @@ export default function CareersPage() {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
               {[
-                { icon: Rocket, title: 'Innovation', desc: 'Work with cutting-edge technologies and solve real challenges', gradient: 'from-emerald-400 to-teal-500' },
-                { icon: Globe, title: 'Impact', desc: 'Build solutions that transform businesses across Africa', gradient: 'from-emerald-500 to-emerald-600' },
+                { icon: Rocket, title: 'Innovation', desc: 'Work with cutting-edge technologies and solve real challenges', gradient: 'from-amber-400 to-yellow-500' },
+                { icon: Globe, title: 'Impact', desc: 'Build solutions that transform businesses across Africa', gradient: 'from-amber-500 to-amber-600' },
                 { icon: TrendingUp, title: 'Growth', desc: 'Continuous learning with dedicated budgets and mentorship', gradient: 'from-amber-400 to-amber-500' },
-                { icon: HeartHandshake, title: 'Culture', desc: 'Collaborative, inclusive environment that values your voice', gradient: 'from-teal-400 to-emerald-500' },
+                { icon: HeartHandshake, title: 'Culture', desc: 'Collaborative, inclusive environment that values your voice', gradient: 'from-yellow-400 to-amber-500' },
               ].map((item) => (
-                <div key={item.title} className="text-center p-5 rounded-xl bg-white/50 dark:bg-white/5 backdrop-blur-sm border border-slate-100 dark:border-white/5 hover:border-emerald-200 dark:hover:border-emerald-700/50 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300 group">
+                <div key={item.title} className="text-center p-5 rounded-xl bg-white/50 dark:bg-white/5 backdrop-blur-sm border border-slate-100 dark:border-white/5 hover:border-amber-200 dark:hover:border-amber-700/50 hover:shadow-md hover:shadow-amber-500/5 transition-all duration-300 group">
                   <div className={`inline-flex size-12 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                     <item.icon className="size-6 text-white" />
                   </div>
@@ -566,7 +566,7 @@ export default function CareersPage() {
       {/* Application Modal */}
       <Dialog open={applyModalOpen} onOpenChange={setApplyModalOpen}>
         <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh]">
-          <div className="relative h-28 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 flex items-center justify-center">
+          <div className="relative h-28 bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-700 flex items-center justify-center">
             <div className="absolute inset-0 grid-pattern opacity-15" />
             <div className="text-center relative z-10">
               <div className="size-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
@@ -685,12 +685,12 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
         animate={{ opacity: 1, scale: 1 }}
       >
         <motion.div
-          className="size-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4"
+          className="size-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
         >
-          <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
+          <CheckCircle2 className="size-8 text-amber-600 dark:text-amber-400" />
         </motion.div>
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Application Received!</h3>
         <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -713,7 +713,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             placeholder="Your full name"
             required
             disabled={submitting}
-            className="h-10 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600"
+            className="h-10 focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600"
           />
         </div>
         <div className="space-y-1.5">
@@ -727,7 +727,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             placeholder="you@example.com"
             required
             disabled={submitting}
-            className="h-10 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600"
+            className="h-10 focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600"
           />
         </div>
       </div>
@@ -742,7 +742,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             onChange={handleChange}
             placeholder="+233 XX XXX XXXX"
             disabled={submitting}
-            className="h-10 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600"
+            className="h-10 focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600"
           />
         </div>
         <div className="space-y-1.5">
@@ -754,7 +754,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             onChange={handleChange}
             required
             disabled={submitting}
-            className="h-10 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600"
+            className="h-10 focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600"
           />
         </div>
       </div>
@@ -768,7 +768,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
           placeholder="Tell us why you're a great fit for this role..."
           rows={4}
           disabled={submitting}
-          className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 resize-none"
+          className="focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600 resize-none"
         />
       </div>
       <div className="space-y-1.5">
@@ -776,7 +776,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
         <div className="flex items-center gap-3">
           <label
             htmlFor="app-resume"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-emerald-400 dark:hover:border-emerald-600 cursor-pointer transition-colors text-sm text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-amber-400 dark:hover:border-amber-600 cursor-pointer transition-colors text-sm text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400"
           >
             <Upload className="size-4" />
             {resumeFile ? resumeFile.name : 'Upload Resume (PDF, DOC)'}
@@ -803,7 +803,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
       <Button
         type="submit"
         disabled={submitting || !formData.name || !formData.email}
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
+        className="w-full bg-amber-600 hover:bg-amber-700 text-white shadow-md hover:shadow-lg transition-all"
       >
         {submitting ? (
           <>

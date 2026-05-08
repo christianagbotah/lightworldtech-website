@@ -28,7 +28,7 @@ export default function PageLoader() {
       animate={{ opacity: 1 }}
     >
       <motion.div
-        className="h-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400"
+        className="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400"
         style={{ width: springProgress }}
       />
     </motion.div>

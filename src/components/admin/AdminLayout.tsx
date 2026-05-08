@@ -47,7 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-600 to-amber-700 flex items-center justify-center">
           <span className="text-white font-bold text-sm">LW</span>
         </div>
         <div>
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                   isActive
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
@@ -136,8 +136,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <span className="text-emerald-700 dark:text-emerald-300 text-xs font-bold">{(adminName || 'A').charAt(0).toUpperCase()}</span>
+                <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <span className="text-amber-700 dark:text-amber-300 text-xs font-bold">{(adminName || 'A').charAt(0).toUpperCase()}</span>
                 </div>
                 <span className="text-sm font-medium text-foreground">{adminName || 'Admin'}</span>
               </div>

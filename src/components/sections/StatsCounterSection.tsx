@@ -29,8 +29,8 @@ const stats: StatItem[] = [
     suffix: '+',
     label: 'Projects Completed',
     description: 'Successfully delivered across diverse industries',
-    gradient: 'from-emerald-500 to-emerald-600',
-    iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+    gradient: 'from-amber-500 to-amber-600',
+    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
     delay: 0,
   },
   {
@@ -39,8 +39,8 @@ const stats: StatItem[] = [
     suffix: '+',
     label: 'Happy Clients',
     description: 'Trusted by businesses throughout Ghana and Africa',
-    gradient: 'from-emerald-400 to-teal-500',
-    iconBg: 'bg-teal-100 dark:bg-teal-900/30',
+    gradient: 'from-amber-400 to-yellow-500',
+    iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
     delay: 100,
   },
   {
@@ -59,7 +59,7 @@ const stats: StatItem[] = [
     suffix: '+',
     label: 'Years Experience',
     description: 'Over eight years of proven excellence in IT',
-    gradient: 'from-emerald-500 to-amber-500',
+    gradient: 'from-amber-500 to-amber-500',
     iconBg: 'bg-orange-100 dark:bg-orange-900/30',
     delay: 300,
   },
@@ -69,8 +69,8 @@ const stats: StatItem[] = [
     suffix: '+',
     label: 'Countries Served',
     description: 'Delivering solutions across West Africa and beyond',
-    gradient: 'from-teal-500 to-emerald-500',
-    iconBg: 'bg-teal-100 dark:bg-teal-900/30',
+    gradient: 'from-yellow-500 to-amber-500',
+    iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
     delay: 400,
   },
   {
@@ -148,19 +148,19 @@ export default function StatsCounterSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative py-20 md:py-28 overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+    <section ref={sectionRef} className="relative py-20 md:py-28 overflow-hidden bg-gradient-to-b from-amber-50 via-white to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
       {/* Decorative grid pattern */}
       <div className="absolute inset-0 grid-pattern opacity-[0.04] dark:opacity-[0.06]" />
 
       {/* Decorative morphing blobs */}
-      <div className="absolute top-10 left-10 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl animate-morph-blob dark:bg-emerald-600/10" />
+      <div className="absolute top-10 left-10 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl animate-morph-blob dark:bg-amber-600/10" />
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-400/10 rounded-full blur-3xl animate-morph-blob dark:bg-amber-600/8" style={{ animationDelay: '-6s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-300/10 rounded-full blur-3xl animate-breathe dark:bg-emerald-500/5" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-300/10 rounded-full blur-3xl animate-breathe dark:bg-amber-500/5" />
 
       {/* Decorative floating geometric shapes */}
-      <div className="absolute top-16 right-1/4 w-3 h-3 rounded-full bg-emerald-400/30 dark:bg-emerald-400/20 animate-float-shape-1" />
+      <div className="absolute top-16 right-1/4 w-3 h-3 rounded-full bg-amber-400/30 dark:bg-amber-400/20 animate-float-shape-1" />
       <div className="absolute bottom-20 left-1/3 w-2 h-2 rounded-full bg-amber-400/30 dark:bg-amber-400/20 animate-float-shape-2" />
-      <div className="absolute top-1/3 right-20 w-4 h-4 rounded-sm bg-emerald-300/20 dark:bg-emerald-300/10 rotate-45 animate-float-shape-3" />
+      <div className="absolute top-1/3 right-20 w-4 h-4 rounded-sm bg-amber-300/20 dark:bg-amber-300/10 rotate-45 animate-float-shape-3" />
 
       <div className="container-main relative z-10">
         {/* Section header */}
@@ -171,7 +171,7 @@ export default function StatsCounterSection() {
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
             Our Impact in Numbers
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
@@ -199,7 +199,7 @@ export default function StatsCounterSection() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 {/* Glassmorphism card with shimmer */}
-                <div className="relative rounded-2xl p-6 md:p-8 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-slate-200/80 dark:border-white/10 hover:border-emerald-300/60 dark:hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-emerald-500/5 transition-all duration-500 h-full shimmer-sweep">
+                <div className="relative rounded-2xl p-6 md:p-8 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-slate-200/80 dark:border-white/10 hover:border-amber-300/60 dark:hover:border-amber-500/30 hover:shadow-xl hover:shadow-amber-500/10 dark:hover:shadow-amber-500/5 transition-all duration-500 h-full shimmer-sweep">
                   {/* Gradient border on hover */}
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 p-[1.5px] -z-10`}>
                     <div className="w-full h-full rounded-2xl bg-white dark:bg-slate-900" />
@@ -208,11 +208,11 @@ export default function StatsCounterSection() {
                   {/* Icon with orbit dot */}
                   <div className="relative inline-flex items-center justify-center mb-5">
                     <div className={`size-14 rounded-xl ${stat.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="size-6 text-emerald-600 dark:text-emerald-400" />
+                      <Icon className="size-6 text-amber-600 dark:text-amber-400" />
                     </div>
                     {/* Orbiting decorative dot */}
                     <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                      <div className="size-1.5 rounded-full bg-emerald-400/50 dark:bg-emerald-400/30 animate-orbit" />
+                      <div className="size-1.5 rounded-full bg-amber-400/50 dark:bg-amber-400/30 animate-orbit" />
                     </div>
                   </div>
 

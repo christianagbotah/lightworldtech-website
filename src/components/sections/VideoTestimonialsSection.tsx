@@ -32,7 +32,7 @@ const videoTestimonials: VideoTestimonial[] = [
     company: 'Grace Tabernacle Church',
     quote: 'Lightworld Technologies transformed our online presence completely. Their team delivered a stunning website with live streaming and donation integration. The professionalism and attention to detail were exceptional. I recommend them to any organization looking for top-quality IT solutions in Ghana.',
     initials: 'SO',
-    gradient: 'from-emerald-500 to-teal-600',
+    gradient: 'from-amber-500 to-yellow-600',
     rating: 5,
     duration: '2:30',
   },
@@ -54,7 +54,7 @@ const videoTestimonials: VideoTestimonial[] = [
     company: 'FreshBite Restaurant',
     quote: 'Our e-commerce food ordering platform is amazing! Customers can order and pay online seamlessly. Our revenue has increased by 40% since launching. Lightworld Technologies truly understands how technology can transform business operations.',
     initials: 'KD',
-    gradient: 'from-emerald-500 to-emerald-700',
+    gradient: 'from-amber-500 to-amber-700',
     rating: 5,
     duration: '1:45',
   },
@@ -106,7 +106,7 @@ export default function VideoTestimonialsSection() {
       <div className="absolute inset-0 mesh-pattern opacity-30 dark:opacity-15" />
 
       {/* Floating orbs */}
-      <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl animate-breathe" />
+      <div className="absolute top-0 right-0 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl animate-breathe" />
       <div className="absolute bottom-0 left-0 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl animate-breathe" style={{ animationDelay: '-3s' }} />
 
       <div className="container-main relative z-10">
@@ -118,7 +118,7 @@ export default function VideoTestimonialsSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Video Testimonials</span>
+          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Video Testimonials</span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
             Hear It From Our <span className="text-gradient-amber">Clients</span>
           </h2>
@@ -148,7 +148,7 @@ export default function VideoTestimonialsSection() {
                     className={index === activeIndex ? 'md:scale-105 md:z-10' : ''}
                   >
                     <Card
-                      className="overflow-hidden border-slate-200/80 dark:border-slate-700/80 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm cursor-pointer hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-all duration-500 group h-full shimmer-sweep"
+                      className="overflow-hidden border-slate-200/80 dark:border-slate-700/80 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm cursor-pointer hover:shadow-xl dark:hover:shadow-amber-900/20 transition-all duration-500 group h-full shimmer-sweep"
                       onClick={() => openVideoModal(testimonial)}
                     >
                       {/* Video placeholder with gradient */}
@@ -177,7 +177,7 @@ export default function VideoTestimonialsSection() {
                         </div>
                         {/* Active indicator */}
                         {index === activeIndex && (
-                          <div className="absolute top-3 left-3 bg-emerald-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-lg shadow-emerald-500/20">
+                          <div className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-lg shadow-amber-500/20">
                             <span className="size-1.5 rounded-full bg-white animate-pulse" />
                             Featured
                           </div>
@@ -192,7 +192,7 @@ export default function VideoTestimonialsSection() {
                         </div>
                         {/* Quote */}
                         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3 mb-3 relative">
-                          <Quote className="size-4 text-emerald-300 dark:text-emerald-700 absolute -top-0.5 -left-0.5 opacity-50" />
+                          <Quote className="size-4 text-amber-300 dark:text-amber-700 absolute -top-0.5 -left-0.5 opacity-50" />
                           <span className="pl-5">&ldquo;{testimonial.quote}&rdquo;</span>
                         </p>
                         <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-700/80">
@@ -216,7 +216,7 @@ export default function VideoTestimonialsSection() {
           <div className="flex items-center justify-center gap-4 mt-8">
             <button
               onClick={goPrev}
-              className="size-10 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all shadow-sm hover:shadow-md"
+              className="size-10 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-300 dark:hover:border-amber-700 transition-all shadow-sm hover:shadow-md"
               aria-label="Previous testimonial"
             >
               <ChevronLeft className="size-5" />
@@ -228,7 +228,7 @@ export default function VideoTestimonialsSection() {
                   onClick={() => goToSlide(i)}
                   className={`rounded-full transition-all duration-300 ${
                     i === activeIndex
-                      ? 'w-8 h-2.5 bg-gradient-to-r from-emerald-500 to-amber-400 shadow-sm'
+                      ? 'w-8 h-2.5 bg-gradient-to-r from-amber-500 to-amber-400 shadow-sm'
                       : 'w-2.5 h-2.5 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500'
                   }`}
                   aria-label={`Go to testimonial ${i + 1}`}
@@ -237,7 +237,7 @@ export default function VideoTestimonialsSection() {
             </div>
             <button
               onClick={goNext}
-              className="size-10 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all shadow-sm hover:shadow-md"
+              className="size-10 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-300 dark:hover:border-amber-700 transition-all shadow-sm hover:shadow-md"
               aria-label="Next testimonial"
             >
               <ChevronRight className="size-5" />
@@ -301,9 +301,9 @@ export default function VideoTestimonialsSection() {
                 </div>
                 <div className="flex items-start gap-3 mb-5 relative">
                   <div className="absolute top-0 left-0 opacity-10 pointer-events-none">
-                    <Quote className="size-16 text-emerald-500" />
+                    <Quote className="size-16 text-amber-500" />
                   </div>
-                  <Quote className="size-8 text-emerald-300 dark:text-emerald-700 shrink-0 mt-1 relative" />
+                  <Quote className="size-8 text-amber-300 dark:text-amber-700 shrink-0 mt-1 relative" />
                   <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic relative">
                     &ldquo;{selectedVideo.quote}&rdquo;
                   </p>

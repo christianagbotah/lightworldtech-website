@@ -40,7 +40,7 @@ export default function ThemeToggle() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-9 rounded-full hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors"
+            className="size-9 rounded-full hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           >
             {theme === 'dark' ? (

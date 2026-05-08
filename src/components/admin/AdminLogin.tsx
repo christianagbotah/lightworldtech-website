@@ -51,11 +51,11 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen flex bg-muted/30">
       {/* Left Panel - Decorative Branding */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative bg-gradient-to-br from-amber-600 via-amber-700 to-yellow-800 overflow-hidden">
         {/* Background patterns */}
         <div className="absolute inset-0 grid-pattern opacity-10" />
         <div className="absolute inset-0 mesh-pattern opacity-20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/50 via-transparent to-emerald-600/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-amber-900/50 via-transparent to-amber-600/20" />
 
         {/* Animated decorative shapes */}
         <div className="absolute top-20 left-16">
@@ -107,8 +107,8 @@ export default function AdminLogin() {
         </div>
 
         {/* Large blurred orbs */}
-        <div className="absolute top-1/4 right-0 w-64 h-64 bg-emerald-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 right-0 w-64 h-64 bg-amber-400/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-500/20 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl" />
 
         {/* Content */}
@@ -125,7 +125,7 @@ export default function AdminLogin() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">Lightworld Technologies</h1>
-                <p className="text-xs text-emerald-200/70">Content Management System</p>
+                <p className="text-xs text-amber-200/70">Content Management System</p>
               </div>
             </div>
 
@@ -135,25 +135,25 @@ export default function AdminLogin() {
                 Digital Presence
               </span>
             </h2>
-            <p className="text-lg text-emerald-100/80 max-w-md mb-10 leading-relaxed">
+            <p className="text-lg text-amber-100/80 max-w-md mb-10 leading-relaxed">
               Access your CMS dashboard to manage blog posts, services, portfolio projects, and more.
             </p>
 
             {/* Trust indicators */}
             <div className="space-y-4">
-              <div className="flex items-center gap-3 text-emerald-100/70">
+              <div className="flex items-center gap-3 text-amber-100/70">
                 <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
                   <Shield className="size-4 text-amber-300" />
                 </div>
                 <span className="text-sm">Secure admin panel with role-based access</span>
               </div>
-              <div className="flex items-center gap-3 text-emerald-100/70">
+              <div className="flex items-center gap-3 text-amber-100/70">
                 <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
                   <Zap className="size-4 text-amber-300" />
                 </div>
                 <span className="text-sm">Real-time content editing and preview</span>
               </div>
-              <div className="flex items-center gap-3 text-emerald-100/70">
+              <div className="flex items-center gap-3 text-amber-100/70">
                 <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
                   <Globe className="size-4 text-amber-300" />
                 </div>
@@ -185,7 +185,7 @@ export default function AdminLogin() {
             <CardContent className="p-8">
               {/* Logo */}
               <div className="flex items-center gap-3 mb-8">
-                <div className="size-11 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-600/20">
+                <div className="size-11 rounded-xl bg-gradient-to-br from-amber-600 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-600/20">
                   <Shield className="size-5 text-white" />
                 </div>
                 <div>
@@ -212,7 +212,7 @@ export default function AdminLogin() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="admin-email" className="text-foreground flex items-center gap-1.5">
-                    <Mail className="size-3.5 text-emerald-500" />
+                    <Mail className="size-3.5 text-amber-500" />
                     Email
                   </Label>
                   <div className="relative">
@@ -227,20 +227,20 @@ export default function AdminLogin() {
                       required
                       className={`pl-10 transition-all duration-300 ${
                         focusedField === 'email'
-                          ? 'border-emerald-400 ring-2 ring-emerald-400/20 shadow-sm shadow-emerald-400/10'
-                          : 'focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400'
+                          ? 'border-amber-400 ring-2 ring-amber-400/20 shadow-sm shadow-amber-400/10'
+                          : 'focus-visible:ring-amber-500/30 focus-visible:border-amber-400'
                       }`}
                       autoComplete="email"
                     />
                     <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 size-4 transition-colors duration-300 ${
-                      focusedField === 'email' ? 'text-emerald-500' : 'text-muted-foreground'
+                      focusedField === 'email' ? 'text-amber-500' : 'text-muted-foreground'
                     }`} />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="admin-password" className="text-foreground flex items-center gap-1.5">
-                    <Lock className="size-3.5 text-emerald-500" />
+                    <Lock className="size-3.5 text-amber-500" />
                     Password
                   </Label>
                   <div className="relative">
@@ -255,18 +255,18 @@ export default function AdminLogin() {
                       required
                       className={`pl-10 pr-10 transition-all duration-300 ${
                         focusedField === 'password'
-                          ? 'border-emerald-400 ring-2 ring-emerald-400/20 shadow-sm shadow-emerald-400/10'
-                          : 'focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400'
+                          ? 'border-amber-400 ring-2 ring-amber-400/20 shadow-sm shadow-amber-400/10'
+                          : 'focus-visible:ring-amber-500/30 focus-visible:border-amber-400'
                       }`}
                       autoComplete="current-password"
                     />
                     <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 size-4 transition-colors duration-300 ${
-                      focusedField === 'password' ? 'text-emerald-500' : 'text-muted-foreground'
+                      focusedField === 'password' ? 'text-amber-500' : 'text-muted-foreground'
                     }`} />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -277,7 +277,7 @@ export default function AdminLogin() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-600/25 hover:shadow-xl hover:shadow-emerald-600/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-600/25 hover:shadow-xl hover:shadow-amber-600/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
                 >
                   {loading ? (
                     <>

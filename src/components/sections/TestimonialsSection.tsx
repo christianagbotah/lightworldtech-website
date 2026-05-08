@@ -157,7 +157,7 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', duration: 0.6, delay: 0.2 }}
-                className="size-20 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30"
+                className="size-20 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30"
               >
                 <CheckCircle2 className="size-10 text-white" />
               </motion.div>
@@ -174,13 +174,13 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
               exit={{ opacity: 0, x: -20 }}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 dark:from-emerald-700 dark:to-emerald-800 p-6">
+              <div className="bg-gradient-to-r from-amber-600 to-amber-700 dark:from-amber-700 dark:to-amber-800 p-6">
                 <DialogHeader>
                   <DialogTitle className="text-xl text-white flex items-center gap-2">
                     <MessageSquarePlus className="size-5" />
                     Share Your Experience
                   </DialogTitle>
-                  <DialogDescription className="text-emerald-100 text-sm">
+                  <DialogDescription className="text-amber-100 text-sm">
                     Tell us about your experience working with Lightworld Technologies.
                   </DialogDescription>
                 </DialogHeader>
@@ -296,7 +296,7 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
                 >
                   {submitting ? (
                     <>
@@ -411,11 +411,11 @@ export default function TestimonialsSection() {
     <section className="section-padding bg-gradient-dark relative overflow-hidden">
       {/* Parallax-like slow-moving gradient background */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/50 via-slate-900 to-amber-950/30 animate-[gradient-shift_20s_ease-in-out_infinite] bg-[length:200%_200%]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-950/50 via-slate-900 to-amber-950/30 animate-[gradient-shift_20s_ease-in-out_infinite] bg-[length:200%_200%]" />
       </div>
       {/* Decorative elements */}
       <div className="absolute inset-0 dot-pattern opacity-10" />
-      <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-500/8 rounded-full blur-3xl" />
 
       <div className="container-main relative z-10">
@@ -427,7 +427,7 @@ export default function TestimonialsSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Testimonials</span>
+          <span className="text-sm font-semibold text-amber-400 uppercase tracking-wider">Testimonials</span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-white">What Our Clients Say</h2>
           <p className="text-slate-400">
             Don&apos;t just take our word for it — hear from the businesses we&apos;ve helped transform.
@@ -442,8 +442,8 @@ export default function TestimonialsSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <div className="inline-flex items-center gap-4 bg-gradient-to-r from-emerald-600/20 to-amber-600/20 rounded-2xl px-8 py-4 border border-emerald-500/20 backdrop-blur-sm">
-            <div className="size-12 rounded-full bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <div className="inline-flex items-center gap-4 bg-gradient-to-r from-amber-600/20 to-amber-600/20 rounded-2xl px-8 py-4 border border-amber-500/20 backdrop-blur-sm">
+            <div className="size-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
               <Users className="size-6 text-white" />
             </div>
             <div className="text-left">
@@ -493,15 +493,15 @@ export default function TestimonialsSection() {
               <CarouselContent className="-ml-4">
                 {testimonials.map((testimonial) => (
                   <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/2">
-                    <Card className="bg-slate-800/40 border-slate-700/40 backdrop-blur-md h-full relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-xl hover:shadow-emerald-900/30 transition-all duration-500">
+                    <Card className="bg-slate-800/40 border-slate-700/40 backdrop-blur-md h-full relative overflow-hidden group hover:border-amber-500/40 hover:shadow-xl hover:shadow-amber-900/30 transition-all duration-500">
                       {/* Top gradient accent bar */}
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <CardContent className="p-6 flex flex-col h-full relative">
                         {/* Large quote decoration with gradient */}
-                        <div className="absolute -top-2 -right-2 size-20 rounded-full bg-gradient-to-br from-emerald-500/10 to-amber-500/10 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-500">
-                          <Quote className="size-10 text-emerald-400/30 group-hover:text-emerald-400/50 transition-colors duration-500" />
+                        <div className="absolute -top-2 -right-2 size-20 rounded-full bg-gradient-to-br from-amber-500/10 to-amber-500/10 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                          <Quote className="size-10 text-amber-400/30 group-hover:text-amber-400/50 transition-colors duration-500" />
                         </div>
-                        <Quote className="size-8 text-emerald-400/60 mb-4 relative" />
+                        <Quote className="size-8 text-amber-400/60 mb-4 relative" />
                         <p className="text-slate-300 text-sm leading-relaxed flex-1 mb-6 relative">
                           &ldquo;{testimonial.content || (testimonial as Record<string, unknown>).quote}&rdquo;
                         </p>
@@ -521,7 +521,7 @@ export default function TestimonialsSection() {
                         </div>
                         {/* Author */}
                         <div className="flex items-center gap-3 pt-4 border-t border-slate-700/40 relative">
-                          <div className="size-11 rounded-full bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-emerald-500/25 group-hover:shadow-emerald-500/40 transition-shadow duration-300">
+                          <div className="size-11 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-amber-500/25 group-hover:shadow-amber-500/40 transition-shadow duration-300">
                             {testimonial.name.charAt(0)}
                           </div>
                           <div>
@@ -541,7 +541,7 @@ export default function TestimonialsSection() {
                   onClick={handlePrev}
                   variant="outline"
                   size="icon"
-                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-amber-600 hover:border-amber-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
                   aria-label="Previous testimonial"
                 >
                   <ChevronLeft className="size-4" />
@@ -554,9 +554,9 @@ export default function TestimonialsSection() {
                       aria-label={`Go to testimonial ${i + 1}`}
                       aria-selected={i === activeDot}
                       role="tab"
-                      className={`rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                      className={`rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
                         i === activeDot
-                          ? 'w-6 h-2 bg-gradient-to-r from-emerald-400 to-amber-400'
+                          ? 'w-6 h-2 bg-gradient-to-r from-amber-400 to-amber-400'
                           : 'w-2 h-2 bg-slate-600 hover:bg-slate-500'
                       }`}
                     />
@@ -566,7 +566,7 @@ export default function TestimonialsSection() {
                   onClick={handleNext}
                   variant="outline"
                   size="icon"
-                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-amber-600 hover:border-amber-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
                   aria-label="Next testimonial"
                 >
                   <ChevronRight className="size-4" />
@@ -584,8 +584,8 @@ export default function TestimonialsSection() {
                   <span>{isPaused ? 'Paused' : 'Auto-playing'}</span>
                   {!isPaused && (
                     <span className="relative flex size-1.5 ml-1">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full size-1.5 bg-emerald-500" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full size-1.5 bg-amber-500" />
                     </span>
                   )}
                 </button>
@@ -607,9 +607,9 @@ export default function TestimonialsSection() {
             {trustedLogos.map((logo) => (
               <div
                 key={logo.name}
-                className="flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-all duration-300 hover:-translate-y-0.5"
+                className="flex items-center gap-2 text-slate-500 hover:text-amber-400 transition-all duration-300 hover:-translate-y-0.5"
               >
-                <div className="size-9 rounded-lg bg-slate-800 border border-slate-700 hover:border-emerald-600/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 transition-colors duration-300">
+                <div className="size-9 rounded-lg bg-slate-800 border border-slate-700 hover:border-amber-600/40 flex items-center justify-center text-[10px] font-bold text-amber-400 transition-colors duration-300">
                   {logo.initials}
                 </div>
                 <span className="text-xs font-medium hidden sm:block">{logo.name}</span>
@@ -628,7 +628,7 @@ export default function TestimonialsSection() {
         >
           <Button
             onClick={() => setReviewOpen(true)}
-            className="bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6"
+            className="bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6"
           >
             <MessageSquarePlus className="size-4 mr-2" />
             Share Your Experience

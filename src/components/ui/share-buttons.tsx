@@ -87,8 +87,8 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
               aria-label={copied ? 'Copied!' : 'Copy link'}
               className={`size-9 rounded-full flex items-center justify-center border transition-all duration-200 ${
                 copied
-                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-md'
-                  : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-md'
+                  ? 'bg-amber-500 text-white border-amber-500 shadow-md'
+                  : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-amber-500 hover:text-white hover:border-amber-500 hover:shadow-md'
               }`}
             >
               {copied ? <Check className="size-4" /> : <Link2 className="size-4" />}

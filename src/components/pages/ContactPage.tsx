@@ -39,7 +39,7 @@ function getFileIcon(type: string): React.ElementType {
 }
 
 function getFileColor(type: string): string {
-  if (type.startsWith('image/')) return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400';
+  if (type.startsWith('image/')) return 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400';
   if (type === 'application/pdf') return 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
   return 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
 }
@@ -64,8 +64,8 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   };
 
   return (
-    <button onClick={handleCopy} className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all duration-200 shrink-0" aria-label={`Copy ${label}`}>
-      {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+    <button onClick={handleCopy} className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all duration-200 shrink-0" aria-label={`Copy ${label}`}>
+      {copied ? <Check className="size-3.5 text-amber-500" /> : <Copy className="size-3.5" />}
     </button>
   );
 }
@@ -145,7 +145,7 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
   return (
     <div className="space-y-3">
       <Label className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
-        <span className="w-1 h-1 rounded-full bg-emerald-500" />
+        <span className="w-1 h-1 rounded-full bg-amber-500" />
         Attachments
         <span className="text-xs text-slate-400 font-normal">(optional - max {MAX_FILES} files, 10MB each)</span>
       </Label>
@@ -154,8 +154,8 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
       <div
         className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300 cursor-pointer ${
           isDragOver
-            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 scale-[1.01]'
-            : 'border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 scale-[1.01]'
+            : 'border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -177,12 +177,12 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
         <motion.div animate={isDragOver ? { scale: 1.05 } : { scale: 1 }} transition={{ duration: 0.2 }}>
           <div className={`size-12 rounded-full mx-auto mb-3 flex items-center justify-center transition-colors duration-300 ${
             isDragOver
-              ? 'bg-emerald-100 dark:bg-emerald-800'
+              ? 'bg-amber-100 dark:bg-amber-800'
               : 'bg-slate-100 dark:bg-slate-800'
           }`}>
-            <Upload className={`size-5 transition-colors duration-300 ${isDragOver ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+            <Upload className={`size-5 transition-colors duration-300 ${isDragOver ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`} />
           </div>
-          <p className={`text-sm font-medium transition-colors duration-300 ${isDragOver ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}`}>
+          <p className={`text-sm font-medium transition-colors duration-300 ${isDragOver ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-300'}`}>
             {isDragOver ? 'Drop files here' : 'Drag & drop files here'}
           </p>
           <p className="text-xs text-slate-400 mt-1">or click to browse</p>
@@ -256,7 +256,7 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
               <div className="w-20 h-1 rounded-full bg-slate-100 dark:bg-slate-700">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${
-                    totalSize > MAX_TOTAL_SIZE ? 'bg-red-500' : totalSize > MAX_TOTAL_SIZE * 0.8 ? 'bg-amber-500' : 'bg-emerald-500'
+                    totalSize > MAX_TOTAL_SIZE ? 'bg-red-500' : totalSize > MAX_TOTAL_SIZE * 0.8 ? 'bg-amber-500' : 'bg-amber-500'
                   }`}
                   style={{ width: `${Math.min((totalSize / MAX_TOTAL_SIZE) * 100, 100)}%` }}
                 />
@@ -353,15 +353,15 @@ export default function ContactPage() {
       {/* Hero Banner */}
       <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-10" />
-        <motion.div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} />
+        <motion.div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} />
         <div className="container-main relative z-10">
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-emerald-400 transition-colors">Home</button>
+            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
             <ChevronRight className="size-3" />
-            <span className="text-emerald-400">Contact</span>
+            <span className="text-amber-400">Contact</span>
           </nav>
           <motion.h1 className="text-4xl sm:text-5xl font-bold text-white mb-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            Get In <span className="text-emerald-400">Touch</span>
+            Get In <span className="text-amber-400">Touch</span>
           </motion.h1>
           <motion.p className="text-lg text-slate-300 max-w-2xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
             Ready to start your next project? We&apos;d love to hear from you. Reach out and let&apos;s discuss how we can help.
@@ -376,19 +376,19 @@ export default function ContactPage() {
             {/* Contact Form */}
             <motion.div className="lg:col-span-2" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
               <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden relative">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-amber-400 hidden lg:block" />
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 via-amber-400 to-amber-400 hidden lg:block" />
                 <CardContent className="p-6 sm:p-8 relative">
                   {submitted ? (
                     <motion.div className="text-center py-12" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-                      <motion.div className="size-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}>
-                        <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
+                      <motion.div className="size-20 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}>
+                        <CheckCircle2 className="size-10 text-amber-600 dark:text-amber-400" />
                       </motion.div>
                       <h3 className="text-2xl font-semibold mb-2 text-slate-900 dark:text-white">Message Sent!</h3>
                       <p className="text-slate-500 dark:text-slate-400 mb-2">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
                       <p className="text-sm text-slate-400 dark:text-slate-500 mb-6">Check your email for a confirmation.</p>
                       <div className="flex gap-3 justify-center">
-                        <Button onClick={() => setSubmitted(false)} variant="outline" className="border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400">Send Another Message</Button>
-                        <Button onClick={() => navigate('home')} className="bg-emerald-600 hover:bg-emerald-700 text-white">Back to Home</Button>
+                        <Button onClick={() => setSubmitted(false)} variant="outline" className="border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400">Send Another Message</Button>
+                        <Button onClick={() => navigate('home')} className="bg-amber-600 hover:bg-amber-700 text-white">Back to Home</Button>
                       </div>
                     </motion.div>
                   ) : (
@@ -397,7 +397,7 @@ export default function ContactPage() {
                       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Fill out the form below and we&apos;ll respond promptly.</p>
 
                       {submitting && (
-                        <motion.div className="mb-4 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                        <motion.div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-sm text-amber-600 dark:text-amber-400 flex items-center gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
                           <Loader2 className="size-4 animate-spin" /> Sending your message...
                         </motion.div>
                       )}
@@ -412,43 +412,43 @@ export default function ContactPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div className="space-y-1.5">
                             <Label htmlFor="name" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
-                              <span className="w-1 h-1 rounded-full bg-emerald-500" /> Full Name
+                              <span className="w-1 h-1 rounded-full bg-amber-500" /> Full Name
                             </Label>
-                            <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all h-11" />
+                            <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required disabled={submitting} className="focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600 transition-all h-11" />
                           </div>
                           <div className="space-y-1.5">
                             <Label htmlFor="email" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
-                              <span className="w-1 h-1 rounded-full bg-emerald-500" /> Email Address
+                              <span className="w-1 h-1 rounded-full bg-amber-500" /> Email Address
                             </Label>
-                            <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all h-11" />
+                            <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required disabled={submitting} className="focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600 transition-all h-11" />
                           </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div className="space-y-1.5">
                             <Label htmlFor="phone" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
-                              <span className="w-1 h-1 rounded-full bg-emerald-500" /> Phone Number
+                              <span className="w-1 h-1 rounded-full bg-amber-500" /> Phone Number
                             </Label>
-                            <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+233 XX XXX XXXX" disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all h-11" />
+                            <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+233 XX XXX XXXX" disabled={submitting} className="focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600 transition-all h-11" />
                           </div>
                           <div className="space-y-1.5">
                             <Label htmlFor="subject" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
-                              <span className="w-1 h-1 rounded-full bg-emerald-500" /> Subject
+                              <span className="w-1 h-1 rounded-full bg-amber-500" /> Subject
                             </Label>
-                            <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all h-11" />
+                            <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" required disabled={submitting} className="focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600 transition-all h-11" />
                           </div>
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="message" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
-                            <span className="w-1 h-1 rounded-full bg-emerald-500" /> Message
+                            <span className="w-1 h-1 rounded-full bg-amber-500" /> Message
                           </Label>
-                          <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us about your project..." rows={5} required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-600 transition-all resize-none" />
+                          <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us about your project..." rows={5} required disabled={submitting} className="focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-600 transition-all resize-none" />
                         </div>
 
                         {/* File Upload */}
                         <FileUploadZone files={attachments} setFiles={setAttachments} />
 
                         <div className="flex flex-col sm:flex-row gap-3">
-                          <Button type="submit" disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto px-8 shadow-md hover:shadow-lg transition-shadow">
+                          <Button type="submit" disabled={submitting} className="bg-amber-600 hover:bg-amber-700 text-white w-full sm:w-auto px-8 shadow-md hover:shadow-lg transition-shadow">
                             {submitting ? (
                               <><Loader2 className="size-4 mr-2 animate-spin" /> Sending...</>
                             ) : (
@@ -467,12 +467,12 @@ export default function ContactPage() {
             <motion.div className="space-y-6" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
               <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
                 <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-400 via-transparent to-amber-400 dark:from-amber-500 dark:via-transparent dark:to-amber-500" />
                 </div>
                 <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0 group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300">
-                      <Phone className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:text-white transition-colors duration-300" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
+                      <Phone className="size-5 text-amber-600 dark:text-amber-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Phone</h3>
@@ -486,12 +486,12 @@ export default function ContactPage() {
 
               <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
                 <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-400 via-transparent to-amber-400 dark:from-amber-500 dark:via-transparent dark:to-amber-500" />
                 </div>
                 <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0 group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300">
-                      <Mail className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:text-white transition-colors duration-300" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
+                      <Mail className="size-5 text-amber-600 dark:text-amber-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Email</h3>
@@ -504,12 +504,12 @@ export default function ContactPage() {
 
               <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
                 <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-400 via-transparent to-amber-400 dark:from-amber-500 dark:via-transparent dark:to-amber-500" />
                 </div>
                 <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0 group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300">
-                      <MapPin className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:text-white transition-colors duration-300" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
+                      <MapPin className="size-5 text-amber-600 dark:text-amber-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Office</h3>
@@ -521,22 +521,22 @@ export default function ContactPage() {
 
               <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
                 <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-emerald-400 via-transparent to-amber-400 dark:from-emerald-500 dark:via-transparent dark:to-amber-500" />
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-400 via-transparent to-amber-400 dark:from-amber-500 dark:via-transparent dark:to-amber-500" />
                 </div>
                 <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center shrink-0 group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300">
-                      <Clock className="size-5 text-emerald-600 dark:text-emerald-400 group-hover:text-white transition-colors duration-300" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
+                      <Clock className="size-5 text-amber-600 dark:text-amber-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-slate-900 dark:text-white">Office Hours</h3>
                         <span className="flex items-center gap-1.5">
                           <span className={`relative flex size-2.5 ${officeStatus.open ? '' : 'opacity-50'}`}>
-                            {officeStatus.open && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
-                            <span className={`relative inline-flex rounded-full size-2.5 ${officeStatus.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                            {officeStatus.open && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />}
+                            <span className={`relative inline-flex rounded-full size-2.5 ${officeStatus.open ? 'bg-amber-500' : 'bg-slate-400'}`} />
                           </span>
-                          <span className={`text-xs font-medium ${officeStatus.open ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>{officeStatus.label}</span>
+                          <span className={`text-xs font-medium ${officeStatus.open ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`}>{officeStatus.label}</span>
                         </span>
                       </div>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Mon - Fri: 08:00 - 17:00</p>
@@ -551,7 +551,7 @@ export default function ContactPage() {
               <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0"><ExternalLink className="size-5 text-white" /></div>
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shrink-0"><ExternalLink className="size-5 text-white" /></div>
                     <div>
                       <h3 className="font-semibold text-slate-900 dark:text-white">Follow Us</h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400">Stay connected on social media</p>
@@ -577,20 +577,20 @@ export default function ContactPage() {
               </Card>
 
               {/* Schedule a Call */}
-              <Card className="border-0 shadow-lg overflow-hidden relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700">
+              <Card className="border-0 shadow-lg overflow-hidden relative bg-gradient-to-br from-amber-600 via-amber-700 to-yellow-700">
                 <div className="absolute inset-0 grid-pattern opacity-10" />
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-emerald-300/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-300/10 rounded-full blur-3xl" />
                 <CardContent className="p-6 relative">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="size-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0"><CalendarDays className="size-6 text-white" /></div>
                     <div>
                       <h3 className="font-bold text-lg text-white">Schedule a Call</h3>
-                      <p className="text-xs text-emerald-200/80">Free 30-minute consultation</p>
+                      <p className="text-xs text-amber-200/80">Free 30-minute consultation</p>
                     </div>
                   </div>
-                  <p className="text-sm text-emerald-100/80 mb-5 leading-relaxed">Not sure where to start? Book a free consultation call with our team to discuss your project requirements.</p>
-                  <Button className="w-full bg-white text-emerald-700 hover:bg-emerald-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]" onClick={() => { const message = 'Hello! I would like to schedule a consultation call to discuss a project.'; window.open(`https://wa.me/233243618186?text=${encodeURIComponent(message)}`, '_blank'); }}>
+                  <p className="text-sm text-amber-100/80 mb-5 leading-relaxed">Not sure where to start? Book a free consultation call with our team to discuss your project requirements.</p>
+                  <Button className="w-full bg-white text-amber-700 hover:bg-amber-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]" onClick={() => { const message = 'Hello! I would like to schedule a consultation call to discuss a project.'; window.open(`https://wa.me/233243618186?text=${encodeURIComponent(message)}`, '_blank'); }}>
                     <MessageCircle className="size-4 mr-2" /> WhatsApp Us Now
                   </Button>
                 </CardContent>
@@ -599,7 +599,7 @@ export default function ContactPage() {
               {/* Google Maps Embed */}
               <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
                 <div className="p-3 pb-0">
-                  <div className="flex items-center gap-2 mb-2"><MapPin className="size-4 text-emerald-600 dark:text-emerald-400" /><h3 className="font-semibold text-sm text-slate-900 dark:text-white">Our Location</h3></div>
+                  <div className="flex items-center gap-2 mb-2"><MapPin className="size-4 text-amber-600 dark:text-amber-400" /><h3 className="font-semibold text-sm text-slate-900 dark:text-white">Our Location</h3></div>
                 </div>
                 <div className="h-56 rounded-b-lg overflow-hidden">
                   <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3770%2C5.5837%2C-0.0070%2C5.6237&layer=mapnik&marker=5.6037%2C-0.1870" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Lightworld Technologies Office Location - Accra, Ghana" className="grayscale-[30%] contrast-[1.1] dark:grayscale-[60%] dark:brightness-[0.8]" />

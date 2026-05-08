@@ -66,7 +66,7 @@ function AnimatedStatCard({ value, suffix, label, icon: Icon, delay = 0, maxValu
   const offset = circumference - progress * circumference;
 
   return (
-    <Card ref={ref} className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-lg dark:hover:shadow-emerald-900/20 transition-all duration-300 group">
+    <Card ref={ref} className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-200 dark:hover:border-amber-700 hover:shadow-lg dark:hover:shadow-amber-900/20 transition-all duration-300 group">
       <CardContent className="p-6 text-center">
         <div className="relative mx-auto mb-3" style={{ width: size, height: size }}>
           <svg className="absolute inset-0 -rotate-90" width={size} height={size}>
@@ -80,12 +80,12 @@ function AnimatedStatCard({ value, suffix, label, icon: Icon, delay = 0, maxValu
             <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={`url(#ring-gradient-${label.replace(/\s+/g, '-')})`} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className="transition-all duration-100 ease-out" />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="size-10 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center group-hover:shadow-md transition-shadow duration-300">
-              <Icon className="size-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="size-10 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center group-hover:shadow-md transition-shadow duration-300">
+              <Icon className="size-5 text-amber-600 dark:text-amber-400" />
             </div>
           </div>
         </div>
-        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{count}{suffix}</div>
+        <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 tabular-nums">{count}{suffix}</div>
         <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">{label}</div>
       </CardContent>
     </Card>
@@ -106,7 +106,7 @@ const socialLinks = [
   { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-[#0077B5]', field: 'linkedin' as const },
   { icon: Twitter, label: 'Twitter', color: 'hover:bg-[#1DA1F2]', field: 'twitter' as const },
   { icon: Github, label: 'GitHub', color: 'hover:bg-[#333]', field: 'github' as const },
-  { icon: Mail, label: 'Email', color: 'hover:bg-emerald-500', field: 'email' as const },
+  { icon: Mail, label: 'Email', color: 'hover:bg-amber-500', field: 'email' as const },
 ];
 
 function TeamFlipCard({ member }: { member: TeamMember }) {
@@ -130,17 +130,17 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
       >
         {/* Front face */}
         <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-xl transition-shadow" style={{ backfaceVisibility: 'hidden' }}>
-          <div className="h-44 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
+          <div className="h-44 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/30 relative overflow-hidden">
             <div className="absolute inset-0 grid-pattern opacity-30" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="size-20 rounded-full bg-emerald-300/50 dark:bg-emerald-700/40 flex items-center justify-center text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+              <div className="size-20 rounded-full bg-amber-300/50 dark:bg-amber-700/40 flex items-center justify-center text-2xl font-bold text-amber-700 dark:text-amber-300">
                 {member.name.charAt(0)}
               </div>
             </div>
           </div>
           <div className="p-5">
             <h3 className="font-semibold text-lg text-slate-900 dark:text-white">{member.name}</h3>
-            <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{member.role}</p>
+            <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">{member.role}</p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 line-clamp-2">{member.bio}</p>
             <div className="flex items-center gap-1 mt-3 text-xs text-slate-400 dark:text-slate-500">
               <ExternalLink className="size-3" />
@@ -150,7 +150,7 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
         </div>
 
         {/* Back face */}
-        <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-700 bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-700 dark:to-emerald-900 shadow-xl" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+        <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden border border-amber-200 dark:border-amber-700 bg-gradient-to-br from-amber-600 to-amber-700 dark:from-amber-700 dark:to-amber-900 shadow-xl" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
           <div className="absolute inset-0 grid-pattern opacity-10" />
           <div className="relative z-10 p-5 h-full flex flex-col">
             <div className="flex items-center gap-3 mb-4">
@@ -159,19 +159,19 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm text-white truncate">{member.name}</h3>
-                <p className="text-xs text-emerald-200">{member.role}</p>
+                <p className="text-xs text-amber-200">{member.role}</p>
               </div>
             </div>
 
-            <p className="text-xs text-emerald-100/80 leading-relaxed mb-3 flex-1">{member.bio}</p>
+            <p className="text-xs text-amber-100/80 leading-relaxed mb-3 flex-1">{member.bio}</p>
 
             {/* Skills */}
             {member.skills && member.skills.length > 0 && (
               <div className="mb-4">
-                <p className="text-[10px] uppercase tracking-wider text-emerald-200/60 font-medium mb-1.5">Skills</p>
+                <p className="text-[10px] uppercase tracking-wider text-amber-200/60 font-medium mb-1.5">Skills</p>
                 <div className="flex flex-wrap gap-1">
                   {member.skills.map((skill) => (
-                    <span key={skill} className="px-2 py-0.5 rounded-full bg-white/10 text-emerald-100 text-[10px] font-medium">
+                    <span key={skill} className="px-2 py-0.5 rounded-full bg-white/10 text-amber-100 text-[10px] font-medium">
                       {skill}
                     </span>
                   ))}
@@ -208,17 +208,17 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <Card className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 hover:-translate-y-1 transition-all duration-300 group">
-      <div className="h-48 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 relative overflow-hidden">
+    <Card className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-amber-900/20 hover:-translate-y-1 transition-all duration-300 group">
+      <div className="h-48 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/30 relative overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-30" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="size-20 rounded-full bg-emerald-300/50 dark:bg-emerald-700/40 flex items-center justify-center text-2xl font-bold text-emerald-700 dark:text-emerald-300 transition-transform duration-300 group-hover:scale-110">
+          <div className="size-20 rounded-full bg-amber-300/50 dark:bg-amber-700/40 flex items-center justify-center text-2xl font-bold text-amber-700 dark:text-amber-300 transition-transform duration-300 group-hover:scale-110">
             {member.name.charAt(0)}
           </div>
         </div>
         {/* Hover social overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-gradient-to-t from-emerald-900/90 via-emerald-900/70 to-emerald-800/40 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
-          <p className="text-[11px] text-emerald-200 font-medium mb-2 tracking-wide uppercase">Connect</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-gradient-to-t from-amber-900/90 via-amber-900/70 to-amber-800/40 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+          <p className="text-[11px] text-amber-200 font-medium mb-2 tracking-wide uppercase">Connect</p>
           <div className="flex gap-2">
             {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
               const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
@@ -238,8 +238,8 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
         </div>
       </div>
       <CardContent className="p-5">
-        <h3 className="font-semibold text-lg text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{member.name}</h3>
-        <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{member.role}</p>
+        <h3 className="font-semibold text-lg text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">{member.name}</h3>
+        <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">{member.role}</p>
 
         {/* Expandable bio */}
         <div className="mt-3">
@@ -248,7 +248,7 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
           </p>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+            className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-1 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
           >
             {expanded ? 'Show less' : 'Read more'}
           </button>
@@ -264,7 +264,7 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
           >
             <div className="flex flex-wrap gap-1">
               {member.skills.map((skill) => (
-                <Badge key={skill} variant="secondary" className="text-[10px] bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800">
+                <Badge key={skill} variant="secondary" className="text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800">
                   {skill}
                 </Badge>
               ))}
@@ -333,15 +333,15 @@ export default function AboutPage() {
       {/* Hero Banner */}
       <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-10" />
-        <motion.div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} />
+        <motion.div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} />
         <div className="container-main relative z-10">
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-emerald-400 transition-colors">Home</button>
+            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
             <ChevronRight className="size-3" />
-            <span className="text-emerald-400">About Us</span>
+            <span className="text-amber-400">About Us</span>
           </nav>
           <motion.h1 className="text-4xl sm:text-5xl font-bold text-white mb-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            About <span className="text-emerald-400">Lightworld Technologies</span>
+            About <span className="text-amber-400">Lightworld Technologies</span>
           </motion.h1>
           <motion.p className="text-lg text-slate-300 max-w-2xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
             A passionate team of innovators dedicated to transforming businesses through technology.
@@ -354,7 +354,7 @@ export default function AboutPage() {
         <div className="container-main">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Our Story</span>
+              <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Our Story</span>
               <h2 className="text-3xl font-bold mt-2 mb-6 text-slate-900 dark:text-white">Building the Future of Technology in Africa</h2>
               <div className="space-y-4 text-slate-600 dark:text-slate-300 leading-relaxed">
                 <p>Founded with a vision to bridge the technology gap in Africa, Lightworld Technologies has grown from a small startup to a leading IT solutions provider. Our journey began with a simple belief: that every business, regardless of size, deserves access to world-class technology solutions.</p>
@@ -378,9 +378,9 @@ export default function AboutPage() {
         <div className="container-main">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <Card className="h-full border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-slate-800">
+              <Card className="h-full border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800">
                 <CardContent className="p-8">
-                  <div className="size-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mb-4"><Target className="size-6 text-emerald-600 dark:text-emerald-400" /></div>
+                  <div className="size-12 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mb-4"><Target className="size-6 text-amber-600 dark:text-amber-400" /></div>
                   <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Our Mission</h3>
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed">To deliver innovative, reliable, and scalable IT solutions that empower businesses across Africa to achieve digital transformation, drive growth, and compete effectively in the global marketplace.</p>
                 </CardContent>
@@ -403,20 +403,20 @@ export default function AboutPage() {
       <section className="section-padding bg-white dark:bg-slate-900">
         <div className="container-main">
           <motion.div className="text-center max-w-2xl mx-auto mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Our Values</span>
+            <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Our Values</span>
             <h2 className="text-3xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Core Values That Drive Us</h2>
             <p className="text-slate-600 dark:text-slate-300">The principles that guide everything we do at Lightworld Technologies.</p>
           </motion.div>
           <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             {values.map((value, idx) => (
               <motion.div key={value.title} variants={itemVariants}>
-                <Card className="h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-lg dark:hover:shadow-emerald-900/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
-                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx % 3 === 0 ? 'bg-emerald-200/40 dark:bg-emerald-500/10' : idx % 3 === 1 ? 'bg-amber-200/40 dark:bg-amber-500/10' : 'bg-teal-200/40 dark:bg-teal-500/10'}`} />
+                <Card className="h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-200 dark:hover:border-amber-700 hover:shadow-lg dark:hover:shadow-amber-900/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
+                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx % 3 === 0 ? 'bg-amber-200/40 dark:bg-amber-500/10' : idx % 3 === 1 ? 'bg-amber-200/40 dark:bg-amber-500/10' : 'bg-yellow-200/40 dark:bg-yellow-500/10'}`} />
                   <CardContent className="p-6 relative">
-                    <div className={`size-12 rounded-xl flex items-center justify-center mb-4 group-hover:shadow-md transition-all duration-300 group-hover:scale-110 ${idx % 3 === 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-teal-500 to-teal-600 shadow-md shadow-teal-500/20'}`}>
+                    <div className={`size-12 rounded-xl flex items-center justify-center mb-4 group-hover:shadow-md transition-all duration-300 group-hover:scale-110 ${idx % 3 === 0 ? 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-md shadow-amber-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md shadow-yellow-500/20'}`}>
                       <value.icon className="size-5 text-white" />
                     </div>
-                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{value.title}</h3>
+                    <h3 className="font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">{value.title}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{value.description}</p>
                   </CardContent>
                 </Card>
@@ -430,9 +430,9 @@ export default function AboutPage() {
       <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
         <div className="container-main">
           <motion.div className="text-center max-w-2xl mx-auto mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Our Team</span>
+            <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Our Team</span>
             <h2 className="text-3xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Meet the Experts</h2>
-            <p className="text-slate-600 dark:text-slate-300">The talented people behind our success. <span className="text-emerald-600 dark:text-emerald-400 font-medium">Click a card</span> to learn more.</p>
+            <p className="text-slate-600 dark:text-slate-300">The talented people behind our success. <span className="text-amber-600 dark:text-amber-400 font-medium">Click a card</span> to learn more.</p>
           </motion.div>
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -475,7 +475,7 @@ export default function AboutPage() {
       <section className="section-padding bg-white dark:bg-slate-900">
         <div className="container-main">
           <motion.div className="text-center max-w-2xl mx-auto mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Recognition</span>
+            <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Recognition</span>
             <h2 className="text-3xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Awards & Achievements</h2>
           </motion.div>
           <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>

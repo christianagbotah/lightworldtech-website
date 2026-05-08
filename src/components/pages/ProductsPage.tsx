@@ -21,7 +21,7 @@ const products = [
     title: 'Project Management Tool',
     description: 'Streamline your team\'s workflow with our intuitive project management solution. Features include task boards, time tracking, Gantt charts, and real-time collaboration for teams of any size.',
     icon: Kanban,
-    gradient: 'from-emerald-500 to-teal-600',
+    gradient: 'from-amber-500 to-yellow-600',
     features: ['Task Boards & Kanban', 'Time Tracking', 'Gantt Charts', 'Team Collaboration', 'Automated Reports'],
     launchDate: 'Q4 2026',
   },
@@ -39,7 +39,7 @@ const products = [
     title: 'Learning Platform',
     description: 'Empower your organization with a modern e-learning platform. Create and deliver courses, track learner progress, issue certificates, and build a culture of continuous learning.',
     icon: GraduationCap,
-    gradient: 'from-teal-500 to-emerald-600',
+    gradient: 'from-yellow-500 to-amber-600',
     features: ['Course Builder', 'Video Streaming', 'Progress Tracking', 'Certificates', 'Assessments'],
     launchDate: 'Q2 2027',
   },
@@ -48,7 +48,7 @@ const products = [
     title: 'Analytics Dashboard',
     description: 'Make data-driven decisions with our powerful analytics dashboard. Visualize key metrics, create custom reports, set alerts, and integrate with your existing data sources.',
     icon: BarChart3,
-    gradient: 'from-emerald-400 to-amber-500',
+    gradient: 'from-amber-400 to-amber-500',
     features: ['Custom Dashboards', 'Real-time Data', 'Export Reports', 'Alert System', 'API Integrations'],
     launchDate: 'Q3 2027',
   },
@@ -100,9 +100,9 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
 
   if (isLaunched) {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
-        <Zap className="size-4 text-emerald-500 shrink-0" />
-        <span className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">Launching now!</span>
+      <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+        <Zap className="size-4 text-amber-500 shrink-0" />
+        <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">Launching now!</span>
       </div>
     );
   }
@@ -190,7 +190,7 @@ export default function ProductsPage() {
         <div className="absolute inset-0 grid-pattern opacity-10" />
         <div className="absolute inset-0 mesh-pattern opacity-20" />
         <motion.div
-          className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-morph-blob"
+          className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-morph-blob"
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 8, repeat: Infinity }}
         />
@@ -200,13 +200,13 @@ export default function ProductsPage() {
           transition={{ duration: 8, repeat: Infinity }}
         />
         {/* Floating geometric shapes */}
-        <div className="absolute top-20 right-1/3 w-3 h-3 rounded-full bg-emerald-400/30 animate-float-shape-1" />
+        <div className="absolute top-20 right-1/3 w-3 h-3 rounded-full bg-amber-400/30 animate-float-shape-1" />
         <div className="absolute bottom-16 left-1/4 w-2 h-2 rounded-full bg-amber-400/30 animate-float-shape-2" />
         <div className="container-main relative z-10">
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-emerald-400 transition-colors">Home</button>
+            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
             <ChevronRight className="size-3" />
-            <span className="text-emerald-400">Products</span>
+            <span className="text-amber-400">Products</span>
           </nav>
           <motion.h1
             className="text-4xl sm:text-5xl font-bold text-white mb-4"
@@ -231,7 +231,7 @@ export default function ProductsPage() {
       <section className="section-padding bg-white dark:bg-slate-900 relative overflow-hidden">
         {/* Subtle background */}
         <div className="absolute inset-0 dot-pattern opacity-20 dark:opacity-10" />
-        <div className="absolute top-20 left-10 w-48 h-48 bg-emerald-400/5 rounded-full blur-3xl animate-breathe" />
+        <div className="absolute top-20 left-10 w-48 h-48 bg-amber-400/5 rounded-full blur-3xl animate-breathe" />
         <div className="absolute bottom-20 right-10 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-breathe" style={{ animationDelay: '-4s' }} />
 
         <div className="container-main relative z-10">
@@ -242,7 +242,7 @@ export default function ProductsPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 mb-4 backdrop-blur-sm">
+            <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 mb-4 backdrop-blur-sm">
               <Clock className="size-3 mr-1" />
               Coming Soon
             </Badge>
@@ -267,7 +267,7 @@ export default function ProductsPage() {
 
               return (
                 <motion.div key={product.id} variants={itemVariants}>
-                  <Card className="h-full border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-all duration-300 group overflow-hidden relative shimmer-sweep">
+                  <Card className="h-full border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:shadow-xl dark:hover:shadow-amber-900/20 transition-all duration-300 group overflow-hidden relative shimmer-sweep">
                     {/* Animated gradient top accent */}
                     <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${product.gradient} animate-gradient-shift`} style={{ backgroundSize: '200% 100%' }} />
 
@@ -287,7 +287,7 @@ export default function ProductsPage() {
                       </div>
 
                       {/* Title & Description */}
-                      <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                         {product.title}
                       </h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
@@ -298,7 +298,7 @@ export default function ProductsPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mb-5">
                         {product.features.map((feature) => (
                           <div key={feature} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                            <CheckCircle2 className="size-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                            <CheckCircle2 className="size-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
                             <span>{feature}</span>
                           </div>
                         ))}
@@ -318,12 +318,12 @@ export default function ProductsPage() {
                       {/* Email Notification */}
                       {isSubscribed ? (
                         <motion.div
-                          className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
+                          className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                         >
-                          <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                          <span className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
+                          <CheckCircle2 className="size-4 text-amber-500 shrink-0" />
+                          <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">
                             You&apos;ll be notified when this launches!
                           </span>
                         </motion.div>
@@ -337,14 +337,14 @@ export default function ProductsPage() {
                                 placeholder="your@email.com"
                                 value={emailInputs[product.id] || ''}
                                 onChange={(e) => setEmailInputs((prev) => ({ ...prev, [product.id]: e.target.value }))}
-                                className="pl-9 h-10 text-sm bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 focus:border-emerald-400 focus:ring-emerald-400/20"
+                                className="pl-9 h-10 text-sm bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 focus:border-amber-400 focus:ring-amber-400/20"
                                 aria-label={`Email for ${product.title} notifications`}
                               />
                             </div>
                             <Button
                               onClick={() => handleSubscribe(product.id)}
                               disabled={subscribing === product.id}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 shrink-0 shadow-md shadow-emerald-500/20 hover:shadow-lg"
+                              className="bg-amber-600 hover:bg-amber-700 text-white text-sm px-4 shrink-0 shadow-md shadow-amber-500/20 hover:shadow-lg"
                             >
                               {subscribing === product.id ? (
                                 <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -379,7 +379,7 @@ export default function ProductsPage() {
             <p className="text-slate-500 dark:text-slate-400 mb-4">Need a custom solution right now?</p>
             <Button
               onClick={() => navigate('contact')}
-              className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 shadow-emerald-500/20"
+              className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 shadow-amber-500/20"
             >
               Get a Custom Solution
               <ArrowRight className="size-4 ml-2" />

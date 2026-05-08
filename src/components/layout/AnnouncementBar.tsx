@@ -11,30 +11,45 @@ const announcements = [
   { id: 4, icon: Megaphone, text: 'We\'re hiring! Join our growing team of developers, designers, and digital marketers' },
 ];
 
-function getDismissedState(): boolean {
-  if (typeof window === 'undefined') return true;
-  const saved = localStorage.getItem('lw-announcement-dismissed');
-  const dismissedAt = saved ? parseInt(saved, 10) : 0;
-  const oneDay = 24 * 60 * 60 * 1000;
-  if (Date.now() - dismissedAt < oneDay) return true;
-  localStorage.removeItem('lw-announcement-dismissed');
-  return false;
+function useAnnouncementState() {
+  // Start dismissed + unmounted to match server (no hydration mismatch)
+  const [dismissed, setDismissed] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('lw-announcement-dismissed');
+    const dismissedAt = saved ? parseInt(saved, 10) : 0;
+    const oneDay = 24 * 60 * 60 * 1000;
+    const isDismissed = dismissedAt > 0 && (Date.now() - dismissedAt < oneDay);
+    if (!isDismissed) {
+      localStorage.removeItem('lw-announcement-dismissed');
+    }
+    // Batch both state updates in a single requestAnimationFrame callback
+    // to avoid synchronous setState-in-effect lint error
+    const id = requestAnimationFrame(() => {
+      setDismissed(isDismissed);
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  return { dismissed, mounted };
 }
 
 export default function AnnouncementBar() {
-  const [dismissed, setDismissed] = useState(getDismissedState);
+  const { dismissed, mounted } = useAnnouncementState();
   const [paused, setPaused] = useState(false);
   const offsetRef = useRef<HTMLDivElement[]>([]);
   const frameRef = useRef<number>(0);
 
   const handleDismiss = useCallback(() => {
     setDismissed(true);
-    localStorage.setItem('lw-announcement-dismissed', Date.now().toString());
+    try { localStorage.setItem('lw-announcement-dismissed', Date.now().toString()); } catch {}
   }, []);
 
-  // Marquee animation using DOM manipulation (no setState in effect)
+  // Marquee animation using DOM manipulation
   useEffect(() => {
-    if (dismissed || paused) return;
+    if (dismissed || paused || !mounted) return;
 
     const speed = 0.5;
     let lastTime = performance.now();
@@ -56,13 +71,16 @@ export default function AnnouncementBar() {
 
     frameRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [dismissed, paused]);
+  }, [dismissed, paused, mounted]);
+
+  // Don't render until mounted (avoids hydration mismatch)
+  if (!mounted) return null;
 
   return (
     <AnimatePresence>
       {!dismissed && (
         <motion.div
-          className="relative z-[51] bg-gradient-to-r from-emerald-700 via-emerald-600 to-amber-600 overflow-hidden animate-gradient-shift"
+          className="relative z-[51] bg-gradient-to-r from-amber-700 via-amber-600 to-yellow-500 overflow-hidden"
           style={{ backgroundSize: '200% 100%' }}
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 36, opacity: 1 }}
@@ -95,7 +113,7 @@ export default function AnnouncementBar() {
                       key={`${setIndex}-${announcement.id}`}
                       className="inline-flex items-center gap-2 px-8 text-xs font-medium text-white/90"
                     >
-                      <Icon className="size-3.5 text-amber-300 shrink-0" />
+                      <Icon className="size-3.5 text-yellow-200 shrink-0" />
                       <span>{announcement.text}</span>
                       <span className="text-white/30 mx-2">•</span>
                     </span>
@@ -106,8 +124,8 @@ export default function AnnouncementBar() {
           </div>
 
           {/* Gradient edge fades */}
-          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-emerald-700 to-transparent pointer-events-none z-10" />
-          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-amber-600 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-amber-700 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-yellow-500 to-transparent pointer-events-none z-10" />
 
           {/* Close button */}
           <button

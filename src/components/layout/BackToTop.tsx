@@ -96,7 +96,7 @@ export default function BackToTop() {
                 </svg>
 
                 {/* Button background */}
-                <div className="size-11 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-colors">
+                <div className="size-11 rounded-full bg-amber-600 hover:bg-amber-700 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-colors">
                   <ArrowUp className="size-5" />
                 </div>
               </motion.button>

@@ -214,7 +214,7 @@ export default function AdminTeam() {
           <h1 className="text-2xl font-bold text-foreground">Team Members</h1>
           <p className="text-muted-foreground text-sm mt-1">{members.length} members</p>
         </div>
-        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={openCreate} className="bg-amber-600 hover:bg-amber-700">
           <Plus className="h-4 w-4 mr-2" /> Add Member
         </Button>
       </div>
@@ -241,15 +241,15 @@ export default function AdminTeam() {
                 </TableRow>
               ) : (
                 members.map((member) => (
-                  <TableRow key={member.id} className="hover:bg-emerald-50/50 dark:hover:bg-emerald-900/5 transition-colors duration-200">
+                  <TableRow key={member.id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
                     <TableCell className="font-medium text-sm">
                       <div className="flex items-center gap-2.5">
                         {member.image ? (
                           <div className="relative shrink-0">
-                            <img src={member.image} alt={member.name} className="size-8 rounded-full object-cover ring-2 ring-emerald-500/30 dark:ring-emerald-400/30" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            <img src={member.image} alt={member.name} className="size-8 rounded-full object-cover ring-2 ring-amber-500/30 dark:ring-amber-400/30" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                           </div>
                         ) : (
-                          <div className="size-8 rounded-full bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center shrink-0 ring-2 ring-emerald-500/20 dark:ring-emerald-400/20">
+                          <div className="size-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center shrink-0 ring-2 ring-amber-500/20 dark:ring-amber-400/20">
                             <span className="text-xs font-bold text-white">{member.name.charAt(0)}</span>
                           </div>
                         )}
@@ -260,7 +260,7 @@ export default function AdminTeam() {
                     <TableCell className="text-sm text-muted-foreground hidden md:table-cell">{member.email || '—'}</TableCell>
                     <TableCell className="text-sm text-center">{member.order}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className={member.active ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-white border-0 shadow-sm' : 'bg-gradient-to-r from-slate-400 to-slate-300 dark:from-slate-600 dark:to-slate-500 text-white border-0'}>
+                      <Badge className={member.active ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-white border-0 shadow-sm' : 'bg-gradient-to-r from-slate-400 to-slate-300 dark:from-slate-600 dark:to-slate-500 text-white border-0'}>
                         {member.active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
@@ -333,7 +333,7 @@ export default function AdminTeam() {
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="flex-shrink-0 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md"
+                  className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md"
                   aria-label="Upload image"
                 >
                   {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
@@ -343,7 +343,7 @@ export default function AdminTeam() {
                 <div className="mt-1">
                   <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                      className="h-full bg-amber-500 rounded-full transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
@@ -358,7 +358,7 @@ export default function AdminTeam() {
                     className="size-16 rounded-lg object-cover border border-slate-200 dark:border-slate-700"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
-                  <div className="absolute -bottom-1 -right-1 size-4 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 size-4 bg-amber-500 rounded-full flex items-center justify-center">
                     <ImageIcon className="size-2.5 text-white" />
                   </div>
                 </div>
@@ -375,13 +375,13 @@ export default function AdminTeam() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Switch checked={form.active} onCheckedChange={(checked) => setForm(f => ({ ...f, active: checked }))} className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-emerald-400" />
-              <Label className={form.active ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}>Active</Label>
+              <Switch checked={form.active} onCheckedChange={(checked) => setForm(f => ({ ...f, active: checked }))} className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-amber-500 data-[state=checked]:to-amber-400" />
+              <Label className={form.active ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}>Active</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleSave} disabled={saving} className="bg-amber-600 hover:bg-amber-700">
               {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>

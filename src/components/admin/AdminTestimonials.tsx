@@ -170,7 +170,7 @@ export default function AdminTestimonials() {
           <h1 className="text-2xl font-bold text-foreground">Testimonials</h1>
           <p className="text-muted-foreground text-sm mt-1">{testimonials.length} testimonials</p>
         </div>
-        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={openCreate} className="bg-amber-600 hover:bg-amber-700">
           <Plus className="h-4 w-4 mr-2" /> Add Testimonial
         </Button>
       </div>
@@ -201,7 +201,7 @@ export default function AdminTestimonials() {
                     <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">{t.company || '—'}</TableCell>
                     <TableCell className="text-center hidden md:table-cell">{renderStars(t.rating)}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className={t.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}>
+                      <Badge className={t.active ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}>
                         {t.active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
@@ -272,7 +272,7 @@ export default function AdminTestimonials() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleSave} disabled={saving} className="bg-amber-600 hover:bg-amber-700">
               {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>

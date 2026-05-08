@@ -161,7 +161,7 @@ function ServiceCard({
   return (
     <Card
       ref={cardRef}
-      className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-emerald-900/20 transition-shadow duration-300 group relative overflow-hidden cursor-pointer ${isPopular ? 'border-emerald-300 dark:border-emerald-600 ring-1 ring-emerald-200/50 dark:ring-emerald-700/50' : ''} ${isExpanded ? 'border-emerald-300 dark:border-emerald-600 shadow-md ring-1 ring-emerald-200 dark:ring-emerald-700' : ''}`}
+      className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-amber-900/20 transition-shadow duration-300 group relative overflow-hidden cursor-pointer ${isPopular ? 'border-amber-300 dark:border-amber-600 ring-1 ring-amber-200/50 dark:ring-amber-700/50' : ''} ${isExpanded ? 'border-amber-300 dark:border-amber-600 shadow-md ring-1 ring-amber-200 dark:ring-amber-700' : ''}`}
       onClick={() => setSelectedService(service)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -172,21 +172,21 @@ function ServiceCard({
         className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-300 pointer-events-none z-10"
       />
       {/* Gradient top border */}
-      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 transition-transform duration-500 origin-left z-20 ${isPopular ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 transition-transform duration-500 origin-left z-20 ${isPopular ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
       {/* Most Popular badge */}
       {isPopular && (
         <div className="absolute top-3 right-3 z-20">
-          <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-semibold shadow-md gap-1">
+          <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-semibold shadow-md gap-1">
             <Sparkles className="size-3" />
             Most Popular
           </Badge>
         </div>
       )}
       <CardContent className="p-6 relative z-[5]">
-        <div className="size-14 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/50 flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow duration-300">
-          <IconComp className="size-6 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
+        <div className="size-14 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow duration-300">
+          <IconComp className="size-6 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300" />
         </div>
-        <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{service.title}</h3>
+        <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">{service.title}</h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">{service.description}</p>
 
         {/* Features list */}
@@ -195,7 +195,7 @@ function ServiceCard({
             <ul className="space-y-2">
               {service.features.slice(0, isExpanded ? undefined : 3).map((feature: string) => (
                 <li key={feature} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
-                  <CheckCircle2 className="size-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="size-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                   <span>{feature}</span>
                 </li>
               ))}
@@ -203,7 +203,7 @@ function ServiceCard({
             {service.features.length > 3 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : service.id); }}
-                className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors inline-flex items-center gap-1"
+                className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors inline-flex items-center gap-1"
               >
                 {isExpanded ? 'Show less' : `+${service.features.length - 3} more features`}
                 <ArrowRight className={`size-3 transition-transform duration-200 ${isExpanded ? '-rotate-90' : ''}`} />
@@ -215,7 +215,7 @@ function ServiceCard({
         <div className="flex gap-2 mt-4">
           <Button
             onClick={(e) => { e.stopPropagation(); setQuoteServiceId(service.id); setQuoteOpen(true); }}
-            className={`flex-1 transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md hover:shadow-lg' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} group/btn`}
+            className={`flex-1 transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md hover:shadow-lg' : 'bg-amber-600 hover:bg-amber-700 text-white'} group/btn`}
           >
             Get a Quote <ArrowRight className="size-4 ml-1 group-hover/btn:translate-x-1 transition-transform duration-200" />
           </Button>
@@ -223,7 +223,7 @@ function ServiceCard({
             variant="outline"
             size="icon"
             onClick={(e) => { e.stopPropagation(); setSelectedService(service); }}
-            className="border-slate-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-600 hover:text-emerald-600 dark:hover:text-emerald-400 shrink-0"
+            className="border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-amber-600 hover:text-amber-600 dark:hover:text-amber-400 shrink-0"
             aria-label={`View details for ${service.title}`}
           >
             <ChevronRight className="size-4" />
@@ -274,15 +274,15 @@ export default function ServicesPage() {
       <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-10" />
         <motion.div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"
+          className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 8, repeat: Infinity }}
         />
         <div className="container-main relative z-10">
           <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-emerald-400 transition-colors">Home</button>
+            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
             <ChevronRight className="size-3" />
-            <span className="text-emerald-400">Services</span>
+            <span className="text-amber-400">Services</span>
           </nav>
           <motion.h1
             className="text-4xl sm:text-5xl font-bold text-white mb-4"
@@ -290,7 +290,7 @@ export default function ServicesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            Our <span className="text-emerald-400">Services</span>
+            Our <span className="text-amber-400">Services</span>
           </motion.h1>
           <motion.p
             className="text-lg text-slate-300 max-w-2xl"
@@ -361,7 +361,7 @@ export default function ServicesPage() {
                 transition={{ duration: 0.3 }}
               >
                 {/* Gradient Header */}
-                <div className="relative h-36 bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 dark:from-emerald-600 dark:via-emerald-700 dark:to-emerald-900 flex items-center justify-center">
+                <div className="relative h-36 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-800 dark:from-amber-600 dark:via-amber-700 dark:to-amber-900 flex items-center justify-center">
                   <div className="absolute inset-0 grid-pattern opacity-20" />
                   <div className="text-center relative z-10">
                     <div className="size-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
@@ -393,13 +393,13 @@ export default function ServicesPage() {
                   {/* Features */}
                   <div>
                     <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-emerald-500" />
+                      <CheckCircle2 className="size-4 text-amber-500" />
                       What&apos;s Included
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {selectedService.features?.map((feature: string) => (
                         <div key={feature} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                          <CheckCircle2 className="size-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                          <CheckCircle2 className="size-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
                           <span>{feature}</span>
                         </div>
                       ))}
@@ -415,7 +415,7 @@ export default function ServicesPage() {
                           <Badge
                             key={tech}
                             variant="secondary"
-                            className="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                            className="text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
                           >
                             {tech}
                           </Badge>
@@ -426,12 +426,12 @@ export default function ServicesPage() {
 
                   {/* Pricing */}
                   {selectedService.priceRange && (
-                    <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-amber-50 dark:from-emerald-900/20 dark:to-amber-900/20 border border-emerald-200 dark:border-emerald-800">
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-50 dark:from-amber-900/20 dark:to-amber-900/20 border border-amber-200 dark:border-amber-800">
                       <div className="flex items-center gap-2 mb-1">
-                        <DollarSign className="size-4 text-emerald-600 dark:text-emerald-400" />
+                        <DollarSign className="size-4 text-amber-600 dark:text-amber-400" />
                         <span className="text-sm font-semibold text-slate-900 dark:text-white">Starting Price</span>
                       </div>
-                      <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{selectedService.priceRange}</p>
+                      <p className="text-lg font-bold text-amber-700 dark:text-amber-300">{selectedService.priceRange}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Custom quotes available for complex projects</p>
                     </div>
                   )}
@@ -440,7 +440,7 @@ export default function ServicesPage() {
                   <div className="flex gap-3 pt-2">
                     <Button
                       onClick={() => { setSelectedService(null); setQuoteServiceId(selectedService.id); setQuoteOpen(true); }}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 shadow-md"
+                      className="bg-amber-600 hover:bg-amber-700 text-white flex-1 shadow-md"
                     >
                       Request a Quote
                       <ArrowRight className="size-4 ml-2" />
@@ -476,7 +476,7 @@ export default function ServicesPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Process</span>
+            <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Process</span>
             <h2 className="text-3xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">How We Deliver Excellence</h2>
             <p className="text-slate-600 dark:text-slate-300">Our proven methodology ensures consistent, high-quality results for every project.</p>
           </motion.div>
@@ -501,7 +501,7 @@ export default function ServicesPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <div className="text-4xl font-bold text-emerald-200 dark:text-emerald-800 mb-2">{item.step}</div>
+                <div className="text-4xl font-bold text-amber-200 dark:text-amber-800 mb-2">{item.step}</div>
                 <h3 className="font-semibold text-lg mb-2 text-slate-900 dark:text-white">{item.title}</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{item.desc}</p>
               </motion.div>

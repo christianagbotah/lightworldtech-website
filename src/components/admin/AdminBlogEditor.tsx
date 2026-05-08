@@ -177,7 +177,7 @@ export default function AdminBlogEditor() {
             {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
             Save Draft
           </Button>
-          <Button onClick={() => handleSave(true)} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+          <Button onClick={() => handleSave(true)} disabled={saving} className="bg-amber-600 hover:bg-amber-700">
             {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
             {form.published ? 'Update' : 'Publish'}
           </Button>

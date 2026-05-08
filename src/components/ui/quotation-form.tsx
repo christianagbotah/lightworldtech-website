@@ -194,7 +194,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', duration: 0.6, delay: 0.2 }}
-                className="size-20 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30"
+                className="size-20 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30"
               >
                 <CheckCircle2 className="size-10 text-white" />
               </motion.div>
@@ -212,13 +212,13 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
               transition={{ duration: 0.2 }}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 dark:from-emerald-700 dark:to-emerald-800 p-6">
+              <div className="bg-gradient-to-r from-amber-600 to-amber-700 dark:from-amber-700 dark:to-amber-800 p-6">
                 <DialogHeader>
                   <DialogTitle className="text-xl text-white flex items-center gap-2">
                     <FileText className="size-5" />
                     Request a Quote
                   </DialogTitle>
-                  <DialogDescription className="text-emerald-100 text-sm">
+                  <DialogDescription className="text-amber-100 text-sm">
                     Fill in the details below and we&apos;ll provide a customized quote for your project.
                   </DialogDescription>
                 </DialogHeader>
@@ -235,10 +235,10 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                           <div
                             className={`size-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
                               isActive
-                                ? 'bg-white text-emerald-600 shadow-md'
+                                ? 'bg-white text-amber-600 shadow-md'
                                 : isCompleted
-                                  ? 'bg-emerald-400 text-white'
-                                  : 'bg-emerald-600/30 text-emerald-200'
+                                  ? 'bg-amber-400 text-white'
+                                  : 'bg-amber-600/30 text-amber-200'
                             }`}
                           >
                             {isCompleted ? (
@@ -249,14 +249,14 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                           </div>
                           <span
                             className={`text-xs font-medium hidden sm:block transition-colors duration-300 ${
-                              isActive ? 'text-white' : isCompleted ? 'text-emerald-200' : 'text-emerald-300/60'
+                              isActive ? 'text-white' : isCompleted ? 'text-amber-200' : 'text-amber-300/60'
                             }`}
                           >
                             {step.title}
                           </span>
                         </div>
                         {index < steps.length - 1 && (
-                          <div className={`h-px flex-1 mx-2 transition-colors duration-300 ${isCompleted ? 'bg-emerald-400' : 'bg-emerald-600/30'}`} />
+                          <div className={`h-px flex-1 mx-2 transition-colors duration-300 ${isCompleted ? 'bg-amber-400' : 'bg-amber-600/30'}`} />
                         )}
                       </div>
                     );
@@ -421,7 +421,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                   <div className="space-y-4">
                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 space-y-4 border border-slate-200 dark:border-slate-700">
                       <h4 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <User className="size-4 text-emerald-500" />
+                        <User className="size-4 text-amber-500" />
                         Your Information
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
@@ -450,7 +450,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
 
                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 space-y-4 border border-slate-200 dark:border-slate-700">
                       <h4 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <Briefcase className="size-4 text-emerald-500" />
+                        <Briefcase className="size-4 text-amber-500" />
                         Project Details
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
@@ -494,7 +494,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                   {currentStep < 3 ? (
                     <Button
                       onClick={handleNext}
-                      className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md"
+                      className="flex-1 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md"
                     >
                       Next
                       <ArrowRight className="size-4 ml-2" />
@@ -503,7 +503,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                     <Button
                       onClick={handleSubmit}
                       disabled={submitting}
-                      className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-md"
+                      className="flex-1 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md"
                     >
                       {submitting ? (
                         <>

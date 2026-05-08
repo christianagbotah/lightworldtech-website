@@ -12,7 +12,7 @@ function CTAStatCounter({ value, suffix, label, icon: Icon, delay = 0 }: { value
     <div className="text-center" ref={ref}>
       <Icon className="size-5 mx-auto mb-2 text-amber-300/70" />
       <div className="text-2xl md:text-3xl font-bold text-white tabular-nums">{displayValue}</div>
-      <div className="text-xs text-emerald-200/70 mt-1">{label}</div>
+      <div className="text-xs text-amber-200/70 mt-1">{label}</div>
     </div>
   );
 }
@@ -31,12 +31,12 @@ export default function CTASection() {
     <section className="relative overflow-hidden">
       {/* Animated gradient border top */}
       <motion.div
-        className="h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent"
+        className="h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent"
         animate={{ opacity: [0.5, 1, 0.5], scaleX: [0.8, 1, 0.8] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-amber-700 dark:from-emerald-800 dark:via-emerald-900 dark:to-amber-900 py-20 md:py-28 relative overflow-hidden animate-gradient-shift" style={{ backgroundSize: '200% 200%' }}>
+      <div className="bg-gradient-to-br from-amber-600 via-amber-700 to-amber-700 dark:from-amber-800 dark:via-amber-900 dark:to-amber-900 py-20 md:py-28 relative overflow-hidden animate-gradient-shift" style={{ backgroundSize: '200% 200%' }}>
         {/* Mesh pattern overlay */}
         <div className="absolute inset-0 mesh-pattern opacity-20" />
 
@@ -101,7 +101,7 @@ export default function CTASection() {
           transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          className="absolute -bottom-20 left-[10%] w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl"
+          className="absolute -bottom-20 left-[10%] w-96 h-96 bg-amber-400/10 rounded-full blur-3xl"
           animate={{ scale: [1, 1.2, 1], x: [0, -20, 0] }}
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
         />
@@ -122,7 +122,7 @@ export default function CTASection() {
             <div className="flex justify-center mb-8">
               <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-5 py-2 backdrop-blur-md border border-white/15 shadow-lg shadow-black/10">
                 <Sparkles className="size-4 text-amber-300" />
-                <span className="text-sm text-emerald-50 font-medium">Let&apos;s Build Something Amazing</span>
+                <span className="text-sm text-amber-50 font-medium">Let&apos;s Build Something Amazing</span>
                 <Sparkles className="size-4 text-amber-300" />
               </div>
             </div>
@@ -137,7 +137,7 @@ export default function CTASection() {
             </h2>
 
             {/* Subtitle */}
-            <p className="text-lg md:text-xl text-emerald-100/90 max-w-2xl mx-auto mb-10 leading-relaxed text-center">
+            <p className="text-lg md:text-xl text-amber-100/90 max-w-2xl mx-auto mb-10 leading-relaxed text-center">
               Get in touch with our team today and let&apos;s discuss how we can help you achieve your digital goals with innovative, tailored solutions.
             </p>
 
@@ -184,7 +184,7 @@ export default function CTASection() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4 }}
                 >
-                  <badge.icon className="size-4 text-emerald-300" />
+                  <badge.icon className="size-4 text-amber-300" />
                   <span className="text-sm text-white/80 font-medium">{badge.label}</span>
                 </motion.div>
               ))}

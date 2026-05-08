@@ -54,7 +54,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors ml-1"
+      className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors ml-1"
       aria-label={`Copy ${label}`}
     >
       {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
@@ -171,16 +171,16 @@ export default function AdminMessages() {
                 messages.map((msg) => (
                   <TableRow
                     key={msg.id}
-                    className={`hover:bg-emerald-50/50 dark:hover:bg-emerald-900/5 transition-colors duration-200 ${
-                      !msg.read ? 'border-l-[3px] border-l-emerald-500 dark:border-l-emerald-400 bg-emerald-50/30 dark:bg-emerald-900/5' : 'border-l-[3px] border-l-transparent'
+                    className={`hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200 ${
+                      !msg.read ? 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400 bg-amber-50/30 dark:bg-amber-900/5' : 'border-l-[3px] border-l-transparent'
                     }`}
                   >
                     <TableCell className="font-medium text-sm">
                       <div className="flex items-center gap-2">
                         {!msg.read ? (
                           <span className="relative flex size-2 shrink-0">
-                            <span className="animate-ping absolute inline-flex size-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+                            <span className="animate-ping absolute inline-flex size-full rounded-full bg-amber-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full size-2 bg-amber-500" />
                           </span>
                         ) : (
                           <Mail className="size-3 text-slate-400 shrink-0" />
@@ -206,7 +206,7 @@ export default function AdminMessages() {
                         <Badge className={
                           msg.read
                             ? 'bg-gradient-to-r from-slate-400 to-slate-300 dark:from-slate-600 dark:to-slate-500 text-white border-0'
-                            : 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-white border-0 shadow-sm'
+                            : 'bg-gradient-to-r from-amber-500 to-amber-400 text-white border-0 shadow-sm'
                         }>
                           {msg.read ? 'Read' : 'Unread'}
                         </Badge>
@@ -238,7 +238,7 @@ export default function AdminMessages() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {viewing?.phone ? <Phone className="size-4 text-emerald-500" /> : <Mail className="size-4 text-emerald-500" />}
+              {viewing?.phone ? <Phone className="size-4 text-amber-500" /> : <Mail className="size-4 text-amber-500" />}
               {viewing?.subject || 'Message Details'}
             </DialogTitle>
           </DialogHeader>

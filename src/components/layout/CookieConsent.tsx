@@ -148,7 +148,7 @@ export default function CookieConsent() {
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="fixed bottom-6 left-6 z-50 size-10 rounded-full bg-slate-800 dark:bg-slate-700 text-slate-400 hover:text-emerald-400 shadow-lg hover:shadow-xl flex items-center justify-center transition-colors"
+          className="fixed bottom-6 left-6 z-50 size-10 rounded-full bg-slate-800 dark:bg-slate-700 text-slate-400 hover:text-amber-400 shadow-lg hover:shadow-xl flex items-center justify-center transition-colors"
           onClick={openSettings}
           aria-label="Cookie Settings"
         >
@@ -177,12 +177,12 @@ export default function CookieConsent() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-sm font-semibold text-foreground">We value your privacy</h3>
-                    <ShieldCheck className="size-3.5 text-emerald-500" />
+                    <ShieldCheck className="size-3.5 text-amber-500" />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                     We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic.
                     By clicking &quot;Accept All&quot;, you consent to our use of cookies.{' '}
-                    <button className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
+                    <button className="text-amber-600 dark:text-amber-400 hover:underline font-medium">
                       Read our Cookie Policy
                     </button>
                   </p>
@@ -211,7 +211,7 @@ export default function CookieConsent() {
                   <Button
                     size="sm"
                     onClick={accept}
-                    className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white h-8"
+                    className="text-xs bg-amber-600 hover:bg-amber-700 text-white h-8"
                   >
                     Accept All
                   </Button>
@@ -259,7 +259,7 @@ export default function CookieConsent() {
                             checked={prefs[cat.key]}
                             disabled={cat.locked}
                             onCheckedChange={() => togglePref(cat.key)}
-                            className="data-[state=checked]:bg-emerald-600"
+                            className="data-[state=checked]:bg-amber-600"
                           />
                         </div>
                       ))}
@@ -267,7 +267,7 @@ export default function CookieConsent() {
                         <Button
                           size="sm"
                           onClick={acceptCustomized}
-                          className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                          className="text-xs bg-amber-600 hover:bg-amber-700 text-white"
                         >
                           Save Preferences
                         </Button>

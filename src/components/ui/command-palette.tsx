@@ -203,7 +203,7 @@ export default function CommandPalette() {
                 onSelect={() => runAction(item.action)}
                 className="cursor-pointer"
               >
-                <item.icon className="size-4 text-emerald-500 dark:text-emerald-400" />
+                <item.icon className="size-4 text-amber-500 dark:text-amber-400" />
                 <span className="flex-1">{item.title}</span>
                 <span className="text-xs text-muted-foreground">{item.description}</span>
                 <ArrowRight className="size-3 text-muted-foreground/50 ml-2" />
@@ -220,7 +220,7 @@ export default function CommandPalette() {
                 onSelect={() => runAction(item.action)}
                 className="cursor-pointer"
               >
-                <item.icon className="size-4 text-emerald-500 dark:text-emerald-400" />
+                <item.icon className="size-4 text-amber-500 dark:text-amber-400" />
                 <div className="flex-1">
                   <span>{item.title}</span>
                   <p className="text-xs text-muted-foreground">{item.description}</p>
@@ -257,7 +257,7 @@ export default function CommandPalette() {
                 onSelect={() => runAction(item.action)}
                 className="cursor-pointer"
               >
-                <item.icon className="size-4 text-emerald-500 dark:text-emerald-400" />
+                <item.icon className="size-4 text-amber-500 dark:text-amber-400" />
                 <div className="flex-1 min-w-0">
                   <span className="truncate block">{item.title}</span>
                 </div>

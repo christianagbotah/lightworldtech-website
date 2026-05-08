@@ -53,7 +53,7 @@ export default function ServicesSection() {
   return (
     <section className="section-padding bg-white dark:bg-slate-900 relative overflow-hidden" id="services">
       {/* Subtle background decoration */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-100/50 dark:bg-emerald-900/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/50 dark:bg-amber-900/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-72 h-72 bg-amber-100/30 dark:bg-amber-900/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
       <div className="container-main relative z-10">
@@ -65,7 +65,7 @@ export default function ServicesSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Our Expertise</span>
+          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Our Expertise</span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">What We Do</h2>
           <p className="text-slate-600 dark:text-slate-300">
             We offer a comprehensive range of IT solutions designed to help your business grow, innovate, and stay ahead of the competition.
@@ -97,7 +97,7 @@ export default function ServicesSection() {
               return (
                 <motion.div key={service.id} variants={itemVariants}>
                   <Card
-                    className="group h-full border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 backdrop-blur-sm hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:shadow-2xl dark:hover:shadow-emerald-900/20 transition-all duration-500 cursor-pointer overflow-hidden relative hover:scale-[1.03]"
+                    className="group h-full border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 backdrop-blur-sm hover:border-amber-300 dark:hover:border-amber-500/50 hover:shadow-2xl dark:hover:shadow-amber-900/20 transition-all duration-500 cursor-pointer overflow-hidden relative hover:scale-[1.03]"
                     onClick={() => navigate('services')}
                   >
                     {/* Shimmer/shine effect on hover */}
@@ -106,27 +106,27 @@ export default function ServicesSection() {
                     </div>
 
                     {/* Animated gradient top border */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-400 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
 
                     {/* Gradient overlay on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/0 to-emerald-50/60 dark:from-emerald-900/0 dark:to-emerald-900/15 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-lg" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-amber-50/0 to-amber-50/60 dark:from-amber-900/0 dark:to-amber-900/15 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-lg" />
 
                     <CardContent className="p-6 relative">
                       {/* Icon with gradient background and rotation on hover */}
                       <div className="mb-5 relative inline-block">
-                        <div className="absolute inset-0 size-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-amber-400 opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500" />
-                        <div className="size-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-emerald-900/60 group-hover:from-emerald-100 group-hover:to-amber-100 dark:group-hover:from-emerald-800/60 dark:group-hover:to-amber-900/40 flex items-center justify-center transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-emerald-200/50 dark:group-hover:shadow-emerald-900/30">
-                          <IconComp className="size-6 text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                        <div className="absolute inset-0 size-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-400 opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500" />
+                        <div className="size-14 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-900/60 group-hover:from-amber-100 group-hover:to-amber-100 dark:group-hover:from-amber-800/60 dark:group-hover:to-amber-900/40 flex items-center justify-center transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-amber-200/50 dark:group-hover:shadow-amber-900/30">
+                          <IconComp className="size-6 text-amber-600 dark:text-amber-400 group-hover:text-amber-700 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
                         </div>
                       </div>
 
-                      <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
+                      <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
                         {service.title}
                       </h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-5">
                         {service.description}
                       </p>
-                      <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-2 group-hover:gap-3 transition-all duration-300">
+                      <span className="text-sm font-medium text-amber-600 dark:text-amber-400 inline-flex items-center gap-2 group-hover:gap-3 transition-all duration-300">
                         Learn More <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform duration-300" />
                       </span>
                     </CardContent>

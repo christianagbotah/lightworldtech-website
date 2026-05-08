@@ -125,17 +125,17 @@ export default function SectionDivider({
     >
       <div className="flex items-center gap-2">
         {/* Left line */}
-        <div className="flex-1 max-w-32 h-px bg-gradient-to-r from-transparent to-emerald-300 dark:to-emerald-700" />
+        <div className="flex-1 max-w-32 h-px bg-gradient-to-r from-transparent to-amber-300 dark:to-amber-700" />
         {/* Center dots */}
         <div className="flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-emerald-400 dark:bg-emerald-500" />
-          <span className="size-2 rounded-full bg-gradient-to-br from-emerald-400 to-amber-400 dark:from-emerald-500 dark:to-amber-500" />
           <span className="size-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
-          <span className="size-1 rounded-full bg-emerald-300 dark:bg-emerald-600" />
+          <span className="size-2 rounded-full bg-gradient-to-br from-amber-400 to-amber-400 dark:from-amber-500 dark:to-amber-500" />
+          <span className="size-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
+          <span className="size-1 rounded-full bg-amber-300 dark:bg-amber-600" />
           <span className="size-1.5 rounded-full bg-amber-300 dark:bg-amber-600" />
         </div>
         {/* Right line */}
-        <div className="flex-1 max-w-32 h-px bg-gradient-to-l from-transparent to-emerald-300 dark:to-emerald-700" />
+        <div className="flex-1 max-w-32 h-px bg-gradient-to-l from-transparent to-amber-300 dark:to-amber-700" />
       </div>
     </motion.div>
   );
