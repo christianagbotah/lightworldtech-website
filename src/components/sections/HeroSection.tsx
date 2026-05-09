@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Award, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Award, Sparkles, ChevronLeft, ChevronRight, Mouse, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
@@ -17,6 +17,8 @@ const slides = [
   { src: '/images/hero-slide-4.png', alt: 'Mobile app development on various devices' },
   { src: '/images/hero-slide-5.png', alt: 'Digital marketing analytics dashboard' },
 ];
+
+const AUTO_ADVANCE_MS = 5000;
 
 function StatCounter({ value, suffix, label, delay = 0 }: { value: number; suffix: string; label: string; delay?: number }) {
   const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
@@ -40,6 +42,7 @@ export default function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
 
   const goToSlide = useCallback((index: number) => {
     setCurrentSlide((prev) => (index + slides.length) % slides.length);
@@ -59,12 +62,24 @@ export default function HeroSection() {
 
     timerRef.current = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, AUTO_ADVANCE_MS);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isPaused]);
+
+  // Restart progress bar animation on slide change or pause/resume
+  // (DOM-only manipulation — avoids cascading setState lint warning)
+  useEffect(() => {
+    const el = progressBarRef.current;
+    if (!el) return;
+    // Force animation restart by toggling it off/on
+    el.style.animation = 'none';
+    void el.offsetHeight; // trigger reflow so the browser sees the change
+    el.style.animation = `progress-fill ${AUTO_ADVANCE_MS}ms linear forwards`;
+    el.style.animationPlayState = isPaused ? 'paused' : 'running';
+  }, [currentSlide, isPaused]);
 
   return (
     <section
@@ -72,25 +87,41 @@ export default function HeroSection() {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
+      {/* ===== Subtle grain / noise overlay ===== */}
+      <div
+        className="absolute inset-0 z-[2] pointer-events-none"
+        style={{
+          opacity: 0.04,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundSize: '128px 128px',
+        }}
+      />
+
       {/* ===== Image Slider Background ===== */}
       <div className="absolute inset-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
             className="absolute inset-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 1.05, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: -20 }}
             transition={{ duration: 1, ease: 'easeInOut' }}
           >
-            <Image
-              src={slides[currentSlide].src}
-              alt={slides[currentSlide].alt}
-              fill
-              className="object-cover"
-              priority={currentSlide === 0}
-              sizes="100vw"
-            />
+            {/* Ken Burns slow zoom wrapper — resets on every slide change */}
+            <div
+              key={`kb-${currentSlide}`}
+              className="absolute inset-0 animate-ken-burns"
+            >
+              <Image
+                src={slides[currentSlide].src}
+                alt={slides[currentSlide].alt}
+                fill
+                className="object-cover"
+                priority={currentSlide === 0}
+                sizes="100vw"
+              />
+            </div>
           </motion.div>
         </AnimatePresence>
 
@@ -233,45 +264,81 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.7 }}
           >
-            <StatCounter value={100} suffix="+" label="Projects Delivered" delay={0} />
-            <StatCounter value={100} suffix="+" label="Happy Clients" delay={200} />
-            <StatCounter value={8} suffix="+" label="Years Experience" delay={400} />
-            <StatCounter value={100} suffix="%" label="Satisfaction Rate" delay={600} />
+            <StatCounter value={200} suffix="+" label="Projects" delay={0} />
+            <StatCounter value={150} suffix="+" label="Clients" delay={200} />
+            <StatCounter value={8} suffix="+" label="Years" delay={400} />
+            <StatCounter value={99} suffix="%" label="Success Rate" delay={600} />
           </motion.div>
         </div>
       </div>
 
-      {/* ===== Navigation Dots ===== */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`group relative rounded-full transition-all duration-300 ${
-              index === currentSlide
-                ? 'w-8 h-3'
-                : 'w-3 h-3 hover:bg-emerald-400/80'
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
+      {/* ===== Scroll-Down Indicator ===== */}
+      <motion.div
+        className="absolute bottom-28 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.5, duration: 0.8 }}
+      >
+        <div className="relative">
+          <Mouse className="size-6 text-white/50" strokeWidth={1.5} />
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center"
+            animate={{ y: [0, 3, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
           >
-            {/* Inactive dot (emerald-400) */}
-            <span
-              className={`absolute inset-0 rounded-full bg-emerald-400/60 transition-opacity duration-300 ${
-                index === currentSlide ? 'opacity-0' : 'opacity-100'
+            <ChevronDown className="size-3 text-white/50" strokeWidth={2.5} />
+          </motion.div>
+        </div>
+        <span className="text-[10px] sm:text-xs text-white/40 tracking-[0.2em] uppercase font-medium">
+          Scroll to Explore
+        </span>
+      </motion.div>
+
+      {/* ===== Navigation Dots + Progress Bar ===== */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`group relative rounded-full transition-all duration-300 ${
+                index === currentSlide
+                  ? 'w-8 h-3'
+                  : 'w-3 h-3 hover:bg-emerald-400/80'
               }`}
-            />
-            {/* Active dot (amber-400 / gold, pill shape) */}
-            <span
-              className={`absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-opacity duration-300 ${
-                index === currentSlide ? 'opacity-100' : 'opacity-0'
-              }`}
-            />
-          </button>
-        ))}
+              aria-label={`Go to slide ${index + 1}`}
+            >
+              {/* Inactive dot (emerald-400) */}
+              <span
+                className={`absolute inset-0 rounded-full bg-emerald-400/60 transition-opacity duration-300 ${
+                  index === currentSlide ? 'opacity-0' : 'opacity-100'
+                }`}
+              />
+              {/* Active dot (amber-400 / gold, pill shape) */}
+              <span
+                className={`absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-opacity duration-300 ${
+                  index === currentSlide ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+
+        {/* Slide progress bar — fills over the auto-advance interval */}
+        <div className="w-full h-[2px] rounded-full overflow-hidden bg-white/10">
+          <div
+            ref={progressBarRef}
+            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-amber-400 origin-left"
+            style={{
+              animation: `progress-fill ${AUTO_ADVANCE_MS}ms linear forwards`,
+              animationPlayState: isPaused ? 'paused' : 'running',
+            }}
+          />
+        </div>
       </div>
 
       {/* ===== Bottom gradient fade to match next section ===== */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-slate-900 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-slate-900 to-transparent z-[1]" />
     </section>
   );
 }

@@ -115,14 +115,14 @@ export default function AboutSection() {
             whileHover={{ y: -2 }}
             transition={{ duration: 0.3 }}
           >
-            <AnimatedStat value={100} suffix="+" label="Projects Completed" delay={0} />
+            <AnimatedStat value={200} suffix="+" label="Projects Completed" delay={0} />
           </motion.div>
           <motion.div
             className="rounded-xl p-4 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 shadow-sm text-center"
             whileHover={{ y: -2 }}
             transition={{ duration: 0.3 }}
           >
-            <AnimatedStat value={100} suffix="+" label="Satisfied Clients" delay={200} />
+            <AnimatedStat value={150} suffix="+" label="Happy Clients" delay={200} />
           </motion.div>
           <motion.div
             className="rounded-xl p-4 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 shadow-sm text-center"
@@ -136,7 +136,7 @@ export default function AboutSection() {
             whileHover={{ y: -2 }}
             transition={{ duration: 0.3 }}
           >
-            <AnimatedStat value={100} suffix="%" label="Client Satisfaction" delay={600} />
+            <AnimatedStat value={99} suffix="%" label="Success Rate" delay={600} />
           </motion.div>
         </motion.div>
 

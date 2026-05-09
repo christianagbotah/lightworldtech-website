@@ -14,6 +14,7 @@ import TestimonialsSection from '@/components/sections/TestimonialsSection';
 import VideoTestimonialsSection from '@/components/sections/VideoTestimonialsSection';
 import FAQSection from '@/components/sections/FAQSection';
 import CTASection from '@/components/sections/CTASection';
+import TechStackSection from '@/components/sections/TechStackSection';
 import SectionDivider from '@/components/ui/section-divider';
 
 export default function HomePage() {
@@ -28,6 +29,8 @@ export default function HomePage() {
       <SectionDivider variant="wave" className="-mt-1" />
       <ClientLogoCarousel />
       <SectionDivider variant="dots" />
+      <TechStackSection />
+      <SectionDivider variant="wave" />
       <ServicesSection />
       <SectionDivider variant="curve" />
       <PricingSection />

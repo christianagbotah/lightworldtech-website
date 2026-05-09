@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 const partnerLogos = [
@@ -21,6 +22,8 @@ const partnerLogos = [
 const allLogos = [...partnerLogos, ...partnerLogos];
 
 export default function ClientLogoCarousel() {
+  const [paused, setPaused] = useState(false);
+
   return (
     <section className="py-14 bg-white dark:bg-slate-900 relative overflow-hidden">
       {/* Subtle top/bottom gradients for fade effect */}
@@ -44,7 +47,12 @@ export default function ClientLogoCarousel() {
         <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white dark:from-slate-900 to-transparent z-10" />
         <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white dark:from-slate-900 to-transparent z-10" />
 
-        <div className="flex gap-4 animate-marquee">
+        <div
+          className="flex gap-4 animate-marquee"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          style={{ animationPlayState: paused ? 'paused' : 'running' }}
+        >
           {allLogos.slice(0, 12).map((logo, i) => (
             <div
               key={`row1-${i}`}
@@ -66,7 +74,12 @@ export default function ClientLogoCarousel() {
         <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white dark:from-slate-900 to-transparent z-10" />
         <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white dark:from-slate-900 to-transparent z-10" />
 
-        <div className="flex gap-4 animate-marquee" style={{ animationDirection: 'reverse', animationDuration: '35s' }}>
+        <div
+          className="flex gap-4 animate-marquee"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          style={{ animationDirection: 'reverse', animationDuration: '35s', animationPlayState: paused ? 'paused' : 'running' }}
+        >
           {allLogos.slice(3, 15).map((logo, i) => (
             <div
               key={`row2-${i}`}

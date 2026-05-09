@@ -23,7 +23,6 @@ import CTASection from '@/components/sections/CTASection';
 import QuotationForm from '@/components/ui/quotation-form';
 import QuoteCalculator from '@/components/ui/quote-calculator';
 import ServicesComparison from '@/components/ui/services-comparison';
-import { useTilt } from '@/hooks/use-tilt';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 

@@ -164,11 +164,6 @@ export default function BlogPage() {
     navigate('blog-detail', slug);
   };
 
-  const getCategoryCount = (catName: string) => {
-    const cat = categories.find(c => c.name === catName);
-    return cat?.count || 0;
-  };
-
   return (
     <main>
       {/* Hero Banner */}
@@ -365,10 +360,6 @@ export default function BlogPage() {
                             className={`group overflow-hidden bg-white dark:bg-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-pointer h-full relative ${
                               post.featured ? 'ring-2 ring-amber-400/60 dark:ring-emerald-500/50' : ''
                             }`}
-                            style={{
-                              borderImage: undefined,
-                              borderImageSlice: undefined,
-                            }}
                             onClick={() => handlePostClick(post.slug)}
                           >
                             {/* Subtle gradient border on hover - implemented with a pseudo-element approach via wrapper */}

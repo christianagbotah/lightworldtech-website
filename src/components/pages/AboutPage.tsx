@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight, ChevronLeft, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Globe, Mail, Github, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -285,30 +285,6 @@ export default function AboutPage() {
   });
   const [team, setTeam] = useState<TeamMember[]>(defaultTeam);
   const [loading, setLoading] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current) return;
-    const scrollLeft = scrollRef.current.scrollLeft;
-    const cardWidth = 296;
-    const slide = Math.round(scrollLeft / cardWidth);
-    setCurrentSlide(slide);
-  }, []);
-
-  const scrollCarousel = useCallback((direction: number) => {
-    if (!scrollRef.current) return;
-    const cardWidth = 296;
-    const newScroll = scrollRef.current.scrollLeft + direction * cardWidth;
-    scrollRef.current.scrollTo({ left: newScroll, behavior: 'smooth' });
-  }, []);
-
-  const scrollToSlide = useCallback((index: number) => {
-    if (!scrollRef.current) return;
-    const cardWidth = 296;
-    scrollRef.current.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
-  }, []);
-
   useEffect(() => {
     fetcher('/api/team')
       .then((data) => {

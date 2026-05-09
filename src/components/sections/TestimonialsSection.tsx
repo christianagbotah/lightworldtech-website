@@ -635,7 +635,7 @@ export default function TestimonialsSection() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => navigate('home')}
+            onClick={() => navigate('portfolio')}
             className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-300 px-6"
           >
             Read More Reviews

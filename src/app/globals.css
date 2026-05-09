@@ -340,6 +340,22 @@
   animation: marquee 30s linear infinite;
 }
 
+/* Ken Burns slow zoom — 1 → 1.08 over 8s then resets */
+@keyframes ken-burns {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+
+.animate-ken-burns {
+  animation: ken-burns 8s ease-in-out infinite;
+}
+
+/* Slide progress bar fill — 0% → 100% width */
+@keyframes progress-fill {
+  0%   { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+
 /* ============================================
    PATTERNS & BACKGROUNDS
    ============================================ */
@@ -418,26 +434,6 @@
     radial-gradient(at 20% 30%, oklch(0.765 0.177 163.223 / 10%) 0px, transparent 60%),
     radial-gradient(at 80% 70%, oklch(0.828 0.189 84.429 / 8%) 0px, transparent 60%),
     radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 5%) 0px, transparent 70%);
-}
-
-/* ============================================
-   SMOOTH DARK MODE TRANSITIONS
-   ============================================ */
-
-*, *::before, *::after {
-  transition-property: background-color, border-color, color;
-  transition-duration: 200ms;
-  transition-timing-function: ease;
-}
-
-/* Opt-out for elements that need instant response */
-.no-transition, .no-transition *,
-[data-radix-collection-item],
-svg,
-canvas,
-video,
-img {
-  transition: none !important;
 }
 
 /* ============================================
@@ -952,4 +948,136 @@ img {
 .animate-dash-border {
   stroke-dasharray: 10 10;
   animation: dash-move 1s linear infinite;
+}
+
+/* ============================================
+   PREMIUM CSS ANIMATIONS & EFFECTS (Round 6)
+   ============================================ */
+
+/* 1. Ken Burns effect for hero image zoom */
+@keyframes ken-burns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+.animate-ken-burns {
+  animation: ken-burns 8s ease-in-out alternate infinite;
+}
+
+/* 2. Magnetic button hover - subtle scale + glow */
+.magnetic-hover {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s ease;
+}
+.magnetic-hover:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* 3. Premium card tilt effect (CSS-only approximation) */
+.premium-card {
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s ease;
+  transform-style: preserve-3d;
+}
+.premium-card:hover {
+  transform: translateY(-6px) rotateX(2deg);
+  box-shadow: 0 25px 50px -12px oklch(0 0 0 / 15%);
+}
+
+/* 4. Glow text effect */
+.text-glow {
+  text-shadow: 0 0 20px oklch(0.596 0.145 163.225 / 30%), 0 0 40px oklch(0.596 0.145 163.225 / 15%);
+}
+.dark .text-glow {
+  text-shadow: 0 0 20px oklch(0.769 0.188 70.08 / 30%), 0 0 40px oklch(0.769 0.188 70.08 / 15%);
+}
+
+/* 5. Gradient border card */
+.gradient-border-card {
+  position: relative;
+  background: oklch(1 0 0);
+  border-radius: 1rem;
+}
+.gradient-border-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.696 0.17 162.48));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.gradient-border-card:hover::before {
+  opacity: 1;
+}
+.dark .gradient-border-card {
+  background: oklch(0.205 0 0);
+}
+
+/* 6. Slide progress bar animation */
+@keyframes slide-progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+.animate-slide-progress {
+  animation: slide-progress 5s linear;
+}
+
+/* 7. Bounce scroll indicator */
+@keyframes bounce-scroll {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+  40% { transform: translateY(-8px) translateX(-50%); }
+  60% { transform: translateY(-4px) translateX(-50%); }
+}
+.animate-bounce-scroll {
+  animation: bounce-scroll 2s ease-in-out infinite;
+}
+
+/* 8. Noise grain overlay for hero */
+.hero-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+/* 9. Premium underline link effect */
+.premium-link {
+  position: relative;
+  display: inline-block;
+}
+.premium-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08));
+  transition: width 0.4s ease, left 0.4s ease;
+  border-radius: 1px;
+}
+.premium-link:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+/* 10. Floating badge animation */
+@keyframes float-badge {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+}
+.animate-float-badge {
+  animation: float-badge 4s ease-in-out infinite;
+}
+
+/* 11. Tech pill hover effect */
+.tech-pill {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.tech-pill:hover {
+  transform: translateY(-3px) scale(1.05);
 }

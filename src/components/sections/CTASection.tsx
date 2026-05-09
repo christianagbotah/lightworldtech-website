@@ -180,10 +180,10 @@ export default function CTASection() {
 
             {/* Stats row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto mb-12">
-              <CTAStatCounter value={100} suffix="+" label="Projects Delivered" icon={Rocket} delay={0} />
-              <CTAStatCounter value={100} suffix="+" label="Happy Clients" icon={Users} delay={150} />
+              <CTAStatCounter value={200} suffix="+" label="Projects Completed" icon={Rocket} delay={0} />
+              <CTAStatCounter value={150} suffix="+" label="Happy Clients" icon={Users} delay={150} />
               <CTAStatCounter value={8} suffix="+" label="Years Experience" icon={Clock} delay={300} />
-              <CTAStatCounter value={100} suffix="%" label="Satisfaction" icon={CheckCircle2} delay={450} />
+              <CTAStatCounter value={99} suffix="%" label="Success Rate" icon={CheckCircle2} delay={450} />
             </div>
 
             {/* Trust badges */}
