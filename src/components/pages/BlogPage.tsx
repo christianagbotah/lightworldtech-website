@@ -2,13 +2,14 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Clock, ChevronRight, Calendar, FileX, Keyboard, Star, ArrowRight, User, Tag, Sparkles } from 'lucide-react';
+import { Search, Clock, Calendar, FileX, Keyboard, Star, ArrowRight, User, Tag, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
+import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -167,32 +168,10 @@ export default function BlogPage() {
   return (
     <main>
       {/* Hero Banner */}
-      <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-10" />
-        <div className="container-main relative z-10">
-          <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
-            <ChevronRight className="size-3" />
-            <span className="text-amber-400">Blog</span>
-          </nav>
-          <motion.h1
-            className="text-4xl sm:text-5xl font-bold text-white mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            Our <span className="text-amber-400">Blog</span>
-          </motion.h1>
-          <motion.p
-            className="text-lg text-slate-300 max-w-2xl"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            Insights, tips, and trends from our team of technology experts.
-          </motion.p>
-        </div>
-      </section>
+      <PageHero
+        title="Blog & Insights"
+        subtitle="Stay updated with the latest trends, tips, and industry insights from our experts."
+      />
 
       {/* Blog Content */}
       <section className="section-padding bg-slate-50 dark:bg-slate-800/50">

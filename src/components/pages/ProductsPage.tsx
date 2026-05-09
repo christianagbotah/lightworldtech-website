@@ -3,13 +3,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Kanban, UsersRound, GraduationCap, BarChart3, Bell, ChevronRight, Mail, Clock, CheckCircle2,
+  Kanban, UsersRound, GraduationCap, BarChart3, Bell, Mail, Clock, CheckCircle2,
   ArrowRight, Flame, Zap,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
@@ -186,46 +187,10 @@ export default function ProductsPage() {
   return (
     <main>
       {/* Hero Banner */}
-      <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-10" />
-        <div className="absolute inset-0 mesh-pattern opacity-20" />
-        <motion.div
-          className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-morph-blob"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/8 rounded-full blur-3xl animate-morph-blob"
-          animate={{ scale: [1.2, 1, 1.2] }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        {/* Floating geometric shapes */}
-        <div className="absolute top-20 right-1/3 w-3 h-3 rounded-full bg-amber-400/30 animate-float-shape-1" />
-        <div className="absolute bottom-16 left-1/4 w-2 h-2 rounded-full bg-amber-400/30 animate-float-shape-2" />
-        <div className="container-main relative z-10">
-          <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
-            <ChevronRight className="size-3" />
-            <span className="text-amber-400">Products</span>
-          </nav>
-          <motion.h1
-            className="text-4xl sm:text-5xl font-bold text-white mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            Our <span className="text-gradient-animated">Products</span>
-          </motion.h1>
-          <motion.p
-            className="text-lg text-slate-300 max-w-2xl"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            Innovative solutions we&apos;re building to help businesses across Africa grow and thrive.
-          </motion.p>
-        </div>
-      </section>
+      <PageHero
+        title="Our Products"
+        subtitle="Innovative solutions designed to solve real business challenges."
+      />
 
       {/* Products Grid */}
       <section className="section-padding bg-white dark:bg-slate-900 relative overflow-hidden">

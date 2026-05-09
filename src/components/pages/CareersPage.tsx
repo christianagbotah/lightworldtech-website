@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChevronRight, MapPin, Clock, DollarSign, Briefcase,
+  MapPin, Clock, DollarSign, Briefcase,
   ChevronDown, ChevronUp, Send, Loader2, CheckCircle2,
   X, Building2, Users, Sparkles, Upload, FileText, GraduationCap,
   Rocket, Globe, TrendingUp, HeartHandshake,
@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { useAppStore } from '@/lib/store';
+import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 import { toast } from 'sonner';
 import CTASection from '@/components/sections/CTASection';
@@ -230,7 +230,6 @@ export default function CareersPage() {
     keywords: ['IT jobs Ghana', 'tech careers Accra', 'software developer jobs', 'web development jobs Ghana', 'Lightworld Technologies careers'],
   });
 
-  const { navigate } = useAppStore();
   const [jobs] = useState<JobListing[]>(defaultJobs);
   const [activeDepartment, setActiveDepartment] = useState('All Departments');
   const [activeType, setActiveType] = useState('All Types');
@@ -252,68 +251,31 @@ export default function CareersPage() {
   return (
     <main>
       {/* Hero Banner */}
-      <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-10" />
-        <div className="absolute inset-0 mesh-pattern opacity-20" />
-        <motion.div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-morph-blob"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl animate-morph-blob"
-          animate={{ scale: [1, 1.3, 1] }}
-          transition={{ duration: 10, repeat: Infinity, delay: 2 }}
-        />
-        <div className="container-main relative z-10">
-          <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
-            <ChevronRight className="size-3" />
-            <span className="text-amber-400">Careers</span>
-          </nav>
-          <motion.h1
-            className="text-4xl sm:text-5xl font-bold text-white mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            Join Our <span className="text-amber-400">Team</span>
-          </motion.h1>
-          <motion.p
-            className="text-lg text-slate-300 max-w-2xl"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            Build your career with Lightworld Technologies. We&apos;re looking for passionate individuals who want to make a difference through technology.
-          </motion.p>
-
-          {/* Quick stats */}
-          <motion.div
-            className="flex flex-wrap gap-6 mt-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            {[
-              { icon: Briefcase, label: 'Open Positions', value: jobs.length.toString() },
-              { icon: Users, label: 'Team Members', value: '50+' },
-              { icon: Building2, label: 'Office Locations', value: 'Accra' },
-              { icon: GraduationCap, label: 'Training Budget', value: 'GHS 3K/yr' },
-            ].map((stat) => (
-              <div key={stat.label} className="flex items-center gap-3 group">
-                <div className="size-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-emerald-700/20 transition-colors">
-                  <stat.icon className="size-5 text-amber-400" />
-                </div>
-                <div>
-                  <div className="text-lg font-bold text-white">{stat.value}</div>
-                  <div className="text-xs text-slate-400">{stat.label}</div>
-                </div>
+      <PageHero
+        title="Join Our Team"
+        subtitle="Build your career at Lightworld Technologies and make a real impact."
+        badge="We're Hiring!"
+      >
+        {/* Quick stats */}
+        <div className="flex flex-wrap gap-6 mt-8">
+          {[
+            { icon: Briefcase, label: 'Open Positions', value: jobs.length.toString() },
+            { icon: Users, label: 'Team Members', value: '50+' },
+            { icon: Building2, label: 'Office Locations', value: 'Accra' },
+            { icon: GraduationCap, label: 'Training Budget', value: 'GHS 3K/yr' },
+          ].map((stat) => (
+            <div key={stat.label} className="flex items-center gap-3 group">
+              <div className="size-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-emerald-700/20 transition-colors">
+                <stat.icon className="size-5 text-amber-400" />
               </div>
-            ))}
-          </motion.div>
+              <div>
+                <div className="text-lg font-bold text-white">{stat.value}</div>
+                <div className="text-xs text-slate-400">{stat.label}</div>
+              </div>
+            </div>
+          ))}
         </div>
-      </section>
+      </PageHero>
 
       {/* Job Listings */}
       <section className="section-padding bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden">

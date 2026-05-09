@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { useAppStore } from '@/lib/store';
+import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 import CTASection from '@/components/sections/CTASection';
 import QuotationForm from '@/components/ui/quotation-form';
@@ -234,7 +234,6 @@ function ServiceCard({
 }
 
 export default function ServicesPage() {
-  const { navigate } = useAppStore();
   useSEO({
     title: 'Services',
     description: 'Professional IT services in Ghana: Web Development, Mobile App Development, SEO & Marketing, Software Development, IT Training, and Web Hosting. Get a free quote today.',
@@ -270,37 +269,10 @@ export default function ServicesPage() {
   return (
     <main>
       {/* Hero Banner */}
-      <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-10" />
-        <motion.div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        <div className="container-main relative z-10">
-          <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
-            <ChevronRight className="size-3" />
-            <span className="text-amber-400">Services</span>
-          </nav>
-          <motion.h1
-            className="text-4xl sm:text-5xl font-bold text-white mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            Our <span className="text-amber-400">Services</span>
-          </motion.h1>
-          <motion.p
-            className="text-lg text-slate-300 max-w-2xl"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            Comprehensive IT solutions designed to accelerate your business growth and digital transformation.
-          </motion.p>
-        </div>
-      </section>
+      <PageHero
+        title="Our Services"
+        subtitle="Comprehensive IT solutions tailored to elevate your business to the next level."
+      />
 
       {/* Services Grid */}
       <section className="section-padding bg-white dark:bg-slate-900">

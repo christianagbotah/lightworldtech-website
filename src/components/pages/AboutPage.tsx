@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronRight, ChevronLeft, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Globe, Mail, Github, ExternalLink } from 'lucide-react';
+import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronLeft, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Globe, Mail, Github, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAppStore } from '@/lib/store';
+import PageHero from '@/components/ui/page-hero';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 import { useSEO } from '@/hooks/use-seo';
 
@@ -277,7 +277,6 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
 }
 
 export default function AboutPage() {
-  const { navigate } = useAppStore();
   useSEO({
     title: 'About Us',
     description: 'Learn about Lightworld Technologies - a passionate team of innovators dedicated to transforming businesses through technology in Ghana and across Africa.',
@@ -307,23 +306,11 @@ export default function AboutPage() {
   return (
     <main>
       {/* Hero Banner */}
-      <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-10" />
-        <motion.div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} />
-        <div className="container-main relative z-10">
-          <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
-            <ChevronRight className="size-3" />
-            <span className="text-amber-400">About Us</span>
-          </nav>
-          <motion.h1 className="text-4xl sm:text-5xl font-bold text-white mb-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            About <span className="text-amber-400">Lightworld Technologies</span>
-          </motion.h1>
-          <motion.p className="text-lg text-slate-300 max-w-2xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
-            A passionate team of innovators dedicated to transforming businesses through technology.
-          </motion.p>
-        </div>
-      </section>
+      <PageHero
+        title="About Lightworld Technologies"
+        subtitle="A passionate team of innovators driving digital transformation across Africa and beyond."
+        badge="Est. 2016"
+      />
 
       {/* Company Story */}
       <section className="section-padding bg-white dark:bg-slate-900">

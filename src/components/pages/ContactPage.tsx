@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Phone, Mail, MapPin, Clock, ChevronRight, CheckCircle2, Loader2, Copy, Check, CalendarDays, MessageCircle, Facebook, Twitter, Linkedin, Instagram, ExternalLink, Upload, X, FileText, Image as ImageIcon, File, AlertCircle } from 'lucide-react';
+import { Send, Phone, Mail, MapPin, Clock, CheckCircle2, Loader2, Copy, Check, CalendarDays, MessageCircle, Facebook, Twitter, Linkedin, Instagram, ExternalLink, Upload, X, FileText, Image as ImageIcon, File, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
+import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -351,23 +352,10 @@ export default function ContactPage() {
   return (
     <main>
       {/* Hero Banner */}
-      <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-10" />
-        <motion.div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} />
-        <div className="container-main relative z-10">
-          <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
-            <ChevronRight className="size-3" />
-            <span className="text-amber-400">Contact</span>
-          </nav>
-          <motion.h1 className="text-4xl sm:text-5xl font-bold text-white mb-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            Get In <span className="text-amber-400">Touch</span>
-          </motion.h1>
-          <motion.p className="text-lg text-slate-300 max-w-2xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
-            Ready to start your next project? We&apos;d love to hear from you. Reach out and let&apos;s discuss how we can help.
-          </motion.p>
-        </div>
-      </section>
+      <PageHero
+        title="Contact Us"
+        subtitle="Get in touch with our team. We'd love to hear about your project and help you succeed."
+      />
 
       {/* Contact Content */}
       <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
