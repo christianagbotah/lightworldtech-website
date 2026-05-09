@@ -280,7 +280,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                           placeholder="John Doe"
                           value={personalInfo.name}
                           onChange={(e) => setPersonalInfo(prev => ({ ...prev, name: e.target.value }))}
-                          onBlur={() => { if (personalInfoSchema.shape.name.safeParse(personalInfo.name).success) setErrors(prev => ({ ...prev, name: undefined })); else setErrors(prev => ({ ...prev, name: 'Name must be at least 2 characters' })); }}
+                          onBlur={() => { if (personalInfoSchema.shape.name.safeParse(personalInfo.name).success) setErrors(prev => ({ ...prev, name: '' })); else setErrors(prev => ({ ...prev, name: 'Name must be at least 2 characters' })); }}
                           className={`pl-10 ${errors.name ? 'border-red-400 dark:border-red-500' : ''}`}
                         />
                       </div>
@@ -299,7 +299,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                           placeholder="john@example.com"
                           value={personalInfo.email}
                           onChange={(e) => setPersonalInfo(prev => ({ ...prev, email: e.target.value }))}
-                          onBlur={() => { if (personalInfoSchema.shape.email.safeParse(personalInfo.email).success) setErrors(prev => ({ ...prev, email: undefined })); else setErrors(prev => ({ ...prev, email: 'Please enter a valid email' })); }}
+                          onBlur={() => { if (personalInfoSchema.shape.email.safeParse(personalInfo.email).success) setErrors(prev => ({ ...prev, email: '' })); else setErrors(prev => ({ ...prev, email: 'Please enter a valid email' })); }}
                           className={`pl-10 ${errors.email ? 'border-red-400 dark:border-red-500' : ''}`}
                         />
                       </div>
@@ -352,7 +352,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                         value={projectDetails.serviceType}
                         onValueChange={(value) => {
                           setProjectDetails(prev => ({ ...prev, serviceType: value }));
-                          if (errors.serviceType) setErrors(prev => ({ ...prev, serviceType: undefined }));
+                          if (errors.serviceType) setErrors(prev => ({ ...prev, serviceType: '' }));
                         }}
                       >
                         <SelectTrigger className={errors.serviceType ? 'border-red-400 dark:border-red-500' : ''}>
@@ -377,7 +377,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                         value={projectDetails.budgetRange}
                         onValueChange={(value) => {
                           setProjectDetails(prev => ({ ...prev, budgetRange: value }));
-                          if (errors.budgetRange) setErrors(prev => ({ ...prev, budgetRange: undefined }));
+                          if (errors.budgetRange) setErrors(prev => ({ ...prev, budgetRange: '' }));
                         }}
                       >
                         <SelectTrigger className={errors.budgetRange ? 'border-red-400 dark:border-red-500' : ''}>
@@ -405,9 +405,9 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                         value={projectDetails.description}
                         onChange={(e) => {
                           setProjectDetails(prev => ({ ...prev, description: e.target.value }));
-                          if (errors.description) setErrors(prev => ({ ...prev, description: undefined }));
+                          if (errors.description) setErrors(prev => ({ ...prev, description: '' }));
                         }}
-                        onBlur={() => { if (projectDetailsSchema.shape.description.safeParse(projectDetails.description).success) setErrors(prev => ({ ...prev, description: undefined })); else setErrors(prev => ({ ...prev, description: 'Please provide at least 10 characters' })); }}
+                        onBlur={() => { if (projectDetailsSchema.shape.description.safeParse(projectDetails.description).success) setErrors(prev => ({ ...prev, description: '' })); else setErrors(prev => ({ ...prev, description: 'Please provide at least 10 characters' })); }}
                         rows={5}
                         className={errors.description ? 'border-red-400 dark:border-red-500' : ''}
                       />

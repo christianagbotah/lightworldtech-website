@@ -123,12 +123,8 @@ export default function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(false);
   const { navigate } = useAppStore();
 
-  const handleCTA = (tier: PricingTier) => {
-    if (tier.id === 'enterprise') {
-      navigate('contact');
-    } else {
-      navigate('contact');
-    }
+  const handleCTA = () => {
+    navigate('contact');
   };
 
   return (
@@ -141,7 +137,7 @@ export default function PricingSection() {
 
       {/* Morphing decorative blobs */}
       <div className="absolute -top-20 -left-20 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl animate-morph-blob" />
-      <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-amber-400/8 rounded-full blur-3xl animate-morph-blob" style={{ animationDelay: '-4s' }} />
+      <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-amber-400/[0.08] rounded-full blur-3xl animate-morph-blob" style={{ animationDelay: '-4s' }} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-3xl animate-breathe" />
 
       {/* Diagonal stripe accent */}
@@ -241,7 +237,7 @@ export default function PricingSection() {
                   {/* Animated gradient border for enterprise */}
                   {isEnterprise && (
                     <div className="absolute inset-0 rounded-2xl p-[2px] overflow-hidden pointer-events-none">
-                      <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-amber-500 to-amber-500 animate-gradient-shift opacity-60 group-hover:opacity-100 transition-opacity duration-500" style={{
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-amber-500 to-emerald-500 animate-gradient-shift opacity-60 group-hover:opacity-100 transition-opacity duration-500" style={{
                         backgroundSize: '200% 200%',
                       }} />
                     </div>
@@ -255,7 +251,7 @@ export default function PricingSection() {
                   <CardContent className="p-6 sm:p-8 flex flex-col h-full relative z-10">
                     {/* Badge */}
                     {tier.popular && (
-                      <Badge className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-500 text-white border-0 text-xs font-semibold shadow-lg shadow-emerald-500/20">
+                      <Badge className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-emerald-500 text-white border-0 text-xs font-semibold shadow-lg shadow-emerald-500/20">
                         <Star className="size-3 mr-1" />
                         Most Popular
                       </Badge>
@@ -316,7 +312,7 @@ export default function PricingSection() {
 
                     {/* CTA Button */}
                     <Button
-                      onClick={() => handleCTA(tier)}
+                      onClick={handleCTA}
                       className={`w-full mb-6 transition-all duration-300 group/btn ${
                         tier.popular
                           ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 h-11'
@@ -346,7 +342,7 @@ export default function PricingSection() {
                             whileInView="visible"
                             viewport={{ once: true }}
                           >
-                            <CheckCircle className={`size-4 flex-shrink-0 mt-0.5 ${isEnterprise ? 'text-amber-500 dark:text-amber-400' : 'text-amber-500 dark:text-amber-400'}`} />
+                            <CheckCircle className={`size-4 flex-shrink-0 mt-0.5 text-amber-500 dark:text-amber-400`} />
                             <span className="text-slate-600 dark:text-slate-300">{feature}</span>
                           </motion.li>
                         ))}
