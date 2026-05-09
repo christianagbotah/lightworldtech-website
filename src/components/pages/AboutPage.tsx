@@ -50,10 +50,10 @@ const awards = [
 ];
 
 const stats = [
-  { value: 100, suffix: '+', label: 'Projects Delivered', icon: Rocket },
-  { value: 100, suffix: '+', label: 'Happy Clients', icon: UserCheck },
-  { value: 8, suffix: '+', label: 'Years Experience', icon: Calendar },
-  { value: 50, suffix: '+', label: 'Team Members', icon: UsersRound },
+  { value: 200, suffix: '+', label: 'Projects Delivered', icon: Rocket, maxValue: 500 },
+  { value: 150, suffix: '+', label: 'Happy Clients', icon: UserCheck, maxValue: 500 },
+  { value: 8, suffix: '+', label: 'Years Experience', icon: Calendar, maxValue: 15 },
+  { value: 50, suffix: '+', label: 'Team Members', icon: UsersRound, maxValue: 100 },
 ];
 
 function AnimatedStatCard({ value, suffix, label, icon: Icon, delay = 0, maxValue = 100 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number; maxValue?: number }) {
@@ -69,7 +69,7 @@ function AnimatedStatCard({ value, suffix, label, icon: Icon, delay = 0, maxValu
     <Card ref={ref} className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-200 dark:hover:border-emerald-500 hover:shadow-lg dark:hover:shadow-amber-900/20 transition-all duration-300 group">
       <CardContent className="p-6 text-center">
         <div className="relative mx-auto mb-3" style={{ width: size, height: size }}>
-          <svg className="absolute inset-0 -rotate-90" width={size} height={size}>
+          <svg className="absolute inset-0 -rotate-90 group-hover:drop-shadow-[0_0_8px_rgba(16,185,129,0.4)] dark:group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.4)] transition-all duration-300" width={size} height={size}>
             <defs>
               <linearGradient id={`ring-gradient-${label.replace(/\s+/g, '-')}`} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#10b981" />
@@ -208,11 +208,23 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <Card className="overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-amber-900/20 hover:-translate-y-1 transition-all duration-300 group">
-      <div className="h-48 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/30 relative overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-30" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="size-20 rounded-full bg-amber-300/50 dark:bg-amber-500/40 flex items-center justify-center text-2xl font-bold text-amber-500 dark:text-amber-300 transition-transform duration-300 group-hover:scale-110">
+    <motion.div
+      className="relative p-[2px] rounded-xl group/border"
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Animated gradient border on hover */}
+      <motion.div
+        className="absolute inset-0 rounded-xl opacity-0 group-hover/border:opacity-100 transition-opacity duration-500"
+        style={{ background: 'conic-gradient(from 0deg, #f59e0b, #10b981, #f59e0b, #10b981)' }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+      />
+      <Card className="relative z-10 overflow-hidden border-transparent bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-amber-900/20 hover:-translate-y-1 transition-all duration-300 group">
+        <div className="h-48 bg-gradient-to-br from-amber-200 to-amber-400 dark:from-amber-800/50 dark:to-amber-700/40 relative overflow-hidden">
+          <div className="absolute inset-0 grid-pattern opacity-30" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="size-20 rounded-full bg-gradient-to-br from-amber-300/60 to-amber-400/70 dark:from-amber-400/50 dark:to-amber-500/50 flex items-center justify-center text-2xl font-bold text-amber-600 dark:text-amber-200 transition-transform duration-300 group-hover:scale-110 shadow-lg shadow-amber-300/30 dark:shadow-amber-500/20">
             {member.name.charAt(0)}
           </div>
         </div>
@@ -272,7 +284,8 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
           </motion.div>
         )}
       </CardContent>
-    </Card>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -328,7 +341,7 @@ export default function AboutPage() {
             <motion.div className="grid grid-cols-2 gap-4" initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
               {stats.map((stat, index) => (
                 <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: index * 0.1 }}>
-                  <AnimatedStatCard value={stat.value} suffix={stat.suffix} label={stat.label} icon={stat.icon} delay={index * 200} maxValue={stat.value} />
+                  <AnimatedStatCard value={stat.value} suffix={stat.suffix} label={stat.label} icon={stat.icon} delay={index * 200} maxValue={stat.maxValue} />
                 </motion.div>
               ))}
             </motion.div>
@@ -374,9 +387,9 @@ export default function AboutPage() {
             {values.map((value, idx) => (
               <motion.div key={value.title} variants={itemVariants}>
                 <Card className="h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-200 dark:hover:border-emerald-500 hover:shadow-lg dark:hover:shadow-amber-900/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
-                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx % 3 === 0 ? 'bg-amber-200/40 dark:bg-amber-500/10' : idx % 3 === 1 ? 'bg-amber-200/40 dark:bg-amber-500/10' : 'bg-yellow-200/40 dark:bg-yellow-500/10'}`} />
+                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx % 3 === 0 ? 'bg-amber-200/40 dark:bg-amber-500/10' : idx % 3 === 1 ? 'bg-emerald-200/40 dark:bg-emerald-500/10' : 'bg-yellow-200/40 dark:bg-yellow-500/10'}`} />
                   <CardContent className="p-6 relative">
-                    <div className={`size-12 rounded-xl flex items-center justify-center mb-4 group-hover:shadow-md transition-all duration-300 group-hover:scale-110 ${idx % 3 === 0 ? 'bg-gradient-to-br from-amber-500 to-amber-600 shadow-md shadow-emerald-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md shadow-yellow-500/20'}`}>
+                    <div className={`size-12 rounded-xl flex items-center justify-center mb-4 group-hover:shadow-md transition-all duration-300 group-hover:scale-110 ${idx % 3 === 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md shadow-yellow-500/20'}`}>
                       <value.icon className="size-5 text-white" />
                     </div>
                     <h3 className="font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors">{value.title}</h3>
@@ -446,6 +459,8 @@ export default function AboutPage() {
               <motion.div key={award.title} variants={itemVariants}>
                 <Card className="h-full border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 via-white to-amber-50/30 dark:from-amber-900/20 dark:via-slate-800 dark:to-amber-900/10 text-center hover:shadow-lg dark:hover:shadow-amber-900/20 hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
                   <div className="absolute -top-8 -right-8 w-20 h-20 bg-amber-200/30 dark:bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-200/50 dark:group-hover:bg-emerald-700/20 transition-colors duration-500" />
+                  {/* Shimmer effect on hover */}
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
                   <CardContent className="p-6 relative">
                     <div className="size-14 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center mx-auto mb-3 group-hover:shadow-md transition-shadow duration-300">
                       <Award className="size-6 text-emerald-600 dark:text-amber-400" />

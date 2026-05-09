@@ -157,7 +157,7 @@ export default function FAQSection() {
                 placeholder="Search questions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-11 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 h-11"
+                className="pl-11 pr-4 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-500 h-11 shadow-sm focus-visible:shadow-lg focus-visible:shadow-emerald-500/10 dark:focus-visible:shadow-emerald-500/5 transition-all duration-300"
               />
             </motion.div>
 
@@ -186,12 +186,15 @@ export default function FAQSection() {
                         <AccordionItem
                           key={faq.id}
                           value={faq.id}
-                          className="border rounded-xl bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/50 px-6 data-[state=open]:shadow-lg data-[state=open]:shadow-emerald-500/5 data-[state=open]:border-amber-300 dark:data-[state=open]:border-amber-600/50 data-[state=open]:bg-gradient-to-r data-[state=open]:from-amber-50/60 data-[state=open]:to-white dark:data-[state=open]:from-amber-900/10 dark:data-[state=open]:to-slate-800/80 transition-all duration-300 overflow-hidden"
+                          className="border rounded-xl bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/50 px-6 data-[state=open]:shadow-lg data-[state=open]:shadow-emerald-500/5 data-[state=open]:border-amber-300 dark:data-[state=open]:border-amber-600/50 data-[state=open]:bg-gradient-to-r data-[state=open]:from-amber-50/60 data-[state=open]:to-white dark:data-[state=open]:from-amber-900/10 dark:data-[state=open]:to-slate-800/80 transition-all duration-300 overflow-hidden hover:border-slate-300 dark:hover:border-slate-600"
                         >
                           <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline py-4 text-slate-900 dark:text-white data-[state=open]:text-amber-500 dark:data-[state=open]:text-amber-400 transition-colors [&>svg]:text-slate-400 [&>svg]:data-[state=open]:text-emerald-600 dark:[&>svg]:data-[state=open]:text-amber-400">
                             <span className="flex items-center gap-3">
-                              <span className="size-7 rounded-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-amber-400 shrink-0 shadow-sm">
+                              <span className="relative size-7 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-amber-400 shrink-0 shadow-sm border border-amber-200/50 dark:border-amber-700/30">
                                 {String(index + 1).padStart(2, '0')}
+                                {index < filteredFaqs.length - 1 && (
+                                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-px h-3 bg-gradient-to-b from-amber-300/40 to-transparent dark:from-amber-600/30" aria-hidden="true" />
+                                )}
                               </span>
                               {faq.question}
                             </span>

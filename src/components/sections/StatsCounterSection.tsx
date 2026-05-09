@@ -171,9 +171,14 @@ export default function StatsCounterSection() {
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">
-            Our Impact in Numbers
-          </span>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-px w-8 bg-gradient-to-r from-transparent to-emerald-400 dark:to-amber-400" />
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-amber-400 uppercase tracking-widest bg-emerald-50 dark:bg-amber-900/20 rounded-full px-4 py-1.5 border border-emerald-200/60 dark:border-amber-700/30">
+              <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-amber-400 animate-pulse" />
+              Our Impact in Numbers
+            </span>
+            <div className="h-px w-8 bg-gradient-to-l from-transparent to-emerald-400 dark:to-amber-400" />
+          </div>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
             Delivering Results That{' '}
             <span className="text-gradient-amber">
@@ -199,7 +204,7 @@ export default function StatsCounterSection() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 {/* Glassmorphism card with shimmer */}
-                <div className="relative rounded-2xl p-6 md:p-8 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-slate-200/80 dark:border-white/10 hover:border-amber-300/60 dark:hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-emerald-500/5 transition-all duration-500 h-full shimmer-sweep">
+                <div className="relative rounded-2xl p-6 md:p-8 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-slate-200/80 dark:border-white/10 hover:border-amber-300/60 dark:hover:border-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-emerald-500/5 hover:-translate-y-1 hover:scale-[1.02] transition-all duration-500 h-full shimmer-sweep">
                   {/* Gradient border on hover */}
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 p-[1.5px] -z-10`}>
                     <div className="w-full h-full rounded-2xl bg-white dark:bg-slate-900" />

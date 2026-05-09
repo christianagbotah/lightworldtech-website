@@ -1,6 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
 import { ArrowRight, Sparkles, Triangle, Circle, Hexagon, Star, CheckCircle2, Clock, Users, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/lib/store';
@@ -27,9 +28,15 @@ const trustBadges = [
 
 export default function CTASection() {
   const { navigate } = useAppStore();
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
+  const bgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.05, 1]);
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '-8%']);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.7, 1, 1, 0.7]);
+  const contentY = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [40, 0, 0, -40]);
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden" ref={sectionRef}>
       {/* Animated gradient border top */}
       <motion.div
         className="h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent"
@@ -38,8 +45,8 @@ export default function CTASection() {
       />
 
       <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-amber-600 dark:from-emerald-800 dark:via-emerald-900 dark:to-amber-900 py-20 md:py-28 relative overflow-hidden animate-gradient-shift" style={{ backgroundSize: '200% 200%' }}>
-        {/* Background image with heavy overlay */}
-        <div className="absolute inset-0 z-0">
+        {/* Parallax background layer */}
+        <motion.div className="absolute inset-0 z-0" style={{ scale: bgScale, y: bgY }}>
           <Image
             src="/images/hero-slide-2.png"
             alt=""
@@ -48,7 +55,7 @@ export default function CTASection() {
             aria-hidden="true"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-700/92 via-emerald-800/88 to-amber-700/85 dark:from-emerald-900/95 dark:via-slate-900/92 dark:to-amber-900/90" />
-        </div>
+        </motion.div>
 
         {/* Mesh pattern overlay */}
         <div className="absolute inset-0 mesh-pattern opacity-20 z-[1]" />
@@ -124,7 +131,7 @@ export default function CTASection() {
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
         />
 
-        <div className="container-main relative z-10">
+        <motion.div className="container-main relative z-10" style={{ opacity: contentOpacity, y: contentY }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -203,7 +210,7 @@ export default function CTASection() {
               ))}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Animated gradient border bottom */}

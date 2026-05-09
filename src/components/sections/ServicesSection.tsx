@@ -67,7 +67,12 @@ export default function ServicesSection() {
           transition={{ duration: 0.6 }}
         >
           <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">Our Expertise</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">What We Do</h2>
+          <div className="flex items-center justify-center gap-3 mt-3 mb-1">
+            <span className="block w-8 h-[2px] bg-gradient-to-r from-transparent to-emerald-500 dark:to-amber-400 rounded-full" />
+            <span className="block w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-amber-400 shadow-sm shadow-emerald-500/50 dark:shadow-amber-400/50" />
+            <span className="block w-8 h-[2px] bg-gradient-to-l from-transparent to-emerald-500 dark:to-amber-400 rounded-full" />
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-slate-900 dark:text-white">What We Do</h2>
           <p className="text-slate-600 dark:text-slate-300">
             We offer a comprehensive range of IT solutions designed to help your business grow, innovate, and stay ahead of the competition.
           </p>
@@ -118,6 +123,7 @@ export default function ServicesSection() {
             ))}
           </div>
         ) : (
+          <>
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             variants={containerVariants}
@@ -129,10 +135,11 @@ export default function ServicesSection() {
               const IconComp = iconMap[service.icon] || Globe;
               return (
                 <motion.div key={service.id} variants={itemVariants}>
-                  <Card
-                    className="group h-full border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 backdrop-blur-sm hover:border-amber-300 dark:hover:border-emerald-500/50 hover:shadow-2xl dark:hover:shadow-amber-900/20 transition-all duration-500 cursor-pointer overflow-hidden relative hover:scale-[1.03]"
-                    onClick={() => navigate('services')}
-                  >
+                  <div className="group rounded-xl p-[1.5px] bg-gradient-to-br from-slate-200/80 via-slate-200/80 to-slate-200/80 dark:from-slate-700/60 dark:via-slate-700/60 dark:to-slate-700/60 hover:from-emerald-400 hover:via-amber-300 hover:to-amber-400 dark:hover:from-emerald-500 dark:hover:via-amber-400 dark:hover:to-amber-500 transition-all duration-500 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-amber-400/10 cursor-pointer">
+                    <Card
+                      className="h-full border-0 bg-white dark:bg-slate-800/80 backdrop-blur-sm transition-all duration-500 overflow-hidden relative rounded-[10px]"
+                      onClick={() => navigate('services')}
+                    >
                     {/* Shimmer/shine effect on hover */}
                     <div className="absolute inset-0 overflow-hidden rounded-lg pointer-events-none z-10">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/0 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out skew-x-12 scale-x-150 group-hover:via-white/20" />
@@ -163,11 +170,31 @@ export default function ServicesSection() {
                         Learn More <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform duration-300" />
                       </span>
                     </CardContent>
-                  </Card>
+                    </Card>
+                  </div>
                 </motion.div>
               );
             })}
           </motion.div>
+
+          {/* CTA Button */}
+          <motion.div
+            className="text-center mt-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Button
+              size="lg"
+              onClick={() => navigate('services')}
+              className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-lg shadow-emerald-600/25 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-300 hover:scale-105 rounded-full px-8 group/btn"
+            >
+              Explore All Services
+              <ArrowRight className="ml-2 size-4 group-hover/btn:translate-x-1 transition-transform duration-300" />
+            </Button>
+          </motion.div>
+          </>
         )}
       </div>
     </section>

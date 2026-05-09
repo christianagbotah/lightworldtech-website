@@ -493,15 +493,16 @@ export default function TestimonialsSection() {
               <CarouselContent className="-ml-4">
                 {testimonials.map((testimonial) => (
                   <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/2">
-                    <Card className="bg-slate-800/40 border-slate-700/40 backdrop-blur-md h-full relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-xl hover:shadow-amber-900/30 transition-all duration-500">
+                    <Card className="bg-slate-800/40 border-slate-700/40 backdrop-blur-md h-full relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-1 transition-all duration-500">
                       {/* Top gradient accent bar */}
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-amber-400 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <CardContent className="p-6 flex flex-col h-full relative">
-                        {/* Large quote decoration with gradient */}
-                        <div className="absolute -top-2 -right-2 size-20 rounded-full bg-gradient-to-br from-amber-500/10 to-amber-500/10 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                        {/* Large decorative opening quote at top-left */}
+                        <span className="absolute -top-2 -left-1 text-[5rem] leading-none font-serif text-amber-400/15 dark:text-amber-400/10 group-hover:text-emerald-400/20 dark:group-hover:text-emerald-400/15 select-none transition-colors duration-700 pointer-events-none">&ldquo;</span>
+                        {/* Large quote decoration with gradient at top-right */}
+                        <div className="absolute -top-2 -right-2 size-20 rounded-full bg-gradient-to-br from-amber-500/10 to-emerald-500/10 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-500">
                           <Quote className="size-10 text-amber-400/30 group-hover:text-amber-400/50 transition-colors duration-500" />
                         </div>
-                        <Quote className="size-8 text-amber-400/60 mb-4 relative" />
                         <p className="text-slate-300 text-sm leading-relaxed flex-1 mb-6 relative">
                           &ldquo;{testimonial.content || (testimonial as Record<string, unknown>).quote}&rdquo;
                         </p>

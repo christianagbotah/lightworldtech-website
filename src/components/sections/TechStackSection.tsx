@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 interface TechItem {
@@ -48,6 +49,7 @@ function MarqueeRow({
   direction: 'normal' | 'reverse';
   delay: number;
 }) {
+  const [paused, setPaused] = useState(false);
   // Double items for seamless infinite loop
   const doubled = [...items, ...items];
 
@@ -69,12 +71,15 @@ function MarqueeRow({
         style={{
           animationDuration: duration,
           animationDirection: direction,
+          animationPlayState: paused ? 'paused' : 'running',
         }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
       >
         {doubled.map((tech, i) => (
           <div
             key={`${tech.name}-${i}`}
-            className={`flex-shrink-0 flex items-center gap-3 px-5 py-3 rounded-2xl border border-slate-200/80 dark:border-slate-700/40 bg-white/60 dark:bg-slate-800/40 backdrop-blur-sm shadow-sm hover:shadow-lg dark:shadow-slate-900/20 ${tech.hoverBorder} transition-all duration-300 group cursor-default hover:scale-105`}
+            className={`flex-shrink-0 flex items-center gap-3 px-5 py-3 rounded-2xl border border-white/40 dark:border-white/10 bg-white/50 dark:bg-slate-800/30 backdrop-blur-md shadow-sm hover:shadow-xl dark:shadow-slate-900/20 hover:shadow-emerald-500/5 ${tech.hoverBorder} transition-all duration-300 group cursor-default hover:scale-105 hover:bg-white/80 dark:hover:bg-slate-800/50`}
           >
             {/* Colored icon circle with initials */}
             <div

@@ -51,7 +51,12 @@ export default function ProcessSection() {
           transition={{ duration: 0.6 }}
         >
           <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">How We Work</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Our Development Process</h2>
+          <div className="flex items-center justify-center gap-3 mt-3 mb-1">
+            <span className="block w-8 h-[2px] bg-gradient-to-r from-transparent to-emerald-500 dark:to-amber-400 rounded-full" />
+            <span className="block w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-amber-400 shadow-sm shadow-emerald-500/50 dark:shadow-amber-400/50" />
+            <span className="block w-8 h-[2px] bg-gradient-to-l from-transparent to-emerald-500 dark:to-amber-400 rounded-full" />
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-slate-900 dark:text-white">Our Development Process</h2>
           <p className="text-slate-600 dark:text-slate-300">
             A proven, structured approach that ensures every project is delivered on time, within budget, and exceeds expectations.
           </p>
@@ -95,8 +100,15 @@ export default function ProcessSection() {
               <div className="mt-4 h-1.5 rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500 opacity-60" />
             </motion.div>
 
-            {/* Right: Process steps in 2-column grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Right: Process steps with timeline */}
+            <div className="relative">
+              {/* Vertical timeline connector line */}
+              <div className="absolute left-[1.3rem] top-4 bottom-4 w-[2px] bg-gradient-to-b from-emerald-400/30 via-amber-400/20 to-emerald-400/30 rounded-full hidden lg:block" />
+              {/* Glow dot at top of timeline */}
+              <div className="absolute left-[1.1rem] top-2 size-[6px] rounded-full bg-emerald-400/50 blur-[2px] hidden lg:block" />
+              {/* Glow dot at bottom of timeline */}
+              <div className="absolute left-[1.1rem] bottom-2 size-[6px] rounded-full bg-amber-400/50 blur-[2px] hidden lg:block" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {steps.map((step, index) => {
                 const IconComp = iconMap[step.icon] || Code;
                 return (
@@ -108,26 +120,26 @@ export default function ProcessSection() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.08 }}
                   >
-                    <div className="p-5 rounded-xl bg-white dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-xl dark:hover:shadow-amber-900/20 hover:border-amber-300 dark:hover:border-emerald-500/50 transition-all duration-500 h-full hover:-translate-y-1 group relative overflow-hidden">
+                    <div className="p-5 rounded-xl bg-white dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/80 dark:border-slate-700/50 shadow-sm hover:shadow-2xl hover:shadow-emerald-500/5 dark:hover:shadow-amber-900/20 hover:border-emerald-300 dark:hover:border-amber-500/50 transition-all duration-500 h-full hover:-translate-y-1.5 group relative overflow-hidden hover:scale-[1.02]">
                       {/* Subtle gradient overlay on hover */}
                       <div className="absolute inset-0 bg-gradient-to-b from-amber-50/0 to-amber-50/50 dark:from-amber-900/0 dark:to-amber-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-xl" />
 
                       {/* Step number + icon row */}
-                      <div className="flex items-center gap-3 mb-3 relative">
+                      <div className="flex items-center gap-4 mb-3 relative">
                         <motion.div
-                          className="relative size-10 shrink-0"
+                          className="relative size-12 shrink-0"
                           initial={{ scale: 0 }}
                           whileInView={{ scale: 1 }}
                           viewport={{ once: true }}
                           transition={{ duration: 0.4, delay: index * 0.08 + 0.2, type: 'spring', stiffness: 200 }}
                         >
-                          <div className="absolute inset-0 rounded-full bg-amber-500/20 animate-pulse" />
-                          <div className="relative size-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 dark:from-amber-500 dark:to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-emerald-500/25 dark:shadow-amber-900/40">
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-400/30 to-amber-400/30 animate-pulse" />
+                          <div className="relative size-12 rounded-full bg-gradient-to-br from-emerald-500 via-emerald-600 to-amber-500 dark:from-amber-400 dark:via-amber-500 dark:to-emerald-400 flex items-center justify-center text-white font-bold text-base shadow-lg shadow-emerald-500/30 dark:shadow-amber-900/40 ring-2 ring-white/60 dark:ring-slate-700/60">
                             {step.number || index + 1}
                           </div>
                         </motion.div>
-                        <div className="size-9 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/40 dark:to-amber-900/20 flex items-center justify-center group-hover:shadow-md transition-all duration-500">
-                          <IconComp className="size-4.5 text-emerald-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:scale-110 transition-all duration-500" />
+                        <div className="size-10 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/40 dark:to-amber-900/20 flex items-center justify-center group-hover:shadow-md transition-all duration-500">
+                          <IconComp className="size-5 text-emerald-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:scale-110 transition-all duration-500" />
                         </div>
                       </div>
 
@@ -137,6 +149,7 @@ export default function ProcessSection() {
                   </motion.div>
                 );
               })}
+              </div>
             </div>
           </div>
         )}

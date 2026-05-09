@@ -392,7 +392,7 @@ export default function ContactPage() {
 
                       {error && (
                         <motion.div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 flex items-center gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                          <CheckCircle2 className="size-4" /> {error}
+                          <AlertCircle className="size-4" /> {error}
                         </motion.div>
                       )}
 

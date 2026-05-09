@@ -128,7 +128,7 @@ export default function Footer() {
                 value={email}
                 onChange={(e) => handleEmailChange(e.target.value)}
                 onBlur={handleEmailBlur}
-                className={`pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 ${
+                className={`pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/70 focus:bg-white/15 ${
                   emailError ? 'border-red-400' : 'border-white/20'
                 }`}
                 required
@@ -257,7 +257,7 @@ export default function Footer() {
                 <span className="text-[10px] font-medium leading-tight text-emerald-400 tracking-wider uppercase">Technologies</span>
               </div>
             </div>
-            <p className="text-sm text-slate-400 mb-5 leading-relaxed">
+            <p className="text-sm text-slate-300 mb-5 leading-relaxed">
               We are a dynamic team of professionals dedicated to delivering innovative IT solutions that drive business growth and digital transformation.
             </p>
             <div className="flex items-center gap-3">
@@ -287,7 +287,7 @@ export default function Footer() {
                 <li key={link.page}>
                   <button
                     onClick={() => navigate(link.page)}
-                    className="text-sm text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1.5 group"
+                    className="text-sm text-slate-300 hover:text-emerald-400 transition-colors flex items-center gap-1.5 group"
                   >
                     <ArrowRight className="size-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all text-emerald-400" />
                     {link.label}
@@ -308,7 +308,7 @@ export default function Footer() {
                 <li key={service}>
                   <button
                     onClick={() => navigate('services')}
-                    className="text-sm text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1.5 group"
+                    className="text-sm text-slate-300 hover:text-emerald-400 transition-colors flex items-center gap-1.5 group"
                   >
                     <ArrowRight className="size-3 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all text-emerald-400" />
                     {service}
@@ -329,25 +329,25 @@ export default function Footer() {
                 <div className="size-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-all duration-300">
                   <MapPin className="size-4 text-emerald-400 group-hover:text-white transition-colors" />
                 </div>
-                <span className="text-sm text-slate-400 pt-1">Accra, Ghana</span>
+                <span className="text-sm text-slate-300 pt-1">Accra, Ghana</span>
               </li>
               <li className="flex items-start gap-3 group">
                 <div className="size-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-all duration-300">
                   <Phone className="size-4 text-emerald-400 group-hover:text-white transition-colors" />
                 </div>
-                <span className="text-sm text-slate-400 pt-1">+233 (024) 361 8186</span>
+                <span className="text-sm text-slate-300 pt-1">+233 (024) 361 8186</span>
               </li>
               <li className="flex items-start gap-3 group">
                 <div className="size-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-all duration-300">
                   <Mail className="size-4 text-emerald-400 group-hover:text-white transition-colors" />
                 </div>
-                <span className="text-sm text-slate-400 pt-1">mail@lightworldtech.com</span>
+                <span className="text-sm text-slate-300 pt-1">mail@lightworldtech.com</span>
               </li>
               <li className="flex items-start gap-3 group">
                 <div className="size-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-all duration-300">
                   <Clock className="size-4 text-emerald-400 group-hover:text-white transition-colors" />
                 </div>
-                <span className="text-sm text-slate-400 pt-1">Mon-Fri: 8AM - 5PM GMT</span>
+                <span className="text-sm text-slate-300 pt-1">Mon-Fri: 8AM - 5PM GMT</span>
               </li>
             </ul>
             {/* Map placeholder */}
@@ -356,7 +356,7 @@ export default function Footer() {
                 <div className="absolute inset-0 grid-pattern opacity-10" />
                 <div className="text-center relative z-10">
                   <MapPin className="size-5 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-[10px] text-slate-400 font-medium">Our Location - Accra, Ghana</p>
+                  <p className="text-[10px] text-slate-300 font-medium">Our Location - Accra, Ghana</p>
                 </div>
               </div>
             </div>
@@ -376,8 +376,8 @@ export default function Footer() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <button className="hover:text-emerald-400 transition-colors">Privacy Policy</button>
-            <button className="hover:text-emerald-400 transition-colors">Terms of Service</button>
+            <button onClick={() => navigate('contact')} className="hover:text-emerald-400 transition-colors">Privacy Policy</button>
+            <button onClick={() => navigate('contact')} className="hover:text-emerald-400 transition-colors">Terms of Service</button>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="hover:text-emerald-400 transition-colors flex items-center gap-1"
@@ -385,13 +385,6 @@ export default function Footer() {
             >
               <ArrowUp className="size-3" />
               Top
-            </button>
-            <button
-              onClick={() => navigate('admin-dashboard')}
-              className="hover:text-emerald-400 transition-colors"
-              aria-label="Admin Panel"
-            >
-              Admin
             </button>
           </div>
         </div>

@@ -199,8 +199,8 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15 }}
           >
-            <span className="text-white drop-shadow-lg">The World of{' '}</span>
-            <span className="text-gradient bg-gradient-to-r from-emerald-400 via-emerald-300 to-amber-400 bg-clip-text text-transparent whitespace-nowrap drop-shadow-lg">
+            <span className="text-white drop-shadow-lg">The World of{'\u00A0'}</span>
+            <span className="text-gradient bg-gradient-to-r from-emerald-400 via-emerald-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg">
               Possibilities
             </span>
           </motion.h1>

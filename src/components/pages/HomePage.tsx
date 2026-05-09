@@ -16,6 +16,7 @@ import FAQSection from '@/components/sections/FAQSection';
 import CTASection from '@/components/sections/CTASection';
 import TechStackSection from '@/components/sections/TechStackSection';
 import SectionDivider from '@/components/ui/section-divider';
+import BackToTop from '@/components/ui/back-to-top';
 
 export default function HomePage() {
   useSEO({
@@ -51,6 +52,7 @@ export default function HomePage() {
       <FAQSection />
       <SectionDivider variant="wave" />
       <CTASection />
+      <BackToTop />
     </main>
   );
 }

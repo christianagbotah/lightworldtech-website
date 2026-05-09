@@ -45,9 +45,10 @@ export default function Header() {
   }, []);
 
   // Reset mobile services sub-menu when sheet closes
-  useEffect(() => {
-    if (!mobileMenuOpen) setMobileServicesOpen(false);
-  }, [mobileMenuOpen]);
+  const handleMobileMenuChange = (open: boolean) => {
+    setMobileMenuOpen(open);
+    if (!open) setMobileServicesOpen(false);
+  };
 
   const handleNav = (page: 'home' | 'about' | 'services' | 'portfolio' | 'blog' | 'careers' | 'products' | 'contact') => {
     navigate(page);
@@ -200,7 +201,7 @@ export default function Header() {
             </Button>
 
             {/* Mobile hamburger */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <Sheet open={mobileMenuOpen} onOpenChange={handleMobileMenuChange}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden">
                   <Menu className="size-5" />

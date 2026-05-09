@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 const POPUP_DELAY_MS = 15000;
 const SESSION_KEY = 'lw-newsletter-popup-shown';
 const DISMISS_KEY = 'lw-newsletter-popup-dismissed';
+const COOKIE_CONSENT_KEY = 'lw-cookie-consent';
 
 export default function NewsletterPopup() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,15 +21,19 @@ export default function NewsletterPopup() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // Check if user has permanently dismissed
+    // Don't show if user has permanently dismissed
     const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed) return;
 
-    // Check if already shown this session
+    // Don't show if cookie consent hasn't been accepted yet (avoids overlap)
+    const cookieConsent = localStorage.getItem(COOKIE_CONSENT_KEY);
+    if (!cookieConsent) return;
+
+    // Don't show if already shown this session
     const shown = sessionStorage.getItem(SESSION_KEY);
     if (shown) return;
 
-    // Set timer to show popup
+    // Set timer to show popup after delay
     timerRef.current = setTimeout(() => {
       sessionStorage.setItem(SESSION_KEY, 'true');
       setIsOpen(true);
