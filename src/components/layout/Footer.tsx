@@ -249,7 +249,7 @@ export default function Footer() {
           {/* Company Info */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="size-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden">
+              <div className="size-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden">
                 <Image src="/logo.png" alt="Lightworld Technologies" width={32} height={32} className="object-contain p-0.5" />
               </div>
               <div className="flex flex-col">

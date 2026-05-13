@@ -235,7 +235,7 @@ export default function AdminMessages() {
 
       {/* View Message Dialog */}
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {viewing?.phone ? <Phone className="size-4 text-amber-500" /> : <Mail className="size-4 text-amber-500" />}
