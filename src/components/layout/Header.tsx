@@ -94,7 +94,7 @@ export default function Header() {
             onClick={() => handleNav('home')}
             className="flex items-center gap-2.5 group"
           >
-            <div className="size-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-amber-400/30 transition-all overflow-hidden">
+            <div className="size-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-amber-400/30 transition-all overflow-hidden">
               <Image src="/logo.png" alt="Lightworld Technologies" width={32} height={32} className="object-contain p-0.5" />
             </div>
             <div className="flex flex-col">
@@ -212,7 +212,7 @@ export default function Header() {
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex flex-col h-full">
                   <div className="flex items-center gap-2 px-6 py-5 border-b border-slate-200 dark:border-slate-700">
-                    <div className="size-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center overflow-hidden">
+                    <div className="size-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center overflow-hidden">
                       <Image src="/logo.png" alt="Lightworld Technologies" width={24} height={24} className="object-contain p-0.5" />
                     </div>
                     <span className="font-bold text-foreground">Lightworld Technologies</span>

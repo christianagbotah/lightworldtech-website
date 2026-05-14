@@ -397,7 +397,7 @@ export default function PortfolioSection() {
 
       {/* ── Quick View Modal ── */}
       <Dialog open={!!selectedProject} onOpenChange={() => setSelectedProject(null)}>
-        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
+        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
           {selectedProject && (
             <>
               {/* Modal header with themed gradient */}

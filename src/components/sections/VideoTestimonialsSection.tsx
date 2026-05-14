@@ -248,7 +248,7 @@ export default function VideoTestimonialsSection() {
 
       {/* Video Modal */}
       <Dialog open={!!selectedVideo} onOpenChange={() => { setSelectedVideo(null); setIsPlaying(false); }}>
-        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
           {selectedVideo && (
             <motion.div
               key={selectedVideo.id}
