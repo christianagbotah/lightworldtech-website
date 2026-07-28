@@ -319,3 +319,220 @@ Stage Summary:
 - 4 commits pushed to GitHub (e603940, b219ee5, ecc04e7)
 - Build passes clean with zero new errors
 - All pre-existing quotation-form type errors now resolved
+
+---
+Task ID: 6
+Agent: Main Agent
+Task: Redesign PortfolioPage to no-scroll full-viewport "book page" layout
+
+Work Log:
+- **Removed** PageHero component from PortfolioPage — replaced with compact inline title bar (~60-80px height)
+- **Compact title bar**: Badge ("Our Portfolio" with Briefcase icon) + gradient heading + horizontal filter category tabs + results count
+- **Main content area**: `h-[calc(100vh-8rem)] overflow-hidden` — no scrolling, everything visible at a glance like a PowerPoint slide
+- **Card redesign**: Minimal dark glass cards (`bg-white/[0.03] border border-white/[0.06] rounded-xl`) with:
+  - Category badge (color-coded: emerald for Web Dev, amber for Mobile App, violet for Software Dev)
+  - Featured indicator with pulsing dot
+  - Title (text-sm, hover → emerald)
+  - 2-line description (line-clamp-2)
+  - Tags as tiny pills (`text-[9px] px-2 py-0.5 rounded-full`, max 3 shown + overflow count)
+  - Hover overlay: gradient backdrop blur with ZoomIn icon + "View Details" text
+  - Bottom accent line on hover (gradient based on category)
+  - Featured cards: emerald glow border on hover
+- **Grid layout**: 3 columns desktop, 2 tablet, 1 mobile, `gap-3` for tight spacing
+- **Bottom bar**: "View All Projects" text link with ArrowRight icon + conditional "Load More" button
+- **Preserved ALL existing functionality**:
+  - API fetch with `fetcher` function
+  - Category filtering (all, Web Development, Mobile App, Software Development)
+  - Portfolio detail Dialog with fullDescription, technologies, visit/close buttons
+  - ImageLightbox component with navigation
+  - All interfaces (PortfolioItem) and defaultPortfolio data array
+  - CTASection import and rendering
+  - useSEO hook
+  - LayoutGroup, containerVariants, itemVariants for animations
+  - Loading skeleton state
+  - Empty state with SearchX icon and "View All Projects" CTA
+  - visibleCount/hasMore/load-more logic
+  - prevCategoryRef for resetting visible count on category change
+- **Removed unused imports**: PageHero, Grid3x3, LayoutGrid (no longer needed)
+- **Added new imports**: Briefcase, ArrowRight (for compact title bar and bottom link)
+- **Background**: `bg-[#0a0f1a]` with subtle emerald/amber gradient glow orbs
+
+VERIFICATION:
+- ESLint: 0 errors, 0 warnings
+- Dev server: Compiles successfully (all 200 status codes)
+
+Stage Summary:
+- Complete redesign of PortfolioPage from scroll-based layout to no-scroll full-viewport "book page" layout
+- Everything fits in a single viewport — like a PowerPoint slide
+- All existing functionality preserved (API, filtering, dialog, lightbox, CTA, animations)
+- 1 file modified: PortfolioPage.tsx
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Redesign AboutPage to no-scroll full-viewport "book page" layout
+
+Work Log:
+- **Removed** PageHero component from AboutPage — replaced with compact inline title bar (~64px height)
+- **Compact title bar**: Badge ("Est. 2016") + heading + description + Mission/Vision pill badges on desktop
+- **Main content area**: `h-[calc(100vh-5rem)] overflow-hidden` — no scrolling, everything visible at a glance
+- **3-column dense grid layout**:
+  - **Left (3 cols)**: Stats section — 4 compact stat items with animated counters (icon + count + label in horizontal layout), using `useAnimatedCounter` hook preserved
+  - **Center (5 cols)**: Core Values — 2×3 compact grid of small value cards with gradient icons, truncated descriptions (line-clamp-2), hover glow effects
+  - **Right (4 cols)**: Team section — compact expand/flip cards showing initials avatar + name + role, expandable bio with skills badges, social links on hover. Desktop uses expand cards, mobile uses flip cards
+- **Bottom awards bar**: Horizontal scroll of award badges with Award icon, year badge, title, and organization. Staggered entrance animations.
+- **Preserved ALL existing functionality**:
+  - `fetcher` function and `/api/team` API call with data merging
+  - `TeamMember` interface (unchanged)
+  - All data arrays: `values` (6 items), `defaultTeam` (4 members), `awards` (4 items), `stats` (4 items)
+  - `socialLinks` array for social media
+  - `useAnimatedCounter` hook (refactored into `CompactStatItem` component)
+  - `useSEO` hook with same metadata
+  - `TeamFlipCard` and `TeamExpandCard` components (redesigned for compact layout)
+  - `containerVariants` and `itemVariants` for Framer Motion staggered animations
+  - Loading skeleton state for team data
+  - All shadcn/ui imports (Card, CardContent, Badge, Button, Skeleton)
+- **Theme**: Dark background `bg-[#0a0f1a]`, cards `bg-white/[0.03] border border-white/[0.06] rounded-xl`, emerald/amber accents
+- **Animations**: Staggered fade-in with Framer Motion, hover effects on all interactive elements
+
+VERIFICATION:
+- ESLint: 0 errors, 0 warnings
+- Dev server: Compiles successfully
+
+Stage Summary:
+- Complete redesign of AboutPage from scroll-based multi-section layout to no-scroll full-viewport "book page" layout
+- Everything fits in a single viewport — like a PowerPoint slide
+- All existing functionality preserved (API, animated counters, team cards, social links, SEO)
+- 1 file modified: AboutPage.tsx
+
+---
+Task ID: 10
+Agent: Main Agent
+Task: Redesign ProductsPage to no-scroll full-viewport "book page" layout
+
+Work Log:
+- **Removed** PageHero component from ProductsPage — replaced with compact inline title bar (~60px height)
+- **Compact title bar**: Badge ("Products" with Clock icon) + gradient heading + "Coming Soon" tagline + "Need a custom solution?" link
+- **Main content area**: `h-[calc(100vh-4rem)] overflow-hidden` — no scrolling, everything visible at a glance
+- **2×2 product card grid** with compact cards:
+  - Gradient accent line at top (product-specific gradient)
+  - Icon with gradient background circle (`size-10 lg:size-12`) with hover scale+rotate effect
+  - Title (text-sm/lg:base) with emerald hover color
+  - Launch date badge (`text-[9px] px-2 py-0 rounded-full bg-white/[0.04]`) + compact countdown timer
+  - 2-line description (`line-clamp-2`, text-[11px]/xs)
+  - 4-5 feature pills (`text-[9px] px-2 py-0.5 rounded-full bg-white/[0.04]`)
+  - Compact email signup: input `h-7 text-[10px]` + button `h-7 text-[10px] px-2.5`
+- **CompactCountdown component**: Replaced full grid CountdownTimer with inline badge showing live countdown (Xd HH:MM:SS format with Flame icon)
+- **Card style**: `bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 lg:p-4 hover:bg-white/[0.06]`
+- **Preserved ALL existing functionality**:
+  - `products` data array (4 products, all fields preserved)
+  - `emailSchema` Zod validation
+  - `launchDates` record
+  - `useCountdown` hook (preserved, used in CompactCountdown)
+  - `CompactCountdown` component (renamed from CountdownTimer, same logic, compact rendering)
+  - `handleSubscribe` callback with email validation, API fetch, toast notifications
+  - `emailInputs`, `subscribing`, `subscribed` state management
+  - `useSEO` hook with same metadata
+  - `useAppStore` navigate (used in title bar link)
+  - `containerVariants` and `itemVariants` for Framer Motion staggered animations
+  - All shadcn/ui imports (Card, CardContent, Button, Badge, Input)
+  - All Lucide icon imports (Kanban, UsersRound, GraduationCap, BarChart3, Bell, Mail, Clock, CheckCircle2, ArrowRight, Flame, Zap)
+  - Subscribed state with animated confirmation (CheckCircle2 + message)
+  - Loading spinner state for subscribe button
+- **Removed**: PageHero import and usage
+
+VERIFICATION:
+- ESLint: 0 errors in ProductsPage.tsx
+- Dev server: Compiles successfully (all ✓ Compiled entries, 200 status codes)
+
+Stage Summary:
+- Complete redesign of ProductsPage from scroll-based PageHero+section layout to no-scroll full-viewport "book page" layout
+- Everything fits in a single viewport — 2×2 grid of compact product cards
+- All existing functionality preserved (data, email signup, Zod, countdown, SEO, store, toast, animations)
+- 1 file modified: ProductsPage.tsx
+
+---
+Task ID: 9
+Agent: Careers Redesign Agent
+Task: Redesign CareersPage to no-scroll full-viewport "book page" layout
+
+Work Log:
+- **Removed** PageHero component — replaced with compact inline title bar (~60px height) featuring "Careers" gradient badge + "Open Positions" heading + "Join Our Team" tagline with live position count
+- **Full viewport layout**: `h-[calc(100vh-4rem)] overflow-hidden` flex column — title bar (shrink-0) → 2×2 job grid (flex-1) → bottom email link (shrink-0). No scrolling, everything fits in a single viewport
+- **Compact title bar**: Gradient "Careers" pill badge (emerald→amber), heading, tagline, and compact department/type filter pills (`text-[9px] px-2 py-0.5 rounded-full`)
+- **2×2 job cards grid**: `grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 h-full`. Shows first 4 of filtered jobs with "Showing 4 of N" indicator
+- **Card design** (`bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 lg:p-4`):
+  - Title (`text-sm truncate`, hover → emerald) + Featured indicator
+  - Type badge (tiny `text-[8px] px-1.5 py-0.5 rounded-full` pill, color-coded: amber Full-time, sky Part-time, rose Contract)
+  - Department badge (color-coded: emerald Engineering, violet Design, amber Marketing, cyan Training)
+  - Location with MapPin (`text-[9px]`)
+  - Salary range with DollarSign (`text-[9px] text-emerald-400/70`)
+  - 4 requirement bullets (tiny `text-[9px]` with CheckCircle2, `line-clamp-1`, "+N more" indicator)
+  - "Apply Now" emerald gradient button (`text-[10px] py-1.5` with Send icon)
+- **Bottom bar**: "Don't see a role? Send your CV" mailto link to careers@lightworldtechnologies.com + position count
+- **Background**: `bg-[#050810]` with subtle emerald/amber blurred gradient orbs
+- **Preserved ALL existing functionality**:
+  - `JobListing` interface (unchanged)
+  - `defaultJobs` data (all 6 jobs kept)
+  - `departments` and `jobTypes` filter arrays
+  - Department/Type filtering logic
+  - `useSEO` hook with same metadata
+  - Application Dialog modal (restyled to dark theme `bg-[#0a0f1a]`)
+  - `ApplicationForm` component fully intact: all fields, file upload to `/api/upload`, submission to `/api/careers/apply`, toast notifications, form validation, submitting/submitted states, success animation
+  - `CTASection` import and rendering
+  - `containerVariants`/`itemVariants` Framer Motion animations
+  - Empty state with Clear Filters button
+- **Removed unused imports**: PageHero, Card, CardContent, Badge, ChevronDown, ChevronUp, Users, Sparkles, GraduationCap, Rocket, Globe, TrendingUp, HeartHandshake, Clock
+- **Added**: `aria-describedby={undefined}` to DialogContent for accessibility
+- **Agent record**: Written to `/agent-ctx/9-c-careers-book-page.md`
+
+VERIFICATION:
+- ESLint on CareersPage.tsx: 0 errors, 0 warnings (clean)
+- Dev server compiles successfully (no errors in dev.log)
+- Pre-existing lint error in BlogPage.tsx (line 109) is unrelated to this task
+
+Stage Summary:
+- Complete redesign of CareersPage from scroll-based multi-section layout to no-scroll full-viewport "book page" layout
+- Everything fits in a single viewport — like a PowerPoint slide
+- All existing functionality preserved (API, dialog, form, upload, toasts, SEO, CTA)
+- 1 file modified: CareersPage.tsx
+
+---
+Task ID: 8
+Agent: Main Agent
+Task: Redesign BlogPage.tsx to no-scroll, full-viewport "book page" layout
+
+Work Log:
+- **Fixed broken template literals** on lines 101 and 109: The `readTime` mapping had corrupted template literals (`\` followed by a newline). Fixed to use string concatenation (`p.readTime + ' min read'`).
+- **Changed background** from `bg-[#0a0f1a]` to `bg-[#050810]` per design spec.
+- **Changed title** from "Insights & Articles" to "Insights & Updates" per requirement.
+- **Collapsed two-row title bar into single horizontal row** (~60px height): Badge "Blog" + Title "Insights & Updates" + Search input + Category filter pills — all in one line.
+- **Main content area**: Changed to `h-[calc(100vh-4rem)] overflow-hidden` — no scrolling, everything visible at a glance.
+- **Category badges on cards**: Reduced from `text-[10px] px-2 py-0.5` to `text-[8px] px-1.5 py-0.5 rounded-full` per spec.
+- **Filter tabs**: Reduced from `text-xs` to `text-[10px]` tiny pills.
+- **Added "View All" link** at the bottom with ExternalLink icon.
+- **Limited display to 6 posts** (2×3 grid) using `useMemo` to slice filtered results.
+- **Preserved ALL existing functionality**:
+  - API fetch with `fetcher` function
+  - Search with debounced local state + store sync
+  - Category filtering with `blogCategory`/`setBlogCategory` store
+  - Blog navigation to 'blog-detail' via `navigate`
+  - All interfaces (`BlogPost`, `CategoryCount`) and default data arrays
+  - `useSEO` hook with same metadata
+  - `containerVariants` and `itemVariants` for Framer Motion staggered animations
+  - Loading skeleton state (6 skeleton cards in 2×3 grid)
+  - Empty state with `FileX` icon and "Clear Filters" button
+  - Keyboard shortcut `Cmd/Ctrl+K` to focus search
+  - `AnimatePresence mode="popLayout"` for layout animations
+
+VERIFICATION:
+- ESLint: 0 errors, 0 warnings
+- Dev server: Compiles successfully (all 200 status codes)
+
+Stage Summary:
+- 1 file modified: BlogPage.tsx
+- Template literal bug fixed (was causing parsing error)
+- Complete visual redesign from two-row header to single-row compact inline title
+- Background darkened to #050810, all sizing reduced per spec
+- "View All" link added at bottom
+- All existing functionality preserved with zero regressions

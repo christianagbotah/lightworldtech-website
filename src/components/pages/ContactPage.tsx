@@ -10,19 +10,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
-import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_TOTAL_SIZE = 25 * 1024 * 1024; // 25MB total
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_TOTAL_SIZE = 25 * 1024 * 1024;
 const MAX_FILES = 5;
 const ACCEPTED_TYPES = [
   'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-  'application/pdf',
-  'application/msword',
+  'application/pdf', 'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'text/plain',
-  'application/zip',
+  'text/plain', 'application/zip',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
@@ -33,7 +30,7 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function getFileIcon(type: string): React.ElementType {
+function getFileIcon(type: string) {
   if (type.startsWith('image/')) return ImageIcon;
   if (type === 'application/pdf') return FileText;
   return File;
@@ -57,216 +54,16 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      toast.success('Copied to clipboard', { description: `${label} copied successfully.` });
+      toast.success('Copied!', { description: `${label} copied.` });
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Copy failed', { description: 'Could not copy to clipboard.' });
+      toast.error('Copy failed');
     }
   };
-
   return (
-    <button onClick={handleCopy} className="ml-auto p-1.5 rounded-lg text-white/30 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 shrink-0" aria-label={`Copy ${label}`}>
-      {copied ? <Check className="size-3.5 text-amber-500" /> : <Copy className="size-3.5" />}
+    <button onClick={handleCopy} className="p-1 rounded-md text-white/20 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all shrink-0" aria-label={`Copy ${label}`}>
+      {copied ? <Check className="size-3 text-amber-500" /> : <Copy className="size-3" />}
     </button>
-  );
-}
-
-function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles: (files: FileAttachment[]) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
-
-  const totalSize = useMemo(() => files.reduce((sum, f) => sum + f.file.size, 0), [files]);
-
-  const addFiles = useCallback((newFiles: FileList | File[]) => {
-    const fileArray = Array.from(newFiles);
-
-    if (files.length + fileArray.length > MAX_FILES) {
-      toast.error(`Maximum ${MAX_FILES} files allowed`, { description: `You can upload up to ${MAX_FILES} files at once.` });
-      return;
-    }
-
-    const oversized = fileArray.filter(f => f.size > MAX_FILE_SIZE);
-    if (oversized.length > 0) {
-      toast.error('File too large', { description: `${oversized.map(f => f.name).join(', ')} exceed${oversized.length > 1 ? '' : 's'} the 10MB limit.` });
-    }
-
-    const validFiles = fileArray.filter(f => {
-      if (f.size > MAX_FILE_SIZE) return false;
-      if (totalSize + f.size > MAX_TOTAL_SIZE) return false;
-      if (!ACCEPTED_TYPES.includes(f.type) && !f.name.match(/\.(jpg|jpeg|png|gif|webp|svg|pdf|doc|docx|txt|zip|xls|xlsx)$/i)) return false;
-      return true;
-    });
-
-    if (validFiles.length === 0 && fileArray.length > 0) {
-      toast.error('Invalid files', { description: 'Please upload images, PDFs, or documents only.' });
-      return;
-    }
-
-    const newAttachments: FileAttachment[] = validFiles.map(file => {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-      let preview: string | undefined;
-
-      if (file.type.startsWith('image/')) {
-        preview = URL.createObjectURL(file);
-      }
-
-      return { id, file, preview };
-    });
-
-    setFiles([...files, ...newAttachments]);
-  }, [files, setFiles, totalSize]);
-
-  const removeFile = useCallback((id: string) => {
-    const file = files.find(f => f.id === id);
-    if (file?.preview) URL.revokeObjectURL(file.preview);
-    setFiles(files.filter(f => f.id !== id));
-  }, [files, setFiles]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      addFiles(e.dataTransfer.files);
-    }
-  }, [addFiles]);
-
-  return (
-    <div className="space-y-3">
-      <Label className="text-white font-medium text-sm flex items-center gap-1.5">
-        <span className="w-1 h-1 rounded-full bg-amber-500" />
-        Attachments
-        <span className="text-xs text-slate-400 font-normal">(optional - max {MAX_FILES} files, 10MB each)</span>
-      </Label>
-
-      {/* Drop zone */}
-      <div
-        className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300 cursor-pointer ${
-          isDragOver
-            ? 'border-emerald-500 bg-amber-50 dark:bg-amber-900/20 scale-[1.01]'
-            : 'border-white/[0.06] hover:border-emerald-500/30 hover:bg-emerald-500/10'
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click(); }}
-        aria-label="Upload files - click or drag and drop"
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx"
-          onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }}
-          className="hidden"
-        />
-        <motion.div animate={isDragOver ? { scale: 1.05 } : { scale: 1 }} transition={{ duration: 0.2 }}>
-          <div className={`size-12 rounded-full mx-auto mb-3 flex items-center justify-center transition-colors duration-300 ${
-            isDragOver
-              ? 'bg-amber-100 dark:bg-amber-800'
-              : 'bg-white/[0.06]'
-          }`}>
-            <Upload className={`size-5 transition-colors duration-300 ${isDragOver ? 'text-emerald-400' : 'text-slate-400'}`} />
-          </div>
-          <p className={`text-sm font-medium transition-colors duration-300 ${isDragOver ? 'text-emerald-400' : 'text-white/60'}`}>
-            {isDragOver ? 'Drop files here' : 'Drag & drop files here'}
-          </p>
-          <p className="text-xs text-slate-400 mt-1">or click to browse</p>
-        </motion.div>
-      </div>
-
-      {/* File list */}
-      {files.length > 0 && (
-        <div className="space-y-2">
-          {files.map((attachment) => {
-            const FileIcon = getFileIcon(attachment.file.type);
-            const colorClass = getFileColor(attachment.file.type);
-            const isOversized = attachment.file.size > MAX_FILE_SIZE;
-
-            return (
-              <motion.div
-                key={attachment.id}
-                initial={{ opacity: 0, y: -10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                exit={{ opacity: 0, y: -10, height: 0 }}
-                className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
-                  isOversized ? 'border-red-500/20 bg-red-500/10' : 'border-white/[0.06] bg-white/[0.04]'
-                }`}
-              >
-                {/* Preview or icon */}
-                {attachment.preview ? (
-                  <div className="size-10 rounded-lg overflow-hidden shrink-0 bg-white/[0.06]">
-                    <img src={attachment.preview} alt={attachment.file.name} className="size-full object-cover" />
-                  </div>
-                ) : (
-                  <div className={`size-10 rounded-lg flex items-center justify-center shrink-0 ${colorClass}`}>
-                    <FileIcon className="size-4" />
-                  </div>
-                )}
-
-                <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-medium truncate ${isOversized ? 'text-red-400' : 'text-white/60'}`}>
-                    {attachment.file.name}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <p className={`text-[10px] ${isOversized ? 'text-red-500' : 'text-slate-400'}`}>
-                      {formatFileSize(attachment.file.size)}
-                    </p>
-                    {isOversized && (
-                      <span className="text-[10px] text-red-500 flex items-center gap-0.5">
-                        <AlertCircle className="size-2.5" />
-                        Too large
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  onClick={(e) => { e.stopPropagation(); removeFile(attachment.id); }}
-                  className="size-7 rounded-full hover:bg-red-500/10 text-slate-400 hover:text-red-500 flex items-center justify-center transition-colors shrink-0"
-                  aria-label={`Remove ${attachment.file.name}`}
-                >
-                  <X className="size-3.5" />
-                </button>
-              </motion.div>
-            );
-          })}
-
-          {/* Total size indicator */}
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] text-slate-400">{files.length} file{files.length !== 1 ? 's' : ''} attached</span>
-            <div className="flex items-center gap-2">
-              <span className={`text-[10px] ${totalSize > MAX_TOTAL_SIZE ? 'text-red-500' : 'text-slate-400'}`}>
-                {formatFileSize(totalSize)} / {formatFileSize(MAX_TOTAL_SIZE)}
-              </span>
-              <div className="w-20 h-1 rounded-full bg-white/[0.06]">
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    totalSize > MAX_TOTAL_SIZE ? 'bg-red-500' : totalSize > MAX_TOTAL_SIZE * 0.8 ? 'bg-amber-500' : 'bg-amber-500'
-                  }`}
-                  style={{ width: `${Math.min((totalSize / MAX_TOTAL_SIZE) * 100, 100)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -275,15 +72,10 @@ function useOfficeStatus() {
     const now = new Date();
     const utcHours = now.getUTCHours();
     const day = now.getUTCDay();
-    const ghHour = utcHours;
-
-    if (day === 0) return { open: false, label: 'Currently Closed' };
-    if (day === 6) {
-      if (ghHour >= 9 && ghHour < 13) return { open: true, label: 'Currently Open' };
-      return { open: false, label: 'Currently Closed' };
-    }
-    if (ghHour >= 8 && ghHour < 17) return { open: true, label: 'Currently Open' };
-    return { open: false, label: 'Currently Closed' };
+    if (day === 0) return { open: false, label: 'Closed' };
+    if (day === 6) { if (utcHours >= 9 && utcHours < 13) return { open: true, label: 'Open' }; return { open: false, label: 'Closed' }; }
+    if (utcHours >= 8 && utcHours < 17) return { open: true, label: 'Open' };
+    return { open: false, label: 'Closed' };
   }, []);
   return status;
 }
@@ -292,311 +84,287 @@ export default function ContactPage() {
   const { navigate } = useAppStore();
   useSEO({
     title: 'Contact',
-    description: 'Get in touch with Lightworld Technologies. Contact us for web development, mobile apps, SEO, and IT solutions in Accra, Ghana. +233 (024) 361 8186.',
-    keywords: ['contact Lightworld Technologies', 'IT company Accra', 'web development contact', 'tech support Ghana', 'free consultation'],
+    description: 'Get in touch with Lightworld Technologies for web development, mobile apps, SEO, and IT solutions in Accra, Ghana.',
+    keywords: ['contact Lightworld Technologies', 'IT company Accra', 'web development contact'],
   });
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: '',
-  });
+
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const officeStatus = useOfficeStatus();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const totalSize = useMemo(() => attachments.reduce((sum, f) => sum + f.file.size, 0), [attachments]);
+
+  const addFiles = useCallback((newFiles: FileList | File[]) => {
+    const fileArray = Array.from(newFiles);
+    if (attachments.length + fileArray.length > MAX_FILES) { toast.error(`Max ${MAX_FILES} files`); return; }
+    const oversized = fileArray.filter(f => f.size > MAX_FILE_SIZE);
+    if (oversized.length > 0) toast.error('File too large (max 10MB)');
+    const validFiles = fileArray.filter(f => {
+      if (f.size > MAX_FILE_SIZE) return false;
+      if (totalSize + f.size > MAX_TOTAL_SIZE) return false;
+      if (!ACCEPTED_TYPES.includes(f.type) && !f.name.match(/\.(jpg|jpeg|png|gif|webp|svg|pdf|doc|docx|txt|zip|xls|xlsx)$/i)) return false;
+      return true;
+    });
+    if (validFiles.length === 0 && fileArray.length > 0) toast.error('Invalid file type');
+    const newAttachments: FileAttachment[] = validFiles.map(file => {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      let preview: string | undefined;
+      if (file.type.startsWith('image/')) preview = URL.createObjectURL(file);
+      return { id, file, preview };
+    });
+    setAttachments([...attachments, ...newAttachments]);
+  }, [attachments, setAttachments, totalSize]);
+
+  const removeFile = useCallback((id: string) => {
+    const file = attachments.find(f => f.id === id);
+    if (file?.preview) URL.revokeObjectURL(file.preview);
+    setAttachments(attachments.filter(f => f.id !== id));
+  }, [attachments, setAttachments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
-
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          attachments: attachments.map(a => ({
-            name: a.file.name,
-            size: a.file.size,
-            type: a.file.type,
-          })),
+          attachments: attachments.map(a => ({ name: a.file.name, size: a.file.size, type: a.file.type })),
         }),
       });
       if (res.ok) {
-        toast.success('Message sent successfully!', { description: 'We\'ll get back to you within 24 hours.' });
+        toast.success('Message sent!', { description: "We'll respond within 24 hours." });
         setSubmitted(true);
         setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-        // Clean up previews
         attachments.forEach(a => { if (a.preview) URL.revokeObjectURL(a.preview); });
         setAttachments([]);
       } else {
-        toast.error('Failed to send message', { description: 'Something went wrong. Please try again.' });
-        setError('Something went wrong. Please try again.');
+        toast.error('Failed to send');
+        setError('Something went wrong.');
       }
     } catch {
-      toast.error('Network error', { description: 'Please check your connection and try again.' });
-      setError('Network error. Please check your connection and try again.');
-    } finally {
-      setSubmitting(false);
-    }
+      toast.error('Network error');
+      setError('Check your connection.');
+    } finally { setSubmitting(false); }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const contactItems = [
+    { icon: Phone, label: 'Phone', value: '+233 (024) 361 8186', copy: '+233 (024) 361 8186' },
+    { icon: Mail, label: 'Email', value: 'mail@lightworldtech.com', copy: 'mail@lightworldtech.com' },
+    { icon: MapPin, label: 'Location', value: 'Accra, Ghana', copy: '' },
+    { icon: Clock, label: 'Hours', value: 'Mon-Fri: 8AM-5PM', copy: '' },
+  ];
+
   return (
-    <main>
-      {/* Hero Banner */}
-      <PageHero
-        title="Contact Us"
-        subtitle="Get in touch with our team. We'd love to hear about your project and help you succeed."
-      />
-
-      {/* Contact Content */}
-      <section className="py-16 lg:py-24 bg-[#050810]">
-        <div className="container-main">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-            {/* Contact Form */}
-            <motion.div className="lg:col-span-2" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm overflow-hidden relative">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 via-amber-400 to-emerald-400 hidden lg:block" />
-                <CardContent className="p-6 sm:p-8 relative">
-                  {submitted ? (
-                    <motion.div className="text-center py-12" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-                      <motion.div className="size-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}>
-                        <CheckCircle2 className="size-10 text-amber-400" />
-                      </motion.div>
-                      <h3 className="text-2xl font-semibold mb-2 text-white">Message Sent!</h3>
-                      <p className="text-white/60 mb-2">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
-                      <p className="text-sm text-white/30 mb-6">Check your email for a confirmation.</p>
-                      <div className="flex gap-3 justify-center">
-                        <Button onClick={() => setSubmitted(false)} variant="outline" className="border-emerald-500/30 text-emerald-400">Send Another Message</Button>
-                        <Button onClick={() => navigate('home')} className="bg-emerald-500 hover:bg-emerald-400 text-white">Back to Home</Button>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <>
-                      <h2 className="text-2xl font-bold mb-1 text-white">Send Us a Message</h2>
-                      <p className="text-sm text-white/40 mb-6">Fill out the form below and we&apos;ll respond promptly.</p>
-
-                      {submitting && (
-                        <motion.div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-400 flex items-center gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                          <Loader2 className="size-4 animate-spin" /> Sending your message...
-                        </motion.div>
-                      )}
-
-                      {error && (
-                        <motion.div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400 flex items-center gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                          <AlertCircle className="size-4" /> {error}
-                        </motion.div>
-                      )}
-
-                      <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                          <div className="space-y-1.5">
-                            <Label htmlFor="name" className="text-white font-medium text-sm flex items-center gap-1.5">
-                              <span className="w-1 h-1 rounded-full bg-amber-500" /> Full Name
-                            </Label>
-                            <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all h-11" />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor="email" className="text-white font-medium text-sm flex items-center gap-1.5">
-                              <span className="w-1 h-1 rounded-full bg-amber-500" /> Email Address
-                            </Label>
-                            <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all h-11" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                          <div className="space-y-1.5">
-                            <Label htmlFor="phone" className="text-white font-medium text-sm flex items-center gap-1.5">
-                              <span className="w-1 h-1 rounded-full bg-amber-500" /> Phone Number
-                            </Label>
-                            <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+233 XX XXX XXXX" disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all h-11" />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor="subject" className="text-white font-medium text-sm flex items-center gap-1.5">
-                              <span className="w-1 h-1 rounded-full bg-amber-500" /> Subject
-                            </Label>
-                            <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all h-11" />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="message" className="text-white font-medium text-sm flex items-center gap-1.5">
-                            <span className="w-1 h-1 rounded-full bg-amber-500" /> Message
-                          </Label>
-                          <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us about your project..." rows={5} required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all resize-none" />
-                        </div>
-
-                        {/* File Upload */}
-                        <FileUploadZone files={attachments} setFiles={setAttachments} />
-
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <Button type="submit" disabled={submitting} className="bg-emerald-500 hover:bg-emerald-400 text-white w-full sm:w-auto px-8 shadow-md hover:shadow-lg transition-shadow">
-                            {submitting ? (
-                              <><Loader2 className="size-4 mr-2 animate-spin" /> Sending...</>
-                            ) : (
-                              <>Send Message <Send className="size-4 ml-2" /></>
-                            )}
-                          </Button>
-                        </div>
-                      </form>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Contact Info */}
-            <motion.div className="space-y-6" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
-              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
-                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-500 via-transparent to-amber-500" />
-                </div>
-                <CardContent className="p-6 relative">
-                  <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-900/30 to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
-                      <Phone className="size-5 text-amber-400 group-hover:text-white transition-colors duration-300" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold mb-1 text-white">Phone</h3>
-                      <p className="text-sm text-white/40">+233 (024) 361 8186</p>
-                      <p className="text-sm text-white/40">+233 (055) 467 2081</p>
-                    </div>
-                    <CopyButton text="+233 (024) 361 8186" label="phone number" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
-                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-500 via-transparent to-amber-500" />
-                </div>
-                <CardContent className="p-6 relative">
-                  <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-900/30 to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
-                      <Mail className="size-5 text-amber-400 group-hover:text-white transition-colors duration-300" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold mb-1 text-white">Email</h3>
-                      <p className="text-sm text-white/40">mail@lightworldtech.com</p>
-                    </div>
-                    <CopyButton text="mail@lightworldtech.com" label="email address" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
-                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-500 via-transparent to-amber-500" />
-                </div>
-                <CardContent className="p-6 relative">
-                  <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-900/30 to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
-                      <MapPin className="size-5 text-amber-400 group-hover:text-white transition-colors duration-300" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1 text-white">Office</h3>
-                      <p className="text-sm text-white/40">Accra<br />Ghana</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
-                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-500 via-transparent to-amber-500" />
-                </div>
-                <CardContent className="p-6 relative">
-                  <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-900/30 to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
-                      <Clock className="size-5 text-amber-400 group-hover:text-white transition-colors duration-300" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-white">Office Hours</h3>
-                        <span className="flex items-center gap-1.5">
-                          <span className={`relative flex size-2.5 ${officeStatus.open ? '' : 'opacity-50'}`}>
-                            {officeStatus.open && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />}
-                            <span className={`relative inline-flex rounded-full size-2.5 ${officeStatus.open ? 'bg-amber-500' : 'bg-slate-400'}`} />
-                          </span>
-                          <span className={`text-xs font-medium ${officeStatus.open ? 'text-amber-400' : 'text-white/30'}`}>{officeStatus.label}</span>
-                        </span>
-                      </div>
-                      <p className="text-sm text-white/40">Mon - Fri: 08:00 - 17:00</p>
-                      <p className="text-sm text-white/40">Sat: 09:00 - 13:00</p>
-                      <p className="text-sm text-white/40">Sun: Closed</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Social Media Links */}
-              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shrink-0"><ExternalLink className="size-5 text-white" /></div>
-                    <div>
-                      <h3 className="font-semibold text-white">Follow Us</h3>
-                      <p className="text-xs text-white/40">Stay connected on social media</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-3">
-                    {[
-                      { icon: Facebook, label: 'Facebook', color: 'hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-blue-600/25', link: '#' },
-                      { icon: Twitter, label: 'Twitter', color: 'hover:bg-sky-500 hover:text-white hover:border-sky-500 hover:shadow-sky-500/25', link: '#' },
-                      { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-blue-700 hover:text-white hover:border-blue-700 hover:shadow-blue-700/25', link: '#' },
-                      { icon: Instagram, label: 'Instagram', color: 'hover:bg-pink-600 hover:text-white hover:border-pink-600 hover:shadow-pink-600/25', link: '#' },
-                    ].map((social) => {
-                      const SocialIcon = social.icon;
-                      return (
-                        <button key={social.label} onClick={() => window.open(social.link, '_blank')} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/[0.06] text-white/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${social.color}`} aria-label={social.label}>
-                          <SocialIcon className="size-5" />
-                          <span className="text-[10px] font-medium">{social.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Schedule a Call */}
-              <Card className="border-0 shadow-lg overflow-hidden relative bg-gradient-to-br from-amber-600 via-amber-500 to-yellow-700">
-                <div className="absolute inset-0 grid-pattern opacity-10" />
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-300/10 rounded-full blur-3xl" />
-                <CardContent className="p-6 relative">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="size-12 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0"><CalendarDays className="size-6 text-white" /></div>
-                    <div>
-                      <h3 className="font-bold text-lg text-white">Schedule a Call</h3>
-                      <p className="text-xs text-amber-200/80">Free 30-minute consultation</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-amber-100/80 mb-5 leading-relaxed">Not sure where to start? Book a free consultation call with our team to discuss your project requirements.</p>
-                  <Button className="w-full bg-white text-amber-500 hover:bg-emerald-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]" onClick={() => { const message = 'Hello! I would like to schedule a consultation call to discuss a project.'; window.open(`https://wa.me/233243618186?text=${encodeURIComponent(message)}`, '_blank'); }}>
-                    <MessageCircle className="size-4 mr-2" /> WhatsApp Us Now
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Google Maps Embed */}
-              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm overflow-hidden shadow-sm">
-                <div className="p-3 pb-0">
-                  <div className="flex items-center gap-2 mb-2"><MapPin className="size-4 text-amber-400" /><h3 className="font-semibold text-sm text-white">Our Location</h3></div>
-                </div>
-                <div className="h-56 rounded-b-lg overflow-hidden">
-                  <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3770%2C5.5837%2C-0.0070%2C5.6237&layer=mapnik&marker=5.6037%2C-0.1870" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Lightworld Technologies Office Location - Accra, Ghana" className="grayscale-[30%] contrast-[1.1] dark:grayscale-[60%] dark:brightness-[0.8]" />
-                </div>
-              </Card>
-            </motion.div>
+    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-[#050810] flex flex-col">
+      {/* ═══ Compact Title Bar ═══ */}
+      <div className="shrink-0 px-4 lg:px-8 pt-2 pb-3">
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <div className="size-1.5 rounded-full bg-emerald-400" />
+            <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.2em]">Contact</span>
+          </div>
+          <h1 className="text-xl lg:text-2xl font-bold text-white">
+            Get in <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Touch</span>
+          </h1>
+          <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.06]">
+            <span className={`relative flex size-2 ${officeStatus.open ? '' : 'opacity-50'}`}>
+              {officeStatus.open && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+              <span className={`relative inline-flex rounded-full size-2 ${officeStatus.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+            </span>
+            <span className="text-[10px] text-white/30 font-medium">{officeStatus.label}</span>
           </div>
         </div>
-      </section>
-    </main>
+      </div>
+
+      {/* ═══ Main Content ═══ */}
+      <div className="flex-1 min-h-0 px-4 lg:px-8 pb-4 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 overflow-hidden">
+        {/* ── Left: Contact Form ── */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+          className="lg:col-span-7 flex flex-col min-h-0"
+        >
+          <div className="flex-1 min-h-0 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-3 lg:p-4 flex flex-col overflow-hidden">
+            {submitted ? (
+              <div className="flex-1 flex items-center justify-center">
+                <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                  <motion.div className="size-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}>
+                    <CheckCircle2 className="size-8 text-emerald-400" />
+                  </motion.div>
+                  <h3 className="text-lg font-bold text-white mb-1">Message Sent!</h3>
+                  <p className="text-xs text-white/40 mb-4">We&apos;ll respond within 24 hours.</p>
+                  <div className="flex gap-2 justify-center">
+                    <Button onClick={() => setSubmitted(false)} variant="outline" size="sm" className="text-[11px] border-white/[0.1]">Send Another</Button>
+                    <Button onClick={() => navigate('home')} size="sm" className="text-[11px] bg-emerald-500">Back Home</Button>
+                  </div>
+                </motion.div>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-sm font-bold text-white mb-2 lg:mb-3">Send a Message</h2>
+
+                {submitting && (
+                  <motion.div className="mb-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                    <Loader2 className="size-3 animate-spin" /> Sending...
+                  </motion.div>
+                )}
+                {error && (
+                  <motion.div className="mb-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-[11px] text-red-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                    <AlertCircle className="size-3" /> {error}
+                  </motion.div>
+                )}
+
+                <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="name" className="text-[10px] text-white/40 font-medium mb-0.5 block">Full Name *</Label>
+                      <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
+                    </div>
+                    <div>
+                      <Label htmlFor="email" className="text-[10px] text-white/40 font-medium mb-0.5 block">Email *</Label>
+                      <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="phone" className="text-[10px] text-white/40 font-medium mb-0.5 block">Phone</Label>
+                      <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+233 XX XXX XXXX" disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
+                    </div>
+                    <div>
+                      <Label htmlFor="subject" className="text-[10px] text-white/40 font-medium mb-0.5 block">Subject *</Label>
+                      <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" required disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <Label htmlFor="message" className="text-[10px] text-white/40 font-medium mb-0.5 block">Message *</Label>
+                    <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us about your project..." required disabled={submitting} className="flex-1 min-h-[80px] text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 resize-none focus-visible:border-emerald-500/50" />
+                  </div>
+
+                  {/* File Upload (compact) */}
+                  <div
+                    className={`border border-dashed rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all ${
+                      isDragOver ? 'border-emerald-500 bg-emerald-500/10' : 'border-white/[0.06] hover:border-white/[0.12]'
+                    }`}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                    onDragLeave={(e) => { e.preventDefault(); setIsDragOver(false); }}
+                    onDrop={(e) => { e.preventDefault(); setIsDragOver(false); if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files); }}
+                    onClick={() => inputRef.current?.click()}
+                  >
+                    <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
+                    <Upload className="size-3.5 text-white/25 shrink-0" />
+                    <span className="text-[10px] text-white/30">Attach files (max {MAX_FILES}, 10MB each)</span>
+                    <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
+                  </div>
+
+                  {/* File chips */}
+                  {attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {attachments.map((att) => (
+                        <div key={att.id} className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[9px] text-white/50">
+                          {att.file.name} ({formatFileSize(att.file.size)})
+                          <button onClick={() => removeFile(att.id)} className="text-white/20 hover:text-red-400 ml-0.5"><X className="size-2.5" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Submit */}
+                  <Button type="submit" disabled={submitting} className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold h-9 shadow-lg shadow-emerald-500/20 shrink-0">
+                    {submitting ? <><Loader2 className="size-3.5 mr-1.5 animate-spin" />Sending...</> : <>Send Message <Send className="size-3.5 ml-1.5" /></>}
+                  </Button>
+                </form>
+              </>
+            )}
+          </div>
+        </motion.div>
+
+        {/* ── Right: Contact Info ── */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="lg:col-span-5 flex flex-col gap-2 lg:gap-2.5 min-h-0 overflow-y-auto"
+        >
+          {/* Contact Info Cards */}
+          <div className="grid grid-cols-2 gap-2">
+            {contactItems.map((item) => (
+              <div key={item.label} className="group p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all">
+                <div className="flex items-start gap-2">
+                  <div className="size-7 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                    <item.icon className="size-3.5 text-amber-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[9px] font-semibold text-white/30 uppercase tracking-wider">{item.label}</span>
+                    <span className="block text-[11px] text-white/60 mt-0.5">{item.value}</span>
+                  </div>
+                  {item.copy && <CopyButton text={item.copy} label={item.label} />}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Social Media */}
+          <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+            <span className="block text-[9px] font-semibold text-white/30 uppercase tracking-wider mb-2">Follow Us</span>
+            <div className="flex items-center gap-2">
+              {[
+                { icon: Facebook, label: 'Facebook', color: 'hover:bg-blue-600' },
+                { icon: Twitter, label: 'Twitter', color: 'hover:bg-sky-500' },
+                { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-blue-700' },
+                { icon: Instagram, label: 'Instagram', color: 'hover:bg-pink-600' },
+              ].map((social) => (
+                <button key={social.label} onClick={() => window.open('#', '_blank')} className={`size-8 rounded-lg border border-white/[0.06] text-white/30 flex items-center justify-center transition-all hover:text-white hover:shadow-lg ${social.color}`} aria-label={social.label}>
+                  <social.icon className="size-3.5" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Schedule a Call */}
+          <div className="relative p-3 rounded-lg bg-gradient-to-br from-amber-600 to-amber-700 overflow-hidden">
+            <div className="absolute inset-0 grid-pattern opacity-10" />
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="size-10 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0">
+                <CalendarDays className="size-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xs font-bold text-white">Free Consultation</h3>
+                <p className="text-[10px] text-amber-100/70">30-minute call with our team</p>
+              </div>
+              <Button
+                size="sm"
+                className="bg-white text-amber-600 hover:bg-amber-50 font-semibold text-[10px] h-7 px-3 shrink-0"
+                onClick={() => window.open('https://wa.me/233243618186?text=Hello!%20I%20would%20like%20to%20schedule%20a%20consultation%20call.', '_blank')}
+              >
+                <MessageCircle className="size-3 mr-1" /> WhatsApp
+              </Button>
+            </div>
+          </div>
+
+          {/* Map Preview */}
+          <div className="rounded-lg overflow-hidden border border-white/[0.06] flex-1 min-h-[100px]">
+            <iframe
+              src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3770%2C5.5837%2C-0.0070%2C5.6237&layer=mapnik&marker=5.6037%2C-0.1870"
+              width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+              title="Lightworld Technologies Office - Accra, Ghana"
+              className="grayscale-[50%] contrast-[1.1] dark:brightness-[0.7] h-full"
+            />
+          </div>
+        </motion.div>
+      </div>
+    </div>
   );
 }

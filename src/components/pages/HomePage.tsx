@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useAppStore } from '@/lib/store';
@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils';
 import { useSEO } from '@/hooks/use-seo';
 import {
   Cpu, Cloud, Shield, Database, Monitor, Globe,
-  ArrowRight, ArrowUpRight, Quote,
+  ArrowRight, ArrowUpRight, Quote, ChevronUp, ChevronDown,
   Users, Clock, Zap, Award,
-  Phone, Mail, Sparkles, BookOpen,
+  Phone, Mail, Sparkles, Star, ExternalLink, Play,
 } from 'lucide-react';
 
 /* ══════════════════════════════════════════════════════════════
@@ -18,19 +18,19 @@ import {
    ══════════════════════════════════════════════════════════════ */
 
 const SERVICES = [
-  { icon: Globe, title: 'Web Dev', desc: 'Modern responsive websites & apps', gradient: 'from-emerald-500 to-teal-600', page: 'services' as const },
-  { icon: Cpu, title: 'IT Solutions', desc: 'Enterprise infrastructure', gradient: 'from-cyan-500 to-blue-600', page: 'services' as const },
-  { icon: Shield, title: 'Cybersecurity', desc: 'Advanced threat protection', gradient: 'from-amber-500 to-orange-600', page: 'services' as const },
-  { icon: Cloud, title: 'Cloud Services', desc: 'Scalable cloud platforms', gradient: 'from-violet-500 to-purple-600', page: 'services' as const },
-  { icon: Database, title: 'Data Analytics', desc: 'Business intelligence', gradient: 'from-rose-500 to-pink-600', page: 'services' as const },
-  { icon: Monitor, title: 'Software Dev', desc: 'Custom applications', gradient: 'from-lime-500 to-green-600', page: 'services' as const },
+  { icon: Globe, title: 'Web Development', desc: 'Modern responsive websites & web apps', gradient: 'from-emerald-500 to-teal-600', page: 'services' as const },
+  { icon: Cpu, title: 'IT Solutions', desc: 'Enterprise infrastructure & consulting', gradient: 'from-cyan-500 to-blue-600', page: 'services' as const },
+  { icon: Shield, title: 'Cybersecurity', desc: 'Advanced threat detection & protection', gradient: 'from-amber-500 to-orange-600', page: 'services' as const },
+  { icon: Cloud, title: 'Cloud Services', desc: 'Scalable cloud platforms & migration', gradient: 'from-violet-500 to-purple-600', page: 'services' as const },
+  { icon: Database, title: 'Data Analytics', desc: 'Business intelligence & insights', gradient: 'from-rose-500 to-pink-600', page: 'services' as const },
+  { icon: Monitor, title: 'Software Dev', desc: 'Custom enterprise applications', gradient: 'from-lime-500 to-green-600', page: 'services' as const },
 ];
 
 const STATS = [
-  { value: 500, suffix: '+', label: 'Clients', icon: Users },
-  { value: 15, suffix: '+', label: 'Years', icon: Clock },
-  { value: 99.9, suffix: '%', label: 'Uptime', icon: Zap },
-  { value: 24, suffix: '/7', label: 'Support', icon: Award },
+  { value: 500, suffix: '+', label: 'Clients Served', icon: Users },
+  { value: 15, suffix: '+', label: 'Years Experience', icon: Clock },
+  { value: 99.9, suffix: '%', label: 'Uptime Guarantee', icon: Zap },
+  { value: 24, suffix: '/7', label: 'Support Available', icon: Award },
 ];
 
 const TYPING_MESSAGES = [
@@ -41,9 +41,16 @@ const TYPING_MESSAGES = [
 ];
 
 const TESTIMONIALS = [
-  { text: 'Lightworld transformed our entire IT infrastructure. Their team is incredibly professional and responsive.', author: 'Emmanuel K.', role: 'CEO, TechVentures Ghana' },
-  { text: 'The best IT company we\'ve worked with. They delivered our project on time and exceeded expectations.', author: 'Abigail M.', role: 'CTO, DataFlow Inc.' },
-  { text: 'Outstanding cybersecurity solutions. Our systems have never been more secure since partnering with them.', author: 'Kwame A.', role: 'Director, SecureBank Ghana' },
+  { text: 'Lightworld transformed our entire IT infrastructure. Their team is incredibly professional and responsive. We saw a 40% increase in operational efficiency within the first quarter.', author: 'Emmanuel K.', role: 'CEO, TechVentures Ghana', stars: 5 },
+  { text: 'The best IT company we\'ve worked with. They delivered our project on time, under budget, and exceeded all expectations. Their after-sales support is exceptional.', author: 'Abigail M.', role: 'CTO, DataFlow Inc.', stars: 5 },
+  { text: 'Outstanding cybersecurity solutions. Our systems have never been more secure since partnering with them. They proactively identify threats before they become problems.', author: 'Kwame A.', role: 'Director, SecureBank Ghana', stars: 5 },
+  { text: 'From concept to deployment, Lightworld handled our cloud migration flawlessly. Zero downtime and our team was trained on the new system within a week.', author: 'Ama S.', role: 'VP Operations, Ghana Retail Corp', stars: 5 },
+];
+
+const FEATURED_PROJECTS = [
+  { title: 'E-Commerce Platform', category: 'Web Development', desc: 'Full-featured online store with payment integration and analytics', gradient: 'from-emerald-500/20 to-teal-600/20' },
+  { title: 'Healthcare Mobile App', category: 'Mobile App', desc: 'Patient management with telemedicine and appointment scheduling', gradient: 'from-amber-500/20 to-orange-600/20' },
+  { title: 'Corporate ERP System', category: 'Software', desc: 'Enterprise resource planning for manufacturing company', gradient: 'from-cyan-500/20 to-blue-600/20' },
 ];
 
 const CLIENTS = ['Google', 'MTN Group', 'Vodafone', 'Ghana Government', 'USAID', 'World Bank', 'UNDP', 'Mastercard Foundation'];
@@ -52,7 +59,7 @@ const CLIENTS = ['Google', 'MTN Group', 'Vodafone', 'Ghana Government', 'USAID',
    CUSTOM HOOKS
    ══════════════════════════════════════════════════════════════ */
 
-function useTypewriter(messages: string[], speed = 50) {
+function useTypewriter(messages: string[], speed = 45) {
   const [text, setText] = useState('');
   const [msgIdx, setMsgIdx] = useState(0);
   const [deleting, setDeleting] = useState(false);
@@ -64,7 +71,7 @@ function useTypewriter(messages: string[], speed = 50) {
         const next = current.slice(0, text.length + 1);
         setText(next);
         if (next.length === current.length) {
-          setTimeout(() => setDeleting(true), 2500);
+          setTimeout(() => setDeleting(true), 2800);
         }
       } else {
         const next = text.slice(0, -1);
@@ -74,14 +81,14 @@ function useTypewriter(messages: string[], speed = 50) {
           setMsgIdx((prev) => (prev + 1) % messages.length);
         }
       }
-    }, deleting ? 25 : speed);
+    }, deleting ? 22 : speed);
     return () => clearTimeout(timeout);
   }, [text, msgIdx, deleting, messages, speed]);
 
   return text;
 }
 
-function useCountUp(end: number, duration = 2000, decimals = 0, delay = 800) {
+function useCountUp(end: number, duration = 2000, decimals = 0, delay = 600) {
   const [count, setCount] = useState(0);
   const [started, setStarted] = useState(false);
 
@@ -106,20 +113,20 @@ function useCountUp(end: number, duration = 2000, decimals = 0, delay = 800) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   SUB-COMPONENTS
+   BACKGROUND EFFECTS
    ══════════════════════════════════════════════════════════════ */
 
 function ParticleField() {
   const particles = useMemo(
     () =>
-      Array.from({ length: 50 }, (_, i) => ({
+      Array.from({ length: 40 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         top: Math.random() * 100,
         size: 1 + Math.random() * 2,
-        duration: 15 + Math.random() * 30,
+        duration: 20 + Math.random() * 25,
         delay: Math.random() * 15,
-        opacity: 0.08 + Math.random() * 0.2,
+        opacity: 0.06 + Math.random() * 0.15,
       })),
     [],
   );
@@ -131,7 +138,7 @@ function ParticleField() {
           key={p.id}
           className="absolute rounded-full bg-emerald-400"
           style={{ left: `${p.left}%`, top: `${p.top}%`, width: p.size, height: p.size, opacity: p.opacity }}
-          animate={{ y: [0, -40, 0], opacity: [p.opacity, p.opacity * 0.3, p.opacity] }}
+          animate={{ y: [0, -30, 0], opacity: [p.opacity, p.opacity * 0.3, p.opacity] }}
           transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
@@ -139,151 +146,641 @@ function ParticleField() {
   );
 }
 
-function GradientOrbs() {
+function GradientOrbs({ variant = 0 }: { variant?: number }) {
+  const configs = [
+    { c1: 'emerald-500/[0.06]', c2: 'amber-500/[0.04]', c3: 'cyan-500/[0.03]' },
+    { c1: 'cyan-500/[0.06]', c2: 'violet-500/[0.04]', c3: 'emerald-500/[0.03]' },
+    { c1: 'amber-500/[0.06]', c2: 'rose-500/[0.04]', c3: 'emerald-500/[0.03]' },
+    { c1: 'teal-500/[0.06]', c2: 'blue-500/[0.04]', c3: 'amber-500/[0.03]' },
+    { c1: 'emerald-500/[0.06]', c2: 'cyan-500/[0.04]', c3: 'rose-500/[0.03]' },
+    { c1: 'amber-500/[0.08]', c2: 'emerald-500/[0.06]', c3: 'teal-500/[0.04]' },
+  ];
+  const cfg = configs[variant % configs.length];
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute -top-1/4 -left-1/4 w-[60%] h-[60%] rounded-full bg-emerald-500/[0.04] blur-[100px] animate-orb-1" />
-      <div className="absolute -bottom-1/4 -right-1/4 w-[50%] h-[50%] rounded-full bg-amber-500/[0.03] blur-[100px] animate-orb-2" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] rounded-full bg-cyan-500/[0.02] blur-[80px] animate-orb-3" />
+      <div className={cn('absolute -top-1/4 -left-1/4 w-[60%] h-[60%] rounded-full blur-[100px] animate-orb-1', `bg-${cfg.c1}`)} />
+      <div className={cn('absolute -bottom-1/4 -right-1/4 w-[50%] h-[50%] rounded-full blur-[100px] animate-orb-2', `bg-${cfg.c2}`)} />
+      <div className={cn('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] rounded-full blur-[80px] animate-orb-3', `bg-${cfg.c3}`)} />
     </div>
   );
 }
 
-function ServiceCard({
-  service,
-  index,
-  onClick,
-}: {
-  service: (typeof SERVICES)[number];
-  index: number;
-  onClick: () => void;
-}) {
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setTilt({ x: y * -8, y: x * 8 });
-  }, []);
-
-  const handleMouseLeave = useCallback(() => setTilt({ x: 0, y: 0 }), []);
-
+function GridOverlay() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5, delay: 0.15 + index * 0.07 }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onClick={onClick}
-      className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-2.5 lg:p-3.5 cursor-pointer transition-all duration-300 hover:bg-white/[0.06] hover:border-white/[0.12]"
-      style={{ transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`, transition: 'transform 0.15s ease-out' }}
-    >
-      <div className={cn('size-8 lg:size-10 rounded-lg bg-gradient-to-br flex items-center justify-center mb-2 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-lg', service.gradient)}>
-        <service.icon className="size-3.5 lg:size-4.5 text-white" />
-      </div>
-      <h3 className="text-[11px] lg:text-sm font-semibold text-white/90 mb-0.5 leading-tight">{service.title}</h3>
-      <p className="text-[9px] lg:text-[11px] text-white/35 leading-relaxed line-clamp-2">{service.desc}</p>
-      <div className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
-        <ArrowUpRight className="size-3 text-emerald-400" />
-      </div>
-      <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-emerald-500/[0.06] to-transparent" />
-    </motion.div>
-  );
-}
-
-function StatItem({ stat, index }: { stat: (typeof STATS)[number]; index: number }) {
-  const count = useCountUp(stat.value, 2200, stat.value % 1 !== 0 ? 1 : 0, 900 + index * 150);
-  const Icon = stat.icon;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
-      className="flex flex-col items-center justify-center text-center"
-    >
-      <Icon className="size-3 lg:size-3.5 text-emerald-400/50 mb-1" />
-      <span className="text-base lg:text-xl font-bold text-white tabular-nums tracking-tight">
-        {count}
-        <span className="text-emerald-400/80">{stat.suffix}</span>
-      </span>
-      <span className="text-[9px] lg:text-[10px] text-white/30 mt-0.5 font-medium">{stat.label}</span>
-    </motion.div>
-  );
-}
-
-function TestimonialRotator() {
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => setCurrent((p) => (p + 1) % TESTIMONIALS.length), 6000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="relative h-full overflow-hidden">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={current}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.35 }}
-          className="absolute inset-0 flex flex-col justify-center px-3.5 lg:px-5"
-        >
-          <Quote className="size-3.5 text-emerald-500/30 mb-1.5 shrink-0" />
-          <p className="text-[11px] lg:text-xs text-white/50 leading-relaxed line-clamp-2">"{TESTIMONIALS[current].text}"</p>
-          <div className="mt-2 flex items-center gap-2 shrink-0">
-            <div className="size-5 lg:size-6 rounded-full bg-gradient-to-br from-emerald-400 to-amber-500 flex items-center justify-center text-[9px] lg:text-[10px] font-bold text-white">
-              {TESTIMONIALS[current].author[0]}
-            </div>
-            <div>
-              <p className="text-[10px] lg:text-xs font-semibold text-white/60">{TESTIMONIALS[current].author}</p>
-              <p className="text-[8px] lg:text-[9px] text-white/25">{TESTIMONIALS[current].role}</p>
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-      <div className="absolute bottom-1.5 right-3.5 lg:right-5 flex gap-1">
-        {TESTIMONIALS.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={cn('h-1 rounded-full transition-all duration-300', i === current ? 'bg-emerald-400 w-4' : 'bg-white/15 w-1.5')}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ClientTicker() {
-  const doubled = useMemo(() => [...CLIENTS, ...CLIENTS], []);
-
-  return (
-    <div className="relative flex-1 overflow-hidden flex items-center">
-      <motion.div className="flex gap-8 whitespace-nowrap" animate={{ x: ['0%', '-50%'] }} transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}>
-        {doubled.map((client, i) => (
-          <span key={i} className="text-[10px] lg:text-xs text-white/15 font-medium tracking-wider uppercase">
-            {client}
-          </span>
-        ))}
-      </motion.div>
-      <div className="absolute left-0 inset-y-0 w-6 bg-gradient-to-r from-[#050810] to-transparent pointer-events-none" />
-      <div className="absolute right-0 inset-y-0 w-6 bg-gradient-to-l from-[#050810] to-transparent pointer-events-none" />
+    <div className="absolute inset-0 pointer-events-none opacity-[0.015]">
+      {Array.from({ length: 5 }, (_, i) => (
+        <div key={`h-${i}`} className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" style={{ top: `${(i + 1) * 16.67}%` }} />
+      ))}
+      {Array.from({ length: 5 }, (_, i) => (
+        <div key={`v-${i}`} className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" style={{ left: `${(i + 1) * 16.67}%` }} />
+      ))}
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════════════
-   MAIN COMPONENT — NEXUS COMMAND CENTER
+   SLIDE 1: HERO
    ══════════════════════════════════════════════════════════════ */
 
-export default function HomePage() {
+function HeroSlide() {
   const { navigate } = useAppStore();
   const typedText = useTypewriter(TYPING_MESSAGES);
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <GradientOrbs variant={0} />
+      <ParticleField />
+      <GridOverlay />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+        {/* Logo */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: -20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="flex items-center justify-center gap-3 mb-8"
+        >
+          <div className="size-14 lg:size-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-xl shadow-amber-500/25 overflow-hidden">
+            <Image src="/logo.png" alt="Lightworld Technologies" width={40} height={40} className="object-contain p-1" />
+          </div>
+          <div className="text-left">
+            <span className="text-lg lg:text-xl font-bold text-white leading-tight">Lightworld</span>
+            <span className="block text-[9px] font-semibold text-emerald-400 tracking-[0.3em] uppercase leading-tight">Technologies</span>
+          </div>
+        </motion.div>
+
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5"
+        >
+          We Build{' '}
+          <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+            Digital Futures
+          </span>
+        </motion.h1>
+
+        {/* Typewriter */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mb-8"
+        >
+          <p className="text-sm lg:text-lg text-white/40 font-light h-5 lg:h-7 flex items-center justify-center">
+            <Sparkles className="size-4 lg:size-5 text-emerald-400/50 mr-2 shrink-0" />
+            {typedText}
+            <span className="inline-block w-[2px] h-4 lg:h-6 bg-emerald-400 ml-1 animate-blink" />
+          </p>
+        </motion.div>
+
+        {/* CTAs */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="flex items-center justify-center gap-4 flex-wrap"
+        >
+          <button
+            onClick={() => navigate('services')}
+            className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105 active:scale-[0.98]"
+          >
+            Explore Services
+            <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+          <button
+            onClick={() => navigate('contact')}
+            className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-white/[0.06] text-white/70 text-sm font-medium hover:bg-white/[0.12] hover:text-white transition-all border border-white/[0.1] hover:border-white/[0.2] hover:scale-105 active:scale-[0.98]"
+          >
+            <Phone className="size-4" />
+            Get in Touch
+          </button>
+        </motion.div>
+
+        {/* Quick Stats Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          className="mt-12 flex items-center justify-center gap-6 lg:gap-10"
+        >
+          {STATS.map((stat, i) => {
+            const Icon = stat.icon;
+            return (
+              <div key={i} className="text-center">
+                <Icon className="size-3.5 text-emerald-400/40 mx-auto mb-1" />
+                <span className="block text-xl lg:text-2xl font-bold text-white tabular-nums">
+                  {stat.value}<span className="text-emerald-400/70">{stat.suffix}</span>
+                </span>
+                <span className="block text-[10px] text-white/25 mt-0.5 font-medium">{stat.label}</span>
+              </div>
+            );
+          })}
+        </motion.div>
+      </div>
+
+      {/* Availability Badge */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1.2 }}
+        className="absolute bottom-8 right-8 z-20"
+      >
+        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm">
+          <span className="relative flex size-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full size-2.5 bg-emerald-500" />
+          </span>
+          <span className="text-[10px] text-white/40 font-medium">Available for projects</span>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SLIDE 2: ABOUT / WHO WE ARE
+   ══════════════════════════════════════════════════════════════ */
+
+function AboutSlide() {
+  const { navigate } = useAppStore();
+
+  const stats = [
+    { value: 500, suffix: '+', label: 'Satisfied Clients', desc: 'Across diverse industries' },
+    { value: 200, suffix: '+', label: 'Projects Delivered', desc: 'On time and on budget' },
+    { value: 15, suffix: '+', label: 'Years in Business', desc: 'Of proven excellence' },
+    { value: 99.9, suffix: '%', label: 'Success Rate', desc: 'Client satisfaction guaranteed' },
+  ];
+
+  return (
+    <div className="absolute inset-0 flex items-center">
+      <GradientOrbs variant={1} />
+      <GridOverlay />
+
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          {/* Left: Mission */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
+              <div className="size-1.5 rounded-full bg-emerald-400" />
+              <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.2em]">Who We Are</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-5">
+              Ghana&apos;s Leading{' '}
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">IT Solutions</span>{' '}
+              Partner
+            </h2>
+
+            <p className="text-sm lg:text-base text-white/40 leading-relaxed mb-6 max-w-lg">
+              At Lightworld Technologies, we combine innovation with expertise to deliver transformative digital solutions.
+              From enterprise software to cloud infrastructure, our team of specialists empowers businesses across Africa
+              to thrive in the digital age.
+            </p>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('about')}
+                className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-all border border-emerald-500/20"
+              >
+                Learn More About Us
+                <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <div className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-white/[0.04] border border-white/[0.06]">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="size-3 text-amber-400 fill-amber-400" />
+                ))}
+                <span className="text-[10px] text-white/40 ml-1">5.0 Rating</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right: Stats Grid */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="grid grid-cols-2 gap-3.5"
+          >
+            {stats.map((stat, i) => (
+              <div
+                key={i}
+                className="group relative p-5 lg:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
+              >
+                <span className="block text-2xl lg:text-3xl font-extrabold text-white tabular-nums">
+                  {stat.value}<span className="text-emerald-400/70">{stat.suffix}</span>
+                </span>
+                <span className="block text-xs font-semibold text-white/60 mt-1">{stat.label}</span>
+                <span className="block text-[10px] text-white/25 mt-0.5">{stat.desc}</span>
+                <div className="absolute top-3 right-3 size-8 rounded-lg bg-emerald-500/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ArrowUpRight className="size-3.5 text-emerald-400" />
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SLIDE 3: SERVICES
+   ══════════════════════════════════════════════════════════════ */
+
+function ServicesSlide() {
+  const { navigate } = useAppStore();
+
+  return (
+    <div className="absolute inset-0 flex items-center">
+      <GradientOrbs variant={2} />
+      <GridOverlay />
+
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-10">
+        {/* Header */}
+        <div className="text-center mb-8 lg:mb-10">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4"
+          >
+            <div className="size-1.5 rounded-full bg-amber-400" />
+            <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-[0.2em]">What We Do</span>
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight"
+          >
+            Our <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Services</span>
+          </motion.h2>
+        </div>
+
+        {/* Service Cards Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 lg:gap-4">
+          {SERVICES.map((service, i) => (
+            <motion.button
+              key={i}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.4 }}
+              onClick={() => navigate(service.page)}
+              className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-4 lg:p-5 cursor-pointer text-left transition-all duration-300 hover:bg-white/[0.07] hover:border-white/[0.15] hover:scale-[1.02]"
+            >
+              <div className={cn('size-10 lg:size-12 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-lg', service.gradient)}>
+                <service.icon className="size-5 lg:size-6 text-white" />
+              </div>
+              <h3 className="text-sm lg:text-base font-bold text-white/90 mb-1">{service.title}</h3>
+              <p className="text-[11px] lg:text-xs text-white/35 leading-relaxed line-clamp-2">{service.desc}</p>
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
+                <ArrowUpRight className="size-4 text-emerald-400" />
+              </div>
+              <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-emerald-500/[0.06] to-transparent" />
+            </motion.button>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.6 }}
+          className="text-center mt-6 lg:mt-8"
+        >
+          <button
+            onClick={() => navigate('services')}
+            className="group inline-flex items-center gap-2 text-xs text-white/40 hover:text-emerald-400 transition-colors font-medium"
+          >
+            View All Services & Details
+            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SLIDE 4: PORTFOLIO
+   ══════════════════════════════════════════════════════════════ */
+
+function PortfolioSlide() {
+  const { navigate } = useAppStore();
+
+  return (
+    <div className="absolute inset-0 flex items-center">
+      <GradientOrbs variant={3} />
+      <GridOverlay />
+
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Left: Info */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
+              <div className="size-1.5 rounded-full bg-cyan-400" />
+              <span className="text-[10px] font-semibold text-cyan-400 uppercase tracking-[0.2em]">Our Work</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-5">
+              Projects That{' '}
+              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Speak</span>{' '}
+              For Themselves
+            </h2>
+
+            <p className="text-sm lg:text-base text-white/40 leading-relaxed mb-6 max-w-lg">
+              From enterprise platforms to mobile applications, our portfolio showcases the breadth and depth of our technical expertise.
+              Every project is crafted with precision, performance, and purpose.
+            </p>
+
+            <div className="flex items-center gap-6 mb-8">
+              {[
+                { label: 'Web Apps', count: '80+' },
+                { label: 'Mobile Apps', count: '45+' },
+                { label: 'Enterprise', count: '35+' },
+              ].map((item, i) => (
+                <div key={i}>
+                  <span className="block text-xl font-bold text-white">{item.count}</span>
+                  <span className="block text-[10px] text-white/30 font-medium">{item.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => navigate('portfolio')}
+              className="group flex items-center gap-2.5 px-6 py-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold hover:from-emerald-400 hover:to-teal-400 transition-all shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-[0.98]"
+            >
+              View Full Portfolio
+              <ExternalLink className="size-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </button>
+          </motion.div>
+
+          {/* Right: Featured Projects */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-3"
+          >
+            {FEATURED_PROJECTS.map((project, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'group relative p-4 lg:p-5 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-[1.01]',
+                  `bg-gradient-to-br ${project.gradient} border-white/[0.06] hover:border-white/[0.12]`,
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <span className="text-[10px] font-semibold text-emerald-400/70 uppercase tracking-wider">{project.category}</span>
+                    <h3 className="text-sm lg:text-base font-bold text-white/90 mt-1">{project.title}</h3>
+                    <p className="text-[11px] lg:text-xs text-white/30 mt-1 line-clamp-1">{project.desc}</p>
+                  </div>
+                  <ArrowUpRight className="size-4 text-white/20 group-hover:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SLIDE 5: TESTIMONIALS
+   ══════════════════════════════════════════════════════════════ */
+
+function TestimonialsSlide() {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrent((p) => (p + 1) % TESTIMONIALS.length), 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <GradientOrbs variant={4} />
+      <GridOverlay />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-8"
+        >
+          <div className="size-1.5 rounded-full bg-emerald-400" />
+          <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.2em]">Testimonials</span>
+        </motion.div>
+
+        {/* Stars */}
+        <div className="flex items-center justify-center gap-1 mb-6">
+          {[...Array(TESTIMONIALS[current].stars)].map((_, i) => (
+            <motion.div
+              key={`${current}-${i}`}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05, type: 'spring', stiffness: 300 }}
+            >
+              <Star className="size-5 text-amber-400 fill-amber-400" />
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Quote */}
+        <div className="relative mb-8">
+          <Quote className="size-10 lg:size-14 text-emerald-500/15 absolute -top-3 -left-2 lg:-left-4" />
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={current}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4 }}
+              className="text-lg lg:text-2xl text-white/60 leading-relaxed font-light italic pl-6 lg:pl-10"
+            >
+              &ldquo;{TESTIMONIALS[current].text}&rdquo;
+            </motion.p>
+          </AnimatePresence>
+        </div>
+
+        {/* Author */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.35 }}
+            className="flex items-center justify-center gap-3"
+          >
+            <div className="size-10 lg:size-12 rounded-full bg-gradient-to-br from-emerald-400 to-amber-500 flex items-center justify-center text-sm lg:text-base font-bold text-white shadow-lg shadow-emerald-500/20">
+              {TESTIMONIALS[current].author[0]}
+            </div>
+            <div className="text-left">
+              <p className="text-sm lg:text-base font-semibold text-white/70">{TESTIMONIALS[current].author}</p>
+              <p className="text-[10px] lg:text-xs text-white/30">{TESTIMONIALS[current].role}</p>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Dots */}
+        <div className="flex items-center justify-center gap-2 mt-8">
+          {TESTIMONIALS.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={cn(
+                'h-2 rounded-full transition-all duration-300',
+                i === current ? 'bg-emerald-400 w-6' : 'bg-white/10 w-2 hover:bg-white/20',
+              )}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SLIDE 6: CTA / CONTACT
+   ══════════════════════════════════════════════════════════════ */
+
+function ClientTicker({ className }: { className?: string }) {
+  const doubled = useMemo(() => [...CLIENTS, ...CLIENTS], []);
+  return (
+    <div className={cn('relative overflow-hidden flex items-center', className)}>
+      <motion.div className="flex gap-10 whitespace-nowrap" animate={{ x: ['0%', '-50%'] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}>
+        {doubled.map((client, i) => (
+          <span key={i} className="text-[10px] lg:text-xs text-white/12 font-medium tracking-wider uppercase">{client}</span>
+        ))}
+      </motion.div>
+      <div className="absolute left-0 inset-y-0 w-10 bg-gradient-to-r from-[#050810] to-transparent pointer-events-none" />
+      <div className="absolute right-0 inset-y-0 w-10 bg-gradient-to-l from-[#050810] to-transparent pointer-events-none" />
+    </div>
+  );
+}
+
+function CTASlide() {
+  const { navigate } = useAppStore();
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <GradientOrbs variant={5} />
+      <GridOverlay />
+
+      <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="relative p-8 lg:p-12 rounded-3xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-sm overflow-hidden"
+        >
+          {/* Inner glow */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl" />
+
+          <div className="relative z-10">
+            <Sparkles className="size-6 text-emerald-400/50 mx-auto mb-4" />
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
+              Ready to{' '}
+              <span className="bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">Get Started?</span>
+            </h2>
+
+            <p className="text-sm lg:text-base text-white/40 leading-relaxed mb-8 max-w-md mx-auto">
+              Let&apos;s discuss how we can help transform your business with innovative IT solutions.
+              Get a free consultation today — no obligations.
+            </p>
+
+            {/* CTAs */}
+            <div className="flex items-center justify-center gap-3 flex-wrap mb-8">
+              <button
+                onClick={() => navigate('contact')}
+                className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold hover:from-emerald-400 hover:to-teal-400 transition-all shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-[0.98]"
+              >
+                Get a Free Quote
+                <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={() => navigate('portfolio')}
+                className="group flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-white/[0.06] text-white/60 text-sm font-medium hover:bg-white/[0.12] hover:text-white transition-all border border-white/[0.08] hover:scale-105 active:scale-[0.98]"
+              >
+                View Our Work
+              </button>
+            </div>
+
+            {/* Contact Info */}
+            <div className="flex items-center justify-center gap-6 lg:gap-8 text-xs text-white/30">
+              <a href="tel:+233243618186" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
+                <Phone className="size-3.5" />
+                <span>+233 (024) 361 8186</span>
+              </a>
+              <a href="mailto:mail@lightworldtech.com" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
+                <Mail className="size-3.5" />
+                <span>mail@lightworldtech.com</span>
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Client Ticker */}
+        <div className="mt-10 px-4">
+          <ClientTicker className="py-2" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN COMPONENT — FULLSCREEN SLIDESHOW
+   ══════════════════════════════════════════════════════════════ */
+
+const SLIDES = [
+  { id: 0, label: 'Home', component: HeroSlide },
+  { id: 1, label: 'About', component: AboutSlide },
+  { id: 2, label: 'Services', component: ServicesSlide },
+  { id: 3, label: 'Portfolio', component: PortfolioSlide },
+  { id: 4, label: 'Testimonials', component: TestimonialsSlide },
+  { id: 5, label: 'Get Started', component: CTASlide },
+];
+
+const slideVariants = {
+  enter: { opacity: 0, scale: 0.98 },
+  center: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 1.02 },
+};
+
+export default function HomePage() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const touchStartY = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const lastAutoTime = useRef(Date.now());
 
   useSEO({
     title: 'Lightworld Technologies — Powering Digital Innovation',
@@ -291,211 +788,170 @@ export default function HomePage() {
     keywords: ['IT company Ghana', 'Lightworld Technologies', 'web development Ghana', 'cybersecurity Africa', 'cloud services'],
   });
 
+  // Auto-advance every 6 seconds
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      if (!isPaused && !isTransitioning) {
+        setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
+      }
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [isPaused, isTransitioning]);
+
+  const goToSlide = useCallback((index: number) => {
+    if (isTransitioning || index === currentSlide) return;
+    setIsTransitioning(true);
+    setCurrentSlide(index);
+    setTimeout(() => setIsTransitioning(false), 700);
+  }, [currentSlide, isTransitioning]);
+
+  const nextSlide = useCallback(() => goToSlide((currentSlide + 1) % SLIDES.length), [currentSlide, goToSlide]);
+  const prevSlide = useCallback(() => goToSlide((currentSlide - 1 + SLIDES.length) % SLIDES.length), [currentSlide, goToSlide]);
+
+  // Wheel handler
+  useEffect(() => {
+    let lastWheel = 0;
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastWheel < 1000) return; // Throttle
+      lastWheel = now;
+
+      if (Math.abs(e.deltaY) > 30) {
+        if (e.deltaY > 0) nextSlide();
+        else prevSlide();
+      }
+    };
+
+    const el = containerRef.current;
+    if (el) {
+      el.addEventListener('wheel', handleWheel, { passive: false });
+      return () => el.removeEventListener('wheel', handleWheel);
+    }
+  }, [nextSlide, prevSlide]);
+
+  // Touch handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const diff = touchStartY.current - e.changedTouches[0].clientY;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) nextSlide();
+      else prevSlide();
+    }
+  }, [nextSlide, prevSlide]);
+
+  // Keyboard
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); prevSlide(); }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [nextSlide, prevSlide]);
+
+  const ActiveSlideComponent = SLIDES[currentSlide].component;
+
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#050810] relative">
-      {/* ── Background Effects ── */}
-      <GradientOrbs />
-      <ParticleField />
+    <div
+      ref={containerRef}
+      className="h-screen w-screen overflow-hidden bg-[#050810] relative select-none"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* ── Slide Content ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentSlide}
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inset-0"
+        >
+          <ActiveSlideComponent />
+        </motion.div>
+      </AnimatePresence>
 
-      {/* ── Grid Lines (subtle) ── */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.02]">
-        <div className="absolute top-[25%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
-        <div className="absolute top-[50%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
-        <div className="absolute top-[75%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
-        <div className="absolute left-[25%] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" />
-        <div className="absolute left-[50%] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" />
-        <div className="absolute left-[75%] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" />
-      </div>
-
-      {/* ── Bento Grid ── */}
-      <div className="relative z-10 h-full flex flex-col p-2 lg:p-3.5 gap-2 lg:gap-2.5">
-        {/* ═══ Top: Hero + Services ═══ */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-2.5 min-h-0">
-          {/* ── Hero ── */}
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="col-span-12 lg:col-span-7 flex flex-col justify-center min-h-0 lg:min-h-0 px-1 lg:px-3"
+      {/* ── Navigation Dots (right side) ── */}
+      <div className="fixed right-4 lg:right-8 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2.5">
+        {SLIDES.map((slide, i) => (
+          <button
+            key={i}
+            onClick={() => goToSlide(i)}
+            className="group flex items-center gap-2.5"
+            aria-label={`Go to ${slide.label} slide`}
           >
-            {/* Logo */}
-            <motion.div
-              initial={{ opacity: 0, y: -15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center gap-2.5 mb-3 lg:mb-5"
-            >
-              <div className="size-8 lg:size-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20 overflow-hidden">
-                <Image src="/logo.png" alt="Lightworld Technologies" width={24} height={24} className="object-contain p-0.5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm lg:text-base font-bold text-white/90 leading-tight">Lightworld</span>
-                <span className="text-[8px] lg:text-[9px] font-semibold text-emerald-400 tracking-[0.25em] uppercase leading-tight">
-                  Technologies
-                </span>
-              </div>
-            </motion.div>
-
-            {/* Title */}
-            <motion.h1
-              initial={{ opacity: 0, y: 25 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white leading-[1.1] tracking-tight mb-1.5 lg:mb-2.5"
-            >
-              We Build
-              <br />
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-                Digital Futures
-              </span>
-            </motion.h1>
-
-            {/* Typewriter Tagline */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mb-3 lg:mb-5"
-            >
-              <p className="text-xs lg:text-base text-white/35 font-light h-4 lg:h-6 flex items-center">
-                <Sparkles className="size-3 lg:size-4 text-emerald-400/50 mr-1.5 shrink-0" />
-                {typedText}
-                <span className="inline-block w-[2px] h-3.5 lg:h-5 bg-emerald-400 ml-0.5 animate-blink" />
-              </p>
-            </motion.div>
-
-            {/* CTAs */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-center gap-2.5 flex-wrap"
-            >
-              <button
-                onClick={() => navigate('services')}
-                className="group flex items-center gap-2 px-4 lg:px-5 py-2 lg:py-2.5 rounded-full bg-emerald-500 text-white text-[11px] lg:text-sm font-semibold hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40"
-              >
-                Explore Services
-                <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-              <button
-                onClick={() => navigate('contact')}
-                className="flex items-center gap-2 px-4 lg:px-5 py-2 lg:py-2.5 rounded-full bg-white/[0.04] text-white/60 text-[11px] lg:text-sm font-medium hover:bg-white/[0.08] hover:text-white transition-all border border-white/[0.08]"
-              >
-                <Phone className="size-3.5" />
-                <span className="hidden sm:inline">Get in Touch</span>
-              </button>
-            </motion.div>
-
-            {/* Mobile Stats (inside hero, visible < lg) */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="mt-3 lg:hidden grid grid-cols-4 gap-2"
-            >
-              {STATS.map((stat, i) => (
-                <StatItem key={i} stat={stat} index={i} />
-              ))}
-            </motion.div>
-          </motion.div>
-
-          {/* ── Services Bento Grid ── */}
-          <div className="col-span-12 lg:col-span-5 grid grid-cols-3 gap-2 lg:gap-2.5 min-h-0">
-            {SERVICES.map((service, i) => (
-              <ServiceCard key={i} service={service} index={i} onClick={() => navigate(service.page)} />
-            ))}
-          </div>
-        </div>
-
-        {/* ═══ Middle: Testimonial + Quick Links ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-2.5 flex-shrink-0">
-          {/* Testimonial */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.75, duration: 0.5 }}
-            className="col-span-12 lg:col-span-7 h-16 lg:h-20 rounded-xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-sm overflow-hidden"
-          >
-            <TestimonialRotator />
-          </motion.div>
-
-          {/* Quick Action Cards */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-            className="hidden lg:grid col-span-5 grid-cols-2 gap-2.5"
-          >
-            {/* Newsletter / CTA */}
-            <button
-              onClick={() => navigate('contact')}
-              className="group flex items-center gap-2.5 rounded-xl bg-gradient-to-br from-emerald-600/15 to-teal-600/15 border border-emerald-500/10 px-4 hover:border-emerald-500/20 transition-all"
-            >
-              <Mail className="size-3.5 text-emerald-400/70 shrink-0" />
-              <div className="text-left min-w-0">
-                <p className="text-[10px] font-semibold text-white/60 truncate">Ready to start?</p>
-                <p className="text-[9px] text-white/25">Get a free consultation</p>
-              </div>
-            </button>
-
-            {/* Blog */}
-            <button
-              onClick={() => navigate('blog')}
-              className="group flex items-center gap-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] px-4 hover:bg-white/[0.04] hover:border-white/[0.1] transition-all"
-            >
-              <BookOpen className="size-3.5 text-white/30 shrink-0" />
-              <div className="text-left min-w-0">
-                <p className="text-[10px] font-semibold text-white/60 truncate">Latest Insights</p>
-                <p className="text-[9px] text-white/25">Tech articles & updates</p>
-              </div>
-            </button>
-          </motion.div>
-        </div>
-
-        {/* ═══ Bottom: Stats + Ticker ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-2.5 flex-shrink-0">
-          {/* Desktop Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.85, duration: 0.5 }}
-            className="hidden lg:flex col-span-5 h-14 rounded-xl bg-white/[0.02] border border-white/[0.05] backdrop-blur-sm items-center justify-around px-2"
-          >
-            {STATS.map((stat, i) => (
-              <StatItem key={i} stat={stat} index={i} />
-            ))}
-          </motion.div>
-
-          {/* Client Ticker */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.5 }}
-            className="col-span-12 lg:col-span-12 h-9 lg:h-10 flex items-center rounded-xl bg-white/[0.015] border border-white/[0.04] px-4 gap-4"
-          >
-            <span className="text-[9px] lg:text-[10px] text-emerald-400/30 font-semibold uppercase tracking-[0.2em] shrink-0 hidden sm:block">
-              Trusted by
+            {/* Desktop: dot with label */}
+            <span className="hidden lg:block text-[9px] text-white/0 group-hover:text-white/40 font-medium transition-all duration-300 text-right w-24 -mr-2.5">
+              {slide.label}
             </span>
-            <ClientTicker />
-          </motion.div>
+            <div
+              className={cn(
+                'transition-all duration-400 rounded-full',
+                i === currentSlide
+                  ? 'size-3 bg-emerald-400 shadow-lg shadow-emerald-400/40'
+                  : 'size-2 bg-white/15 group-hover:bg-white/30 group-hover:size-2.5',
+              )}
+            />
+          </button>
+        ))}
+      </div>
+
+      {/* ── Arrow Controls (bottom right) ── */}
+      <div className="fixed bottom-6 lg:bottom-8 right-6 lg:right-8 z-30 flex items-center gap-2">
+        <button
+          onClick={prevSlide}
+          className="size-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:bg-white/[0.08] hover:text-white/70 transition-all hover:scale-110 active:scale-95"
+          aria-label="Previous slide"
+        >
+          <ChevronUp className="size-4" />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="size-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:bg-white/[0.08] hover:text-white/70 transition-all hover:scale-110 active:scale-95"
+          aria-label="Next slide"
+        >
+          <ChevronDown className="size-4" />
+        </button>
+      </div>
+
+      {/* ── Slide Counter (bottom left) ── */}
+      <div className="fixed bottom-6 lg:bottom-8 left-6 lg:left-8 z-30 flex items-center gap-2">
+        <span className="text-lg font-bold text-white/60 tabular-nums">{String(currentSlide + 1).padStart(2, '0')}</span>
+        <span className="text-xs text-white/15 font-medium">/ {String(SLIDES.length).padStart(2, '0')}</span>
+        <div className="ml-3 w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+          <motion.div
+            className="h-full bg-emerald-400/60 rounded-full"
+            initial={{ width: '0%' }}
+            animate={{ width: `${((currentSlide + 1) / SLIDES.length) * 100}%` }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          />
         </div>
       </div>
 
-      {/* ── Corner Badge ── */}
+      {/* ── Scroll Hint (shown briefly) ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="absolute bottom-3 right-3 lg:bottom-5 lg:right-5 z-20"
+        transition={{ delay: 2 }}
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30"
       >
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
-          <span className="relative flex size-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
-          </span>
-          <span className="text-[9px] text-white/30 font-medium">Available for projects</span>
-        </div>
+        <motion.div
+          animate={{ opacity: [0.4, 0.8, 0.4], y: [0, 4, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="flex flex-col items-center gap-1"
+        >
+          <span className="text-[9px] text-white/20 font-medium tracking-wider uppercase">Scroll or Swipe</span>
+          <ChevronDown className="size-3 text-white/20" />
+        </motion.div>
       </motion.div>
     </div>
   );

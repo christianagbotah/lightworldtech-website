@@ -1,15 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Clock, Calendar, FileX, Keyboard, Star, ArrowRight, User, Tag, Sparkles } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Search, Clock, Calendar, FileX, Keyboard, ArrowRight, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
-import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -50,16 +46,33 @@ const defaultCategories: CategoryCount[] = [
   { name: 'Business', count: 1 },
 ];
 
+const categoryColors: Record<string, string> = {
+  'all': 'bg-white/10 text-white/70',
+  'Business': 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+  'Mobile Apps': 'bg-violet-500/15 text-violet-400 border-violet-500/20',
+  'Web Development': 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
+  'Technology': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+  'Design': 'bg-pink-500/15 text-pink-400 border-pink-500/20',
+  'SEO & Marketing': 'bg-orange-500/15 text-orange-400 border-orange-500/20',
+};
+
+const categoryBadgeColors: Record<string, string> = {
+  'Business': 'bg-amber-500/15 text-amber-300',
+  'Mobile Apps': 'bg-violet-500/15 text-violet-300',
+  'Web Development': 'bg-cyan-500/15 text-cyan-300',
+  'Technology': 'bg-emerald-500/15 text-emerald-300',
+  'Design': 'bg-pink-500/15 text-pink-300',
+  'SEO & Marketing': 'bg-orange-500/15 text-orange-300',
+};
+
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
-  exit: { opacity: 0, transition: { staggerChildren: 0.03, staggerDirection: -1 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.04 } },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, scale: 0.95, y: 10 },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4 } },
-  exit: { opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.2 } },
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
 export default function BlogPage() {
@@ -69,14 +82,13 @@ export default function BlogPage() {
     description: 'Insights, tips, and trends from the Lightworld Technologies team. Expert articles on web development, mobile apps, SEO, digital marketing, and technology in Ghana.',
     keywords: ['tech blog Ghana', 'web development blog', 'mobile app trends', 'SEO tips', 'digital marketing Africa', 'IT insights'],
   });
+
   const [posts, setPosts] = useState<BlogPost[]>(defaultPosts);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [localSearch, setLocalSearch] = useState(blogSearch);
   const [categories, setCategories] = useState<CategoryCount[]>(defaultCategories);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const postsPerPage = 6;
 
   useEffect(() => {
     fetcher('/api/blog')
@@ -86,20 +98,24 @@ export default function BlogPage() {
           mappedPosts = data.data.posts.map((p: Record<string, unknown>) => ({
             ...p,
             category: typeof p.category === 'object' ? (p.category as { name?: string }).name || 'Technology' : p.category,
-            readTime: typeof p.readTime === 'number' ? `${p.readTime} min read` : p.readTime,
+            readTime: typeof p.readTime === 'number' ? p.readTime + ' min read' : p.readTime,
             date: p.date || p.createdAt,
           }));
         } else if (Array.isArray(data) && data.length > 0) {
           mappedPosts = data.map((p: Record<string, unknown>) => ({
-            ...p,
-            category: typeof p.category === 'object' ? (p.category as { name?: string }).name || 'Technology' : p.category,
-            readTime: typeof p.readTime === 'number' ? `${p.readTime} min read` : p.readTime,
-            date: p.date || p.createdAt,
+            id: String(p.id || ''),
+            title: String(p.title || ''),
+            excerpt: String(p.excerpt || ''),
+            category: typeof p.category === 'object' ? (p.category as { name?: string }).name || 'Technology' : String(p.category || 'Technology'),
+            author: String(p.author || ''),
+            date: String(p.date || p.createdAt || ''),
+            readTime: typeof p.readTime === 'number' ? p.readTime + ' min read' : String(p.readTime || ''),
+            slug: String(p.slug || ''),
+            featured: p.featured === true,
           }));
         }
         if (mappedPosts.length > 0) setPosts(mappedPosts);
 
-        // Build category counts from posts
         const counts: Record<string, number> = {};
         for (const post of (mappedPosts.length > 0 ? mappedPosts : defaultPosts)) {
           counts[post.category] = (counts[post.category] || 0) + 1;
@@ -132,7 +148,6 @@ export default function BlogPage() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setBlogSearch(value);
-      setPage(1);
     }, 300);
   }, [setBlogSearch]);
 
@@ -149,437 +164,203 @@ export default function BlogPage() {
     return matchesCategory && matchesSearch;
   });
 
-  // Separate featured and regular posts, only show featured hero on first page with no filters
-  const featuredPosts = filteredPosts.filter(p => p.featured);
-  const regularPosts = filteredPosts.filter(p => !p.featured);
-  const showFeaturedHero = page === 1 && !blogSearch && blogCategory === 'all' && featuredPosts.length > 0;
-  const mainFeatured = showFeaturedHero ? featuredPosts[0] : null;
-  const otherPostsForGrid = showFeaturedHero
-    ? [...featuredPosts.slice(1), ...regularPosts]
-    : filteredPosts;
-
-  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
-  const paginatedPosts = otherPostsForGrid.slice(0, showFeaturedHero ? postsPerPage - 1 : postsPerPage);
-
   const handlePostClick = (slug: string) => {
     navigate('blog-detail', slug);
   };
 
   return (
-    <main>
-      {/* Hero Banner */}
-      <PageHero
-        title="Blog & Insights"
-        subtitle="Stay updated with the latest trends, tips, and industry insights from our experts."
-      />
-
-      {/* Blog Content */}
-      <section className="py-16 lg:py-24 bg-[#050810]">
-        <div className="container-main">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Main Content */}
-            <div className="flex-1 min-w-0">
-              {/* Search and Filters */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                  <Input
-                    ref={searchInputRef}
-                    placeholder="Search articles..."
-                    value={localSearch}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    className="pl-10 pr-16"
-                  />
-                  <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/[0.06] bg-white/[0.04] px-1.5 font-mono text-[10px] font-medium text-white/30">
-                    <Keyboard className="size-2.5" />
-                    ⌘K
-                  </kbd>
-                </div>
-                {/* Mobile category pills with amber gradient when active */}
-                <div className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.name}
-                      onClick={() => { setBlogCategory(cat.name); setPage(1); }}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all capitalize whitespace-nowrap flex items-center gap-1.5 ${
-                        blogCategory === cat.name
-                          ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white shadow-md shadow-emerald-500/20'
-                          : 'bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:text-emerald-400 border border-white/[0.06]'
-                      }`}
-                    >
-                      {cat.name === 'all' ? 'All' : cat.name}
-                      <span className="text-xs opacity-70">({cat.count})</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Result count */}
-              {!loading && (
-                <p className="text-sm text-white/40 mb-6">
-                  Showing <span className="font-medium text-white/60">{(showFeaturedHero ? 1 : 0) + paginatedPosts.length}</span> of{' '}
-                  <span className="font-medium text-white/60">{filteredPosts.length}</span> articles
-                  {blogSearch && (
-                    <span> matching &ldquo;<span className="text-emerald-400">{blogSearch}</span>&rdquo;</span>
-                  )}
-                </p>
-              )}
-
-              {/* Blog Grid */}
-              {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <Card key={i} className="bg-white/[0.04] border border-white/[0.06]">
-                      <Skeleton className="h-48 w-full rounded-t-lg" />
-                      <div className="p-5">
-                        <Skeleton className="h-4 w-20 mb-3" />
-                        <Skeleton className="h-5 w-full mb-2" />
-                        <Skeleton className="h-4 w-full mb-1" />
-                        <Skeleton className="h-4 w-2/3 mb-3" />
-                        <div className="flex gap-3">
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-4 w-16" />
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              ) : paginatedPosts.length > 0 || mainFeatured ? (
-                <>
-                  {/* Featured Hero Card - full width, large layout */}
-                  {mainFeatured && (
-                    <motion.div
-                      className="mb-8"
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <Card
-                        className="group overflow-hidden cursor-pointer border-0 shadow-lg hover:shadow-2xl transition-all duration-500 h-full"
-                        onClick={() => handlePostClick(mainFeatured.slug)}
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-2">
-                          {/* Image placeholder with gradient overlay */}
-                          <div className="relative h-64 md:h-full min-h-[280px] bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-700 overflow-hidden">
-                            <div className="absolute inset-0 grid-pattern opacity-20" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="size-20 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                                <Sparkles className="size-10 text-white/80" />
-                              </div>
-                            </div>
-                            {/* Featured badge */}
-                            <div className="absolute top-4 left-4">
-                              <Badge className="bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 text-xs font-bold gap-1 shadow-lg">
-                                <Star className="size-3 fill-amber-400" />
-                                Featured
-                              </Badge>
-                            </div>
-                          </div>
-                          {/* Content */}
-                          <div className="p-6 sm:p-8 flex flex-col justify-center bg-white/[0.04]">
-                            <div className="flex items-center gap-2 mb-3">
-                              <Badge className="bg-amber-500/10 text-amber-300 text-xs font-medium">
-                                {mainFeatured.category}
-                              </Badge>
-                              <span className="text-xs text-white/30">Editor&apos;s Pick</span>
-                            </div>
-                            <h2 className="text-2xl sm:text-3xl font-bold mb-3 group-hover:text-amber-400 transition-colors line-clamp-2 text-white leading-snug">
-                              {mainFeatured.title}
-                            </h2>
-                            <p className="text-white/40 leading-relaxed mb-5 line-clamp-3">
-                              {mainFeatured.excerpt}
-                            </p>
-                            {/* Author row */}
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="size-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 shadow-md">
-                                <span className="text-white text-sm font-bold">{mainFeatured.author?.charAt(0) || 'L'}</span>
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-white">{mainFeatured.author}</p>
-                                <div className="flex items-center gap-3 text-xs text-white/30">
-                                  <span className="flex items-center gap-1">
-                                    <Calendar className="size-3" />
-                                    {new Date(mainFeatured.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="size-3" />
-                                    {mainFeatured.readTime}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1 text-emerald-400 font-semibold">
-                              Read Article
-                              <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  )}
-
-                  {/* Regular blog cards grid */}
-                  <motion.div
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                    key={`${blogCategory}-${blogSearch}`}
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                  >
-                    <AnimatePresence mode="popLayout">
-                      {paginatedPosts.map((post, index) => (
-                        <motion.div
-                          key={post.id}
-                          variants={itemVariants}
-                          layout
-                        >
-                          <Card
-                            className={`group overflow-hidden bg-white/[0.04] backdrop-blur-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-500 cursor-pointer h-full relative ${
-                              post.featured ? 'ring-2 ring-amber-500/30' : ''
-                            }`}
-                            onClick={() => handlePostClick(post.slug)}
-                          >
-                            {/* Subtle gradient border on hover - implemented with a pseudo-element approach via wrapper */}
-                            <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                              <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-500 via-transparent to-amber-500" />
-                            </div>
-                            <div className="relative">
-                              <div className="h-48 bg-gradient-to-br from-amber-900/40 to-amber-800/30 relative overflow-hidden transition-transform duration-500 group-hover:scale-[1.03]">
-                                <div className="absolute inset-0 grid-pattern opacity-30" />
-                                {/* Gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-amber-600/20 via-transparent to-transparent" />
-                                <div className="absolute top-3 left-3">
-                                  <Badge className="bg-white/90 text-slate-800 text-xs backdrop-blur-sm">
-                                    {post.category}
-                                  </Badge>
-                                </div>
-                                {/* Featured badge */}
-                                {post.featured && (
-                                  <div className="absolute top-3 right-3">
-                                    <Badge className="bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 text-xs font-semibold gap-1 shadow-sm">
-                                      <Star className="size-3" />
-                                      Featured
-                                    </Badge>
-                                  </div>
-                                )}
-                                {/* Read time badge */}
-                                <div className="absolute bottom-3 right-3">
-                                  <Badge className="bg-black/40 backdrop-blur-sm text-white text-[10px] gap-1 border-0">
-                                    <Clock className="size-2.5" />
-                                    {post.readTime}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <CardContent className="p-5 flex flex-col h-full">
-                                <h3 className="font-semibold text-lg mb-2 group-hover:text-emerald-400 transition-colors line-clamp-2 text-white">
-                                  {post.title}
-                                </h3>
-                                <p className="text-sm text-white/40 leading-relaxed mb-4 flex-1 line-clamp-2">
-                                  {post.excerpt}
-                                </p>
-                                {/* Author row */}
-                                <div className="flex items-center gap-2 mb-3">
-                                  <div className="size-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0">
-                                    <span className="text-white text-[10px] font-bold">{post.author?.charAt(0) || 'L'}</span>
-                                  </div>
-                                  <span className="text-xs font-medium text-white/60 truncate">{post.author}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-xs text-white/30 pt-3 border-t border-white/[0.06]">
-                                  <div className="flex items-center gap-3">
-                                    <span className="flex items-center gap-1">
-                                      <Calendar className="size-3" />
-                                      {new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="size-3" />
-                                      {post.readTime}
-                                    </span>
-                                  </div>
-                                  <span className="flex items-center gap-1 text-emerald-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Read <ArrowRight className="size-3 group-hover:translate-x-1 transition-transform" />
-                                  </span>
-                                </div>
-                              </CardContent>
-                            </div>
-                          </Card>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-
-                  {/* Load More Button */}
-                  {filteredPosts.length > paginatedPosts.length + (mainFeatured ? 1 : 0) && (
-                    <motion.div
-                      className="flex justify-center mt-10"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <Button
-                        onClick={() => setPage(p => p + 1)}
-                        className="bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white shadow-md hover:shadow-lg transition-all duration-300 px-8 gap-2"
-                      >
-                        <ArrowRight className="size-4" />
-                        Load More Articles
-                      </Button>
-                    </motion.div>
-                  )}
-
-                  {/* Pagination fallback */}
-                  {totalPages > 1 && filteredPosts.length <= paginatedPosts.length + (mainFeatured ? 1 : 0) && (
-                    <div className="flex items-center justify-center gap-2 mt-10">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                      >
-                        Previous
-                      </Button>
-                      {Array.from({ length: totalPages }).map((_, i) => (
-                        <Button
-                          key={i}
-                          variant={page === i + 1 ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setPage(i + 1)}
-                          className={page === i + 1 ? 'bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white shadow-md shadow-emerald-500/20' : ''}
-                        >
-                          {i + 1}
-                        </Button>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        disabled={page === totalPages}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <motion.div
-                  className="text-center py-16"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <div className="max-w-sm mx-auto">
-                    <div className="size-16 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-                      <FileX className="size-8 text-white/30" />
-                    </div>
-                    <h3 className="text-lg font-medium text-white/60 mb-2">No results found</h3>
-                    <p className="text-sm text-white/40 mb-6">
-                      We couldn&apos;t find any articles matching your search. Try different keywords or clear the filters.
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setBlogSearch('');
-                        setLocalSearch('');
-                        setBlogCategory('all');
-                        setPage(1);
-                      }}
-                      className="border-emerald-500/30 text-emerald-400"
-                    >
-                      Clear Filters
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
+    <main className="h-[calc(100vh-5rem)] overflow-hidden bg-[#0a0f1a] flex flex-col">
+      {/* Compact Title Bar */}
+      <div className="shrink-0 px-4 lg:px-8 pt-4 pb-3">
+        <div className="flex flex-col gap-3">
+          {/* Row 1: Badge + Title + Search */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-semibold border border-emerald-500/20">
+                <Sparkles className="size-3" />
+                Blog
+              </span>
+              <h1 className="text-xl lg:text-2xl font-bold text-white tracking-tight">
+                Insights &amp; Articles
+              </h1>
             </div>
 
-            {/* Sidebar - Categories with glass card effect */}
-            <aside className="lg:w-72 shrink-0 hidden lg:block">
-              <div className="sticky top-24 space-y-6">
-                {/* Categories - glass card */}
-                <Card className="bg-white/[0.04] backdrop-blur-lg border border-white/[0.06] shadow-sm">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Tag className="size-4 text-amber-400" />
-                      <h3 className="font-semibold text-white">Categories</h3>
-                    </div>
-                    <nav className="space-y-1" aria-label="Blog categories">
-                      {categories.map((cat) => {
-                        const isActive = blogCategory === cat.name;
-                        return (
-                          <button
-                            key={cat.name}
-                            onClick={() => { setBlogCategory(cat.name); setPage(1); }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-                              isActive
-                                ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white font-medium shadow-md shadow-emerald-500/20'
-                                : 'text-white/40 hover:bg-white/[0.06] hover:text-white/60'
-                            }`}
-                          >
-                            <span className="capitalize">{cat.name === 'all' ? 'All Articles' : cat.name}</span>
-                            <Badge
-                              variant="secondary"
-                              className={`text-xs h-5 min-w-[24px] justify-center px-1.5 ${
-                                isActive
-                                  ? 'bg-white/20 text-white border-0'
-                                  : 'bg-white/[0.06] text-white/40'
-                              }`}
-                            >
-                              {cat.count}
-                            </Badge>
-                          </button>
-                        );
-                      })}
-                    </nav>
-                  </CardContent>
-                </Card>
+            <div className="flex-1" />
 
-                {/* Popular Posts - glass card */}
-                <Card className="bg-white/[0.04] backdrop-blur-lg border border-white/[0.06] shadow-sm">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Star className="size-4 text-amber-400" />
-                      <h3 className="font-semibold text-white">Featured Posts</h3>
-                    </div>
-                    <div className="space-y-4">
-                      {posts.filter(p => p.featured).slice(0, 3).map((post) => (
-                        <button
-                          key={post.id}
-                          onClick={() => handlePostClick(post.slug)}
-                          className="block w-full text-left group"
-                        >
-                          <h4 className="text-sm font-medium text-white/60 group-hover:text-amber-400 transition-colors line-clamp-2 mb-1">
-                            {post.title}
-                          </h4>
-                          <div className="flex items-center gap-2 text-xs text-white/30">
-                            <Calendar className="size-3" />
-                            <span>{new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}</span>
-                            <span className="text-white/20">·</span>
-                            <Clock className="size-3" />
-                            <span>{post.readTime}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Search input - compact */}
+            <div className="relative w-48 lg:w-64 shrink-0">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-500" />
+              <Input
+                ref={searchInputRef}
+                placeholder="Search articles..."
+                value={localSearch}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="h-8 pl-8 pr-12 text-sm bg-white/[0.04] border-white/[0.08] rounded-lg text-white placeholder:text-white/30 focus:border-emerald-500/40 focus:ring-emerald-500/20"
+              />
+              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/[0.08] bg-white/[0.04] px-1.5 font-mono text-[9px] font-medium text-white/25">
+                <Keyboard className="size-2" />
+                {'⌘'}K
+              </kbd>
+            </div>
+          </div>
 
-                {/* About Widget - glass card */}
-                <Card className="bg-white/[0.04] backdrop-blur-lg border border-white/[0.06] shadow-sm">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <User className="size-4 text-amber-400" />
-                      <h3 className="font-semibold text-white">About Our Blog</h3>
-                    </div>
-                    <p className="text-sm text-white/40 leading-relaxed">
-                      Stay updated with the latest trends in technology, web development, mobile apps, and digital marketing from the team at Lightworld Technologies.
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </aside>
+          {/* Row 2: Category filter pills + result count */}
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+              {categories.map((cat) => (
+                <button
+                  key={cat.name}
+                  onClick={() => setBlogCategory(cat.name)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all capitalize whitespace-nowrap border ${
+                    blogCategory === cat.name
+                      ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white border-transparent shadow-md shadow-emerald-500/20'
+                      : categoryColors[cat.name] || 'bg-white/[0.04] text-white/50 border-white/[0.06] hover:bg-white/[0.08]'
+                  }`}
+                >
+                  {cat.name === 'all' ? 'All' : cat.name}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1" />
+            {!loading && (
+              <span className="text-[11px] text-white/30 shrink-0 hidden sm:block">
+                {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''}
+                {blogSearch && (
+                  <span className="text-emerald-400/60"> {'·'} &ldquo;{blogSearch}&rdquo;</span>
+                )}
+              </span>
+            )}
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* Blog Grid */}
+      <div className="flex-1 min-h-0 px-4 lg:px-8 pb-4">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 h-full">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 lg:p-4 flex flex-col gap-2.5"
+              >
+                <Skeleton className="h-3 w-16 rounded-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <div className="flex-1" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="size-5 rounded-full" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-14" />
+                  <div className="flex-1" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredPosts.length > 0 ? (
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 h-full"
+            key={`${blogCategory}-${blogSearch}`}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredPosts.map((post) => (
+                <motion.div
+                  key={post.id}
+                  variants={itemVariants}
+                  layout
+                  className={`group cursor-pointer rounded-xl p-3 lg:p-4 flex flex-col transition-all duration-300 hover:bg-white/[0.05] ${
+                    post.featured
+                      ? 'bg-white/[0.03] border border-emerald-500/20 shadow-[0_0_20px_-4px_rgba(16,185,129,0.15)] hover:shadow-[0_0_30px_-4px_rgba(16,185,129,0.25)]'
+                      : 'bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.1]'
+                  }`}
+                  onClick={() => handlePostClick(post.slug)}
+                >
+                  {/* Category badge */}
+                  <span className={`inline-flex self-start px-2 py-0.5 rounded-full text-[10px] font-semibold mb-2 ${
+                    categoryBadgeColors[post.category] || 'bg-white/10 text-white/60'
+                  }`}>
+                    {post.category}
+                  </span>
+
+                  {/* Title - 2 lines max */}
+                  <h3 className="text-sm lg:text-[15px] font-semibold text-white leading-snug line-clamp-2 mb-1.5 group-hover:text-emerald-300 transition-colors">
+                    {post.title}
+                  </h3>
+
+                  {/* Excerpt - 2 lines */}
+                  <p className="text-xs text-white/35 leading-relaxed line-clamp-2 mb-auto">
+                    {post.excerpt}
+                  </p>
+
+                  {/* Meta row: author, date, read time, read more */}
+                  <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-white/[0.06]">
+                    {/* Author avatar */}
+                    <div className={`size-5 rounded-full flex items-center justify-center shrink-0 ${
+                      post.featured
+                        ? 'bg-gradient-to-br from-emerald-400 to-emerald-600'
+                        : 'bg-white/10'
+                    }`}>
+                      <span className="text-white text-[8px] font-bold">
+                        {post.author?.charAt(0) || 'L'}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-white/50 truncate max-w-[80px] lg:max-w-none">
+                      {post.author}
+                    </span>
+
+                    <div className="flex-1" />
+
+                    <span className="hidden sm:flex items-center gap-1 text-[10px] text-white/25">
+                      <Calendar className="size-2.5" />
+                      {new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
+                    </span>
+
+                    <span className="hidden sm:flex items-center gap-1 text-[10px] text-white/25">
+                      <Clock className="size-2.5" />
+                      {post.readTime}
+                    </span>
+
+                    <span className="flex items-center gap-0.5 text-[11px] text-emerald-400/80 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                      Read <ArrowRight className="size-3 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        ) : (
+          <motion.div
+            className="flex flex-col items-center justify-center h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="size-12 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-3">
+              <FileX className="size-6 text-white/25" />
+            </div>
+            <h3 className="text-sm font-medium text-white/50 mb-1">No results found</h3>
+            <p className="text-xs text-white/30 mb-4 text-center max-w-xs">
+              We couldn&apos;t find any articles matching your search. Try different keywords or clear the filters.
+            </p>
+            <button
+              onClick={() => {
+                setBlogSearch('');
+                setLocalSearch('');
+                setBlogCategory('all');
+              }}
+              className="px-4 py-1.5 rounded-full text-xs font-medium border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+            >
+              Clear Filters
+            </button>
+          </motion.div>
+        )}
+      </div>
     </main>
   );
 }

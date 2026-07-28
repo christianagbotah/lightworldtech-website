@@ -4,13 +4,10 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin, Clock, DollarSign, Briefcase,
-  ChevronDown, ChevronUp, Send, Loader2, CheckCircle2,
-  X, Building2, Users, Sparkles, Upload, FileText, GraduationCap,
-  Rocket, Globe, TrendingUp, HeartHandshake,
+  Send, Loader2, CheckCircle2,
+  X, Building2, Upload, FileText, Mail,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -21,7 +18,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 import { toast } from 'sonner';
 import CTASection from '@/components/sections/CTASection';
@@ -207,20 +203,27 @@ const defaultJobs: JobListing[] = [
 const departments = ['All Departments', 'Engineering', 'Design', 'Marketing', 'Training'];
 const jobTypes = ['All Types', 'Full-time', 'Part-time', 'Contract'];
 
+const deptColors: Record<string, string> = {
+  Engineering: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',
+  Design: 'bg-violet-500/15 text-violet-400 border border-violet-500/20',
+  Marketing: 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
+  Training: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/20',
+};
+
 const typeColors: Record<string, string> = {
-  'Full-time': 'bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-  'Part-time': 'bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-  'Contract': 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+  'Full-time': 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
+  'Part-time': 'bg-sky-500/15 text-sky-400 border border-sky-500/20',
+  'Contract': 'bg-rose-500/15 text-rose-400 border border-rose-500/20',
 };
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
 export default function CareersPage() {
@@ -233,7 +236,6 @@ export default function CareersPage() {
   const [jobs] = useState<JobListing[]>(defaultJobs);
   const [activeDepartment, setActiveDepartment] = useState('All Departments');
   const [activeType, setActiveType] = useState('All Types');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [applyModalOpen, setApplyModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobListing | null>(null);
 
@@ -243,312 +245,223 @@ export default function CareersPage() {
     return matchDept && matchType;
   });
 
+  const displayed = filtered.slice(0, 4);
+  const hasMore = filtered.length > 4;
+
   const handleApplyClick = (job: JobListing) => {
     setSelectedJob(job);
     setApplyModalOpen(true);
   };
 
   return (
-    <main>
-      {/* Hero Banner */}
-      <PageHero
-        title="Join Our Team"
-        subtitle="Build your career at Lightworld Technologies and make a real impact."
-        badge="We're Hiring!"
-      >
-        {/* Quick stats */}
-        <div className="flex flex-wrap gap-6 mt-8">
-          {[
-            { icon: Briefcase, label: 'Open Positions', value: jobs.length.toString() },
-            { icon: Users, label: 'Team Members', value: '50+' },
-            { icon: Building2, label: 'Office Locations', value: 'Accra' },
-            { icon: GraduationCap, label: 'Training Budget', value: 'GHS 3K/yr' },
-          ].map((stat) => (
-            <div key={stat.label} className="flex items-center gap-3 group">
-              <div className="size-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-emerald-700/20 transition-colors">
-                <stat.icon className="size-5 text-amber-400" />
-              </div>
-              <div>
-                <div className="text-lg font-bold text-white">{stat.value}</div>
-                <div className="text-xs text-white/30">{stat.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </PageHero>
+    <main className="bg-[#050810]">
+      {/* Full viewport book page */}
+      <div className="h-[calc(100vh-4rem)] overflow-hidden flex flex-col relative">
+        {/* Subtle gradient orbs */}
+        <div className="absolute top-[-10%] right-[10%] w-[400px] h-[400px] rounded-full bg-emerald-600/[0.04] blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[5%] w-[350px] h-[350px] rounded-full bg-amber-600/[0.03] blur-[100px] pointer-events-none" />
 
-      {/* Job Listings */}
-      <section className="py-16 lg:py-24 bg-[#050810] relative overflow-hidden">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 dot-pattern opacity-10" />
-        <div className="container-main relative z-10">
-          {/* Filters */}
+        {/* Compact Title Bar */}
+        <div className="shrink-0 px-4 sm:px-6 lg:px-8 pt-6 pb-4">
           <motion.div
-            className="flex flex-col sm:flex-row gap-4 mb-10"
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <div className="flex flex-wrap gap-2 flex-1">
-              {departments.map((dept) => (
-                <button
-                  key={dept}
-                  onClick={() => setActiveDepartment(dept)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                    activeDepartment === dept
-                      ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white shadow-md shadow-emerald-500/20'
-                      : 'bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:text-emerald-400 border border-white/[0.06]'
-                  }`}
-                >
-                  {dept}
-                </button>
-              ))}
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-amber-500 text-white">
+                <Briefcase className="size-3" />
+                Careers
+              </span>
+              <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+                Open Positions
+              </h1>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {jobTypes.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setActiveType(type)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                    activeType === type
-                      ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white shadow-md shadow-emerald-500/20'
-                      : 'bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:text-emerald-400 border border-white/[0.06]'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Results info */}
-          <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-white/40">
-              Showing <span className="font-medium text-white/60">{filtered.length}</span>{' '}
-              {filtered.length === 1 ? 'position' : 'positions'}
+              Join Our Team — <span className="text-emerald-400">{filtered.length} position{filtered.length !== 1 ? 's' : ''} available</span>
             </p>
-          </div>
-
-          {/* Job Cards */}
-          <motion.div
-            className="space-y-4"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            {filtered.map((job) => {
-              const isExpanded = expandedId === job.id;
-              return (
-                <motion.div key={job.id} variants={itemVariants}>
-                  <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 overflow-hidden shimmer-sweep">
-                    <CardContent className="p-0">
-                      {/* Job header - clickable */}
-                      <button
-                        className="w-full p-5 sm:p-6 text-left"
-                        onClick={() => setExpandedId(isExpanded ? null : job.id)}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                              <h3 className="text-lg font-semibold text-white">
-                                {job.title}
-                              </h3>
-                              {job.featured && (
-                                <Badge className="bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 text-xs font-bold gap-1 shadow-sm">
-                                  <Sparkles className="size-3" />
-                                  Featured
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-white/40">
-                              <span className="flex items-center gap-1">
-                                <Building2 className="size-3.5 text-amber-500" />
-                                {job.department}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MapPin className="size-3.5 text-amber-500" />
-                                {job.location}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="size-3.5 text-amber-500" />
-                                {job.type}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <DollarSign className="size-3.5 text-amber-500" />
-                                {job.salaryRange}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium border ${typeColors[job.type] || ''}`}>
-                              {job.type}
-                            </span>
-                            <div className="size-8 rounded-full bg-white/[0.06] flex items-center justify-center">
-                              {isExpanded ? (
-                                <ChevronUp className="size-4 text-slate-500" />
-                              ) : (
-                                <ChevronDown className="size-4 text-slate-500" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* Expanded details */}
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="px-5 sm:px-6 pb-6 pt-0 border-t border-white/[0.06]">
-                              <div className="pt-5 space-y-5">
-                                {/* Description */}
-                                <div>
-                                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">About the Role</h4>
-                                  <p className="text-sm text-white/60 leading-relaxed">{job.description}</p>
-                                </div>
-
-                                {/* Requirements */}
-                                <div>
-                                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Requirements</h4>
-                                  <ul className="space-y-1.5">
-                                    {job.requirements.map((req) => (
-                                      <li key={req} className="flex items-start gap-2 text-sm text-white/60">
-                                        <CheckCircle2 className="size-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-                                        <span>{req}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-
-                                {/* Benefits */}
-                                <div>
-                                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Benefits & Perks</h4>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {job.benefits.map((benefit) => (
-                                      <div key={benefit} className="flex items-start gap-2 text-sm text-white/60">
-                                        <span className="text-amber-500 shrink-0 mt-0.5">✓</span>
-                                        <span>{benefit}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                {/* Apply Button */}
-                                <div className="flex flex-col sm:flex-row gap-3 pt-3">
-                                  <Button
-                                    onClick={() => handleApplyClick(job)}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
-                                  >
-                                    <Send className="size-4 mr-2" />
-                                    Apply Now
-                                  </Button>
-                                  <span className="text-xs text-slate-400 flex items-center gap-1 self-center">
-                                    Posted {new Date(job.postedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
           </motion.div>
 
-          {/* No results */}
-          {filtered.length === 0 && (
+          {/* Compact filter pills */}
+          <motion.div
+            className="flex flex-wrap items-center gap-2 mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <span className="text-[9px] uppercase tracking-wider text-white/25 mr-1">Dept:</span>
+            {departments.map((dept) => (
+              <button
+                key={dept}
+                onClick={() => setActiveDepartment(dept)}
+                className={`text-[9px] px-2 py-0.5 rounded-full transition-all duration-200 ${
+                  activeDepartment === dept
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
+                }`}
+              >
+                {dept}
+              </button>
+            ))}
+            <span className="w-px h-3 bg-white/[0.08] mx-1" />
+            <span className="text-[9px] uppercase tracking-wider text-white/25 mr-1">Type:</span>
+            {jobTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => setActiveType(type)}
+                className={`text-[9px] px-2 py-0.5 rounded-full transition-all duration-200 ${
+                  activeType === type
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* 2×2 Job Cards Grid */}
+        <div className="flex-1 min-h-0 px-4 sm:px-6 lg:px-8">
+          {displayed.length > 0 ? (
             <motion.div
-              className="text-center py-16"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 h-full"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {displayed.map((job) => (
+                <motion.div
+                  key={job.id}
+                  variants={itemVariants}
+                  className="flex"
+                >
+                  <div className="flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 lg:p-4 hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all duration-300 group w-full">
+                    {/* Card header */}
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors truncate">
+                          {job.title}
+                        </h3>
+                        {job.featured && (
+                          <span className="inline-block text-[7px] font-bold uppercase tracking-wider text-amber-400 mt-0.5">★ Featured</span>
+                        )}
+                      </div>
+                      <span className={`shrink-0 text-[8px] px-1.5 py-0.5 rounded-full font-medium ${typeColors[job.type] || ''}`}>
+                        {job.type}
+                      </span>
+                    </div>
+
+                    {/* Meta row */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2.5">
+                      <span className={`inline-flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded-full font-medium ${deptColors[job.department] || 'bg-white/[0.05] text-white/40 border border-white/[0.08]'}`}>
+                        <Building2 className="size-2.5" />
+                        {job.department}
+                      </span>
+                      <span className="flex items-center gap-1 text-[9px] text-white/35">
+                        <MapPin className="size-2.5" />
+                        {job.location}
+                      </span>
+                      <span className="flex items-center gap-1 text-[9px] text-emerald-400/70 font-medium">
+                        <DollarSign className="size-2.5" />
+                        <span className="truncate max-w-[120px]">{job.salaryRange}</span>
+                      </span>
+                    </div>
+
+                    {/* Requirements bullets */}
+                    <ul className="space-y-1 mb-3 flex-1">
+                      {job.requirements.slice(0, 4).map((req, i) => (
+                        <li key={i} className="flex items-start gap-1.5 text-[9px] text-white/45 leading-tight">
+                          <CheckCircle2 className="size-2.5 text-emerald-500/70 shrink-0 mt-0.5" />
+                          <span className="line-clamp-1">{req}</span>
+                        </li>
+                      ))}
+                      {job.requirements.length > 4 && (
+                        <li className="text-[8px] text-white/25 pl-4">+{job.requirements.length - 4} more requirements</li>
+                      )}
+                    </ul>
+
+                    {/* Apply button */}
+                    <button
+                      onClick={() => handleApplyClick(job)}
+                      className="w-full text-[10px] font-semibold py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20 flex items-center justify-center gap-1.5"
+                    >
+                      <Send className="size-3" />
+                      Apply Now
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              className="h-full flex items-center justify-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <div className="size-16 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-                <Briefcase className="size-8 text-white/30" />
+              <div className="text-center">
+                <div className="size-12 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
+                  <Briefcase className="size-5 text-white/20" />
+                </div>
+                <p className="text-sm text-white/40 mb-3">No positions match your filters</p>
+                <button
+                  onClick={() => { setActiveDepartment('All Departments'); setActiveType('All Types'); }}
+                  className="text-[10px] px-3 py-1 rounded-full bg-white/[0.05] text-white/50 hover:text-white/70 border border-white/[0.08] transition-colors"
+                >
+                  Clear Filters
+                </button>
               </div>
-              <h3 className="text-lg font-medium text-white/60 mb-2">No positions found</h3>
-              <p className="text-sm text-white/40 mb-6">
-                No open positions match your current filters. Try different criteria.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => { setActiveDepartment('All Departments'); setActiveType('All Types'); }}
-                className="border-amber-300 dark:border-emerald-500 text-emerald-600 dark:text-amber-400"
-              >
-                Clear Filters
-              </Button>
             </motion.div>
           )}
-
-          {/* Why Work With Us */}
-          <motion.div
-            className="mt-16 p-8 rounded-2xl bg-gradient-to-br from-amber-50 via-white to-amber-50 dark:from-amber-900/20 dark:via-slate-800/50 dark:to-amber-900/20 border border-amber-200/80 dark:border-amber-800/60 relative overflow-hidden"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            {/* Decorative background shapes */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-            <div className="absolute inset-0 diagonal-stripes opacity-30" />
-
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 text-center relative">
-              Why Work at <span className="text-gradient-amber">Lightworld Technologies</span>?
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
-              {[
-                { icon: Rocket, title: 'Innovation', desc: 'Work with cutting-edge technologies and solve real challenges', gradient: 'from-amber-400 to-yellow-500' },
-                { icon: Globe, title: 'Impact', desc: 'Build solutions that transform businesses across Africa', gradient: 'from-amber-500 to-amber-600' },
-                { icon: TrendingUp, title: 'Growth', desc: 'Continuous learning with dedicated budgets and mentorship', gradient: 'from-amber-400 to-amber-500' },
-                { icon: HeartHandshake, title: 'Culture', desc: 'Collaborative, inclusive environment that values your voice', gradient: 'from-yellow-400 to-amber-500' },
-              ].map((item) => (
-                <div key={item.title} className="text-center p-5 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:border-emerald-500/30 hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-300 group">
-                  <div className={`inline-flex size-12 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                    <item.icon className="size-6 text-white" />
-                  </div>
-                  <h4 className="font-semibold text-white mb-1">{item.title}</h4>
-                  <p className="text-xs text-white/60 leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
         </div>
-      </section>
+
+        {/* Bottom Bar */}
+        <div className="shrink-0 px-4 sm:px-6 lg:px-8 py-3 border-t border-white/[0.04]">
+          <div className="flex items-center justify-between">
+            <a
+              href="mailto:careers@lightworldtechnologies.com?subject=General%20Application"
+              className="group inline-flex items-center gap-2 text-[11px] text-white/35 hover:text-emerald-400 transition-colors"
+            >
+              <Mail className="size-3.5" />
+              <span>Don&apos;t see a role? Send your CV to <span className="underline underline-offset-2 group-hover:text-emerald-400/80 transition-colors">careers@lightworldtechnologies.com</span></span>
+            </a>
+            {hasMore && (
+              <span className="text-[9px] text-white/25">
+                Showing 4 of {filtered.length} positions
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Application Modal */}
       <Dialog open={applyModalOpen} onOpenChange={setApplyModalOpen}>
-        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh]">
-          <div className="relative h-28 bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-700 flex items-center justify-center">
-            <div className="absolute inset-0 grid-pattern opacity-15" />
+        <DialogContent
+          className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh] bg-[#0a0f1a] border-white/[0.08]"
+          aria-describedby={undefined}
+        >
+          <div className="relative h-24 bg-gradient-to-br from-emerald-600 via-emerald-600 to-amber-600 flex items-center justify-center">
+            <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.03)_25%,transparent_25%,transparent_75%,rgba(255,255,255,0.03)_75%)] bg-[length:16px_16px]" />
             <div className="text-center relative z-10">
-              <div className="size-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
-                <FileText className="size-6 text-white" />
+              <div className="size-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
+                <FileText className="size-5 text-white" />
               </div>
-              <h2 className="text-lg font-bold text-white">Apply for Position</h2>
+              <h2 className="text-base font-bold text-white">Apply for Position</h2>
             </div>
             <button
               onClick={() => setApplyModalOpen(false)}
-              className="absolute top-3 right-3 size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10"
+              className="absolute top-3 right-3 size-7 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10"
               aria-label="Close"
             >
-              <X className="size-4" />
+              <X className="size-3.5" />
             </button>
           </div>
 
           <div className="p-6">
             <DialogHeader>
-              <DialogTitle className="text-xl">{selectedJob?.title}</DialogTitle>
-              <DialogDescription className="text-sm text-white/60">
+              <DialogTitle className="text-lg text-white">{selectedJob?.title}</DialogTitle>
+              <DialogDescription className="text-sm text-white/50">
                 {selectedJob?.department} · {selectedJob?.location} · {selectedJob?.type}
               </DialogDescription>
             </DialogHeader>
@@ -647,14 +560,14 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
         animate={{ opacity: 1, scale: 1 }}
       >
         <motion.div
-          className="size-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4"
+          className="size-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
         >
-          <CheckCircle2 className="size-8 text-emerald-600 dark:text-amber-400" />
+          <CheckCircle2 className="size-8 text-emerald-400" />
         </motion.div>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Application Received!</h3>
+        <h3 className="text-lg font-semibold text-white mb-1">Application Received!</h3>
         <p className="text-sm text-white/40">
           Thank you for your interest. Our team will review your application and get back to you soon.
         </p>
@@ -666,7 +579,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
     <form onSubmit={handleSubmit} className="space-y-4 mt-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="app-name" className="text-sm font-medium">Full Name *</Label>
+          <Label htmlFor="app-name" className="text-xs font-medium text-white/60">Full Name *</Label>
           <Input
             id="app-name"
             name="name"
@@ -675,11 +588,11 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             placeholder="Your full name"
             required
             disabled={submitting}
-            className="h-10 focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500"
+            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="app-email" className="text-sm font-medium">Email *</Label>
+          <Label htmlFor="app-email" className="text-xs font-medium text-white/60">Email *</Label>
           <Input
             id="app-email"
             name="email"
@@ -689,13 +602,13 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             placeholder="you@example.com"
             required
             disabled={submitting}
-            className="h-10 focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500"
+            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
           />
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="app-phone" className="text-sm font-medium">Phone</Label>
+          <Label htmlFor="app-phone" className="text-xs font-medium text-white/60">Phone</Label>
           <Input
             id="app-phone"
             name="phone"
@@ -704,11 +617,11 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             onChange={handleChange}
             placeholder="+233 XX XXX XXXX"
             disabled={submitting}
-            className="h-10 focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500"
+            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="app-position" className="text-sm font-medium">Position *</Label>
+          <Label htmlFor="app-position" className="text-xs font-medium text-white/60">Position *</Label>
           <Input
             id="app-position"
             name="position"
@@ -716,31 +629,31 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             onChange={handleChange}
             required
             disabled={submitting}
-            className="h-10 focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500"
+            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
           />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="app-cover" className="text-sm font-medium">Cover Letter</Label>
+        <Label htmlFor="app-cover" className="text-xs font-medium text-white/60">Cover Letter</Label>
         <Textarea
           id="app-cover"
           name="coverLetter"
           value={formData.coverLetter}
           onChange={handleChange}
           placeholder="Tell us why you're a great fit for this role..."
-          rows={4}
+          rows={3}
           disabled={submitting}
-          className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 resize-none"
+          className="bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 resize-none"
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="app-resume" className="text-sm font-medium">Resume / CV</Label>
+        <Label htmlFor="app-resume" className="text-xs font-medium text-white/60">Resume / CV</Label>
         <div className="flex items-center gap-3">
           <label
             htmlFor="app-resume"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-white/[0.06] hover:border-emerald-500/30 cursor-pointer transition-colors text-sm text-white/40 hover:text-emerald-400"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-white/[0.08] hover:border-emerald-500/30 cursor-pointer transition-colors text-xs text-white/35 hover:text-emerald-400"
           >
-            <Upload className="size-4" />
+            <Upload className="size-3.5" />
             {resumeFile ? resumeFile.name : 'Upload Resume (PDF, DOC)'}
             <input
               id="app-resume"
@@ -755,7 +668,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             <button
               type="button"
               onClick={() => setResumeFile(null)}
-              className="text-xs text-slate-400 hover:text-red-500 transition-colors"
+              className="text-[10px] text-white/30 hover:text-red-400 transition-colors"
             >
               Remove
             </button>
@@ -765,7 +678,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
       <Button
         type="submit"
         disabled={submitting || !formData.name || !formData.email}
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
+        className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:shadow-emerald-500/20 transition-all"
       >
         {submitting ? (
           <>

@@ -10,7 +10,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
@@ -69,7 +68,7 @@ const launchDates: Record<string, Date> = {
 
 function useCountdown(targetDate: Date) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -95,37 +94,24 @@ function useCountdown(targetDate: Date) {
   return timeLeft;
 }
 
-function CountdownTimer({ targetDate }: { targetDate: Date }) {
+function CompactCountdown({ targetDate }: { targetDate: Date }) {
   const { days, hours, minutes, seconds } = useCountdown(targetDate);
   const isLaunched = days === 0 && hours === 0 && minutes === 0 && seconds === 0;
 
   if (isLaunched) {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-        <Zap className="size-4 text-amber-500 shrink-0" />
-        <span className="text-sm text-amber-500 dark:text-amber-300 font-medium">Launching now!</span>
-      </div>
+      <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        <Zap className="size-2.5" />
+        Launching now!
+      </span>
     );
   }
 
-  const units = [
-    { value: days, label: 'Days' },
-    { value: hours, label: 'Hrs' },
-    { value: minutes, label: 'Min' },
-    { value: seconds, label: 'Sec' },
-  ];
-
   return (
-    <div className="grid grid-cols-4 gap-2 p-3 rounded-xl bg-[#050810] border border-white/[0.06]">
-      {units.map((unit) => (
-        <div key={unit.label} className="text-center">
-          <div className="text-lg sm:text-xl font-bold text-white tabular-nums font-mono leading-none">
-            {String(unit.value).padStart(2, '0')}
-          </div>
-          <div className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wider">{unit.label}</div>
-        </div>
-      ))}
-    </div>
+    <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-white/[0.04] text-white/50 tabular-nums">
+      <Flame className="size-2.5 text-amber-500 shrink-0" />
+      {days}d {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+    </span>
   );
 }
 
@@ -176,182 +162,153 @@ export default function ProductsPage() {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
   return (
     <main>
-      {/* Hero Banner */}
-      <PageHero
-        title="Our Products"
-        subtitle="Innovative solutions designed to solve real business challenges."
-      />
+      <div className="h-[calc(100vh-4rem)] overflow-hidden bg-[#050810] flex flex-col">
+        {/* Subtle background glow */}
+        <div className="absolute top-10 left-10 w-40 h-40 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-56 h-56 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Products Grid */}
-      <section className="py-16 lg:py-24 bg-[#050810] relative overflow-hidden">
-        {/* Subtle background */}
-        <div className="absolute inset-0 dot-pattern opacity-5" />
-        <div className="absolute top-20 left-10 w-48 h-48 bg-amber-400/5 rounded-full blur-3xl animate-breathe" />
-        <div className="absolute bottom-20 right-10 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-breathe" style={{ animationDelay: '-4s' }} />
-
-        <div className="container-main relative z-10">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <Badge className="bg-amber-500/10 text-amber-300 border-emerald-500/20 mb-4 backdrop-blur-sm">
-              <Clock className="size-3 mr-1" />
-              Coming Soon
+        {/* Compact Title Bar — ~60px */}
+        <motion.div
+          className="relative z-10 flex items-center justify-between px-4 lg:px-6 py-3 border-b border-white/[0.06]"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="flex items-center gap-3">
+            <Badge className="bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[10px] font-semibold backdrop-blur-sm shrink-0">
+              <Clock className="size-2.5 mr-1" />
+              Products
             </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-white">
-              Products in <span className="text-gradient-amber">Development</span>
-            </h2>
-            <p className="text-white/60">
-              We&apos;re working on cutting-edge tools to solve real business challenges. Be the first to know when they launch.
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
+            <h1 className="text-base lg:text-lg font-bold text-white">
+              Our <span className="text-gradient-amber">Products</span>
+            </h1>
+            <span className="hidden sm:inline text-[10px] text-white/30 uppercase tracking-widest">
+              Coming Soon
+            </span>
+          </div>
+          <button
+            onClick={() => navigate('contact')}
+            className="hidden md:inline-flex items-center gap-1 text-[10px] text-white/40 hover:text-emerald-400 transition-colors"
           >
-            {products.map((product) => {
-              const Icon = product.icon;
-              const isSubscribed = subscribed[product.id];
+            Need a custom solution?
+            <ArrowRight className="size-3" />
+          </button>
+        </motion.div>
 
-              return (
-                <motion.div key={product.id} variants={itemVariants}>
-                  <Card className="h-full border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 group overflow-hidden relative shimmer-sweep">
-                    {/* Animated gradient top accent */}
-                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${product.gradient} animate-gradient-shift`} style={{ backgroundSize: '200% 100%' }} />
+        {/* 2×2 Product Cards Grid */}
+        <motion.div
+          className="relative z-10 flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {products.map((product) => {
+            const Icon = product.icon;
+            const isSubscribed = subscribed[product.id];
 
-                    <CardContent className="p-6 pt-8">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className={`size-14 rounded-2xl bg-gradient-to-br ${product.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                          <Icon className="size-7 text-white" />
-                        </div>
-                        <Badge className="bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-semibold flex items-center gap-1.5 backdrop-blur-sm">
-                          <span className="relative flex size-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full size-2 bg-amber-400" />
-                          </span>
-                          Coming Soon
+            return (
+              <motion.div key={product.id} variants={itemVariants} className="min-h-0">
+                <Card className="h-full bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 lg:p-4 hover:bg-white/[0.06] transition-all duration-300 group overflow-hidden relative flex flex-col">
+                  {/* Top accent line */}
+                  <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${product.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
+
+                  {/* Header: icon + title + launch badge */}
+                  <div className="flex items-start gap-2.5 mb-2">
+                    <div className={`size-10 lg:size-12 shrink-0 rounded-xl bg-gradient-to-br ${product.gradient} flex items-center justify-center shadow-lg group-hover:scale-105 group-hover:rotate-1 transition-all duration-300`}>
+                      <Icon className="size-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm lg:text-base font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
+                          {product.title}
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Badge className="text-[9px] px-2 py-0 rounded-full bg-white/[0.04] text-white/40 border-0 font-normal">
+                          {product.launchDate}
                         </Badge>
+                        <CompactCountdown targetDate={launchDates[product.id] || new Date()} />
                       </div>
+                    </div>
+                  </div>
 
-                      {/* Title & Description */}
-                      <h3 className="text-xl font-bold mb-2 text-white group-hover:text-emerald-400 transition-colors">
-                        {product.title}
-                      </h3>
-                      <p className="text-sm text-white/40 leading-relaxed mb-4">
-                        {product.description}
-                      </p>
+                  {/* Description — 2 lines */}
+                  <p className="text-[11px] lg:text-xs text-white/40 leading-relaxed line-clamp-2 mb-2">
+                    {product.description}
+                  </p>
 
-                      {/* Features */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mb-5">
-                        {product.features.map((feature) => (
-                          <div key={feature} className="flex items-center gap-2 text-sm text-white/60">
-                            <CheckCircle2 className="size-3.5 text-amber-400 shrink-0" />
-                            <span>{feature}</span>
-                          </div>
-                        ))}
+                  {/* Feature pills */}
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {product.features.map((feature) => (
+                      <span
+                        key={feature}
+                        className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.04] text-white/45 whitespace-nowrap"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Spacer to push email to bottom */}
+                  <div className="flex-1" />
+
+                  {/* Email Notification — compact */}
+                  {isSubscribed ? (
+                    <motion.div
+                      className="flex items-center gap-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/15"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <CheckCircle2 className="size-3 text-amber-400 shrink-0" />
+                      <span className="text-[10px] text-amber-400 font-medium">
+                        You&apos;ll be notified at launch!
+                      </span>
+                    </motion.div>
+                  ) : (
+                    <div className="flex gap-1.5">
+                      <div className="relative flex-1">
+                        <Mail className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-white/25" />
+                        <Input
+                          type="email"
+                          placeholder="your@email.com"
+                          value={emailInputs[product.id] || ''}
+                          onChange={(e) => setEmailInputs((prev) => ({ ...prev, [product.id]: e.target.value }))}
+                          className="pl-7 h-7 text-[10px] bg-white/[0.04] border-white/[0.06] rounded-lg focus:border-amber-400/50 focus:ring-amber-400/10 placeholder:text-white/25"
+                          aria-label={`Email for ${product.title} notifications`}
+                        />
                       </div>
-
-                      {/* Launch Countdown */}
-                      <div className="mb-5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Flame className="size-3.5 text-amber-500" />
-                          <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">
-                            Launch Countdown
-                          </span>
-                        </div>
-                        <CountdownTimer targetDate={launchDates[product.id] || new Date()} />
-                      </div>
-
-                      {/* Email Notification */}
-                      {isSubscribed ? (
-                        <motion.div
-                          className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                        >
-                          <CheckCircle2 className="size-4 text-amber-500 shrink-0" />
-                          <span className="text-sm text-amber-500 dark:text-amber-300 font-medium">
-                            You&apos;ll be notified when this launches!
-                          </span>
-                        </motion.div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <div className="relative flex-1">
-                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                              <Input
-                                type="email"
-                                placeholder="your@email.com"
-                                value={emailInputs[product.id] || ''}
-                                onChange={(e) => setEmailInputs((prev) => ({ ...prev, [product.id]: e.target.value }))}
-                                className="pl-9 h-10 text-sm bg-white/[0.06] border-white/[0.06] focus:border-amber-400 focus:ring-amber-400/20"
-                                aria-label={`Email for ${product.title} notifications`}
-                              />
-                            </div>
-                            <Button
-                              onClick={() => handleSubscribe(product.id)}
-                              disabled={subscribing === product.id}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 shrink-0 shadow-md shadow-emerald-500/20 hover:shadow-lg"
-                            >
-                              {subscribing === product.id ? (
-                                <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              ) : (
-                                <>
-                                  <Bell className="size-4 mr-1.5" />
-                                  Notify Me
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                          <p className="text-xs text-white/30">
-                            No spam, unsubscribe anytime. We&apos;ll only notify you about this product launch.
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-
-          {/* CTA */}
-          <motion.div
-            className="mt-16 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <p className="text-white/40 mb-4">Need a custom solution right now?</p>
-            <Button
-              onClick={() => navigate('contact')}
-              className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 shadow-emerald-500/20"
-            >
-              Get a Custom Solution
-              <ArrowRight className="size-4 ml-2" />
-            </Button>
-          </motion.div>
-        </div>
-      </section>
+                      <Button
+                        onClick={() => handleSubscribe(product.id)}
+                        disabled={subscribing === product.id}
+                        className="h-7 text-[10px] px-2.5 lg:px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shrink-0 shadow-md shadow-emerald-500/15"
+                      >
+                        {subscribing === product.id ? (
+                          <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <Bell className="size-2.5 mr-1" />
+                            <span className="hidden sm:inline">Get Notified</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      </div>
     </main>
   );
 }

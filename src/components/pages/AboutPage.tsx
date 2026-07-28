@@ -7,7 +7,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import PageHero from '@/components/ui/page-hero';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 import { useSEO } from '@/hooks/use-seo';
 
@@ -56,52 +55,6 @@ const stats = [
   { value: 50, suffix: '+', label: 'Team Members', icon: UsersRound, maxValue: 100 },
 ];
 
-function AnimatedStatCard({ value, suffix, label, icon: Icon, delay = 0, maxValue = 100 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number; maxValue?: number }) {
-  const { count, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
-  const progress = Math.min(count / maxValue, 1);
-  const size = 80;
-  const strokeWidth = 4;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - progress * circumference;
-
-  return (
-    <Card ref={ref} className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 group">
-      <CardContent className="p-6 text-center">
-        <div className="relative mx-auto mb-3" style={{ width: size, height: size }}>
-          <svg className="absolute inset-0 -rotate-90 group-hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.4)] transition-all duration-300" width={size} height={size}>
-            <defs>
-              <linearGradient id={`ring-gradient-${label.replace(/\s+/g, '-')}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#10b981" />
-                <stop offset="100%" stopColor="#f59e0b" />
-              </linearGradient>
-            </defs>
-            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="currentColor" strokeWidth={strokeWidth} className="text-white/[0.06]" />
-            <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={`url(#ring-gradient-${label.replace(/\s+/g, '-')})`} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className="transition-all duration-100 ease-out" />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="size-10 rounded-xl bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md transition-shadow duration-300">
-              <Icon className="size-5 text-amber-400" />
-            </div>
-          </div>
-        </div>
-        <div className="text-2xl font-bold text-amber-400 tabular-nums">{count}{suffix}</div>
-        <div className="text-sm text-white/40 mt-1">{label}</div>
-      </CardContent>
-    </Card>
-  );
-}
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-};
-
 const socialLinks = [
   { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-[#0077B5]', field: 'linkedin' as const },
   { icon: Twitter, label: 'Twitter', color: 'hover:bg-[#1DA1F2]', field: 'twitter' as const },
@@ -109,12 +62,43 @@ const socialLinks = [
   { icon: Mail, label: 'Email', color: 'hover:bg-emerald-700', field: 'email' as const },
 ];
 
+function CompactStatItem({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
+  const { count, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
+
+  return (
+    <div ref={ref} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 group">
+      <div className="size-10 shrink-0 rounded-lg bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md group-hover:shadow-amber-500/20 transition-all duration-300">
+        <Icon className="size-4 text-amber-400" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-lg font-bold text-amber-400 tabular-nums leading-tight">{count}{suffix}</div>
+        <div className="text-xs text-white/40 leading-tight truncate">{label}</div>
+      </div>
+    </div>
+  );
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+};
+
+const fadeVariant = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+};
+
 function TeamFlipCard({ member }: { member: TeamMember }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
     <div
-      className="relative w-full h-[320px] cursor-pointer"
+      className="relative w-full cursor-pointer"
       style={{ perspective: '1000px' }}
       onClick={() => setIsFlipped(!isFlipped)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsFlipped(!isFlipped); } }}
@@ -123,64 +107,50 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
       aria-label={`${member.name} - click to ${isFlipped ? 'hide' : 'show'} details`}
     >
       <motion.div
-        className="w-full h-full relative"
+        className="w-full relative"
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.6, type: 'spring', stiffness: 200, damping: 25 }}
         style={{ transformStyle: 'preserve-3d' }}
       >
         {/* Front face */}
-        <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-shadow" style={{ backfaceVisibility: 'hidden' }}>
-          <div className="h-44 bg-gradient-to-br from-amber-900/40 to-amber-800/30 relative overflow-hidden">
-            <div className="absolute inset-0 grid-pattern opacity-30" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="size-20 rounded-full bg-amber-500/40 flex items-center justify-center text-2xl font-bold text-amber-300">
+        <div className="rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300" style={{ backfaceVisibility: 'hidden' }}>
+          <div className="p-3">
+            <div className="flex items-center gap-3">
+              <div className="size-10 shrink-0 rounded-full bg-gradient-to-br from-amber-400/50 to-amber-500/50 flex items-center justify-center text-sm font-bold text-amber-200 shadow-lg shadow-amber-500/20">
                 {member.name.charAt(0)}
               </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-sm text-white truncate">{member.name}</h3>
+                <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
+              </div>
             </div>
-          </div>
-          <div className="p-5">
-            <h3 className="font-semibold text-lg text-white">{member.name}</h3>
-            <p className="text-sm text-amber-400 font-medium">{member.role}</p>
-            <p className="text-xs text-white/30 mt-2 line-clamp-2">{member.bio}</p>
-            <div className="flex items-center gap-1 mt-3 text-xs text-white/30">
-              <ExternalLink className="size-3" />
-              <span>Tap to see more</span>
-            </div>
+            <p className="text-[11px] text-white/30 mt-2 line-clamp-2 leading-relaxed">{member.bio}</p>
           </div>
         </div>
 
         {/* Back face */}
-        <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-amber-600 to-amber-500 shadow-xl" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-          <div className="absolute inset-0 grid-pattern opacity-10" />
-          <div className="relative z-10 p-5 h-full flex flex-col">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="size-12 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold text-white shrink-0">
+        <div className="absolute inset-0 w-full rounded-xl overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-amber-600 to-amber-500" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+          <div className="p-3 h-full flex flex-col">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="size-8 shrink-0 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white">
                 {member.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-white truncate">{member.name}</h3>
-                <p className="text-xs text-amber-200">{member.role}</p>
+                <h3 className="font-semibold text-xs text-white truncate">{member.name}</h3>
+                <p className="text-[10px] text-amber-200">{member.role}</p>
               </div>
             </div>
-
-            <p className="text-xs text-amber-100/80 leading-relaxed mb-3 flex-1">{member.bio}</p>
-
-            {/* Skills */}
+            <p className="text-[10px] text-amber-100/80 leading-relaxed flex-1 line-clamp-3">{member.bio}</p>
             {member.skills && member.skills.length > 0 && (
-              <div className="mb-4">
-                <p className="text-[10px] uppercase tracking-wider text-amber-200/60 font-medium mb-1.5">Skills</p>
-                <div className="flex flex-wrap gap-1">
-                  {member.skills.map((skill) => (
-                    <span key={skill} className="px-2 py-0.5 rounded-full bg-white/10 text-amber-100 text-[10px] font-medium">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {member.skills.slice(0, 3).map((skill) => (
+                  <span key={skill} className="px-1.5 py-0.5 rounded-full bg-white/10 text-amber-100 text-[9px] font-medium">
+                    {skill}
+                  </span>
+                ))}
               </div>
             )}
-
-            {/* Social links */}
-            <div className="flex gap-2 mt-auto">
+            <div className="flex gap-1.5 mt-2">
               {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
                 const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
                 return (
@@ -188,11 +158,11 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
                     key={label}
                     href={href}
                     onClick={(e) => e.stopPropagation()}
-                    className={`size-8 rounded-full bg-white/15 backdrop-blur-sm text-white flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
+                    className={`size-6 rounded-full bg-white/15 backdrop-blur-sm text-white flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
                     aria-label={`${label} - ${member.name}`}
                     title={`${label} - ${member.name}`}
                   >
-                    <SocialIcon className="size-3.5" />
+                    <SocialIcon className="size-3" />
                   </a>
                 );
               })}
@@ -208,30 +178,52 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <motion.div
-      className="relative p-[2px] rounded-xl group/border"
-      whileHover={{ scale: 1.01 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* Animated gradient border on hover */}
+    <div className="relative p-[1px] rounded-xl group/border">
       <motion.div
         className="absolute inset-0 rounded-xl opacity-0 group-hover/border:opacity-100 transition-opacity duration-500"
         style={{ background: 'conic-gradient(from 0deg, #f59e0b, #10b981, #f59e0b, #10b981)' }}
         animate={{ rotate: 360 }}
         transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
       />
-      <Card className="relative z-10 overflow-hidden border-transparent bg-white/[0.04] backdrop-blur-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 group">
-        <div className="h-48 bg-gradient-to-br from-amber-800/50 to-amber-700/40 relative overflow-hidden">
-          <div className="absolute inset-0 grid-pattern opacity-30" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="size-20 rounded-full bg-gradient-to-br from-amber-400/50 to-amber-500/50 flex items-center justify-center text-2xl font-bold text-amber-200 transition-transform duration-300 group-hover:scale-110 shadow-lg shadow-amber-500/20">
-            {member.name.charAt(0)}
+      <Card className="relative z-10 overflow-hidden border-transparent bg-white/[0.04] backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 group">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-3">
+            <div className="size-10 shrink-0 rounded-full bg-gradient-to-br from-amber-400/50 to-amber-500/50 flex items-center justify-center text-sm font-bold text-amber-200 transition-transform duration-300 group-hover:scale-110 shadow-lg shadow-amber-500/20">
+              {member.name.charAt(0)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-sm text-white group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
+              <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
+            </div>
           </div>
-        </div>
-        {/* Hover social overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-gradient-to-t from-amber-900/90 via-amber-900/70 to-amber-800/40 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
-          <p className="text-[11px] text-amber-200 font-medium mb-2 tracking-wide uppercase">Connect</p>
-          <div className="flex gap-2">
+          <div className="mt-2">
+            <p className={`text-[11px] text-white/40 leading-relaxed transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}>
+              {member.bio}
+            </p>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-[10px] text-amber-400 font-medium mt-0.5 hover:text-amber-300 transition-colors"
+            >
+              {expanded ? 'Show less' : 'Read more'}
+            </button>
+          </div>
+          {expanded && member.skills && member.skills.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-2 pt-2 border-t border-white/[0.06]"
+            >
+              <div className="flex flex-wrap gap-1">
+                {member.skills.map((skill) => (
+                  <Badge key={skill} variant="secondary" className="text-[9px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-1.5 py-0">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </motion.div>
+          )}
+          <div className="flex gap-1.5 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
               const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
               return (
@@ -240,52 +232,16 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
                   href={href}
                   aria-label={`${label} - ${member.name}`}
                   title={`${label} - ${member.name}`}
-                  className={`size-8 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
+                  className={`size-6 rounded-full bg-white/10 text-white/60 flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
                 >
-                  <SocialIcon className="size-3.5" />
+                  <SocialIcon className="size-3" />
                 </a>
               );
             })}
           </div>
-        </div>
-      </div>
-      <CardContent className="p-5">
-        <h3 className="font-semibold text-lg text-white group-hover:text-amber-400 transition-colors">{member.name}</h3>
-        <p className="text-sm text-amber-400 font-medium">{member.role}</p>
-
-        {/* Expandable bio */}
-        <div className="mt-3">
-          <p className={`text-xs text-white/40 leading-relaxed transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}>
-            {member.bio}
-          </p>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-xs text-amber-400 font-medium mt-1 hover:text-amber-300 transition-colors"
-          >
-            {expanded ? 'Show less' : 'Read more'}
-          </button>
-        </div>
-
-        {/* Skills (visible when expanded) */}
-        {expanded && member.skills && member.skills.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mt-3 pt-3 border-t border-white/[0.06]"
-          >
-            <div className="flex flex-wrap gap-1">
-              {member.skills.map((skill) => (
-                <Badge key={skill} variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                  {skill}
-                </Badge>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </CardContent>
+        </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -295,8 +251,10 @@ export default function AboutPage() {
     description: 'Learn about Lightworld Technologies - a passionate team of innovators dedicated to transforming businesses through technology in Ghana and across Africa.',
     keywords: ['about Lightworld Technologies', 'IT company Ghana', 'tech team Accra', 'web development company', 'digital transformation Africa'],
   });
+
   const [team, setTeam] = useState<TeamMember[]>(defaultTeam);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     fetcher('/api/team')
       .then((data) => {
@@ -317,164 +275,167 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <main>
-      {/* Hero Banner */}
-      <PageHero
-        title="About Lightworld Technologies"
-        subtitle="A passionate team of innovators driving digital transformation across Africa and beyond."
-        badge="Est. 2016"
-      />
-
-      {/* Company Story */}
-      <section className="py-16 lg:py-24 bg-[#050810]">
-        <div className="container-main">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <span className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Our Story</span>
-              <h2 className="text-3xl font-bold mt-2 mb-6 text-white">Building the Future of Technology in Africa</h2>
-              <div className="space-y-4 text-white/60 leading-relaxed">
-                <p>Founded with a vision to bridge the technology gap in Africa, Lightworld Technologies has grown from a small startup to a leading IT solutions provider. Our journey began with a simple belief: that every business, regardless of size, deserves access to world-class technology solutions.</p>
-                <p>Over the years, we have built a reputation for excellence, innovation, and client satisfaction. Our team of talented professionals brings diverse expertise and a shared passion for creating impactful digital solutions that drive real business outcomes.</p>
-                <p>Today, we serve clients across multiple industries, from startups to established enterprises, helping them navigate the digital landscape and achieve sustainable growth through technology.</p>
-              </div>
-            </motion.div>
-            <motion.div className="grid grid-cols-2 gap-4" initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
-              {stats.map((stat, index) => (
-                <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: index * 0.1 }}>
-                  <AnimatedStatCard value={stat.value} suffix={stat.suffix} label={stat.label} icon={stat.icon} delay={index * 200} maxValue={stat.maxValue} />
-                </motion.div>
-              ))}
-            </motion.div>
+    <main className="h-[calc(100vh-5rem)] overflow-hidden bg-[#0a0f1a] flex flex-col">
+      {/* Compact Title Bar */}
+      <motion.div
+        className="shrink-0 px-6 py-4 flex items-center gap-4 border-b border-white/[0.06]"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div variants={fadeVariant}>
+          <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20 font-semibold shrink-0">
+            Est. 2016
+          </Badge>
+        </motion.div>
+        <motion.div variants={fadeVariant} className="min-w-0">
+          <h1 className="text-xl font-bold text-white/90 truncate">About Lightworld Technologies</h1>
+          <p className="text-xs text-white/40 truncate">A passionate team of innovators driving digital transformation across Africa and beyond.</p>
+        </motion.div>
+        <motion.div variants={fadeVariant} className="ml-auto hidden md:flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <Target className="size-3.5 text-amber-400" />
+            <span className="text-[11px] text-amber-300 font-medium">Mission-Driven</span>
           </div>
-        </div>
-      </section>
-
-      {/* Mission & Vision */}
-      <section className="py-16 lg:py-24 bg-[#050810]">
-        <div className="container-main">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <Card className="h-full border-amber-500/20 bg-amber-500/5 backdrop-blur-sm">
-                <CardContent className="p-8">
-                  <div className="size-12 rounded-lg bg-amber-500/10 flex items-center justify-center mb-4"><Target className="size-6 text-amber-400" /></div>
-                  <h3 className="text-xl font-bold mb-3 text-white">Our Mission</h3>
-                  <p className="text-white/60 leading-relaxed">To deliver innovative, reliable, and scalable IT solutions that empower businesses across Africa to achieve digital transformation, drive growth, and compete effectively in the global marketplace.</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}>
-              <Card className="h-full border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm">
-                <CardContent className="p-8">
-                  <div className="size-12 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4"><Eye className="size-6 text-emerald-400" /></div>
-                  <h3 className="text-xl font-bold mb-3 text-white">Our Vision</h3>
-                  <p className="text-white/60 leading-relaxed">To be Africa&apos;s most trusted technology partner, recognized globally for our commitment to innovation, quality, and the positive impact we create for businesses and communities through technology.</p>
-                </CardContent>
-              </Card>
-            </motion.div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+            <Eye className="size-3.5 text-emerald-400" />
+            <span className="text-[11px] text-emerald-300 font-medium">Future-Focused</span>
           </div>
-        </div>
-      </section>
+        </motion.div>
+      </motion.div>
 
-      {/* Core Values */}
-      <section className="py-16 lg:py-24 bg-[#050810]">
-        <div className="container-main">
-          <motion.div className="text-center max-w-2xl mx-auto mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <span className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Our Values</span>
-            <h2 className="text-3xl font-bold mt-2 mb-4 text-white">Core Values That Drive Us</h2>
-            <p className="text-white/60">The principles that guide everything we do at Lightworld Technologies.</p>
-          </motion.div>
-          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+      {/* Main Content Grid */}
+      <motion.div
+        className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        {/* Left Column — Stats */}
+        <motion.div variants={itemVariants} className="md:col-span-3 flex flex-col gap-3">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
+            <h2 className="text-sm font-semibold text-white/90 uppercase tracking-wider">By the Numbers</h2>
+          </div>
+          <div className="flex flex-col gap-2 flex-1">
+            {stats.map((stat, index) => (
+              <CompactStatItem
+                key={stat.label}
+                value={stat.value}
+                suffix={stat.suffix}
+                label={stat.label}
+                icon={stat.icon}
+                delay={index * 200}
+              />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Center Column — Core Values */}
+        <motion.div variants={itemVariants} className="md:col-span-5 flex flex-col gap-3 min-h-0">
+          <div className="flex items-center gap-2 mb-1 shrink-0">
+            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-amber-400 to-emerald-400" />
+            <h2 className="text-sm font-semibold text-white/90 uppercase tracking-wider">Core Values</h2>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 flex-1 min-h-0 auto-rows-fr">
             {values.map((value, idx) => (
-              <motion.div key={value.title} variants={itemVariants}>
-                <Card className="h-full border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
-                  <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx % 3 === 0 ? 'bg-emerald-500/10' : idx % 3 === 1 ? 'bg-amber-500/10' : 'bg-yellow-500/10'}`} />
-                  <CardContent className="p-6 relative">
-                    <div className={`size-12 rounded-xl flex items-center justify-center mb-4 group-hover:shadow-md transition-all duration-300 group-hover:scale-110 ${idx % 3 === 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md shadow-yellow-500/20'}`}>
-                      <value.icon className="size-5 text-white" />
+              <motion.div key={value.title} variants={itemVariants} className="min-h-0">
+                <Card className="h-full border-white/[0.06] bg-white/[0.03] backdrop-blur-sm hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 group overflow-hidden relative rounded-xl">
+                  <div className={`absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx % 3 === 0 ? 'bg-emerald-500/10' : idx % 3 === 1 ? 'bg-amber-500/10' : 'bg-yellow-500/10'}`} />
+                  <CardContent className="p-3 relative flex flex-col h-full">
+                    <div className={`size-8 rounded-lg flex items-center justify-center mb-2 shrink-0 group-hover:scale-110 transition-all duration-300 ${idx % 3 === 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md shadow-yellow-500/20'}`}>
+                      <value.icon className="size-3.5 text-white" />
                     </div>
-                    <h3 className="font-semibold mb-2 text-white group-hover:text-amber-400 transition-colors">{value.title}</h3>
-                    <p className="text-sm text-white/40 leading-relaxed">{value.description}</p>
+                    <h3 className="font-semibold text-xs text-white group-hover:text-amber-400 transition-colors leading-tight">{value.title}</h3>
+                    <p className="text-[10px] text-white/40 leading-relaxed mt-1 line-clamp-2">{value.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
             ))}
-          </motion.div>
-        </div>
-      </section>
+          </div>
+        </motion.div>
 
-      {/* Team */}
-      <section className="py-16 lg:py-24 bg-[#050810]">
-        <div className="container-main">
-          <motion.div className="text-center max-w-2xl mx-auto mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <span className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Our Team</span>
-            <h2 className="text-3xl font-bold mt-2 mb-4 text-white">Meet the Experts</h2>
-            <p className="text-white/60">The talented people behind our success. <span className="text-amber-400 font-medium">Click a card</span> to learn more.</p>
-          </motion.div>
+        {/* Right Column — Team */}
+        <motion.div variants={itemVariants} className="md:col-span-4 flex flex-col gap-3 min-h-0">
+          <div className="flex items-center gap-2 mb-1 shrink-0">
+            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
+            <h2 className="text-sm font-semibold text-white/90 uppercase tracking-wider">Our Team</h2>
+            <span className="text-[10px] text-white/25 ml-auto hidden md:inline">Click to explore</span>
+          </div>
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-col gap-2 flex-1">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Card key={i} className="bg-white/[0.04] border border-white/[0.06]">
-                  <Skeleton className="h-48 w-full rounded-t-lg" />
-                  <div className="p-5">
-                    <Skeleton className="h-5 w-2/3 mb-2" />
-                    <Skeleton className="h-4 w-1/2 mb-2" />
-                    <Skeleton className="h-4 w-full" />
+                  <div className="p-3 flex items-center gap-3">
+                    <Skeleton className="size-10 rounded-full shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-3.5 w-2/3" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
                   </div>
                 </Card>
               ))}
             </div>
           ) : (
-            <>
-              {/* Desktop: Expand cards with hover social links */}
-              <motion.div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <div className="flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+              {/* Desktop: Expand cards */}
+              <div className="hidden lg:flex flex-col gap-2">
                 {team.map((member) => (
-                  <motion.div key={member.id} variants={itemVariants}>
-                    <TeamExpandCard member={member} />
-                  </motion.div>
+                  <TeamExpandCard key={member.id} member={member} />
                 ))}
-              </motion.div>
-
-              {/* Mobile/Tablet: Flip cards */}
-              <div className="lg:hidden">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {team.map((member) => (
-                    <TeamFlipCard key={member.id} member={member} />
-                  ))}
-                </div>
               </div>
-            </>
+              {/* Mobile/Tablet: Flip cards */}
+              <div className="lg:hidden flex flex-col gap-2">
+                {team.map((member) => (
+                  <TeamFlipCard key={member.id} member={member} />
+                ))}
+              </div>
+            </div>
           )}
-        </div>
-      </section>
+        </motion.div>
+      </motion.div>
 
-      {/* Awards */}
-      <section className="py-16 lg:py-24 bg-[#050810]">
-        <div className="container-main">
-          <motion.div className="text-center max-w-2xl mx-auto mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <span className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Recognition</span>
-            <h2 className="text-3xl font-bold mt-2 mb-4 text-white">Awards & Achievements</h2>
-          </motion.div>
-          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            {awards.map((award) => (
-              <motion.div key={award.title} variants={itemVariants}>
-                <Card className="h-full border-amber-500/20 bg-gradient-to-br from-amber-900/20 to-[#050810] text-center hover:shadow-lg hover:shadow-amber-500/10 hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
-                  <div className="absolute -top-8 -right-8 w-20 h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors duration-500" />
-                  {/* Shimmer effect on hover */}
-                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
-                  <CardContent className="p-6 relative">
-                    <div className="size-14 rounded-full bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center mx-auto mb-3 group-hover:shadow-md transition-shadow duration-300">
-                      <Award className="size-6 text-amber-400" />
-                    </div>
-                    <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20 mb-3 font-semibold">{award.year}</Badge>
-                    <h3 className="font-semibold text-sm mb-1 text-white">{award.title}</h3>
-                    <p className="text-xs text-white/40">{award.organization}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
+      {/* Bottom — Awards Bar */}
+      <motion.div
+        className="shrink-0 border-t border-white/[0.06] px-6 py-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.5 }}
+      >
+        <div className="flex items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+          <div className="flex items-center gap-2 shrink-0">
+            <Award className="size-4 text-amber-400" />
+            <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">Awards</span>
+          </div>
+          <div className="w-px h-5 bg-white/[0.06] shrink-0" />
+          {awards.map((award, index) => (
+            <motion.div
+              key={award.title}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.6 + index * 0.08 }}
+              className="shrink-0"
+            >
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:border-amber-500/30 hover:bg-white/[0.05] transition-all duration-300 group cursor-default">
+                <div className="size-7 shrink-0 rounded-md bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md transition-shadow duration-300">
+                  <Award className="size-3 text-amber-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-white/90 truncate max-w-[180px]">{award.title}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <Badge className="text-[9px] bg-amber-500/10 text-amber-300 border-amber-500/20 px-1.5 py-0 font-semibold">{award.year}</Badge>
+                    <span className="text-[10px] text-white/25 truncate max-w-[140px]">{award.organization}</span>
+                  </div>
+                </div>
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none rounded-lg" />
+              </div>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </motion.div>
     </main>
   );
 }

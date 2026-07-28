@@ -7,7 +7,6 @@ import Footer from '@/components/layout/Footer';
 import FloatingWidgets from '@/components/layout/FloatingWidgets';
 import CookieConsent from '@/components/layout/CookieConsent';
 import NewsletterPopup from '@/components/layout/NewsletterPopup';
-import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import PageLoader from '@/components/ui/page-loader';
 import ScrollProgress from '@/components/ui/scroll-progress';
 import CommandPalette from '@/components/ui/command-palette';
@@ -35,11 +34,7 @@ import AdminFAQs from '@/components/admin/AdminFAQs';
 import AdminSettings from '@/components/admin/AdminSettings';
 
 function AdminRouter() {
-  const { currentPage, adminTab } = useAppStore();
-
-  if (currentPage === 'admin-blog-editor') {
-    return <AdminBlogEditor />;
-  }
+  const { adminTab } = useAppStore();
 
   switch (adminTab) {
     case 'dashboard':
@@ -132,17 +127,18 @@ export default function Home() {
     );
   }
 
+  const isHomePage = currentPage === 'home';
+
   return (
     <div className="min-h-screen flex flex-col">
       <Preloader />
-      <ScrollProgress />
+      {!isHomePage && <ScrollProgress />}
       <PageLoader />
-      {/* Header is now a floating pill nav */}
       <Header />
-      <main className="flex-1">
+      <main className={isHomePage ? 'flex-1' : 'flex-1'}>
         <PublicRouter />
       </main>
-      <Footer />
+      {!isHomePage && <Footer />}
       <FloatingWidgets />
       <CookieConsent />
       <NewsletterPopup />

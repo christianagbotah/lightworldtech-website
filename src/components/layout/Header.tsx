@@ -51,7 +51,6 @@ export default function Header() {
     setMobileMenuOpen(false);
   };
 
-  // Determine if we're on the homepage (dark bg) or an inner page
   const isHomePage = currentPage === 'home';
 
   return (
@@ -60,22 +59,18 @@ export default function Header() {
       <header
         className={cn(
           'fixed top-2.5 lg:top-3.5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.25rem)] lg:w-auto lg:max-w-3xl transition-all duration-500',
-          scrolled && !isHomePage ? 'top-2 lg:top-2' : '',
         )}
       >
         <nav
           className={cn(
-            'flex items-center justify-between px-2.5 lg:px-3 py-2 rounded-full transition-all duration-500',
-            // Dark mode (always for home, conditional for inner)
-            'dark:bg-slate-950/80 border dark:border-white/[0.06]',
-            // Light mode (inner pages only)
-            'bg-white/80 border-slate-200/50',
-            // Home always dark
-            isHomePage && 'bg-[#0a0f1a]/85 border-white/[0.08]',
+            'flex items-center justify-between px-2.5 lg:px-3 py-2 rounded-full transition-all duration-500 backdrop-blur-xl',
+            // Home page: always dark floating
+            isHomePage
+              ? 'bg-[#0a0f1a]/85 border border-white/[0.08]'
+              : 'dark:bg-slate-950/80 bg-white/80 dark:border-white/[0.06] border-slate-200/50',
             // Scrolled on inner pages
             scrolled && !isHomePage && 'dark:bg-slate-950/90 border-white/[0.1] shadow-2xl dark:shadow-black/20',
             scrolled && !isHomePage && 'bg-white/90 border-slate-200/60 shadow-2xl shadow-slate-200/50',
-            'backdrop-blur-xl',
           )}
         >
           {/* Logo */}
@@ -261,7 +256,7 @@ export default function Header() {
         </nav>
       </header>
 
-      {/* ═══ Spacer for non-home pages (to push content below floating nav) ═══ */}
+      {/* ═══ Spacer for non-home pages ═══ */}
       {!isHomePage && <div className="h-14 lg:h-16" />}
     </>
   );

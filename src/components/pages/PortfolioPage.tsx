@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { ExternalLink, X, Layers, SearchX, ChevronDown, Sparkles, Grid3x3, LayoutGrid, ZoomIn, Maximize2 } from 'lucide-react';
+import { ExternalLink, X, Layers, SearchX, ChevronDown, Sparkles, ZoomIn, Maximize2, Briefcase, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import PageHero from '@/components/ui/page-hero';
 import { useSEO } from '@/hooks/use-seo';
 import CTASection from '@/components/sections/CTASection';
 import ImageLightbox from '@/components/ui/image-lightbox';
@@ -30,7 +29,7 @@ interface PortfolioItem {
   featured: boolean;
   clientUrl?: string;
   fullDescription?: string;
-  height?: 'short' | 'tall' | 'medium'; // For masonry layout
+  height?: 'short' | 'tall' | 'medium';
 }
 
 const defaultPortfolio: PortfolioItem[] = [
@@ -57,24 +56,18 @@ const itemVariants = {
   visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-// Gradient backgrounds for portfolio cards (simulating images)
-const cardGradients = [
-  'from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/30',
-  'from-yellow-100 to-yellow-200 dark:from-yellow-900/40 dark:to-yellow-800/30',
-  'from-cyan-100 to-cyan-200 dark:from-cyan-900/40 dark:to-cyan-800/30',
-  'from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/30',
-  'from-rose-100 to-rose-200 dark:from-rose-900/40 dark:to-rose-800/30',
-  'from-violet-100 to-violet-200 dark:from-violet-900/40 dark:to-violet-800/30',
-  'from-sky-100 to-sky-200 dark:from-sky-900/40 dark:to-sky-800/30',
-  'from-lime-100 to-lime-200 dark:from-lime-900/40 dark:to-lime-800/30',
-  'from-orange-100 to-orange-200 dark:from-orange-900/40 dark:to-orange-800/30',
-];
+// Category color mapping for badges
+const categoryColors: Record<string, string> = {
+  'Web Development': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+  'Mobile App': 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+  'Software Development': 'bg-violet-500/15 text-violet-400 border-violet-500/20',
+};
 
-// Masonry column heights
-const masonryHeights = {
-  short: 'h-48',
-  medium: 'h-64',
-  tall: 'h-80',
+// Card gradient accents based on category
+const categoryCardAccents: Record<string, string> = {
+  'Web Development': 'from-emerald-500/8 to-emerald-600/3',
+  'Mobile App': 'from-amber-500/8 to-amber-600/3',
+  'Software Development': 'from-violet-500/8 to-violet-600/3',
 };
 
 export default function PortfolioPage() {
@@ -89,15 +82,14 @@ export default function PortfolioPage() {
   const [selectedProject, setSelectedProject] = useState<PortfolioItem | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [visibleCount, setVisibleCount] = useState(6);
-  const [layoutMode, setLayoutMode] = useState<'grid' | 'masonry'>('grid');
+  const [visibleCount, setVisibleCount] = useState(9);
   const itemsPerPage = 6;
 
   // Reset visible count when category changes
   const prevCategoryRef = useState(activeCategory);
   if (prevCategoryRef[0] !== activeCategory) {
     prevCategoryRef[1](activeCategory);
-    setVisibleCount(6);
+    setVisibleCount(9);
   }
 
   useEffect(() => {
@@ -105,7 +97,14 @@ export default function PortfolioPage() {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           const merged = data.map((p: Record<string, unknown>, i: number) => ({
-            ...p,
+            id: String(p.id || defaultPortfolio[i]?.id || String(i)),
+            title: String(p.title || defaultPortfolio[i]?.title || ''),
+            description: String(p.description || defaultPortfolio[i]?.description || ''),
+            category: String(p.category || defaultPortfolio[i]?.category || ''),
+            tags: Array.isArray(p.tags) ? p.tags.map(String) : (defaultPortfolio[i]?.tags || []),
+            featured: p.featured === true,
+            clientUrl: String(p.clientUrl || defaultPortfolio[i]?.clientUrl || ''),
+            fullDescription: String(p.fullDescription || defaultPortfolio[i]?.fullDescription || ''),
             height: (p.height || defaultPortfolio[i]?.height || ['short', 'medium', 'tall'][i % 3]) as 'short' | 'tall' | 'medium',
           }));
           setPortfolio(merged);
@@ -139,267 +138,242 @@ export default function PortfolioPage() {
     }));
   }, [portfolio]);
 
-  // Masonry layout: split items into columns
-  const masonryColumns = useMemo(() => {
-    const cols: PortfolioItem[][] = [[], [], []];
-    visibleItems.forEach((item, i) => {
-      cols[i % 3].push(item);
-    });
-    return cols;
-  }, [visibleItems]);
-
   return (
-    <main>
-      {/* Hero Banner */}
-      <PageHero
-        title="Our Portfolio"
-        subtitle="Explore our diverse range of projects that showcase our expertise and creativity."
-      />
+    <main className="bg-[#0a0f1a] min-h-screen">
+      {/* Compact Title Bar */}
+      <section className="relative">
+        {/* Subtle top gradient glow */}
+        <div className="absolute top-0 left-1/4 w-96 h-32 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-1/4 w-80 h-24 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Portfolio Grid */}
-      <section className="py-16 lg:py-24 bg-[#050810]">
-        <div className="container-main">
-          {/* Filter tabs + layout toggle */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.name}
-                  onClick={() => setActiveCategory(cat.name)}
-                  className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all capitalize flex items-center gap-2 ${
-                    activeCategory === cat.name
-                      ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white shadow-md shadow-emerald-500/20'
-                      : 'bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:text-emerald-400 border border-white/[0.06]'
-                  }`}
-                >
-                  {cat.name === 'all' ? 'All Projects' : cat.name}
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center font-medium ${
-                    activeCategory === cat.name ? 'bg-white/20 text-white' : 'bg-white/[0.06] text-white/40'
-                  }`}>
-                    {cat.count}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            {/* Layout toggle */}
-            <div className="flex items-center gap-1 bg-white/[0.04] rounded-lg p-1 border border-white/[0.06]">
-              <button
-                onClick={() => setLayoutMode('grid')}
-                className={`p-2 rounded-md transition-all ${layoutMode === 'grid' ? 'bg-emerald-500/10 text-emerald-400' : 'text-white/30 hover:text-white/60'}`}
-                aria-label="Grid layout"
-                title="Grid layout"
-              >
-                <Grid3x3 className="size-4" />
-              </button>
-              <button
-                onClick={() => setLayoutMode('masonry')}
-                className={`p-2 rounded-md transition-all ${layoutMode === 'masonry' ? 'bg-emerald-500/10 text-emerald-400' : 'text-white/30 hover:text-white/60'}`}
-                aria-label="Masonry layout"
-                title="Masonry layout"
-              >
-                <LayoutGrid className="size-4" />
-              </button>
-            </div>
+        <div className="container-main relative z-10">
+          {/* Badge + Title Row */}
+          <div className="flex items-center gap-4 mb-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium"
+            >
+              <Briefcase className="size-3" />
+              Our Portfolio
+            </motion.div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">
+              Projects & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-400">Case Studies</span>
+            </h1>
           </div>
 
-          {/* Results info */}
-          {!loading && (
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-sm text-white/40">
-                Showing <span className="font-medium text-white/60">{visibleItems.length}</span> of{' '}
-                <span className="font-medium text-white/60">{filtered.length}</span> projects
-                {activeCategory !== 'all' && (
-                  <span> in <span className="text-emerald-400">{activeCategory}</span></span>
-                )}
-              </p>
-              <div className="flex items-center gap-1 text-white/30">
-                <Layers className="size-4" />
-                <span className="text-xs">{filtered.length} total</span>
-              </div>
-            </div>
-          )}
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-2 mb-2">
+            {categories.map((cat) => (
+              <button
+                key={cat.name}
+                onClick={() => setActiveCategory(cat.name)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  activeCategory === cat.name
+                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-white shadow-md shadow-emerald-500/15'
+                    : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
+                }`}
+              >
+                {cat.name === 'all' ? 'All Projects' : cat.name}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center font-medium ${
+                  activeCategory === cat.name ? 'bg-white/20 text-white' : 'bg-white/[0.06] text-white/30'
+                }`}>
+                  {cat.count}
+                </span>
+              </button>
+            ))}
 
+            {/* Results count */}
+            {!loading && (
+              <div className="ml-auto flex items-center gap-1.5 text-white/25">
+                <Layers className="size-3.5" />
+                <span className="text-[11px]">{filtered.length} projects</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content — Full Viewport Grid */}
+      <section className="h-[calc(100vh-8rem)] overflow-hidden">
+        <div className="container-main h-full">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden bg-white/[0.04] border border-white/[0.06]">
-                  <Skeleton className="h-56 w-full" />
-                  <div className="p-5">
-                    <Skeleton className="h-5 w-2/3 mb-2" />
-                    <Skeleton className="h-4 w-full mb-1" />
-                    <Skeleton className="h-4 w-3/4 mb-3" />
-                    <div className="flex gap-1.5">
-                      <Skeleton className="h-5 w-16 rounded-full" />
-                      <Skeleton className="h-5 w-20 rounded-full" />
-                      <Skeleton className="h-5 w-14 rounded-full" />
-                    </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-full">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <Card key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+                  <Skeleton className="h-4 w-28 mb-3 mx-4 mt-4" />
+                  <Skeleton className="h-3 w-full mb-1.5 mx-4" />
+                  <Skeleton className="h-3 w-3/4 mb-3 mx-4" />
+                  <div className="flex gap-1.5 px-4 pb-4">
+                    <Skeleton className="h-4 w-12 rounded-full" />
+                    <Skeleton className="h-4 w-16 rounded-full" />
+                    <Skeleton className="h-4 w-10 rounded-full" />
                   </div>
                 </Card>
               ))}
             </div>
-          ) : layoutMode === 'masonry' ? (
-            /* Masonry Layout */
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`masonry-${activeCategory}`}
-                className="columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                {visibleItems.map((project, index) => {
-                  const heightClass = masonryHeights[project.height || 'medium'] || 'h-64';
-                  return (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.06 }}
-                      className="break-inside-avoid"
-                    >
-                      <Card
-                        className="group overflow-hidden border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer"
-                        onClick={() => handleCardClick(project, visibleItems.indexOf(project))}
-                      >
-                        {/* Image placeholder with varying height */}
-                        <div className={`relative ${heightClass} bg-gradient-to-br ${cardGradients[index % cardGradients.length]} overflow-hidden`}>
-                          <div className="absolute inset-0 grid-pattern opacity-30" />
-                          {/* Blur placeholder */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="text-center p-4">
-                              <div className="size-10 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
-                                <ZoomIn className="size-5 text-emerald-600/50" />
-                              </div>
-                              <span className="text-amber-400/50 font-bold text-sm">{project.title}</span>
-                            </div>
-                          </div>
-                          {/* Hover overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent flex flex-col justify-end p-5 opacity-0 group-hover:opacity-100 transition-all duration-400">
-                            <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-400">
-                              <p className="text-white/90 text-xs leading-relaxed mb-3 line-clamp-3">{project.description}</p>
-                              <div className="flex items-center gap-2">
-                                <ExternalLink className="size-4 text-white" />
-                                <span className="font-medium text-white text-sm">View Details</span>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Badges */}
-                          <div className="absolute top-3 left-3">
-                            <Badge className="bg-white/90 text-slate-800 text-xs backdrop-blur-sm">{project.category}</Badge>
-                          </div>
-                          {project.featured && (
-                            <div className="absolute top-3 right-3">
-                              <Badge className="bg-amber-400 text-amber-900 text-xs font-semibold">Featured</Badge>
-                            </div>
-                          )}
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="text-base font-semibold mb-1.5 group-hover:text-emerald-400 transition-colors text-white truncate">
-                            {project.title}
-                          </h3>
-                          <div className="flex flex-wrap gap-1">
-                            {project.tags?.slice(0, 3).map((tag: string) => (
-                              <Badge key={tag} variant="secondary" className="text-[10px] bg-white/[0.06] text-white/40">{tag}</Badge>
-                            ))}
-                            {(project.tags?.length || 0) > 3 && (
-                              <Badge variant="secondary" className="text-[10px] bg-white/[0.06] text-white/30">+{project.tags.length - 3}</Badge>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            </AnimatePresence>
-          ) : (
-            /* Standard Grid Layout */
-            <LayoutGroup>
-              <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" variants={containerVariants} initial="hidden" animate="visible">
-                <AnimatePresence mode="popLayout">
-                  {visibleItems.map((project) => (
-                    <motion.div key={project.id} variants={itemVariants} layout exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}>
-                      <Card
-                        className="group overflow-hidden border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer"
-                        onClick={() => handleCardClick(project, visibleItems.indexOf(project))}
-                      >
-                        <div className={`relative h-56 bg-gradient-to-br ${cardGradients[parseInt(project.id) % cardGradients.length]} overflow-hidden`}>
-                          <div className="absolute inset-0 grid-pattern opacity-30" />
-                          {/* Blur placeholder with lazy loading effect */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-amber-400/40 font-bold text-lg opacity-40">{project.title}</span>
-                          </div>
-                          {/* Hover overlay */}
-                          <div className="absolute inset-0 bg-amber-900/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                            <motion.div className="text-center text-white" initial={false} animate={{ y: [5, 0] }} transition={{ duration: 0.3 }}>
-                              <ExternalLink className="size-8 mx-auto mb-2" />
-                              <span className="font-medium">View Details</span>
-                            </motion.div>
-                          </div>
-                          <div className="absolute top-3 left-3">
-                            <Badge className="bg-white/90 text-slate-800 text-xs backdrop-blur-sm">{project.category}</Badge>
-                          </div>
-                          {project.featured && (
-                            <div className="absolute top-3 right-3">
-                              <Badge className="bg-amber-400 text-amber-900 text-xs font-semibold">Featured</Badge>
-                            </div>
-                          )}
-                        </div>
-                        <CardContent className="p-5">
-                          <h3 className="text-lg font-semibold mb-2 group-hover:text-emerald-400 transition-colors text-white">{project.title}</h3>
-                          <p className="text-sm text-white/40 leading-relaxed mb-3 line-clamp-2">{project.description}</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {project.tags?.map((tag: string) => (
-                              <Badge key={tag} variant="secondary" className="text-xs bg-white/[0.06] text-white/40">{tag}</Badge>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            </LayoutGroup>
-          )}
-
-          {/* Load More Button */}
-          {hasMore && !loading && (
-            <motion.div className="flex justify-center mt-10" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <Button variant="outline" onClick={() => setVisibleCount(prev => prev + itemsPerPage)} className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 px-8 hover:shadow-md transition-all duration-300">
-                Load More Projects <ChevronDown className="size-4 ml-1" />
-              </Button>
-            </motion.div>
-          )}
-
-          {filtered.length === 0 && !loading && (
-            <motion.div className="text-center py-20" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="max-w-sm mx-auto">
-                <div className="relative size-24 mx-auto mb-6">
+          ) : filtered.length === 0 ? (
+            <motion.div
+              className="flex items-center justify-center h-full"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="text-center max-w-sm">
+                <div className="relative size-20 mx-auto mb-5">
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/30 to-amber-800/20 rotate-6" />
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/20 to-amber-800/10 -rotate-3" />
-                  <div className="relative size-24 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shadow-lg">
-                    <SearchX className="size-10 text-white/30" />
+                  <div className="relative size-20 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shadow-lg">
+                    <SearchX className="size-8 text-white/30" />
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold text-white/60 mb-2">No projects found</h3>
-                <p className="text-sm text-white/40 mb-6 leading-relaxed">There are no projects in this category yet. Check back soon or browse all our projects.</p>
-                <Button onClick={() => setActiveCategory('all')} className="bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all duration-300">
+                <p className="text-sm text-white/40 mb-5 leading-relaxed">There are no projects in this category yet. Check back soon or browse all our projects.</p>
+                <Button onClick={() => setActiveCategory('all')} className="bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white shadow-md shadow-emerald-500/20 text-sm">
                   <Sparkles className="size-4 mr-2" /> View All Projects
                 </Button>
               </div>
             </motion.div>
+          ) : (
+            <LayoutGroup>
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-full"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <AnimatePresence mode="popLayout">
+                  {visibleItems.map((project, index) => {
+                    const accentGradient = categoryCardAccents[project.category] || 'from-slate-500/8 to-slate-600/3';
+                    const badgeColor = categoryColors[project.category] || 'bg-white/10 text-white/60';
+
+                    return (
+                      <motion.div
+                        key={project.id}
+                        variants={itemVariants}
+                        layout
+                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                        className="h-full"
+                      >
+                        <Card
+                          className={`group relative h-full bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 cursor-pointer hover:bg-white/[0.05] ${
+                            project.featured
+                              ? 'hover:border-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/5'
+                              : 'hover:border-white/[0.12]'
+                          }`}
+                          onClick={() => handleCardClick(project, visibleItems.indexOf(project))}
+                        >
+                          {/* Featured glow accent */}
+                          {project.featured && (
+                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          )}
+
+                          <div className="p-4 flex flex-col h-full">
+                            {/* Top: Category badge + Featured indicator */}
+                            <div className="flex items-center justify-between mb-3">
+                              <Badge className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${badgeColor}`}>
+                                {project.category}
+                              </Badge>
+                              {project.featured && (
+                                <span className="flex items-center gap-1 text-[9px] text-amber-400/70">
+                                  <span className="size-1.5 rounded-full bg-amber-400/70 animate-pulse" />
+                                  Featured
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Title */}
+                            <h3 className="text-sm font-semibold mb-1.5 group-hover:text-emerald-400 transition-colors text-white leading-snug">
+                              {project.title}
+                            </h3>
+
+                            {/* Description (2 lines) */}
+                            <p className="text-[11px] text-white/35 leading-relaxed mb-3 line-clamp-2 flex-grow">
+                              {project.description}
+                            </p>
+
+                            {/* Tags (max 3) */}
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {project.tags?.slice(0, 3).map((tag: string) => (
+                                <span
+                                  key={tag}
+                                  className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.05] text-white/40 border border-white/[0.04]"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                              {(project.tags?.length || 0) > 3 && (
+                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.03] text-white/25">
+                                  +{project.tags.length - 3}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Hover overlay — View Details */}
+                            <div className="absolute inset-0 bg-[#0a0f1a]/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
+                              <motion.div
+                                className="text-center"
+                                initial={false}
+                                animate={{ y: [6, 0] }}
+                                transition={{ duration: 0.25 }}
+                              >
+                                <div className="size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-400 flex items-center justify-center mx-auto mb-2.5 shadow-lg shadow-emerald-500/25">
+                                  <ZoomIn className="size-4 text-white" />
+                                </div>
+                                <span className="text-sm font-medium text-white">View Details</span>
+                              </motion.div>
+                            </div>
+                          </div>
+
+                          {/* Bottom accent line */}
+                          <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${accentGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
+            </LayoutGroup>
           )}
         </div>
       </section>
 
+      {/* Bottom Bar */}
+      <div className="container-main pb-6">
+        <div className="flex items-center justify-between">
+          {/* View All Projects link */}
+          <motion.button
+            className="inline-flex items-center gap-2 text-sm text-emerald-400/70 hover:text-emerald-400 transition-colors group"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            View All Projects
+            <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </motion.button>
+
+          {/* Load More (only if needed) */}
+          {hasMore && !loading && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVisibleCount(prev => prev + itemsPerPage)}
+                className="border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 px-5 text-xs h-8 hover:shadow-md transition-all duration-300"
+              >
+                Load More <ChevronDown className="size-3 ml-1" />
+              </Button>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
       {/* Quick View Modal */}
       <Dialog open={!!selectedProject && !lightboxOpen} onOpenChange={() => setSelectedProject(null)}>
-        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
+        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
           {selectedProject && (
             <>
-              <div className={`relative ${masonryHeights[selectedProject.height || 'medium'] || 'h-64'} bg-gradient-to-br from-emerald-600 to-amber-700 flex items-center justify-center`}>
+              <div className="relative h-48 bg-gradient-to-br from-emerald-600 to-amber-700 flex items-center justify-center">
                 <div className="absolute inset-0 grid-pattern opacity-20" />
                 <div className="text-center relative z-10 p-6">
                   <div className="size-14 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
@@ -413,7 +387,7 @@ export default function PortfolioPage() {
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex gap-1.5">
-                    <Badge className="bg-amber-500/10 text-amber-300">{selectedProject.category}</Badge>
+                    <Badge className={`text-xs ${categoryColors[selectedProject.category] || 'bg-amber-500/10 text-amber-300'}`}>{selectedProject.category}</Badge>
                     {selectedProject.featured && <Badge className="bg-amber-500/10 text-amber-300">Featured</Badge>}
                   </div>
                   <Button size="sm" onClick={() => { const idx = filtered.findIndex(p => p.id === selectedProject.id); setLightboxIndex(idx >= 0 ? idx : 0); setLightboxOpen(true); }} className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs">
