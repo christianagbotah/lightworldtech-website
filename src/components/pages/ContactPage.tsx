@@ -61,7 +61,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     }
   };
   return (
-    <button onClick={handleCopy} className="p-1 rounded-md dark:text-white/20 text-slate-300 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all shrink-0" aria-label={`Copy ${label}`}>
+    <button onClick={handleCopy} className="p-1 rounded-md dark:text-white/20 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all shrink-0" aria-label={`Copy ${label}`}>
       {copied ? <Check className="size-3 text-amber-500" /> : <Copy className="size-3" />}
     </button>
   );
@@ -264,7 +264,7 @@ export default function ContactPage() {
                     onClick={() => inputRef.current?.click()}
                   >
                     <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
-                    <Upload className="size-3.5 dark:text-white/25 text-slate-300 shrink-0" />
+                    <Upload className="size-3.5 dark:text-white/25 text-slate-400 shrink-0" />
                     <span className="text-xs dark:text-white/30 text-slate-400">Attach files (max {MAX_FILES}, 10MB each)</span>
                     <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
                   </div>
@@ -275,7 +275,7 @@ export default function ContactPage() {
                       {attachments.map((att) => (
                         <div key={att.id} className="flex items-center gap-1 px-2 py-0.5 rounded-md dark:bg-white/[0.04] bg-slate-50 border border-slate-200 dark:border-white/[0.06] text-xs dark:text-white/50 text-slate-500">
                           {att.file.name} ({formatFileSize(att.file.size)})
-                          <button onClick={() => removeFile(att.id)} className="dark:text-white/20 text-slate-300 hover:text-red-400 ml-0.5"><X className="size-2.5" /></button>
+                          <button onClick={() => removeFile(att.id)} className="dark:text-white/20 text-slate-500 hover:text-red-400 ml-0.5"><X className="size-2.5" /></button>
                         </div>
                       ))}
                     </div>

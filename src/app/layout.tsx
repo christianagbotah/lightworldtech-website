@@ -110,6 +110,11 @@ export default function RootLayout({
         <WebSiteJsonLd />
         <meta name="theme-color" content="#059669" />
         <link rel="icon" href="https://www.lightworldtech.com/wp-content/uploads/2018/10/Lightworldtech-Logo-favicon-1.png" sizes="32x32" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('theme')==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){document.documentElement.classList.add('dark')}`,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}

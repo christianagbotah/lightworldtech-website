@@ -97,7 +97,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-slate-900 text-slate-300 relative wave-border-top">
+    <footer className="bg-slate-900 dark:bg-black text-slate-300 relative wave-border-top dark:border-t dark:border-white/[0.04]">
       {/* Gradient top border */}
       <div className="h-1 bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500" />
 

@@ -760,3 +760,34 @@ Stage Summary:
 - No TypeScript or lint errors
 - Footer remains always-dark (common design pattern)
 - Homepage uses theme-aware gradient overlays instead of hardcoded dark
+
+---
+Task ID: dark-mode-logo-fix-2
+Agent: Main Agent
+Task: Fix dark/light mode toggle + Fix logo background and display
+
+Work Log:
+- **Dark mode variant fix**: Changed `@custom-variant dark (&:is(.dark *));` to `@custom-variant dark (&:where(.dark, .dark *));` in globals.css for proper Tailwind CSS v4 class-based dark mode
+- **FOIT prevention script**: Added inline `<script>` in layout.tsx `<head>` to set `.dark` class before hydration, preventing flash of wrong theme on page load
+- **Logo PNG transparency**: Used Python/PIL to remove opaque white background from /public/logo.png (225x225 RGBA). Corner pixels were fully opaque white (alpha=255), converted to transparent (alpha=0). Logo content is amber/gold colored (avg RGB 220,148,45)
+- **Logo circle redesign**: Changed logo circles from amber gradient (`bg-gradient-to-br from-amber-400 to-amber-600`) to neutral dark circles:
+  - Header nav logo: `bg-slate-900 dark:bg-slate-950/80`, border `slate-600 dark:border-white/10`, size 32px/36px, image 28px
+  - Hero slide logo: `bg-slate-900 dark:bg-slate-950/80`, border `slate-700 dark:border-white/12`, size 64px/80px, image 50px
+  - Mobile sheet logo: `bg-slate-950/80`, border `white/10`, size 32px, image 26px
+- **Inner page dark mode fixes**:
+  - ContactPage.tsx: Fixed `text-slate-300` → `text-slate-500` for CopyButton, Upload icon, and file-remove button (invisible in light mode)
+  - PortfolioPage.tsx: Fixed `text-slate-300` → `text-slate-400` for results count and surplus tag. Replaced `dark:bg-[#0a0f1a]/80` → `dark:bg-slate-950/80` for hover overlay
+  - Footer.tsx: Added `dark:bg-black dark:border-t dark:border-white/[0.04]` for better dark mode separation
+- **Verification**: agent-browser confirmed:
+  - Theme toggle correctly adds/removes `.dark` class on `<html>`
+  - CSS variables (`--background`, `--foreground`, etc.) update between themes
+  - Home page background switches between `#050810` (dark) and `slate-50` (light)
+  - Logo circles have dark backgrounds in dark mode (computed L=1.77)
+  - No console errors, lint passes clean
+
+Stage Summary:
+- Dark/light mode toggle fully functional across entire site
+- Logo white background removed, now displays with transparent PNG
+- Logo circles use neutral dark backgrounds for better contrast with amber logo
+- FOIT prevention script ensures correct theme on first load
+- All inner pages have proper dark: variants

@@ -75,8 +75,8 @@ export default function Header() {
         >
           {/* Logo */}
           <button onClick={() => handleNav('home')} className="flex items-center gap-2 shrink-0 pr-1.5">
-            <div className="size-7 lg:size-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20 overflow-hidden transition-transform hover:scale-110">
-              <Image src="/logo.png" alt="Lightworld Technologies" width={18} height={18} className="object-contain p-0.5" />
+            <div className="size-8 lg:size-9 rounded-full bg-slate-900 dark:bg-slate-950/80 border border-slate-600 dark:border-white/[0.1] flex items-center justify-center shadow-sm overflow-hidden transition-transform hover:scale-110">
+              <Image src="/logo.png" alt="Lightworld Technologies" width={28} height={28} className="object-contain" />
             </div>
             <span className={cn(
               'text-sm lg:text-base font-bold transition-colors hidden sm:block',
@@ -187,8 +187,8 @@ export default function Header() {
                 <div className="flex flex-col h-full">
                   {/* Mobile header */}
                   <div className="flex items-center gap-2.5 px-5 py-4 border-b border-white/[0.06]">
-                    <div className="size-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center overflow-hidden">
-                      <Image src="/logo.png" alt="Lightworld" width={20} height={20} className="object-contain p-0.5" />
+                    <div className="size-8 rounded-full bg-slate-950/80 border border-white/[0.1] flex items-center justify-center overflow-hidden">
+                      <Image src="/logo.png" alt="Lightworld" width={26} height={26} className="object-contain" />
                     </div>
                     <span className="font-bold text-white/90 text-sm">Lightworld Technologies</span>
                   </div>

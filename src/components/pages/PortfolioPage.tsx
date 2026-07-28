@@ -186,7 +186,7 @@ export default function PortfolioPage() {
 
             {/* Results count */}
             {!loading && (
-              <div className="ml-auto flex items-center gap-1.5 dark:text-white/25 text-slate-300">
+              <div className="ml-auto flex items-center gap-1.5 dark:text-white/25 text-slate-400">
                 <Layers className="size-3.5" />
                 <span className="text-xs">{filtered.length} projects</span>
               </div>
@@ -303,14 +303,14 @@ export default function PortfolioPage() {
                                 </span>
                               ))}
                               {(project.tags?.length || 0) > 3 && (
-                                <span className="text-xs px-2 py-0.5 rounded-full dark:bg-white/[0.03] bg-slate-100 dark:text-white/25 text-slate-300">
+                                <span className="text-xs px-2 py-0.5 rounded-full dark:bg-white/[0.03] bg-slate-100 dark:text-white/25 text-slate-400">
                                   +{project.tags.length - 3}
                                 </span>
                               )}
                             </div>
 
                             {/* Hover overlay — View Details */}
-                            <div className="absolute inset-0 dark:bg-[#0a0f1a]/80 bg-slate-900/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
+                            <div className="absolute inset-0 dark:bg-slate-950/80 bg-slate-900/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
                               <motion.div
                                 className="text-center"
                                 initial={false}
