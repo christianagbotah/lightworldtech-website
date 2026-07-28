@@ -1153,3 +1153,65 @@
 .nexus-card:hover::before {
   opacity: 1;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL POINTER CURSOR — all interactive elements
+   ══════════════════════════════════════════════════════════════ */
+
+a,
+button,
+[role="button"],
+summary,
+select,
+input[type="checkbox"],
+input[type="radio"],
+label[for],
+.tabular-nav-item,
+.clickable,
+.cursor-pointer {
+  cursor: pointer;
+}
+
+a:hover,
+button:hover,
+[role="button"]:hover,
+summary:hover {
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   KEN BURNS SLOW PAN — slide backgrounds
+   ══════════════════════════════════════════════════════════════ */
+
+/* Variant A: slow zoom-in with subtle pan right */
+@keyframes ken-burns-a {
+  0%   { transform: scale(1.05) translate(0, 0); }
+  50%  { transform: scale(1.12) translate(-1.5%, -0.5%); }
+  100% { transform: scale(1.05) translate(0, 0); }
+}
+
+/* Variant B: slow zoom-out with subtle pan left */
+@keyframes ken-burns-b {
+  0%   { transform: scale(1.12) translate(-1%, 0); }
+  50%  { transform: scale(1.05) translate(1.5%, -1%); }
+  100% { transform: scale(1.12) translate(-1%, 0); }
+}
+
+/* Variant C: slow zoom with diagonal drift */
+@keyframes ken-burns-c {
+  0%   { transform: scale(1.08) translate(-1%, -1%); }
+  50%  { transform: scale(1.15) translate(1%, 0.5%); }
+  100% { transform: scale(1.08) translate(-1%, -1%); }
+}
+
+/* Variant D: gentle sway with zoom */
+@keyframes ken-burns-d {
+  0%   { transform: scale(1.1) translate(0.5%, -0.5%); }
+  50%  { transform: scale(1.06) translate(-0.5%, 0.5%); }
+  100% { transform: scale(1.1) translate(0.5%, -0.5%); }
+}
+
+.animate-ken-burns-a { animation: ken-burns-a 25s ease-in-out infinite; }
+.animate-ken-burns-b { animation: ken-burns-b 30s ease-in-out infinite; }
+.animate-ken-burns-c { animation: ken-burns-c 28s ease-in-out infinite; }
+.animate-ken-burns-d { animation: ken-burns-d 22s ease-in-out infinite; }

@@ -621,3 +621,28 @@ Stage Summary:
 - Single edit to `src/components/pages/HomePage.tsx` — replaced Math.random() with seeded PRNG
 - Hydration mismatch fully resolved, confirmed by browser verification
 - No regressions: all slides, animations, gradients, and particles work correctly
+
+---
+Task ID: pointer-cursor-and-slide-bgs
+Agent: Main Agent
+Task: Add pointer cursor to all buttons/links + slow Ken Burns image backgrounds to slides
+
+Work Log:
+- **Pointer cursor**: Added global CSS rule in `globals.css` targeting all `a`, `button`, `[role="button"]`, `summary`, `select`, checkboxes, radios, and `.cursor-pointer` elements with `cursor: pointer`
+- **Slide backgrounds**: Generated 6 unique abstract tech-themed images (1344x768 each) using AI image generation, saved to `/public/slides/`
+  - `slide-hero.png` — dark navy/emerald circuit board patterns
+  - `slide-about.png` — corporate glass building reflections
+  - `slide-services.png` — cloud computing server racks
+  - `slide-portfolio.png` — digital creative workspace
+  - `slide-testimonials.png` — trust/testimonial elegant patterns
+  - `slide-cta.png` — futuristic digital gateway portal
+- **Ken Burns animations**: Created 4 CSS animation variants (a/b/c/d) with different zoom+pan directions, 22-30s cycles for slow, cinematic motion
+- **SlideBackground component**: New component renders each slide's image at 18% opacity with dark gradient overlays (vertical + horizontal) for text readability
+- Integrated `SlideBackground` into the `AnimatePresence` wrapper so backgrounds crossfade with slides
+- Browser verification: pointer cursor on all 28+ clickable elements, all 6 slides show different moving backgrounds, zero console errors
+
+Stage Summary:
+- 3 files changed: `globals.css` (pointer rule + Ken Burns CSS), `HomePage.tsx` (SlideBackground component + integration), 6 new images in `/public/slides/`
+- All interactive elements now show pointer cursor on hover
+- All 6 slides have cinematic slow-motion backgrounds with Ken Burns zoom/pan
+- ESLint clean, no hydration errors, no console errors

@@ -155,6 +155,38 @@ function ParticleField() {
   );
 }
 
+/* ── Slide Background with Ken Burns ── */
+const SLIDE_BG: Record<number, { src: string; anim: string }> = {
+  0: { src: '/slides/slide-hero.png',        anim: 'animate-ken-burns-a' },
+  1: { src: '/slides/slide-about.png',       anim: 'animate-ken-burns-b' },
+  2: { src: '/slides/slide-services.png',    anim: 'animate-ken-burns-c' },
+  3: { src: '/slides/slide-portfolio.png',   anim: 'animate-ken-burns-d' },
+  4: { src: '/slides/slide-testimonials.png', anim: 'animate-ken-burns-a' },
+  5: { src: '/slides/slide-cta.png',         anim: 'animate-ken-burns-b' },
+};
+
+function SlideBackground({ slideIndex }: { slideIndex: number }) {
+  const bg = SLIDE_BG[slideIndex];
+  if (!bg) return null;
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Image */}
+      <Image
+        src={bg.src}
+        alt=""
+        fill
+        sizes="100vw"
+        className={cn('object-cover object-center opacity-[0.18]', bg.anim)}
+        priority={slideIndex === 0}
+        aria-hidden="true"
+      />
+      {/* Dark gradient overlay for readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#050810]/60 via-[#050810]/80 to-[#050810]/90" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#050810]/50 via-transparent to-[#050810]/50" />
+    </div>
+  );
+}
+
 function GradientOrbs({ variant = 0 }: { variant?: number }) {
   const configs = [
     { c1: 'emerald-500/[0.06]', c2: 'amber-500/[0.04]', c3: 'cyan-500/[0.03]' },
@@ -885,6 +917,7 @@ export default function HomePage() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="absolute inset-0"
         >
+          <SlideBackground slideIndex={currentSlide} />
           <ActiveSlideComponent />
         </motion.div>
       </AnimatePresence>
