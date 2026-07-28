@@ -343,7 +343,7 @@ export default function AboutPage() {
 
       {/* Main Content Grid */}
       <motion.div
-        className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6 pb-0 md:pb-0"
+        className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6 pb-4 md:pb-6"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -434,7 +434,7 @@ export default function AboutPage() {
 
       {/* Bottom — Awards Bar (overlaps the grid above) */}
       <motion.div
-        className="shrink-0 relative z-10 mt-4 mx-4 md:mx-6"
+        className="shrink-0 mx-4 md:mx-6"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.5 }}
