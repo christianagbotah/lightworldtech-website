@@ -141,21 +141,28 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
       >
         {/* Front face */}
         <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300" style={{ backfaceVisibility: 'hidden' }}>
-          <div className="p-4 lg:p-5">
-            <div className="flex items-center gap-4">
-              <TeamAvatar member={member} size="sm" />
-              <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-base dark:text-white text-slate-900 truncate">{member.name}</h3>
-                <p className="text-sm text-amber-400 font-medium truncate">{member.role}</p>
+          {/* Image slot area */}
+          <div className="relative h-28 bg-gradient-to-br from-amber-900/30 to-slate-100 dark:from-amber-900/20 dark:to-slate-800/50 overflow-hidden">
+            {member.image ? (
+              <Image src={member.image} alt={member.name} fill className="object-cover" unoptimized />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <TeamAvatar member={member} size="lg" />
               </div>
-            </div>
-            <p className="text-sm dark:text-white/40 text-slate-500 mt-2.5 line-clamp-2 leading-relaxed">{member.bio}</p>
+            )}
+            {/* Subtle overlay gradient */}
+            <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white dark:from-[#0c1117] to-transparent" />
+          </div>
+          <div className="p-4">
+            <h3 className="font-semibold text-base dark:text-white text-slate-900 truncate">{member.name}</h3>
+            <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
+            <p className="text-sm dark:text-white/40 text-slate-500 mt-2 line-clamp-2 leading-relaxed">{member.bio}</p>
           </div>
         </div>
 
         {/* Back face */}
         <div className="absolute inset-0 w-full rounded-xl overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-amber-600 to-amber-500" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-          <div className="p-4 lg:p-5 h-full flex flex-col">
+          <div className="p-4 h-full flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <TeamAvatar member={member} size="sm" />
               <div className="flex-1 min-w-0">
@@ -203,13 +210,22 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
   return (
     <div className="relative rounded-xl">
       <Card className="relative z-10 overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 group">
-        <CardContent className="p-4 lg:p-5">
-          <div className="flex items-center gap-3">
-            <TeamAvatar member={member} size="sm" />
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-base dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
-              <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
+        {/* Image slot area */}
+        <div className="relative h-24 bg-gradient-to-br from-amber-900/30 to-slate-100 dark:from-amber-900/20 dark:to-slate-800/50 overflow-hidden">
+          {member.image ? (
+            <Image src={member.image} alt={member.name} fill className="object-cover" unoptimized />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <TeamAvatar member={member} size="md" />
             </div>
+          )}
+          {/* Subtle overlay gradient */}
+          <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-white dark:from-[#0c1117] to-transparent" />
+        </div>
+        <CardContent className="p-4 lg:p-5 pt-3">
+          <div className="min-w-0">
+            <h3 className="font-semibold text-base dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
+            <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
           </div>
           <div className="mt-2">
             <p className={`text-sm dark:text-white/50 text-slate-500 leading-relaxed transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}>

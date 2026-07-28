@@ -75,7 +75,7 @@ export default function Header() {
         >
           {/* Logo */}
           <button onClick={() => handleNav('home')} className="flex items-center gap-2 shrink-0 pr-1.5">
-            <div className="size-8 lg:size-9 rounded-full bg-slate-900 dark:bg-slate-950 border-2 border-slate-500 dark:border-amber-400/30 flex items-center justify-center shadow-sm overflow-hidden transition-transform hover:scale-110">
+            <div className="size-8 lg:size-9 rounded-full flex items-center justify-center shadow-sm overflow-hidden transition-transform hover:scale-110" style={{ background: 'var(--logo-circle-bg, #0f172a)', border: '2px solid rgba(251, 191, 36, 0.3)' }}>
               <Image src="/logo.png" alt="Lightworld Technologies" width={28} height={28} className="object-contain" />
             </div>
             <span className={cn(
@@ -187,7 +187,7 @@ export default function Header() {
                 <div className="flex flex-col h-full">
                   {/* Mobile header */}
                   <div className="flex items-center gap-2.5 px-5 py-4 border-b border-white/[0.06]">
-                    <div className="size-8 rounded-full bg-slate-950 border-2 border-amber-400/30 flex items-center justify-center overflow-hidden">
+                    <div className="size-8 rounded-full flex items-center justify-center overflow-hidden" style={{ background: '#0f172a', border: '2px solid rgba(251, 191, 36, 0.3)' }}>
                       <Image src="/logo.png" alt="Lightworld" width={26} height={26} className="object-contain" />
                     </div>
                     <span className="font-bold text-white/90 text-sm">Lightworld Technologies</span>

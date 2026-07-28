@@ -810,3 +810,19 @@ Stage Summary:
 - Stats correctly show Happy Clients (200+) > Projects Delivered (150+)
 - All logo circles have prominent `border-2` gold/amber borders
 - Lint passes, no errors
+
+---
+Task ID: about-page-fixes-round2
+Agent: Main Agent
+Task: Fix remaining About page issues - team card image slot, footer logo bg, logo borders
+
+Work Log:
+- **Team member card image slots**: Redesigned both `TeamFlipCard` (mobile) and `TeamExpandCard` (desktop) to have a dedicated rectangular image area at the top of each card. Uses `relative h-28` (mobile) / `h-24` (desktop) container with gradient bg placeholder. If `member.image` exists, renders with `<Image fill className="object-cover">`; otherwise shows a large `TeamAvatar` (size="lg"/"md") centered in the area. A subtle bottom gradient blends the image area into the card content below.
+- **Footer logo**: Replaced old amber gradient circle (`bg-gradient-to-br from-amber-400 to-amber-600`) with dark slate background and amber border. Used inline `style` attribute (`background: '#1e293b', border: '2px solid rgba(251, 191, 36, 0.35)'`) to ensure Tailwind v4 compatibility. Verified with computed styles: `rgb(30, 41, 59)` bg + `2px solid rgba(251, 191, 36, 0.35)` border.
+- **All logo circles**: Converted from Tailwind classes to inline styles for guaranteed rendering. Applied to: Header nav logo, mobile sheet logo, hero slide logo, footer logo. All use `background: '#0f172a'` (slate-900) with `border: '2px solid rgba(251, 191, 36, 0.3)'` amber ring.
+- **Verification**: agent-browser confirmed team cards have rectangular image area at top with circular avatar placeholder, awards section overlaps grid, and footer logo has dark background with amber border.
+
+Stage Summary:
+- Team cards now have proper rectangular photo/image slot at the top of each card
+- Footer logo background changed from amber gradient to dark slate (no more interfering bg)
+- All logo circles guaranteed to render with dark bg and visible amber border via inline styles

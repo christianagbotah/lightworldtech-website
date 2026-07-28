@@ -249,8 +249,8 @@ export default function Footer() {
           {/* Company Info */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="size-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden">
-                <Image src="/logo.png" alt="Lightworld Technologies" width={32} height={32} className="object-contain p-0.5" />
+              <div className="size-10 shrink-0 rounded-full overflow-hidden flex items-center justify-center" style={{ background: '#1e293b', border: '2px solid rgba(251, 191, 36, 0.35)' }}>
+                <Image src="/logo.png" alt="Lightworld Technologies" width={36} height={36} className="object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="text-base font-bold leading-tight text-white">Lightworld</span>
