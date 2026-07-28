@@ -176,7 +176,7 @@ export default function PortfolioPage() {
                 }`}
               >
                 {cat.name === 'all' ? 'All Projects' : cat.name}
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center font-medium ${
+                <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center font-medium ${
                   activeCategory === cat.name ? 'bg-white/20 text-white' : 'bg-white/[0.06] text-white/30'
                 }`}>
                   {cat.count}
@@ -188,7 +188,7 @@ export default function PortfolioPage() {
             {!loading && (
               <div className="ml-auto flex items-center gap-1.5 text-white/25">
                 <Layers className="size-3.5" />
-                <span className="text-[11px]">{filtered.length} projects</span>
+                <span className="text-xs">{filtered.length} projects</span>
               </div>
             )}
           </div>
@@ -271,11 +271,11 @@ export default function PortfolioPage() {
                           <div className="p-4 flex flex-col h-full">
                             {/* Top: Category badge + Featured indicator */}
                             <div className="flex items-center justify-between mb-3">
-                              <Badge className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${badgeColor}`}>
+                              <Badge className={`text-xs px-2 py-0.5 rounded-full border font-medium ${badgeColor}`}>
                                 {project.category}
                               </Badge>
                               {project.featured && (
-                                <span className="flex items-center gap-1 text-[9px] text-amber-400/70">
+                                <span className="flex items-center gap-1 text-xs text-amber-400/70">
                                   <span className="size-1.5 rounded-full bg-amber-400/70 animate-pulse" />
                                   Featured
                                 </span>
@@ -288,7 +288,7 @@ export default function PortfolioPage() {
                             </h3>
 
                             {/* Description (2 lines) */}
-                            <p className="text-[11px] text-white/35 leading-relaxed mb-3 line-clamp-2 flex-grow">
+                            <p className="text-xs text-white/35 leading-relaxed mb-3 line-clamp-2 flex-grow">
                               {project.description}
                             </p>
 
@@ -297,13 +297,13 @@ export default function PortfolioPage() {
                               {project.tags?.slice(0, 3).map((tag: string) => (
                                 <span
                                   key={tag}
-                                  className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.05] text-white/40 border border-white/[0.04]"
+                                  className="text-xs px-2 py-0.5 rounded-full bg-white/[0.05] text-white/40 border border-white/[0.04]"
                                 >
                                   {tag}
                                 </span>
                               ))}
                               {(project.tags?.length || 0) > 3 && (
-                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.03] text-white/25">
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-white/[0.03] text-white/25">
                                   +{project.tags.length - 3}
                                 </span>
                               )}

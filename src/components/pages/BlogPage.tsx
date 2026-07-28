@@ -197,7 +197,7 @@ export default function BlogPage() {
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="h-8 pl-8 pr-12 text-sm bg-white/[0.04] border-white/[0.08] rounded-lg text-white placeholder:text-white/30 focus:border-emerald-500/40 focus:ring-emerald-500/20"
               />
-              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/[0.08] bg-white/[0.04] px-1.5 font-mono text-[9px] font-medium text-white/25">
+              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/[0.08] bg-white/[0.04] px-1.5 font-mono text-xs font-medium text-white/25">
                 <Keyboard className="size-2" />
                 {'⌘'}K
               </kbd>
@@ -223,7 +223,7 @@ export default function BlogPage() {
             </div>
             <div className="flex-1" />
             {!loading && (
-              <span className="text-[11px] text-white/30 shrink-0 hidden sm:block">
+              <span className="text-xs text-white/30 shrink-0 hidden sm:block">
                 {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''}
                 {blogSearch && (
                   <span className="text-emerald-400/60"> {'·'} &ldquo;{blogSearch}&rdquo;</span>
@@ -282,7 +282,7 @@ export default function BlogPage() {
                   onClick={() => handlePostClick(post.slug)}
                 >
                   {/* Category badge */}
-                  <span className={`inline-flex self-start px-2 py-0.5 rounded-full text-[10px] font-semibold mb-2 ${
+                  <span className={`inline-flex self-start px-2 py-0.5 rounded-full text-xs font-semibold mb-2 ${
                     categoryBadgeColors[post.category] || 'bg-white/10 text-white/60'
                   }`}>
                     {post.category}
@@ -310,23 +310,23 @@ export default function BlogPage() {
                         {post.author?.charAt(0) || 'L'}
                       </span>
                     </div>
-                    <span className="text-[11px] text-white/50 truncate max-w-[80px] lg:max-w-none">
+                    <span className="text-xs text-white/50 truncate max-w-[80px] lg:max-w-none">
                       {post.author}
                     </span>
 
                     <div className="flex-1" />
 
-                    <span className="hidden sm:flex items-center gap-1 text-[10px] text-white/25">
+                    <span className="hidden sm:flex items-center gap-1 text-xs text-white/25">
                       <Calendar className="size-2.5" />
                       {new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                     </span>
 
-                    <span className="hidden sm:flex items-center gap-1 text-[10px] text-white/25">
+                    <span className="hidden sm:flex items-center gap-1 text-xs text-white/25">
                       <Clock className="size-2.5" />
                       {post.readTime}
                     </span>
 
-                    <span className="flex items-center gap-0.5 text-[11px] text-emerald-400/80 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="flex items-center gap-0.5 text-xs text-emerald-400/80 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                       Read <ArrowRight className="size-3 group-hover:translate-x-0.5 transition-transform" />
                     </span>
                   </div>

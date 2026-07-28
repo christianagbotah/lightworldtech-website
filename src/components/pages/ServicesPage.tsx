@@ -97,7 +97,7 @@ export default function ServicesPage() {
           <div className="flex items-center gap-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               <div className="size-1.5 rounded-full bg-emerald-400" />
-              <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.2em]">Our Services</span>
+              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-[0.2em]">Our Services</span>
             </div>
             <h1 className="text-xl lg:text-2xl font-bold text-white">
               What We <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Offer</span>
@@ -108,7 +108,7 @@ export default function ServicesPage() {
               variant="outline"
               size="sm"
               onClick={() => setCompareOpen(true)}
-              className="rounded-full text-[11px] font-medium border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.15] px-3 h-8"
+              className="rounded-full text-xs font-medium border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.15] px-3 h-8"
             >
               Compare Plans
             </Button>
@@ -116,7 +116,7 @@ export default function ServicesPage() {
               variant="outline"
               size="sm"
               onClick={() => setCalculatorOpen(true)}
-              className="rounded-full text-[11px] font-medium border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.15] px-3 h-8"
+              className="rounded-full text-xs font-medium border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.15] px-3 h-8"
             >
               Cost Calculator
             </Button>
@@ -167,14 +167,14 @@ export default function ServicesPage() {
                     <h3 className="text-xs lg:text-sm font-bold text-white/90 mb-0.5 lg:mb-1 leading-tight">{service.title}</h3>
 
                     {/* Description */}
-                    <p className="text-[10px] lg:text-[11px] text-white/30 leading-relaxed line-clamp-2 mb-2 lg:mb-3">{service.description}</p>
+                    <p className="text-xs lg:text-xs text-white/30 leading-relaxed line-clamp-2 mb-2 lg:mb-3">{service.description}</p>
 
                     {/* Features */}
                     <div className="space-y-0.5 mb-2 lg:mb-3 flex-1">
                       {service.features.slice(0, 4).map((feature: string) => (
                         <div key={feature} className="flex items-center gap-1.5">
                           <CheckCircle2 className="size-2.5 lg:size-3 text-emerald-400/60 shrink-0" />
-                          <span className="text-[9px] lg:text-[10px] text-white/40 leading-tight line-clamp-1">{feature}</span>
+                          <span className="text-xs lg:text-xs text-white/40 leading-tight line-clamp-1">{feature}</span>
                         </div>
                       ))}
                     </div>
@@ -182,9 +182,9 @@ export default function ServicesPage() {
                     {/* Bottom: Price + CTA */}
                     <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
                       {service.priceRange && (
-                        <span className="text-[9px] lg:text-[10px] font-semibold text-amber-400/80">{service.priceRange}</span>
+                        <span className="text-xs lg:text-xs font-semibold text-amber-400/80">{service.priceRange}</span>
                       )}
-                      <div className="flex items-center gap-1 text-emerald-400 text-[10px] font-medium group-hover:translate-x-0.5 transition-transform">
+                      <div className="flex items-center gap-1 text-emerald-400 text-xs font-medium group-hover:translate-x-0.5 transition-transform">
                         Details <ArrowRight className="size-3" />
                       </div>
                     </div>
@@ -256,7 +256,7 @@ export default function ServicesPage() {
                       <h4 className="text-xs font-semibold text-white mb-2">Technology Stack</h4>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedService.techStack.map((tech: string) => (
-                          <Badge key={tech} variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/20">{tech}</Badge>
+                          <Badge key={tech} variant="secondary" className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20">{tech}</Badge>
                         ))}
                       </div>
                     </div>

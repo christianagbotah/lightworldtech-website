@@ -173,7 +173,7 @@ export default function ContactPage() {
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
             <div className="size-1.5 rounded-full bg-emerald-400" />
-            <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.2em]">Contact</span>
+            <span className="text-xs font-semibold text-emerald-400 uppercase tracking-[0.2em]">Contact</span>
           </div>
           <h1 className="text-xl lg:text-2xl font-bold text-white">
             Get in <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Touch</span>
@@ -183,7 +183,7 @@ export default function ContactPage() {
               {officeStatus.open && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
               <span className={`relative inline-flex rounded-full size-2 ${officeStatus.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
             </span>
-            <span className="text-[10px] text-white/30 font-medium">{officeStatus.label}</span>
+            <span className="text-xs text-white/30 font-medium">{officeStatus.label}</span>
           </div>
         </div>
       </div>
@@ -207,8 +207,8 @@ export default function ContactPage() {
                   <h3 className="text-lg font-bold text-white mb-1">Message Sent!</h3>
                   <p className="text-xs text-white/40 mb-4">We&apos;ll respond within 24 hours.</p>
                   <div className="flex gap-2 justify-center">
-                    <Button onClick={() => setSubmitted(false)} variant="outline" size="sm" className="text-[11px] border-white/[0.1]">Send Another</Button>
-                    <Button onClick={() => navigate('home')} size="sm" className="text-[11px] bg-emerald-500">Back Home</Button>
+                    <Button onClick={() => setSubmitted(false)} variant="outline" size="sm" className="text-xs border-white/[0.1]">Send Another</Button>
+                    <Button onClick={() => navigate('home')} size="sm" className="text-xs bg-emerald-500">Back Home</Button>
                   </div>
                 </motion.div>
               </div>
@@ -217,12 +217,12 @@ export default function ContactPage() {
                 <h2 className="text-sm font-bold text-white mb-2 lg:mb-3">Send a Message</h2>
 
                 {submitting && (
-                  <motion.div className="mb-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                  <motion.div className="mb-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
                     <Loader2 className="size-3 animate-spin" /> Sending...
                   </motion.div>
                 )}
                 {error && (
-                  <motion.div className="mb-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-[11px] text-red-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                  <motion.div className="mb-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
                     <AlertCircle className="size-3" /> {error}
                   </motion.div>
                 )}
@@ -230,26 +230,26 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col gap-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label htmlFor="name" className="text-[10px] text-white/40 font-medium mb-0.5 block">Full Name *</Label>
+                      <Label htmlFor="name" className="text-xs text-white/40 font-medium mb-0.5 block">Full Name *</Label>
                       <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
                     </div>
                     <div>
-                      <Label htmlFor="email" className="text-[10px] text-white/40 font-medium mb-0.5 block">Email *</Label>
+                      <Label htmlFor="email" className="text-xs text-white/40 font-medium mb-0.5 block">Email *</Label>
                       <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label htmlFor="phone" className="text-[10px] text-white/40 font-medium mb-0.5 block">Phone</Label>
+                      <Label htmlFor="phone" className="text-xs text-white/40 font-medium mb-0.5 block">Phone</Label>
                       <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+233 XX XXX XXXX" disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
                     </div>
                     <div>
-                      <Label htmlFor="subject" className="text-[10px] text-white/40 font-medium mb-0.5 block">Subject *</Label>
+                      <Label htmlFor="subject" className="text-xs text-white/40 font-medium mb-0.5 block">Subject *</Label>
                       <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" required disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
                     </div>
                   </div>
                   <div className="flex-1 min-h-0 flex flex-col">
-                    <Label htmlFor="message" className="text-[10px] text-white/40 font-medium mb-0.5 block">Message *</Label>
+                    <Label htmlFor="message" className="text-xs text-white/40 font-medium mb-0.5 block">Message *</Label>
                     <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us about your project..." required disabled={submitting} className="flex-1 min-h-[80px] text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 resize-none focus-visible:border-emerald-500/50" />
                   </div>
 
@@ -265,7 +265,7 @@ export default function ContactPage() {
                   >
                     <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
                     <Upload className="size-3.5 text-white/25 shrink-0" />
-                    <span className="text-[10px] text-white/30">Attach files (max {MAX_FILES}, 10MB each)</span>
+                    <span className="text-xs text-white/30">Attach files (max {MAX_FILES}, 10MB each)</span>
                     <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
                   </div>
 
@@ -273,7 +273,7 @@ export default function ContactPage() {
                   {attachments.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {attachments.map((att) => (
-                        <div key={att.id} className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[9px] text-white/50">
+                        <div key={att.id} className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-xs text-white/50">
                           {att.file.name} ({formatFileSize(att.file.size)})
                           <button onClick={() => removeFile(att.id)} className="text-white/20 hover:text-red-400 ml-0.5"><X className="size-2.5" /></button>
                         </div>
@@ -307,8 +307,8 @@ export default function ContactPage() {
                     <item.icon className="size-3.5 text-amber-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="block text-[9px] font-semibold text-white/30 uppercase tracking-wider">{item.label}</span>
-                    <span className="block text-[11px] text-white/60 mt-0.5">{item.value}</span>
+                    <span className="block text-xs font-semibold text-white/30 uppercase tracking-wider">{item.label}</span>
+                    <span className="block text-xs text-white/60 mt-0.5">{item.value}</span>
                   </div>
                   {item.copy && <CopyButton text={item.copy} label={item.label} />}
                 </div>
@@ -318,7 +318,7 @@ export default function ContactPage() {
 
           {/* Social Media */}
           <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-            <span className="block text-[9px] font-semibold text-white/30 uppercase tracking-wider mb-2">Follow Us</span>
+            <span className="block text-xs font-semibold text-white/30 uppercase tracking-wider mb-2">Follow Us</span>
             <div className="flex items-center gap-2">
               {[
                 { icon: Facebook, label: 'Facebook', color: 'hover:bg-blue-600' },
@@ -342,11 +342,11 @@ export default function ContactPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-xs font-bold text-white">Free Consultation</h3>
-                <p className="text-[10px] text-amber-100/70">30-minute call with our team</p>
+                <p className="text-xs text-amber-100/70">30-minute call with our team</p>
               </div>
               <Button
                 size="sm"
-                className="bg-white text-amber-600 hover:bg-amber-50 font-semibold text-[10px] h-7 px-3 shrink-0"
+                className="bg-white text-amber-600 hover:bg-amber-50 font-semibold text-xs h-7 px-3 shrink-0"
                 onClick={() => window.open('https://wa.me/233243618186?text=Hello!%20I%20would%20like%20to%20schedule%20a%20consultation%20call.', '_blank')}
               >
                 <MessageCircle className="size-3 mr-1" /> WhatsApp

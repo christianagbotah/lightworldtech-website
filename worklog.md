@@ -646,3 +646,33 @@ Stage Summary:
 - All interactive elements now show pointer cursor on hover
 - All 6 slides have cinematic slow-motion backgrounds with Ken Burns zoom/pan
 - ESLint clean, no hydration errors, no console errors
+
+---
+Task ID: responsiveness-and-legibility-fix
+Agent: Main Agent
+Task: Fix nav menu tiny text, remove About page rotating rectangle, improve text legibility across all pages
+
+Work Log:
+- **Header nav links**: Bumped from `text-[11px]` → `text-sm` (14px) on desktop, increased gap and padding
+- **Header "Get a Quote" button**: Bumped from `text-[11px]` → `text-sm` (14px)
+- **Header mega menu**: Bumped service labels from `text-[11px]` → `text-sm`, descriptions from `text-[10px]` → `text-xs`, icons from `size-3.5` → `size-4`
+- **About page rotating rectangle**: Removed the `conic-gradient` spinning border from `TeamExpandCard` component entirely
+- **About page text legibility**: Comprehensive size bumps throughout:
+  - Page title: `text-xl` → `text-2xl`, sub-heading: `text-xs` → `text-sm`
+  - Section headings: `text-sm` → `text-base`
+  - Stats: numbers `text-lg` → `text-xl`, labels `text-xs` → `text-sm`, icons `size-4` → `size-5`
+  - Team cards: avatar `size-10` → `size-11`, names `text-sm` → `text-base`, roles `text-xs` → `text-sm`, bios `text-[11px]` → `text-sm`
+  - Skills badges: `text-[9px]` → `text-xs`
+  - Social icons: `size-6` → `size-7`, icon `size-3` → `size-3.5`
+  - Awards bar: titles `text-xs` → `text-sm`, icons `size-4` → `size-5`
+  - Pill badges: `text-[11px]` → `text-xs`
+- **Inner pages bulk text fix**: Applied `text-[9px]`→`text-[10px]`, `text-[10px]`→`text-xs`, `text-[11px]`→`text-xs` across Services, Contact, Portfolio, Careers, Products, Blog, BlogDetail pages
+- **Responsive padding**: Added `px-4 sm:px-6` and `py-4 sm:py-5` to About title bar for mobile comfort
+- Browser verification: All changes confirmed, no console errors, ESLint clean
+
+Stage Summary:
+- 9 files changed: Header.tsx, AboutPage.tsx, ServicesPage.tsx, ContactPage.tsx, PortfolioPage.tsx, CareersPage.tsx, ProductsPage.tsx, BlogPage.tsx, BlogDetailPage.tsx
+- Nav menu now readable at 14px on desktop
+- About page rotating rectangle completely removed
+- All text across all pages bumped to minimum 12px for mobile legibility
+- Native mobile rendering preserved

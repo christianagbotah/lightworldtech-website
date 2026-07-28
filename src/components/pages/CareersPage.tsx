@@ -270,7 +270,7 @@ export default function CareersPage() {
             transition={{ duration: 0.4 }}
           >
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-amber-500 text-white">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-amber-500 text-white">
                 <Briefcase className="size-3" />
                 Careers
               </span>
@@ -290,12 +290,12 @@ export default function CareersPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <span className="text-[9px] uppercase tracking-wider text-white/25 mr-1">Dept:</span>
+            <span className="text-xs uppercase tracking-wider text-white/25 mr-1">Dept:</span>
             {departments.map((dept) => (
               <button
                 key={dept}
                 onClick={() => setActiveDepartment(dept)}
-                className={`text-[9px] px-2 py-0.5 rounded-full transition-all duration-200 ${
+                className={`text-xs px-2 py-0.5 rounded-full transition-all duration-200 ${
                   activeDepartment === dept
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                     : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
@@ -305,12 +305,12 @@ export default function CareersPage() {
               </button>
             ))}
             <span className="w-px h-3 bg-white/[0.08] mx-1" />
-            <span className="text-[9px] uppercase tracking-wider text-white/25 mr-1">Type:</span>
+            <span className="text-xs uppercase tracking-wider text-white/25 mr-1">Type:</span>
             {jobTypes.map((type) => (
               <button
                 key={type}
                 onClick={() => setActiveType(type)}
-                className={`text-[9px] px-2 py-0.5 rounded-full transition-all duration-200 ${
+                className={`text-xs px-2 py-0.5 rounded-full transition-all duration-200 ${
                   activeType === type
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                     : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
@@ -359,11 +359,11 @@ export default function CareersPage() {
                         <Building2 className="size-2.5" />
                         {job.department}
                       </span>
-                      <span className="flex items-center gap-1 text-[9px] text-white/35">
+                      <span className="flex items-center gap-1 text-xs text-white/35">
                         <MapPin className="size-2.5" />
                         {job.location}
                       </span>
-                      <span className="flex items-center gap-1 text-[9px] text-emerald-400/70 font-medium">
+                      <span className="flex items-center gap-1 text-xs text-emerald-400/70 font-medium">
                         <DollarSign className="size-2.5" />
                         <span className="truncate max-w-[120px]">{job.salaryRange}</span>
                       </span>
@@ -372,7 +372,7 @@ export default function CareersPage() {
                     {/* Requirements bullets */}
                     <ul className="space-y-1 mb-3 flex-1">
                       {job.requirements.slice(0, 4).map((req, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-[9px] text-white/45 leading-tight">
+                        <li key={i} className="flex items-start gap-1.5 text-xs text-white/45 leading-tight">
                           <CheckCircle2 className="size-2.5 text-emerald-500/70 shrink-0 mt-0.5" />
                           <span className="line-clamp-1">{req}</span>
                         </li>
@@ -385,7 +385,7 @@ export default function CareersPage() {
                     {/* Apply button */}
                     <button
                       onClick={() => handleApplyClick(job)}
-                      className="w-full text-[10px] font-semibold py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20 flex items-center justify-center gap-1.5"
+                      className="w-full text-xs font-semibold py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20 flex items-center justify-center gap-1.5"
                     >
                       <Send className="size-3" />
                       Apply Now
@@ -407,7 +407,7 @@ export default function CareersPage() {
                 <p className="text-sm text-white/40 mb-3">No positions match your filters</p>
                 <button
                   onClick={() => { setActiveDepartment('All Departments'); setActiveType('All Types'); }}
-                  className="text-[10px] px-3 py-1 rounded-full bg-white/[0.05] text-white/50 hover:text-white/70 border border-white/[0.08] transition-colors"
+                  className="text-xs px-3 py-1 rounded-full bg-white/[0.05] text-white/50 hover:text-white/70 border border-white/[0.08] transition-colors"
                 >
                   Clear Filters
                 </button>
@@ -421,13 +421,13 @@ export default function CareersPage() {
           <div className="flex items-center justify-between">
             <a
               href="mailto:careers@lightworldtechnologies.com?subject=General%20Application"
-              className="group inline-flex items-center gap-2 text-[11px] text-white/35 hover:text-emerald-400 transition-colors"
+              className="group inline-flex items-center gap-2 text-xs text-white/35 hover:text-emerald-400 transition-colors"
             >
               <Mail className="size-3.5" />
               <span>Don&apos;t see a role? Send your CV to <span className="underline underline-offset-2 group-hover:text-emerald-400/80 transition-colors">careers@lightworldtechnologies.com</span></span>
             </a>
             {hasMore && (
-              <span className="text-[9px] text-white/25">
+              <span className="text-xs text-white/25">
                 Showing 4 of {filtered.length} positions
               </span>
             )}
@@ -668,7 +668,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             <button
               type="button"
               onClick={() => setResumeFile(null)}
-              className="text-[10px] text-white/30 hover:text-red-400 transition-colors"
+              className="text-xs text-white/30 hover:text-red-400 transition-colors"
             >
               Remove
             </button>

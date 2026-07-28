@@ -87,7 +87,7 @@ export default function Header() {
           </button>
 
           {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-0.5">
+          <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               if (link.page === 'services') {
                 return (
@@ -95,7 +95,7 @@ export default function Header() {
                     <button
                       onClick={() => handleNav('services')}
                       className={cn(
-                        'px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-all flex items-center gap-1',
+                        'px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1',
                         currentPage === link.page
                           ? 'bg-emerald-500/15 text-emerald-400'
                           : isHomePage
@@ -126,12 +126,12 @@ export default function Header() {
                             onClick={() => handleNav('services')}
                             className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-white/[0.06] transition-colors text-left"
                           >
-                            <div className="size-7 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0">
-                              <service.icon className="size-3.5 text-emerald-400" />
+                            <div className="size-8 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0">
+                              <service.icon className="size-4 text-emerald-400" />
                             </div>
                             <div>
-                              <p className="text-[11px] font-semibold text-white/75">{service.label}</p>
-                              <p className="text-[10px] text-white/30 mt-0.5">{service.desc}</p>
+                              <p className="text-sm font-semibold text-white/75">{service.label}</p>
+                              <p className="text-xs text-white/30 mt-0.5">{service.desc}</p>
                             </div>
                           </button>
                         ))}
@@ -146,7 +146,7 @@ export default function Header() {
                   key={link.page}
                   onClick={() => handleNav(link.page)}
                   className={cn(
-                    'px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-all',
+                    'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
                     currentPage === link.page
                       ? 'bg-emerald-500/15 text-emerald-400'
                       : isHomePage
@@ -161,13 +161,13 @@ export default function Header() {
           </div>
 
           {/* Right Side */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button
               onClick={() => handleNav('contact')}
               size="sm"
               className={cn(
-                'hidden sm:inline-flex rounded-full text-[11px] font-semibold px-3.5 h-8 shadow-md transition-all',
+                'hidden sm:inline-flex rounded-full text-sm font-semibold px-4 h-8 shadow-md transition-all',
                 'bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20 hover:shadow-emerald-500/40',
               )}
             >

@@ -100,7 +100,7 @@ function CompactCountdown({ targetDate }: { targetDate: Date }) {
 
   if (isLaunched) {
     return (
-      <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
         <Zap className="size-2.5" />
         Launching now!
       </span>
@@ -108,7 +108,7 @@ function CompactCountdown({ targetDate }: { targetDate: Date }) {
   }
 
   return (
-    <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-white/[0.04] text-white/50 tabular-nums">
+    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white/[0.04] text-white/50 tabular-nums">
       <Flame className="size-2.5 text-amber-500 shrink-0" />
       {days}d {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
     </span>
@@ -185,20 +185,20 @@ export default function ProductsPage() {
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center gap-3">
-            <Badge className="bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[10px] font-semibold backdrop-blur-sm shrink-0">
+            <Badge className="bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-semibold backdrop-blur-sm shrink-0">
               <Clock className="size-2.5 mr-1" />
               Products
             </Badge>
             <h1 className="text-base lg:text-lg font-bold text-white">
               Our <span className="text-gradient-amber">Products</span>
             </h1>
-            <span className="hidden sm:inline text-[10px] text-white/30 uppercase tracking-widest">
+            <span className="hidden sm:inline text-xs text-white/30 uppercase tracking-widest">
               Coming Soon
             </span>
           </div>
           <button
             onClick={() => navigate('contact')}
-            className="hidden md:inline-flex items-center gap-1 text-[10px] text-white/40 hover:text-emerald-400 transition-colors"
+            className="hidden md:inline-flex items-center gap-1 text-xs text-white/40 hover:text-emerald-400 transition-colors"
           >
             Need a custom solution?
             <ArrowRight className="size-3" />
@@ -234,7 +234,7 @@ export default function ProductsPage() {
                         </h3>
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Badge className="text-[9px] px-2 py-0 rounded-full bg-white/[0.04] text-white/40 border-0 font-normal">
+                        <Badge className="text-xs px-2 py-0 rounded-full bg-white/[0.04] text-white/40 border-0 font-normal">
                           {product.launchDate}
                         </Badge>
                         <CompactCountdown targetDate={launchDates[product.id] || new Date()} />
@@ -243,7 +243,7 @@ export default function ProductsPage() {
                   </div>
 
                   {/* Description — 2 lines */}
-                  <p className="text-[11px] lg:text-xs text-white/40 leading-relaxed line-clamp-2 mb-2">
+                  <p className="text-xs lg:text-xs text-white/40 leading-relaxed line-clamp-2 mb-2">
                     {product.description}
                   </p>
 
@@ -252,7 +252,7 @@ export default function ProductsPage() {
                     {product.features.map((feature) => (
                       <span
                         key={feature}
-                        className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.04] text-white/45 whitespace-nowrap"
+                        className="text-xs px-2 py-0.5 rounded-full bg-white/[0.04] text-white/45 whitespace-nowrap"
                       >
                         {feature}
                       </span>
@@ -270,7 +270,7 @@ export default function ProductsPage() {
                       animate={{ opacity: 1, scale: 1 }}
                     >
                       <CheckCircle2 className="size-3 text-amber-400 shrink-0" />
-                      <span className="text-[10px] text-amber-400 font-medium">
+                      <span className="text-xs text-amber-400 font-medium">
                         You&apos;ll be notified at launch!
                       </span>
                     </motion.div>
@@ -283,14 +283,14 @@ export default function ProductsPage() {
                           placeholder="your@email.com"
                           value={emailInputs[product.id] || ''}
                           onChange={(e) => setEmailInputs((prev) => ({ ...prev, [product.id]: e.target.value }))}
-                          className="pl-7 h-7 text-[10px] bg-white/[0.04] border-white/[0.06] rounded-lg focus:border-amber-400/50 focus:ring-amber-400/10 placeholder:text-white/25"
+                          className="pl-7 h-7 text-xs bg-white/[0.04] border-white/[0.06] rounded-lg focus:border-amber-400/50 focus:ring-amber-400/10 placeholder:text-white/25"
                           aria-label={`Email for ${product.title} notifications`}
                         />
                       </div>
                       <Button
                         onClick={() => handleSubscribe(product.id)}
                         disabled={subscribing === product.id}
-                        className="h-7 text-[10px] px-2.5 lg:px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shrink-0 shadow-md shadow-emerald-500/15"
+                        className="h-7 text-xs px-2.5 lg:px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shrink-0 shadow-md shadow-emerald-500/15"
                       >
                         {subscribing === product.id ? (
                           <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
