@@ -434,7 +434,7 @@ export default function AboutPage() {
 
       {/* Bottom — Awards Bar (overlaps the grid above) */}
       <motion.div
-        className="shrink-0 mx-4 md:mx-6"
+        className="shrink-0 mx-4 md:mx-6 pt-4 md:pt-6"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.5 }}
