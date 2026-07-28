@@ -69,9 +69,9 @@ function PublicRouter() {
   const { currentPage } = useAppStore();
 
   const variants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
+    initial: { opacity: 0, scale: 0.98 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.98 },
   };
 
   return (
@@ -82,7 +82,7 @@ function PublicRouter() {
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
       >
         {currentPage === 'home' && <HomePage />}
         {currentPage === 'about' && <AboutPage />}
@@ -137,11 +137,8 @@ export default function Home() {
       <Preloader />
       <ScrollProgress />
       <PageLoader />
-      {/* Sticky wrapper keeps announcement bar + header at top when scrolling */}
-      <div className="sticky top-0 z-[60]">
-        <AnnouncementBar />
-        <Header />
-      </div>
+      {/* Header is now a floating pill nav */}
+      <Header />
       <main className="flex-1">
         <PublicRouter />
       </main>

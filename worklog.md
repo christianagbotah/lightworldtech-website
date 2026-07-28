@@ -1,4 +1,51 @@
 ---
+Task ID: nexus-redesign
+Agent: Main Agent
+Task: Complete website redesign — NEXUS Command Center concept
+
+Work Log:
+- **Radical redesign**: Replaced traditional hero+sections layout with a full-viewport interactive bento dashboard
+- **New HomePage.tsx** (complete rewrite):
+  - Full viewport (h-screen, no scroll) bento grid layout
+  - Split-screen: Hero (left 7 cols) + Services (right 5 cols)
+  - 6 interactive service cards with 3D tilt hover effect (perspective + rotateX/Y)
+  - Typewriter tagline cycling through 4 messages with blinking cursor
+  - Animated gradient orbs (3 radial gradient blobs with slow movement)
+  - Particle field (50 floating dots with Framer Motion)
+  - Subtle grid lines overlay
+  - Auto-rotating testimonials with AnimatePresence transitions
+  - Count-up animated statistics (ease-out cubic)
+  - Infinite-scrolling client logo ticker
+  - "Available for projects" pulsing status badge
+  - CTA buttons: "Explore Services" + "Get in Touch"
+  - Quick links: Newsletter CTA + Blog preview
+- **New Header.tsx** (complete rewrite):
+  - Floating pill-shaped navigation (fixed position, glassmorphism)
+  - Rounded-full links with active state highlighting
+  - Services mega menu dropdown with glassmorphism
+  - Mobile: Sheet slide-in panel with dark theme
+  - Responsive spacer for inner pages (non-home pages push content below nav)
+- **page.tsx updates**:
+  - Removed sticky AnnouncementBar wrapper ( AnnouncementBar no longer used)
+  - Enhanced page transitions: scale+fade instead of y-translate+fade
+  - Custom cubic-bezier easing for smoother morph effect
+- **globals.css additions**:
+  - `animate-blink` keyframe for typewriter cursor
+  - `animate-orb-1/2/3` keyframes for gradient orb movement
+  - Custom dark scrollbar styling
+  - `.nexus-card` glow border effect on hover
+- **Dark mode default**: Changed defaultTheme from "light" to "dark" in layout.tsx
+- Lint: 0 errors, 0 warnings
+
+Stage Summary:
+- 4 files rewritten (HomePage, Header), 3 files updated (page.tsx, globals.css, layout.tsx)
+- Site now opens to a full-viewport interactive dashboard with zero scroll
+- Navigation uses floating glassmorphism pill at top
+- All page transitions use smooth scale+fade morphing
+- Dark mode is now the default theme
+- Inner pages (About, Services, etc.) retain existing layouts but may need restyling
+
+---
 Task ID: production-fine-tune
 Agent: Main Agent
 Task: Production fine-tuning — circular logo, dialog aria warnings, QA pass
