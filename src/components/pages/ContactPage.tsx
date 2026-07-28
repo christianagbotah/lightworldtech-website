@@ -40,9 +40,9 @@ function getFileIcon(type: string): React.ElementType {
 }
 
 function getFileColor(type: string): string {
-  if (type.startsWith('image/')) return 'bg-amber-100 dark:bg-amber-900/30 text-emerald-600 dark:text-amber-400';
-  if (type === 'application/pdf') return 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
-  return 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+  if (type.startsWith('image/')) return 'bg-amber-100 dark:bg-amber-900/30 text-emerald-400';
+  if (type === 'application/pdf') return 'bg-red-100 dark:bg-red-900/30 text-red-400';
+  return 'bg-white/[0.06] text-white/60';
 }
 
 interface FileAttachment {
@@ -65,7 +65,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   };
 
   return (
-    <button onClick={handleCopy} className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-amber-400 hover:bg-emerald-50 dark:hover:bg-amber-900/30 transition-all duration-200 shrink-0" aria-label={`Copy ${label}`}>
+    <button onClick={handleCopy} className="ml-auto p-1.5 rounded-lg text-white/30 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-200 shrink-0" aria-label={`Copy ${label}`}>
       {copied ? <Check className="size-3.5 text-amber-500" /> : <Copy className="size-3.5" />}
     </button>
   );
@@ -145,7 +145,7 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
 
   return (
     <div className="space-y-3">
-      <Label className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+      <Label className="text-white font-medium text-sm flex items-center gap-1.5">
         <span className="w-1 h-1 rounded-full bg-amber-500" />
         Attachments
         <span className="text-xs text-slate-400 font-normal">(optional - max {MAX_FILES} files, 10MB each)</span>
@@ -156,7 +156,7 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
         className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300 cursor-pointer ${
           isDragOver
             ? 'border-emerald-500 bg-amber-50 dark:bg-amber-900/20 scale-[1.01]'
-            : 'border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            : 'border-white/[0.06] hover:border-emerald-500/30 hover:bg-emerald-500/10'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -179,11 +179,11 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
           <div className={`size-12 rounded-full mx-auto mb-3 flex items-center justify-center transition-colors duration-300 ${
             isDragOver
               ? 'bg-amber-100 dark:bg-amber-800'
-              : 'bg-slate-100 dark:bg-slate-800'
+              : 'bg-white/[0.06]'
           }`}>
-            <Upload className={`size-5 transition-colors duration-300 ${isDragOver ? 'text-emerald-600 dark:text-amber-400' : 'text-slate-400'}`} />
+            <Upload className={`size-5 transition-colors duration-300 ${isDragOver ? 'text-emerald-400' : 'text-slate-400'}`} />
           </div>
-          <p className={`text-sm font-medium transition-colors duration-300 ${isDragOver ? 'text-emerald-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-300'}`}>
+          <p className={`text-sm font-medium transition-colors duration-300 ${isDragOver ? 'text-emerald-400' : 'text-white/60'}`}>
             {isDragOver ? 'Drop files here' : 'Drag & drop files here'}
           </p>
           <p className="text-xs text-slate-400 mt-1">or click to browse</p>
@@ -205,12 +205,12 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
                 animate={{ opacity: 1, y: 0, height: 'auto' }}
                 exit={{ opacity: 0, y: -10, height: 0 }}
                 className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
-                  isOversized ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                  isOversized ? 'border-red-500/20 bg-red-500/10' : 'border-white/[0.06] bg-white/[0.04]'
                 }`}
               >
                 {/* Preview or icon */}
                 {attachment.preview ? (
-                  <div className="size-10 rounded-lg overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-700">
+                  <div className="size-10 rounded-lg overflow-hidden shrink-0 bg-white/[0.06]">
                     <img src={attachment.preview} alt={attachment.file.name} className="size-full object-cover" />
                   </div>
                 ) : (
@@ -220,7 +220,7 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
                 )}
 
                 <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-medium truncate ${isOversized ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                  <p className={`text-xs font-medium truncate ${isOversized ? 'text-red-400' : 'text-white/60'}`}>
                     {attachment.file.name}
                   </p>
                   <div className="flex items-center gap-1">
@@ -238,7 +238,7 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
 
                 <button
                   onClick={(e) => { e.stopPropagation(); removeFile(attachment.id); }}
-                  className="size-7 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 flex items-center justify-center transition-colors shrink-0"
+                  className="size-7 rounded-full hover:bg-red-500/10 text-slate-400 hover:text-red-500 flex items-center justify-center transition-colors shrink-0"
                   aria-label={`Remove ${attachment.file.name}`}
                 >
                   <X className="size-3.5" />
@@ -254,7 +254,7 @@ function FileUploadZone({ files, setFiles }: { files: FileAttachment[]; setFiles
               <span className={`text-[10px] ${totalSize > MAX_TOTAL_SIZE ? 'text-red-500' : 'text-slate-400'}`}>
                 {formatFileSize(totalSize)} / {formatFileSize(MAX_TOTAL_SIZE)}
               </span>
-              <div className="w-20 h-1 rounded-full bg-slate-100 dark:bg-slate-700">
+              <div className="w-20 h-1 rounded-full bg-white/[0.06]">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${
                     totalSize > MAX_TOTAL_SIZE ? 'bg-red-500' : totalSize > MAX_TOTAL_SIZE * 0.8 ? 'bg-amber-500' : 'bg-amber-500'
@@ -358,40 +358,40 @@ export default function ContactPage() {
       />
 
       {/* Contact Content */}
-      <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
+      <section className="py-16 lg:py-24 bg-[#050810]">
         <div className="container-main">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             {/* Contact Form */}
             <motion.div className="lg:col-span-2" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden relative">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 via-amber-400 to-amber-400 hidden lg:block" />
+              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm overflow-hidden relative">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 via-amber-400 to-emerald-400 hidden lg:block" />
                 <CardContent className="p-6 sm:p-8 relative">
                   {submitted ? (
                     <motion.div className="text-center py-12" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-                      <motion.div className="size-20 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}>
-                        <CheckCircle2 className="size-10 text-emerald-600 dark:text-amber-400" />
+                      <motion.div className="size-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}>
+                        <CheckCircle2 className="size-10 text-amber-400" />
                       </motion.div>
-                      <h3 className="text-2xl font-semibold mb-2 text-slate-900 dark:text-white">Message Sent!</h3>
-                      <p className="text-slate-500 dark:text-slate-400 mb-2">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
-                      <p className="text-sm text-slate-400 dark:text-slate-500 mb-6">Check your email for a confirmation.</p>
+                      <h3 className="text-2xl font-semibold mb-2 text-white">Message Sent!</h3>
+                      <p className="text-white/60 mb-2">Thank you for reaching out. We&apos;ll get back to you within 24 hours.</p>
+                      <p className="text-sm text-white/30 mb-6">Check your email for a confirmation.</p>
                       <div className="flex gap-3 justify-center">
-                        <Button onClick={() => setSubmitted(false)} variant="outline" className="border-amber-300 dark:border-emerald-500 text-emerald-600 dark:text-amber-400">Send Another Message</Button>
-                        <Button onClick={() => navigate('home')} className="bg-emerald-600 hover:bg-emerald-700 text-white">Back to Home</Button>
+                        <Button onClick={() => setSubmitted(false)} variant="outline" className="border-emerald-500/30 text-emerald-400">Send Another Message</Button>
+                        <Button onClick={() => navigate('home')} className="bg-emerald-500 hover:bg-emerald-400 text-white">Back to Home</Button>
                       </div>
                     </motion.div>
                   ) : (
                     <>
-                      <h2 className="text-2xl font-bold mb-1 text-slate-900 dark:text-white">Send Us a Message</h2>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Fill out the form below and we&apos;ll respond promptly.</p>
+                      <h2 className="text-2xl font-bold mb-1 text-white">Send Us a Message</h2>
+                      <p className="text-sm text-white/40 mb-6">Fill out the form below and we&apos;ll respond promptly.</p>
 
                       {submitting && (
-                        <motion.div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-sm text-emerald-600 dark:text-amber-400 flex items-center gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                        <motion.div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-400 flex items-center gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
                           <Loader2 className="size-4 animate-spin" /> Sending your message...
                         </motion.div>
                       )}
 
                       {error && (
-                        <motion.div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 flex items-center gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                        <motion.div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400 flex items-center gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
                           <AlertCircle className="size-4" /> {error}
                         </motion.div>
                       )}
@@ -399,13 +399,13 @@ export default function ContactPage() {
                       <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div className="space-y-1.5">
-                            <Label htmlFor="name" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                            <Label htmlFor="name" className="text-white font-medium text-sm flex items-center gap-1.5">
                               <span className="w-1 h-1 rounded-full bg-amber-500" /> Full Name
                             </Label>
                             <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all h-11" />
                           </div>
                           <div className="space-y-1.5">
-                            <Label htmlFor="email" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                            <Label htmlFor="email" className="text-white font-medium text-sm flex items-center gap-1.5">
                               <span className="w-1 h-1 rounded-full bg-amber-500" /> Email Address
                             </Label>
                             <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all h-11" />
@@ -413,20 +413,20 @@ export default function ContactPage() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           <div className="space-y-1.5">
-                            <Label htmlFor="phone" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                            <Label htmlFor="phone" className="text-white font-medium text-sm flex items-center gap-1.5">
                               <span className="w-1 h-1 rounded-full bg-amber-500" /> Phone Number
                             </Label>
                             <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+233 XX XXX XXXX" disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all h-11" />
                           </div>
                           <div className="space-y-1.5">
-                            <Label htmlFor="subject" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                            <Label htmlFor="subject" className="text-white font-medium text-sm flex items-center gap-1.5">
                               <span className="w-1 h-1 rounded-full bg-amber-500" /> Subject
                             </Label>
                             <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all h-11" />
                           </div>
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="message" className="text-slate-900 dark:text-slate-100 font-medium text-sm flex items-center gap-1.5">
+                          <Label htmlFor="message" className="text-white font-medium text-sm flex items-center gap-1.5">
                             <span className="w-1 h-1 rounded-full bg-amber-500" /> Message
                           </Label>
                           <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us about your project..." rows={5} required disabled={submitting} className="focus-visible:ring-emerald-500/30 focus-visible:border-amber-400 dark:focus-visible:border-emerald-500 transition-all resize-none" />
@@ -436,7 +436,7 @@ export default function ContactPage() {
                         <FileUploadZone files={attachments} setFiles={setAttachments} />
 
                         <div className="flex flex-col sm:flex-row gap-3">
-                          <Button type="submit" disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto px-8 shadow-md hover:shadow-lg transition-shadow">
+                          <Button type="submit" disabled={submitting} className="bg-emerald-500 hover:bg-emerald-400 text-white w-full sm:w-auto px-8 shadow-md hover:shadow-lg transition-shadow">
                             {submitting ? (
                               <><Loader2 className="size-4 mr-2 animate-spin" /> Sending...</>
                             ) : (
@@ -453,96 +453,96 @@ export default function ContactPage() {
 
             {/* Contact Info */}
             <motion.div className="space-y-6" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
+              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
                 <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-400 via-transparent to-amber-400 dark:from-amber-500 dark:via-transparent dark:to-amber-500" />
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-500 via-transparent to-amber-500" />
                 </div>
                 <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
-                      <Phone className="size-5 text-emerald-600 dark:text-amber-400 group-hover:text-white transition-colors duration-300" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-900/30 to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
+                      <Phone className="size-5 text-amber-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Phone</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">+233 (024) 361 8186</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">+233 (055) 467 2081</p>
+                      <h3 className="font-semibold mb-1 text-white">Phone</h3>
+                      <p className="text-sm text-white/40">+233 (024) 361 8186</p>
+                      <p className="text-sm text-white/40">+233 (055) 467 2081</p>
                     </div>
                     <CopyButton text="+233 (024) 361 8186" label="phone number" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
+              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
                 <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-400 via-transparent to-amber-400 dark:from-amber-500 dark:via-transparent dark:to-amber-500" />
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-500 via-transparent to-amber-500" />
                 </div>
                 <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
-                      <Mail className="size-5 text-emerald-600 dark:text-amber-400 group-hover:text-white transition-colors duration-300" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-900/30 to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
+                      <Mail className="size-5 text-amber-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Email</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">mail@lightworldtech.com</p>
+                      <h3 className="font-semibold mb-1 text-white">Email</h3>
+                      <p className="text-sm text-white/40">mail@lightworldtech.com</p>
                     </div>
                     <CopyButton text="mail@lightworldtech.com" label="email address" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
+              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
                 <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-400 via-transparent to-amber-400 dark:from-amber-500 dark:via-transparent dark:to-amber-500" />
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-500 via-transparent to-amber-500" />
                 </div>
                 <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
-                      <MapPin className="size-5 text-emerald-600 dark:text-amber-400 group-hover:text-white transition-colors duration-300" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-900/30 to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
+                      <MapPin className="size-5 text-amber-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1 text-slate-900 dark:text-white">Office</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Accra<br />Ghana</p>
+                      <h3 className="font-semibold mb-1 text-white">Office</h3>
+                      <p className="text-sm text-white/40">Accra<br />Ghana</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
+              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative">
                 <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none p-[1px]">
-                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-400 via-transparent to-amber-400 dark:from-amber-500 dark:via-transparent dark:to-amber-500" />
+                  <div className="w-full h-full rounded-lg bg-gradient-to-br from-amber-500 via-transparent to-amber-500" />
                 </div>
                 <CardContent className="p-6 relative">
                   <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
-                      <Clock className="size-5 text-emerald-600 dark:text-amber-400 group-hover:text-white transition-colors duration-300" />
+                    <div className="size-10 rounded-lg bg-gradient-to-br from-amber-900/30 to-amber-900/50 flex items-center justify-center shrink-0 group-hover:from-amber-500 group-hover:to-amber-600 transition-all duration-300">
+                      <Clock className="size-5 text-amber-400 group-hover:text-white transition-colors duration-300" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-slate-900 dark:text-white">Office Hours</h3>
+                        <h3 className="font-semibold text-white">Office Hours</h3>
                         <span className="flex items-center gap-1.5">
                           <span className={`relative flex size-2.5 ${officeStatus.open ? '' : 'opacity-50'}`}>
                             {officeStatus.open && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />}
                             <span className={`relative inline-flex rounded-full size-2.5 ${officeStatus.open ? 'bg-amber-500' : 'bg-slate-400'}`} />
                           </span>
-                          <span className={`text-xs font-medium ${officeStatus.open ? 'text-emerald-600 dark:text-amber-400' : 'text-slate-400'}`}>{officeStatus.label}</span>
+                          <span className={`text-xs font-medium ${officeStatus.open ? 'text-amber-400' : 'text-white/30'}`}>{officeStatus.label}</span>
                         </span>
                       </div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Mon - Fri: 08:00 - 17:00</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Sat: 09:00 - 13:00</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Sun: Closed</p>
+                      <p className="text-sm text-white/40">Mon - Fri: 08:00 - 17:00</p>
+                      <p className="text-sm text-white/40">Sat: 09:00 - 13:00</p>
+                      <p className="text-sm text-white/40">Sun: Closed</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Social Media Links */}
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
+              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm shadow-sm overflow-hidden">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="size-10 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shrink-0"><ExternalLink className="size-5 text-white" /></div>
                     <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-white">Follow Us</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Stay connected on social media</p>
+                      <h3 className="font-semibold text-white">Follow Us</h3>
+                      <p className="text-xs text-white/40">Stay connected on social media</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-3">
@@ -554,7 +554,7 @@ export default function ContactPage() {
                     ].map((social) => {
                       const SocialIcon = social.icon;
                       return (
-                        <button key={social.label} onClick={() => window.open(social.link, '_blank')} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${social.color}`} aria-label={social.label}>
+                        <button key={social.label} onClick={() => window.open(social.link, '_blank')} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/[0.06] text-white/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${social.color}`} aria-label={social.label}>
                           <SocialIcon className="size-5" />
                           <span className="text-[10px] font-medium">{social.label}</span>
                         </button>
@@ -585,9 +585,9 @@ export default function ContactPage() {
               </Card>
 
               {/* Google Maps Embed */}
-              <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
+              <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm overflow-hidden shadow-sm">
                 <div className="p-3 pb-0">
-                  <div className="flex items-center gap-2 mb-2"><MapPin className="size-4 text-emerald-600 dark:text-amber-400" /><h3 className="font-semibold text-sm text-slate-900 dark:text-white">Our Location</h3></div>
+                  <div className="flex items-center gap-2 mb-2"><MapPin className="size-4 text-amber-400" /><h3 className="font-semibold text-sm text-white">Our Location</h3></div>
                 </div>
                 <div className="h-56 rounded-b-lg overflow-hidden">
                   <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3770%2C5.5837%2C-0.0070%2C5.6237&layer=mapnik&marker=5.6037%2C-0.1870" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Lightworld Technologies Office Location - Accra, Ghana" className="grayscale-[30%] contrast-[1.1] dark:grayscale-[60%] dark:brightness-[0.8]" />

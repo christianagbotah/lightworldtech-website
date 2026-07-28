@@ -160,7 +160,7 @@ function ServiceCard({
   return (
     <Card
       ref={cardRef}
-      className={`h-full border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl dark:hover:shadow-amber-900/20 transition-shadow duration-300 group relative overflow-hidden cursor-pointer ${isPopular ? 'border-amber-300 dark:border-amber-600 ring-1 ring-amber-200/50 dark:ring-emerald-500/50' : ''} ${isExpanded ? 'border-amber-300 dark:border-amber-600 shadow-md ring-1 ring-amber-200 dark:ring-emerald-500' : ''}`}
+      className={`h-full border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-shadow duration-300 group relative overflow-hidden cursor-pointer ${isPopular ? 'border-amber-500/30 ring-1 ring-amber-500/20' : ''} ${isExpanded ? 'border-amber-500/30 shadow-md ring-1 ring-amber-500/30' : ''}`}
       onClick={() => setSelectedService(service)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -171,30 +171,30 @@ function ServiceCard({
         className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-300 pointer-events-none z-10"
       />
       {/* Gradient top border */}
-      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 transition-transform duration-500 origin-left z-20 ${isPopular ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-amber-400 to-emerald-400 transition-transform duration-500 origin-left z-20 ${isPopular ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
       {/* Most Popular badge */}
       {isPopular && (
         <div className="absolute top-3 right-3 z-20">
-          <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-semibold shadow-md gap-1">
+          <Badge className="bg-gradient-to-r from-emerald-500 to-amber-500 text-white text-xs font-semibold shadow-md gap-1">
             <Sparkles className="size-3" />
             Most Popular
           </Badge>
         </div>
       )}
       <CardContent className="p-6 relative z-[5]">
-        <div className="size-14 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/50 flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow duration-300">
-          <IconComp className="size-6 text-emerald-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300" />
+        <div className="size-14 rounded-xl bg-gradient-to-br from-amber-900/30 to-amber-900/50 flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow duration-300">
+          <IconComp className="size-6 text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
         </div>
-        <h3 className="text-xl font-semibold mb-3 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors">{service.title}</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">{service.description}</p>
+        <h3 className="text-xl font-semibold mb-3 text-white group-hover:text-emerald-400 transition-colors">{service.title}</h3>
+        <p className="text-sm text-white/40 leading-relaxed mb-4">{service.description}</p>
 
         {/* Features list */}
         {service.features && (
           <div className="space-y-2">
             <ul className="space-y-2">
               {service.features.slice(0, isExpanded ? undefined : 3).map((feature: string) => (
-                <li key={feature} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
-                  <CheckCircle2 className="size-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
+                <li key={feature} className="flex items-start gap-2 text-sm text-white/60">
+                  <CheckCircle2 className="size-4 text-amber-400 shrink-0 mt-0.5" />
                   <span>{feature}</span>
                 </li>
               ))}
@@ -202,7 +202,7 @@ function ServiceCard({
             {service.features.length > 3 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : service.id); }}
-                className="text-xs font-medium text-emerald-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors inline-flex items-center gap-1"
+                className="text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors inline-flex items-center gap-1"
               >
                 {isExpanded ? 'Show less' : `+${service.features.length - 3} more features`}
                 <ArrowRight className={`size-3 transition-transform duration-200 ${isExpanded ? '-rotate-90' : ''}`} />
@@ -214,7 +214,7 @@ function ServiceCard({
         <div className="flex gap-2 mt-4">
           <Button
             onClick={(e) => { e.stopPropagation(); setQuoteServiceId(service.id); setQuoteOpen(true); }}
-            className={`flex-1 transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-md hover:shadow-lg' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} group/btn`}
+            className={`flex-1 transition-all duration-300 ${isPopular ? 'bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white shadow-md hover:shadow-lg' : 'bg-emerald-500 hover:bg-emerald-400 text-white'} group/btn`}
           >
             Get a Quote <ArrowRight className="size-4 ml-1 group-hover/btn:translate-x-1 transition-transform duration-200" />
           </Button>
@@ -222,7 +222,7 @@ function ServiceCard({
             variant="outline"
             size="icon"
             onClick={(e) => { e.stopPropagation(); setSelectedService(service); }}
-            className="border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-amber-400 shrink-0"
+            className="border-white/[0.06] hover:border-emerald-500/30 hover:text-emerald-400 shrink-0"
             aria-label={`View details for ${service.title}`}
           >
             <ChevronRight className="size-4" />
@@ -275,12 +275,12 @@ export default function ServicesPage() {
       />
 
       {/* Services Grid */}
-      <section className="section-padding bg-white dark:bg-slate-900">
+      <section className="py-16 lg:py-24 bg-[#050810]">
         <div className="container-main">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i} className="bg-white dark:bg-slate-800">
+                <Card key={i} className="bg-white/[0.04] border border-white/[0.06]">
                   <div className="p-6">
                     <Skeleton className="size-12 rounded-lg mb-4" />
                     <Skeleton className="h-6 w-3/4 mb-2" />
@@ -332,7 +332,7 @@ export default function ServicesPage() {
                 transition={{ duration: 0.3 }}
               >
                 {/* Gradient Header */}
-                <div className="relative h-36 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-800 dark:from-amber-600 dark:via-amber-500 dark:to-amber-900 flex items-center justify-center">
+                <div className="relative h-36 bg-gradient-to-br from-emerald-600 via-amber-500 to-amber-700 flex items-center justify-center">
                   <div className="absolute inset-0 grid-pattern opacity-20" />
                   <div className="text-center relative z-10">
                     <div className="size-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
@@ -355,21 +355,21 @@ export default function ServicesPage() {
                 <div className="p-6 space-y-5 max-h-[calc(90vh-9rem)] overflow-y-auto">
                   {/* Description */}
                   <DialogHeader>
-                    <DialogTitle className="text-xl">{selectedService.title}</DialogTitle>
-                    <DialogDescription className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <DialogTitle className="text-xl text-white">{selectedService.title}</DialogTitle>
+                    <DialogDescription className="text-sm text-white/60 leading-relaxed">
                       {selectedService.description}
                     </DialogDescription>
                   </DialogHeader>
 
                   {/* Features */}
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-amber-500" />
+                    <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                      <CheckCircle2 className="size-4 text-amber-400" />
                       What&apos;s Included
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {selectedService.features?.map((feature: string) => (
-                        <div key={feature} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                        <div key={feature} className="flex items-center gap-2 text-sm text-white/60">
                           <CheckCircle2 className="size-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
                           <span>{feature}</span>
                         </div>
@@ -380,13 +380,13 @@ export default function ServicesPage() {
                   {/* Technology Stack */}
                   {selectedService.techStack && selectedService.techStack.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Technology Stack</h4>
+                      <h4 className="text-sm font-semibold text-white mb-3">Technology Stack</h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedService.techStack.map((tech: string) => (
                           <Badge
                             key={tech}
                             variant="secondary"
-                            className="text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                            className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20"
                           >
                             {tech}
                           </Badge>
@@ -397,13 +397,13 @@ export default function ServicesPage() {
 
                   {/* Pricing */}
                   {selectedService.priceRange && (
-                    <div className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-amber-50 dark:from-amber-900/20 dark:to-amber-900/20 border border-amber-200 dark:border-amber-800">
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20">
                       <div className="flex items-center gap-2 mb-1">
-                        <DollarSign className="size-4 text-emerald-600 dark:text-amber-400" />
-                        <span className="text-sm font-semibold text-slate-900 dark:text-white">Starting Price</span>
+                        <DollarSign className="size-4 text-amber-400" />
+                        <span className="text-sm font-semibold text-white">Starting Price</span>
                       </div>
-                      <p className="text-lg font-bold text-amber-500 dark:text-amber-300">{selectedService.priceRange}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Custom quotes available for complex projects</p>
+                      <p className="text-lg font-bold text-amber-400">{selectedService.priceRange}</p>
+                      <p className="text-xs text-white/40 mt-1">Custom quotes available for complex projects</p>
                     </div>
                   )}
 
@@ -411,7 +411,7 @@ export default function ServicesPage() {
                   <div className="flex gap-3 pt-2">
                     <Button
                       onClick={() => { setSelectedService(null); setQuoteServiceId(selectedService.id); setQuoteOpen(true); }}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 shadow-md"
+                      className="bg-emerald-500 hover:bg-emerald-400 text-white flex-1 shadow-md"
                     >
                       Request a Quote
                       <ArrowRight className="size-4 ml-2" />
@@ -419,7 +419,7 @@ export default function ServicesPage() {
                     <Button
                       variant="outline"
                       onClick={() => setSelectedService(null)}
-                      className="flex-1 border-slate-200 dark:border-slate-600"
+                      className="flex-1 border-white/[0.06]"
                     >
                       Close
                     </Button>
@@ -438,7 +438,7 @@ export default function ServicesPage() {
       <ServicesComparison />
 
       {/* Development Process */}
-      <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
+      <section className="py-16 lg:py-24 bg-[#050810]">
         <div className="container-main">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-12"
@@ -447,9 +447,9 @@ export default function ServicesPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">Process</span>
-            <h2 className="text-3xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">How We Deliver Excellence</h2>
-            <p className="text-slate-600 dark:text-slate-300">Our proven methodology ensures consistent, high-quality results for every project.</p>
+            <span className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Process</span>
+            <h2 className="text-3xl font-bold mt-2 mb-4 text-white">How We Deliver Excellence</h2>
+            <p className="text-white/60">Our proven methodology ensures consistent, high-quality results for every project.</p>
           </motion.div>
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
@@ -472,9 +472,9 @@ export default function ServicesPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <div className="text-4xl font-bold text-amber-200 dark:text-amber-800 mb-2">{item.step}</div>
-                <h3 className="font-semibold text-lg mb-2 text-slate-900 dark:text-white">{item.title}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{item.desc}</p>
+                <div className="text-4xl font-bold text-emerald-400/20 mb-2">{item.step}</div>
+                <h3 className="font-semibold text-lg mb-2 text-white">{item.title}</h3>
+                <p className="text-sm text-white/40">{item.desc}</p>
               </motion.div>
             ))}
           </motion.div>

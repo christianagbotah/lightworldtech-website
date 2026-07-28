@@ -157,7 +157,7 @@ export default function PortfolioPage() {
       />
 
       {/* Portfolio Grid */}
-      <section className="section-padding bg-slate-50 dark:bg-slate-800/50">
+      <section className="py-16 lg:py-24 bg-[#050810]">
         <div className="container-main">
           {/* Filter tabs + layout toggle */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
@@ -168,13 +168,13 @@ export default function PortfolioPage() {
                   onClick={() => setActiveCategory(cat.name)}
                   className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all capitalize flex items-center gap-2 ${
                     activeCategory === cat.name
-                      ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-emerald-600/25'
-                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-amber-900/30 hover:text-emerald-600 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-600'
+                      ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white shadow-md shadow-emerald-500/20'
+                      : 'bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:text-emerald-400 border border-white/[0.06]'
                   }`}
                 >
                   {cat.name === 'all' ? 'All Projects' : cat.name}
                   <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center font-medium ${
-                    activeCategory === cat.name ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-300'
+                    activeCategory === cat.name ? 'bg-white/20 text-white' : 'bg-white/[0.06] text-white/40'
                   }`}>
                     {cat.count}
                   </span>
@@ -183,10 +183,10 @@ export default function PortfolioPage() {
             </div>
 
             {/* Layout toggle */}
-            <div className="flex items-center gap-1 bg-white dark:bg-slate-700 rounded-lg p-1 border border-slate-200 dark:border-slate-600">
+            <div className="flex items-center gap-1 bg-white/[0.04] rounded-lg p-1 border border-white/[0.06]">
               <button
                 onClick={() => setLayoutMode('grid')}
-                className={`p-2 rounded-md transition-all ${layoutMode === 'grid' ? 'bg-amber-100 dark:bg-amber-900/30 text-emerald-600 dark:text-amber-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                className={`p-2 rounded-md transition-all ${layoutMode === 'grid' ? 'bg-emerald-500/10 text-emerald-400' : 'text-white/30 hover:text-white/60'}`}
                 aria-label="Grid layout"
                 title="Grid layout"
               >
@@ -194,7 +194,7 @@ export default function PortfolioPage() {
               </button>
               <button
                 onClick={() => setLayoutMode('masonry')}
-                className={`p-2 rounded-md transition-all ${layoutMode === 'masonry' ? 'bg-amber-100 dark:bg-amber-900/30 text-emerald-600 dark:text-amber-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                className={`p-2 rounded-md transition-all ${layoutMode === 'masonry' ? 'bg-emerald-500/10 text-emerald-400' : 'text-white/30 hover:text-white/60'}`}
                 aria-label="Masonry layout"
                 title="Masonry layout"
               >
@@ -206,14 +206,14 @@ export default function PortfolioPage() {
           {/* Results info */}
           {!loading && (
             <div className="flex items-center justify-between mb-6">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Showing <span className="font-medium text-slate-700 dark:text-slate-200">{visibleItems.length}</span> of{' '}
-                <span className="font-medium text-slate-700 dark:text-slate-200">{filtered.length}</span> projects
+              <p className="text-sm text-white/40">
+                Showing <span className="font-medium text-white/60">{visibleItems.length}</span> of{' '}
+                <span className="font-medium text-white/60">{filtered.length}</span> projects
                 {activeCategory !== 'all' && (
-                  <span> in <span className="text-emerald-600 dark:text-amber-400">{activeCategory}</span></span>
+                  <span> in <span className="text-emerald-400">{activeCategory}</span></span>
                 )}
               </p>
-              <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+              <div className="flex items-center gap-1 text-white/30">
                 <Layers className="size-4" />
                 <span className="text-xs">{filtered.length} total</span>
               </div>
@@ -223,7 +223,7 @@ export default function PortfolioPage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden bg-white dark:bg-slate-800">
+                <Card key={i} className="overflow-hidden bg-white/[0.04] border border-white/[0.06]">
                   <Skeleton className="h-56 w-full" />
                   <div className="p-5">
                     <Skeleton className="h-5 w-2/3 mb-2" />
@@ -260,7 +260,7 @@ export default function PortfolioPage() {
                       className="break-inside-avoid"
                     >
                       <Card
-                        className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                        className="group overflow-hidden border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer"
                         onClick={() => handleCardClick(project, visibleItems.indexOf(project))}
                       >
                         {/* Image placeholder with varying height */}
@@ -272,7 +272,7 @@ export default function PortfolioPage() {
                               <div className="size-10 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
                                 <ZoomIn className="size-5 text-emerald-600/50" />
                               </div>
-                              <span className="text-amber-500/50 dark:text-amber-300/50 font-bold text-sm">{project.title}</span>
+                              <span className="text-amber-400/50 font-bold text-sm">{project.title}</span>
                             </div>
                           </div>
                           {/* Hover overlay */}
@@ -287,7 +287,7 @@ export default function PortfolioPage() {
                           </div>
                           {/* Badges */}
                           <div className="absolute top-3 left-3">
-                            <Badge className="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 text-xs backdrop-blur-sm">{project.category}</Badge>
+                            <Badge className="bg-white/90 text-slate-800 text-xs backdrop-blur-sm">{project.category}</Badge>
                           </div>
                           {project.featured && (
                             <div className="absolute top-3 right-3">
@@ -296,15 +296,15 @@ export default function PortfolioPage() {
                           )}
                         </div>
                         <CardContent className="p-4">
-                          <h3 className="text-base font-semibold mb-1.5 group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors text-slate-900 dark:text-white truncate">
+                          <h3 className="text-base font-semibold mb-1.5 group-hover:text-emerald-400 transition-colors text-white truncate">
                             {project.title}
                           </h3>
                           <div className="flex flex-wrap gap-1">
                             {project.tags?.slice(0, 3).map((tag: string) => (
-                              <Badge key={tag} variant="secondary" className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{tag}</Badge>
+                              <Badge key={tag} variant="secondary" className="text-[10px] bg-white/[0.06] text-white/40">{tag}</Badge>
                             ))}
                             {(project.tags?.length || 0) > 3 && (
-                              <Badge variant="secondary" className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">+{project.tags.length - 3}</Badge>
+                              <Badge variant="secondary" className="text-[10px] bg-white/[0.06] text-white/30">+{project.tags.length - 3}</Badge>
                             )}
                           </div>
                         </CardContent>
@@ -322,14 +322,14 @@ export default function PortfolioPage() {
                   {visibleItems.map((project) => (
                     <motion.div key={project.id} variants={itemVariants} layout exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}>
                       <Card
-                        className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                        className="group overflow-hidden border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer"
                         onClick={() => handleCardClick(project, visibleItems.indexOf(project))}
                       >
                         <div className={`relative h-56 bg-gradient-to-br ${cardGradients[parseInt(project.id) % cardGradients.length]} overflow-hidden`}>
                           <div className="absolute inset-0 grid-pattern opacity-30" />
                           {/* Blur placeholder with lazy loading effect */}
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-emerald-600/40 dark:text-amber-400/40 font-bold text-lg opacity-40">{project.title}</span>
+                            <span className="text-amber-400/40 font-bold text-lg opacity-40">{project.title}</span>
                           </div>
                           {/* Hover overlay */}
                           <div className="absolute inset-0 bg-amber-900/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
@@ -339,7 +339,7 @@ export default function PortfolioPage() {
                             </motion.div>
                           </div>
                           <div className="absolute top-3 left-3">
-                            <Badge className="bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-slate-200 text-xs backdrop-blur-sm">{project.category}</Badge>
+                            <Badge className="bg-white/90 text-slate-800 text-xs backdrop-blur-sm">{project.category}</Badge>
                           </div>
                           {project.featured && (
                             <div className="absolute top-3 right-3">
@@ -348,11 +348,11 @@ export default function PortfolioPage() {
                           )}
                         </div>
                         <CardContent className="p-5">
-                          <h3 className="text-lg font-semibold mb-2 group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors text-slate-900 dark:text-white">{project.title}</h3>
-                          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-3 line-clamp-2">{project.description}</p>
+                          <h3 className="text-lg font-semibold mb-2 group-hover:text-emerald-400 transition-colors text-white">{project.title}</h3>
+                          <p className="text-sm text-white/40 leading-relaxed mb-3 line-clamp-2">{project.description}</p>
                           <div className="flex flex-wrap gap-1.5">
                             {project.tags?.map((tag: string) => (
-                              <Badge key={tag} variant="secondary" className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{tag}</Badge>
+                              <Badge key={tag} variant="secondary" className="text-xs bg-white/[0.06] text-white/40">{tag}</Badge>
                             ))}
                           </div>
                         </CardContent>
@@ -367,7 +367,7 @@ export default function PortfolioPage() {
           {/* Load More Button */}
           {hasMore && !loading && (
             <motion.div className="flex justify-center mt-10" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <Button variant="outline" onClick={() => setVisibleCount(prev => prev + itemsPerPage)} className="border-amber-300 dark:border-emerald-500 text-emerald-600 dark:text-amber-400 hover:bg-emerald-50 dark:hover:bg-amber-900/30 px-8 hover:border-amber-400 dark:hover:border-emerald-500 hover:shadow-md dark:hover:shadow-amber-900/20 transition-all duration-300">
+              <Button variant="outline" onClick={() => setVisibleCount(prev => prev + itemsPerPage)} className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 px-8 hover:shadow-md transition-all duration-300">
                 Load More Projects <ChevronDown className="size-4 ml-1" />
               </Button>
             </motion.div>
@@ -377,15 +377,15 @@ export default function PortfolioPage() {
             <motion.div className="text-center py-20" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <div className="max-w-sm mx-auto">
                 <div className="relative size-24 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/20 rotate-6" />
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/20 dark:to-amber-800/10 -rotate-3" />
-                  <div className="relative size-24 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-lg">
-                    <SearchX className="size-10 text-slate-300 dark:text-slate-600" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/30 to-amber-800/20 rotate-6" />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/20 to-amber-800/10 -rotate-3" />
+                  <div className="relative size-24 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shadow-lg">
+                    <SearchX className="size-10 text-white/30" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">No projects found</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">There are no projects in this category yet. Check back soon or browse all our projects.</p>
-                <Button onClick={() => setActiveCategory('all')} className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-md shadow-emerald-600/25 hover:shadow-lg transition-all duration-300">
+                <h3 className="text-lg font-semibold text-white/60 mb-2">No projects found</h3>
+                <p className="text-sm text-white/40 mb-6 leading-relaxed">There are no projects in this category yet. Check back soon or browse all our projects.</p>
+                <Button onClick={() => setActiveCategory('all')} className="bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all duration-300">
                   <Sparkles className="size-4 mr-2" /> View All Projects
                 </Button>
               </div>
@@ -399,7 +399,7 @@ export default function PortfolioPage() {
         <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
           {selectedProject && (
             <>
-              <div className={`relative ${masonryHeights[selectedProject.height || 'medium'] || 'h-64'} bg-gradient-to-br from-amber-500 to-amber-500 dark:from-amber-600 dark:to-amber-900 flex items-center justify-center`}>
+              <div className={`relative ${masonryHeights[selectedProject.height || 'medium'] || 'h-64'} bg-gradient-to-br from-emerald-600 to-amber-700 flex items-center justify-center`}>
                 <div className="absolute inset-0 grid-pattern opacity-20" />
                 <div className="text-center relative z-10 p-6">
                   <div className="size-14 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
@@ -413,27 +413,27 @@ export default function PortfolioPage() {
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex gap-1.5">
-                    <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-500 dark:text-amber-300">{selectedProject.category}</Badge>
-                    {selectedProject.featured && <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-500 dark:text-amber-300">Featured</Badge>}
+                    <Badge className="bg-amber-500/10 text-amber-300">{selectedProject.category}</Badge>
+                    {selectedProject.featured && <Badge className="bg-amber-500/10 text-amber-300">Featured</Badge>}
                   </div>
-                  <Button size="sm" onClick={() => { const idx = filtered.findIndex(p => p.id === selectedProject.id); setLightboxIndex(idx >= 0 ? idx : 0); setLightboxOpen(true); }} className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs">
+                  <Button size="sm" onClick={() => { const idx = filtered.findIndex(p => p.id === selectedProject.id); setLightboxIndex(idx >= 0 ? idx : 0); setLightboxOpen(true); }} className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs">
                     <ExternalLink className="size-3 mr-1" /> Full View
                   </Button>
                 </div>
-                <DialogHeader className="mt-1"><DialogTitle className="text-xl">{selectedProject.title}</DialogTitle></DialogHeader>
-                <DialogDescription className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{selectedProject.fullDescription || selectedProject.description}</DialogDescription>
+                <DialogHeader className="mt-1"><DialogTitle className="text-xl text-white">{selectedProject.title}</DialogTitle></DialogHeader>
+                <DialogDescription className="text-sm text-white/60 leading-relaxed">{selectedProject.fullDescription || selectedProject.description}</DialogDescription>
 
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Technologies</h4>
+                  <h4 className="text-sm font-semibold text-white mb-2">Technologies</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedProject.tags?.map((tag: string) => (
-                      <Badge key={tag} variant="secondary" className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{tag}</Badge>
+                      <Badge key={tag} variant="secondary" className="text-xs bg-white/[0.06] text-white/40">{tag}</Badge>
                     ))}
                   </div>
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1"><ExternalLink className="size-4 mr-2" /> Visit Project</Button>
+                  <Button className="bg-emerald-500 hover:bg-emerald-400 text-white flex-1"><ExternalLink className="size-4 mr-2" /> Visit Project</Button>
                   <Button variant="outline" onClick={() => setSelectedProject(null)} className="flex-1">Close</Button>
                 </div>
               </div>

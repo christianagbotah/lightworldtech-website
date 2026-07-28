@@ -116,7 +116,7 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-2 p-3 rounded-xl bg-slate-900 dark:bg-slate-950 border border-slate-700/50">
+    <div className="grid grid-cols-4 gap-2 p-3 rounded-xl bg-[#050810] border border-white/[0.06]">
       {units.map((unit) => (
         <div key={unit.label} className="text-center">
           <div className="text-lg sm:text-xl font-bold text-white tabular-nums font-mono leading-none">
@@ -193,9 +193,9 @@ export default function ProductsPage() {
       />
 
       {/* Products Grid */}
-      <section className="section-padding bg-white dark:bg-slate-900 relative overflow-hidden">
+      <section className="py-16 lg:py-24 bg-[#050810] relative overflow-hidden">
         {/* Subtle background */}
-        <div className="absolute inset-0 dot-pattern opacity-20 dark:opacity-10" />
+        <div className="absolute inset-0 dot-pattern opacity-5" />
         <div className="absolute top-20 left-10 w-48 h-48 bg-amber-400/5 rounded-full blur-3xl animate-breathe" />
         <div className="absolute bottom-20 right-10 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-breathe" style={{ animationDelay: '-4s' }} />
 
@@ -207,14 +207,14 @@ export default function ProductsPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge className="bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-300 border-amber-200 dark:border-emerald-500 mb-4 backdrop-blur-sm">
+            <Badge className="bg-amber-500/10 text-amber-300 border-emerald-500/20 mb-4 backdrop-blur-sm">
               <Clock className="size-3 mr-1" />
               Coming Soon
             </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
+            <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-white">
               Products in <span className="text-gradient-amber">Development</span>
             </h2>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-white/60">
               We&apos;re working on cutting-edge tools to solve real business challenges. Be the first to know when they launch.
             </p>
           </motion.div>
@@ -232,7 +232,7 @@ export default function ProductsPage() {
 
               return (
                 <motion.div key={product.id} variants={itemVariants}>
-                  <Card className="h-full border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:shadow-xl dark:hover:shadow-amber-900/20 transition-all duration-300 group overflow-hidden relative shimmer-sweep">
+                  <Card className="h-full border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 group overflow-hidden relative shimmer-sweep">
                     {/* Animated gradient top accent */}
                     <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${product.gradient} animate-gradient-shift`} style={{ backgroundSize: '200% 100%' }} />
 
@@ -242,7 +242,7 @@ export default function ProductsPage() {
                         <div className={`size-14 rounded-2xl bg-gradient-to-br ${product.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                           <Icon className="size-7 text-white" />
                         </div>
-                        <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-500 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-semibold flex items-center gap-1.5 backdrop-blur-sm">
+                        <Badge className="bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-semibold flex items-center gap-1.5 backdrop-blur-sm">
                           <span className="relative flex size-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
                             <span className="relative inline-flex rounded-full size-2 bg-amber-400" />
@@ -252,18 +252,18 @@ export default function ProductsPage() {
                       </div>
 
                       {/* Title & Description */}
-                      <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors">
+                      <h3 className="text-xl font-bold mb-2 text-white group-hover:text-emerald-400 transition-colors">
                         {product.title}
                       </h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                      <p className="text-sm text-white/40 leading-relaxed mb-4">
                         {product.description}
                       </p>
 
                       {/* Features */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mb-5">
                         {product.features.map((feature) => (
-                          <div key={feature} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                            <CheckCircle2 className="size-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
+                          <div key={feature} className="flex items-center gap-2 text-sm text-white/60">
+                            <CheckCircle2 className="size-3.5 text-amber-400 shrink-0" />
                             <span>{feature}</span>
                           </div>
                         ))}
@@ -273,7 +273,7 @@ export default function ProductsPage() {
                       <div className="mb-5">
                         <div className="flex items-center gap-2 mb-2">
                           <Flame className="size-3.5 text-amber-500" />
-                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                          <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">
                             Launch Countdown
                           </span>
                         </div>
@@ -302,7 +302,7 @@ export default function ProductsPage() {
                                 placeholder="your@email.com"
                                 value={emailInputs[product.id] || ''}
                                 onChange={(e) => setEmailInputs((prev) => ({ ...prev, [product.id]: e.target.value }))}
-                                className="pl-9 h-10 text-sm bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 focus:border-amber-400 focus:ring-amber-400/20"
+                                className="pl-9 h-10 text-sm bg-white/[0.06] border-white/[0.06] focus:border-amber-400 focus:ring-amber-400/20"
                                 aria-label={`Email for ${product.title} notifications`}
                               />
                             </div>
@@ -321,7 +321,7 @@ export default function ProductsPage() {
                               )}
                             </Button>
                           </div>
-                          <p className="text-xs text-slate-400 dark:text-slate-500">
+                          <p className="text-xs text-white/30">
                             No spam, unsubscribe anytime. We&apos;ll only notify you about this product launch.
                           </p>
                         </div>
@@ -341,7 +341,7 @@ export default function ProductsPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <p className="text-slate-500 dark:text-slate-400 mb-4">Need a custom solution right now?</p>
+            <p className="text-white/40 mb-4">Need a custom solution right now?</p>
             <Button
               onClick={() => navigate('contact')}
               className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 shadow-emerald-500/20"

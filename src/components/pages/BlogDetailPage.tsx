@@ -229,8 +229,8 @@ export default function BlogDetailPage() {
       </section>
 
       {/* Reading Progress Bar - Fixed at top of content */}
-      <div className="sticky top-16 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-700/50">
-        <div className="h-1 w-full bg-slate-100 dark:bg-slate-800">
+      <div className="sticky top-16 z-40 bg-[#050810]/95 backdrop-blur-sm border-b border-white/[0.04]">
+        <div className="h-1 w-full bg-white/[0.06]">
           <motion.div
             className="h-full bg-gradient-to-r from-amber-500 to-amber-400"
             initial={{ width: '0%' }}
@@ -240,17 +240,17 @@ export default function BlogDetailPage() {
         </div>
         <div className="container-main flex items-center justify-between py-2 px-4">
           <div className="flex items-center gap-3">
-            <BookOpen className="size-4 text-emerald-600 dark:text-amber-400" />
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-300 tabular-nums">{readingProgress}% read</span>
+            <BookOpen className="size-4 text-amber-400" />
+            <span className="text-xs font-medium text-white/60 tabular-nums">{readingProgress}% read</span>
           </div>
           <div className="flex items-center gap-2">
             {readingProgress < 100 ? (
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-white/40">
                 <Clock className="size-3 inline mr-1" />
                 {remainingTime} min remaining
               </span>
             ) : (
-              <span className="text-xs text-emerald-600 dark:text-amber-400 font-medium">
+              <span className="text-xs text-amber-400 font-medium">
                 ✓ Article complete
               </span>
             )}
@@ -260,13 +260,13 @@ export default function BlogDetailPage() {
 
       {/* Mobile TOC toggle */}
       {tocItems.length > 0 && (
-        <div className="lg:hidden sticky top-[88px] z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4">
+        <div className="lg:hidden sticky top-[88px] z-30 bg-[#050810] border-b border-white/[0.04] px-4">
           <button
             onClick={() => setTocOpen(!tocOpen)}
-            className="flex items-center justify-between w-full py-3 text-sm font-medium text-slate-700 dark:text-slate-200"
+            className="flex items-center justify-between w-full py-3 text-sm font-medium text-white/60"
           >
             <span className="flex items-center gap-2">
-              <List className="size-4 text-emerald-600 dark:text-amber-400" />
+              <List className="size-4 text-emerald-400" />
               Table of Contents ({tocItems.length})
             </span>
             <ChevronDown className={`size-4 transition-transform duration-200 ${tocOpen ? 'rotate-180' : ''}`} />
@@ -288,8 +288,8 @@ export default function BlogDetailPage() {
                   }}
                   className={`block text-left w-full py-1.5 px-3 text-sm rounded-md transition-colors ${
                     activeHeading === item.id
-                      ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 font-medium'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      ? 'bg-amber-500/10 text-amber-400 font-medium'
+                      : 'text-white/40 hover:bg-white/[0.06]'
                   } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
                 >
                   {item.text}
@@ -301,7 +301,7 @@ export default function BlogDetailPage() {
       )}
 
       {/* Content */}
-      <section className="section-padding bg-white dark:bg-slate-900">
+      <section className="py-16 lg:py-24 bg-[#050810]">
         <div className="container-main">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* Article */}
@@ -329,13 +329,13 @@ export default function BlogDetailPage() {
                 <Button
                   onClick={() => navigate('blog')}
                   variant="outline"
-                  className="border-amber-300 dark:border-emerald-500 text-emerald-600 dark:text-amber-400 hover:bg-emerald-50 dark:hover:bg-amber-900/30"
+                  className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
                 >
                   <ArrowLeft className="size-4 mr-2" />
                   Back to Blog
                 </Button>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center gap-2 text-sm text-white/40">
                     <Share2 className="size-4" />
                     <span className="font-medium">Share this article</span>
                   </div>
@@ -353,10 +353,10 @@ export default function BlogDetailPage() {
               <div className="sticky top-28 space-y-8">
                 {/* Table of Contents */}
                 {tocItems.length > 0 && (
-                  <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                  <Card className="border-white/[0.06] bg-white/[0.04]">
                     <CardContent className="p-5">
-                      <h3 className="font-semibold text-sm mb-3 text-slate-900 dark:text-white flex items-center gap-2">
-                        <List className="size-4 text-emerald-600 dark:text-amber-400" />
+                      <h3 className="font-semibold text-sm mb-3 text-white flex items-center gap-2">
+                        <List className="size-4 text-emerald-400" />
                         Table of Contents
                       </h3>
                       <nav className="space-y-1">
@@ -367,7 +367,7 @@ export default function BlogDetailPage() {
                             className={`block text-left w-full py-1.5 text-sm rounded-md transition-colors ${
                               activeHeading === item.id
                                 ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 font-medium'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                : 'text-white/40 hover:bg-white/[0.06]'
                             } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
                           >
                             {item.text}
@@ -382,19 +382,19 @@ export default function BlogDetailPage() {
                 <Card className="border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <BookOpen className="size-4 text-emerald-600 dark:text-amber-400" />
-                      <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Reading Progress</h3>
+                      <BookOpen className="size-4 text-emerald-400" />
+                      <h3 className="font-semibold text-sm text-white">Reading Progress</h3>
                     </div>
                     {/* Progress bar */}
-                    <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-700 mb-2">
+                    <div className="w-full h-2 rounded-full bg-white/[0.06] mb-2">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-300"
                         style={{ width: `${readingProgress}%` }}
                       />
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500 dark:text-slate-400">{readingProgress}%</span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                      <span className="text-xs text-white/40">{readingProgress}%</span>
+                      <span className="text-xs text-white/40">
                         {readingProgress < 100 ? `${remainingTime} min left` : 'Complete ✓'}
                       </span>
                     </div>
@@ -402,32 +402,32 @@ export default function BlogDetailPage() {
                 </Card>
 
                 {/* Author card */}
-                <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <Card className="border-white/[0.06] bg-white/[0.04]">
                   <CardContent className="p-6 text-center">
-                    <div className="size-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-3 text-xl font-bold text-amber-500 dark:text-amber-300">
+                    <div className="size-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3 text-xl font-bold text-amber-300">
                       {post.author.charAt(0)}
                     </div>
-                    <h4 className="font-semibold text-slate-900 dark:text-white">{post.author}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Contributing Writer</p>
+                    <h4 className="font-semibold text-white">{post.author}</h4>
+                    <p className="text-xs text-white/30 mt-1">Contributing Writer</p>
                   </CardContent>
                 </Card>
 
                 {/* Related Posts */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-4 text-slate-900 dark:text-white">Related Articles</h3>
+                  <h3 className="font-semibold text-lg mb-4 text-white">Related Articles</h3>
                   <div className="space-y-3">
                     {relatedPosts.map((related) => (
                       <Card
                         key={related.id}
-                        className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-200 dark:hover:border-emerald-500 hover:shadow-sm transition-all cursor-pointer"
+                        className="border-white/[0.06] bg-white/[0.04] hover:border-emerald-500/30 hover:shadow-sm transition-all cursor-pointer"
                         onClick={() => navigate('blog-detail', related.slug)}
                       >
                         <CardContent className="p-4">
-                          <Badge variant="secondary" className="text-xs mb-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{related.category}</Badge>
-                          <h4 className="text-sm font-medium line-clamp-2 hover:text-emerald-600 dark:hover:text-amber-400 transition-colors text-slate-900 dark:text-white">
+                          <Badge variant="secondary" className="text-xs mb-2 bg-white/[0.06] text-white/40">{related.category}</Badge>
+                          <h4 className="text-sm font-medium line-clamp-2 hover:text-emerald-400 transition-colors text-white">
                             {related.title}
                           </h4>
-                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                          <p className="text-xs text-white/30 mt-1">
                             {new Date(related.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                           </p>
                         </CardContent>

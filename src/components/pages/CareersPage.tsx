@@ -270,7 +270,7 @@ export default function CareersPage() {
               </div>
               <div>
                 <div className="text-lg font-bold text-white">{stat.value}</div>
-                <div className="text-xs text-slate-400">{stat.label}</div>
+                <div className="text-xs text-white/30">{stat.label}</div>
               </div>
             </div>
           ))}
@@ -278,9 +278,9 @@ export default function CareersPage() {
       </PageHero>
 
       {/* Job Listings */}
-      <section className="section-padding bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden">
+      <section className="py-16 lg:py-24 bg-[#050810] relative overflow-hidden">
         {/* Subtle background pattern */}
-        <div className="absolute inset-0 dot-pattern opacity-30 dark:opacity-15" />
+        <div className="absolute inset-0 dot-pattern opacity-10" />
         <div className="container-main relative z-10">
           {/* Filters */}
           <motion.div
@@ -297,8 +297,8 @@ export default function CareersPage() {
                   onClick={() => setActiveDepartment(dept)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                     activeDepartment === dept
-                      ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-emerald-600/25'
-                      : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-amber-900/30 hover:text-emerald-600 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-emerald-500'
+                      ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white shadow-md shadow-emerald-500/20'
+                      : 'bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:text-emerald-400 border border-white/[0.06]'
                   }`}
                 >
                   {dept}
@@ -312,8 +312,8 @@ export default function CareersPage() {
                   onClick={() => setActiveType(type)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                     activeType === type
-                      ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-md shadow-emerald-600/25'
-                      : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-amber-900/30 hover:text-emerald-600 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-600 hover:border-amber-300 dark:hover:border-emerald-500'
+                      ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white shadow-md shadow-emerald-500/20'
+                      : 'bg-white/[0.04] text-white/60 hover:bg-white/[0.08] hover:text-emerald-400 border border-white/[0.06]'
                   }`}
                 >
                   {type}
@@ -324,8 +324,8 @@ export default function CareersPage() {
 
           {/* Results info */}
           <div className="flex items-center justify-between mb-6">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Showing <span className="font-medium text-slate-700 dark:text-slate-200">{filtered.length}</span>{' '}
+            <p className="text-sm text-white/40">
+              Showing <span className="font-medium text-white/60">{filtered.length}</span>{' '}
               {filtered.length === 1 ? 'position' : 'positions'}
             </p>
           </div>
@@ -342,7 +342,7 @@ export default function CareersPage() {
               const isExpanded = expandedId === job.id;
               return (
                 <motion.div key={job.id} variants={itemVariants}>
-                  <Card className="border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:shadow-lg dark:hover:shadow-amber-900/20 hover:border-amber-300/50 dark:hover:border-emerald-500/30 transition-all duration-300 overflow-hidden shimmer-sweep">
+                  <Card className="border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 overflow-hidden shimmer-sweep">
                     <CardContent className="p-0">
                       {/* Job header - clickable */}
                       <button
@@ -352,7 +352,7 @@ export default function CareersPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                              <h3 className="text-lg font-semibold text-white">
                                 {job.title}
                               </h3>
                               {job.featured && (
@@ -362,7 +362,7 @@ export default function CareersPage() {
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-white/40">
                               <span className="flex items-center gap-1">
                                 <Building2 className="size-3.5 text-amber-500" />
                                 {job.department}
@@ -385,7 +385,7 @@ export default function CareersPage() {
                             <span className={`px-3 py-1 rounded-full text-xs font-medium border ${typeColors[job.type] || ''}`}>
                               {job.type}
                             </span>
-                            <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                            <div className="size-8 rounded-full bg-white/[0.06] flex items-center justify-center">
                               {isExpanded ? (
                                 <ChevronUp className="size-4 text-slate-500" />
                               ) : (
@@ -406,12 +406,12 @@ export default function CareersPage() {
                             transition={{ duration: 0.3 }}
                             className="overflow-hidden"
                           >
-                            <div className="px-5 sm:px-6 pb-6 pt-0 border-t border-slate-100 dark:border-slate-700">
+                            <div className="px-5 sm:px-6 pb-6 pt-0 border-t border-white/[0.06]">
                               <div className="pt-5 space-y-5">
                                 {/* Description */}
                                 <div>
                                   <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">About the Role</h4>
-                                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{job.description}</p>
+                                  <p className="text-sm text-white/60 leading-relaxed">{job.description}</p>
                                 </div>
 
                                 {/* Requirements */}
@@ -419,7 +419,7 @@ export default function CareersPage() {
                                   <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Requirements</h4>
                                   <ul className="space-y-1.5">
                                     {job.requirements.map((req) => (
-                                      <li key={req} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                      <li key={req} className="flex items-start gap-2 text-sm text-white/60">
                                         <CheckCircle2 className="size-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                                         <span>{req}</span>
                                       </li>
@@ -432,7 +432,7 @@ export default function CareersPage() {
                                   <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Benefits & Perks</h4>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {job.benefits.map((benefit) => (
-                                      <div key={benefit} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                      <div key={benefit} className="flex items-start gap-2 text-sm text-white/60">
                                         <span className="text-amber-500 shrink-0 mt-0.5">✓</span>
                                         <span>{benefit}</span>
                                       </div>
@@ -472,11 +472,11 @@ export default function CareersPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <div className="size-16 rounded-full bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-4">
-                <Briefcase className="size-8 text-slate-400 dark:text-slate-500" />
+              <div className="size-16 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+                <Briefcase className="size-8 text-white/30" />
               </div>
-              <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">No positions found</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              <h3 className="text-lg font-medium text-white/60 mb-2">No positions found</h3>
+              <p className="text-sm text-white/40 mb-6">
                 No open positions match your current filters. Try different criteria.
               </p>
               <Button
@@ -512,12 +512,12 @@ export default function CareersPage() {
                 { icon: TrendingUp, title: 'Growth', desc: 'Continuous learning with dedicated budgets and mentorship', gradient: 'from-amber-400 to-amber-500' },
                 { icon: HeartHandshake, title: 'Culture', desc: 'Collaborative, inclusive environment that values your voice', gradient: 'from-yellow-400 to-amber-500' },
               ].map((item) => (
-                <div key={item.title} className="text-center p-5 rounded-xl bg-white/50 dark:bg-white/5 backdrop-blur-sm border border-slate-100 dark:border-white/5 hover:border-amber-200 dark:hover:border-emerald-500/50 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-300 group">
+                <div key={item.title} className="text-center p-5 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:border-emerald-500/30 hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-300 group">
                   <div className={`inline-flex size-12 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                     <item.icon className="size-6 text-white" />
                   </div>
-                  <h4 className="font-semibold text-slate-900 dark:text-white mb-1">{item.title}</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{item.desc}</p>
+                  <h4 className="font-semibold text-white mb-1">{item.title}</h4>
+                  <p className="text-xs text-white/60 leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -548,7 +548,7 @@ export default function CareersPage() {
           <div className="p-6">
             <DialogHeader>
               <DialogTitle className="text-xl">{selectedJob?.title}</DialogTitle>
-              <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
+              <DialogDescription className="text-sm text-white/60">
                 {selectedJob?.department} · {selectedJob?.location} · {selectedJob?.type}
               </DialogDescription>
             </DialogHeader>
@@ -655,7 +655,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
           <CheckCircle2 className="size-8 text-emerald-600 dark:text-amber-400" />
         </motion.div>
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Application Received!</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-white/40">
           Thank you for your interest. Our team will review your application and get back to you soon.
         </p>
       </motion.div>
@@ -738,7 +738,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
         <div className="flex items-center gap-3">
           <label
             htmlFor="app-resume"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-amber-400 dark:hover:border-emerald-500 cursor-pointer transition-colors text-sm text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-amber-400"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-white/[0.06] hover:border-emerald-500/30 cursor-pointer transition-colors text-sm text-white/40 hover:text-emerald-400"
           >
             <Upload className="size-4" />
             {resumeFile ? resumeFile.name : 'Upload Resume (PDF, DOC)'}
