@@ -1,0 +1,573 @@
+    80→  const [submitted, setSubmitted] = useState(false);
+    81→
+    82→  const validateField = (field: keyof ReviewFormData, value: unknown) => {
+    83→    try {
+    84→      const partial = reviewSchema.shape[field];
+    85→      partial.parse(value);
+    86→      setErrors(prev => ({ ...prev, [field]: undefined }));
+    87→      return true;
+    88→    } catch {
+    89→      setErrors(prev => ({ ...prev, [field]: 'Invalid value' }));
+    90→      return false;
+    91→    }
+    92→  };
+    93→
+    94→  const handleSubmit = async () => {
+    95→    try {
+    96→      const result = reviewSchema.safeParse(formData);
+    97→      if (!result.success) {
+    98→        const fieldErrors: Partial<Record<keyof ReviewFormData, string>> = {};
+    99→        result.error.issues.forEach((issue) => {
+   100→          const field = issue.path[0] as keyof ReviewFormData;
+   101→          if (!fieldErrors[field]) {
+   102→            fieldErrors[field] = issue.message;
+   103→          }
+   104→        });
+   105→        setErrors(fieldErrors);
+   106→        return;
+   107→      }
+   108→
+   109→      setSubmitting(true);
+   110→      const response = await fetch('/api/testimonials', {
+   111→        method: 'POST',
+   112→        headers: { 'Content-Type': 'application/json' },
+   113→        body: JSON.stringify(result.data),
+   114→      });
+   115→
+   116→      const data = await response.json();
+   117→
+   118→      if (data.success) {
+   119→        setSubmitted(true);
+   120→        toast.success('Thank you for your review! Your feedback is invaluable to us.');
+   121→        setTimeout(() => {
+   122→          handleClose();
+   123→        }, 3000);
+   124→      } else {
+   125→        toast.error('Failed to submit review. Please try again.');
+   126→      }
+   127→    } catch {
+   128→      toast.error('Something went wrong. Please try again.');
+   129→    } finally {
+   130→      setSubmitting(false);
+   131→    }
+   132→  };
+   133→
+   134→  const handleClose = () => {
+   135→    onOpenChange(false);
+   136→    setTimeout(() => {
+   137→      setFormData({ name: '', company: '', role: '', rating: 0, content: '' });
+   138→      setErrors({});
+   139→      setSubmitted(false);
+   140→      setHoverRating(0);
+   141→    }, 300);
+   142→  };
+   143→
+   144→  return (
+   145→    <Dialog open={open} onOpenChange={handleClose}>
+   146→      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
+   147→        <AnimatePresence mode="wait">
+   148→          {submitted ? (
+   149→            <motion.div
+   150→              key="success"
+   151→              initial={{ opacity: 0, scale: 0.95 }}
+   152→              animate={{ opacity: 1, scale: 1 }}
+   153→              exit={{ opacity: 0, scale: 0.95 }}
+   154→              className="p-8 text-center"
+   155→            >
+   156→              <motion.div
+   157→                initial={{ scale: 0 }}
+   158→                animate={{ scale: 1 }}
+   159→                transition={{ type: 'spring', duration: 0.6, delay: 0.2 }}
+   160→                className="size-20 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30"
+   161→              >
+   162→                <CheckCircle2 className="size-10 text-white" />
+   163→              </motion.div>
+   164→              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Thank You!</h3>
+   165→              <p className="text-slate-500 dark:text-slate-400 text-sm">
+   166→                Your review has been submitted successfully. We appreciate your feedback and will publish it after review.
+   167→              </p>
+   168→            </motion.div>
+   169→          ) : (
+   170→            <motion.div
+   171→              key="form"
+   172→              initial={{ opacity: 0, x: 20 }}
+   173→              animate={{ opacity: 1, x: 0 }}
+   174→              exit={{ opacity: 0, x: -20 }}
+   175→            >
+   176→              {/* Header */}
+   177→              <div className="bg-gradient-to-r from-amber-600 to-amber-500 dark:from-amber-500 dark:to-amber-800 p-6">
+   178→                <DialogHeader>
+   179→                  <DialogTitle className="text-xl text-white flex items-center gap-2">
+   180→                    <MessageSquarePlus className="size-5" />
+   181→                    Share Your Experience
+   182→                  </DialogTitle>
+   183→                  <DialogDescription className="text-amber-100 text-sm">
+   184→                    Tell us about your experience working with Lightworld Technologies.
+   185→                  </DialogDescription>
+   186→                </DialogHeader>
+   187→              </div>
+   188→
+   189→              <div className="p-6 space-y-5">
+   190→                {/* Name */}
+   191→                <div className="space-y-2">
+   192→                  <Label htmlFor="review-name" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+   193→                    Full Name <span className="text-red-500">*</span>
+   194→                  </Label>
+   195→                  <Input
+   196→                    id="review-name"
+   197→                    placeholder="Enter your full name"
+   198→                    value={formData.name}
+   199→                    onChange={(e) => {
+   200→                      setFormData(prev => ({ ...prev, name: e.target.value }));
+   201→                      if (errors.name) validateField('name', e.target.value);
+   202→                    }}
+   203→                    onBlur={() => validateField('name', formData.name)}
+   204→                    className={errors.name ? 'border-red-400 dark:border-red-500' : ''}
+   205→                  />
+   206→                  {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+   207→                </div>
+   208→
+   209→                {/* Company & Role */}
+   210→                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   211→                  <div className="space-y-2">
+   212→                    <Label htmlFor="review-company" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+   213→                      Company
+   214→                    </Label>
+   215→                    <Input
+   216→                      id="review-company"
+   217→                      placeholder="Your company"
+   218→                      value={formData.company}
+   219→                      onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+   220→                    />
+   221→                  </div>
+   222→                  <div className="space-y-2">
+   223→                    <Label htmlFor="review-role" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+   224→                      Role
+   225→                    </Label>
+   226→                    <Input
+   227→                      id="review-role"
+   228→                      placeholder="Your role"
+   229→                      value={formData.role}
+   230→                      onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+   231→                    />
+   232→                  </div>
+   233→                </div>
+   234→
+   235→                {/* Star Rating */}
+   236→                <div className="space-y-2">
+   237→                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+   238→                    Rating <span className="text-red-500">*</span>
+   239→                  </Label>
+   240→                  <div className="flex items-center gap-1">
+   241→                    {[1, 2, 3, 4, 5].map((star) => (
+   242→                      <button
+   243→                        key={star}
+   244→                        type="button"
+   245→                        onClick={() => {
+   246→                          setFormData(prev => ({ ...prev, rating: star }));
+   247→                          if (errors.rating) validateField('rating', star);
+   248→                        }}
+   249→                        onMouseEnter={() => setHoverRating(star)}
+   250→                        onMouseLeave={() => setHoverRating(0)}
+   251→                        className="p-0.5 transition-transform hover:scale-110 focus:outline-none"
+   252→                        aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+   253→                      >
+   254→                        <Star
+   255→                          className={`size-7 transition-colors duration-150 ${
+   256→                            star <= (hoverRating || formData.rating)
+   257→                              ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]'
+   258→                              : 'text-slate-300 dark:text-slate-600'
+   259→                          }`}
+   260→                        />
+   261→                      </button>
+   262→                    ))}
+   263→                    {(formData.rating > 0 || hoverRating > 0) && (
+   264→                      <span className="text-sm text-slate-500 dark:text-slate-400 ml-2">
+   265→                        {hoverRating || formData.rating}/5
+   266→                      </span>
+   267→                    )}
+   268→                  </div>
+   269→                  {errors.rating && <p className="text-xs text-red-500">{errors.rating}</p>}
+   270→                </div>
+   271→
+   272→                {/* Review Text */}
+   273→                <div className="space-y-2">
+   274→                  <Label htmlFor="review-content" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+   275→                    Your Review <span className="text-red-500">*</span>
+   276→                  </Label>
+   277→                  <Textarea
+   278→                    id="review-content"
+   279→                    placeholder="Tell us about your experience (minimum 20 characters)..."
+   280→                    value={formData.content}
+   281→                    onChange={(e) => {
+   282→                      setFormData(prev => ({ ...prev, content: e.target.value }));
+   283→                      if (errors.content) validateField('content', e.target.value);
+   284→                    }}
+   285→                    onBlur={() => validateField('content', formData.content)}
+   286→                    rows={4}
+   287→                    className={errors.content ? 'border-red-400 dark:border-red-500' : ''}
+   288→                  />
+   289→                  <div className="flex justify-between items-center">
+   290→                    {errors.content && <p className="text-xs text-red-500">{errors.content}</p>}
+   291→                    <p className="text-xs text-slate-400 ml-auto">{formData.content.length} characters</p>
+   292→                  </div>
+   293→                </div>
+   294→
+   295→                {/* Submit */}
+   296→                <Button
+   297→                  onClick={handleSubmit}
+   298→                  disabled={submitting}
+   299→                  className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
+   300→                >
+   301→                  {submitting ? (
+   302→                    <>
+   303→                      <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+   304→                      Submitting...
+   305→                    </>
+   306→                  ) : (
+   307→                    <>
+   308→                      <Send className="size-4 mr-2" />
+   309→                      Submit Review
+   310→                    </>
+   311→                  )}
+   312→                </Button>
+   313→              </div>
+   314→            </motion.div>
+   315→          )}
+   316→        </AnimatePresence>
+   317→      </DialogContent>
+   318→    </Dialog>
+   319→  );
+   320→}
+   321→
+   322→export default function TestimonialsSection() {
+   323→  const { navigate } = useAppStore();
+   324→  const [testimonials, setTestimonials] = useState(defaultTestimonials);
+   325→  const [loading, setLoading] = useState(true);
+   326→  const [activeDot, setActiveDot] = useState(0);
+   327→  const [reviewOpen, setReviewOpen] = useState(false);
+   328→  const [isPaused, setIsPaused] = useState(false);
+   329→  const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+   330→  const carouselApiRef = useRef<CarouselApi | null>(null);
+   331→
+   332→  useEffect(() => {
+   333→    fetcher('/api/testimonials')
+   334→      .then((data) => {
+   335→        if (Array.isArray(data) && data.length > 0) setTestimonials(data);
+   336→      })
+   337→      .catch(() => {})
+   338→      .finally(() => setLoading(false));
+   339→  }, []);
+   340→
+   341→  // Sync active dot with carousel scroll position
+   342→  const syncActiveDot = useCallback(() => {
+   343→    const api = carouselApiRef.current;
+   344→    if (!api) return;
+   345→    const scrollProgress = api.scrollProgress();
+   346→    const newIndex = Math.round(scrollProgress * testimonials.length) % testimonials.length;
+   347→    setActiveDot(newIndex < 0 ? 0 : newIndex);
+   348→  }, [testimonials.length]);
+   349→
+   350→  // Hook into the carousel API
+   351→  const handleApi = useCallback((api: CarouselApi) => {
+   352→    if (!api) return;
+   353→    carouselApiRef.current = api;
+   354→    api.on('select', syncActiveDot);
+   355→    api.on('scroll', syncActiveDot);
+   356→  }, [syncActiveDot]);
+   357→
+   358→  // Auto-play carousel with pause-on-hover support
+   359→  const startAutoPlay = useCallback(() => {
+   360→    if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+   361→    autoPlayRef.current = setInterval(() => {
+   362→      if (!isPaused) {
+   363→        const api = carouselApiRef.current;
+   364→        if (api) api.scrollNext();
+   365→      }
+   366→    }, 5000);
+   367→  }, [isPaused]);
+   368→
+   369→  useEffect(() => {
+   370→    if (!loading) startAutoPlay();
+   371→    return () => {
+   372→      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+   373→    };
+   374→  }, [loading, startAutoPlay]);
+   375→
+   376→  const handlePrev = () => {
+   377→    carouselApiRef.current?.scrollPrev();
+   378→    startAutoPlay();
+   379→  };
+   380→
+   381→  const handleNext = () => {
+   382→    carouselApiRef.current?.scrollNext();
+   383→    startAutoPlay();
+   384→  };
+   385→
+   386→  const handleDotClick = (index: number) => {
+   387→    carouselApiRef.current?.scrollTo(index);
+   388→    setActiveDot(index);
+   389→    startAutoPlay();
+   390→  };
+   391→
+   392→  // Keyboard navigation for carousel
+   393→  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+   394→    if (e.key === 'ArrowLeft') {
+   395→      e.preventDefault();
+   396→      handlePrev();
+   397→    } else if (e.key === 'ArrowRight') {
+   398→      e.preventDefault();
+   399→      handleNext();
+   400→    }
+   401→  }, [handlePrev, handleNext]);
+   402→
+   403→  const handleMouseEnter = useCallback(() => setIsPaused(true), []);
+   404→  const handleMouseLeave = useCallback(() => setIsPaused(false), []);
+   405→
+   406→  const togglePause = useCallback(() => {
+   407→    setIsPaused(prev => !prev);
+   408→  }, []);
+   409→
+   410→  return (
+   411→    <section className="section-padding bg-gradient-dark relative overflow-hidden">
+   412→      {/* Parallax-like slow-moving gradient background */}
+   413→      <div className="absolute inset-0 -z-10">
+   414→        <div className="absolute inset-0 bg-gradient-to-br from-amber-950/50 via-slate-900 to-amber-950/30 animate-[gradient-shift_20s_ease-in-out_infinite] bg-[length:200%_200%]" />
+   415→      </div>
+   416→      {/* Decorative elements */}
+   417→      <div className="absolute inset-0 dot-pattern opacity-10" />
+   418→      <div className="absolute top-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
+   419→      <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-500/8 rounded-full blur-3xl" />
+   420→
+   421→      <div className="container-main relative z-10">
+   422→        {/* Section header */}
+   423→        <motion.div
+   424→          className="text-center max-w-2xl mx-auto mb-8"
+   425→          initial={{ opacity: 0, y: 20 }}
+   426→          whileInView={{ opacity: 1, y: 0 }}
+   427→          viewport={{ once: true, margin: '-100px' }}
+   428→          transition={{ duration: 0.6 }}
+   429→        >
+   430→          <span className="text-sm font-semibold text-amber-400 uppercase tracking-wider">Testimonials</span>
+   431→          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-white">What Our Clients Say</h2>
+   432→          <p className="text-slate-400">
+   433→            Don&apos;t just take our word for it — hear from the businesses we&apos;ve helped transform.
+   434→          </p>
+   435→        </motion.div>
+   436→
+   437→        {/* Clients served counter */}
+   438→        <motion.div
+   439→          className="flex justify-center mb-10"
+   440→          initial={{ opacity: 0, scale: 0.9 }}
+   441→          whileInView={{ opacity: 1, scale: 1 }}
+   442→          viewport={{ once: true }}
+   443→          transition={{ duration: 0.5, delay: 0.2 }}
+   444→        >
+   445→          <div className="inline-flex items-center gap-4 bg-gradient-to-r from-amber-600/20 to-amber-600/20 rounded-2xl px-8 py-4 border border-emerald-500/20 backdrop-blur-sm">
+   446→            <div className="size-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+   447→              <Users className="size-6 text-white" />
+   448→            </div>
+   449→            <div className="text-left">
+   450→              <ClientsCounter />
+   451→              <div className="flex items-center gap-1 mt-0.5">
+   452→                <Award className="size-3 text-amber-400" />
+   453→                <span className="text-xs text-amber-400/80 font-medium">Trusted across Africa</span>
+   454→              </div>
+   455→            </div>
+   456→          </div>
+   457→        </motion.div>
+   458→
+   459→        {/* Testimonials carousel */}
+   460→        {loading ? (
+   461→          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+   462→            {Array.from({ length: 2 }).map((_, i) => (
+   463→              <Card key={i} className="bg-slate-800/50 border-slate-700 p-6">
+   464→                <Skeleton className="h-4 w-full mb-2" />
+   465→                <Skeleton className="h-4 w-3/4 mb-4" />
+   466→                <div className="flex gap-2">
+   467→                  <Skeleton className="size-10 rounded-full" />
+   468→                  <div>
+   469→                    <Skeleton className="h-4 w-32 mb-1" />
+   470→                    <Skeleton className="h-3 w-24" />
+   471→                  </div>
+   472→                </div>
+   473→              </Card>
+   474→            ))}
+   475→          </div>
+   476→        ) : (
+   477→          <motion.div
+   478→            initial={{ opacity: 0 }}
+   479→            whileInView={{ opacity: 1 }}
+   480→            viewport={{ once: true, margin: '-100px' }}
+   481→            transition={{ duration: 0.6, delay: 0.4 }}
+   482→            onMouseEnter={handleMouseEnter}
+   483→            onMouseLeave={handleMouseLeave}
+   484→          >
+   485→            <Carousel
+   486→              opts={{ align: 'start', loop: true }}
+   487→              className="w-full"
+   488→              setApi={handleApi}
+   489→              tabIndex={0}
+   490→              onKeyDown={handleKeyDown}
+   491→              aria-label="Client testimonials carousel - use arrow keys to navigate"
+   492→            >
+   493→              <CarouselContent className="-ml-4">
+   494→                {testimonials.map((testimonial) => (
+   495→                  <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/2">
+   496→                    <Card className="bg-slate-800/40 border-slate-700/40 backdrop-blur-md h-full relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-1 transition-all duration-500">
+   497→                      {/* Top gradient accent bar */}
+   498→                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-amber-400 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+   499→                      <CardContent className="p-6 flex flex-col h-full relative">
+   500→                        {/* Large decorative opening quote at top-left */}
+   501→                        <span className="absolute -top-2 -left-1 text-[5rem] leading-none font-serif text-amber-400/15 dark:text-amber-400/10 group-hover:text-emerald-400/20 dark:group-hover:text-emerald-400/15 select-none transition-colors duration-700 pointer-events-none">&ldquo;</span>
+   502→                        {/* Large quote decoration with gradient at top-right */}
+   503→                        <div className="absolute -top-2 -right-2 size-20 rounded-full bg-gradient-to-br from-amber-500/10 to-emerald-500/10 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+   504→                          <Quote className="size-10 text-amber-400/30 group-hover:text-amber-400/50 transition-colors duration-500" />
+   505→                        </div>
+   506→                        <p className="text-slate-300 text-sm leading-relaxed flex-1 mb-6 relative">
+   507→                          &ldquo;{testimonial.content || (testimonial as Record<string, unknown>).quote}&rdquo;
+   508→                        </p>
+   509→                        {/* Star rating with enhanced glow */}
+   510→                        <div className="flex gap-1 mb-4 relative">
+   511→                          {Array.from({ length: testimonial.rating }).map((_, i) => (
+   512→                            <motion.div
+   513→                              key={i}
+   514→                              initial={{ scale: 0, rotate: -180 }}
+   515→                              whileInView={{ scale: 1, rotate: 0 }}
+   516→                              viewport={{ once: true }}
+   517→                              transition={{ duration: 0.3, delay: i * 0.1, type: 'spring' }}
+   518→                            >
+   519→                              <Star className="size-5 fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+   520→                            </motion.div>
+   521→                          ))}
+   522→                        </div>
+   523→                        {/* Author */}
+   524→                        <div className="flex items-center gap-3 pt-4 border-t border-slate-700/40 relative">
+   525→                          <div className="size-11 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-emerald-500/25 group-hover:shadow-emerald-500/40 transition-shadow duration-300">
+   526→                            {testimonial.name.charAt(0)}
+   527→                          </div>
+   528→                          <div>
+   529→                            <div className="font-semibold text-sm text-white">{testimonial.name}</div>
+   530→                            <div className="text-xs text-slate-400">{testimonial.role}, {testimonial.company}</div>
+   531→                          </div>
+   532→                        </div>
+   533→                      </CardContent>
+   534→                    </Card>
+   535→                  </CarouselItem>
+   536→                ))}
+   537→              </CarouselContent>
+   538→
+   539→              {/* Navigation Controls */}
+   540→              <div className="flex items-center justify-center gap-4 mt-8">
+   541→                <Button
+   542→                  onClick={handlePrev}
+   543→                  variant="outline"
+   544→                  size="icon"
+   545→                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+   546→                  aria-label="Previous testimonial"
+   547→                >
+   548→                  <ChevronLeft className="size-4" />
+   549→                </Button>
+   550→                <div className="flex gap-2" role="tablist" aria-label="Testimonial navigation">
+   551→                  {testimonials.map((_, i) => (
+   552→                    <button
+   553→                      key={i}
+   554→                      onClick={() => handleDotClick(i)}
+   555→                      aria-label={`Go to testimonial ${i + 1}`}
+   556→                      aria-selected={i === activeDot}
+   557→                      role="tab"
+   558→                      className={`rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+   559→                        i === activeDot
+   560→                          ? 'w-6 h-2 bg-gradient-to-r from-amber-400 to-amber-400'
+   561→                          : 'w-2 h-2 bg-slate-600 hover:bg-slate-500'
+   562→                      }`}
+   563→                    />
+   564→                  ))}
+   565→                </div>
+   566→                <Button
+   567→                  onClick={handleNext}
+   568→                  variant="outline"
+   569→                  size="icon"
+   570→                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+   571→                  aria-label="Next testimonial"
+   572→                >
+   573→                  <ChevronRight className="size-4" />
+   574→                </Button>
+   575→              </div>
+   576→
+   577→              {/* Pause/Play button and auto-play indicator */}
+   578→              <div className="flex justify-center mt-3">
+   579→                <button
+   580→                  onClick={togglePause}
+   581→                  className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+   582→                  aria-label={isPaused ? 'Resume auto-play' : 'Pause auto-play'}
+   583→                >
+   584→                  {isPaused ? <Play className="size-3" /> : <Pause className="size-3" />}
+   585→                  <span>{isPaused ? 'Paused' : 'Auto-playing'}</span>
+   586→                  {!isPaused && (
+   587→                    <span className="relative flex size-1.5 ml-1">
+   588→                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+   589→                      <span className="relative inline-flex rounded-full size-1.5 bg-amber-500" />
+   590→                    </span>
+   591→                  )}
+   592→                </button>
+   593→              </div>
+   594→            </Carousel>
+   595→          </motion.div>
+   596→        )}
+   597→
+   598→        {/* Trusted by Leading Companies strip */}
+   599→        <motion.div
+   600→          className="mt-12 pt-8 border-t border-slate-700/40"
+   601→          initial={{ opacity: 0, y: 10 }}
+   602→          whileInView={{ opacity: 1, y: 0 }}
+   603→          viewport={{ once: true }}
+   604→          transition={{ duration: 0.5, delay: 0.3 }}
+   605→        >
+   606→          <p className="text-center text-xs uppercase tracking-wider text-slate-500 font-medium mb-5">Trusted by Leading Companies</p>
+   607→          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+   608→            {trustedLogos.map((logo) => (
+   609→              <div
+   610→                key={logo.name}
+   611→                className="flex items-center gap-2 text-slate-500 hover:text-amber-400 transition-all duration-300 hover:-translate-y-0.5"
+   612→              >
+   613→                <div className="size-9 rounded-lg bg-slate-800 border border-slate-700 hover:border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-amber-400 transition-colors duration-300">
+   614→                  {logo.initials}
+   615→                </div>
+   616→                <span className="text-xs font-medium hidden sm:block">{logo.name}</span>
+   617→              </div>
+   618→            ))}
+   619→          </div>
+   620→        </motion.div>
+   621→
+   622→        {/* Action Buttons */}
+   623→        <motion.div
+   624→          className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10"
+   625→          initial={{ opacity: 0, y: 20 }}
+   626→          whileInView={{ opacity: 1, y: 0 }}
+   627→          viewport={{ once: true }}
+   628→          transition={{ duration: 0.5, delay: 0.5 }}
+   629→        >
+   630→          <Button
+   631→            onClick={() => setReviewOpen(true)}
+   632→            className="bg-gradient-to-r from-amber-500 to-amber-500 hover:from-amber-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6"
+   633→          >
+   634→            <MessageSquarePlus className="size-4 mr-2" />
+   635→            Share Your Experience
+   636→          </Button>
+   637→          <Button
+   638→            variant="outline"
+   639→            onClick={() => navigate('portfolio')}
+   640→            className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-300 px-6"
+   641→          >
+   642→            Read More Reviews
+   643→          </Button>
+   644→        </motion.div>
+   645→      </div>
+   646→
+   647→      {/* Review Form Modal */}
+   648→      <ReviewFormModal open={reviewOpen} onOpenChange={setReviewOpen} />
+   649→    </section>
+   650→  );
+   651→}
+   652→

@@ -90,7 +90,7 @@ export default function ServicesPage() {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-[#050810] flex flex-col">
+    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-background flex flex-col">
       {/* ═══ Compact Title Bar ═══ */}
       <div className="shrink-0 px-4 lg:px-8 pt-2 pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -99,7 +99,7 @@ export default function ServicesPage() {
               <div className="size-1.5 rounded-full bg-emerald-400" />
               <span className="text-xs font-semibold text-emerald-400 uppercase tracking-[0.2em]">Our Services</span>
             </div>
-            <h1 className="text-xl lg:text-2xl font-bold text-white">
+            <h1 className="text-xl lg:text-2xl font-bold dark:text-white text-slate-900">
               What We <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Offer</span>
             </h1>
           </div>
@@ -108,7 +108,7 @@ export default function ServicesPage() {
               variant="outline"
               size="sm"
               onClick={() => setCompareOpen(true)}
-              className="rounded-full text-xs font-medium border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.15] px-3 h-8"
+              className="rounded-full text-xs font-medium border-slate-200 dark:border-white/[0.08] dark:text-white/50 text-slate-500 hover:text-slate-900 dark:hover:text-white dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.15] hover:border-slate-300 px-3 h-8"
             >
               Compare Plans
             </Button>
@@ -116,7 +116,7 @@ export default function ServicesPage() {
               variant="outline"
               size="sm"
               onClick={() => setCalculatorOpen(true)}
-              className="rounded-full text-xs font-medium border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.15] px-3 h-8"
+              className="rounded-full text-xs font-medium border-slate-200 dark:border-white/[0.08] dark:text-white/50 text-slate-500 hover:text-slate-900 dark:hover:text-white dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.15] hover:border-slate-300 px-3 h-8"
             >
               Cost Calculator
             </Button>
@@ -145,7 +145,7 @@ export default function ServicesPage() {
                   initial={{ opacity: 0, y: 15, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.35, delay: index * 0.06 }}
-                  className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm cursor-pointer transition-all duration-300 hover:bg-white/[0.06] hover:border-white/[0.12] hover:scale-[1.01]"
+                  className="group relative overflow-hidden rounded-xl dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] backdrop-blur-sm cursor-pointer transition-all duration-300 dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.12] hover:border-slate-300 hover:scale-[1.01]"
                   onClick={() => setSelectedService(service)}
                 >
                   {/* Popular badge */}
@@ -164,23 +164,23 @@ export default function ServicesPage() {
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-xs lg:text-sm font-bold text-white/90 mb-0.5 lg:mb-1 leading-tight">{service.title}</h3>
+                    <h3 className="text-xs lg:text-sm font-bold dark:text-white/90 text-slate-800 mb-0.5 lg:mb-1 leading-tight">{service.title}</h3>
 
                     {/* Description */}
-                    <p className="text-xs lg:text-sm text-white/40 leading-relaxed line-clamp-2 mb-2 lg:mb-3">{service.description}</p>
+                    <p className="text-xs lg:text-sm dark:text-white/40 text-slate-500 leading-relaxed line-clamp-2 mb-2 lg:mb-3">{service.description}</p>
 
                     {/* Features */}
                     <div className="space-y-0.5 mb-2 lg:mb-3 flex-1">
                       {service.features.slice(0, 4).map((feature: string) => (
                         <div key={feature} className="flex items-center gap-1.5">
                           <CheckCircle2 className="size-3 lg:size-3.5 text-emerald-400/60 shrink-0" />
-                          <span className="text-xs lg:text-sm text-white/50 leading-tight line-clamp-1">{feature}</span>
+                          <span className="text-xs lg:text-sm dark:text-white/50 text-slate-500 leading-tight line-clamp-1">{feature}</span>
                         </div>
                       ))}
                     </div>
 
                     {/* Bottom: Price + CTA */}
-                    <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/[0.04]">
                       {service.priceRange && (
                         <span className="text-xs lg:text-sm font-semibold text-amber-400/80">{service.priceRange}</span>
                       )}
@@ -201,7 +201,7 @@ export default function ServicesPage() {
 
       {/* ═══ Service Detail Dialog ═══ */}
       <Dialog open={!!selectedService} onOpenChange={() => setSelectedService(null)}>
-        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[85vh] bg-slate-900 border-white/[0.08]">
+        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[85vh] dark:bg-slate-900 bg-white border-slate-200 dark:border-white/[0.08]">
           <AnimatePresence mode="wait">
             {selectedService && (
               <motion.div
@@ -233,17 +233,17 @@ export default function ServicesPage() {
 
                 <div className="p-5 space-y-4 max-h-[calc(85vh-8rem)] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle className="text-lg text-white">{selectedService.title}</DialogTitle>
-                    <DialogDescription className="text-sm text-white/60 leading-relaxed">{selectedService.description}</DialogDescription>
+                    <DialogTitle className="text-lg dark:text-white text-slate-900">{selectedService.title}</DialogTitle>
+                    <DialogDescription className="text-sm dark:text-white/60 text-slate-500 leading-relaxed">{selectedService.description}</DialogDescription>
                   </DialogHeader>
 
                   <div>
-                    <h4 className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                    <h4 className="text-xs font-semibold dark:text-white text-slate-900 mb-2 flex items-center gap-1.5">
                       <CheckCircle2 className="size-3.5 text-amber-400" /> What&apos;s Included
                     </h4>
                     <div className="grid grid-cols-2 gap-1.5">
                       {selectedService.features?.map((feature: string) => (
-                        <div key={feature} className="flex items-center gap-1.5 text-xs text-white/60">
+                        <div key={feature} className="flex items-center gap-1.5 text-xs dark:text-white/60 text-slate-500">
                           <CheckCircle2 className="size-3 text-amber-500 shrink-0" />
                           <span>{feature}</span>
                         </div>
@@ -253,7 +253,7 @@ export default function ServicesPage() {
 
                   {selectedService.techStack && selectedService.techStack.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-white mb-2">Technology Stack</h4>
+                      <h4 className="text-xs font-semibold dark:text-white text-slate-900 mb-2">Technology Stack</h4>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedService.techStack.map((tech: string) => (
                           <Badge key={tech} variant="secondary" className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20">{tech}</Badge>
@@ -266,7 +266,7 @@ export default function ServicesPage() {
                     <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <DollarSign className="size-3.5 text-amber-400" />
-                        <span className="text-xs font-semibold text-white">Starting Price</span>
+                        <span className="text-xs font-semibold dark:text-white text-slate-900">Starting Price</span>
                       </div>
                       <p className="text-base font-bold text-amber-400">{selectedService.priceRange}</p>
                     </div>
@@ -279,7 +279,7 @@ export default function ServicesPage() {
                     >
                       Request a Quote <ArrowRight className="size-3.5 ml-1" />
                     </Button>
-                    <Button variant="outline" onClick={() => setSelectedService(null)} className="flex-1 border-white/[0.06] text-xs h-9">Close</Button>
+                    <Button variant="outline" onClick={() => setSelectedService(null)} className="flex-1 border-slate-200 dark:border-white/[0.06] text-xs h-9">Close</Button>
                   </div>
                 </div>
               </motion.div>
@@ -290,7 +290,7 @@ export default function ServicesPage() {
 
       {/* ═══ Compare Dialog ═══ */}
       <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
-        <DialogContent className="sm:max-w-4xl p-0 gap-0 overflow-hidden max-h-[85vh] bg-slate-900 border-white/[0.08]">
+        <DialogContent className="sm:max-w-4xl p-0 gap-0 overflow-hidden max-h-[85vh] dark:bg-slate-900 bg-white border-slate-200 dark:border-white/[0.08]">
           <div className="max-h-[85vh] overflow-y-auto">
             <ServicesComparison />
           </div>
@@ -299,7 +299,7 @@ export default function ServicesPage() {
 
       {/* ═══ Calculator Dialog ═══ */}
       <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
-        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[85vh] bg-slate-900 border-white/[0.08]">
+        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[85vh] dark:bg-slate-900 bg-white border-slate-200 dark:border-white/[0.08]">
           <div className="max-h-[85vh] overflow-y-auto">
             <QuoteCalculator />
           </div>

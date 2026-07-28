@@ -188,10 +188,10 @@ export default function BlogDetailPage() {
   return (
     <main>
       {/* Hero */}
-      <section className="relative pt-32 pb-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+      <section className="relative pt-32 pb-16 bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 from-white via-slate-100 to-white overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-10" />
         <div className="container-main relative z-10">
-          <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
+          <nav className="flex items-center gap-2 text-sm dark:text-slate-400 text-slate-500 mb-6">
             <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
             <ChevronRight className="size-3" />
             <button onClick={() => navigate('blog')} className="hover:text-amber-400 transition-colors">Blog</button>
@@ -203,22 +203,22 @@ export default function BlogDetailPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-5 leading-tight">{post.title}</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold dark:text-white text-slate-900 mb-5 leading-tight">{post.title}</h1>
             <div className="flex flex-wrap items-center gap-2.5 mb-5">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-emerald-500/20 text-xs font-medium">
                 <Tag className="size-3" />
                 {post.category}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/30 text-xs font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full dark:bg-slate-700/50 bg-slate-100 dark:text-slate-300 text-slate-600 dark:border border-slate-600/30 border-slate-200 text-xs font-medium">
                 <Calendar className="size-3" />
                 {new Date(post.date).toLocaleDateString('en-GB', { month: 'long', day: 'numeric', year: 'numeric' })}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/30 text-xs font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full dark:bg-slate-700/50 bg-slate-100 dark:text-slate-300 text-slate-600 dark:border border-slate-600/30 border-slate-200 text-xs font-medium">
                 <Clock className="size-3" />
                 {post.readTime}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-400">
+            <div className="flex items-center gap-2 text-sm dark:text-slate-400 text-slate-500">
               <span className="flex items-center gap-1.5">
                 <User className="size-4" />
                 {post.author}
@@ -229,8 +229,8 @@ export default function BlogDetailPage() {
       </section>
 
       {/* Reading Progress Bar - Fixed at top of content */}
-      <div className="sticky top-16 z-40 bg-[#050810]/95 backdrop-blur-sm border-b border-white/[0.04]">
-        <div className="h-1 w-full bg-white/[0.06]">
+      <div className="sticky top-16 z-40 dark:bg-[#050810]/95 bg-background/95 backdrop-blur-sm border-b dark:border-white/[0.04] border-slate-200">
+        <div className="h-1 w-full dark:bg-white/[0.06] bg-slate-200">
           <motion.div
             className="h-full bg-gradient-to-r from-amber-500 to-amber-400"
             initial={{ width: '0%' }}
@@ -241,11 +241,11 @@ export default function BlogDetailPage() {
         <div className="container-main flex items-center justify-between py-2 px-4">
           <div className="flex items-center gap-3">
             <BookOpen className="size-4 text-amber-400" />
-            <span className="text-xs font-medium text-white/60 tabular-nums">{readingProgress}% read</span>
+            <span className="text-xs font-medium dark:text-white/60 text-slate-500 tabular-nums">{readingProgress}% read</span>
           </div>
           <div className="flex items-center gap-2">
             {readingProgress < 100 ? (
-              <span className="text-xs text-white/40">
+              <span className="text-xs dark:text-white/40 text-slate-500">
                 <Clock className="size-3 inline mr-1" />
                 {remainingTime} min remaining
               </span>
@@ -260,10 +260,10 @@ export default function BlogDetailPage() {
 
       {/* Mobile TOC toggle */}
       {tocItems.length > 0 && (
-        <div className="lg:hidden sticky top-[88px] z-30 bg-[#050810] border-b border-white/[0.04] px-4">
+        <div className="lg:hidden sticky top-[88px] z-30 bg-background border-b dark:border-white/[0.04] border-slate-200 px-4">
           <button
             onClick={() => setTocOpen(!tocOpen)}
-            className="flex items-center justify-between w-full py-3 text-sm font-medium text-white/60"
+            className="flex items-center justify-between w-full py-3 text-sm font-medium dark:text-white/60 text-slate-500"
           >
             <span className="flex items-center gap-2">
               <List className="size-4 text-emerald-400" />
@@ -289,7 +289,7 @@ export default function BlogDetailPage() {
                   className={`block text-left w-full py-1.5 px-3 text-sm rounded-md transition-colors ${
                     activeHeading === item.id
                       ? 'bg-amber-500/10 text-amber-400 font-medium'
-                      : 'text-white/40 hover:bg-white/[0.06]'
+                      : 'dark:text-white/40 text-slate-500 dark:hover:bg-white/[0.06] hover:bg-slate-100'
                   } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
                 >
                   {item.text}
@@ -301,7 +301,7 @@ export default function BlogDetailPage() {
       )}
 
       {/* Content */}
-      <section className="py-16 lg:py-24 bg-[#050810]">
+      <section className="py-16 lg:py-24 bg-background">
         <div className="container-main">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* Article */}
@@ -335,7 +335,7 @@ export default function BlogDetailPage() {
                   Back to Blog
                 </Button>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-sm text-white/40">
+                  <div className="flex items-center gap-2 text-sm dark:text-white/40 text-slate-500">
                     <Share2 className="size-4" />
                     <span className="font-medium">Share this article</span>
                   </div>
@@ -353,9 +353,9 @@ export default function BlogDetailPage() {
               <div className="sticky top-28 space-y-8">
                 {/* Table of Contents */}
                 {tocItems.length > 0 && (
-                  <Card className="border-white/[0.06] bg-white/[0.04]">
+                  <Card className="dark:border-white/[0.06] border-slate-200 dark:bg-white/[0.04] bg-white">
                     <CardContent className="p-5">
-                      <h3 className="font-semibold text-sm mb-3 text-white flex items-center gap-2">
+                      <h3 className="font-semibold text-sm mb-3 dark:text-white text-slate-900 flex items-center gap-2">
                         <List className="size-4 text-emerald-400" />
                         Table of Contents
                       </h3>
@@ -367,7 +367,7 @@ export default function BlogDetailPage() {
                             className={`block text-left w-full py-1.5 text-sm rounded-md transition-colors ${
                               activeHeading === item.id
                                 ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 font-medium'
-                                : 'text-white/40 hover:bg-white/[0.06]'
+                                : 'dark:text-white/40 text-slate-500 dark:hover:bg-white/[0.06] hover:bg-slate-100'
                             } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
                           >
                             {item.text}
@@ -383,18 +383,18 @@ export default function BlogDetailPage() {
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <BookOpen className="size-4 text-emerald-400" />
-                      <h3 className="font-semibold text-sm text-white">Reading Progress</h3>
+                      <h3 className="font-semibold text-sm dark:text-white text-slate-900">Reading Progress</h3>
                     </div>
                     {/* Progress bar */}
-                    <div className="w-full h-2 rounded-full bg-white/[0.06] mb-2">
+                    <div className="w-full h-2 rounded-full dark:bg-white/[0.06] bg-slate-200 mb-2">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-300"
                         style={{ width: `${readingProgress}%` }}
                       />
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-white/40">{readingProgress}%</span>
-                      <span className="text-xs text-white/40">
+                      <span className="text-xs dark:text-white/40 text-slate-500">{readingProgress}%</span>
+                      <span className="text-xs dark:text-white/40 text-slate-500">
                         {readingProgress < 100 ? `${remainingTime} min left` : 'Complete ✓'}
                       </span>
                     </div>
@@ -402,32 +402,32 @@ export default function BlogDetailPage() {
                 </Card>
 
                 {/* Author card */}
-                <Card className="border-white/[0.06] bg-white/[0.04]">
+                <Card className="dark:border-white/[0.06] border-slate-200 dark:bg-white/[0.04] bg-white">
                   <CardContent className="p-6 text-center">
                     <div className="size-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3 text-xl font-bold text-amber-300">
                       {post.author.charAt(0)}
                     </div>
-                    <h4 className="font-semibold text-white">{post.author}</h4>
-                    <p className="text-xs text-white/30 mt-1">Contributing Writer</p>
+                    <h4 className="font-semibold dark:text-white text-slate-900">{post.author}</h4>
+                    <p className="text-xs dark:text-white/30 text-slate-400 mt-1">Contributing Writer</p>
                   </CardContent>
                 </Card>
 
                 {/* Related Posts */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-4 text-white">Related Articles</h3>
+                  <h3 className="font-semibold text-lg mb-4 dark:text-white text-slate-900">Related Articles</h3>
                   <div className="space-y-3">
                     {relatedPosts.map((related) => (
                       <Card
                         key={related.id}
-                        className="border-white/[0.06] bg-white/[0.04] hover:border-emerald-500/30 hover:shadow-sm transition-all cursor-pointer"
+                        className="dark:border-white/[0.06] border-slate-200 dark:bg-white/[0.04] bg-white hover:border-emerald-500/30 hover:shadow-sm transition-all cursor-pointer"
                         onClick={() => navigate('blog-detail', related.slug)}
                       >
                         <CardContent className="p-4">
-                          <Badge variant="secondary" className="text-xs mb-2 bg-white/[0.06] text-white/40">{related.category}</Badge>
-                          <h4 className="text-sm font-medium line-clamp-2 hover:text-emerald-400 transition-colors text-white">
+                          <Badge variant="secondary" className="text-xs mb-2 dark:bg-white/[0.06] bg-slate-100 dark:text-white/40 text-slate-500">{related.category}</Badge>
+                          <h4 className="text-sm font-medium line-clamp-2 hover:text-emerald-400 transition-colors dark:text-white text-slate-900">
                             {related.title}
                           </h4>
-                          <p className="text-xs text-white/30 mt-1">
+                          <p className="text-xs dark:text-white/30 text-slate-400 mt-1">
                             {new Date(related.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                           </p>
                         </CardContent>

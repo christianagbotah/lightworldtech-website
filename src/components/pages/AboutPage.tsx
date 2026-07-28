@@ -66,13 +66,13 @@ function CompactStatItem({ value, suffix, label, icon: Icon, delay = 0 }: { valu
   const { count, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
 
   return (
-    <div ref={ref} className="flex items-center gap-3 p-4 lg:p-5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 group">
+    <div ref={ref} className="flex items-center gap-3 p-4 lg:p-5 rounded-xl dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] hover:border-emerald-500/30 dark:hover:bg-white/[0.05] hover:bg-slate-100 transition-all duration-300 group">
       <div className="size-12 shrink-0 rounded-lg bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md group-hover:shadow-amber-500/20 transition-all duration-300">
         <Icon className="size-5 text-amber-400" />
       </div>
       <div className="min-w-0">
         <div className="text-xl lg:text-2xl font-bold text-amber-400 tabular-nums leading-tight">{count}{suffix}</div>
-        <div className="text-sm text-white/55 leading-tight truncate">{label}</div>
+        <div className="text-sm dark:text-white/55 text-slate-600 leading-tight truncate">{label}</div>
       </div>
     </div>
   );
@@ -113,18 +113,18 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
         style={{ transformStyle: 'preserve-3d' }}
       >
         {/* Front face */}
-        <div className="rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300" style={{ backfaceVisibility: 'hidden' }}>
+        <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300" style={{ backfaceVisibility: 'hidden' }}>
           <div className="p-4 lg:p-5">
             <div className="flex items-center gap-4">
               <div className="size-11 shrink-0 rounded-full bg-gradient-to-br from-amber-400/50 to-amber-500/50 flex items-center justify-center text-base font-bold text-amber-200 shadow-lg shadow-amber-500/20">
                 {member.name.charAt(0)}
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-base text-white truncate">{member.name}</h3>
+                <h3 className="font-semibold text-base dark:text-white text-slate-900 truncate">{member.name}</h3>
                 <p className="text-sm text-amber-400 font-medium truncate">{member.role}</p>
               </div>
             </div>
-            <p className="text-sm text-white/40 mt-2.5 line-clamp-2 leading-relaxed">{member.bio}</p>
+            <p className="text-sm dark:text-white/40 text-slate-500 mt-2.5 line-clamp-2 leading-relaxed">{member.bio}</p>
           </div>
         </div>
 
@@ -179,19 +179,19 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
 
   return (
     <div className="relative rounded-xl">
-      <Card className="relative z-10 overflow-hidden border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 group">
+      <Card className="relative z-10 overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 group">
         <CardContent className="p-4 lg:p-5">
           <div className="flex items-center gap-3">
             <div className="size-11 shrink-0 rounded-full bg-gradient-to-br from-amber-400/50 to-amber-500/50 flex items-center justify-center text-base font-bold text-amber-200 transition-transform duration-300 group-hover:scale-110 shadow-lg shadow-amber-500/20">
               {member.name.charAt(0)}
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-base text-white group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
+              <h3 className="font-semibold text-base dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
               <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
             </div>
           </div>
           <div className="mt-2">
-            <p className={`text-sm text-white/50 leading-relaxed transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}>
+            <p className={`text-sm dark:text-white/50 text-slate-500 leading-relaxed transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}>
               {member.bio}
             </p>
             <button
@@ -206,7 +206,7 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-2 pt-2 border-t border-white/[0.06]"
+              className="mt-2 pt-2 border-t border-slate-100 dark:border-white/[0.06]"
             >
               <div className="flex flex-wrap gap-1">
                 {member.skills.map((skill) => (
@@ -226,7 +226,7 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
                   href={href}
                   aria-label={`${label} - ${member.name}`}
                   title={`${label} - ${member.name}`}
-                  className={`size-7 rounded-full bg-white/10 text-white/60 flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
+                  className={`size-7 rounded-full dark:bg-white/10 bg-slate-100 dark:text-white/60 text-slate-500 flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
                 >
                   <SocialIcon className="size-3.5" />
                 </a>
@@ -269,10 +269,10 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <main className="h-[calc(100vh-5rem)] overflow-hidden bg-[#0a0f1a] flex flex-col">
+    <main className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
       {/* Compact Title Bar */}
       <motion.div
-        className="shrink-0 px-4 sm:px-6 py-4 sm:py-5 flex items-center gap-4 border-b border-white/[0.06]"
+        className="shrink-0 px-4 sm:px-6 py-4 sm:py-5 flex items-center gap-4 border-b border-slate-100 dark:border-white/[0.06]"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -283,8 +283,8 @@ export default function AboutPage() {
           </Badge>
         </motion.div>
         <motion.div variants={fadeVariant} className="min-w-0">
-          <h1 className="text-2xl font-bold text-white/90 truncate">About Lightworld Technologies</h1>
-          <p className="text-sm text-white/50 truncate">A passionate team of innovators driving digital transformation across Africa and beyond.</p>
+          <h1 className="text-2xl font-bold dark:text-white/90 text-slate-800 truncate">About Lightworld Technologies</h1>
+          <p className="text-sm dark:text-white/50 text-slate-500 truncate">A passionate team of innovators driving digital transformation across Africa and beyond.</p>
         </motion.div>
         <motion.div variants={fadeVariant} className="ml-auto hidden md:flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
@@ -309,7 +309,7 @@ export default function AboutPage() {
         <motion.div variants={itemVariants} className="md:col-span-3 flex flex-col gap-3">
           <div className="flex items-center gap-2 mb-1 shrink-0">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
-            <h2 className="text-base lg:text-lg font-semibold text-white/90 uppercase tracking-wider">By the Numbers</h2>
+            <h2 className="text-base lg:text-lg font-semibold dark:text-white/90 text-slate-800 uppercase tracking-wider">By the Numbers</h2>
           </div>
           <div className="flex flex-col gap-2 flex-1">
             {stats.map((stat, index) => (
@@ -329,19 +329,19 @@ export default function AboutPage() {
         <motion.div variants={itemVariants} className="md:col-span-5 flex flex-col gap-3 min-h-0">
           <div className="flex items-center gap-2 mb-1 shrink-0">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-amber-400 to-emerald-400" />
-            <h2 className="text-base lg:text-lg font-semibold text-white/90 uppercase tracking-wider">Core Values</h2>
+            <h2 className="text-base lg:text-lg font-semibold dark:text-white/90 text-slate-800 uppercase tracking-wider">Core Values</h2>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 flex-1 min-h-0 auto-rows-fr">
             {values.map((value, idx) => (
               <motion.div key={value.title} variants={itemVariants} className="min-h-0">
-                <Card className="h-full border-white/[0.06] bg-white/[0.03] backdrop-blur-sm hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 group overflow-hidden relative rounded-xl">
+                <Card className="h-full border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.03] bg-white shadow-sm backdrop-blur-sm hover:border-emerald-500/30 dark:hover:bg-white/[0.05] hover:bg-slate-100 transition-all duration-300 group overflow-hidden relative rounded-xl">
                   <div className={`absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx % 3 === 0 ? 'bg-emerald-500/10' : idx % 3 === 1 ? 'bg-amber-500/10' : 'bg-yellow-500/10'}`} />
                   <CardContent className="p-4 lg:p-5 relative flex flex-col h-full">
                     <div className={`size-10 lg:size-11 rounded-lg flex items-center justify-center mb-2.5 lg:mb-3 shrink-0 group-hover:scale-110 transition-all duration-300 ${idx % 3 === 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md shadow-yellow-500/20'}`}>
                       <value.icon className="size-4 lg:size-5 text-white" />
                     </div>
-                    <h3 className="font-semibold text-sm lg:text-base text-white group-hover:text-amber-400 transition-colors leading-tight">{value.title}</h3>
-                    <p className="text-xs lg:text-sm text-white/50 leading-relaxed mt-1.5 line-clamp-2">{value.description}</p>
+                    <h3 className="font-semibold text-sm lg:text-base dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors leading-tight">{value.title}</h3>
+                    <p className="text-xs lg:text-sm dark:text-white/50 text-slate-500 leading-relaxed mt-1.5 line-clamp-2">{value.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -353,13 +353,13 @@ export default function AboutPage() {
         <motion.div variants={itemVariants} className="md:col-span-4 flex flex-col gap-3 min-h-0">
           <div className="flex items-center gap-2 mb-1 shrink-0">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
-            <h2 className="text-base lg:text-lg font-semibold text-white/90 uppercase tracking-wider">Our Team</h2>
-            <span className="text-xs text-white/30 ml-auto hidden md:inline">Click to explore</span>
+            <h2 className="text-base lg:text-lg font-semibold dark:text-white/90 text-slate-800 uppercase tracking-wider">Our Team</h2>
+            <span className="text-xs dark:text-white/30 text-slate-400 ml-auto hidden md:inline">Click to explore</span>
           </div>
           {loading ? (
             <div className="flex flex-col gap-2 flex-1">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i} className="bg-white/[0.04] border border-white/[0.06]">
+                <Card key={i} className="dark:bg-white/[0.04] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06]">
                   <div className="p-3 flex items-center gap-3">
                     <Skeleton className="size-10 rounded-full shrink-0" />
                     <div className="flex-1 space-y-1.5">
@@ -391,7 +391,7 @@ export default function AboutPage() {
 
       {/* Bottom — Awards Bar */}
       <motion.div
-        className="shrink-0 border-t border-white/[0.06] px-6 py-3"
+        className="shrink-0 border-t border-slate-100 dark:border-white/[0.06] px-6 py-3"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.5 }}
@@ -399,9 +399,9 @@ export default function AboutPage() {
         <div className="flex items-center gap-4 overflow-x-auto custom-scrollbar pb-1">
           <div className="flex items-center gap-2.5 shrink-0">
             <Award className="size-5 text-amber-400" />
-            <span className="text-sm font-semibold text-white/70 uppercase tracking-wider">Awards</span>
+            <span className="text-sm font-semibold dark:text-white/70 text-slate-600 uppercase tracking-wider">Awards</span>
           </div>
-          <div className="w-px h-6 bg-white/[0.08] shrink-0" />
+          <div className="w-px h-6 dark:bg-white/[0.08] bg-slate-200 shrink-0" />
           {awards.map((award, index) => (
             <motion.div
               key={award.title}
@@ -410,17 +410,17 @@ export default function AboutPage() {
               transition={{ duration: 0.3, delay: 0.6 + index * 0.08 }}
               className="shrink-0"
             >
-              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:border-amber-500/30 hover:bg-white/[0.05] transition-all duration-300 group cursor-default">
+              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] hover:border-amber-500/30 dark:hover:bg-white/[0.05] hover:bg-slate-100 transition-all duration-300 group cursor-default">
                 <div className="size-8 shrink-0 rounded-md bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md transition-shadow duration-300">
                   <Award className="size-4 text-amber-400" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-white/90 truncate max-w-[200px]">{award.title}</span>
+                    <span className="text-sm font-semibold dark:text-white/90 text-slate-800 truncate max-w-[200px]">{award.title}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <Badge className="text-xs bg-amber-500/10 text-amber-300 border-amber-500/20 px-2 py-0.5 font-semibold">{award.year}</Badge>
-                    <span className="text-xs text-white/35 truncate max-w-[160px]">{award.organization}</span>
+                    <span className="text-xs dark:text-white/35 text-slate-400 truncate max-w-[160px]">{award.organization}</span>
                   </div>
                 </div>
               </div>

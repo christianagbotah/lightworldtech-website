@@ -60,8 +60,8 @@ function ClientsCounter() {
   const { displayValue, ref } = useAnimatedCounter({ end: 150, suffix: '+', startOnView: false });
   return (
     <div ref={ref} className="text-center">
-      <div className="text-3xl md:text-4xl font-extrabold text-white tabular-nums">{displayValue}</div>
-      <div className="text-sm text-slate-400 mt-1">Clients Served</div>
+      <div className="text-3xl md:text-4xl font-extrabold dark:text-white text-slate-900 tabular-nums">{displayValue}</div>
+      <div className="text-sm dark:text-slate-400 text-slate-500 mt-1">Clients Served</div>
     </div>
   );
 }
@@ -288,7 +288,7 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                   />
                   <div className="flex justify-between items-center">
                     {errors.content && <p className="text-xs text-red-500">{errors.content}</p>}
-                    <p className="text-xs text-slate-400 ml-auto">{formData.content.length} characters</p>
+                    <p className="text-xs dark:text-slate-400 text-slate-500 ml-auto">{formData.content.length} characters</p>
                   </div>
                 </div>
 
@@ -408,10 +408,10 @@ export default function TestimonialsSection() {
   }, []);
 
   return (
-    <section className="section-padding bg-gradient-dark relative overflow-hidden">
+    <section className="section-padding bg-slate-50 dark:bg-slate-900 relative overflow-hidden">
       {/* Parallax-like slow-moving gradient background */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-950/50 via-slate-900 to-amber-950/30 animate-[gradient-shift_20s_ease-in-out_infinite] bg-[length:200%_200%]" />
+        <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-amber-950/50 dark:via-slate-900 dark:to-amber-950/30 animate-[gradient-shift_20s_ease-in-out_infinite] bg-[length:200%_200%]" />
       </div>
       {/* Decorative elements */}
       <div className="absolute inset-0 dot-pattern opacity-10" />
@@ -427,9 +427,9 @@ export default function TestimonialsSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-amber-400 uppercase tracking-wider">Testimonials</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-white">What Our Clients Say</h2>
-          <p className="text-slate-400">
+          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">Testimonials</span>
+          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 dark:text-white text-slate-900">What Our Clients Say</h2>
+          <p className="dark:text-slate-400 text-slate-600">
             Don&apos;t just take our word for it — hear from the businesses we&apos;ve helped transform.
           </p>
         </motion.div>
@@ -442,7 +442,7 @@ export default function TestimonialsSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <div className="inline-flex items-center gap-4 bg-gradient-to-r from-amber-600/20 to-amber-600/20 rounded-2xl px-8 py-4 border border-emerald-500/20 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-4 bg-amber-50/80 border border-amber-200/50 dark:bg-gradient-to-r dark:from-amber-600/20 dark:to-amber-600/20 dark:border-emerald-500/20 backdrop-blur-sm rounded-2xl px-8 py-4">
             <div className="size-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <Users className="size-6 text-white" />
             </div>
@@ -460,7 +460,7 @@ export default function TestimonialsSection() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Array.from({ length: 2 }).map((_, i) => (
-              <Card key={i} className="bg-slate-800/50 border-slate-700 p-6">
+              <Card key={i} className="bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 p-6">
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-3/4 mb-4" />
                 <div className="flex gap-2">
@@ -493,7 +493,7 @@ export default function TestimonialsSection() {
               <CarouselContent className="-ml-4">
                 {testimonials.map((testimonial) => (
                   <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/2">
-                    <Card className="bg-slate-800/40 border-slate-700/40 backdrop-blur-md h-full relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-1 transition-all duration-500">
+                    <Card className="bg-white dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700/40 backdrop-blur-md h-full relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-xl hover:shadow-amber-900/30 hover:-translate-y-1 transition-all duration-500">
                       {/* Top gradient accent bar */}
                       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-amber-400 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <CardContent className="p-6 flex flex-col h-full relative">
@@ -503,7 +503,7 @@ export default function TestimonialsSection() {
                         <div className="absolute -top-2 -right-2 size-20 rounded-full bg-gradient-to-br from-amber-500/10 to-emerald-500/10 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-500">
                           <Quote className="size-10 text-amber-400/30 group-hover:text-amber-400/50 transition-colors duration-500" />
                         </div>
-                        <p className="text-slate-300 text-sm leading-relaxed flex-1 mb-6 relative">
+                        <p className="dark:text-slate-300 text-slate-600 text-sm leading-relaxed flex-1 mb-6 relative">
                           &ldquo;{testimonial.content || (testimonial as Record<string, unknown>).quote}&rdquo;
                         </p>
                         {/* Star rating with enhanced glow */}
@@ -521,13 +521,13 @@ export default function TestimonialsSection() {
                           ))}
                         </div>
                         {/* Author */}
-                        <div className="flex items-center gap-3 pt-4 border-t border-slate-700/40 relative">
+                        <div className="flex items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-700/40 relative">
                           <div className="size-11 rounded-full bg-gradient-to-br from-amber-500 to-amber-500 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-emerald-500/25 group-hover:shadow-emerald-500/40 transition-shadow duration-300">
                             {testimonial.name.charAt(0)}
                           </div>
                           <div>
-                            <div className="font-semibold text-sm text-white">{testimonial.name}</div>
-                            <div className="text-xs text-slate-400">{testimonial.role}, {testimonial.company}</div>
+                            <div className="font-semibold text-sm dark:text-white text-slate-900">{testimonial.name}</div>
+                            <div className="text-xs dark:text-slate-400 text-slate-500">{testimonial.role}, {testimonial.company}</div>
                           </div>
                         </div>
                       </CardContent>
@@ -542,7 +542,7 @@ export default function TestimonialsSection() {
                   onClick={handlePrev}
                   variant="outline"
                   size="icon"
-                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+                  className="static translate-y-0 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
                   aria-label="Previous testimonial"
                 >
                   <ChevronLeft className="size-4" />
@@ -555,10 +555,10 @@ export default function TestimonialsSection() {
                       aria-label={`Go to testimonial ${i + 1}`}
                       aria-selected={i === activeDot}
                       role="tab"
-                      className={`rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                      className={`rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 ${
                         i === activeDot
                           ? 'w-6 h-2 bg-gradient-to-r from-amber-400 to-amber-400'
-                          : 'w-2 h-2 bg-slate-600 hover:bg-slate-500'
+                          : 'w-2 h-2 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500'
                       }`}
                     />
                   ))}
@@ -567,7 +567,7 @@ export default function TestimonialsSection() {
                   onClick={handleNext}
                   variant="outline"
                   size="icon"
-                  className="static translate-y-0 border-slate-600 text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
+                  className="static translate-y-0 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white transition-colors duration-300 size-10 rounded-full"
                   aria-label="Next testimonial"
                 >
                   <ChevronRight className="size-4" />
@@ -578,7 +578,7 @@ export default function TestimonialsSection() {
               <div className="flex justify-center mt-3">
                 <button
                   onClick={togglePause}
-                  className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
                   aria-label={isPaused ? 'Resume auto-play' : 'Pause auto-play'}
                 >
                   {isPaused ? <Play className="size-3" /> : <Pause className="size-3" />}
@@ -597,7 +597,7 @@ export default function TestimonialsSection() {
 
         {/* Trusted by Leading Companies strip */}
         <motion.div
-          className="mt-12 pt-8 border-t border-slate-700/40"
+          className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700/40"
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -610,7 +610,7 @@ export default function TestimonialsSection() {
                 key={logo.name}
                 className="flex items-center gap-2 text-slate-500 hover:text-amber-400 transition-all duration-300 hover:-translate-y-0.5"
               >
-                <div className="size-9 rounded-lg bg-slate-800 border border-slate-700 hover:border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-amber-400 transition-colors duration-300">
+                <div className="size-9 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-amber-400 transition-colors duration-300">
                   {logo.initials}
                 </div>
                 <span className="text-xs font-medium hidden sm:block">{logo.name}</span>
@@ -637,7 +637,7 @@ export default function TestimonialsSection() {
           <Button
             variant="outline"
             onClick={() => navigate('portfolio')}
-            className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-300 px-6"
+            className="border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors duration-300 px-6"
           >
             Read More Reviews
           </Button>

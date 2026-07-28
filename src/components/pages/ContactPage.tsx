@@ -39,7 +39,7 @@ function getFileIcon(type: string) {
 function getFileColor(type: string): string {
   if (type.startsWith('image/')) return 'bg-amber-100 dark:bg-amber-900/30 text-emerald-400';
   if (type === 'application/pdf') return 'bg-red-100 dark:bg-red-900/30 text-red-400';
-  return 'bg-white/[0.06] text-white/60';
+  return 'dark:bg-white/[0.06] bg-slate-100 dark:text-white/60 text-slate-500';
 }
 
 interface FileAttachment {
@@ -61,7 +61,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     }
   };
   return (
-    <button onClick={handleCopy} className="p-1 rounded-md text-white/20 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all shrink-0" aria-label={`Copy ${label}`}>
+    <button onClick={handleCopy} className="p-1 rounded-md dark:text-white/20 text-slate-300 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all shrink-0" aria-label={`Copy ${label}`}>
       {copied ? <Check className="size-3 text-amber-500" /> : <Copy className="size-3" />}
     </button>
   );
@@ -167,7 +167,7 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-[#050810] flex flex-col">
+    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-background flex flex-col">
       {/* ═══ Compact Title Bar ═══ */}
       <div className="shrink-0 px-4 lg:px-8 pt-2 pb-3">
         <div className="flex items-center gap-3">
@@ -175,15 +175,15 @@ export default function ContactPage() {
             <div className="size-1.5 rounded-full bg-emerald-400" />
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-[0.2em]">Contact</span>
           </div>
-          <h1 className="text-xl lg:text-2xl font-bold text-white">
+          <h1 className="text-xl lg:text-2xl font-bold dark:text-white text-slate-900">
             Get in <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Touch</span>
           </h1>
-          <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.06]">
+          <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06]">
             <span className={`relative flex size-2 ${officeStatus.open ? '' : 'opacity-50'}`}>
               {officeStatus.open && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
               <span className={`relative inline-flex rounded-full size-2 ${officeStatus.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
             </span>
-            <span className="text-xs text-white/30 font-medium">{officeStatus.label}</span>
+            <span className="text-xs dark:text-white/30 text-slate-400 font-medium">{officeStatus.label}</span>
           </div>
         </div>
       </div>
@@ -197,24 +197,24 @@ export default function ContactPage() {
           transition={{ duration: 0.4 }}
           className="lg:col-span-7 flex flex-col min-h-0"
         >
-          <div className="flex-1 min-h-0 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-4 lg:p-6 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 rounded-xl dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] backdrop-blur-sm p-4 lg:p-6 flex flex-col overflow-hidden">
             {submitted ? (
               <div className="flex-1 flex items-center justify-center">
                 <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
                   <motion.div className="size-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}>
                     <CheckCircle2 className="size-8 text-emerald-400" />
                   </motion.div>
-                  <h3 className="text-lg font-bold text-white mb-1">Message Sent!</h3>
-                  <p className="text-xs text-white/40 mb-4">We&apos;ll respond within 24 hours.</p>
+                  <h3 className="text-lg font-bold dark:text-white text-slate-900 mb-1">Message Sent!</h3>
+                  <p className="text-xs dark:text-white/40 text-slate-500 mb-4">We&apos;ll respond within 24 hours.</p>
                   <div className="flex gap-2 justify-center">
-                    <Button onClick={() => setSubmitted(false)} variant="outline" size="sm" className="text-xs border-white/[0.1]">Send Another</Button>
+                    <Button onClick={() => setSubmitted(false)} variant="outline" size="sm" className="text-xs border-slate-300 dark:border-white/[0.1]">Send Another</Button>
                     <Button onClick={() => navigate('home')} size="sm" className="text-xs bg-emerald-500">Back Home</Button>
                   </div>
                 </motion.div>
               </div>
             ) : (
               <>
-                <h2 className="text-sm lg:text-base font-bold text-white mb-3 lg:mb-4">Send a Message</h2>
+                <h2 className="text-sm lg:text-base font-bold dark:text-white text-slate-900 mb-3 lg:mb-4">Send a Message</h2>
 
                 {submitting && (
                   <motion.div className="mb-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
@@ -230,33 +230,33 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col gap-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label htmlFor="name" className="text-xs text-white/40 font-medium mb-0.5 block">Full Name *</Label>
-                      <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
+                      <Label htmlFor="name" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Full Name *</Label>
+                      <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required disabled={submitting} className="h-9 text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 focus-visible:border-emerald-500/50" />
                     </div>
                     <div>
-                      <Label htmlFor="email" className="text-xs text-white/40 font-medium mb-0.5 block">Email *</Label>
-                      <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
+                      <Label htmlFor="email" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Email *</Label>
+                      <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required disabled={submitting} className="h-9 text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 focus-visible:border-emerald-500/50" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label htmlFor="phone" className="text-xs text-white/40 font-medium mb-0.5 block">Phone</Label>
-                      <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+233 XX XXX XXXX" disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
+                      <Label htmlFor="phone" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Phone</Label>
+                      <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+233 XX XXX XXXX" disabled={submitting} className="h-9 text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 focus-visible:border-emerald-500/50" />
                     </div>
                     <div>
-                      <Label htmlFor="subject" className="text-xs text-white/40 font-medium mb-0.5 block">Subject *</Label>
-                      <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" required disabled={submitting} className="h-9 text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:border-emerald-500/50" />
+                      <Label htmlFor="subject" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Subject *</Label>
+                      <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" required disabled={submitting} className="h-9 text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 focus-visible:border-emerald-500/50" />
                     </div>
                   </div>
                   <div className="flex-1 min-h-0 flex flex-col">
-                    <Label htmlFor="message" className="text-xs text-white/40 font-medium mb-0.5 block">Message *</Label>
-                    <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us about your project..." required disabled={submitting} className="flex-1 min-h-[80px] text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 resize-none focus-visible:border-emerald-500/50" />
+                    <Label htmlFor="message" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Message *</Label>
+                    <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us about your project..." required disabled={submitting} className="flex-1 min-h-[80px] text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 resize-none focus-visible:border-emerald-500/50" />
                   </div>
 
                   {/* File Upload (compact) */}
                   <div
                     className={`border border-dashed rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all ${
-                      isDragOver ? 'border-emerald-500 bg-emerald-500/10' : 'border-white/[0.06] hover:border-white/[0.12]'
+                      isDragOver ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-200 dark:border-white/[0.06] dark:hover:border-white/[0.12] hover:border-slate-300'
                     }`}
                     onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                     onDragLeave={(e) => { e.preventDefault(); setIsDragOver(false); }}
@@ -264,8 +264,8 @@ export default function ContactPage() {
                     onClick={() => inputRef.current?.click()}
                   >
                     <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
-                    <Upload className="size-3.5 text-white/25 shrink-0" />
-                    <span className="text-xs text-white/30">Attach files (max {MAX_FILES}, 10MB each)</span>
+                    <Upload className="size-3.5 dark:text-white/25 text-slate-300 shrink-0" />
+                    <span className="text-xs dark:text-white/30 text-slate-400">Attach files (max {MAX_FILES}, 10MB each)</span>
                     <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
                   </div>
 
@@ -273,9 +273,9 @@ export default function ContactPage() {
                   {attachments.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {attachments.map((att) => (
-                        <div key={att.id} className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-xs text-white/50">
+                        <div key={att.id} className="flex items-center gap-1 px-2 py-0.5 rounded-md dark:bg-white/[0.04] bg-slate-50 border border-slate-200 dark:border-white/[0.06] text-xs dark:text-white/50 text-slate-500">
                           {att.file.name} ({formatFileSize(att.file.size)})
-                          <button onClick={() => removeFile(att.id)} className="text-white/20 hover:text-red-400 ml-0.5"><X className="size-2.5" /></button>
+                          <button onClick={() => removeFile(att.id)} className="dark:text-white/20 text-slate-300 hover:text-red-400 ml-0.5"><X className="size-2.5" /></button>
                         </div>
                       ))}
                     </div>
@@ -301,14 +301,14 @@ export default function ContactPage() {
           {/* Contact Info Cards */}
           <div className="grid grid-cols-2 gap-2">
             {contactItems.map((item) => (
-              <div key={item.label} className="group p-3 lg:p-4 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all">
+              <div key={item.label} className="group p-3 lg:p-4 rounded-lg dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.12] hover:border-slate-300 transition-all">
                 <div className="flex items-start gap-2">
                   <div className="size-7 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
                     <item.icon className="size-3.5 text-amber-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="block text-xs lg:text-sm font-semibold text-white/35 uppercase tracking-wider">{item.label}</span>
-                    <span className="block text-xs lg:text-sm text-white/65 mt-0.5">{item.value}</span>
+                    <span className="block text-xs lg:text-sm font-semibold dark:text-white/35 text-slate-400 uppercase tracking-wider">{item.label}</span>
+                    <span className="block text-xs lg:text-sm dark:text-white/65 text-slate-600 mt-0.5">{item.value}</span>
                   </div>
                   {item.copy && <CopyButton text={item.copy} label={item.label} />}
                 </div>
@@ -317,8 +317,8 @@ export default function ContactPage() {
           </div>
 
           {/* Social Media */}
-          <div className="p-3 lg:p-4 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-            <span className="block text-xs font-semibold text-white/30 uppercase tracking-wider mb-2">Follow Us</span>
+          <div className="p-3 lg:p-4 rounded-lg dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06]">
+            <span className="block text-xs font-semibold dark:text-white/30 text-slate-400 uppercase tracking-wider mb-2">Follow Us</span>
             <div className="flex items-center gap-2">
               {[
                 { icon: Facebook, label: 'Facebook', color: 'hover:bg-blue-600' },
@@ -326,7 +326,7 @@ export default function ContactPage() {
                 { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-blue-700' },
                 { icon: Instagram, label: 'Instagram', color: 'hover:bg-pink-600' },
               ].map((social) => (
-                <button key={social.label} onClick={() => window.open('#', '_blank')} className={`size-8 rounded-lg border border-white/[0.06] text-white/30 flex items-center justify-center transition-all hover:text-white hover:shadow-lg ${social.color}`} aria-label={social.label}>
+                <button key={social.label} onClick={() => window.open('#', '_blank')} className={`size-8 rounded-lg border border-slate-200 dark:border-white/[0.06] dark:text-white/30 text-slate-400 flex items-center justify-center transition-all hover:text-white hover:shadow-lg ${social.color}`} aria-label={social.label}>
                   <social.icon className="size-3.5" />
                 </button>
               ))}
@@ -355,7 +355,7 @@ export default function ContactPage() {
           </div>
 
           {/* Map Preview */}
-          <div className="rounded-lg overflow-hidden border border-white/[0.06] flex-1 min-h-[100px]">
+          <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-white/[0.06] flex-1 min-h-[100px]">
             <iframe
               src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3770%2C5.5837%2C-0.0070%2C5.6237&layer=mapnik&marker=5.6037%2C-0.1870"
               width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade"

@@ -139,7 +139,7 @@ export default function PortfolioPage() {
   }, [portfolio]);
 
   return (
-    <main className="bg-[#0a0f1a] min-h-screen">
+    <main className="bg-background min-h-screen">
       {/* Compact Title Bar */}
       <section className="relative">
         {/* Subtle top gradient glow */}
@@ -158,7 +158,7 @@ export default function PortfolioPage() {
               <Briefcase className="size-3" />
               Our Portfolio
             </motion.div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white">
+            <h1 className="text-2xl md:text-3xl font-bold dark:text-white text-slate-900">
               Projects & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-400">Case Studies</span>
             </h1>
           </div>
@@ -172,12 +172,12 @@ export default function PortfolioPage() {
                 className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
                   activeCategory === cat.name
                     ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-white shadow-md shadow-emerald-500/15'
-                    : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
+                    : 'dark:bg-white/[0.04] bg-slate-100 dark:text-white/50 text-slate-500 dark:hover:bg-white/[0.08] hover:bg-slate-200 dark:hover:text-white/70 hover:text-slate-700 border border-slate-200 dark:border-white/[0.06]'
                 }`}
               >
                 {cat.name === 'all' ? 'All Projects' : cat.name}
                 <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center font-medium ${
-                  activeCategory === cat.name ? 'bg-white/20 text-white' : 'bg-white/[0.06] text-white/30'
+                  activeCategory === cat.name ? 'bg-white/20 text-white' : 'dark:bg-white/[0.06] bg-slate-200 dark:text-white/30 text-slate-400'
                 }`}>
                   {cat.count}
                 </span>
@@ -186,7 +186,7 @@ export default function PortfolioPage() {
 
             {/* Results count */}
             {!loading && (
-              <div className="ml-auto flex items-center gap-1.5 text-white/25">
+              <div className="ml-auto flex items-center gap-1.5 dark:text-white/25 text-slate-300">
                 <Layers className="size-3.5" />
                 <span className="text-xs">{filtered.length} projects</span>
               </div>
@@ -201,7 +201,7 @@ export default function PortfolioPage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-full">
               {Array.from({ length: 9 }).map((_, i) => (
-                <Card key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+                <Card key={i} className="dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] rounded-xl overflow-hidden">
                   <Skeleton className="h-4 w-28 mb-3 mx-4 mt-4" />
                   <Skeleton className="h-3 w-full mb-1.5 mx-4" />
                   <Skeleton className="h-3 w-3/4 mb-3 mx-4" />
@@ -223,12 +223,12 @@ export default function PortfolioPage() {
                 <div className="relative size-20 mx-auto mb-5">
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/30 to-amber-800/20 rotate-6" />
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/20 to-amber-800/10 -rotate-3" />
-                  <div className="relative size-20 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shadow-lg">
-                    <SearchX className="size-8 text-white/30" />
+                  <div className="relative size-20 rounded-2xl dark:bg-white/[0.04] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] flex items-center justify-center shadow-lg">
+                    <SearchX className="size-8 dark:text-white/30 text-slate-400" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-white/60 mb-2">No projects found</h3>
-                <p className="text-sm text-white/40 mb-5 leading-relaxed">There are no projects in this category yet. Check back soon or browse all our projects.</p>
+                <h3 className="text-lg font-semibold dark:text-white/60 text-slate-500 mb-2">No projects found</h3>
+                <p className="text-sm dark:text-white/40 text-slate-500 mb-5 leading-relaxed">There are no projects in this category yet. Check back soon or browse all our projects.</p>
                 <Button onClick={() => setActiveCategory('all')} className="bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white shadow-md shadow-emerald-500/20 text-sm">
                   <Sparkles className="size-4 mr-2" /> View All Projects
                 </Button>
@@ -245,7 +245,7 @@ export default function PortfolioPage() {
                 <AnimatePresence mode="popLayout">
                   {visibleItems.map((project, index) => {
                     const accentGradient = categoryCardAccents[project.category] || 'from-slate-500/8 to-slate-600/3';
-                    const badgeColor = categoryColors[project.category] || 'bg-white/10 text-white/60';
+                    const badgeColor = categoryColors[project.category] || 'dark:bg-white/10 bg-slate-100 dark:text-white/60 text-slate-500';
 
                     return (
                       <motion.div
@@ -256,10 +256,10 @@ export default function PortfolioPage() {
                         className="h-full"
                       >
                         <Card
-                          className={`group relative h-full bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 cursor-pointer hover:bg-white/[0.05] ${
+                          className={`group relative h-full dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 cursor-pointer dark:hover:bg-white/[0.05] hover:bg-slate-100 ${
                             project.featured
                               ? 'hover:border-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/5'
-                              : 'hover:border-white/[0.12]'
+                              : 'dark:hover:border-white/[0.12] hover:border-slate-300'
                           }`}
                           onClick={() => handleCardClick(project, visibleItems.indexOf(project))}
                         >
@@ -283,12 +283,12 @@ export default function PortfolioPage() {
                             </div>
 
                             {/* Title */}
-                            <h3 className="text-sm lg:text-base font-semibold mb-2 group-hover:text-emerald-400 transition-colors text-white leading-snug">
+                            <h3 className="text-sm lg:text-base font-semibold mb-2 group-hover:text-emerald-400 transition-colors dark:text-white text-slate-900 leading-snug">
                               {project.title}
                             </h3>
 
                             {/* Description (2 lines) */}
-                            <p className="text-xs lg:text-sm text-white/40 leading-relaxed mb-3 line-clamp-2 flex-grow">
+                            <p className="text-xs lg:text-sm dark:text-white/40 text-slate-500 leading-relaxed mb-3 line-clamp-2 flex-grow">
                               {project.description}
                             </p>
 
@@ -297,20 +297,20 @@ export default function PortfolioPage() {
                               {project.tags?.slice(0, 3).map((tag: string) => (
                                 <span
                                   key={tag}
-                                  className="text-xs lg:text-sm px-2.5 lg:px-3 py-0.5 lg:py-1 rounded-full bg-white/[0.05] text-white/40 border border-white/[0.04]"
+                                  className="text-xs lg:text-sm px-2.5 lg:px-3 py-0.5 lg:py-1 rounded-full dark:bg-white/[0.05] bg-slate-100 dark:text-white/40 text-slate-500 border border-slate-100 dark:border-white/[0.04]"
                                 >
                                   {tag}
                                 </span>
                               ))}
                               {(project.tags?.length || 0) > 3 && (
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-white/[0.03] text-white/25">
+                                <span className="text-xs px-2 py-0.5 rounded-full dark:bg-white/[0.03] bg-slate-100 dark:text-white/25 text-slate-300">
                                   +{project.tags.length - 3}
                                 </span>
                               )}
                             </div>
 
                             {/* Hover overlay — View Details */}
-                            <div className="absolute inset-0 bg-[#0a0f1a]/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
+                            <div className="absolute inset-0 dark:bg-[#0a0f1a]/80 bg-slate-900/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto">
                               <motion.div
                                 className="text-center"
                                 initial={false}
@@ -394,14 +394,14 @@ export default function PortfolioPage() {
                     <ExternalLink className="size-3 mr-1" /> Full View
                   </Button>
                 </div>
-                <DialogHeader className="mt-1"><DialogTitle className="text-xl text-white">{selectedProject.title}</DialogTitle></DialogHeader>
-                <DialogDescription className="text-sm text-white/60 leading-relaxed">{selectedProject.fullDescription || selectedProject.description}</DialogDescription>
+                <DialogHeader className="mt-1"><DialogTitle className="text-xl dark:text-white text-slate-900">{selectedProject.title}</DialogTitle></DialogHeader>
+                <DialogDescription className="text-sm dark:text-white/60 text-slate-500 leading-relaxed">{selectedProject.fullDescription || selectedProject.description}</DialogDescription>
 
                 <div>
-                  <h4 className="text-sm font-semibold text-white mb-2">Technologies</h4>
+                  <h4 className="text-sm font-semibold dark:text-white text-slate-900 mb-2">Technologies</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedProject.tags?.map((tag: string) => (
-                      <Badge key={tag} variant="secondary" className="text-xs bg-white/[0.06] text-white/40">{tag}</Badge>
+                      <Badge key={tag} variant="secondary" className="text-xs dark:bg-white/[0.06] bg-slate-100 dark:text-white/40 text-slate-500">{tag}</Badge>
                     ))}
                   </div>
                 </div>

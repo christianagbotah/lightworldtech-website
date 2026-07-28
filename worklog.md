@@ -730,3 +730,33 @@ Stage Summary:
 - Badge text minimum `text-xs` (12px) everywhere, descriptions minimum `text-sm` on desktop
 - Nav menu items noticeably larger on desktop (15px text + 16px vertical padding)
 - ESLint clean, no runtime errors, browser verified on desktop (1280×720) and mobile (375×812)
+
+---
+Task ID: dark-mode-fix
+Agent: Main Agent + 4 Subagents
+Task: Fix dark/light mode toggle + Replace official logo
+
+Work Log:
+- **Logo Replacement**: Copied `/home/z/my-project/upload/LIGHTWORLDTECH-OFFICIAL LOGO.png` to `/home/z/my-project/public/logo.png`
+- **Dark/Light Mode Root Cause**: All page components used hardcoded dark colors (`bg-[#050810]`, `text-white`, `bg-white/[0.03]`, `border-white/[0.06]`) instead of Tailwind `dark:` variants. The ThemeProvider (`next-themes`) was correctly configured with `attribute="class"` but no components actually responded to the class change.
+- **Fix Approach**: Added `dark:` prefix to all hardcoded dark-mode classes, paired with light-mode equivalents (slate-50/100/200/300/400/500/600/700/800/900 for backgrounds/text/borders)
+- **Files Updated (22 total)**:
+  - **HomePage.tsx**: SlideBackground overlays, GridOverlay, HeroSlide, AboutSlide, ServicesSlide, PortfolioSlide, TestimonialsSlide, CTASlide, ClientTicker, main container, navigation dots/arrows/counter
+  - **Inner Pages (8)**: AboutPage, ServicesPage, PortfolioPage, ContactPage, BlogPage, BlogDetailPage, CareersPage, ProductsPage
+  - **Section Components (1 updated)**: TestimonialsSection (others already had dark: variants)
+- **Files Already OK**: Preloader, FloatingWidgets, NewsletterPopup, CookieConsent, Header (partial), Footer (kept always-dark)
+
+- **Verification**: Used agent-browser to verify:
+  - Theme toggle correctly toggles `dark` class on `<html>` element
+  - Home page switches between dark and light mode
+  - About page switches between dark and light mode
+  - Services page switches between dark and light mode
+  - No console errors in any mode
+  - Lint passes clean
+
+Stage Summary:
+- Dark/light mode toggle now works across entire site (homepage + all inner pages)
+- Official logo replaced
+- No TypeScript or lint errors
+- Footer remains always-dark (common design pattern)
+- Homepage uses theme-aware gradient overlays instead of hardcoded dark

@@ -47,7 +47,7 @@ const defaultCategories: CategoryCount[] = [
 ];
 
 const categoryColors: Record<string, string> = {
-  'all': 'bg-white/10 text-white/70',
+  'all': 'dark:bg-white/10 bg-slate-100 dark:text-white/70 text-slate-600',
   'Business': 'bg-amber-500/15 text-amber-400 border-amber-500/20',
   'Mobile Apps': 'bg-violet-500/15 text-violet-400 border-violet-500/20',
   'Web Development': 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
@@ -169,7 +169,7 @@ export default function BlogPage() {
   };
 
   return (
-    <main className="h-[calc(100vh-5rem)] overflow-hidden bg-[#0a0f1a] flex flex-col">
+    <main className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
       {/* Compact Title Bar */}
       <div className="shrink-0 px-4 lg:px-8 pt-4 pb-3">
         <div className="flex flex-col gap-3">
@@ -180,7 +180,7 @@ export default function BlogPage() {
                 <Sparkles className="size-3" />
                 Blog
               </span>
-              <h1 className="text-xl lg:text-2xl font-bold text-white tracking-tight">
+              <h1 className="text-xl lg:text-2xl font-bold dark:text-white text-slate-900 tracking-tight">
                 Insights &amp; Articles
               </h1>
             </div>
@@ -195,9 +195,9 @@ export default function BlogPage() {
                 placeholder="Search articles..."
                 value={localSearch}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="h-8 pl-8 pr-12 text-sm bg-white/[0.04] border-white/[0.08] rounded-lg text-white placeholder:text-white/30 focus:border-emerald-500/40 focus:ring-emerald-500/20"
+                className="h-8 pl-8 pr-12 text-sm dark:bg-white/[0.04] bg-slate-100 dark:border-white/[0.08] border-slate-200 rounded-lg dark:text-white text-slate-900 dark:placeholder:text-white/30 placeholder:text-slate-400 focus:border-emerald-500/40 focus:ring-emerald-500/20"
               />
-              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/[0.08] bg-white/[0.04] px-1.5 font-mono text-xs font-medium text-white/25">
+              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-1 rounded border dark:border-white/[0.08] border-slate-200 dark:bg-white/[0.04] bg-slate-100 px-1.5 font-mono text-xs font-medium dark:text-white/25 text-slate-400">
                 <Keyboard className="size-2" />
                 {'⌘'}K
               </kbd>
@@ -214,7 +214,7 @@ export default function BlogPage() {
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all capitalize whitespace-nowrap border ${
                     blogCategory === cat.name
                       ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white border-transparent shadow-md shadow-emerald-500/20'
-                      : categoryColors[cat.name] || 'bg-white/[0.04] text-white/50 border-white/[0.06] hover:bg-white/[0.08]'
+                      : categoryColors[cat.name] || 'dark:bg-white/[0.04] bg-slate-100 dark:text-white/50 text-slate-500 dark:border-white/[0.06] border-slate-200 dark:hover:bg-white/[0.08] hover:bg-slate-200'
                   }`}
                 >
                   {cat.name === 'all' ? 'All' : cat.name}
@@ -223,7 +223,7 @@ export default function BlogPage() {
             </div>
             <div className="flex-1" />
             {!loading && (
-              <span className="text-xs text-white/30 shrink-0 hidden sm:block">
+              <span className="text-xs dark:text-white/30 text-slate-400 shrink-0 hidden sm:block">
                 {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''}
                 {blogSearch && (
                   <span className="text-emerald-400/60"> {'·'} &ldquo;{blogSearch}&rdquo;</span>
@@ -241,7 +241,7 @@ export default function BlogPage() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 lg:p-4 flex flex-col gap-2.5"
+                className="dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl p-3 lg:p-4 flex flex-col gap-2.5"
               >
                 <Skeleton className="h-3 w-16 rounded-full" />
                 <Skeleton className="h-4 w-full" />
@@ -274,54 +274,54 @@ export default function BlogPage() {
                   key={post.id}
                   variants={itemVariants}
                   layout
-                  className={`group cursor-pointer rounded-xl p-4 lg:p-5 flex flex-col transition-all duration-300 hover:bg-white/[0.05] ${
+                  className={`group cursor-pointer rounded-xl p-4 lg:p-5 flex flex-col transition-all duration-300 dark:hover:bg-white/[0.05] hover:bg-slate-100 ${
                     post.featured
-                      ? 'bg-white/[0.03] border border-emerald-500/20 shadow-[0_0_20px_-4px_rgba(16,185,129,0.15)] hover:shadow-[0_0_30px_-4px_rgba(16,185,129,0.25)]'
-                      : 'bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.1]'
+                      ? 'dark:bg-white/[0.03] bg-white border border-emerald-500/20 shadow-[0_0_20px_-4px_rgba(16,185,129,0.15)] hover:shadow-[0_0_30px_-4px_rgba(16,185,129,0.25)]'
+                      : 'dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 dark:hover:border-white/[0.1] hover:border-slate-300'
                   }`}
                   onClick={() => handlePostClick(post.slug)}
                 >
                   {/* Category badge */}
                   <span className={`inline-flex self-start px-2.5 py-0.5 rounded-full text-xs font-semibold mb-2 ${
-                    categoryBadgeColors[post.category] || 'bg-white/10 text-white/60'
+                    categoryBadgeColors[post.category] || 'dark:bg-white/10 bg-slate-100 dark:text-white/60 text-slate-500'
                   }`}>
                     {post.category}
                   </span>
 
                   {/* Title - 2 lines max */}
-                  <h3 className="text-sm lg:text-base font-semibold text-white leading-snug line-clamp-2 mb-1.5 group-hover:text-emerald-300 transition-colors">
+                  <h3 className="text-sm lg:text-base font-semibold dark:text-white text-slate-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-emerald-300 transition-colors">
                     {post.title}
                   </h3>
 
                   {/* Excerpt - 2 lines */}
-                  <p className="text-xs lg:text-sm text-white/40 leading-relaxed line-clamp-2 mb-auto">
+                  <p className="text-xs lg:text-sm dark:text-white/40 text-slate-500 leading-relaxed line-clamp-2 mb-auto">
                     {post.excerpt}
                   </p>
 
                   {/* Meta row: author, date, read time, read more */}
-                  <div className="flex items-center gap-2 mt-3 lg:mt-4 pt-2.5 lg:pt-3 border-t border-white/[0.06]">
+                  <div className="flex items-center gap-2 mt-3 lg:mt-4 pt-2.5 lg:pt-3 border-t dark:border-white/[0.06] border-slate-200">
                     {/* Author avatar */}
                     <div className={`size-5 rounded-full flex items-center justify-center shrink-0 ${
                       post.featured
                         ? 'bg-gradient-to-br from-emerald-400 to-emerald-600'
-                        : 'bg-white/10'
+                        : 'dark:bg-white/10 bg-slate-100'
                     }`}>
-                      <span className="text-white text-[8px] font-bold">
+                      <span className="dark:text-white text-slate-900 text-[8px] font-bold">
                         {post.author?.charAt(0) || 'L'}
                       </span>
                     </div>
-                    <span className="text-xs lg:text-sm text-white/50 truncate max-w-[80px] lg:max-w-none">
+                    <span className="text-xs lg:text-sm dark:text-white/50 text-slate-500 truncate max-w-[80px] lg:max-w-none">
                       {post.author}
                     </span>
 
                     <div className="flex-1" />
 
-                    <span className="hidden sm:flex items-center gap-1 text-xs text-white/25">
+                    <span className="hidden sm:flex items-center gap-1 text-xs dark:text-white/25 text-slate-400">
                       <Calendar className="size-2.5" />
                       {new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                     </span>
 
-                    <span className="hidden sm:flex items-center gap-1 text-xs text-white/25">
+                    <span className="hidden sm:flex items-center gap-1 text-xs dark:text-white/25 text-slate-400">
                       <Clock className="size-2.5" />
                       {post.readTime}
                     </span>
@@ -341,11 +341,11 @@ export default function BlogPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="size-12 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-3">
-              <FileX className="size-6 text-white/25" />
+            <div className="size-12 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:border-white/[0.06] border-slate-200 flex items-center justify-center mb-3">
+              <FileX className="size-6 dark:text-white/25 text-slate-400" />
             </div>
-            <h3 className="text-sm font-medium text-white/50 mb-1">No results found</h3>
-            <p className="text-xs text-white/30 mb-4 text-center max-w-xs">
+            <h3 className="text-sm font-medium dark:text-white/50 text-slate-500 mb-1">No results found</h3>
+            <p className="text-xs dark:text-white/30 text-slate-400 mb-4 text-center max-w-xs">
               We couldn&apos;t find any articles matching your search. Try different keywords or clear the filters.
             </p>
             <button

@@ -108,7 +108,7 @@ function CompactCountdown({ targetDate }: { targetDate: Date }) {
   }
 
   return (
-    <span className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full bg-white/[0.04] text-white/50 tabular-nums">
+    <span className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:text-white/50 text-slate-500 tabular-nums">
       <Flame className="size-2.5 text-amber-500 shrink-0" />
       {days}d {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
     </span>
@@ -172,14 +172,14 @@ export default function ProductsPage() {
 
   return (
     <main>
-      <div className="h-[calc(100vh-4rem)] overflow-hidden bg-[#050810] flex flex-col">
+      <div className="h-[calc(100vh-4rem)] overflow-hidden bg-background flex flex-col">
         {/* Subtle background glow */}
         <div className="absolute top-10 left-10 w-40 h-40 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-56 h-56 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
 
         {/* Compact Title Bar — ~60px */}
         <motion.div
-          className="relative z-10 flex items-center justify-between px-4 lg:px-6 py-3 border-b border-white/[0.06]"
+          className="relative z-10 flex items-center justify-between px-4 lg:px-6 py-3 border-b dark:border-white/[0.06] border-slate-200"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
@@ -189,16 +189,16 @@ export default function ProductsPage() {
               <Clock className="size-2.5 mr-1" />
               Products
             </Badge>
-            <h1 className="text-base lg:text-lg font-bold text-white">
+            <h1 className="text-base lg:text-lg font-bold dark:text-white text-slate-900">
               Our <span className="text-gradient-amber">Products</span>
             </h1>
-            <span className="hidden sm:inline text-xs text-white/30 uppercase tracking-widest">
+            <span className="hidden sm:inline text-xs dark:text-white/30 text-slate-400 uppercase tracking-widest">
               Coming Soon
             </span>
           </div>
           <button
             onClick={() => navigate('contact')}
-            className="hidden md:inline-flex items-center gap-1 text-xs text-white/40 hover:text-emerald-400 transition-colors"
+            className="hidden md:inline-flex items-center gap-1 text-xs dark:text-white/40 text-slate-500 hover:text-emerald-400 transition-colors"
           >
             Need a custom solution?
             <ArrowRight className="size-3" />
@@ -218,7 +218,7 @@ export default function ProductsPage() {
 
             return (
               <motion.div key={product.id} variants={itemVariants} className="min-h-0">
-                <Card className="h-full bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 lg:p-5 hover:bg-white/[0.06] transition-all duration-300 group overflow-hidden relative flex flex-col">
+                <Card className="h-full dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl p-4 lg:p-5 dark:hover:bg-white/[0.06] hover:bg-slate-50 transition-all duration-300 group overflow-hidden relative flex flex-col">
                   {/* Top accent line */}
                   <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${product.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
 
@@ -229,12 +229,12 @@ export default function ProductsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm lg:text-base font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
+                        <h3 className="text-sm lg:text-base font-bold dark:text-white text-slate-900 group-hover:text-emerald-400 transition-colors truncate">
                           {product.title}
                         </h3>
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Badge className="text-xs px-2 py-0 rounded-full bg-white/[0.04] text-white/40 border-0 font-normal">
+                        <Badge className="text-xs px-2 py-0 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:text-white/40 text-slate-500 border-0 font-normal">
                           {product.launchDate}
                         </Badge>
                         <CompactCountdown targetDate={launchDates[product.id] || new Date()} />
@@ -243,7 +243,7 @@ export default function ProductsPage() {
                   </div>
 
                   {/* Description — 2 lines */}
-                  <p className="text-xs lg:text-sm text-white/45 leading-relaxed line-clamp-2 mb-2">
+                  <p className="text-xs lg:text-sm dark:text-white/45 text-slate-600 leading-relaxed line-clamp-2 mb-2">
                     {product.description}
                   </p>
 
@@ -252,7 +252,7 @@ export default function ProductsPage() {
                     {product.features.map((feature) => (
                       <span
                         key={feature}
-                        className="text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full bg-white/[0.04] text-white/45 whitespace-nowrap"
+                        className="text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:text-white/45 text-slate-600 whitespace-nowrap"
                       >
                         {feature}
                       </span>
@@ -277,13 +277,13 @@ export default function ProductsPage() {
                   ) : (
                     <div className="flex gap-1.5">
                       <div className="relative flex-1">
-                        <Mail className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-white/25" />
+                        <Mail className="absolute left-2 top-1/2 -translate-y-1/2 size-3 dark:text-white/25 text-slate-400" />
                         <Input
                           type="email"
                           placeholder="your@email.com"
                           value={emailInputs[product.id] || ''}
                           onChange={(e) => setEmailInputs((prev) => ({ ...prev, [product.id]: e.target.value }))}
-                          className="pl-7 h-7 text-xs bg-white/[0.04] border-white/[0.06] rounded-lg focus:border-amber-400/50 focus:ring-amber-400/10 placeholder:text-white/25"
+                          className="pl-7 h-7 text-xs dark:bg-white/[0.04] bg-slate-50 dark:border-white/[0.06] border-slate-200 rounded-lg focus:border-amber-400/50 focus:ring-amber-400/10 dark:placeholder:text-white/25 placeholder:text-slate-400"
                           aria-label={`Email for ${product.title} notifications`}
                         />
                       </div>

@@ -180,9 +180,9 @@ function SlideBackground({ slideIndex }: { slideIndex: number }) {
         priority={slideIndex === 0}
         aria-hidden="true"
       />
-      {/* Dark gradient overlay for readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#050810]/60 via-[#050810]/80 to-[#050810]/90" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#050810]/50 via-transparent to-[#050810]/50" />
+      {/* Theme-aware gradient overlay for readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/80 to-white/90 dark:from-[#050810]/60 dark:via-[#050810]/80 dark:to-[#050810]/90" />
+      <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-transparent to-white/50 dark:from-[#050810]/50 dark:via-transparent dark:to-[#050810]/50" />
     </div>
   );
 }
@@ -211,10 +211,10 @@ function GridOverlay() {
   return (
     <div className="absolute inset-0 pointer-events-none opacity-[0.015]">
       {Array.from({ length: 5 }, (_, i) => (
-        <div key={`h-${i}`} className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" style={{ top: `${(i + 1) * 16.67}%` }} />
+        <div key={`h-${i}`} className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-400 dark:via-white to-transparent" style={{ top: `${(i + 1) * 16.67}%` }} />
       ))}
       {Array.from({ length: 5 }, (_, i) => (
-        <div key={`v-${i}`} className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" style={{ left: `${(i + 1) * 16.67}%` }} />
+        <div key={`v-${i}`} className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-slate-400 dark:via-white to-transparent" style={{ left: `${(i + 1) * 16.67}%` }} />
       ))}
     </div>
   );
@@ -246,7 +246,7 @@ function HeroSlide() {
             <Image src="/logo.png" alt="Lightworld Technologies" width={40} height={40} className="object-contain p-1" />
           </div>
           <div className="text-left">
-            <span className="text-lg lg:text-xl font-bold text-white leading-tight">Lightworld</span>
+            <span className="text-lg lg:text-xl font-bold dark:text-white text-slate-900 leading-tight">Lightworld</span>
             <span className="block text-[9px] font-semibold text-emerald-400 tracking-[0.3em] uppercase leading-tight">Technologies</span>
           </div>
         </motion.div>
@@ -256,7 +256,7 @@ function HeroSlide() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold dark:text-white text-slate-900 leading-[1.05] tracking-tight mb-5"
         >
           We Build{' '}
           <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
@@ -271,7 +271,7 @@ function HeroSlide() {
           transition={{ delay: 0.5 }}
           className="mb-8"
         >
-          <p className="text-sm lg:text-lg text-white/40 font-light h-5 lg:h-7 flex items-center justify-center">
+          <p className="text-sm lg:text-lg dark:text-white/40 text-slate-500 font-light h-5 lg:h-7 flex items-center justify-center">
             <Sparkles className="size-4 lg:size-5 text-emerald-400/50 mr-2 shrink-0" />
             {typedText}
             <span className="inline-block w-[2px] h-4 lg:h-6 bg-emerald-400 ml-1 animate-blink" />
@@ -294,7 +294,7 @@ function HeroSlide() {
           </button>
           <button
             onClick={() => navigate('contact')}
-            className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-white/[0.06] text-white/70 text-sm font-medium hover:bg-white/[0.12] hover:text-white transition-all border border-white/[0.1] hover:border-white/[0.2] hover:scale-105 active:scale-[0.98]"
+            className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full dark:bg-white/[0.06] bg-slate-100 dark:text-white/70 text-slate-700 text-sm font-medium dark:hover:bg-white/[0.12] hover:bg-slate-200 dark:hover:text-white hover:text-slate-900 transition-all dark:border-white/[0.1] border-slate-200 dark:hover:border-white/[0.2] hover:border-slate-300 hover:scale-105 active:scale-[0.98]"
           >
             <Phone className="size-4" />
             Get in Touch
@@ -313,10 +313,10 @@ function HeroSlide() {
             return (
               <div key={i} className="text-center">
                 <Icon className="size-3.5 text-emerald-400/40 mx-auto mb-1" />
-                <span className="block text-xl lg:text-2xl font-bold text-white tabular-nums">
+                <span className="block text-xl lg:text-2xl font-bold dark:text-white text-slate-900 tabular-nums">
                   {stat.value}<span className="text-emerald-400/70">{stat.suffix}</span>
                 </span>
-                <span className="block text-xs text-white/35 mt-0.5 font-medium">{stat.label}</span>
+                <span className="block text-xs dark:text-white/35 text-slate-500 mt-0.5 font-medium">{stat.label}</span>
               </div>
             );
           })}
@@ -330,12 +330,12 @@ function HeroSlide() {
         transition={{ delay: 1.2 }}
         className="absolute bottom-8 right-8 z-20"
       >
-        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm">
+        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full dark:bg-white/[0.04] bg-slate-100/80 dark:border-white/[0.08] border-slate-200 backdrop-blur-sm">
           <span className="relative flex size-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full size-2.5 bg-emerald-500" />
           </span>
-          <span className="text-[10px] lg:text-xs text-white/40 font-medium">Available for projects</span>
+          <span className="text-[10px] lg:text-xs dark:text-white/40 text-slate-500 font-medium">Available for projects</span>
         </div>
       </motion.div>
     </div>
@@ -375,13 +375,13 @@ function AboutSlide() {
               <span className="text-xs font-semibold text-emerald-400 uppercase tracking-[0.15em]">Who We Are</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-5">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold dark:text-white text-slate-900 leading-tight mb-5">
               Ghana&apos;s Leading{' '}
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">IT Solutions</span>{' '}
               Partner
             </h2>
 
-            <p className="text-sm lg:text-lg text-white/50 leading-relaxed mb-6 max-w-lg">
+            <p className="text-sm lg:text-lg dark:text-white/50 text-slate-600 leading-relaxed mb-6 max-w-lg">
               At Lightworld Technologies, we combine innovation with expertise to deliver transformative digital solutions.
               From enterprise software to cloud infrastructure, our team of specialists empowers businesses across Africa
               to thrive in the digital age.
@@ -395,11 +395,11 @@ function AboutSlide() {
                 Learn More About Us
                 <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <div className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-white/[0.04] border border-white/[0.06]">
+              <div className="flex items-center gap-1.5 px-3 py-2.5 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:border-white/[0.06] border-slate-200">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="size-3 text-amber-400 fill-amber-400" />
                 ))}
-                <span className="text-[10px] text-white/40 ml-1">5.0 Rating</span>
+                <span className="text-[10px] dark:text-white/40 text-slate-500 ml-1">5.0 Rating</span>
               </div>
             </div>
           </motion.div>
@@ -415,13 +415,13 @@ function AboutSlide() {
             {stats.map((stat, i) => (
               <div
                 key={i}
-                className="group relative p-5 lg:p-7 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
+                className="group relative p-5 lg:p-7 rounded-2xl dark:bg-white/[0.03] bg-white shadow-sm dark:border-white/[0.06] border-slate-200 backdrop-blur-sm dark:hover:bg-white/[0.06] hover:bg-slate-50 dark:hover:border-white/[0.12] hover:border-slate-300 transition-all duration-300"
               >
-                <span className="block text-2xl lg:text-3xl font-extrabold text-white tabular-nums">
+                <span className="block text-2xl lg:text-3xl font-extrabold dark:text-white text-slate-900 tabular-nums">
                   {stat.value}<span className="text-emerald-400/70">{stat.suffix}</span>
                 </span>
-                <span className="block text-sm font-semibold text-white/70 mt-1.5">{stat.label}</span>
-                <span className="block text-xs text-white/35 mt-0.5">{stat.desc}</span>
+                <span className="block text-sm font-semibold dark:text-white/70 text-slate-700 mt-1.5">{stat.label}</span>
+                <span className="block text-xs dark:text-white/35 text-slate-400 mt-0.5">{stat.desc}</span>
                 <div className="absolute top-3 right-3 size-8 rounded-lg bg-emerald-500/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <ArrowUpRight className="size-3.5 text-emerald-400" />
                 </div>
@@ -463,7 +463,7 @@ function ServicesSlide() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold dark:text-white text-slate-900 leading-tight"
           >
             Our <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Services</span>
           </motion.h2>
@@ -479,17 +479,17 @@ function ServicesSlide() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.4 }}
               onClick={() => navigate(service.page)}
-              className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-4 lg:p-6 cursor-pointer text-left transition-all duration-300 hover:bg-white/[0.07] hover:border-white/[0.15] hover:scale-[1.02]"
+              className="group relative overflow-hidden rounded-xl dark:bg-white/[0.03] bg-white shadow-sm dark:border-white/[0.06] border-slate-200 backdrop-blur-sm p-4 lg:p-6 cursor-pointer text-left transition-all duration-300 dark:hover:bg-white/[0.07] hover:bg-slate-50 dark:hover:border-white/[0.15] hover:border-slate-300 hover:scale-[1.02]"
             >
               <div className={cn('size-10 lg:size-12 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3 lg:mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-lg', service.gradient)}>
                 <service.icon className="size-5 lg:size-6 text-white" />
               </div>
-              <h3 className="text-sm lg:text-base font-bold text-white/90 mb-1.5">{service.title}</h3>
-              <p className="text-xs lg:text-sm text-white/40 leading-relaxed line-clamp-2">{service.desc}</p>
+              <h3 className="text-sm lg:text-base font-bold dark:text-white/90 text-slate-800 mb-1.5">{service.title}</h3>
+              <p className="text-xs lg:text-sm dark:text-white/40 text-slate-500 leading-relaxed line-clamp-2">{service.desc}</p>
               <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
                 <ArrowUpRight className="size-4 text-emerald-400" />
               </div>
-              <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-emerald-500/[0.06] to-transparent" />
+              <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br dark:from-emerald-500/[0.06] from-emerald-500/[0.04] to-transparent" />
             </motion.button>
           ))}
         </div>
@@ -504,7 +504,7 @@ function ServicesSlide() {
         >
           <button
             onClick={() => navigate('services')}
-            className="group inline-flex items-center gap-2 text-xs text-white/40 hover:text-emerald-400 transition-colors font-medium"
+            className="group inline-flex items-center gap-2 text-xs dark:text-white/40 text-slate-500 hover:text-emerald-400 transition-colors font-medium"
           >
             View All Services & Details
             <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
@@ -541,13 +541,13 @@ function PortfolioSlide() {
               <span className="text-xs font-semibold text-cyan-400 uppercase tracking-[0.15em]">Our Work</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-5">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold dark:text-white text-slate-900 leading-tight mb-5">
               Projects That{' '}
               <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Speak</span>{' '}
               For Themselves
             </h2>
 
-            <p className="text-sm lg:text-lg text-white/50 leading-relaxed mb-6 max-w-lg">
+            <p className="text-sm lg:text-lg dark:text-white/50 text-slate-600 leading-relaxed mb-6 max-w-lg">
               From enterprise platforms to mobile applications, our portfolio showcases the breadth and depth of our technical expertise.
               Every project is crafted with precision, performance, and purpose.
             </p>
@@ -559,8 +559,8 @@ function PortfolioSlide() {
                 { label: 'Enterprise', count: '35+' },
               ].map((item, i) => (
                 <div key={i}>
-                  <span className="block text-xl font-bold text-white">{item.count}</span>
-                  <span className="block text-xs text-white/40 font-medium">{item.label}</span>
+                  <span className="block text-xl font-bold dark:text-white text-slate-900">{item.count}</span>
+                  <span className="block text-xs dark:text-white/40 text-slate-500 font-medium">{item.label}</span>
                 </div>
               ))}
             </div>
@@ -587,16 +587,16 @@ function PortfolioSlide() {
                 key={i}
                 className={cn(
                   'group relative p-4 lg:p-6 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-[1.01]',
-                  `bg-gradient-to-br ${project.gradient} border-white/[0.06] hover:border-white/[0.12]`,
+                  `bg-gradient-to-br ${project.gradient} dark:border-white/[0.06] border-slate-200 dark:hover:border-white/[0.12] hover:border-slate-300`,
                 )}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <span className="text-xs font-semibold text-emerald-400/70 uppercase tracking-wider">{project.category}</span>
-                    <h3 className="text-sm lg:text-base font-bold text-white/90 mt-1.5">{project.title}</h3>
-                    <p className="text-xs lg:text-sm text-white/40 mt-1 line-clamp-1">{project.desc}</p>
+                    <h3 className="text-sm lg:text-base font-bold dark:text-white/90 text-slate-800 mt-1.5">{project.title}</h3>
+                    <p className="text-xs lg:text-sm dark:text-white/40 text-slate-500 mt-1 line-clamp-1">{project.desc}</p>
                   </div>
-                  <ArrowUpRight className="size-4 text-white/20 group-hover:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
+                  <ArrowUpRight className="size-4 dark:text-white/20 text-slate-400 group-hover:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
                 </div>
               </div>
             ))}
@@ -659,7 +659,7 @@ function TestimonialsSlide() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.4 }}
-              className="text-lg lg:text-2xl text-white/60 leading-relaxed font-light italic pl-6 lg:pl-10"
+              className="text-lg lg:text-2xl dark:text-white/60 text-slate-600 leading-relaxed font-light italic pl-6 lg:pl-10"
             >
               &ldquo;{TESTIMONIALS[current].text}&rdquo;
             </motion.p>
@@ -680,8 +680,8 @@ function TestimonialsSlide() {
               {TESTIMONIALS[current].author[0]}
             </div>
             <div className="text-left">
-              <p className="text-sm lg:text-base font-semibold text-white/70">{TESTIMONIALS[current].author}</p>
-              <p className="text-xs lg:text-sm text-white/40">{TESTIMONIALS[current].role}</p>
+              <p className="text-sm lg:text-base font-semibold dark:text-white/70 text-slate-700">{TESTIMONIALS[current].author}</p>
+              <p className="text-xs lg:text-sm dark:text-white/40 text-slate-500">{TESTIMONIALS[current].role}</p>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -694,7 +694,7 @@ function TestimonialsSlide() {
               onClick={() => setCurrent(i)}
               className={cn(
                 'h-2 rounded-full transition-all duration-300',
-                i === current ? 'bg-emerald-400 w-6' : 'bg-white/10 w-2 hover:bg-white/20',
+                i === current ? 'bg-emerald-400 w-6' : 'dark:bg-white/10 bg-slate-300 w-2 dark:hover:bg-white/20 hover:bg-slate-400',
               )}
             />
           ))}
@@ -714,11 +714,11 @@ function ClientTicker({ className }: { className?: string }) {
     <div className={cn('relative overflow-hidden flex items-center', className)}>
       <motion.div className="flex gap-10 whitespace-nowrap" animate={{ x: ['0%', '-50%'] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}>
         {doubled.map((client, i) => (
-          <span key={i} className="text-[10px] lg:text-xs text-white/12 font-medium tracking-wider uppercase">{client}</span>
+          <span key={i} className="text-[10px] lg:text-xs dark:text-white/12 text-slate-300 font-medium tracking-wider uppercase">{client}</span>
         ))}
       </motion.div>
-      <div className="absolute left-0 inset-y-0 w-10 bg-gradient-to-r from-[#050810] to-transparent pointer-events-none" />
-      <div className="absolute right-0 inset-y-0 w-10 bg-gradient-to-l from-[#050810] to-transparent pointer-events-none" />
+      <div className="absolute left-0 inset-y-0 w-10 bg-gradient-to-r dark:from-[#050810] from-slate-50 to-transparent pointer-events-none" />
+      <div className="absolute right-0 inset-y-0 w-10 bg-gradient-to-l dark:from-[#050810] from-slate-50 to-transparent pointer-events-none" />
     </div>
   );
 }
@@ -737,7 +737,7 @@ function CTASlide() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="relative p-8 lg:p-12 rounded-3xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-sm overflow-hidden"
+          className="relative p-8 lg:p-12 rounded-3xl dark:bg-white/[0.03] bg-white/90 shadow-sm dark:border-white/[0.08] border-slate-200 backdrop-blur-sm overflow-hidden"
         >
           {/* Inner glow */}
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
@@ -746,12 +746,12 @@ function CTASlide() {
           <div className="relative z-10">
             <Sparkles className="size-6 text-emerald-400/50 mx-auto mb-4" />
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold dark:text-white text-slate-900 leading-tight mb-4">
               Ready to{' '}
               <span className="bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">Get Started?</span>
             </h2>
 
-            <p className="text-sm lg:text-base text-white/40 leading-relaxed mb-8 max-w-md mx-auto">
+            <p className="text-sm lg:text-base dark:text-white/40 text-slate-500 leading-relaxed mb-8 max-w-md mx-auto">
               Let&apos;s discuss how we can help transform your business with innovative IT solutions.
               Get a free consultation today — no obligations.
             </p>
@@ -767,14 +767,14 @@ function CTASlide() {
               </button>
               <button
                 onClick={() => navigate('portfolio')}
-                className="group flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-white/[0.06] text-white/60 text-sm font-medium hover:bg-white/[0.12] hover:text-white transition-all border border-white/[0.08] hover:scale-105 active:scale-[0.98]"
+                className="group flex items-center gap-2.5 px-6 py-3.5 rounded-full dark:bg-white/[0.06] bg-slate-100 dark:text-white/60 text-slate-700 text-sm font-medium dark:hover:bg-white/[0.12] hover:bg-slate-200 dark:hover:text-white hover:text-slate-900 transition-all dark:border-white/[0.08] border-slate-200 hover:scale-105 active:scale-[0.98]"
               >
                 View Our Work
               </button>
             </div>
 
             {/* Contact Info */}
-            <div className="flex items-center justify-center gap-6 lg:gap-8 text-xs text-white/30">
+            <div className="flex items-center justify-center gap-6 lg:gap-8 text-xs dark:text-white/30 text-slate-400">
               <a href="tel:+233243618186" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
                 <Phone className="size-3.5" />
                 <span>+233 (024) 361 8186</span>
@@ -900,7 +900,7 @@ export default function HomePage() {
   return (
     <div
       ref={containerRef}
-      className="h-screen w-screen overflow-hidden bg-[#050810] relative select-none"
+      className="h-screen w-screen overflow-hidden dark:bg-[#050810] bg-slate-50 relative select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -932,7 +932,7 @@ export default function HomePage() {
             aria-label={`Go to ${slide.label} slide`}
           >
             {/* Desktop: dot with label */}
-            <span className="hidden lg:block text-[9px] text-white/0 group-hover:text-white/40 font-medium transition-all duration-300 text-right w-24 -mr-2.5">
+            <span className="hidden lg:block text-[9px] dark:text-white/0 text-transparent dark:group-hover:text-white/40 group-hover:text-slate-600 font-medium transition-all duration-300 text-right w-24 -mr-2.5">
               {slide.label}
             </span>
             <div
@@ -940,7 +940,7 @@ export default function HomePage() {
                 'transition-all duration-400 rounded-full',
                 i === currentSlide
                   ? 'size-3 bg-emerald-400 shadow-lg shadow-emerald-400/40'
-                  : 'size-2 bg-white/15 group-hover:bg-white/30 group-hover:size-2.5',
+                  : 'size-2 dark:bg-white/15 bg-slate-300 dark:group-hover:bg-white/30 group-hover:bg-slate-400 group-hover:size-2.5',
               )}
             />
           </button>
@@ -951,14 +951,14 @@ export default function HomePage() {
       <div className="fixed bottom-6 lg:bottom-8 right-6 lg:right-8 z-30 flex items-center gap-2">
         <button
           onClick={prevSlide}
-          className="size-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:bg-white/[0.08] hover:text-white/70 transition-all hover:scale-110 active:scale-95"
+          className="size-10 rounded-full dark:bg-white/[0.04] bg-white/80 dark:border-white/[0.08] border-slate-200 flex items-center justify-center dark:text-white/40 text-slate-500 dark:hover:bg-white/[0.08] hover:bg-slate-100 dark:hover:text-white/70 hover:text-slate-700 transition-all hover:scale-110 active:scale-95"
           aria-label="Previous slide"
         >
           <ChevronUp className="size-4" />
         </button>
         <button
           onClick={nextSlide}
-          className="size-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:bg-white/[0.08] hover:text-white/70 transition-all hover:scale-110 active:scale-95"
+          className="size-10 rounded-full dark:bg-white/[0.04] bg-white/80 dark:border-white/[0.08] border-slate-200 flex items-center justify-center dark:text-white/40 text-slate-500 dark:hover:bg-white/[0.08] hover:bg-slate-100 dark:hover:text-white/70 hover:text-slate-700 transition-all hover:scale-110 active:scale-95"
           aria-label="Next slide"
         >
           <ChevronDown className="size-4" />
@@ -967,9 +967,9 @@ export default function HomePage() {
 
       {/* ── Slide Counter (bottom left) ── */}
       <div className="fixed bottom-6 lg:bottom-8 left-6 lg:left-8 z-30 flex items-center gap-2">
-        <span className="text-lg font-bold text-white/60 tabular-nums">{String(currentSlide + 1).padStart(2, '0')}</span>
-        <span className="text-xs text-white/15 font-medium">/ {String(SLIDES.length).padStart(2, '0')}</span>
-        <div className="ml-3 w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+        <span className="text-lg font-bold dark:text-white/60 text-slate-500 tabular-nums">{String(currentSlide + 1).padStart(2, '0')}</span>
+        <span className="text-xs dark:text-white/15 text-slate-400 font-medium">/ {String(SLIDES.length).padStart(2, '0')}</span>
+        <div className="ml-3 w-16 h-1 rounded-full dark:bg-white/[0.06] bg-slate-200 overflow-hidden">
           <motion.div
             className="h-full bg-emerald-400/60 rounded-full"
             initial={{ width: '0%' }}
@@ -991,8 +991,8 @@ export default function HomePage() {
           transition={{ duration: 2, repeat: Infinity }}
           className="flex flex-col items-center gap-1"
         >
-          <span className="text-[9px] text-white/20 font-medium tracking-wider uppercase">Scroll or Swipe</span>
-          <ChevronDown className="size-3 text-white/20" />
+          <span className="text-[9px] dark:text-white/20 text-slate-400 font-medium tracking-wider uppercase">Scroll or Swipe</span>
+          <ChevronDown className="size-3 dark:text-white/20 text-slate-400" />
         </motion.div>
       </motion.div>
     </div>

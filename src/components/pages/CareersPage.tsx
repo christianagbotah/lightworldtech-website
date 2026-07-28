@@ -254,7 +254,7 @@ export default function CareersPage() {
   };
 
   return (
-    <main className="bg-[#050810]">
+    <main className="bg-background">
       {/* Full viewport book page */}
       <div className="h-[calc(100vh-4rem)] overflow-hidden flex flex-col relative">
         {/* Subtle gradient orbs */}
@@ -274,11 +274,11 @@ export default function CareersPage() {
                 <Briefcase className="size-3" />
                 Careers
               </span>
-              <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+              <h1 className="text-2xl lg:text-3xl font-bold dark:text-white text-slate-900 tracking-tight">
                 Open Positions
               </h1>
             </div>
-            <p className="text-sm text-white/40">
+            <p className="text-sm dark:text-white/40 text-slate-500">
               Join Our Team — <span className="text-emerald-400">{filtered.length} position{filtered.length !== 1 ? 's' : ''} available</span>
             </p>
           </motion.div>
@@ -290,7 +290,7 @@ export default function CareersPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <span className="text-xs uppercase tracking-wider text-white/25 mr-1">Dept:</span>
+            <span className="text-xs uppercase tracking-wider dark:text-white/25 text-slate-400 mr-1">Dept:</span>
             {departments.map((dept) => (
               <button
                 key={dept}
@@ -298,14 +298,14 @@ export default function CareersPage() {
                 className={`text-xs px-2 py-0.5 rounded-full transition-all duration-200 ${
                   activeDepartment === dept
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
+                    : 'dark:bg-white/[0.03] bg-slate-100 dark:text-white/40 text-slate-500 dark:border-white/[0.06] border-slate-200 dark:hover:text-white/60 hover:text-slate-700 dark:hover:border-white/[0.12] hover:border-slate-300'
                 }`}
               >
                 {dept}
               </button>
             ))}
-            <span className="w-px h-3 bg-white/[0.08] mx-1" />
-            <span className="text-xs uppercase tracking-wider text-white/25 mr-1">Type:</span>
+            <span className="w-px h-3 dark:bg-white/[0.08] bg-slate-200 mx-1" />
+            <span className="text-xs uppercase tracking-wider dark:text-white/25 text-slate-400 mr-1">Type:</span>
             {jobTypes.map((type) => (
               <button
                 key={type}
@@ -313,7 +313,7 @@ export default function CareersPage() {
                 className={`text-xs px-2 py-0.5 rounded-full transition-all duration-200 ${
                   activeType === type
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
+                    : 'dark:bg-white/[0.03] bg-slate-100 dark:text-white/40 text-slate-500 dark:border-white/[0.06] border-slate-200 dark:hover:text-white/60 hover:text-slate-700 dark:hover:border-white/[0.12] hover:border-slate-300'
                 }`}
               >
                 {type}
@@ -337,11 +337,11 @@ export default function CareersPage() {
                   variants={itemVariants}
                   className="flex"
                 >
-                  <div className="flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 lg:p-4 hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all duration-300 group w-full">
+                  <div className="flex flex-col dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl p-3 lg:p-4 hover:border-emerald-500/20 dark:hover:bg-white/[0.04] hover:bg-slate-50 transition-all duration-300 group w-full">
                     {/* Card header */}
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors truncate">
+                        <h3 className="text-sm font-semibold dark:text-white text-slate-900 group-hover:text-emerald-400 transition-colors truncate">
                           {job.title}
                         </h3>
                         {job.featured && (
@@ -355,11 +355,11 @@ export default function CareersPage() {
 
                     {/* Meta row */}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2.5">
-                      <span className={`inline-flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded-full font-medium ${deptColors[job.department] || 'bg-white/[0.05] text-white/40 border border-white/[0.08]'}`}>
+                      <span className={`inline-flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded-full font-medium ${deptColors[job.department] || 'dark:bg-white/[0.05] bg-slate-100 dark:text-white/40 text-slate-500 dark:border-white/[0.08] border-slate-200'}`}>
                         <Building2 className="size-2.5" />
                         {job.department}
                       </span>
-                      <span className="flex items-center gap-1 text-xs text-white/35">
+                      <span className="flex items-center gap-1 text-xs dark:text-white/35 text-slate-600">
                         <MapPin className="size-2.5" />
                         {job.location}
                       </span>
@@ -372,13 +372,13 @@ export default function CareersPage() {
                     {/* Requirements bullets */}
                     <ul className="space-y-1 mb-3 flex-1">
                       {job.requirements.slice(0, 4).map((req, i) => (
-                        <li key={i} className="flex items-start gap-1.5 text-xs text-white/45 leading-tight">
+                        <li key={i} className="flex items-start gap-1.5 text-xs dark:text-white/45 text-slate-600 leading-tight">
                           <CheckCircle2 className="size-2.5 text-emerald-500/70 shrink-0 mt-0.5" />
                           <span className="line-clamp-1">{req}</span>
                         </li>
                       ))}
                       {job.requirements.length > 4 && (
-                        <li className="text-[8px] text-white/25 pl-4">+{job.requirements.length - 4} more requirements</li>
+                        <li className="text-[8px] dark:text-white/25 text-slate-400 pl-4">+{job.requirements.length - 4} more requirements</li>
                       )}
                     </ul>
 
@@ -401,13 +401,13 @@ export default function CareersPage() {
               animate={{ opacity: 1 }}
             >
               <div className="text-center">
-                <div className="size-12 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
-                  <Briefcase className="size-5 text-white/20" />
+                <div className="size-12 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:border-white/[0.06] border-slate-200 flex items-center justify-center mx-auto mb-3">
+                  <Briefcase className="size-5 dark:text-white/20 text-slate-400" />
                 </div>
-                <p className="text-sm text-white/40 mb-3">No positions match your filters</p>
+                <p className="text-sm dark:text-white/40 text-slate-500 mb-3">No positions match your filters</p>
                 <button
                   onClick={() => { setActiveDepartment('All Departments'); setActiveType('All Types'); }}
-                  className="text-xs px-3 py-1 rounded-full bg-white/[0.05] text-white/50 hover:text-white/70 border border-white/[0.08] transition-colors"
+                  className="text-xs px-3 py-1 rounded-full dark:bg-white/[0.05] bg-slate-100 dark:text-white/50 text-slate-500 dark:hover:text-white/70 hover:text-slate-700 dark:border-white/[0.08] border-slate-200 transition-colors"
                 >
                   Clear Filters
                 </button>
@@ -417,17 +417,17 @@ export default function CareersPage() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="shrink-0 px-4 sm:px-6 lg:px-8 py-3 border-t border-white/[0.04]">
+        <div className="shrink-0 px-4 sm:px-6 lg:px-8 py-3 border-t dark:border-white/[0.04] border-slate-200">
           <div className="flex items-center justify-between">
             <a
               href="mailto:careers@lightworldtechnologies.com?subject=General%20Application"
-              className="group inline-flex items-center gap-2 text-xs text-white/35 hover:text-emerald-400 transition-colors"
+              className="group inline-flex items-center gap-2 text-xs dark:text-white/35 text-slate-400 hover:text-emerald-400 transition-colors"
             >
               <Mail className="size-3.5" />
               <span>Don&apos;t see a role? Send your CV to <span className="underline underline-offset-2 group-hover:text-emerald-400/80 transition-colors">careers@lightworldtechnologies.com</span></span>
             </a>
             {hasMore && (
-              <span className="text-xs text-white/25">
+              <span className="text-xs dark:text-white/25 text-slate-400">
                 Showing 4 of {filtered.length} positions
               </span>
             )}
@@ -438,13 +438,13 @@ export default function CareersPage() {
       {/* Application Modal */}
       <Dialog open={applyModalOpen} onOpenChange={setApplyModalOpen}>
         <DialogContent
-          className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh] bg-[#0a0f1a] border-white/[0.08]"
+          className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh] bg-background dark:border-white/[0.08] border-slate-200"
           aria-describedby={undefined}
         >
           <div className="relative h-24 bg-gradient-to-br from-emerald-600 via-emerald-600 to-amber-600 flex items-center justify-center">
             <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.03)_25%,transparent_25%,transparent_75%,rgba(255,255,255,0.03)_75%)] bg-[length:16px_16px]" />
             <div className="text-center relative z-10">
-              <div className="size-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
+              <div className="size-10 rounded-xl dark:bg-white/20 bg-black/5 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
                 <FileText className="size-5 text-white" />
               </div>
               <h2 className="text-base font-bold text-white">Apply for Position</h2>
@@ -460,8 +460,8 @@ export default function CareersPage() {
 
           <div className="p-6">
             <DialogHeader>
-              <DialogTitle className="text-lg text-white">{selectedJob?.title}</DialogTitle>
-              <DialogDescription className="text-sm text-white/50">
+              <DialogTitle className="text-lg dark:text-white text-slate-900">{selectedJob?.title}</DialogTitle>
+              <DialogDescription className="text-sm dark:text-white/50 text-slate-500">
                 {selectedJob?.department} · {selectedJob?.location} · {selectedJob?.type}
               </DialogDescription>
             </DialogHeader>
@@ -567,8 +567,8 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
         >
           <CheckCircle2 className="size-8 text-emerald-400" />
         </motion.div>
-        <h3 className="text-lg font-semibold text-white mb-1">Application Received!</h3>
-        <p className="text-sm text-white/40">
+        <h3 className="text-lg font-semibold dark:text-white text-slate-900 mb-1">Application Received!</h3>
+        <p className="text-sm dark:text-white/40 text-slate-500">
           Thank you for your interest. Our team will review your application and get back to you soon.
         </p>
       </motion.div>
@@ -579,7 +579,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
     <form onSubmit={handleSubmit} className="space-y-4 mt-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="app-name" className="text-xs font-medium text-white/60">Full Name *</Label>
+          <Label htmlFor="app-name" className="text-xs font-medium dark:text-white/60 text-slate-500">Full Name *</Label>
           <Input
             id="app-name"
             name="name"
@@ -588,11 +588,11 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             placeholder="Your full name"
             required
             disabled={submitting}
-            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
+            className="h-9 dark:bg-white/[0.04] bg-slate-50 dark:border-white/[0.08] border-slate-200 dark:text-white text-slate-900 text-sm dark:placeholder:text-white/25 placeholder:text-slate-400 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="app-email" className="text-xs font-medium text-white/60">Email *</Label>
+          <Label htmlFor="app-email" className="text-xs font-medium dark:text-white/60 text-slate-500">Email *</Label>
           <Input
             id="app-email"
             name="email"
@@ -602,13 +602,13 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             placeholder="you@example.com"
             required
             disabled={submitting}
-            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
+            className="h-9 dark:bg-white/[0.04] bg-slate-50 dark:border-white/[0.08] border-slate-200 dark:text-white text-slate-900 text-sm dark:placeholder:text-white/25 placeholder:text-slate-400 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
           />
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="app-phone" className="text-xs font-medium text-white/60">Phone</Label>
+          <Label htmlFor="app-phone" className="text-xs font-medium dark:text-white/60 text-slate-500">Phone</Label>
           <Input
             id="app-phone"
             name="phone"
@@ -617,11 +617,11 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             onChange={handleChange}
             placeholder="+233 XX XXX XXXX"
             disabled={submitting}
-            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
+            className="h-9 dark:bg-white/[0.04] bg-slate-50 dark:border-white/[0.08] border-slate-200 dark:text-white text-slate-900 text-sm dark:placeholder:text-white/25 placeholder:text-slate-400 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="app-position" className="text-xs font-medium text-white/60">Position *</Label>
+          <Label htmlFor="app-position" className="text-xs font-medium dark:text-white/60 text-slate-500">Position *</Label>
           <Input
             id="app-position"
             name="position"
@@ -629,12 +629,12 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             onChange={handleChange}
             required
             disabled={submitting}
-            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
+            className="h-9 dark:bg-white/[0.04] bg-slate-50 dark:border-white/[0.08] border-slate-200 dark:text-white text-slate-900 text-sm dark:placeholder:text-white/25 placeholder:text-slate-400 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
           />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="app-cover" className="text-xs font-medium text-white/60">Cover Letter</Label>
+        <Label htmlFor="app-cover" className="text-xs font-medium dark:text-white/60 text-slate-500">Cover Letter</Label>
         <Textarea
           id="app-cover"
           name="coverLetter"
@@ -643,15 +643,15 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
           placeholder="Tell us why you're a great fit for this role..."
           rows={3}
           disabled={submitting}
-          className="bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 resize-none"
+          className="dark:bg-white/[0.04] bg-slate-50 dark:border-white/[0.08] border-slate-200 dark:text-white text-slate-900 text-sm dark:placeholder:text-white/25 placeholder:text-slate-400 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 resize-none"
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="app-resume" className="text-xs font-medium text-white/60">Resume / CV</Label>
+        <Label htmlFor="app-resume" className="text-xs font-medium dark:text-white/60 text-slate-500">Resume / CV</Label>
         <div className="flex items-center gap-3">
           <label
             htmlFor="app-resume"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-white/[0.08] hover:border-emerald-500/30 cursor-pointer transition-colors text-xs text-white/35 hover:text-emerald-400"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed dark:border-white/[0.08] border-slate-200 hover:border-emerald-500/30 cursor-pointer transition-colors text-xs dark:text-white/35 text-slate-600 hover:text-emerald-400"
           >
             <Upload className="size-3.5" />
             {resumeFile ? resumeFile.name : 'Upload Resume (PDF, DOC)'}
@@ -668,7 +668,7 @@ function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess:
             <button
               type="button"
               onClick={() => setResumeFile(null)}
-              className="text-xs text-white/30 hover:text-red-400 transition-colors"
+              className="text-xs dark:text-white/30 text-slate-400 hover:text-red-400 transition-colors"
             >
               Remove
             </button>
