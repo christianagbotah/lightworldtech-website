@@ -1,0 +1,481 @@
+     1→'use client';
+     2→
+     3→import { useEffect, useState } from 'react';
+     4→import { motion } from 'framer-motion';
+     5→import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Mail, Github, User, Camera } from 'lucide-react';
+     6→import { Card, CardContent } from '@/components/ui/card';
+     7→import { Badge } from '@/components/ui/badge';
+     8→import { Skeleton } from '@/components/ui/skeleton';
+     9→import { useAnimatedCounter } from '@/hooks/use-animated-counter';
+    10→import { useSEO } from '@/hooks/use-seo';
+    11→import Image from 'next/image';
+    12→
+    13→const fetcher = (url: string) => fetch(url).then(r => r.json());
+    14→
+    15→interface TeamMember {
+    16→  id: string;
+    17→  name: string;
+    18→  role: string;
+    19→  bio: string;
+    20→  skills?: string[];
+    21→  linkedin?: string;
+    22→  twitter?: string;
+    23→  github?: string;
+    24→  email?: string;
+    25→  image?: string;
+    26→}
+    27→
+    28→const values = [
+    29→  { icon: Lightbulb, title: 'Innovation', description: 'We embrace new technologies and creative approaches to solve complex challenges.' },
+    30→  { icon: Heart, title: 'Passion', description: 'We are driven by a genuine passion for technology and the positive impact it creates.' },
+    31→  { icon: Shield, title: 'Integrity', description: 'We conduct business with transparency, honesty, and a strong ethical foundation.' },
+    32→  { icon: Users, title: 'Collaboration', description: 'We believe in the power of teamwork and building strong partnerships with our clients.' },
+    33→  { icon: Award, title: 'Excellence', description: 'We strive for the highest quality in everything we do, from code to customer service.' },
+    34→  { icon: Target, title: 'Results-Driven', description: 'We focus on delivering measurable outcomes that create real business value.' },
+    35→];
+    36→
+    37→const defaultTeam: TeamMember[] = [
+    38→  { id: '1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with 10+ years in IT solutions and digital transformation across Africa. Passionate about leveraging technology to solve real-world challenges and empowering businesses to thrive in the digital age.', skills: ['Strategic Planning', 'Business Development', 'Project Management', 'Digital Transformation'], linkedin: 'https://linkedin.com/in/emmanuel-osei', twitter: 'https://twitter.com/emmanuel_osei', github: 'https://github.com/emmanuel-osei', email: 'emmanuel@lightworldtech.com' },
+    39→  { id: '2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web and mobile technologies. Committed to writing clean, scalable code and mentoring the next generation of developers in Ghana.', skills: ['React', 'Node.js', 'TypeScript', 'System Architecture', 'DevOps'], linkedin: 'https://linkedin.com/in/kwame-asante', twitter: 'https://twitter.com/kwame_asante', github: 'https://github.com/kwame-asante', email: 'kwame@lightworldtech.com' },
+    40→  { id: '3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Award-winning designer passionate about creating intuitive user experiences. Specializes in design systems, accessibility, and user research to create interfaces that users love.', skills: ['UI Design', 'UX Research', 'Figma', 'Design Systems', 'Accessibility'], linkedin: 'https://linkedin.com/in/abena-mensah', twitter: 'https://twitter.com/abena_mensah', github: 'https://github.com/abena-mensah', email: 'abena@lightworldtech.com' },
+    41→  { id: '4', name: 'Kofi Amponsah', role: 'Digital Marketing Lead', bio: 'Digital marketing expert specializing in SEO, social media, and growth strategies. Has helped dozens of businesses increase their online visibility and revenue through data-driven marketing.', skills: ['SEO', 'Content Marketing', 'Google Ads', 'Analytics', 'Social Media'], linkedin: 'https://linkedin.com/in/kofi-amponsah', twitter: 'https://twitter.com/kofi_amponsah', github: 'https://github.com/kofi-amponsah', email: 'kofi@lightworldtech.com' },
+    42→];
+    43→
+    44→const awards = [
+    45→  { title: '2024 Business Excellence Award', organization: 'Ghana Business Excellence Awards', year: '2024' },
+    46→  { title: '2021 MEA Awards Winner', organization: 'Middle East & Africa IT Awards', year: '2021' },
+    47→  { title: 'Top 10 IT Companies in Ghana', organization: 'TechReview Africa', year: '2023' },
+    48→  { title: 'Best Web Development Agency', organization: 'Africa Digital Excellence Awards', year: '2022' },
+    49→];
+    50→
+    51→const stats = [
+    52→  { value: 200, suffix: '+', label: 'Happy Clients', icon: UserCheck, maxValue: 500 },
+    53→  { value: 150, suffix: '+', label: 'Projects Delivered', icon: Rocket, maxValue: 500 },
+    54→  { value: 8, suffix: '+', label: 'Years Experience', icon: Calendar, maxValue: 15 },
+    55→  { value: 50, suffix: '+', label: 'Team Members', icon: UsersRound, maxValue: 100 },
+    56→];
+    57→
+    58→const socialLinks = [
+    59→  { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-[#0077B5]', field: 'linkedin' as const },
+    60→  { icon: Twitter, label: 'Twitter', color: 'hover:bg-[#1DA1F2]', field: 'twitter' as const },
+    61→  { icon: Github, label: 'GitHub', color: 'hover:bg-[#333]', field: 'github' as const },
+    62→  { icon: Mail, label: 'Email', color: 'hover:bg-emerald-700', field: 'email' as const },
+    63→];
+    64→
+    65→function TeamAvatar({ member, size = 'md' }: { member: TeamMember; size?: 'sm' | 'md' | 'lg' }) {
+    66→  const sizeClasses = {
+    67→    sm: 'size-9',
+    68→    md: 'size-12 lg:size-14',
+    69→    lg: 'size-16 lg:size-20',
+    70→  };
+    71→
+    72→  return (
+    73→    <div className={`${sizeClasses[size]} shrink-0 rounded-full overflow-hidden border-2 border-amber-400/30 dark:border-amber-400/20 flex items-center justify-center bg-gradient-to-br from-amber-900/60 to-amber-800/80 shadow-lg shadow-amber-500/15`}>
+    74→      {member.image ? (
+    75→        <Image
+    76→          src={member.image}
+    77→          alt={member.name}
+    78→          width={size === 'sm' ? 36 : size === 'md' ? 56 : 80}
+    79→          height={size === 'sm' ? 36 : size === 'md' ? 56 : 80}
+    80→          className="object-cover w-full h-full"
+    81→          unoptimized
+    82→        />
+    83→      ) : (
+    84→        <span className={`${size === 'sm' ? 'text-sm' : size === 'md' ? 'text-lg lg:text-xl' : 'text-2xl lg:text-3xl'} font-bold text-amber-200`}>
+    85→          {member.name.charAt(0)}
+    86→        </span>
+    87→      )}
+    88→    </div>
+    89→  );
+    90→}
+    91→
+    92→function TeamPhotoSlot({ member, sizeClass = 'size-20 lg:size-24' }: { member: TeamMember; sizeClass?: string }) {
+    93→  return (
+    94→    <div className={`relative ${sizeClass} shrink-0 overflow-hidden rounded-xl dark:bg-slate-800/80 bg-slate-200`}>
+    95→      {member.image ? (
+    96→        <Image src={member.image} alt={member.name} fill className="object-cover object-top" unoptimized />
+    97→      ) : (
+    98→        <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-800/80 dark:to-slate-900/80 flex flex-col items-center justify-center gap-1.5">
+    99→          <div className="relative">
+   100→            <User className="size-8 lg:size-10 text-slate-300 dark:text-slate-600" strokeWidth={1.5} />
+   101→            <div className="absolute -bottom-1 -right-1 size-3.5 rounded-full bg-amber-400/20 flex items-center justify-center">
+   102→              <Camera className="size-2 text-amber-500" />
+   103→            </div>
+   104→          </div>
+   105→          <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Photo</span>
+   106→        </div>
+   107→      )}
+   108→    </div>
+   109→  );
+   110→}
+   111→
+   112→function CompactStatItem({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
+   113→  const { count, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
+   114→
+   115→  return (
+   116→    <div ref={ref} className="flex items-center gap-3 p-4 lg:p-5 rounded-xl dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] hover:border-emerald-500/30 dark:hover:bg-white/[0.05] hover:bg-slate-100 transition-all duration-300 group">
+   117→      <div className="size-12 shrink-0 rounded-lg bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md group-hover:shadow-amber-500/20 transition-all duration-300">
+   118→        <Icon className="size-5 text-amber-400" />
+   119→      </div>
+   120→      <div className="min-w-0">
+   121→        <div className="text-xl lg:text-2xl font-bold text-amber-400 tabular-nums leading-tight">{count}{suffix}</div>
+   122→        <div className="text-sm dark:text-white/55 text-slate-600 leading-tight truncate">{label}</div>
+   123→      </div>
+   124→    </div>
+   125→  );
+   126→}
+   127→
+   128→const containerVariants = {
+   129→  hidden: { opacity: 0 },
+   130→  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+   131→};
+   132→
+   133→const itemVariants = {
+   134→  hidden: { opacity: 0, y: 12 },
+   135→  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+   136→};
+   137→
+   138→const fadeVariant = {
+   139→  hidden: { opacity: 0, y: 8 },
+   140→  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+   141→};
+   142→
+   143→function TeamFlipCard({ member }: { member: TeamMember }) {
+   144→  const [isFlipped, setIsFlipped] = useState(false);
+   145→
+   146→  return (
+   147→    <div
+   148→      className="relative w-full cursor-pointer"
+   149→      style={{ perspective: '1000px' }}
+   150→      onClick={() => setIsFlipped(!isFlipped)}
+   151→      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsFlipped(!isFlipped); } }}
+   152→      tabIndex={0}
+   153→      role="button"
+   154→      aria-label={`${member.name} - click to ${isFlipped ? 'hide' : 'show'} details`}
+   155→    >
+   156→      <motion.div
+   157→        className="w-full relative"
+   158→        animate={{ rotateY: isFlipped ? 180 : 0 }}
+   159→        transition={{ duration: 0.6, type: 'spring', stiffness: 200, damping: 25 }}
+   160→        style={{ transformStyle: 'preserve-3d' }}
+   161→      >
+   162→        {/* Front face */}
+   163→        <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300" style={{ backfaceVisibility: 'hidden' }}>
+   164→          <div className="flex gap-3 p-3">
+   165→            {/* Left: Details */}
+   166→            <div className="flex-1 min-w-0 flex flex-col justify-center">
+   167→              <h3 className="font-semibold text-sm dark:text-white text-slate-900 truncate">{member.name}</h3>
+   168→              <p className="text-[11px] text-amber-400 font-medium truncate">{member.role}</p>
+   169→              <p className="text-xs dark:text-white/40 text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{member.bio}</p>
+   170→            </div>
+   171→            {/* Right: Portrait image slot */}
+   172→            <TeamPhotoSlot member={member} sizeClass="size-20" />
+   173→          </div>
+   174→        </div>
+   175→
+   176→        {/* Back face */}
+   177→        <div className="absolute inset-0 w-full rounded-xl overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-amber-600 to-amber-500" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+   178→          <div className="flex gap-3 p-3 h-full">
+   179→            {/* Left: Details */}
+   180→            <div className="flex-1 min-w-0 flex flex-col">
+   181→              <h3 className="font-semibold text-sm text-white truncate">{member.name}</h3>
+   182→              <p className="text-[11px] text-amber-200 mt-0.5">{member.role}</p>
+   183→              <p className="text-xs text-amber-100/80 leading-relaxed flex-1 line-clamp-3 mt-1.5">{member.bio}</p>
+   184→              {member.skills && member.skills.length > 0 && (
+   185→                <div className="flex flex-wrap gap-1 mt-1.5">
+   186→                  {member.skills.slice(0, 3).map((skill) => (
+   187→                    <span key={skill} className="px-1.5 py-0.5 rounded-full bg-white/10 text-amber-100 text-[10px] font-medium">
+   188→                      {skill}
+   189→                    </span>
+   190→                  ))}
+   191→                </div>
+   192→              )}
+   193→              <div className="flex gap-1.5 mt-2">
+   194→                {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
+   195→                  const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
+   196→                  return (
+   197→                    <a
+   198→                      key={label}
+   199→                      href={href}
+   200→                      onClick={(e) => e.stopPropagation()}
+   201→                      className={`size-6 rounded-full bg-white/15 backdrop-blur-sm text-white flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
+   202→                      aria-label={`${label} - ${member.name}`}
+   203→                      title={`${label} - ${member.name}`}
+   204→                    >
+   205→                      <SocialIcon className="size-3" />
+   206→                    </a>
+   207→                  );
+   208→                })}
+   209→              </div>
+   210→            </div>
+   211→            {/* Right: Portrait image slot */}
+   212→            <TeamPhotoSlot member={member} sizeClass="size-20" />
+   213→          </div>
+   214→        </div>
+   215→      </motion.div>
+   216→    </div>
+   217→  );
+   218→}
+   219→
+   220→function TeamExpandCard({ member }: { member: TeamMember }) {
+   221→  const [expanded, setExpanded] = useState(false);
+   222→
+   223→  return (
+   224→    <div className="relative rounded-xl">
+   225→      <Card className="relative z-10 overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 group">
+   226→        <CardContent className="p-4 lg:p-5">
+   227→          <div className="flex gap-3 lg:gap-4">
+   228→            {/* Left: Details */}
+   229→            <div className="flex-1 min-w-0">
+   230→              <h3 className="font-semibold text-base lg:text-lg dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
+   231→              <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
+   232→              <div className="mt-1.5">
+   233→                <p className={`text-sm dark:text-white/50 text-slate-500 leading-relaxed transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}>
+   234→                  {member.bio}
+   235→                </p>
+   236→                <button
+   237→                  onClick={() => setExpanded(!expanded)}
+   238→                  className="text-xs text-amber-400 font-medium mt-1 hover:text-amber-300 transition-colors"
+   239→                >
+   240→                  {expanded ? 'Show less' : 'Read more'}
+   241→                </button>
+   242→              </div>
+   243→              {expanded && member.skills && member.skills.length > 0 && (
+   244→                <motion.div
+   245→                  initial={{ opacity: 0, height: 0 }}
+   246→                  animate={{ opacity: 1, height: 'auto' }}
+   247→                  exit={{ opacity: 0, height: 0 }}
+   248→                  className="mt-2 pt-2 border-t border-slate-100 dark:border-white/[0.06]"
+   249→                >
+   250→                  <div className="flex flex-wrap gap-1">
+   251→                    {member.skills.map((skill) => (
+   252→                      <Badge key={skill} variant="secondary" className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20 px-1.5 py-0">
+   253→                        {skill}
+   254→                      </Badge>
+   255→                    ))}
+   256→                  </div>
+   257→                </motion.div>
+   258→              )}
+   259→              <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+   260→                {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
+   261→                  const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
+   262→                  return (
+   263→                    <a
+   264→                      key={label}
+   265→                      href={href}
+   266→                      aria-label={`${label} - ${member.name}`}
+   267→                      title={`${label} - ${member.name}`}
+   268→                      className={`size-7 rounded-full dark:bg-white/10 bg-slate-100 dark:text-white/60 text-slate-500 flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
+   269→                    >
+   270→                      <SocialIcon className="size-3.5" />
+   271→                    </a>
+   272→                  );
+   273→                })}
+   274→              </div>
+   275→            </div>
+   276→            {/* Right: Portrait image slot */}
+   277→            <TeamPhotoSlot member={member} sizeClass="size-20 lg:size-28" />
+   278→          </div>
+   279→        </CardContent>
+   280→      </Card>
+   281→    </div>
+   282→  );
+   283→}
+   284→
+   285→export default function AboutPage() {
+   286→  useSEO({
+   287→    title: 'About Us',
+   288→    description: 'Learn about Lightworld Technologies - a passionate team of innovators dedicated to transforming businesses through technology in Ghana and across Africa.',
+   289→    keywords: ['about Lightworld Technologies', 'IT company Ghana', 'tech team Accra', 'web development company', 'digital transformation Africa'],
+   290→  });
+   291→
+   292→  const [team, setTeam] = useState<TeamMember[]>(defaultTeam);
+   293→  const [loading, setLoading] = useState(true);
+   294→
+   295→  useEffect(() => {
+   296→    fetcher('/api/team')
+   297→      .then((data) => {
+   298→        if (Array.isArray(data) && data.length > 0) {
+   299→          const merged = data.map((t: Record<string, unknown>) => {
+   300→            const defaults = defaultTeam.find(d => d.name === t.name);
+   301→            return {
+   302→              ...t,
+   303→              skills: t.skills || defaults?.skills || [],
+   304→              bio: t.bio || defaults?.bio || '',
+   305→            } as TeamMember;
+   306→          });
+   307→          setTeam(merged);
+   308→        }
+   309→      })
+   310→      .catch(() => {})
+   311→      .finally(() => setLoading(false));
+   312→  }, []);
+   313→
+   314→  return (
+   315→    <main className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
+   316→      {/* Compact Title Bar */}
+   317→      <motion.div
+   318→        className="shrink-0 px-4 sm:px-6 py-5 sm:py-6 flex items-center gap-4 border-b border-slate-100 dark:border-white/[0.06]"
+   319→        initial="hidden"
+   320→        animate="visible"
+   321→        variants={containerVariants}
+   322→      >
+   323→        <motion.div variants={fadeVariant}>
+   324→          <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20 font-semibold shrink-0">
+   325→            Est. 2016
+   326→          </Badge>
+   327→        </motion.div>
+   328→        <motion.div variants={fadeVariant} className="min-w-0">
+   329→          <h1 className="text-2xl font-bold dark:text-white/90 text-slate-800 truncate">About Lightworld Technologies</h1>
+   330→          <p className="text-sm dark:text-white/50 text-slate-500 truncate">A passionate team of innovators driving digital transformation across Africa and beyond.</p>
+   331→        </motion.div>
+   332→        <motion.div variants={fadeVariant} className="ml-auto hidden md:flex items-center gap-3 shrink-0">
+   333→          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+   334→            <Target className="size-4 text-amber-400" />
+   335→            <span className="text-xs text-amber-300 font-medium">Mission-Driven</span>
+   336→          </div>
+   337→          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+   338→            <Eye className="size-4 text-emerald-400" />
+   339→            <span className="text-xs text-emerald-300 font-medium">Future-Focused</span>
+   340→          </div>
+   341→        </motion.div>
+   342→      </motion.div>
+   343→
+   344→      {/* Main Content Grid */}
+   345→      <motion.div
+   346→        className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6 pb-4 md:pb-6"
+   347→        initial="hidden"
+   348→        animate="visible"
+   349→        variants={containerVariants}
+   350→      >
+   351→        {/* Left Column — Stats */}
+   352→        <motion.div variants={itemVariants} className="md:col-span-3 flex flex-col gap-3">
+   353→          <div className="flex items-center gap-2 mb-1 shrink-0 mt-1">
+   354→            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
+   355→            <h2 className="text-base lg:text-lg font-semibold dark:text-white/90 text-slate-800 uppercase tracking-wider">By the Numbers</h2>
+   356→          </div>
+   357→          <div className="flex flex-col gap-2 flex-1">
+   358→            {stats.map((stat, index) => (
+   359→              <CompactStatItem
+   360→                key={stat.label}
+   361→                value={stat.value}
+   362→                suffix={stat.suffix}
+   363→                label={stat.label}
+   364→                icon={stat.icon}
+   365→                delay={index * 200}
+   366→              />
+   367→            ))}
+   368→          </div>
+   369→        </motion.div>
+   370→
+   371→        {/* Center Column — Core Values */}
+   372→        <motion.div variants={itemVariants} className="md:col-span-5 flex flex-col gap-3 min-h-0">
+   373→          <div className="flex items-center gap-2 mb-1 shrink-0 mt-1">
+   374→            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-amber-400 to-emerald-400" />
+   375→            <h2 className="text-base lg:text-lg font-semibold dark:text-white/90 text-slate-800 uppercase tracking-wider">Core Values</h2>
+   376→          </div>
+   377→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 flex-1 min-h-0 auto-rows-fr">
+   378→            {values.map((value, idx) => (
+   379→              <motion.div key={value.title} variants={itemVariants} className="min-h-0">
+   380→                <Card className="h-full border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.03] bg-white shadow-sm backdrop-blur-sm hover:border-emerald-500/30 dark:hover:bg-white/[0.05] hover:bg-slate-100 transition-all duration-300 group overflow-hidden relative rounded-xl">
+   381→                  <div className={`absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx % 3 === 0 ? 'bg-emerald-500/10' : idx % 3 === 1 ? 'bg-amber-500/10' : 'bg-yellow-500/10'}`} />
+   382→                  <CardContent className="p-4 lg:p-5 relative flex flex-col h-full">
+   383→                    <div className={`size-10 lg:size-11 rounded-lg flex items-center justify-center mb-2.5 lg:mb-3 shrink-0 group-hover:scale-110 transition-all duration-300 ${idx % 3 === 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md shadow-yellow-500/20'}`}>
+   384→                      <value.icon className="size-4 lg:size-5 text-white" />
+   385→                    </div>
+   386→                    <h3 className="font-semibold text-sm lg:text-base dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors leading-tight">{value.title}</h3>
+   387→                    <p className="text-xs lg:text-sm dark:text-white/50 text-slate-500 leading-relaxed mt-1.5 line-clamp-2">{value.description}</p>
+   388→                  </CardContent>
+   389→                </Card>
+   390→              </motion.div>
+   391→            ))}
+   392→          </div>
+   393→        </motion.div>
+   394→
+   395→        {/* Right Column — Team */}
+   396→        <motion.div variants={itemVariants} className="md:col-span-4 flex flex-col gap-3 min-h-0">
+   397→          <div className="flex items-center gap-2 mb-1 shrink-0 mt-1">
+   398→            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
+   399→            <h2 className="text-base lg:text-lg font-semibold dark:text-white/90 text-slate-800 uppercase tracking-wider">Our Team</h2>
+   400→            <span className="text-xs dark:text-white/30 text-slate-400 ml-auto hidden md:inline">Click to explore</span>
+   401→          </div>
+   402→          {loading ? (
+   403→            <div className="flex flex-col gap-2 flex-1">
+   404→              {Array.from({ length: 4 }).map((_, i) => (
+   405→                <Card key={i} className="dark:bg-white/[0.04] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06]">
+   406→                  <div className="p-3 flex items-center gap-3">
+   407→                    <Skeleton className="size-10 rounded-full shrink-0" />
+   408→                    <div className="flex-1 space-y-1.5">
+   409→                      <Skeleton className="h-3.5 w-2/3" />
+   410→                      <Skeleton className="h-3 w-1/2" />
+   411→                    </div>
+   412→                  </div>
+   413→                </Card>
+   414→              ))}
+   415→            </div>
+   416→          ) : (
+   417→            <div className="flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+   418→              {/* Desktop: Expand cards */}
+   419→              <div className="hidden lg:flex flex-col gap-2">
+   420→                {team.map((member) => (
+   421→                  <TeamExpandCard key={member.id} member={member} />
+   422→                ))}
+   423→              </div>
+   424→              {/* Mobile/Tablet: Flip cards */}
+   425→              <div className="lg:hidden flex flex-col gap-2">
+   426→                {team.map((member) => (
+   427→                  <TeamFlipCard key={member.id} member={member} />
+   428→                ))}
+   429→              </div>
+   430→            </div>
+   431→          )}
+   432→        </motion.div>
+   433→      </motion.div>
+   434→
+   435→      {/* Bottom — Awards Bar (overlaps the grid above) */}
+   436→      <motion.div
+   437→        className="shrink-0 mx-4 md:mx-6 pt-4 md:pt-6"
+   438→        initial={{ opacity: 0, y: 10 }}
+   439→        animate={{ opacity: 1, y: 0 }}
+   440→        transition={{ duration: 0.4, delay: 0.5 }}
+   441→      >
+   442→        <div className="rounded-xl dark:bg-[#0c1117]/95 bg-white/95 backdrop-blur-xl shadow-xl shadow-black/10 dark:shadow-black/30 border border-slate-100 dark:border-white/[0.06] px-4 py-3.5">
+   443→          <div className="flex items-center gap-4 overflow-x-auto custom-scrollbar pb-1">
+   444→            <div className="flex items-center gap-2.5 shrink-0">
+   445→              <div className="size-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20">
+   446→                <Award className="size-4 text-white" />
+   447→              </div>
+   448→              <span className="text-sm font-semibold dark:text-white/70 text-slate-600 uppercase tracking-wider">Awards</span>
+   449→            </div>
+   450→            <div className="w-px h-6 dark:bg-white/[0.08] bg-slate-200 shrink-0" />
+   451→            {awards.map((award, index) => (
+   452→              <motion.div
+   453→                key={award.title}
+   454→                initial={{ opacity: 0, x: 20 }}
+   455→                animate={{ opacity: 1, x: 0 }}
+   456→                transition={{ duration: 0.3, delay: 0.6 + index * 0.08 }}
+   457→                className="shrink-0"
+   458→              >
+   459→                <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg dark:bg-white/[0.03] bg-slate-50 shadow-sm border border-slate-100 dark:border-white/[0.06] hover:border-amber-500/30 dark:hover:bg-white/[0.05] hover:bg-slate-100 transition-all duration-300 group cursor-default">
+   460→                  <div className="size-8 shrink-0 rounded-md bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md transition-shadow duration-300">
+   461→                    <Award className="size-4 text-amber-400" />
+   462→                  </div>
+   463→                  <div className="min-w-0">
+   464→                    <div className="flex items-center gap-2">
+   465→                      <span className="text-sm font-semibold dark:text-white/90 text-slate-800 truncate max-w-[200px]">{award.title}</span>
+   466→                    </div>
+   467→                    <div className="flex items-center gap-2 mt-0.5">
+   468→                      <Badge className="text-xs bg-amber-500/10 text-amber-300 border-amber-500/20 px-2 py-0.5 font-semibold">{award.year}</Badge>
+   469→                      <span className="text-xs dark:text-white/35 text-slate-400 truncate max-w-[160px]">{award.organization}</span>
+   470→                    </div>
+   471→                  </div>
+   472→                </div>
+   473→              </motion.div>
+   474→            ))}
+   475→          </div>
+   476→        </div>
+   477→      </motion.div>
+   478→    </main>
+   479→  );
+   480→}
+   481→
