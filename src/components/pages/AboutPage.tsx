@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Mail, Github } from 'lucide-react';
+import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Mail, Github, User, Camera } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -89,6 +89,29 @@ function TeamAvatar({ member, size = 'md' }: { member: TeamMember; size?: 'sm' |
   );
 }
 
+function TeamPhotoSlot({ member, height = 'h-32' }: { member: TeamMember; height?: string }) {
+  return (
+    <div className={`relative w-full ${height} overflow-hidden rounded-t-xl`}>
+      {member.image ? (
+        <>
+          <Image src={member.image} alt={member.name} fill className="object-cover" unoptimized />
+          <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white dark:from-[#0c1117] to-transparent" />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-800/80 dark:to-slate-900/80 flex flex-col items-center justify-center gap-2">
+          <div className="relative">
+            <User className="size-10 lg:size-12 text-slate-300 dark:text-slate-600" strokeWidth={1.5} />
+            <div className="absolute -bottom-1 -right-1 size-4 rounded-full bg-amber-400/20 flex items-center justify-center">
+              <Camera className="size-2.5 text-amber-500" />
+            </div>
+          </div>
+          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Photo</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CompactStatItem({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
   const { count, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
 
@@ -142,17 +165,7 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
         {/* Front face */}
         <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300" style={{ backfaceVisibility: 'hidden' }}>
           {/* Image slot area */}
-          <div className="relative h-28 bg-gradient-to-br from-amber-900/30 to-slate-100 dark:from-amber-900/20 dark:to-slate-800/50 overflow-hidden">
-            {member.image ? (
-              <Image src={member.image} alt={member.name} fill className="object-cover" unoptimized />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <TeamAvatar member={member} size="lg" />
-              </div>
-            )}
-            {/* Subtle overlay gradient */}
-            <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white dark:from-[#0c1117] to-transparent" />
-          </div>
+          <TeamPhotoSlot member={member} height="h-28" />
           <div className="p-4">
             <h3 className="font-semibold text-base dark:text-white text-slate-900 truncate">{member.name}</h3>
             <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
@@ -211,17 +224,7 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
     <div className="relative rounded-xl">
       <Card className="relative z-10 overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 group">
         {/* Image slot area */}
-        <div className="relative h-24 bg-gradient-to-br from-amber-900/30 to-slate-100 dark:from-amber-900/20 dark:to-slate-800/50 overflow-hidden">
-          {member.image ? (
-            <Image src={member.image} alt={member.name} fill className="object-cover" unoptimized />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <TeamAvatar member={member} size="md" />
-            </div>
-          )}
-          {/* Subtle overlay gradient */}
-          <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-white dark:from-[#0c1117] to-transparent" />
-        </div>
+        <TeamPhotoSlot member={member} height="h-24" />
         <CardContent className="p-4 lg:p-5 pt-3">
           <div className="min-w-0">
             <h3 className="font-semibold text-base dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
