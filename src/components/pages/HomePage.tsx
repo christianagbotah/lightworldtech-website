@@ -242,7 +242,7 @@ function HeroSlide() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="flex items-center justify-center gap-3 mb-8"
         >
-          <div className="size-16 lg:size-20 rounded-full bg-slate-900 dark:bg-slate-950/80 border border-slate-700 dark:border-white/[0.12] flex items-center justify-center shadow-xl shadow-black/10 dark:shadow-black/40 overflow-hidden">
+          <div className="size-16 lg:size-20 rounded-full bg-slate-900 dark:bg-slate-950 border-2 border-slate-500 dark:border-amber-400/30 flex items-center justify-center shadow-xl shadow-black/10 dark:shadow-black/40 overflow-hidden">
             <Image src="/logo.png" alt="Lightworld Technologies" width={50} height={50} className="object-contain" />
           </div>
           <div className="text-left">

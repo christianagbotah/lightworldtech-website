@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, ChevronLeft, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Globe, Mail, Github, ExternalLink } from 'lucide-react';
+import { Target, Eye, Heart, Users, Lightbulb, Shield, Award, Rocket, UserCheck, Calendar, UsersRound, Twitter, Linkedin, Mail, Github } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 import { useSEO } from '@/hooks/use-seo';
+import Image from 'next/image';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -49,8 +49,8 @@ const awards = [
 ];
 
 const stats = [
-  { value: 200, suffix: '+', label: 'Projects Delivered', icon: Rocket, maxValue: 500 },
-  { value: 150, suffix: '+', label: 'Happy Clients', icon: UserCheck, maxValue: 500 },
+  { value: 200, suffix: '+', label: 'Happy Clients', icon: UserCheck, maxValue: 500 },
+  { value: 150, suffix: '+', label: 'Projects Delivered', icon: Rocket, maxValue: 500 },
   { value: 8, suffix: '+', label: 'Years Experience', icon: Calendar, maxValue: 15 },
   { value: 50, suffix: '+', label: 'Team Members', icon: UsersRound, maxValue: 100 },
 ];
@@ -61,6 +61,33 @@ const socialLinks = [
   { icon: Github, label: 'GitHub', color: 'hover:bg-[#333]', field: 'github' as const },
   { icon: Mail, label: 'Email', color: 'hover:bg-emerald-700', field: 'email' as const },
 ];
+
+function TeamAvatar({ member, size = 'md' }: { member: TeamMember; size?: 'sm' | 'md' | 'lg' }) {
+  const sizeClasses = {
+    sm: 'size-9',
+    md: 'size-12 lg:size-14',
+    lg: 'size-16 lg:size-20',
+  };
+
+  return (
+    <div className={`${sizeClasses[size]} shrink-0 rounded-full overflow-hidden border-2 border-amber-400/30 dark:border-amber-400/20 flex items-center justify-center bg-gradient-to-br from-amber-900/60 to-amber-800/80 shadow-lg shadow-amber-500/15`}>
+      {member.image ? (
+        <Image
+          src={member.image}
+          alt={member.name}
+          width={size === 'sm' ? 36 : size === 'md' ? 56 : 80}
+          height={size === 'sm' ? 36 : size === 'md' ? 56 : 80}
+          className="object-cover w-full h-full"
+          unoptimized
+        />
+      ) : (
+        <span className={`${size === 'sm' ? 'text-sm' : size === 'md' ? 'text-lg lg:text-xl' : 'text-2xl lg:text-3xl'} font-bold text-amber-200`}>
+          {member.name.charAt(0)}
+        </span>
+      )}
+    </div>
+  );
+}
 
 function CompactStatItem({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
   const { count, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
@@ -116,9 +143,7 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
         <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300" style={{ backfaceVisibility: 'hidden' }}>
           <div className="p-4 lg:p-5">
             <div className="flex items-center gap-4">
-              <div className="size-11 shrink-0 rounded-full bg-gradient-to-br from-amber-400/50 to-amber-500/50 flex items-center justify-center text-base font-bold text-amber-200 shadow-lg shadow-amber-500/20">
-                {member.name.charAt(0)}
-              </div>
+              <TeamAvatar member={member} size="sm" />
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-base dark:text-white text-slate-900 truncate">{member.name}</h3>
                 <p className="text-sm text-amber-400 font-medium truncate">{member.role}</p>
@@ -132,9 +157,7 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
         <div className="absolute inset-0 w-full rounded-xl overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-amber-600 to-amber-500" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
           <div className="p-4 lg:p-5 h-full flex flex-col">
             <div className="flex items-center gap-3 mb-2">
-              <div className="size-9 shrink-0 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold text-white">
-                {member.name.charAt(0)}
-              </div>
+              <TeamAvatar member={member} size="sm" />
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm text-white truncate">{member.name}</h3>
                 <p className="text-xs text-amber-200">{member.role}</p>
@@ -182,9 +205,7 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
       <Card className="relative z-10 overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 group">
         <CardContent className="p-4 lg:p-5">
           <div className="flex items-center gap-3">
-            <div className="size-11 shrink-0 rounded-full bg-gradient-to-br from-amber-400/50 to-amber-500/50 flex items-center justify-center text-base font-bold text-amber-200 transition-transform duration-300 group-hover:scale-110 shadow-lg shadow-amber-500/20">
-              {member.name.charAt(0)}
-            </div>
+            <TeamAvatar member={member} size="sm" />
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-base dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
               <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
@@ -272,7 +293,7 @@ export default function AboutPage() {
     <main className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
       {/* Compact Title Bar */}
       <motion.div
-        className="shrink-0 px-4 sm:px-6 py-4 sm:py-5 flex items-center gap-4 border-b border-slate-100 dark:border-white/[0.06]"
+        className="shrink-0 px-4 sm:px-6 py-5 sm:py-6 flex items-center gap-4 border-b border-slate-100 dark:border-white/[0.06]"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -300,14 +321,14 @@ export default function AboutPage() {
 
       {/* Main Content Grid */}
       <motion.div
-        className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6"
+        className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6 pb-0 md:pb-0"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
         {/* Left Column — Stats */}
         <motion.div variants={itemVariants} className="md:col-span-3 flex flex-col gap-3">
-          <div className="flex items-center gap-2 mb-1 shrink-0">
+          <div className="flex items-center gap-2 mb-1 shrink-0 mt-1">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
             <h2 className="text-base lg:text-lg font-semibold dark:text-white/90 text-slate-800 uppercase tracking-wider">By the Numbers</h2>
           </div>
@@ -327,7 +348,7 @@ export default function AboutPage() {
 
         {/* Center Column — Core Values */}
         <motion.div variants={itemVariants} className="md:col-span-5 flex flex-col gap-3 min-h-0">
-          <div className="flex items-center gap-2 mb-1 shrink-0">
+          <div className="flex items-center gap-2 mb-1 shrink-0 mt-1">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-amber-400 to-emerald-400" />
             <h2 className="text-base lg:text-lg font-semibold dark:text-white/90 text-slate-800 uppercase tracking-wider">Core Values</h2>
           </div>
@@ -351,7 +372,7 @@ export default function AboutPage() {
 
         {/* Right Column — Team */}
         <motion.div variants={itemVariants} className="md:col-span-4 flex flex-col gap-3 min-h-0">
-          <div className="flex items-center gap-2 mb-1 shrink-0">
+          <div className="flex items-center gap-2 mb-1 shrink-0 mt-1">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
             <h2 className="text-base lg:text-lg font-semibold dark:text-white/90 text-slate-800 uppercase tracking-wider">Our Team</h2>
             <span className="text-xs dark:text-white/30 text-slate-400 ml-auto hidden md:inline">Click to explore</span>
@@ -389,43 +410,47 @@ export default function AboutPage() {
         </motion.div>
       </motion.div>
 
-      {/* Bottom — Awards Bar */}
+      {/* Bottom — Awards Bar (overlaps the grid above) */}
       <motion.div
-        className="shrink-0 border-t border-slate-100 dark:border-white/[0.06] px-6 py-3"
+        className="shrink-0 relative z-10 -mt-6 mx-4 md:mx-6"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.5 }}
       >
-        <div className="flex items-center gap-4 overflow-x-auto custom-scrollbar pb-1">
-          <div className="flex items-center gap-2.5 shrink-0">
-            <Award className="size-5 text-amber-400" />
-            <span className="text-sm font-semibold dark:text-white/70 text-slate-600 uppercase tracking-wider">Awards</span>
-          </div>
-          <div className="w-px h-6 dark:bg-white/[0.08] bg-slate-200 shrink-0" />
-          {awards.map((award, index) => (
-            <motion.div
-              key={award.title}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.6 + index * 0.08 }}
-              className="shrink-0"
-            >
-              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] hover:border-amber-500/30 dark:hover:bg-white/[0.05] hover:bg-slate-100 transition-all duration-300 group cursor-default">
-                <div className="size-8 shrink-0 rounded-md bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md transition-shadow duration-300">
-                  <Award className="size-4 text-amber-400" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold dark:text-white/90 text-slate-800 truncate max-w-[200px]">{award.title}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <Badge className="text-xs bg-amber-500/10 text-amber-300 border-amber-500/20 px-2 py-0.5 font-semibold">{award.year}</Badge>
-                    <span className="text-xs dark:text-white/35 text-slate-400 truncate max-w-[160px]">{award.organization}</span>
-                  </div>
-                </div>
+        <div className="rounded-xl dark:bg-[#0c1117]/95 bg-white/95 backdrop-blur-xl shadow-xl shadow-black/10 dark:shadow-black/30 border border-slate-100 dark:border-white/[0.06] px-4 py-3.5">
+          <div className="flex items-center gap-4 overflow-x-auto custom-scrollbar pb-1">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="size-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20">
+                <Award className="size-4 text-white" />
               </div>
-            </motion.div>
-          ))}
+              <span className="text-sm font-semibold dark:text-white/70 text-slate-600 uppercase tracking-wider">Awards</span>
+            </div>
+            <div className="w-px h-6 dark:bg-white/[0.08] bg-slate-200 shrink-0" />
+            {awards.map((award, index) => (
+              <motion.div
+                key={award.title}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.6 + index * 0.08 }}
+                className="shrink-0"
+              >
+                <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg dark:bg-white/[0.03] bg-slate-50 shadow-sm border border-slate-100 dark:border-white/[0.06] hover:border-amber-500/30 dark:hover:bg-white/[0.05] hover:bg-slate-100 transition-all duration-300 group cursor-default">
+                  <div className="size-8 shrink-0 rounded-md bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md transition-shadow duration-300">
+                    <Award className="size-4 text-amber-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold dark:text-white/90 text-slate-800 truncate max-w-[200px]">{award.title}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <Badge className="text-xs bg-amber-500/10 text-amber-300 border-amber-500/20 px-2 py-0.5 font-semibold">{award.year}</Badge>
+                      <span className="text-xs dark:text-white/35 text-slate-400 truncate max-w-[160px]">{award.organization}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </motion.div>
     </main>

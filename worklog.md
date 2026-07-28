@@ -791,3 +791,22 @@ Stage Summary:
 - Logo circles use neutral dark backgrounds for better contrast with amber logo
 - FOIT prevention script ensures correct theme on first load
 - All inner pages have proper dark: variants
+
+---
+Task ID: about-page-enhancements
+Agent: Main Agent
+Task: Fix About page — team avatars, awards overlap, stats order, logo borders
+
+Work Log:
+- **Team member card avatars**: Created `TeamAvatar` component with `size` prop (sm/md/lg). Supports actual `member.image` URL via Next.js `<Image>` component with `object-cover`, falls back to initial letter on amber gradient circle. Applied to both `TeamFlipCard` and `TeamExpandCard` front/back faces.
+- **Awards section overlap**: Changed awards bar from simple `border-t` section to floating card with `-mt-6` negative margin, `mx-4 md:mx-6` horizontal margins, `rounded-xl`, `backdrop-blur-xl`, `shadow-xl`. Now visually overlaps the bottom of the three-column grid.
+- **Stats reordering**: Swapped "Happy Clients" (200+) and "Projects Delivered" (150+) so projects < clients.
+- **Logo circle borders**: Changed all logo circles from `border` (1px, `border-white/[0.1]`) to `border-2 border-amber-400/30` for a prominent, fully visible gold ring. Applied to: Header nav logo, mobile sheet logo, and hero slide logo.
+- **Top margin**: Added `mt-1` to column headers and increased title bar padding from `py-4 sm:py-5` to `py-5 sm:py-6`.
+
+Stage Summary:
+- About page team cards now support member images with proper fallback
+- Awards bar visually overlaps the main content grid as a floating card
+- Stats correctly show Happy Clients (200+) > Projects Delivered (150+)
+- All logo circles have prominent `border-2` gold/amber borders
+- Lint passes, no errors
