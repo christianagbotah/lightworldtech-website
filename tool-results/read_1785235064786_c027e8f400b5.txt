@@ -1,0 +1,959 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import Image from 'next/image';
+     6→import { useAppStore } from '@/lib/store';
+     7→import { cn } from '@/lib/utils';
+     8→import { useSEO } from '@/hooks/use-seo';
+     9→import {
+    10→  Cpu, Cloud, Shield, Database, Monitor, Globe,
+    11→  ArrowRight, ArrowUpRight, Quote, ChevronUp, ChevronDown,
+    12→  Users, Clock, Zap, Award,
+    13→  Phone, Mail, Sparkles, Star, ExternalLink, Play,
+    14→} from 'lucide-react';
+    15→
+    16→/* ══════════════════════════════════════════════════════════════
+    17→   DATA
+    18→   ══════════════════════════════════════════════════════════════ */
+    19→
+    20→const SERVICES = [
+    21→  { icon: Globe, title: 'Web Development', desc: 'Modern responsive websites & web apps', gradient: 'from-emerald-500 to-teal-600', page: 'services' as const },
+    22→  { icon: Cpu, title: 'IT Solutions', desc: 'Enterprise infrastructure & consulting', gradient: 'from-cyan-500 to-blue-600', page: 'services' as const },
+    23→  { icon: Shield, title: 'Cybersecurity', desc: 'Advanced threat detection & protection', gradient: 'from-amber-500 to-orange-600', page: 'services' as const },
+    24→  { icon: Cloud, title: 'Cloud Services', desc: 'Scalable cloud platforms & migration', gradient: 'from-violet-500 to-purple-600', page: 'services' as const },
+    25→  { icon: Database, title: 'Data Analytics', desc: 'Business intelligence & insights', gradient: 'from-rose-500 to-pink-600', page: 'services' as const },
+    26→  { icon: Monitor, title: 'Software Dev', desc: 'Custom enterprise applications', gradient: 'from-lime-500 to-green-600', page: 'services' as const },
+    27→];
+    28→
+    29→const STATS = [
+    30→  { value: 500, suffix: '+', label: 'Clients Served', icon: Users },
+    31→  { value: 15, suffix: '+', label: 'Years Experience', icon: Clock },
+    32→  { value: 99.9, suffix: '%', label: 'Uptime Guarantee', icon: Zap },
+    33→  { value: 24, suffix: '/7', label: 'Support Available', icon: Award },
+    34→];
+    35→
+    36→const TYPING_MESSAGES = [
+    37→  'Powering Digital Innovation in Africa',
+    38→  'Empowering Businesses with Technology',
+    39→  'Your Trusted IT Partner in Ghana',
+    40→  'Building the Future, One Solution at a Time',
+    41→];
+    42→
+    43→const TESTIMONIALS = [
+    44→  { text: 'Lightworld transformed our entire IT infrastructure. Their team is incredibly professional and responsive. We saw a 40% increase in operational efficiency within the first quarter.', author: 'Emmanuel K.', role: 'CEO, TechVentures Ghana', stars: 5 },
+    45→  { text: 'The best IT company we\'ve worked with. They delivered our project on time, under budget, and exceeded all expectations. Their after-sales support is exceptional.', author: 'Abigail M.', role: 'CTO, DataFlow Inc.', stars: 5 },
+    46→  { text: 'Outstanding cybersecurity solutions. Our systems have never been more secure since partnering with them. They proactively identify threats before they become problems.', author: 'Kwame A.', role: 'Director, SecureBank Ghana', stars: 5 },
+    47→  { text: 'From concept to deployment, Lightworld handled our cloud migration flawlessly. Zero downtime and our team was trained on the new system within a week.', author: 'Ama S.', role: 'VP Operations, Ghana Retail Corp', stars: 5 },
+    48→];
+    49→
+    50→const FEATURED_PROJECTS = [
+    51→  { title: 'E-Commerce Platform', category: 'Web Development', desc: 'Full-featured online store with payment integration and analytics', gradient: 'from-emerald-500/20 to-teal-600/20' },
+    52→  { title: 'Healthcare Mobile App', category: 'Mobile App', desc: 'Patient management with telemedicine and appointment scheduling', gradient: 'from-amber-500/20 to-orange-600/20' },
+    53→  { title: 'Corporate ERP System', category: 'Software', desc: 'Enterprise resource planning for manufacturing company', gradient: 'from-cyan-500/20 to-blue-600/20' },
+    54→];
+    55→
+    56→const CLIENTS = ['Google', 'MTN Group', 'Vodafone', 'Ghana Government', 'USAID', 'World Bank', 'UNDP', 'Mastercard Foundation'];
+    57→
+    58→/* ══════════════════════════════════════════════════════════════
+    59→   CUSTOM HOOKS
+    60→   ══════════════════════════════════════════════════════════════ */
+    61→
+    62→function useTypewriter(messages: string[], speed = 45) {
+    63→  const [text, setText] = useState('');
+    64→  const [msgIdx, setMsgIdx] = useState(0);
+    65→  const [deleting, setDeleting] = useState(false);
+    66→
+    67→  useEffect(() => {
+    68→    const current = messages[msgIdx];
+    69→    const timeout = setTimeout(() => {
+    70→      if (!deleting) {
+    71→        const next = current.slice(0, text.length + 1);
+    72→        setText(next);
+    73→        if (next.length === current.length) {
+    74→          setTimeout(() => setDeleting(true), 2800);
+    75→        }
+    76→      } else {
+    77→        const next = text.slice(0, -1);
+    78→        setText(next);
+    79→        if (next.length === 0) {
+    80→          setDeleting(false);
+    81→          setMsgIdx((prev) => (prev + 1) % messages.length);
+    82→        }
+    83→      }
+    84→    }, deleting ? 22 : speed);
+    85→    return () => clearTimeout(timeout);
+    86→  }, [text, msgIdx, deleting, messages, speed]);
+    87→
+    88→  return text;
+    89→}
+    90→
+    91→function useCountUp(end: number, duration = 2000, decimals = 0, delay = 600) {
+    92→  const [count, setCount] = useState(0);
+    93→  const [started, setStarted] = useState(false);
+    94→
+    95→  useEffect(() => {
+    96→    const t = setTimeout(() => setStarted(true), delay);
+    97→    return () => clearTimeout(t);
+    98→  }, [delay]);
+    99→
+   100→  useEffect(() => {
+   101→    if (!started) return;
+   102→    const start = Date.now();
+   103→    const interval = setInterval(() => {
+   104→      const progress = Math.min((Date.now() - start) / duration, 1);
+   105→      const eased = 1 - Math.pow(1 - progress, 3);
+   106→      setCount(Number((eased * end).toFixed(decimals)));
+   107→      if (progress >= 1) clearInterval(interval);
+   108→    }, 16);
+   109→    return () => clearInterval(interval);
+   110→  }, [started, end, duration, decimals]);
+   111→
+   112→  return count;
+   113→}
+   114→
+   115→/* ══════════════════════════════════════════════════════════════
+   116→   BACKGROUND EFFECTS
+   117→   ══════════════════════════════════════════════════════════════ */
+   118→
+   119→function ParticleField() {
+   120→  const particles = useMemo(
+   121→    () =>
+   122→      Array.from({ length: 40 }, (_, i) => ({
+   123→        id: i,
+   124→        left: Math.random() * 100,
+   125→        top: Math.random() * 100,
+   126→        size: 1 + Math.random() * 2,
+   127→        duration: 20 + Math.random() * 25,
+   128→        delay: Math.random() * 15,
+   129→        opacity: 0.06 + Math.random() * 0.15,
+   130→      })),
+   131→    [],
+   132→  );
+   133→
+   134→  return (
+   135→    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+   136→      {particles.map((p) => (
+   137→        <motion.div
+   138→          key={p.id}
+   139→          className="absolute rounded-full bg-emerald-400"
+   140→          style={{ left: `${p.left}%`, top: `${p.top}%`, width: p.size, height: p.size, opacity: p.opacity }}
+   141→          animate={{ y: [0, -30, 0], opacity: [p.opacity, p.opacity * 0.3, p.opacity] }}
+   142→          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: 'easeInOut' }}
+   143→        />
+   144→      ))}
+   145→    </div>
+   146→  );
+   147→}
+   148→
+   149→function GradientOrbs({ variant = 0 }: { variant?: number }) {
+   150→  const configs = [
+   151→    { c1: 'emerald-500/[0.06]', c2: 'amber-500/[0.04]', c3: 'cyan-500/[0.03]' },
+   152→    { c1: 'cyan-500/[0.06]', c2: 'violet-500/[0.04]', c3: 'emerald-500/[0.03]' },
+   153→    { c1: 'amber-500/[0.06]', c2: 'rose-500/[0.04]', c3: 'emerald-500/[0.03]' },
+   154→    { c1: 'teal-500/[0.06]', c2: 'blue-500/[0.04]', c3: 'amber-500/[0.03]' },
+   155→    { c1: 'emerald-500/[0.06]', c2: 'cyan-500/[0.04]', c3: 'rose-500/[0.03]' },
+   156→    { c1: 'amber-500/[0.08]', c2: 'emerald-500/[0.06]', c3: 'teal-500/[0.04]' },
+   157→  ];
+   158→  const cfg = configs[variant % configs.length];
+   159→
+   160→  return (
+   161→    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+   162→      <div className={cn('absolute -top-1/4 -left-1/4 w-[60%] h-[60%] rounded-full blur-[100px] animate-orb-1', `bg-${cfg.c1}`)} />
+   163→      <div className={cn('absolute -bottom-1/4 -right-1/4 w-[50%] h-[50%] rounded-full blur-[100px] animate-orb-2', `bg-${cfg.c2}`)} />
+   164→      <div className={cn('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] rounded-full blur-[80px] animate-orb-3', `bg-${cfg.c3}`)} />
+   165→    </div>
+   166→  );
+   167→}
+   168→
+   169→function GridOverlay() {
+   170→  return (
+   171→    <div className="absolute inset-0 pointer-events-none opacity-[0.015]">
+   172→      {Array.from({ length: 5 }, (_, i) => (
+   173→        <div key={`h-${i}`} className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" style={{ top: `${(i + 1) * 16.67}%` }} />
+   174→      ))}
+   175→      {Array.from({ length: 5 }, (_, i) => (
+   176→        <div key={`v-${i}`} className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" style={{ left: `${(i + 1) * 16.67}%` }} />
+   177→      ))}
+   178→    </div>
+   179→  );
+   180→}
+   181→
+   182→/* ══════════════════════════════════════════════════════════════
+   183→   SLIDE 1: HERO
+   184→   ══════════════════════════════════════════════════════════════ */
+   185→
+   186→function HeroSlide() {
+   187→  const { navigate } = useAppStore();
+   188→  const typedText = useTypewriter(TYPING_MESSAGES);
+   189→
+   190→  return (
+   191→    <div className="absolute inset-0 flex items-center justify-center">
+   192→      <GradientOrbs variant={0} />
+   193→      <ParticleField />
+   194→      <GridOverlay />
+   195→
+   196→      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+   197→        {/* Logo */}
+   198→        <motion.div
+   199→          initial={{ opacity: 0, scale: 0.8, y: -20 }}
+   200→          animate={{ opacity: 1, scale: 1, y: 0 }}
+   201→          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+   202→          className="flex items-center justify-center gap-3 mb-8"
+   203→        >
+   204→          <div className="size-14 lg:size-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-xl shadow-amber-500/25 overflow-hidden">
+   205→            <Image src="/logo.png" alt="Lightworld Technologies" width={40} height={40} className="object-contain p-1" />
+   206→          </div>
+   207→          <div className="text-left">
+   208→            <span className="text-lg lg:text-xl font-bold text-white leading-tight">Lightworld</span>
+   209→            <span className="block text-[9px] font-semibold text-emerald-400 tracking-[0.3em] uppercase leading-tight">Technologies</span>
+   210→          </div>
+   211→        </motion.div>
+   212→
+   213→        {/* Headline */}
+   214→        <motion.h1
+   215→          initial={{ opacity: 0, y: 30 }}
+   216→          animate={{ opacity: 1, y: 0 }}
+   217→          transition={{ delay: 0.2, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+   218→          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5"
+   219→        >
+   220→          We Build{' '}
+   221→          <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+   222→            Digital Futures
+   223→          </span>
+   224→        </motion.h1>
+   225→
+   226→        {/* Typewriter */}
+   227→        <motion.div
+   228→          initial={{ opacity: 0 }}
+   229→          animate={{ opacity: 1 }}
+   230→          transition={{ delay: 0.5 }}
+   231→          className="mb-8"
+   232→        >
+   233→          <p className="text-sm lg:text-lg text-white/40 font-light h-5 lg:h-7 flex items-center justify-center">
+   234→            <Sparkles className="size-4 lg:size-5 text-emerald-400/50 mr-2 shrink-0" />
+   235→            {typedText}
+   236→            <span className="inline-block w-[2px] h-4 lg:h-6 bg-emerald-400 ml-1 animate-blink" />
+   237→          </p>
+   238→        </motion.div>
+   239→
+   240→        {/* CTAs */}
+   241→        <motion.div
+   242→          initial={{ opacity: 0, y: 15 }}
+   243→          animate={{ opacity: 1, y: 0 }}
+   244→          transition={{ delay: 0.7 }}
+   245→          className="flex items-center justify-center gap-4 flex-wrap"
+   246→        >
+   247→          <button
+   248→            onClick={() => navigate('services')}
+   249→            className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105 active:scale-[0.98]"
+   250→          >
+   251→            Explore Services
+   252→            <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+   253→          </button>
+   254→          <button
+   255→            onClick={() => navigate('contact')}
+   256→            className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-white/[0.06] text-white/70 text-sm font-medium hover:bg-white/[0.12] hover:text-white transition-all border border-white/[0.1] hover:border-white/[0.2] hover:scale-105 active:scale-[0.98]"
+   257→          >
+   258→            <Phone className="size-4" />
+   259→            Get in Touch
+   260→          </button>
+   261→        </motion.div>
+   262→
+   263→        {/* Quick Stats Bar */}
+   264→        <motion.div
+   265→          initial={{ opacity: 0, y: 20 }}
+   266→          animate={{ opacity: 1, y: 0 }}
+   267→          transition={{ delay: 1 }}
+   268→          className="mt-12 flex items-center justify-center gap-6 lg:gap-10"
+   269→        >
+   270→          {STATS.map((stat, i) => {
+   271→            const Icon = stat.icon;
+   272→            return (
+   273→              <div key={i} className="text-center">
+   274→                <Icon className="size-3.5 text-emerald-400/40 mx-auto mb-1" />
+   275→                <span className="block text-xl lg:text-2xl font-bold text-white tabular-nums">
+   276→                  {stat.value}<span className="text-emerald-400/70">{stat.suffix}</span>
+   277→                </span>
+   278→                <span className="block text-[10px] text-white/25 mt-0.5 font-medium">{stat.label}</span>
+   279→              </div>
+   280→            );
+   281→          })}
+   282→        </motion.div>
+   283→      </div>
+   284→
+   285→      {/* Availability Badge */}
+   286→      <motion.div
+   287→        initial={{ opacity: 0, x: 20 }}
+   288→        animate={{ opacity: 1, x: 0 }}
+   289→        transition={{ delay: 1.2 }}
+   290→        className="absolute bottom-8 right-8 z-20"
+   291→      >
+   292→        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm">
+   293→          <span className="relative flex size-2.5">
+   294→            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+   295→            <span className="relative inline-flex rounded-full size-2.5 bg-emerald-500" />
+   296→          </span>
+   297→          <span className="text-[10px] text-white/40 font-medium">Available for projects</span>
+   298→        </div>
+   299→      </motion.div>
+   300→    </div>
+   301→  );
+   302→}
+   303→
+   304→/* ══════════════════════════════════════════════════════════════
+   305→   SLIDE 2: ABOUT / WHO WE ARE
+   306→   ══════════════════════════════════════════════════════════════ */
+   307→
+   308→function AboutSlide() {
+   309→  const { navigate } = useAppStore();
+   310→
+   311→  const stats = [
+   312→    { value: 500, suffix: '+', label: 'Satisfied Clients', desc: 'Across diverse industries' },
+   313→    { value: 200, suffix: '+', label: 'Projects Delivered', desc: 'On time and on budget' },
+   314→    { value: 15, suffix: '+', label: 'Years in Business', desc: 'Of proven excellence' },
+   315→    { value: 99.9, suffix: '%', label: 'Success Rate', desc: 'Client satisfaction guaranteed' },
+   316→  ];
+   317→
+   318→  return (
+   319→    <div className="absolute inset-0 flex items-center">
+   320→      <GradientOrbs variant={1} />
+   321→      <GridOverlay />
+   322→
+   323→      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-10">
+   324→        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+   325→          {/* Left: Mission */}
+   326→          <motion.div
+   327→            initial={{ opacity: 0, x: -30 }}
+   328→            whileInView={{ opacity: 1, x: 0 }}
+   329→            viewport={{ once: true }}
+   330→            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+   331→          >
+   332→            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
+   333→              <div className="size-1.5 rounded-full bg-emerald-400" />
+   334→              <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.2em]">Who We Are</span>
+   335→            </div>
+   336→
+   337→            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-5">
+   338→              Ghana&apos;s Leading{' '}
+   339→              <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">IT Solutions</span>{' '}
+   340→              Partner
+   341→            </h2>
+   342→
+   343→            <p className="text-sm lg:text-base text-white/40 leading-relaxed mb-6 max-w-lg">
+   344→              At Lightworld Technologies, we combine innovation with expertise to deliver transformative digital solutions.
+   345→              From enterprise software to cloud infrastructure, our team of specialists empowers businesses across Africa
+   346→              to thrive in the digital age.
+   347→            </p>
+   348→
+   349→            <div className="flex items-center gap-3">
+   350→              <button
+   351→                onClick={() => navigate('about')}
+   352→                className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-all border border-emerald-500/20"
+   353→              >
+   354→                Learn More About Us
+   355→                <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+   356→              </button>
+   357→              <div className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-white/[0.04] border border-white/[0.06]">
+   358→                {[...Array(5)].map((_, i) => (
+   359→                  <Star key={i} className="size-3 text-amber-400 fill-amber-400" />
+   360→                ))}
+   361→                <span className="text-[10px] text-white/40 ml-1">5.0 Rating</span>
+   362→              </div>
+   363→            </div>
+   364→          </motion.div>
+   365→
+   366→          {/* Right: Stats Grid */}
+   367→          <motion.div
+   368→            initial={{ opacity: 0, x: 30 }}
+   369→            whileInView={{ opacity: 1, x: 0 }}
+   370→            viewport={{ once: true }}
+   371→            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+   372→            className="grid grid-cols-2 gap-3.5"
+   373→          >
+   374→            {stats.map((stat, i) => (
+   375→              <div
+   376→                key={i}
+   377→                className="group relative p-5 lg:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
+   378→              >
+   379→                <span className="block text-2xl lg:text-3xl font-extrabold text-white tabular-nums">
+   380→                  {stat.value}<span className="text-emerald-400/70">{stat.suffix}</span>
+   381→                </span>
+   382→                <span className="block text-xs font-semibold text-white/60 mt-1">{stat.label}</span>
+   383→                <span className="block text-[10px] text-white/25 mt-0.5">{stat.desc}</span>
+   384→                <div className="absolute top-3 right-3 size-8 rounded-lg bg-emerald-500/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+   385→                  <ArrowUpRight className="size-3.5 text-emerald-400" />
+   386→                </div>
+   387→              </div>
+   388→            ))}
+   389→          </motion.div>
+   390→        </div>
+   391→      </div>
+   392→    </div>
+   393→  );
+   394→}
+   395→
+   396→/* ══════════════════════════════════════════════════════════════
+   397→   SLIDE 3: SERVICES
+   398→   ══════════════════════════════════════════════════════════════ */
+   399→
+   400→function ServicesSlide() {
+   401→  const { navigate } = useAppStore();
+   402→
+   403→  return (
+   404→    <div className="absolute inset-0 flex items-center">
+   405→      <GradientOrbs variant={2} />
+   406→      <GridOverlay />
+   407→
+   408→      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-10">
+   409→        {/* Header */}
+   410→        <div className="text-center mb-8 lg:mb-10">
+   411→          <motion.div
+   412→            initial={{ opacity: 0, y: -10 }}
+   413→            whileInView={{ opacity: 1, y: 0 }}
+   414→            viewport={{ once: true }}
+   415→            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4"
+   416→          >
+   417→            <div className="size-1.5 rounded-full bg-amber-400" />
+   418→            <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-[0.2em]">What We Do</span>
+   419→          </motion.div>
+   420→          <motion.h2
+   421→            initial={{ opacity: 0, y: 20 }}
+   422→            whileInView={{ opacity: 1, y: 0 }}
+   423→            viewport={{ once: true }}
+   424→            transition={{ delay: 0.1 }}
+   425→            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight"
+   426→          >
+   427→            Our <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Services</span>
+   428→          </motion.h2>
+   429→        </div>
+   430→
+   431→        {/* Service Cards Grid */}
+   432→        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 lg:gap-4">
+   433→          {SERVICES.map((service, i) => (
+   434→            <motion.button
+   435→              key={i}
+   436→              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+   437→              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+   438→              viewport={{ once: true }}
+   439→              transition={{ delay: i * 0.08, duration: 0.4 }}
+   440→              onClick={() => navigate(service.page)}
+   441→              className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-4 lg:p-5 cursor-pointer text-left transition-all duration-300 hover:bg-white/[0.07] hover:border-white/[0.15] hover:scale-[1.02]"
+   442→            >
+   443→              <div className={cn('size-10 lg:size-12 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-lg', service.gradient)}>
+   444→                <service.icon className="size-5 lg:size-6 text-white" />
+   445→              </div>
+   446→              <h3 className="text-sm lg:text-base font-bold text-white/90 mb-1">{service.title}</h3>
+   447→              <p className="text-[11px] lg:text-xs text-white/35 leading-relaxed line-clamp-2">{service.desc}</p>
+   448→              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
+   449→                <ArrowUpRight className="size-4 text-emerald-400" />
+   450→              </div>
+   451→              <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-emerald-500/[0.06] to-transparent" />
+   452→            </motion.button>
+   453→          ))}
+   454→        </div>
+   455→
+   456→        {/* CTA */}
+   457→        <motion.div
+   458→          initial={{ opacity: 0 }}
+   459→          whileInView={{ opacity: 1 }}
+   460→          viewport={{ once: true }}
+   461→          transition={{ delay: 0.6 }}
+   462→          className="text-center mt-6 lg:mt-8"
+   463→        >
+   464→          <button
+   465→            onClick={() => navigate('services')}
+   466→            className="group inline-flex items-center gap-2 text-xs text-white/40 hover:text-emerald-400 transition-colors font-medium"
+   467→          >
+   468→            View All Services & Details
+   469→            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+   470→          </button>
+   471→        </motion.div>
+   472→      </div>
+   473→    </div>
+   474→  );
+   475→}
+   476→
+   477→/* ══════════════════════════════════════════════════════════════
+   478→   SLIDE 4: PORTFOLIO
+   479→   ══════════════════════════════════════════════════════════════ */
+   480→
+   481→function PortfolioSlide() {
+   482→  const { navigate } = useAppStore();
+   483→
+   484→  return (
+   485→    <div className="absolute inset-0 flex items-center">
+   486→      <GradientOrbs variant={3} />
+   487→      <GridOverlay />
+   488→
+   489→      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 lg:px-10">
+   490→        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+   491→          {/* Left: Info */}
+   492→          <motion.div
+   493→            initial={{ opacity: 0, x: -30 }}
+   494→            whileInView={{ opacity: 1, x: 0 }}
+   495→            viewport={{ once: true }}
+   496→            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+   497→          >
+   498→            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
+   499→              <div className="size-1.5 rounded-full bg-cyan-400" />
+   500→              <span className="text-[10px] font-semibold text-cyan-400 uppercase tracking-[0.2em]">Our Work</span>
+   501→            </div>
+   502→
+   503→            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-5">
+   504→              Projects That{' '}
+   505→              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Speak</span>{' '}
+   506→              For Themselves
+   507→            </h2>
+   508→
+   509→            <p className="text-sm lg:text-base text-white/40 leading-relaxed mb-6 max-w-lg">
+   510→              From enterprise platforms to mobile applications, our portfolio showcases the breadth and depth of our technical expertise.
+   511→              Every project is crafted with precision, performance, and purpose.
+   512→            </p>
+   513→
+   514→            <div className="flex items-center gap-6 mb-8">
+   515→              {[
+   516→                { label: 'Web Apps', count: '80+' },
+   517→                { label: 'Mobile Apps', count: '45+' },
+   518→                { label: 'Enterprise', count: '35+' },
+   519→              ].map((item, i) => (
+   520→                <div key={i}>
+   521→                  <span className="block text-xl font-bold text-white">{item.count}</span>
+   522→                  <span className="block text-[10px] text-white/30 font-medium">{item.label}</span>
+   523→                </div>
+   524→              ))}
+   525→            </div>
+   526→
+   527→            <button
+   528→              onClick={() => navigate('portfolio')}
+   529→              className="group flex items-center gap-2.5 px-6 py-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold hover:from-emerald-400 hover:to-teal-400 transition-all shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-[0.98]"
+   530→            >
+   531→              View Full Portfolio
+   532→              <ExternalLink className="size-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+   533→            </button>
+   534→          </motion.div>
+   535→
+   536→          {/* Right: Featured Projects */}
+   537→          <motion.div
+   538→            initial={{ opacity: 0, x: 30 }}
+   539→            whileInView={{ opacity: 1, x: 0 }}
+   540→            viewport={{ once: true }}
+   541→            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+   542→            className="space-y-3"
+   543→          >
+   544→            {FEATURED_PROJECTS.map((project, i) => (
+   545→              <div
+   546→                key={i}
+   547→                className={cn(
+   548→                  'group relative p-4 lg:p-5 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-[1.01]',
+   549→                  `bg-gradient-to-br ${project.gradient} border-white/[0.06] hover:border-white/[0.12]`,
+   550→                )}
+   551→              >
+   552→                <div className="flex items-start justify-between">
+   553→                  <div className="flex-1">
+   554→                    <span className="text-[10px] font-semibold text-emerald-400/70 uppercase tracking-wider">{project.category}</span>
+   555→                    <h3 className="text-sm lg:text-base font-bold text-white/90 mt-1">{project.title}</h3>
+   556→                    <p className="text-[11px] lg:text-xs text-white/30 mt-1 line-clamp-1">{project.desc}</p>
+   557→                  </div>
+   558→                  <ArrowUpRight className="size-4 text-white/20 group-hover:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
+   559→                </div>
+   560→              </div>
+   561→            ))}
+   562→          </motion.div>
+   563→        </div>
+   564→      </div>
+   565→    </div>
+   566→  );
+   567→}
+   568→
+   569→/* ══════════════════════════════════════════════════════════════
+   570→   SLIDE 5: TESTIMONIALS
+   571→   ══════════════════════════════════════════════════════════════ */
+   572→
+   573→function TestimonialsSlide() {
+   574→  const [current, setCurrent] = useState(0);
+   575→
+   576→  useEffect(() => {
+   577→    const interval = setInterval(() => setCurrent((p) => (p + 1) % TESTIMONIALS.length), 5000);
+   578→    return () => clearInterval(interval);
+   579→  }, []);
+   580→
+   581→  return (
+   582→    <div className="absolute inset-0 flex items-center justify-center">
+   583→      <GradientOrbs variant={4} />
+   584→      <GridOverlay />
+   585→
+   586→      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+   587→        <motion.div
+   588→          initial={{ opacity: 0, y: -10 }}
+   589→          whileInView={{ opacity: 1, y: 0 }}
+   590→          viewport={{ once: true }}
+   591→          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-8"
+   592→        >
+   593→          <div className="size-1.5 rounded-full bg-emerald-400" />
+   594→          <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.2em]">Testimonials</span>
+   595→        </motion.div>
+   596→
+   597→        {/* Stars */}
+   598→        <div className="flex items-center justify-center gap-1 mb-6">
+   599→          {[...Array(TESTIMONIALS[current].stars)].map((_, i) => (
+   600→            <motion.div
+   601→              key={`${current}-${i}`}
+   602→              initial={{ opacity: 0, scale: 0 }}
+   603→              animate={{ opacity: 1, scale: 1 }}
+   604→              transition={{ delay: i * 0.05, type: 'spring', stiffness: 300 }}
+   605→            >
+   606→              <Star className="size-5 text-amber-400 fill-amber-400" />
+   607→            </motion.div>
+   608→          ))}
+   609→        </div>
+   610→
+   611→        {/* Quote */}
+   612→        <div className="relative mb-8">
+   613→          <Quote className="size-10 lg:size-14 text-emerald-500/15 absolute -top-3 -left-2 lg:-left-4" />
+   614→          <AnimatePresence mode="wait">
+   615→            <motion.p
+   616→              key={current}
+   617→              initial={{ opacity: 0, y: 15 }}
+   618→              animate={{ opacity: 1, y: 0 }}
+   619→              exit={{ opacity: 0, y: -15 }}
+   620→              transition={{ duration: 0.4 }}
+   621→              className="text-lg lg:text-2xl text-white/60 leading-relaxed font-light italic pl-6 lg:pl-10"
+   622→            >
+   623→              &ldquo;{TESTIMONIALS[current].text}&rdquo;
+   624→            </motion.p>
+   625→          </AnimatePresence>
+   626→        </div>
+   627→
+   628→        {/* Author */}
+   629→        <AnimatePresence mode="wait">
+   630→          <motion.div
+   631→            key={current}
+   632→            initial={{ opacity: 0, scale: 0.9 }}
+   633→            animate={{ opacity: 1, scale: 1 }}
+   634→            exit={{ opacity: 0, scale: 0.9 }}
+   635→            transition={{ duration: 0.35 }}
+   636→            className="flex items-center justify-center gap-3"
+   637→          >
+   638→            <div className="size-10 lg:size-12 rounded-full bg-gradient-to-br from-emerald-400 to-amber-500 flex items-center justify-center text-sm lg:text-base font-bold text-white shadow-lg shadow-emerald-500/20">
+   639→              {TESTIMONIALS[current].author[0]}
+   640→            </div>
+   641→            <div className="text-left">
+   642→              <p className="text-sm lg:text-base font-semibold text-white/70">{TESTIMONIALS[current].author}</p>
+   643→              <p className="text-[10px] lg:text-xs text-white/30">{TESTIMONIALS[current].role}</p>
+   644→            </div>
+   645→          </motion.div>
+   646→        </AnimatePresence>
+   647→
+   648→        {/* Dots */}
+   649→        <div className="flex items-center justify-center gap-2 mt-8">
+   650→          {TESTIMONIALS.map((_, i) => (
+   651→            <button
+   652→              key={i}
+   653→              onClick={() => setCurrent(i)}
+   654→              className={cn(
+   655→                'h-2 rounded-full transition-all duration-300',
+   656→                i === current ? 'bg-emerald-400 w-6' : 'bg-white/10 w-2 hover:bg-white/20',
+   657→              )}
+   658→            />
+   659→          ))}
+   660→        </div>
+   661→      </div>
+   662→    </div>
+   663→  );
+   664→}
+   665→
+   666→/* ══════════════════════════════════════════════════════════════
+   667→   SLIDE 6: CTA / CONTACT
+   668→   ══════════════════════════════════════════════════════════════ */
+   669→
+   670→function ClientTicker({ className }: { className?: string }) {
+   671→  const doubled = useMemo(() => [...CLIENTS, ...CLIENTS], []);
+   672→  return (
+   673→    <div className={cn('relative overflow-hidden flex items-center', className)}>
+   674→      <motion.div className="flex gap-10 whitespace-nowrap" animate={{ x: ['0%', '-50%'] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}>
+   675→        {doubled.map((client, i) => (
+   676→          <span key={i} className="text-[10px] lg:text-xs text-white/12 font-medium tracking-wider uppercase">{client}</span>
+   677→        ))}
+   678→      </motion.div>
+   679→      <div className="absolute left-0 inset-y-0 w-10 bg-gradient-to-r from-[#050810] to-transparent pointer-events-none" />
+   680→      <div className="absolute right-0 inset-y-0 w-10 bg-gradient-to-l from-[#050810] to-transparent pointer-events-none" />
+   681→    </div>
+   682→  );
+   683→}
+   684→
+   685→function CTASlide() {
+   686→  const { navigate } = useAppStore();
+   687→
+   688→  return (
+   689→    <div className="absolute inset-0 flex items-center justify-center">
+   690→      <GradientOrbs variant={5} />
+   691→      <GridOverlay />
+   692→
+   693→      <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+   694→        <motion.div
+   695→          initial={{ opacity: 0, scale: 0.9 }}
+   696→          whileInView={{ opacity: 1, scale: 1 }}
+   697→          viewport={{ once: true }}
+   698→          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+   699→          className="relative p-8 lg:p-12 rounded-3xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-sm overflow-hidden"
+   700→        >
+   701→          {/* Inner glow */}
+   702→          <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
+   703→          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl" />
+   704→
+   705→          <div className="relative z-10">
+   706→            <Sparkles className="size-6 text-emerald-400/50 mx-auto mb-4" />
+   707→
+   708→            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
+   709→              Ready to{' '}
+   710→              <span className="bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">Get Started?</span>
+   711→            </h2>
+   712→
+   713→            <p className="text-sm lg:text-base text-white/40 leading-relaxed mb-8 max-w-md mx-auto">
+   714→              Let&apos;s discuss how we can help transform your business with innovative IT solutions.
+   715→              Get a free consultation today — no obligations.
+   716→            </p>
+   717→
+   718→            {/* CTAs */}
+   719→            <div className="flex items-center justify-center gap-3 flex-wrap mb-8">
+   720→              <button
+   721→                onClick={() => navigate('contact')}
+   722→                className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold hover:from-emerald-400 hover:to-teal-400 transition-all shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-[0.98]"
+   723→              >
+   724→                Get a Free Quote
+   725→                <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+   726→              </button>
+   727→              <button
+   728→                onClick={() => navigate('portfolio')}
+   729→                className="group flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-white/[0.06] text-white/60 text-sm font-medium hover:bg-white/[0.12] hover:text-white transition-all border border-white/[0.08] hover:scale-105 active:scale-[0.98]"
+   730→              >
+   731→                View Our Work
+   732→              </button>
+   733→            </div>
+   734→
+   735→            {/* Contact Info */}
+   736→            <div className="flex items-center justify-center gap-6 lg:gap-8 text-xs text-white/30">
+   737→              <a href="tel:+233243618186" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
+   738→                <Phone className="size-3.5" />
+   739→                <span>+233 (024) 361 8186</span>
+   740→              </a>
+   741→              <a href="mailto:mail@lightworldtech.com" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
+   742→                <Mail className="size-3.5" />
+   743→                <span>mail@lightworldtech.com</span>
+   744→              </a>
+   745→            </div>
+   746→          </div>
+   747→        </motion.div>
+   748→
+   749→        {/* Client Ticker */}
+   750→        <div className="mt-10 px-4">
+   751→          <ClientTicker className="py-2" />
+   752→        </div>
+   753→      </div>
+   754→    </div>
+   755→  );
+   756→}
+   757→
+   758→/* ══════════════════════════════════════════════════════════════
+   759→   MAIN COMPONENT — FULLSCREEN SLIDESHOW
+   760→   ══════════════════════════════════════════════════════════════ */
+   761→
+   762→const SLIDES = [
+   763→  { id: 0, label: 'Home', component: HeroSlide },
+   764→  { id: 1, label: 'About', component: AboutSlide },
+   765→  { id: 2, label: 'Services', component: ServicesSlide },
+   766→  { id: 3, label: 'Portfolio', component: PortfolioSlide },
+   767→  { id: 4, label: 'Testimonials', component: TestimonialsSlide },
+   768→  { id: 5, label: 'Get Started', component: CTASlide },
+   769→];
+   770→
+   771→const slideVariants = {
+   772→  enter: { opacity: 0, scale: 0.98 },
+   773→  center: { opacity: 1, scale: 1 },
+   774→  exit: { opacity: 0, scale: 1.02 },
+   775→};
+   776→
+   777→export default function HomePage() {
+   778→  const [currentSlide, setCurrentSlide] = useState(0);
+   779→  const [isTransitioning, setIsTransitioning] = useState(false);
+   780→  const [isPaused, setIsPaused] = useState(false);
+   781→  const touchStartY = useRef(0);
+   782→  const containerRef = useRef<HTMLDivElement>(null);
+   783→  const lastAutoTime = useRef(Date.now());
+   784→
+   785→  useSEO({
+   786→    title: 'Lightworld Technologies — Powering Digital Innovation',
+   787→    description: 'Leading IT solutions provider in Ghana. Web development, cloud services, cybersecurity, data analytics, and enterprise software.',
+   788→    keywords: ['IT company Ghana', 'Lightworld Technologies', 'web development Ghana', 'cybersecurity Africa', 'cloud services'],
+   789→  });
+   790→
+   791→  // Auto-advance every 6 seconds
+   792→  useEffect(() => {
+   793→    if (isPaused) return;
+   794→    const interval = setInterval(() => {
+   795→      if (!isPaused && !isTransitioning) {
+   796→        setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
+   797→      }
+   798→    }, 7000);
+   799→    return () => clearInterval(interval);
+   800→  }, [isPaused, isTransitioning]);
+   801→
+   802→  const goToSlide = useCallback((index: number) => {
+   803→    if (isTransitioning || index === currentSlide) return;
+   804→    setIsTransitioning(true);
+   805→    setCurrentSlide(index);
+   806→    setTimeout(() => setIsTransitioning(false), 700);
+   807→  }, [currentSlide, isTransitioning]);
+   808→
+   809→  const nextSlide = useCallback(() => goToSlide((currentSlide + 1) % SLIDES.length), [currentSlide, goToSlide]);
+   810→  const prevSlide = useCallback(() => goToSlide((currentSlide - 1 + SLIDES.length) % SLIDES.length), [currentSlide, goToSlide]);
+   811→
+   812→  // Wheel handler
+   813→  useEffect(() => {
+   814→    let lastWheel = 0;
+   815→    const handleWheel = (e: WheelEvent) => {
+   816→      e.preventDefault();
+   817→      const now = Date.now();
+   818→      if (now - lastWheel < 1000) return; // Throttle
+   819→      lastWheel = now;
+   820→
+   821→      if (Math.abs(e.deltaY) > 30) {
+   822→        if (e.deltaY > 0) nextSlide();
+   823→        else prevSlide();
+   824→      }
+   825→    };
+   826→
+   827→    const el = containerRef.current;
+   828→    if (el) {
+   829→      el.addEventListener('wheel', handleWheel, { passive: false });
+   830→      return () => el.removeEventListener('wheel', handleWheel);
+   831→    }
+   832→  }, [nextSlide, prevSlide]);
+   833→
+   834→  // Touch handlers
+   835→  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+   836→    touchStartY.current = e.touches[0].clientY;
+   837→  }, []);
+   838→
+   839→  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+   840→    const diff = touchStartY.current - e.changedTouches[0].clientY;
+   841→    if (Math.abs(diff) > 50) {
+   842→      if (diff > 0) nextSlide();
+   843→      else prevSlide();
+   844→    }
+   845→  }, [nextSlide, prevSlide]);
+   846→
+   847→  // Keyboard
+   848→  useEffect(() => {
+   849→    const handleKey = (e: KeyboardEvent) => {
+   850→      if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+   851→      if (e.key === 'ArrowUp') { e.preventDefault(); prevSlide(); }
+   852→    };
+   853→    window.addEventListener('keydown', handleKey);
+   854→    return () => window.removeEventListener('keydown', handleKey);
+   855→  }, [nextSlide, prevSlide]);
+   856→
+   857→  const ActiveSlideComponent = SLIDES[currentSlide].component;
+   858→
+   859→  return (
+   860→    <div
+   861→      ref={containerRef}
+   862→      className="h-screen w-screen overflow-hidden bg-[#050810] relative select-none"
+   863→      onMouseEnter={() => setIsPaused(true)}
+   864→      onMouseLeave={() => setIsPaused(false)}
+   865→      onTouchStart={handleTouchStart}
+   866→      onTouchEnd={handleTouchEnd}
+   867→    >
+   868→      {/* ── Slide Content ── */}
+   869→      <AnimatePresence mode="wait">
+   870→        <motion.div
+   871→          key={currentSlide}
+   872→          variants={slideVariants}
+   873→          initial="enter"
+   874→          animate="center"
+   875→          exit="exit"
+   876→          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+   877→          className="absolute inset-0"
+   878→        >
+   879→          <ActiveSlideComponent />
+   880→        </motion.div>
+   881→      </AnimatePresence>
+   882→
+   883→      {/* ── Navigation Dots (right side) ── */}
+   884→      <div className="fixed right-4 lg:right-8 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2.5">
+   885→        {SLIDES.map((slide, i) => (
+   886→          <button
+   887→            key={i}
+   888→            onClick={() => goToSlide(i)}
+   889→            className="group flex items-center gap-2.5"
+   890→            aria-label={`Go to ${slide.label} slide`}
+   891→          >
+   892→            {/* Desktop: dot with label */}
+   893→            <span className="hidden lg:block text-[9px] text-white/0 group-hover:text-white/40 font-medium transition-all duration-300 text-right w-24 -mr-2.5">
+   894→              {slide.label}
+   895→            </span>
+   896→            <div
+   897→              className={cn(
+   898→                'transition-all duration-400 rounded-full',
+   899→                i === currentSlide
+   900→                  ? 'size-3 bg-emerald-400 shadow-lg shadow-emerald-400/40'
+   901→                  : 'size-2 bg-white/15 group-hover:bg-white/30 group-hover:size-2.5',
+   902→              )}
+   903→            />
+   904→          </button>
+   905→        ))}
+   906→      </div>
+   907→
+   908→      {/* ── Arrow Controls (bottom right) ── */}
+   909→      <div className="fixed bottom-6 lg:bottom-8 right-6 lg:right-8 z-30 flex items-center gap-2">
+   910→        <button
+   911→          onClick={prevSlide}
+   912→          className="size-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:bg-white/[0.08] hover:text-white/70 transition-all hover:scale-110 active:scale-95"
+   913→          aria-label="Previous slide"
+   914→        >
+   915→          <ChevronUp className="size-4" />
+   916→        </button>
+   917→        <button
+   918→          onClick={nextSlide}
+   919→          className="size-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:bg-white/[0.08] hover:text-white/70 transition-all hover:scale-110 active:scale-95"
+   920→          aria-label="Next slide"
+   921→        >
+   922→          <ChevronDown className="size-4" />
+   923→        </button>
+   924→      </div>
+   925→
+   926→      {/* ── Slide Counter (bottom left) ── */}
+   927→      <div className="fixed bottom-6 lg:bottom-8 left-6 lg:left-8 z-30 flex items-center gap-2">
+   928→        <span className="text-lg font-bold text-white/60 tabular-nums">{String(currentSlide + 1).padStart(2, '0')}</span>
+   929→        <span className="text-xs text-white/15 font-medium">/ {String(SLIDES.length).padStart(2, '0')}</span>
+   930→        <div className="ml-3 w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+   931→          <motion.div
+   932→            className="h-full bg-emerald-400/60 rounded-full"
+   933→            initial={{ width: '0%' }}
+   934→            animate={{ width: `${((currentSlide + 1) / SLIDES.length) * 100}%` }}
+   935→            transition={{ duration: 0.4, ease: 'easeOut' }}
+   936→          />
+   937→        </div>
+   938→      </div>
+   939→
+   940→      {/* ── Scroll Hint (shown briefly) ── */}
+   941→      <motion.div
+   942→        initial={{ opacity: 0 }}
+   943→        animate={{ opacity: 1 }}
+   944→        transition={{ delay: 2 }}
+   945→        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30"
+   946→      >
+   947→        <motion.div
+   948→          animate={{ opacity: [0.4, 0.8, 0.4], y: [0, 4, 0] }}
+   949→          transition={{ duration: 2, repeat: Infinity }}
+   950→          className="flex flex-col items-center gap-1"
+   951→        >
+   952→          <span className="text-[9px] text-white/20 font-medium tracking-wider uppercase">Scroll or Swipe</span>
+   953→          <ChevronDown className="size-3 text-white/20" />
+   954→        </motion.div>
+   955→      </motion.div>
+   956→    </div>
+   957→  );
+   958→}
+   959→

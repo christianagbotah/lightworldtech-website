@@ -116,20 +116,29 @@ function useCountUp(end: number, duration = 2000, decimals = 0, delay = 600) {
    BACKGROUND EFFECTS
    ══════════════════════════════════════════════════════════════ */
 
+/** Deterministic seeded PRNG (mulberry32) — keeps SSR & client output identical. */
+function mulberry32(seed: number) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function ParticleField() {
-  const particles = useMemo(
-    () =>
-      Array.from({ length: 40 }, (_, i) => ({
-        id: i,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        size: 1 + Math.random() * 2,
-        duration: 20 + Math.random() * 25,
-        delay: Math.random() * 15,
-        opacity: 0.06 + Math.random() * 0.15,
-      })),
-    [],
-  );
+  const particles = useMemo(() => {
+    const rand = mulberry32(20240517); // fixed seed → SSR & client match
+    return Array.from({ length: 40 }, (_, i) => ({
+      id: i,
+      left: rand() * 100,
+      top: rand() * 100,
+      size: 1 + rand() * 2,
+      duration: 20 + rand() * 25,
+      delay: rand() * 15,
+      opacity: 0.06 + rand() * 0.15,
+    }));
+  }, []);
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">

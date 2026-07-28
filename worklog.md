@@ -603,3 +603,21 @@ The website has been completely redesigned from a traditional scrolling format t
 3. Consider adding touch gesture support for mobile slide navigation
 4. Consider adding slide thumbnails or overview mode
 5. Fine-tune spacing and layout for different viewport sizes
+
+---
+Task ID: hydration-fix
+Agent: Main Agent
+Task: Fix React hydration mismatch error caused by Math.random() in ParticleField
+
+Work Log:
+- Diagnosed hydration mismatch: `ParticleField` in `HomePage.tsx` used `Math.random()` inside `useMemo` to generate 40 particles with random `left`, `top`, `size`, `duration`, `delay`, `opacity` values
+- Server and client produced different random values → DOM mismatch on hydration
+- Fix: Replaced `Math.random()` with deterministic seeded PRNG (mulberry32 algorithm, seed=20240517) so both server and client generate identical particle data
+- Added `mulberry32()` helper function above `ParticleField` component
+- Verified via agent-browser: no hydration mismatch errors in console, page renders correctly with all 6 slides, gradient orbs, and particles
+- ESLint: 0 errors, 0 warnings
+
+Stage Summary:
+- Single edit to `src/components/pages/HomePage.tsx` — replaced Math.random() with seeded PRNG
+- Hydration mismatch fully resolved, confirmed by browser verification
+- No regressions: all slides, animations, gradients, and particles work correctly

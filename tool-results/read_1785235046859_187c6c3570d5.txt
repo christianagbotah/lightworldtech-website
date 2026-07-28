@@ -1,0 +1,733 @@
+     1→## Error Type
+     2→Console Error
+     3→
+     4→## Error Message
+     5→A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+     6→
+     7→- A server/client branch `if (typeof window !== 'undefined')`.
+     8→- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+     9→- Date formatting in a user's locale which doesn't match the server.
+    10→- External changing data without sending a snapshot of it along with the HTML.
+    11→- Invalid HTML tag nesting.
+    12→
+    13→It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+    14→
+    15→https://react.dev/link/hydration-mismatch
+    16→
+    17→  ...
+    18→    <div style={{opacity:0, ...}} ref={function useMotionRef.useCallback}>
+    19→      <HomePage>
+    20→        <div ref={{current:null}} className="h-screen w..." onMouseEnter={function onMouseEnter} ...>
+    21→          <AnimatePresence mode="wait">
+    22→            <PresenceChild isPresent={true} initial={undefined} custom={undefined} presenceAffectsLayout={true} ...>
+    23→              <motion.div variants={{...}} initial="enter" animate="center" exit="exit" transition={{duration:0.6, ...}} ...>
+    24→                <div className="absolute i..." style={{opacity:0, ...}} ref={function useMotionRef.useCallback}>
+    25→                  <HeroSlide>
+    26→                    <div className="absolute i...">
+    27→                      <GradientOrbs>
+    28→                      <ParticleField>
+    29→                        <div className="absolute i...">
+    30→                          <motion.div className="absolute r..." style={{left:"51.0...", ...}} animate={{y:[...], ...}} ...>
+    31→                            <div
+    32→                              className="absolute rounded-full bg-emerald-400"
+    33→                              style={{
+    34→+                               left: "51.00206564164596%"
+    35→-                               left: "97.0417%"
+    36→+                               top: "22.965930016987002%"
+    37→-                               top: "23.3098%"
+    38→+                               width: 1.1024001111087542
+    39→-                               width: "1.2766px"
+    40→+                               height: 1.1024001111087542
+    41→-                               height: "1.2766px"
+    42→+                               opacity: 0.07678013842203116
+    43→-                               opacity: "0.178471"
+    44→                              }}
+    45→                              ref={function useMotionRef.useCallback}
+    46→                            >
+    47→                          <motion.div className="absolute r..." style={{left:"1.63...", ...}} animate={{y:[...], ...}} ...>
+    48→                            <div
+    49→                              className="absolute rounded-full bg-emerald-400"
+    50→                              style={{
+    51→+                               left: "1.639956969357259%"
+    52→-                               left: "83.4189%"
+    53→+                               top: "50.973464428356216%"
+    54→-                               top: "0.147761%"
+    55→+                               width: 2.853353525446968
+    56→-                               width: "1.13253px"
+    57→+                               height: 2.853353525446968
+    58→-                               height: "1.13253px"
+    59→+                               opacity: 0.12718940706452775
+    60→-                               opacity: "0.0628491"
+    61→                              }}
+    62→                              ref={function useMotionRef.useCallback}
+    63→                            >
+    64→                          <motion.div className="absolute r..." style={{left:"37.7...", ...}} animate={{y:[...], ...}} ...>
+    65→                            <div
+    66→                              className="absolute rounded-full bg-emerald-400"
+    67→                              style={{
+    68→+                               left: "37.72981516704586%"
+    69→-                               left: "79.7911%"
+    70→+                               top: "95.23377711914065%"
+    71→-                               top: "51.1867%"
+    72→+                               width: 1.7849145093209817
+    73→-                               width: "1.38914px"
+    74→+                               height: 1.7849145093209817
+    75→-                               height: "1.38914px"
+    76→+                               opacity: 0.1623352912184446
+    77→-                               opacity: "0.191616"
+    78→                              }}
+    79→                              ref={function useMotionRef.useCallback}
+    80→                            >
+    81→                          <motion.div className="absolute r..." style={{left:"84.8...", ...}} animate={{y:[...], ...}} ...>
+    82→                            <div
+    83→                              className="absolute rounded-full bg-emerald-400"
+    84→                              style={{
+    85→+                               left: "84.84123013126738%"
+    86→-                               left: "76.369%"
+    87→+                               top: "94.45826861460435%"
+    88→-                               top: "12.6607%"
+    89→+                               width: 2.7522192236586216
+    90→-                               width: "2.21398px"
+    91→+                               height: 2.7522192236586216
+    92→-                               height: "2.21398px"
+    93→+                               opacity: 0.08192241781618428
+    94→-                               opacity: "0.148426"
+    95→                              }}
+    96→                              ref={function useMotionRef.useCallback}
+    97→                            >
+    98→                          <motion.div className="absolute r..." style={{left:"82.6...", ...}} animate={{y:[...], ...}} ...>
+    99→                            <div
+   100→                              className="absolute rounded-full bg-emerald-400"
+   101→                              style={{
+   102→+                               left: "82.69425417584503%"
+   103→-                               left: "81.3901%"
+   104→+                               top: "8.320105260610866%"
+   105→-                               top: "11.8435%"
+   106→+                               width: 1.1605366430376038
+   107→-                               width: "1.01714px"
+   108→+                               height: 1.1605366430376038
+   109→-                               height: "1.01714px"
+   110→+                               opacity: 0.13916317617781787
+   111→-                               opacity: "0.178569"
+   112→                              }}
+   113→                              ref={function useMotionRef.useCallback}
+   114→                            >
+   115→                          <motion.div className="absolute r..." style={{left:"7.14...", ...}} animate={{y:[...], ...}} ...>
+   116→                            <div
+   117→                              className="absolute rounded-full bg-emerald-400"
+   118→                              style={{
+   119→+                               left: "7.1447571264928955%"
+   120→-                               left: "0.355534%"
+   121→+                               top: "11.237390299664296%"
+   122→-                               top: "64.3197%"
+   123→+                               width: 2.271733103247639
+   124→-                               width: "1.51573px"
+   125→+                               height: 2.271733103247639
+   126→-                               height: "1.51573px"
+   127→+                               opacity: 0.1019584770229138
+   128→-                               opacity: "0.0879295"
+   129→                              }}
+   130→                              ref={function useMotionRef.useCallback}
+   131→                            >
+   132→                          <motion.div className="absolute r..." style={{left:"24.2...", ...}} animate={{y:[...], ...}} ...>
+   133→                            <div
+   134→                              className="absolute rounded-full bg-emerald-400"
+   135→                              style={{
+   136→+                               left: "24.253989725556846%"
+   137→-                               left: "41.0544%"
+   138→+                               top: "7.491592580431972%"
+   139→-                               top: "64.3313%"
+   140→+                               width: 2.41905473540115
+   141→-                               width: "2.15321px"
+   142→+                               height: 2.41905473540115
+   143→-                               height: "2.15321px"
+   144→+                               opacity: 0.141267399300554
+   145→-                               opacity: "0.142109"
+   146→                              }}
+   147→                              ref={function useMotionRef.useCallback}
+   148→                            >
+   149→                          <motion.div className="absolute r..." style={{left:"2.74...", ...}} animate={{y:[...], ...}} ...>
+   150→                            <div
+   151→                              className="absolute rounded-full bg-emerald-400"
+   152→                              style={{
+   153→+                               left: "2.743621762230375%"
+   154→-                               left: "27.3971%"
+   155→+                               top: "10.529904092483411%"
+   156→-                               top: "5.85522%"
+   157→+                               width: 2.512375551265802
+   158→-                               width: "1.51258px"
+   159→+                               height: 2.512375551265802
+   160→-                               height: "1.51258px"
+   161→+                               opacity: 0.1400702175167507
+   162→-                               opacity: "0.0631486"
+   163→                              }}
+   164→                              ref={function useMotionRef.useCallback}
+   165→                            >
+   166→                          <motion.div className="absolute r..." style={{left:"11.2...", ...}} animate={{y:[...], ...}} ...>
+   167→                            <div
+   168→                              className="absolute rounded-full bg-emerald-400"
+   169→                              style={{
+   170→+                               left: "11.28087565693402%"
+   171→-                               left: "83.499%"
+   172→+                               top: "70.24046620066474%"
+   173→-                               top: "72.2152%"
+   174→+                               width: 1.0770026602719267
+   175→-                               width: "1.61298px"
+   176→+                               height: 1.0770026602719267
+   177→-                               height: "1.61298px"
+   178→+                               opacity: 0.14439576548430003
+   179→-                               opacity: "0.111462"
+   180→                              }}
+   181→                              ref={function useMotionRef.useCallback}
+   182→                            >
+   183→                          <motion.div className="absolute r..." style={{left:"98.8...", ...}} animate={{y:[...], ...}} ...>
+   184→                            <div
+   185→                              className="absolute rounded-full bg-emerald-400"
+   186→                              style={{
+   187→+                               left: "98.84936296854853%"
+   188→-                               left: "10.1842%"
+   189→+                               top: "13.0181081561057%"
+   190→-                               top: "75.7444%"
+   191→+                               width: 2.5472632232028145
+   192→-                               width: "2.08888px"
+   193→+                               height: 2.5472632232028145
+   194→-                               height: "2.08888px"
+   195→+                               opacity: 0.18676245955320642
+   196→-                               opacity: "0.134962"
+   197→                              }}
+   198→                              ref={function useMotionRef.useCallback}
+   199→                            >
+   200→                          <motion.div className="absolute r..." style={{left:"76.4...", ...}} animate={{y:[...], ...}} ...>
+   201→                            <div
+   202→                              className="absolute rounded-full bg-emerald-400"
+   203→                              style={{
+   204→+                               left: "76.43320024066031%"
+   205→-                               left: "71.426%"
+   206→+                               top: "84.4886682990224%"
+   207→-                               top: "27.631%"
+   208→+                               width: 2.810889376909005
+   209→-                               width: "1.52245px"
+   210→+                               height: 2.810889376909005
+   211→-                               height: "1.52245px"
+   212→+                               opacity: 0.11572241372631117
+   213→-                               opacity: "0.161797"
+   214→                              }}
+   215→                              ref={function useMotionRef.useCallback}
+   216→                            >
+   217→                          <motion.div className="absolute r..." style={{left:"54.1...", ...}} animate={{y:[...], ...}} ...>
+   218→                            <div
+   219→                              className="absolute rounded-full bg-emerald-400"
+   220→                              style={{
+   221→+                               left: "54.12680545275498%"
+   222→-                               left: "28.2392%"
+   223→+                               top: "93.57311908335265%"
+   224→-                               top: "80.8049%"
+   225→+                               width: 2.7264466666217073
+   226→-                               width: "2.23746px"
+   227→+                               height: 2.7264466666217073
+   228→-                               height: "2.23746px"
+   229→+                               opacity: 0.1254811866034528
+   230→-                               opacity: "0.119746"
+   231→                              }}
+   232→                              ref={function useMotionRef.useCallback}
+   233→                            >
+   234→                          <motion.div className="absolute r..." style={{left:"83.7...", ...}} animate={{y:[...], ...}} ...>
+   235→                            <div
+   236→                              className="absolute rounded-full bg-emerald-400"
+   237→                              style={{
+   238→+                               left: "83.75222681130097%"
+   239→-                               left: "42.9349%"
+   240→+                               top: "77.39068963685048%"
+   241→-                               top: "70.4959%"
+   242→+                               width: 2.8892903099535676
+   243→-                               width: "1.93025px"
+   244→+                               height: 2.8892903099535676
+   245→-                               height: "1.93025px"
+   246→+                               opacity: 0.11614074295684709
+   247→-                               opacity: "0.182714"
+   248→                              }}
+   249→                              ref={function useMotionRef.useCallback}
+   250→                            >
+   251→                          <motion.div className="absolute r..." style={{left:"96.2...", ...}} animate={{y:[...], ...}} ...>
+   252→                            <div
+   253→                              className="absolute rounded-full bg-emerald-400"
+   254→                              style={{
+   255→+                               left: "96.23347283121886%"
+   256→-                               left: "30.4993%"
+   257→+                               top: "67.40356125108691%"
+   258→-                               top: "28.14%"
+   259→+                               width: 2.01042893103119
+   260→-                               width: "2.74915px"
+   261→+                               height: 2.01042893103119
+   262→-                               height: "2.74915px"
+   263→+                               opacity: 0.13332086482071917
+   264→-                               opacity: "0.0695"
+   265→                              }}
+   266→                              ref={function useMotionRef.useCallback}
+   267→                            >
+   268→                          <motion.div className="absolute r..." style={{left:"59.9...", ...}} animate={{y:[...], ...}} ...>
+   269→                            <div
+   270→                              className="absolute rounded-full bg-emerald-400"
+   271→                              style={{
+   272→+                               left: "59.97782252358898%"
+   273→-                               left: "18.6541%"
+   274→+                               top: "34.97805257775597%"
+   275→-                               top: "25.5469%"
+   276→+                               width: 2.906406041549025
+   277→-                               width: "1.87576px"
+   278→+                               height: 2.906406041549025
+   279→-                               height: "1.87576px"
+   280→+                               opacity: 0.1511642610906631
+   281→-                               opacity: "0.172099"
+   282→                              }}
+   283→                              ref={function useMotionRef.useCallback}
+   284→                            >
+   285→                          <motion.div className="absolute r..." style={{left:"53.7...", ...}} animate={{y:[...], ...}} ...>
+   286→                            <div
+   287→                              className="absolute rounded-full bg-emerald-400"
+   288→                              style={{
+   289→+                               left: "53.73802417896161%"
+   290→-                               left: "74.2132%"
+   291→+                               top: "93.28763297203196%"
+   292→-                               top: "46.9271%"
+   293→+                               width: 1.153197895564492
+   294→-                               width: "2.4721px"
+   295→+                               height: 1.153197895564492
+   296→-                               height: "2.4721px"
+   297→+                               opacity: 0.1936281198586786
+   298→-                               opacity: "0.159368"
+   299→                              }}
+   300→                              ref={function useMotionRef.useCallback}
+   301→                            >
+   302→                          <motion.div className="absolute r..." style={{left:"55.0...", ...}} animate={{y:[...], ...}} ...>
+   303→                            <div
+   304→                              className="absolute rounded-full bg-emerald-400"
+   305→                              style={{
+   306→+                               left: "55.04230843066858%"
+   307→-                               left: "56.221%"
+   308→+                               top: "75.801037264861%"
+   309→-                               top: "15.8276%"
+   310→+                               width: 2.4115876144982007
+   311→-                               width: "2.20749px"
+   312→+                               height: 2.4115876144982007
+   313→-                               height: "2.20749px"
+   314→+                               opacity: 0.19747693586385334
+   315→-                               opacity: "0.130945"
+   316→                              }}
+   317→                              ref={function useMotionRef.useCallback}
+   318→                            >
+   319→                          <motion.div className="absolute r..." style={{left:"74.2...", ...}} animate={{y:[...], ...}} ...>
+   320→                            <div
+   321→                              className="absolute rounded-full bg-emerald-400"
+   322→                              style={{
+   323→+                               left: "74.23760124182638%"
+   324→-                               left: "46.4956%"
+   325→+                               top: "32.19064720173187%"
+   326→-                               top: "73.8569%"
+   327→+                               width: 1.371244256187991
+   328→-                               width: "2.85664px"
+   329→+                               height: 1.371244256187991
+   330→-                               height: "2.85664px"
+   331→+                               opacity: 0.07709940652171715
+   332→-                               opacity: "0.0830305"
+   333→                              }}
+   334→                              ref={function useMotionRef.useCallback}
+   335→                            >
+   336→                          <motion.div className="absolute r..." style={{left:"38.0...", ...}} animate={{y:[...], ...}} ...>
+   337→                            <div
+   338→                              className="absolute rounded-full bg-emerald-400"
+   339→                              style={{
+   340→+                               left: "38.051676998102835%"
+   341→-                               left: "20.8431%"
+   342→+                               top: "87.84074345577999%"
+   343→-                               top: "51.8892%"
+   344→+                               width: 2.01759591344037
+   345→-                               width: "1.14071px"
+   346→+                               height: 2.01759591344037
+   347→-                               height: "1.14071px"
+   348→+                               opacity: 0.17391024924280804
+   349→-                               opacity: "0.16569"
+   350→                              }}
+   351→                              ref={function useMotionRef.useCallback}
+   352→                            >
+   353→                          <motion.div className="absolute r..." style={{left:"4.80...", ...}} animate={{y:[...], ...}} ...>
+   354→                            <div
+   355→                              className="absolute rounded-full bg-emerald-400"
+   356→                              style={{
+   357→+                               left: "4.801474411815166%"
+   358→-                               left: "30.9021%"
+   359→+                               top: "39.68083656083131%"
+   360→-                               top: "36.3069%"
+   361→+                               width: 2.4776920040698154
+   362→-                               width: "2.68708px"
+   363→+                               height: 2.4776920040698154
+   364→-                               height: "2.68708px"
+   365→+                               opacity: 0.18557815265377423
+   366→-                               opacity: "0.174755"
+   367→                              }}
+   368→                              ref={function useMotionRef.useCallback}
+   369→                            >
+   370→                          <motion.div className="absolute r..." style={{left:"94.3...", ...}} animate={{y:[...], ...}} ...>
+   371→                            <div
+   372→                              className="absolute rounded-full bg-emerald-400"
+   373→                              style={{
+   374→+                               left: "94.30775478676354%"
+   375→-                               left: "55.9155%"
+   376→+                               top: "91.35728732165602%"
+   377→-                               top: "88.9499%"
+   378→+                               width: 1.7134371916058246
+   379→-                               width: "2.62352px"
+   380→+                               height: 1.7134371916058246
+   381→-                               height: "2.62352px"
+   382→+                               opacity: 0.07085919194287776
+   383→-                               opacity: "0.0999756"
+   384→                              }}
+   385→                              ref={function useMotionRef.useCallback}
+   386→                            >
+   387→                          <motion.div className="absolute r..." style={{left:"46.8...", ...}} animate={{y:[...], ...}} ...>
+   388→                            <div
+   389→                              className="absolute rounded-full bg-emerald-400"
+   390→                              style={{
+   391→+                               left: "46.88618520704484%"
+   392→-                               left: "94.2593%"
+   393→+                               top: "42.47460813993099%"
+   394→-                               top: "98.1574%"
+   395→+                               width: 2.330559075843519
+   396→-                               width: "1.65239px"
+   397→+                               height: 2.330559075843519
+   398→-                               height: "1.65239px"
+   399→+                               opacity: 0.14738406066995902
+   400→-                               opacity: "0.126453"
+   401→                              }}
+   402→                              ref={function useMotionRef.useCallback}
+   403→                            >
+   404→                          <motion.div className="absolute r..." style={{left:"13.7...", ...}} animate={{y:[...], ...}} ...>
+   405→                            <div
+   406→                              className="absolute rounded-full bg-emerald-400"
+   407→                              style={{
+   408→+                               left: "13.73830164256985%"
+   409→-                               left: "98.6353%"
+   410→+                               top: "49.00903181047829%"
+   411→-                               top: "2.10446%"
+   412→+                               width: 1.2404212642725916
+   413→-                               width: "2.34312px"
+   414→+                               height: 1.2404212642725916
+   415→-                               height: "2.34312px"
+   416→+                               opacity: 0.1338135439083264
+   417→-                               opacity: "0.143567"
+   418→                              }}
+   419→                              ref={function useMotionRef.useCallback}
+   420→                            >
+   421→                          <motion.div className="absolute r..." style={{left:"32.5...", ...}} animate={{y:[...], ...}} ...>
+   422→                            <div
+   423→                              className="absolute rounded-full bg-emerald-400"
+   424→                              style={{
+   425→+                               left: "32.51252709846643%"
+   426→-                               left: "60.8758%"
+   427→+                               top: "64.72368177751466%"
+   428→-                               top: "37.2596%"
+   429→+                               width: 2.7939716865597437
+   430→-                               width: "2.81083px"
+   431→+                               height: 2.7939716865597437
+   432→-                               height: "2.81083px"
+   433→+                               opacity: 0.15812781186745506
+   434→-                               opacity: "0.160339"
+   435→                              }}
+   436→                              ref={function useMotionRef.useCallback}
+   437→                            >
+   438→                          <motion.div className="absolute r..." style={{left:"28.4...", ...}} animate={{y:[...], ...}} ...>
+   439→                            <div
+   440→                              className="absolute rounded-full bg-emerald-400"
+   441→                              style={{
+   442→+                               left: "28.45749746221208%"
+   443→-                               left: "16.6098%"
+   444→+                               top: "70.50318050489541%"
+   445→-                               top: "98.3886%"
+   446→+                               width: 1.6575223379618276
+   447→-                               width: "1.88869px"
+   448→+                               height: 1.6575223379618276
+   449→-                               height: "1.88869px"
+   450→+                               opacity: 0.1918544832753928
+   451→-                               opacity: "0.19895"
+   452→                              }}
+   453→                              ref={function useMotionRef.useCallback}
+   454→                            >
+   455→                          <motion.div className="absolute r..." style={{left:"5.91...", ...}} animate={{y:[...], ...}} ...>
+   456→                            <div
+   457→                              className="absolute rounded-full bg-emerald-400"
+   458→                              style={{
+   459→+                               left: "5.917561699408102%"
+   460→-                               left: "17.197%"
+   461→+                               top: "28.275917701091714%"
+   462→-                               top: "88.7612%"
+   463→+                               width: 1.5616320156294337
+   464→-                               width: "2.13706px"
+   465→+                               height: 1.5616320156294337
+   466→-                               height: "2.13706px"
+   467→+                               opacity: 0.06479179548473768
+   468→-                               opacity: "0.0726728"
+   469→                              }}
+   470→                              ref={function useMotionRef.useCallback}
+   471→                            >
+   472→                          <motion.div className="absolute r..." style={{left:"67.0...", ...}} animate={{y:[...], ...}} ...>
+   473→                            <div
+   474→                              className="absolute rounded-full bg-emerald-400"
+   475→                              style={{
+   476→+                               left: "67.06419058806645%"
+   477→-                               left: "47.2452%"
+   478→+                               top: "75.87481059514576%"
+   479→-                               top: "7.73189%"
+   480→+                               width: 1.3016623007475148
+   481→-                               width: "1.9743px"
+   482→+                               height: 1.3016623007475148
+   483→-                               height: "1.9743px"
+   484→+                               opacity: 0.08446344359626065
+   485→-                               opacity: "0.0849453"
+   486→                              }}
+   487→                              ref={function useMotionRef.useCallback}
+   488→                            >
+   489→                          <motion.div className="absolute r..." style={{left:"25.1...", ...}} animate={{y:[...], ...}} ...>
+   490→                            <div
+   491→                              className="absolute rounded-full bg-emerald-400"
+   492→                              style={{
+   493→+                               left: "25.121757895531903%"
+   494→-                               left: "12.3041%"
+   495→+                               top: "67.00316059744537%"
+   496→-                               top: "4.66482%"
+   497→+                               width: 1.3824162336362484
+   498→-                               width: "1.89078px"
+   499→+                               height: 1.3824162336362484
+   500→-                               height: "1.89078px"
+   501→+                               opacity: 0.07761729538611348
+   502→-                               opacity: "0.184865"
+   503→                              }}
+   504→                              ref={function useMotionRef.useCallback}
+   505→                            >
+   506→                          <motion.div className="absolute r..." style={{left:"55.2...", ...}} animate={{y:[...], ...}} ...>
+   507→                            <div
+   508→                              className="absolute rounded-full bg-emerald-400"
+   509→                              style={{
+   510→+                               left: "55.22319046512455%"
+   511→-                               left: "18.9098%"
+   512→+                               top: "99.89589933201451%"
+   513→-                               top: "15.9789%"
+   514→+                               width: 1.9553196755063478
+   515→-                               width: "2.81502px"
+   516→+                               height: 1.9553196755063478
+   517→-                               height: "2.81502px"
+   518→+                               opacity: 0.1807544074272839
+   519→-                               opacity: "0.163809"
+   520→                              }}
+   521→                              ref={function useMotionRef.useCallback}
+   522→                            >
+   523→                          <motion.div className="absolute r..." style={{left:"82.2...", ...}} animate={{y:[...], ...}} ...>
+   524→                            <div
+   525→                              className="absolute rounded-full bg-emerald-400"
+   526→                              style={{
+   527→+                               left: "82.24436637995444%"
+   528→-                               left: "50.7364%"
+   529→+                               top: "94.36948402796243%"
+   530→-                               top: "50.3886%"
+   531→+                               width: 2.246556681811069
+   532→-                               width: "2.84603px"
+   533→+                               height: 2.246556681811069
+   534→-                               height: "2.84603px"
+   535→+                               opacity: 0.1901088398481903
+   536→-                               opacity: "0.170785"
+   537→                              }}
+   538→                              ref={function useMotionRef.useCallback}
+   539→                            >
+   540→                          <motion.div className="absolute r..." style={{left:"59.0...", ...}} animate={{y:[...], ...}} ...>
+   541→                            <div
+   542→                              className="absolute rounded-full bg-emerald-400"
+   543→                              style={{
+   544→+                               left: "59.064675864394786%"
+   545→-                               left: "77.6117%"
+   546→+                               top: "16.354713381736374%"
+   547→-                               top: "86.0103%"
+   548→+                               width: 1.4057080640773367
+   549→-                               width: "2.98292px"
+   550→+                               height: 1.4057080640773367
+   551→-                               height: "2.98292px"
+   552→+                               opacity: 0.18442945259353405
+   553→-                               opacity: "0.190875"
+   554→                              }}
+   555→                              ref={function useMotionRef.useCallback}
+   556→                            >
+   557→                          <motion.div className="absolute r..." style={{left:"30.5...", ...}} animate={{y:[...], ...}} ...>
+   558→                            <div
+   559→                              className="absolute rounded-full bg-emerald-400"
+   560→                              style={{
+   561→+                               left: "30.56431914597424%"
+   562→-                               left: "12.6936%"
+   563→+                               top: "50.37993799183151%"
+   564→-                               top: "95.3519%"
+   565→+                               width: 1.4830225970800213
+   566→-                               width: "2.93258px"
+   567→+                               height: 1.4830225970800213
+   568→-                               height: "2.93258px"
+   569→+                               opacity: 0.08202841239103967
+   570→-                               opacity: "0.192597"
+   571→                              }}
+   572→                              ref={function useMotionRef.useCallback}
+   573→                            >
+   574→                          <motion.div className="absolute r..." style={{left:"77.2...", ...}} animate={{y:[...], ...}} ...>
+   575→                            <div
+   576→                              className="absolute rounded-full bg-emerald-400"
+   577→                              style={{
+   578→+                               left: "77.2370327279007%"
+   579→-                               left: "96.838%"
+   580→+                               top: "76.37641318851077%"
+   581→-                               top: "42.7839%"
+   582→+                               width: 2.065244401412728
+   583→-                               width: "2.41627px"
+   584→+                               height: 2.065244401412728
+   585→-                               height: "2.41627px"
+   586→+                               opacity: 0.18579625069959796
+   587→-                               opacity: "0.0606988"
+   588→                              }}
+   589→                              ref={function useMotionRef.useCallback}
+   590→                            >
+   591→                          <motion.div className="absolute r..." style={{left:"26.4...", ...}} animate={{y:[...], ...}} ...>
+   592→                            <div
+   593→                              className="absolute rounded-full bg-emerald-400"
+   594→                              style={{
+   595→+                               left: "26.41740943913211%"
+   596→-                               left: "6.58023%"
+   597→+                               top: "65.4806016154993%"
+   598→-                               top: "1.64851%"
+   599→+                               width: 1.5615944247521059
+   600→-                               width: "1.70495px"
+   601→+                               height: 1.5615944247521059
+   602→-                               height: "1.70495px"
+   603→+                               opacity: 0.17114889844973957
+   604→-                               opacity: "0.208647"
+   605→                              }}
+   606→                              ref={function useMotionRef.useCallback}
+   607→                            >
+   608→                          <motion.div className="absolute r..." style={{left:"9.41...", ...}} animate={{y:[...], ...}} ...>
+   609→                            <div
+   610→                              className="absolute rounded-full bg-emerald-400"
+   611→                              style={{
+   612→+                               left: "9.418731941320068%"
+   613→-                               left: "64.8955%"
+   614→+                               top: "24.80224753568898%"
+   615→-                               top: "9.17873%"
+   616→+                               width: 2.2914057440267532
+   617→-                               width: "1.93194px"
+   618→+                               height: 2.2914057440267532
+   619→-                               height: "1.93194px"
+   620→+                               opacity: 0.13040832969072433
+   621→-                               opacity: "0.0969621"
+   622→                              }}
+   623→                              ref={function useMotionRef.useCallback}
+   624→                            >
+   625→                          <motion.div className="absolute r..." style={{left:"53.0...", ...}} animate={{y:[...], ...}} ...>
+   626→                            <div
+   627→                              className="absolute rounded-full bg-emerald-400"
+   628→                              style={{
+   629→+                               left: "53.07002760549933%"
+   630→-                               left: "91.9208%"
+   631→+                               top: "74.67648190264534%"
+   632→-                               top: "86.2233%"
+   633→+                               width: 1.2876488496713603
+   634→-                               width: "1.83632px"
+   635→+                               height: 1.2876488496713603
+   636→-                               height: "1.83632px"
+   637→+                               opacity: 0.1811011796709123
+   638→-                               opacity: "0.122444"
+   639→                              }}
+   640→                              ref={function useMotionRef.useCallback}
+   641→                            >
+   642→                          <motion.div className="absolute r..." style={{left:"87.7...", ...}} animate={{y:[...], ...}} ...>
+   643→                            <div
+   644→                              className="absolute rounded-full bg-emerald-400"
+   645→                              style={{
+   646→+                               left: "87.70864785455534%"
+   647→-                               left: "7.26345%"
+   648→+                               top: "97.46646767757075%"
+   649→-                               top: "4.04119%"
+   650→+                               width: 1.4987736946780668
+   651→-                               width: "2.16791px"
+   652→+                               height: 1.4987736946780668
+   653→-                               height: "2.16791px"
+   654→+                               opacity: 0.128423726099187
+   655→-                               opacity: "0.138963"
+   656→                              }}
+   657→                              ref={function useMotionRef.useCallback}
+   658→                            >
+   659→                          <motion.div className="absolute r..." style={{left:"15.8...", ...}} animate={{y:[...], ...}} ...>
+   660→                            <div
+   661→                              className="absolute rounded-full bg-emerald-400"
+   662→                              style={{
+   663→+                               left: "15.809649081472221%"
+   664→-                               left: "91.4848%"
+   665→+                               top: "78.49177077355668%"
+   666→-                               top: "66.4503%"
+   667→+                               width: 1.145123700844567
+   668→-                               width: "1.35898px"
+   669→+                               height: 1.145123700844567
+   670→-                               height: "1.35898px"
+   671→+                               opacity: 0.08475489906654111
+   672→-                               opacity: "0.147796"
+   673→                              }}
+   674→                              ref={function useMotionRef.useCallback}
+   675→                            >
+   676→                          <motion.div className="absolute r..." style={{left:"17.6...", ...}} animate={{y:[...], ...}} ...>
+   677→                            <div
+   678→                              className="absolute rounded-full bg-emerald-400"
+   679→                              style={{
+   680→+                               left: "17.65744678351382%"
+   681→-                               left: "31.9548%"
+   682→+                               top: "55.78783993720211%"
+   683→-                               top: "71.2592%"
+   684→+                               width: 1.7298921678443253
+   685→-                               width: "1.7792px"
+   686→+                               height: 1.7298921678443253
+   687→-                               height: "1.7792px"
+   688→+                               opacity: 0.10013803051389042
+   689→-                               opacity: "0.167335"
+   690→                              }}
+   691→                              ref={function useMotionRef.useCallback}
+   692→                            >
+   693→                          <motion.div className="absolute r..." style={{left:"63.7...", ...}} animate={{y:[...], ...}} ...>
+   694→                            <div
+   695→                              className="absolute rounded-full bg-emerald-400"
+   696→                              style={{
+   697→+                               left: "63.78134626913191%"
+   698→-                               left: "36.121%"
+   699→+                               top: "73.5268908737732%"
+   700→-                               top: "89.3796%"
+   701→+                               width: 2.928540614145144
+   702→-                               width: "2.89638px"
+   703→+                               height: 2.928540614145144
+   704→-                               height: "2.89638px"
+   705→+                               opacity: 0.17191857070141103
+   706→-                               opacity: "0.133381"
+   707→                              }}
+   708→                              ref={function useMotionRef.useCallback}
+   709→                            >
+   710→                      ...
+   711→          ...
+   712→
+   713→
+   714→
+   715→    at div (unknown:0:0)
+   716→    at ParticleField/<.children< (src/components/pages/HomePage.tsx:137:9)
+   717→    at ParticleField (src/components/pages/HomePage.tsx:136:18)
+   718→    at HeroSlide (src/components/pages/HomePage.tsx:193:7)
+   719→    at HomePage (src/components/pages/HomePage.tsx:879:11)
+   720→    at PublicRouter (src/app/page.tsx:82:36)
+   721→    at Home (src/app/page.tsx:139:9)
+   722→
+   723→## Code Frame
+   724→  135 |     <div className="absolute inset-0 overflow-hidden pointer-events-none">
+   725→  136 |       {particles.map((p) => (
+   726→> 137 |         <motion.div
+   727→      |         ^
+   728→  138 |           key={p.id}
+   729→  139 |           className="absolute rounded-full bg-emerald-400"
+   730→  140 |           style={{ left: `${p.left}%`, top: `${p.top}%`, width: p.size, height: p.size, opacity: p.opacity }}
+   731→
+   732→Next.js version: 16.1.3 (Turbopack)
+   733→
