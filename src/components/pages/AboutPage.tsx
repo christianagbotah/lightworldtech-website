@@ -89,23 +89,20 @@ function TeamAvatar({ member, size = 'md' }: { member: TeamMember; size?: 'sm' |
   );
 }
 
-function TeamPhotoSlot({ member, height = 'h-32' }: { member: TeamMember; height?: string }) {
+function TeamPhotoSlot({ member, sizeClass = 'size-20 lg:size-24' }: { member: TeamMember; sizeClass?: string }) {
   return (
-    <div className={`relative w-full ${height} overflow-hidden rounded-t-xl`}>
+    <div className={`relative ${sizeClass} shrink-0 overflow-hidden rounded-xl dark:bg-slate-800/80 bg-slate-200`}>
       {member.image ? (
-        <>
-          <Image src={member.image} alt={member.name} fill className="object-cover" unoptimized />
-          <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white dark:from-[#0c1117] to-transparent" />
-        </>
+        <Image src={member.image} alt={member.name} fill className="object-cover object-top" unoptimized />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-800/80 dark:to-slate-900/80 flex flex-col items-center justify-center gap-2">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-800/80 dark:to-slate-900/80 flex flex-col items-center justify-center gap-1.5">
           <div className="relative">
-            <User className="size-10 lg:size-12 text-slate-300 dark:text-slate-600" strokeWidth={1.5} />
-            <div className="absolute -bottom-1 -right-1 size-4 rounded-full bg-amber-400/20 flex items-center justify-center">
-              <Camera className="size-2.5 text-amber-500" />
+            <User className="size-8 lg:size-10 text-slate-300 dark:text-slate-600" strokeWidth={1.5} />
+            <div className="absolute -bottom-1 -right-1 size-3.5 rounded-full bg-amber-400/20 flex items-center justify-center">
+              <Camera className="size-2 text-amber-500" />
             </div>
           </div>
-          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Photo</span>
+          <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Photo</span>
         </div>
       )}
     </div>
@@ -164,52 +161,55 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
       >
         {/* Front face */}
         <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300" style={{ backfaceVisibility: 'hidden' }}>
-          {/* Image slot area */}
-          <TeamPhotoSlot member={member} height="h-28" />
-          <div className="p-4">
-            <h3 className="font-semibold text-base dark:text-white text-slate-900 truncate">{member.name}</h3>
-            <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
-            <p className="text-sm dark:text-white/40 text-slate-500 mt-2 line-clamp-2 leading-relaxed">{member.bio}</p>
+          <div className="flex gap-3 p-3">
+            {/* Left: Details */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <h3 className="font-semibold text-sm dark:text-white text-slate-900 truncate">{member.name}</h3>
+              <p className="text-[11px] text-amber-400 font-medium truncate">{member.role}</p>
+              <p className="text-xs dark:text-white/40 text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">{member.bio}</p>
+            </div>
+            {/* Right: Portrait image slot */}
+            <TeamPhotoSlot member={member} sizeClass="size-20" />
           </div>
         </div>
 
         {/* Back face */}
         <div className="absolute inset-0 w-full rounded-xl overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-amber-600 to-amber-500" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-          <div className="p-4 h-full flex flex-col">
-            <div className="flex items-center gap-3 mb-2">
-              <TeamAvatar member={member} size="sm" />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-white truncate">{member.name}</h3>
-                <p className="text-xs text-amber-200">{member.role}</p>
+          <div className="flex gap-3 p-3 h-full">
+            {/* Left: Details */}
+            <div className="flex-1 min-w-0 flex flex-col">
+              <h3 className="font-semibold text-sm text-white truncate">{member.name}</h3>
+              <p className="text-[11px] text-amber-200 mt-0.5">{member.role}</p>
+              <p className="text-xs text-amber-100/80 leading-relaxed flex-1 line-clamp-3 mt-1.5">{member.bio}</p>
+              {member.skills && member.skills.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {member.skills.slice(0, 3).map((skill) => (
+                    <span key={skill} className="px-1.5 py-0.5 rounded-full bg-white/10 text-amber-100 text-[10px] font-medium">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-1.5 mt-2">
+                {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
+                  const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
+                  return (
+                    <a
+                      key={label}
+                      href={href}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`size-6 rounded-full bg-white/15 backdrop-blur-sm text-white flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
+                      aria-label={`${label} - ${member.name}`}
+                      title={`${label} - ${member.name}`}
+                    >
+                      <SocialIcon className="size-3" />
+                    </a>
+                  );
+                })}
               </div>
             </div>
-            <p className="text-xs text-amber-100/80 leading-relaxed flex-1 line-clamp-3">{member.bio}</p>
-            {member.skills && member.skills.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {member.skills.slice(0, 3).map((skill) => (
-                  <span key={skill} className="px-2 py-0.5 rounded-full bg-white/10 text-amber-100 text-xs font-medium">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="flex gap-2 mt-2.5">
-              {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
-                const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
-                return (
-                  <a
-                    key={label}
-                    href={href}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`size-7 rounded-full bg-white/15 backdrop-blur-sm text-white flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
-                    aria-label={`${label} - ${member.name}`}
-                    title={`${label} - ${member.name}`}
-                  >
-                    <SocialIcon className="size-3.5" />
-                  </a>
-                );
-              })}
-            </div>
+            {/* Right: Portrait image slot */}
+            <TeamPhotoSlot member={member} sizeClass="size-20" />
           </div>
         </div>
       </motion.div>
@@ -223,55 +223,58 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
   return (
     <div className="relative rounded-xl">
       <Card className="relative z-10 overflow-hidden border border-slate-100 dark:border-white/[0.06] dark:bg-white/[0.04] bg-white shadow-sm backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 group">
-        {/* Image slot area */}
-        <TeamPhotoSlot member={member} height="h-24" />
-        <CardContent className="p-4 lg:p-5 pt-3">
-          <div className="min-w-0">
-            <h3 className="font-semibold text-base dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
-            <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
-          </div>
-          <div className="mt-2">
-            <p className={`text-sm dark:text-white/50 text-slate-500 leading-relaxed transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}>
-              {member.bio}
-            </p>
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="text-xs text-amber-400 font-medium mt-1 hover:text-amber-300 transition-colors"
-            >
-              {expanded ? 'Show less' : 'Read more'}
-            </button>
-          </div>
-          {expanded && member.skills && member.skills.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2 pt-2 border-t border-slate-100 dark:border-white/[0.06]"
-            >
-              <div className="flex flex-wrap gap-1">
-                {member.skills.map((skill) => (
-                  <Badge key={skill} variant="secondary" className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20 px-1.5 py-0">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            </motion.div>
-          )}
-          <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
-              const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
-              return (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={`${label} - ${member.name}`}
-                  title={`${label} - ${member.name}`}
-                  className={`size-7 rounded-full dark:bg-white/10 bg-slate-100 dark:text-white/60 text-slate-500 flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
+        <CardContent className="p-4 lg:p-5">
+          <div className="flex gap-3 lg:gap-4">
+            {/* Left: Details */}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-base lg:text-lg dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
+              <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
+              <div className="mt-1.5">
+                <p className={`text-sm dark:text-white/50 text-slate-500 leading-relaxed transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}>
+                  {member.bio}
+                </p>
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="text-xs text-amber-400 font-medium mt-1 hover:text-amber-300 transition-colors"
                 >
-                  <SocialIcon className="size-3.5" />
-                </a>
-              );
-            })}
+                  {expanded ? 'Show less' : 'Read more'}
+                </button>
+              </div>
+              {expanded && member.skills && member.skills.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-2 pt-2 border-t border-slate-100 dark:border-white/[0.06]"
+                >
+                  <div className="flex flex-wrap gap-1">
+                    {member.skills.map((skill) => (
+                      <Badge key={skill} variant="secondary" className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20 px-1.5 py-0">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+              <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
+                  const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
+                  return (
+                    <a
+                      key={label}
+                      href={href}
+                      aria-label={`${label} - ${member.name}`}
+                      title={`${label} - ${member.name}`}
+                      className={`size-7 rounded-full dark:bg-white/10 bg-slate-100 dark:text-white/60 text-slate-500 flex items-center justify-center transition-all duration-200 hover:scale-110 ${color}`}
+                    >
+                      <SocialIcon className="size-3.5" />
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+            {/* Right: Portrait image slot */}
+            <TeamPhotoSlot member={member} sizeClass="size-20 lg:size-28" />
           </div>
         </CardContent>
       </Card>
@@ -431,7 +434,7 @@ export default function AboutPage() {
 
       {/* Bottom — Awards Bar (overlaps the grid above) */}
       <motion.div
-        className="shrink-0 relative z-10 -mt-6 mx-4 md:mx-6"
+        className="shrink-0 relative z-10 mt-4 mx-4 md:mx-6"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.5 }}
