@@ -676,3 +676,57 @@ Stage Summary:
 - About page rotating rectangle completely removed
 - All text across all pages bumped to minimum 12px for mobile legibility
 - Native mobile rendering preserved
+
+---
+Task ID: professional-card-margins
+Agent: Main Agent
+Task: Professional card margins, improved text readability, and responsive layout across all pages
+
+Work Log:
+- **Header.tsx nav improvements**:
+  - Nav link text: `text-sm` → `text-sm lg:text-[15px]`
+  - Nav link padding: `px-3 py-1.5` → `px-3.5 lg:px-4 lg:py-2`
+  - Nav gap: `gap-1` → `gap-1.5`
+  - Logo text: `text-xs lg:text-sm` → `text-sm lg:text-base`
+  - CTA button: `px-4 h-8` → `px-4 lg:px-5 h-8 lg:h-9` with larger text
+- **HomePage.tsx slide improvements**:
+  - All slide badges: `text-[10px] px-3 py-1` → `text-xs px-4 py-1.5` (better padding + legibility)
+  - Tracking: `tracking-[0.2em]` → `tracking-[0.15em]` (more readable)
+  - About slide: Stats padding `p-5 lg:p-6` → `p-5 lg:p-7`, labels `text-xs text-white/60` → `text-sm text-white/70`, desc `text-[10px] text-white/25` → `text-xs text-white/35`
+  - About paragraph: `text-sm lg:text-base text-white/40` → `text-sm lg:text-lg text-white/50`
+  - Services cards: padding `p-4 lg:p-5` → `p-4 lg:p-6`, gap `lg:gap-4` → `lg:gap-5`, icon mb `3` → `3 lg:mb-4`
+  - Services desc: `text-[11px] lg:text-xs text-white/35` → `text-xs lg:text-sm text-white/40`
+  - Portfolio project cards: `p-4 lg:p-5` → `p-4 lg:p-6`, spacing `space-y-3` → `space-y-3 lg:space-y-4`
+  - Portfolio labels: `text-[10px]` → `text-xs`, desc `text-[11px] lg:text-xs text-white/30` → `text-xs lg:text-sm text-white/40`
+  - Hero stats labels: `text-[10px] text-white/25` → `text-xs text-white/35`
+  - Testimonials author role: `text-[10px] lg:text-xs text-white/30` → `text-xs lg:text-sm text-white/40`
+- **AboutPage.tsx card layout improvements**:
+  - Stat items: padding `p-3.5` → `p-4 lg:p-5`, icon `size-11` → `size-12`, number `text-xl` → `text-xl lg:text-2xl`, label `text-white/50` → `text-white/55`
+  - Core Values cards: padding `p-3.5` → `p-4 lg:p-5`, icon `size-9` → `size-10 lg:size-11`, icon `size-3.5` → `size-4 lg:size-5`, title `text-sm` → `text-sm lg:text-base`, desc `text-xs` → `text-xs lg:text-sm text-white/50`
+  - Team flip card front: `p-4` → `p-4 lg:p-5`
+  - Team flip card back: `p-4` → `p-4 lg:p-5`
+  - Team expand card: `p-4` → `p-4 lg:p-5`
+  - Section headings: `text-base` → `text-base lg:text-lg`
+- **ServicesPage.tsx** (via subagent):
+  - Cards: `p-3 lg:p-4` → `p-4 lg:p-6`, icons `size-9 lg:size-11` → `size-10 lg:size-12`
+  - Description/feature text bumped to `lg:text-sm`, opacity increased
+- **PortfolioPage.tsx** (via subagent):
+  - Cards: `p-4` → `p-4 lg:p-6`, title `text-sm` → `text-sm lg:text-base`
+  - Tags: larger padding, View Details text scaled up
+- **BlogPage.tsx** (via subagent):
+  - Cards: `p-3 lg:p-4` → `p-4 lg:p-5`, title → `text-sm lg:text-base`, excerpt → `text-xs lg:text-sm`
+  - Category badges and meta row padding increased
+- **ContactPage.tsx** (via subagent):
+  - Form: `p-3 lg:p-4` → `p-4 lg:p-6`, contact info cards `p-2.5` → `p-3 lg:p-4`
+  - Text labels and values bumped in size and opacity
+- **ProductsPage.tsx** (via subagent):
+  - Cards: `p-3 lg:p-4` → `p-4 lg:p-5`, description and feature pills increased
+  - Grid gap: `lg:gap-4` → `lg:gap-5`
+
+Stage Summary:
+- 8 files changed with professional card margins and improved text readability
+- All cards now have proper breathing room (p-4/p-5/p-6 on lg+)
+- Text opacity increased from /30-/35 to /40-/50 for better contrast on dark backgrounds
+- Badge text minimum `text-xs` (12px) everywhere, descriptions minimum `text-sm` on desktop
+- Nav menu items noticeably larger on desktop (15px text + 16px vertical padding)
+- ESLint clean, no runtime errors, browser verified on desktop (1280×720) and mobile (375×812)

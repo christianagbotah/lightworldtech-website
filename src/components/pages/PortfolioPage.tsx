@@ -268,10 +268,10 @@ export default function PortfolioPage() {
                             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                           )}
 
-                          <div className="p-4 flex flex-col h-full">
+                          <div className="p-4 lg:p-6 flex flex-col h-full">
                             {/* Top: Category badge + Featured indicator */}
                             <div className="flex items-center justify-between mb-3">
-                              <Badge className={`text-xs px-2 py-0.5 rounded-full border font-medium ${badgeColor}`}>
+                              <Badge className={`text-xs px-2.5 py-0.5 rounded-full border font-medium ${badgeColor}`}>
                                 {project.category}
                               </Badge>
                               {project.featured && (
@@ -283,12 +283,12 @@ export default function PortfolioPage() {
                             </div>
 
                             {/* Title */}
-                            <h3 className="text-sm font-semibold mb-1.5 group-hover:text-emerald-400 transition-colors text-white leading-snug">
+                            <h3 className="text-sm lg:text-base font-semibold mb-2 group-hover:text-emerald-400 transition-colors text-white leading-snug">
                               {project.title}
                             </h3>
 
                             {/* Description (2 lines) */}
-                            <p className="text-xs text-white/35 leading-relaxed mb-3 line-clamp-2 flex-grow">
+                            <p className="text-xs lg:text-sm text-white/40 leading-relaxed mb-3 line-clamp-2 flex-grow">
                               {project.description}
                             </p>
 
@@ -297,7 +297,7 @@ export default function PortfolioPage() {
                               {project.tags?.slice(0, 3).map((tag: string) => (
                                 <span
                                   key={tag}
-                                  className="text-xs px-2 py-0.5 rounded-full bg-white/[0.05] text-white/40 border border-white/[0.04]"
+                                  className="text-xs lg:text-sm px-2.5 lg:px-3 py-0.5 lg:py-1 rounded-full bg-white/[0.05] text-white/40 border border-white/[0.04]"
                                 >
                                   {tag}
                                 </span>
@@ -320,7 +320,7 @@ export default function PortfolioPage() {
                                 <div className="size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-400 flex items-center justify-center mx-auto mb-2.5 shadow-lg shadow-emerald-500/25">
                                   <ZoomIn className="size-4 text-white" />
                                 </div>
-                                <span className="text-sm font-medium text-white">View Details</span>
+                                <span className="text-sm lg:text-base font-medium text-white">View Details</span>
                               </motion.div>
                             </div>
                           </div>

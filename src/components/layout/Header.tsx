@@ -79,7 +79,7 @@ export default function Header() {
               <Image src="/logo.png" alt="Lightworld Technologies" width={18} height={18} className="object-contain p-0.5" />
             </div>
             <span className={cn(
-              'text-xs lg:text-sm font-bold transition-colors hidden sm:block',
+              'text-sm lg:text-base font-bold transition-colors hidden sm:block',
               isHomePage ? 'text-white/90' : 'text-slate-800 dark:text-white/90',
             )}>
               Lightworld
@@ -87,7 +87,7 @@ export default function Header() {
           </button>
 
           {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1.5">
             {navLinks.map((link) => {
               if (link.page === 'services') {
                 return (
@@ -95,7 +95,7 @@ export default function Header() {
                     <button
                       onClick={() => handleNav('services')}
                       className={cn(
-                        'px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1',
+                        'px-3.5 lg:px-4 py-1.5 lg:py-2 rounded-full text-sm lg:text-[15px] font-medium transition-all flex items-center gap-1',
                         currentPage === link.page
                           ? 'bg-emerald-500/15 text-emerald-400'
                           : isHomePage
@@ -146,7 +146,7 @@ export default function Header() {
                   key={link.page}
                   onClick={() => handleNav(link.page)}
                   className={cn(
-                    'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
+                    'px-3.5 lg:px-4 py-1.5 lg:py-2 rounded-full text-sm lg:text-[15px] font-medium transition-all',
                     currentPage === link.page
                       ? 'bg-emerald-500/15 text-emerald-400'
                       : isHomePage
@@ -167,7 +167,7 @@ export default function Header() {
               onClick={() => handleNav('contact')}
               size="sm"
               className={cn(
-                'hidden sm:inline-flex rounded-full text-sm font-semibold px-4 h-8 shadow-md transition-all',
+                'hidden sm:inline-flex rounded-full text-sm lg:text-[15px] font-semibold px-4 lg:px-5 h-8 lg:h-9 shadow-md transition-all',
                 'bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20 hover:shadow-emerald-500/40',
               )}
             >

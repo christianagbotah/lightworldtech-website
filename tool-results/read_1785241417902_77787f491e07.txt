@@ -1,0 +1,1218 @@
+     1→@import "tailwindcss";
+     2→@import "tw-animate-css";
+     3→
+     4→@custom-variant dark (&:is(.dark *));
+     5→
+     6→@theme inline {
+     7→  --color-background: var(--background);
+     8→  --color-foreground: var(--foreground);
+     9→  --font-sans: var(--font-geist-sans);
+    10→  --font-mono: var(--font-geist-mono);
+    11→  --color-sidebar-ring: var(--sidebar-ring);
+    12→  --color-sidebar-border: var(--sidebar-border);
+    13→  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    14→  --color-sidebar-accent: var(--sidebar-accent);
+    15→  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    16→  --color-sidebar-primary: var(--sidebar-primary);
+    17→  --color-sidebar-foreground: var(--sidebar-foreground);
+    18→  --color-sidebar: var(--sidebar);
+    19→  --color-chart-5: var(--chart-5);
+    20→  --color-chart-4: var(--chart-4);
+    21→  --color-chart-3: var(--chart-3);
+    22→  --color-chart-2: var(--chart-2);
+    23→  --color-chart-1: var(--chart-1);
+    24→  --color-ring: var(--ring);
+    25→  --color-input: var(--input);
+    26→  --color-border: var(--border);
+    27→  --color-destructive: var(--destructive);
+    28→  --color-accent-foreground: var(--accent-foreground);
+    29→  --color-accent: var(--accent);
+    30→  --color-muted-foreground: var(--muted-foreground);
+    31→  --color-muted: var(--muted);
+    32→  --color-secondary-foreground: var(--secondary-foreground);
+    33→  --color-secondary: var(--secondary);
+    34→  --color-primary-foreground: var(--primary-foreground);
+    35→  --color-primary: var(--primary);
+    36→  --color-popover-foreground: var(--popover-foreground);
+    37→  --color-popover: var(--popover);
+    38→  --color-card-foreground: var(--card-foreground);
+    39→  --color-card: var(--card);
+    40→  --radius-sm: calc(var(--radius) - 4px);
+    41→  --radius-md: calc(var(--radius) - 2px);
+    42→  --radius-lg: var(--radius);
+    43→  --radius-xl: calc(var(--radius) + 4px);
+    44→  --color-amber-50: oklch(0.987 0.022 95.277);
+    45→  --color-amber-100: oklch(0.962 0.059 95.617);
+    46→  --color-amber-200: oklch(0.924 0.12 95.946);
+    47→  --color-amber-300: oklch(0.879 0.169 91.605);
+    48→  --color-amber-400: oklch(0.828 0.189 84.429);
+    49→  --color-amber-500: oklch(0.769 0.188 70.08);
+    50→  --color-amber-600: oklch(0.666 0.179 58.318);
+    51→  --color-amber-700: oklch(0.555 0.163 48.998);
+    52→  --color-amber-800: oklch(0.473 0.137 46.201);
+    53→  --color-amber-900: oklch(0.414 0.112 45.904);
+    54→  --color-amber-950: oklch(0.279 0.071 45.626);
+    55→  --color-slate-50: oklch(0.984 0.003 247.858);
+    56→  --color-slate-100: oklch(0.968 0.007 247.896);
+    57→  --color-slate-200: oklch(0.929 0.013 255.508);
+    58→  --color-slate-300: oklch(0.869 0.022 252.894);
+    59→  --color-slate-400: oklch(0.704 0.015 256.848);
+    60→  --color-slate-500: oklch(0.554 0.022 257.417);
+    61→  --color-slate-600: oklch(0.446 0.03 256.802);
+    62→  --color-slate-700: oklch(0.372 0.034 258.33);
+    63→  --color-slate-800: oklch(0.279 0.041 260.031);
+    64→  --color-slate-900: oklch(0.208 0.042 265.755);
+    65→  --color-slate-950: oklch(0.129 0.042 264.695);
+    66→}
+    67→
+    68→:root {
+    69→  --radius: 0.625rem;
+    70→  --background: oklch(1 0 0);
+    71→  --foreground: oklch(0.145 0 0);
+    72→  --card: oklch(1 0 0);
+    73→  --card-foreground: oklch(0.145 0 0);
+    74→  --popover: oklch(1 0 0);
+    75→  --popover-foreground: oklch(0.145 0 0);
+    76→  --primary: oklch(0.596 0.145 163.225);
+    77→  --primary-foreground: oklch(0.985 0 0);
+    78→  --secondary: oklch(0.979 0.021 166.113);
+    79→  --secondary-foreground: oklch(0.208 0.042 265.755);
+    80→  --muted: oklch(0.968 0.007 247.896);
+    81→  --muted-foreground: oklch(0.554 0.022 257.417);
+    82→  --accent: oklch(0.979 0.021 166.113);
+    83→  --accent-foreground: oklch(0.208 0.042 265.755);
+    84→  --destructive: oklch(0.577 0.245 27.325);
+    85→  --border: oklch(0.929 0.013 255.508);
+    86→  --input: oklch(0.929 0.013 255.508);
+    87→  --ring: oklch(0.596 0.145 163.225);
+    88→  --chart-1: oklch(0.696 0.17 162.48);
+    89→  --chart-2: oklch(0.596 0.145 163.225);
+    90→  --chart-3: oklch(0.828 0.189 84.429);
+    91→  --chart-4: oklch(0.554 0.022 257.417);
+    92→  --chart-5: oklch(0.769 0.188 70.08);
+    93→  --sidebar: oklch(0.985 0 0);
+    94→  --sidebar-foreground: oklch(0.145 0 0);
+    95→  --sidebar-primary: oklch(0.596 0.145 163.225);
+    96→  --sidebar-primary-foreground: oklch(0.985 0 0);
+    97→  --sidebar-accent: oklch(0.97 0 0);
+    98→  --sidebar-accent-foreground: oklch(0.205 0 0);
+    99→  --sidebar-border: oklch(0.922 0 0);
+   100→  --sidebar-ring: oklch(0.708 0 0);
+   101→}
+   102→
+   103→.dark {
+   104→  --background: oklch(0.145 0 0);
+   105→  --foreground: oklch(0.985 0 0);
+   106→  --card: oklch(0.205 0 0);
+   107→  --card-foreground: oklch(0.985 0 0);
+   108→  --popover: oklch(0.205 0 0);
+   109→  --popover-foreground: oklch(0.985 0 0);
+   110→  --primary: oklch(0.769 0.188 70.08);
+   111→  --primary-foreground: oklch(0.145 0 0);
+   112→  --secondary: oklch(0.269 0 0);
+   113→  --secondary-foreground: oklch(0.985 0 0);
+   114→  --muted: oklch(0.269 0 0);
+   115→  --muted-foreground: oklch(0.708 0 0);
+   116→  --accent: oklch(0.269 0 0);
+   117→  --accent-foreground: oklch(0.985 0 0);
+   118→  --destructive: oklch(0.704 0.191 22.216);
+   119→  --border: oklch(1 0 0 / 10%);
+   120→  --input: oklch(1 0 0 / 15%);
+   121→  --ring: oklch(0.769 0.188 70.08);
+   122→  --chart-1: oklch(0.828 0.189 84.429);
+   123→  --chart-2: oklch(0.769 0.188 70.08);
+   124→  --chart-3: oklch(0.696 0.17 162.48);
+   125→  --chart-4: oklch(0.627 0.265 303.9);
+   126→  --chart-5: oklch(0.645 0.246 16.439);
+   127→  --sidebar: oklch(0.205 0 0);
+   128→  --sidebar-foreground: oklch(0.985 0 0);
+   129→  --sidebar-primary: oklch(0.769 0.188 70.08);
+   130→  --sidebar-primary-foreground: oklch(0.145 0 0);
+   131→  --sidebar-accent: oklch(0.269 0 0);
+   132→  --sidebar-accent-foreground: oklch(0.985 0 0);
+   133→  --sidebar-border: oklch(1 0 0 / 10%);
+   134→  --sidebar-ring: oklch(0.556 0 0);
+   135→}
+   136→
+   137→@layer base {
+   138→  * {
+   139→    @apply border-border outline-ring/50;
+   140→  }
+   141→  body {
+   142→    @apply bg-background text-foreground;
+   143→  }
+   144→  html {
+   145→    scroll-behavior: smooth;
+   146→  }
+   147→  /* Emerald-tinted text selection */
+   148→  ::selection {
+   149→    background-color: oklch(0.765 0.177 163.223 / 30%);
+   150→    color: oklch(0.208 0.042 265.755);
+   151→  }
+   152→  .dark ::selection {
+   153→    background-color: oklch(0.596 0.145 163.225 / 40%);
+   154→    color: oklch(0.985 0 0);
+   155→  }
+   156→  /* Improved global focus-visible ring */
+   157→  :focus-visible {
+   158→    outline: 2px solid oklch(0.596 0.145 163.225);
+   159→    outline-offset: 2px;
+   160→    border-radius: 4px;
+   161→  }
+   162→  .dark :focus-visible {
+   163→    outline-color: oklch(0.769 0.188 70.08);
+   164→  }
+   165→}
+   166→
+   167→@layer utilities {
+   168→  .text-gradient {
+   169→    @apply bg-gradient-to-r from-emerald-600 to-amber-400 bg-clip-text text-transparent;
+   170→  }
+   171→  .text-gradient-gold {
+   172→    @apply bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 bg-clip-text text-transparent;
+   173→  }
+   174→  .bg-gradient-primary {
+   175→    @apply bg-gradient-to-br from-emerald-600 via-emerald-700 to-amber-600;
+   176→  }
+   177→  .bg-gradient-dark {
+   178→    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900;
+   179→  }
+   180→  .bg-gradient-cta {
+   181→    @apply bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-600;
+   182→  }
+   183→  .section-padding {
+   184→    @apply py-16 md:py-24 px-4 sm:px-6 lg:px-8;
+   185→  }
+   186→  .container-main {
+   187→    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+   188→  }
+   189→}
+   190→
+   191→/* Custom scrollbar - amber tinted */
+   192→::-webkit-scrollbar {
+   193→  width: 8px;
+   194→  height: 8px;
+   195→}
+   196→::-webkit-scrollbar-track {
+   197→  background: transparent;
+   198→}
+   199→::-webkit-scrollbar-thumb {
+   200→  background: oklch(0.596 0.145 163.225 / 20%);
+   201→  border-radius: 999px;
+   202→}
+   203→::-webkit-scrollbar-thumb:hover {
+   204→  background: oklch(0.596 0.145 163.225 / 40%);
+   205→}
+   206→.dark ::-webkit-scrollbar-thumb {
+   207→  background: oklch(0.596 0.145 163.225 / 25%);
+   208→}
+   209→.dark ::-webkit-scrollbar-thumb:hover {
+   210→  background: oklch(0.596 0.145 163.225 / 45%);
+   211→}
+   212→/* Firefox scrollbar */
+   213→* {
+   214→  scrollbar-width: thin;
+   215→  scrollbar-color: oklch(0.596 0.145 163.225 / 25%) transparent;
+   216→}
+   217→
+   218→/* ============================================
+   219→   ANIMATIONS
+   220→   ============================================ */
+   221→
+   222→/* Float animation */
+   223→@keyframes float {
+   224→  0%, 100% { transform: translateY(0px); }
+   225→  50% { transform: translateY(-10px); }
+   226→}
+   227→
+   228→/* Pulse glow animation */
+   229→@keyframes pulse-glow {
+   230→  0%, 100% { box-shadow: 0 0 20px oklch(0.596 0.145 163.225 / 20%); }
+   231→  50% { box-shadow: 0 0 40px oklch(0.596 0.145 163.225 / 40%); }
+   232→}
+   233→
+   234→.animate-float {
+   235→  animation: float 3s ease-in-out infinite;
+   236→}
+   237→
+   238→.animate-pulse-glow {
+   239→  animation: pulse-glow 2s ease-in-out infinite;
+   240→}
+   241→
+   242→/* Cursor blink */
+   243→@keyframes blink {
+   244→  0%, 100% { opacity: 1; }
+   245→  50% { opacity: 0; }
+   246→}
+   247→
+   248→@keyframes blink-fast {
+   249→  0%, 100% { opacity: 1; }
+   250→  50% { opacity: 0; }
+   251→}
+   252→
+   253→.animate-blink {
+   254→  animation: blink 1s step-end infinite;
+   255→}
+   256→
+   257→.animate-blink-fast {
+   258→  animation: blink-fast 0.5s step-end infinite;
+   259→}
+   260→
+   261→/* Glow pulse */
+   262→@keyframes glow-pulse {
+   263→  0%, 100% { opacity: 0.6; transform: scale(1); }
+   264→  50% { opacity: 1; transform: scale(1.02); }
+   265→}
+   266→
+   267→.animate-glow-pulse {
+   268→  animation: glow-pulse 2s ease-in-out infinite;
+   269→}
+   270→
+   271→/* Shimmer / Shine effect */
+   272→@keyframes shimmer {
+   273→  0% { transform: translateX(-100%) skewX(-15deg); }
+   274→  100% { transform: translateX(200%) skewX(-15deg); }
+   275→}
+   276→
+   277→.animate-shimmer {
+   278→  animation: shimmer 2.5s ease-in-out infinite;
+   279→}
+   280→
+   281→/* Gradient shift for backgrounds */
+   282→@keyframes gradient-shift {
+   283→  0%, 100% { background-position: 0% 50%; }
+   284→  50% { background-position: 100% 50%; }
+   285→}
+   286→
+   287→.animate-gradient-shift {
+   288→  background-size: 200% 200%;
+   289→  animation: gradient-shift 6s ease infinite;
+   290→}
+   291→
+   292→/* Pulse ring for notification dots */
+   293→@keyframes pulse-ring {
+   294→  0% { transform: scale(0.8); opacity: 1; }
+   295→  80%, 100% { transform: scale(2); opacity: 0; }
+   296→}
+   297→
+   298→.animate-pulse-ring {
+   299→  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+   300→}
+   301→
+   302→/* Subtle scale breathe for decorative elements */
+   303→@keyframes breathe {
+   304→  0%, 100% { transform: scale(1); opacity: 0.5; }
+   305→  50% { transform: scale(1.08); opacity: 0.8; }
+   306→}
+   307→
+   308→.animate-breathe {
+   309→  animation: breathe 4s ease-in-out infinite;
+   310→}
+   311→
+   312→/* Draw line for timeline connectors */
+   313→@keyframes draw-line {
+   314→  to { stroke-dashoffset: 0; }
+   315→}
+   316→
+   317→.animate-draw-line {
+   318→  stroke-dasharray: 8 6;
+   319→  stroke-dashoffset: 100;
+   320→  animation: draw-line 2s ease-out forwards;
+   321→}
+   322→
+   323→/* Spin slow for decorative elements */
+   324→@keyframes spin-slow {
+   325→  from { transform: rotate(0deg); }
+   326→  to { transform: rotate(360deg); }
+   327→}
+   328→
+   329→.animate-spin-slow {
+   330→  animation: spin-slow 20s linear infinite;
+   331→}
+   332→
+   333→/* Marquee scroll for logos */
+   334→@keyframes marquee {
+   335→  0% { transform: translateX(0); }
+   336→  100% { transform: translateX(-50%); }
+   337→}
+   338→
+   339→.animate-marquee {
+   340→  animation: marquee 30s linear infinite;
+   341→}
+   342→
+   343→/* Ken Burns slow zoom — 1 → 1.08 over 8s then resets */
+   344→@keyframes ken-burns {
+   345→  0%   { transform: scale(1); }
+   346→  100% { transform: scale(1.08); }
+   347→}
+   348→
+   349→.animate-ken-burns {
+   350→  animation: ken-burns 8s ease-in-out infinite;
+   351→}
+   352→
+   353→/* Slide progress bar fill — 0% → 100% width */
+   354→@keyframes progress-fill {
+   355→  0%   { transform: scaleX(0); }
+   356→  100% { transform: scaleX(1); }
+   357→}
+   358→
+   359→/* ============================================
+   360→   PATTERNS & BACKGROUNDS
+   361→   ============================================ */
+   362→
+   363→/* Grid pattern */
+   364→.grid-pattern {
+   365→  background-image: 
+   366→    linear-gradient(oklch(0.596 0.145 163.225 / 5%) 1px, transparent 1px),
+   367→    linear-gradient(90deg, oklch(0.596 0.145 163.225 / 5%) 1px, transparent 1px);
+   368→  background-size: 40px 40px;
+   369→}
+   370→
+   371→/* Dot pattern */
+   372→.dot-pattern {
+   373→  background-image: radial-gradient(oklch(0.596 0.145 163.225 / 15%) 1px, transparent 1px);
+   374→  background-size: 24px 24px;
+   375→}
+   376→
+   377→/* Mesh gradient pattern */
+   378→.mesh-pattern {
+   379→  background-image: 
+   380→    radial-gradient(at 20% 30%, oklch(0.765 0.177 163.223 / 15%) 0px, transparent 60%),
+   381→    radial-gradient(at 80% 70%, oklch(0.828 0.189 84.429 / 12%) 0px, transparent 60%),
+   382→    radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 8%) 0px, transparent 70%);
+   383→}
+   384→
+   385→/* ============================================
+   386→   GLASS & GLASSMORPHISM EFFECTS
+   387→   ============================================ */
+   388→
+   389→/* Glass effect */
+   390→.glass {
+   391→  background: oklch(1 0 0 / 80%);
+   392→  backdrop-filter: blur(12px);
+   393→  -webkit-backdrop-filter: blur(12px);
+   394→}
+   395→
+   396→.dark .glass {
+   397→  background: oklch(0.145 0 0 / 80%);
+   398→}
+   399→
+   400→/* Glassmorphism card */
+   401→.glass-card {
+   402→  background: oklch(1 0 0 / 60%);
+   403→  backdrop-filter: blur(16px) saturate(180%);
+   404→  -webkit-backdrop-filter: blur(16px) saturate(180%);
+   405→  border: 1px solid oklch(1 0 0 / 30%);
+   406→}
+   407→
+   408→.dark .glass-card {
+   409→  background: oklch(0.205 0 0 / 60%);
+   410→  backdrop-filter: blur(16px) saturate(180%);
+   411→  -webkit-backdrop-filter: blur(16px) saturate(180%);
+   412→  border: 1px solid oklch(1 0 0 / 8%);
+   413→}
+   414→
+   415→/* ============================================
+   416→   DARK MODE VARIANTS
+   417→   ============================================ */
+   418→
+   419→/* Dark mode grid pattern - more subtle */
+   420→.dark .grid-pattern {
+   421→  background-image: 
+   422→    linear-gradient(oklch(0.765 0.177 163.223 / 5%) 1px, transparent 1px),
+   423→    linear-gradient(90deg, oklch(0.765 0.177 163.223 / 5%) 1px, transparent 1px);
+   424→}
+   425→
+   426→/* Dark mode dot pattern */
+   427→.dark .dot-pattern {
+   428→  background-image: radial-gradient(oklch(0.765 0.177 163.223 / 10%) 1px, transparent 1px);
+   429→}
+   430→
+   431→/* Dark mode mesh pattern */
+   432→.dark .mesh-pattern {
+   433→  background-image: 
+   434→    radial-gradient(at 20% 30%, oklch(0.765 0.177 163.223 / 10%) 0px, transparent 60%),
+   435→    radial-gradient(at 80% 70%, oklch(0.828 0.189 84.429 / 8%) 0px, transparent 60%),
+   436→    radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 5%) 0px, transparent 70%);
+   437→}
+   438→
+   439→/* ============================================
+   440→   MARKDOWN / PROSE CONTENT
+   441→   ============================================ */
+   442→
+   443→.prose h1 { @apply text-3xl font-bold mt-8 mb-4 text-foreground; }
+   444→.prose h2 { @apply text-2xl font-bold mt-6 mb-3 text-foreground; }
+   445→.prose h3 { @apply text-xl font-semibold mt-4 mb-2 text-foreground; }
+   446→.prose p { @apply mb-4 leading-relaxed text-slate-600 dark:text-slate-300; }
+   447→.prose ul { @apply list-disc pl-6 mb-4 space-y-1 text-slate-600 dark:text-slate-300; }
+   448→.prose ol { @apply list-decimal pl-6 mb-4 space-y-1 text-slate-600 dark:text-slate-300; }
+   449→.prose li { @apply leading-relaxed text-slate-600 dark:text-slate-300; }
+   450→.prose strong { @apply font-semibold text-foreground; }
+   451→.prose a { @apply text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 underline; }
+   452→.prose blockquote { /* Enhanced blockquote styling is in the dedicated section below */ }
+   453→.prose code { @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono; }
+   454→.prose pre { @apply bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto my-4; }
+   455→
+   456→/* ============================================
+   457→   WAVE BORDER FOR FOOTER
+   458→   ============================================ */
+   459→
+   460→.wave-border-top {
+   461→  position: relative;
+   462→}
+   463→.wave-border-top::before {
+   464→  content: '';
+   465→  position: absolute;
+   466→  top: -40px;
+   467→  left: 0;
+   468→  right: 0;
+   469→  height: 40px;
+   470→  background: linear-gradient(135deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.666 0.179 58.318), oklch(0.828 0.189 84.429));
+   471→  clip-path: polygon(0 60%, 15% 45%, 30% 55%, 45% 40%, 60% 50%, 75% 35%, 90% 45%, 100% 30%, 100% 100%, 0 100%);
+   472→  opacity: 0.15;
+   473→}
+   474→
+   475→/* ============================================
+   476→   GRADIENT BORDER ANIMATION
+   477→   ============================================ */
+   478→
+   479→.gradient-border-animated {
+   480→  position: relative;
+   481→}
+   482→.gradient-border-animated::after {
+   483→  content: '';
+   484→  position: absolute;
+   485→  bottom: 0;
+   486→  left: 0;
+   487→  right: 0;
+   488→  height: 2px;
+   489→  background: linear-gradient(90deg, transparent, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.596 0.145 163.225), transparent);
+   490→  background-size: 200% 100%;
+   491→  animation: gradient-shift 3s ease infinite;
+   492→}
+   493→
+   494→.dark .gradient-border-animated::after {
+   495→  background: linear-gradient(90deg, transparent, oklch(0.769 0.188 70.08), oklch(0.696 0.17 162.48), oklch(0.769 0.188 70.08), transparent);
+   496→  background-size: 200% 100%;
+   497→  animation: gradient-shift 3s ease infinite;
+   498→}
+   499→
+   500→/* ============================================
+   501→   NOISE TEXTURE OVERLAY
+   502→   ============================================ */
+   503→
+   504→.noise-texture {
+   505→  position: relative;
+   506→}
+   507→.noise-texture::before {
+   508→  content: '';
+   509→  position: absolute;
+   510→  inset: 0;
+   511→  opacity: 0.03;
+   512→  pointer-events: none;
+   513→  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+   514→  background-repeat: repeat;
+   515→  background-size: 256px 256px;
+   516→  z-index: 1;
+   517→}
+   518→
+   519→.dark .noise-texture::before {
+   520→  opacity: 0.04;
+   521→}
+   522→
+   523→/* ============================================
+   524→   ENHANCED BLOCKQUOTE STYLING
+   525→   ============================================ */
+   526→
+   527→.prose blockquote {
+   528→  border-left: 4px solid oklch(0.596 0.145 163.225);
+   529→  background: linear-gradient(135deg, oklch(0.979 0.021 166.113 / 50%), oklch(0.987 0.022 95.277 / 30%));
+   530→  border-radius: 0 8px 8px 0;
+   531→  padding: 1rem 1.25rem;
+   532→  margin: 1.5rem 0;
+   533→  position: relative;
+   534→}
+   535→
+   536→.dark .prose blockquote {
+   537→  border-left-color: oklch(0.769 0.188 70.08);
+   538→  background: linear-gradient(135deg, oklch(0.508 0.118 165.612 / 20%), oklch(0.555 0.163 48.998 / 10%));
+   539→}
+   540→
+   541→/* ============================================
+   542→   READING PROGRESS BAR
+   543→   ============================================ */
+   544→
+   545→.reading-progress-bar {
+   546→  position: fixed;
+   547→  top: 0;
+   548→  left: 0;
+   549→  height: 3px;
+   550→  background: linear-gradient(90deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08));
+   551→  z-index: 100;
+   552→  transition: width 100ms ease-out;
+   553→  border-radius: 0 2px 2px 0;
+   554→  box-shadow: 0 0 8px oklch(0.596 0.145 163.225 / 40%);
+   555→}
+   556→
+   557→/* ============================================
+   558→   GRADIENT BORDER ON HOVER UTILITY
+   559→   ============================================ */
+   560→
+   561→.gradient-border-hover {
+   562→  position: relative;
+   563→  border: 1px solid transparent;
+   564→  background-clip: padding-box;
+   565→}
+   566→
+   567→/* ============================================
+   568→   SPLIT SCREEN DECORATIVE SHAPES
+   569→   ============================================ */
+   570→
+   571→@keyframes float-shape-1 {
+   572→  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+   573→  25% { transform: translate(10px, -15px) rotate(5deg); }
+   574→  50% { transform: translate(-5px, -25px) rotate(-3deg); }
+   575→  75% { transform: translate(15px, -10px) rotate(7deg); }
+   576→}
+   577→
+   578→@keyframes float-shape-2 {
+   579→  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+   580→  33% { transform: translate(-15px, -20px) rotate(-8deg); }
+   581→  66% { transform: translate(10px, -30px) rotate(4deg); }
+   582→}
+   583→
+   584→@keyframes float-shape-3 {
+   585→  0%, 100% { transform: translate(0, 0) scale(1); }
+   586→  50% { transform: translate(5px, -15px) scale(1.1); }
+   587→}
+   588→
+   589→.animate-float-shape-1 {
+   590→  animation: float-shape-1 12s ease-in-out infinite;
+   591→}
+   592→
+   593→.animate-float-shape-2 {
+   594→  animation: float-shape-2 15s ease-in-out infinite;
+   595→}
+   596→
+   597→.animate-float-shape-3 {
+   598→  animation: float-shape-3 8s ease-in-out infinite;
+   599→}
+   600→
+   601→/* ============================================
+   602→   MICRO-INTERACTION ANIMATIONS
+   603→   ============================================ */
+   604→
+   605→/* Number count-up reveal */
+   606→@keyframes count-reveal {
+   607→  0% { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+   608→  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+   609→}
+   610→
+   611→.animate-count-reveal {
+   612→  animation: count-reveal 0.6s ease-out forwards;
+   613→}
+   614→
+   615→/* Slide up blur */
+   616→@keyframes slide-up-blur {
+   617→  0% { opacity: 0; transform: translateY(20px); filter: blur(6px); }
+   618→  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+   619→}
+   620→
+   621→.animate-slide-up-blur {
+   622→  animation: slide-up-blur 0.7s ease-out forwards;
+   623→}
+   624→
+   625→/* Morph blob for decorative shapes */
+   626→@keyframes morph-blob {
+   627→  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+   628→  25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+   629→  50% { border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%; }
+   630→  75% { border-radius: 60% 30% 60% 40% / 70% 40% 50% 60%; }
+   631→}
+   632→
+   633→.animate-morph-blob {
+   634→  animation: morph-blob 12s ease-in-out infinite;
+   635→}
+   636→
+   637→/* Ribbon wave for backgrounds */
+   638→@keyframes ribbon-wave {
+   639→  0% { background-position: 0% 50%; }
+   640→  50% { background-position: 100% 50%; }
+   641→  100% { background-position: 0% 50%; }
+   642→}
+   643→
+   644→.animate-ribbon-wave {
+   645→  background-size: 300% 300%;
+   646→  animation: ribbon-wave 8s ease infinite;
+   647→}
+   648→
+   649→/* Scale up fade in */
+   650→@keyframes scale-up-fade {
+   651→  0% { opacity: 0; transform: scale(0.92); }
+   652→  100% { opacity: 1; transform: scale(1); }
+   653→}
+   654→
+   655→.animate-scale-up-fade {
+   656→  animation: scale-up-fade 0.5s ease-out forwards;
+   657→}
+   658→
+   659→/* Orbiting dot */
+   660→@keyframes orbit {
+   661→  from { transform: rotate(0deg) translateX(24px) rotate(0deg); }
+   662→  to { transform: rotate(360deg) translateX(24px) rotate(-360deg); }
+   663→}
+   664→
+   665→.animate-orbit {
+   666→  animation: orbit 6s linear infinite;
+   667→}
+   668→
+   669→/* Pulse soft shadow */
+   670→@keyframes pulse-shadow {
+   671→  0%, 100% { box-shadow: 0 0 0 0 oklch(0.596 0.145 163.225 / 20%); }
+   672→  50% { box-shadow: 0 0 0 12px oklch(0.596 0.145 163.225 / 0%); }
+   673→}
+   674→
+   675→.animate-pulse-shadow {
+   676→  animation: pulse-shadow 2s ease-in-out infinite;
+   677→}
+   678→
+   679→/* ============================================
+   680→   ENHANCED UTILITY CLASSES
+   681→   ============================================ */
+   682→
+   683→/* Gradient text with amber accent */
+   684→.text-gradient-amber {
+   685→  @apply bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 bg-clip-text text-transparent;
+   686→}
+   687→
+   688→/* Animated gradient text */
+   689→.text-gradient-animated {
+   690→  background-size: 200% auto;
+   691→  background-image: linear-gradient(90deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.696 0.17 162.48), oklch(0.596 0.145 163.225));
+   692→  -webkit-background-clip: text;
+   693→  background-clip: text;
+   694→  -webkit-text-fill-color: transparent;
+   695→  animation: gradient-shift 4s linear infinite;
+   696→}
+   697→
+   698→/* Card hover lift with subtle shadow */
+   699→.card-hover-lift {
+   700→  transition: transform 0.3s ease, box-shadow 0.3s ease;
+   701→}
+   702→.card-hover-lift:hover {
+   703→  transform: translateY(-4px);
+   704→  box-shadow: 0 12px 40px oklch(0.596 0.145 163.225 / 12%), 0 4px 12px oklch(0 0 0 / 6%);
+   705→}
+   706→.dark .card-hover-lift:hover {
+   707→  box-shadow: 0 12px 40px oklch(0.596 0.145 163.225 / 8%), 0 4px 12px oklch(0 0 0 / 20%);
+   708→}
+   709→
+   710→/* Shimmer sweep overlay for cards */
+   711→.shimmer-sweep {
+   712→  position: relative;
+   713→  overflow: hidden;
+   714→}
+   715→.shimmer-sweep::after {
+   716→  content: '';
+   717→  position: absolute;
+   718→  top: 0;
+   719→  left: -100%;
+   720→  width: 50%;
+   721→  height: 100%;
+   722→  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 15%), transparent);
+   723→  transform: skewX(-15deg);
+   724→  transition: none;
+   725→  pointer-events: none;
+   726→}
+   727→.dark .shimmer-sweep::after {
+   728→  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 5%), transparent);
+   729→}
+   730→.shimmer-sweep:hover::after {
+   731→  animation: shimmer 0.8s ease-in-out;
+   732→}
+   733→
+   734→/* Diagonal stripe pattern */
+   735→.diagonal-stripes {
+   736→  background-image: repeating-linear-gradient(
+   737→    -45deg,
+   738→    oklch(0.596 0.145 163.225 / 3%) 0px,
+   739→    oklch(0.596 0.145 163.225 / 3%) 1px,
+   740→    transparent 1px,
+   741→    transparent 12px
+   742→  );
+   743→}
+   744→.dark .diagonal-stripes {
+   745→  background-image: repeating-linear-gradient(
+   746→    -45deg,
+   747→    oklch(0.596 0.145 163.225 / 4%) 0px,
+   748→    oklch(0.596 0.145 163.225 / 4%) 1px,
+   749→    transparent 1px,
+   750→    transparent 12px
+   751→  );
+   752→}
+   753→
+   754→/* Animated gradient border (all sides) */
+   755→.gradient-border-all {
+   756→  position: relative;
+   757→}
+   758→.gradient-border-all::before {
+   759→  content: '';
+   760→  position: absolute;
+   761→  inset: 0;
+   762→  border-radius: inherit;
+   763→  padding: 1.5px;
+   764→  background: linear-gradient(135deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.596 0.145 163.225));
+   765→  background-size: 200% 200%;
+   766→  animation: gradient-shift 4s ease infinite;
+   767→  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   768→  -webkit-mask-composite: xor;
+   769→  mask-composite: exclude;
+   770→  pointer-events: none;
+   771→}
+   772→.dark .gradient-border-all::before {
+   773→  background: linear-gradient(135deg, oklch(0.769 0.188 70.08), oklch(0.696 0.17 162.48), oklch(0.769 0.188 70.08));
+   774→  background-size: 200% 200%;
+   775→  animation: gradient-shift 4s ease infinite;
+   776→}
+   777→
+   778→/* ============================================
+   779→   ADDITIONAL ANIMATIONS (Round 5)
+   780→   ============================================ */
+   781→
+   782→/* Typing cursor animation */
+   783→@keyframes cursor-blink {
+   784→  0%, 100% { opacity: 1; }
+   785→  50% { opacity: 0; }
+   786→}
+   787→
+   788→/* Fade in from bottom with slight blur */
+   789→@keyframes fade-in-up {
+   790→  from { opacity: 0; transform: translateY(16px); filter: blur(4px); }
+   791→  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+   792→}
+   793→
+   794→.animate-fade-in-up {
+   795→  animation: fade-in-up 0.6s ease-out both;
+   796→}
+   797→
+   798→/* Staggered fade in children */
+   799→.stagger-children > * {
+   800→  animation: fade-in-up 0.5s ease-out both;
+   801→}
+   802→.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+   803→.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+   804→.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+   805→.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+   806→.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+   807→.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+   808→.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+   809→.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+   810→
+   811→/* Gradient text pulse */
+   812→@keyframes gradient-text-pulse {
+   813→  0%, 100% { background-position: 0% 50%; }
+   814→  50% { background-position: 100% 50%; }
+   815→}
+   816→
+   817→.text-gradient-pulse {
+   818→  background-size: 200% auto;
+   819→  background-image: linear-gradient(90deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.696 0.17 162.48), oklch(0.769 0.188 70.08), oklch(0.596 0.145 163.225));
+   820→  -webkit-background-clip: text;
+   821→  background-clip: text;
+   822→  -webkit-text-fill-color: transparent;
+   823→  animation: gradient-text-pulse 6s ease infinite;
+   824→}
+   825→
+   826→/* Glow border on focus */
+   827→.glow-focus:focus-within {
+   828→  box-shadow: 0 0 0 3px oklch(0.596 0.145 163.225 / 20%), 0 0 20px oklch(0.596 0.145 163.225 / 10%);
+   829→}
+   830→
+   831→.dark .glow-focus:focus-within {
+   832→  box-shadow: 0 0 0 3px oklch(0.769 0.188 70.08 / 20%), 0 0 20px oklch(0.769 0.188 70.08 / 10%);
+   833→}
+   834→
+   835→/* Underline hover animation */
+   836→.hover-underline {
+   837→  position: relative;
+   838→}
+   839→.hover-underline::after {
+   840→  content: '';
+   841→  position: absolute;
+   842→  bottom: -2px;
+   843→  left: 0;
+   844→  width: 0;
+   845→  height: 2px;
+   846→  background: linear-gradient(90deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08));
+   847→  transition: width 0.3s ease;
+   848→  border-radius: 1px;
+   849→}
+   850→.hover-underline:hover::after {
+   851→  width: 100%;
+   852→}
+   853→
+   854→/* Soft bounce animation */
+   855→@keyframes soft-bounce {
+   856→  0%, 100% { transform: translateY(0); }
+   857→  40% { transform: translateY(-8px); }
+   858→  60% { transform: translateY(-4px); }
+   859→}
+   860→
+   861→.animate-soft-bounce {
+   862→  animation: soft-bounce 2s ease-in-out infinite;
+   863→}
+   864→
+   865→/* Rotating gradient border */
+   866→@keyframes rotate-gradient-border {
+   867→  from { --angle: 0deg; }
+   868→  to { --angle: 360deg; }
+   869→}
+   870→
+   871→@property --angle {
+   872→  syntax: '<angle>';
+   873→  initial-value: 0deg;
+   874→  inherits: false;
+   875→}
+   876→
+   877→.animate-rotate-border {
+   878→  animation: rotate-gradient-border 4s linear infinite;
+   879→  background: conic-gradient(from var(--angle), oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.696 0.17 162.48), oklch(0.596 0.145 163.225));
+   880→}
+   881→
+   882→/* Noise overlay for depth */
+   883→.depth-noise {
+   884→  position: relative;
+   885→}
+   886→.depth-noise::after {
+   887→  content: '';
+   888→  position: absolute;
+   889→  inset: 0;
+   890→  opacity: 0.015;
+   891→  pointer-events: none;
+   892→  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+   893→  background-size: 100px 100px;
+   894→  z-index: 1;
+   895→  border-radius: inherit;
+   896→}
+   897→
+   898→/* Spotlight effect on hover */
+   899→.spotlight-hover {
+   900→  position: relative;
+   901→  overflow: hidden;
+   902→}
+   903→.spotlight-hover::before {
+   904→  content: '';
+   905→  position: absolute;
+   906→  top: var(--mouse-y, 50%);
+   907→  left: var(--mouse-x, 50%);
+   908→  width: 200px;
+   909→  height: 200px;
+   910→  background: radial-gradient(circle, oklch(1 0 0 / 8%) 0%, transparent 70%);
+   911→  transform: translate(-50%, -50%);
+   912→  opacity: 0;
+   913→  transition: opacity 0.3s ease;
+   914→  pointer-events: none;
+   915→  z-index: 1;
+   916→}
+   917→.spotlight-hover:hover::before {
+   918→  opacity: 1;
+   919→}
+   920→
+   921→/* Smooth scroll indicator */
+   922→@keyframes scroll-indicator {
+   923→  0% { transform: translateY(0); opacity: 1; }
+   924→  50% { transform: translateY(8px); opacity: 0.5; }
+   925→  100% { transform: translateY(0); opacity: 1; }
+   926→}
+   927→
+   928→.animate-scroll-indicator {
+   929→  animation: scroll-indicator 2s ease-in-out infinite;
+   930→}
+   931→
+   932→/* Subtle float with rotation */
+   933→@keyframes float-rotate {
+   934→  0%, 100% { transform: translateY(0) rotate(0deg); }
+   935→  25% { transform: translateY(-8px) rotate(2deg); }
+   936→  75% { transform: translateY(4px) rotate(-1deg); }
+   937→}
+   938→
+   939→.animate-float-rotate {
+   940→  animation: float-rotate 6s ease-in-out infinite;
+   941→}
+   942→
+   943→/* Border dash animation */
+   944→@keyframes dash-move {
+   945→  to { stroke-dashoffset: -20; }
+   946→}
+   947→
+   948→.animate-dash-border {
+   949→  stroke-dasharray: 10 10;
+   950→  animation: dash-move 1s linear infinite;
+   951→}
+   952→
+   953→/* ============================================
+   954→   PREMIUM CSS ANIMATIONS & EFFECTS (Round 6)
+   955→   ============================================ */
+   956→
+   957→/* 1. Ken Burns effect for hero image zoom */
+   958→@keyframes ken-burns {
+   959→  0% { transform: scale(1); }
+   960→  100% { transform: scale(1.08); }
+   961→}
+   962→.animate-ken-burns {
+   963→  animation: ken-burns 8s ease-in-out alternate infinite;
+   964→}
+   965→
+   966→/* 2. Magnetic button hover - subtle scale + glow */
+   967→.magnetic-hover {
+   968→  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s ease;
+   969→}
+   970→.magnetic-hover:hover {
+   971→  transform: translateY(-2px) scale(1.02);
+   972→}
+   973→
+   974→/* 3. Premium card tilt effect (CSS-only approximation) */
+   975→.premium-card {
+   976→  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s ease;
+   977→  transform-style: preserve-3d;
+   978→}
+   979→.premium-card:hover {
+   980→  transform: translateY(-6px) rotateX(2deg);
+   981→  box-shadow: 0 25px 50px -12px oklch(0 0 0 / 15%);
+   982→}
+   983→
+   984→/* 4. Glow text effect */
+   985→.text-glow {
+   986→  text-shadow: 0 0 20px oklch(0.596 0.145 163.225 / 30%), 0 0 40px oklch(0.596 0.145 163.225 / 15%);
+   987→}
+   988→.dark .text-glow {
+   989→  text-shadow: 0 0 20px oklch(0.769 0.188 70.08 / 30%), 0 0 40px oklch(0.769 0.188 70.08 / 15%);
+   990→}
+   991→
+   992→/* 5. Gradient border card */
+   993→.gradient-border-card {
+   994→  position: relative;
+   995→  background: oklch(1 0 0);
+   996→  border-radius: 1rem;
+   997→}
+   998→.gradient-border-card::before {
+   999→  content: '';
+  1000→  position: absolute;
+  1001→  inset: -1px;
+  1002→  border-radius: inherit;
+  1003→  background: linear-gradient(135deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08), oklch(0.696 0.17 162.48));
+  1004→  z-index: -1;
+  1005→  opacity: 0;
+  1006→  transition: opacity 0.4s ease;
+  1007→}
+  1008→.gradient-border-card:hover::before {
+  1009→  opacity: 1;
+  1010→}
+  1011→.dark .gradient-border-card {
+  1012→  background: oklch(0.205 0 0);
+  1013→}
+  1014→
+  1015→/* 6. Slide progress bar animation */
+  1016→@keyframes slide-progress {
+  1017→  0% { width: 0%; }
+  1018→  100% { width: 100%; }
+  1019→}
+  1020→.animate-slide-progress {
+  1021→  animation: slide-progress 5s linear;
+  1022→}
+  1023→
+  1024→/* 7. Bounce scroll indicator */
+  1025→@keyframes bounce-scroll {
+  1026→  0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+  1027→  40% { transform: translateY(-8px) translateX(-50%); }
+  1028→  60% { transform: translateY(-4px) translateX(-50%); }
+  1029→}
+  1030→.animate-bounce-scroll {
+  1031→  animation: bounce-scroll 2s ease-in-out infinite;
+  1032→}
+  1033→
+  1034→/* 8. Noise grain overlay for hero */
+  1035→.hero-grain::after {
+  1036→  content: '';
+  1037→  position: absolute;
+  1038→  inset: 0;
+  1039→  opacity: 0.04;
+  1040→  pointer-events: none;
+  1041→  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  1042→  background-size: 256px 256px;
+  1043→  z-index: 1;
+  1044→  border-radius: inherit;
+  1045→}
+  1046→
+  1047→/* 9. Premium underline link effect */
+  1048→.premium-link {
+  1049→  position: relative;
+  1050→  display: inline-block;
+  1051→}
+  1052→.premium-link::after {
+  1053→  content: '';
+  1054→  position: absolute;
+  1055→  bottom: -2px;
+  1056→  left: 50%;
+  1057→  width: 0;
+  1058→  height: 2px;
+  1059→  background: linear-gradient(90deg, oklch(0.596 0.145 163.225), oklch(0.769 0.188 70.08));
+  1060→  transition: width 0.4s ease, left 0.4s ease;
+  1061→  border-radius: 1px;
+  1062→}
+  1063→.premium-link:hover::after {
+  1064→  width: 100%;
+  1065→  left: 0;
+  1066→}
+  1067→
+  1068→/* 10. Floating badge animation */
+  1069→@keyframes float-badge {
+  1070→  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  1071→  50% { transform: translateY(-6px) rotate(2deg); }
+  1072→}
+  1073→.animate-float-badge {
+  1074→  animation: float-badge 4s ease-in-out infinite;
+  1075→}
+  1076→
+  1077→/* 11. Tech pill hover effect */
+  1078→.tech-pill {
+  1079→  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  1080→}
+  1081→.tech-pill:hover {
+  1082→  transform: translateY(-3px) scale(1.05);
+  1083→}
+  1084→
+  1085→/* ══════════════════════════════════════════════════════════════
+  1086→   NEXUS COMMAND CENTER ANIMATIONS
+  1087→   ══════════════════════════════════════════════════════════════ */
+  1088→
+  1089→/* 12. Blinking cursor for typewriter effect */
+  1090→@keyframes blink {
+  1091→  0%, 100% { opacity: 1; }
+  1092→  50% { opacity: 0; }
+  1093→}
+  1094→.animate-blink {
+  1095→  animation: blink 0.8s step-end infinite;
+  1096→}
+  1097→
+  1098→/* 13. Gradient orbs slow movement */
+  1099→@keyframes orb-1 {
+  1100→  0%, 100% { transform: translate(0, 0) scale(1); }
+  1101→  33% { transform: translate(30px, -20px) scale(1.05); }
+  1102→  66% { transform: translate(-20px, 30px) scale(0.95); }
+  1103→}
+  1104→@keyframes orb-2 {
+  1105→  0%, 100% { transform: translate(0, 0) scale(1); }
+  1106→  33% { transform: translate(-40px, 30px) scale(0.95); }
+  1107→  66% { transform: translate(20px, -40px) scale(1.05); }
+  1108→}
+  1109→@keyframes orb-3 {
+  1110→  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  1111→  33% { transform: translate(calc(-50% + 25px), calc(-50% - 25px)) scale(1.1); }
+  1112→  66% { transform: translate(calc(-50% - 25px), calc(-50% + 25px)) scale(0.9); }
+  1113→}
+  1114→.animate-orb-1 { animation: orb-1 20s ease-in-out infinite; }
+  1115→.animate-orb-2 { animation: orb-2 25s ease-in-out infinite; }
+  1116→.animate-orb-3 { animation: orb-3 18s ease-in-out infinite; }
+  1117→
+  1118→/* 14. Smooth scrollbar for dark theme */
+  1119→.dark ::-webkit-scrollbar {
+  1120→  width: 6px;
+  1121→}
+  1122→.dark ::-webkit-scrollbar-track {
+  1123→  background: transparent;
+  1124→}
+  1125→.dark ::-webkit-scrollbar-thumb {
+  1126→  background: rgba(255, 255, 255, 0.08);
+  1127→  border-radius: 3px;
+  1128→}
+  1129→.dark ::-webkit-scrollbar-thumb:hover {
+  1130→  background: rgba(255, 255, 255, 0.15);
+  1131→}
+  1132→
+  1133→/* 15. NEXUS card glow on hover */
+  1134→.nexus-card {
+  1135→  position: relative;
+  1136→  overflow: hidden;
+  1137→}
+  1138→.nexus-card::before {
+  1139→  content: '';
+  1140→  position: absolute;
+  1141→  inset: 0;
+  1142→  border-radius: inherit;
+  1143→  padding: 1px;
+  1144→  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), transparent 50%, rgba(245, 158, 11, 0.1));
+  1145→  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  1146→  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  1147→  -webkit-mask-composite: xor;
+  1148→  mask-composite: exclude;
+  1149→  opacity: 0;
+  1150→  transition: opacity 0.4s ease;
+  1151→  pointer-events: none;
+  1152→}
+  1153→.nexus-card:hover::before {
+  1154→  opacity: 1;
+  1155→}
+  1156→
+  1157→/* ══════════════════════════════════════════════════════════════
+  1158→   GLOBAL POINTER CURSOR — all interactive elements
+  1159→   ══════════════════════════════════════════════════════════════ */
+  1160→
+  1161→a,
+  1162→button,
+  1163→[role="button"],
+  1164→summary,
+  1165→select,
+  1166→input[type="checkbox"],
+  1167→input[type="radio"],
+  1168→label[for],
+  1169→.tabular-nav-item,
+  1170→.clickable,
+  1171→.cursor-pointer {
+  1172→  cursor: pointer;
+  1173→}
+  1174→
+  1175→a:hover,
+  1176→button:hover,
+  1177→[role="button"]:hover,
+  1178→summary:hover {
+  1179→  cursor: pointer;
+  1180→}
+  1181→
+  1182→/* ══════════════════════════════════════════════════════════════
+  1183→   KEN BURNS SLOW PAN — slide backgrounds
+  1184→   ══════════════════════════════════════════════════════════════ */
+  1185→
+  1186→/* Variant A: slow zoom-in with subtle pan right */
+  1187→@keyframes ken-burns-a {
+  1188→  0%   { transform: scale(1.05) translate(0, 0); }
+  1189→  50%  { transform: scale(1.12) translate(-1.5%, -0.5%); }
+  1190→  100% { transform: scale(1.05) translate(0, 0); }
+  1191→}
+  1192→
+  1193→/* Variant B: slow zoom-out with subtle pan left */
+  1194→@keyframes ken-burns-b {
+  1195→  0%   { transform: scale(1.12) translate(-1%, 0); }
+  1196→  50%  { transform: scale(1.05) translate(1.5%, -1%); }
+  1197→  100% { transform: scale(1.12) translate(-1%, 0); }
+  1198→}
+  1199→
+  1200→/* Variant C: slow zoom with diagonal drift */
+  1201→@keyframes ken-burns-c {
+  1202→  0%   { transform: scale(1.08) translate(-1%, -1%); }
+  1203→  50%  { transform: scale(1.15) translate(1%, 0.5%); }
+  1204→  100% { transform: scale(1.08) translate(-1%, -1%); }
+  1205→}
+  1206→
+  1207→/* Variant D: gentle sway with zoom */
+  1208→@keyframes ken-burns-d {
+  1209→  0%   { transform: scale(1.1) translate(0.5%, -0.5%); }
+  1210→  50%  { transform: scale(1.06) translate(-0.5%, 0.5%); }
+  1211→  100% { transform: scale(1.1) translate(0.5%, -0.5%); }
+  1212→}
+  1213→
+  1214→.animate-ken-burns-a { animation: ken-burns-a 25s ease-in-out infinite; }
+  1215→.animate-ken-burns-b { animation: ken-burns-b 30s ease-in-out infinite; }
+  1216→.animate-ken-burns-c { animation: ken-burns-c 28s ease-in-out infinite; }
+  1217→.animate-ken-burns-d { animation: ken-burns-d 22s ease-in-out infinite; }
+  1218→

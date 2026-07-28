@@ -108,7 +108,7 @@ function CompactCountdown({ targetDate }: { targetDate: Date }) {
   }
 
   return (
-    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white/[0.04] text-white/50 tabular-nums">
+    <span className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full bg-white/[0.04] text-white/50 tabular-nums">
       <Flame className="size-2.5 text-amber-500 shrink-0" />
       {days}d {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
     </span>
@@ -207,7 +207,7 @@ export default function ProductsPage() {
 
         {/* 2×2 Product Cards Grid */}
         <motion.div
-          className="relative z-10 flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden"
+          className="relative z-10 flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-5 p-3 lg:p-4 overflow-hidden"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -218,7 +218,7 @@ export default function ProductsPage() {
 
             return (
               <motion.div key={product.id} variants={itemVariants} className="min-h-0">
-                <Card className="h-full bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 lg:p-4 hover:bg-white/[0.06] transition-all duration-300 group overflow-hidden relative flex flex-col">
+                <Card className="h-full bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 lg:p-5 hover:bg-white/[0.06] transition-all duration-300 group overflow-hidden relative flex flex-col">
                   {/* Top accent line */}
                   <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${product.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
 
@@ -243,7 +243,7 @@ export default function ProductsPage() {
                   </div>
 
                   {/* Description — 2 lines */}
-                  <p className="text-xs lg:text-xs text-white/40 leading-relaxed line-clamp-2 mb-2">
+                  <p className="text-xs lg:text-sm text-white/45 leading-relaxed line-clamp-2 mb-2">
                     {product.description}
                   </p>
 
@@ -252,7 +252,7 @@ export default function ProductsPage() {
                     {product.features.map((feature) => (
                       <span
                         key={feature}
-                        className="text-xs px-2 py-0.5 rounded-full bg-white/[0.04] text-white/45 whitespace-nowrap"
+                        className="text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full bg-white/[0.04] text-white/45 whitespace-nowrap"
                       >
                         {feature}
                       </span>

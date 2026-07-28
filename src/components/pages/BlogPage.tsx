@@ -274,7 +274,7 @@ export default function BlogPage() {
                   key={post.id}
                   variants={itemVariants}
                   layout
-                  className={`group cursor-pointer rounded-xl p-3 lg:p-4 flex flex-col transition-all duration-300 hover:bg-white/[0.05] ${
+                  className={`group cursor-pointer rounded-xl p-4 lg:p-5 flex flex-col transition-all duration-300 hover:bg-white/[0.05] ${
                     post.featured
                       ? 'bg-white/[0.03] border border-emerald-500/20 shadow-[0_0_20px_-4px_rgba(16,185,129,0.15)] hover:shadow-[0_0_30px_-4px_rgba(16,185,129,0.25)]'
                       : 'bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.1]'
@@ -282,24 +282,24 @@ export default function BlogPage() {
                   onClick={() => handlePostClick(post.slug)}
                 >
                   {/* Category badge */}
-                  <span className={`inline-flex self-start px-2 py-0.5 rounded-full text-xs font-semibold mb-2 ${
+                  <span className={`inline-flex self-start px-2.5 py-0.5 rounded-full text-xs font-semibold mb-2 ${
                     categoryBadgeColors[post.category] || 'bg-white/10 text-white/60'
                   }`}>
                     {post.category}
                   </span>
 
                   {/* Title - 2 lines max */}
-                  <h3 className="text-sm lg:text-[15px] font-semibold text-white leading-snug line-clamp-2 mb-1.5 group-hover:text-emerald-300 transition-colors">
+                  <h3 className="text-sm lg:text-base font-semibold text-white leading-snug line-clamp-2 mb-1.5 group-hover:text-emerald-300 transition-colors">
                     {post.title}
                   </h3>
 
                   {/* Excerpt - 2 lines */}
-                  <p className="text-xs text-white/35 leading-relaxed line-clamp-2 mb-auto">
+                  <p className="text-xs lg:text-sm text-white/40 leading-relaxed line-clamp-2 mb-auto">
                     {post.excerpt}
                   </p>
 
                   {/* Meta row: author, date, read time, read more */}
-                  <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-white/[0.06]">
+                  <div className="flex items-center gap-2 mt-3 lg:mt-4 pt-2.5 lg:pt-3 border-t border-white/[0.06]">
                     {/* Author avatar */}
                     <div className={`size-5 rounded-full flex items-center justify-center shrink-0 ${
                       post.featured
@@ -310,7 +310,7 @@ export default function BlogPage() {
                         {post.author?.charAt(0) || 'L'}
                       </span>
                     </div>
-                    <span className="text-xs text-white/50 truncate max-w-[80px] lg:max-w-none">
+                    <span className="text-xs lg:text-sm text-white/50 truncate max-w-[80px] lg:max-w-none">
                       {post.author}
                     </span>
 

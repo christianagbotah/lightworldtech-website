@@ -1,0 +1,698 @@
+     1→'use client';
+     2→
+     3→import { useState } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  MapPin, Clock, DollarSign, Briefcase,
+     7→  Send, Loader2, CheckCircle2,
+     8→  X, Building2, Upload, FileText, Mail,
+     9→} from 'lucide-react';
+    10→import { Button } from '@/components/ui/button';
+    11→import { Input } from '@/components/ui/input';
+    12→import { Textarea } from '@/components/ui/textarea';
+    13→import { Label } from '@/components/ui/label';
+    14→import {
+    15→  Dialog,
+    16→  DialogContent,
+    17→  DialogHeader,
+    18→  DialogTitle,
+    19→  DialogDescription,
+    20→} from '@/components/ui/dialog';
+    21→import { useSEO } from '@/hooks/use-seo';
+    22→import { toast } from 'sonner';
+    23→import CTASection from '@/components/sections/CTASection';
+    24→
+    25→interface JobListing {
+    26→  id: string;
+    27→  title: string;
+    28→  department: string;
+    29→  location: string;
+    30→  type: string;
+    31→  salaryRange: string;
+    32→  description: string;
+    33→  requirements: string[];
+    34→  benefits: string[];
+    35→  postedDate: string;
+    36→  featured: boolean;
+    37→}
+    38→
+    39→const defaultJobs: JobListing[] = [
+    40→  {
+    41→    id: '1',
+    42→    title: 'Senior Full-Stack Developer',
+    43→    department: 'Engineering',
+    44→    location: 'Accra, Ghana',
+    45→    type: 'Full-time',
+    46→    salaryRange: 'GHS 8,000 – GHS 14,000/mo',
+    47→    description: 'We are looking for an experienced Full-Stack Developer to lead the development of our enterprise web applications. You will work with modern technologies including React, Next.js, Node.js, and PostgreSQL to build scalable solutions for our clients across Africa.',
+    48→    requirements: [
+    49→      '5+ years of professional software development experience',
+    50→      'Expert knowledge of React, Next.js, and TypeScript',
+    51→      'Strong backend experience with Node.js and Python',
+    52→      'Experience with relational databases (PostgreSQL, MySQL)',
+    53→      'Familiarity with cloud platforms (AWS, GCP, Azure)',
+    54→      'Strong problem-solving and communication skills',
+    55→      'Experience leading small development teams is a plus',
+    56→    ],
+    57→    benefits: [
+    58→      'Competitive salary with annual performance bonus',
+    59→      'Health insurance and wellness allowance',
+    60→      'Flexible working hours with remote options',
+    61→      'Professional development budget (GHS 3,000/year)',
+    62→      'Latest MacBook Pro and equipment provided',
+    63→      'Annual team retreats and company events',
+    64→    ],
+    65→    postedDate: '2025-01-10',
+    66→    featured: true,
+    67→  },
+    68→  {
+    69→    id: '2',
+    70→    title: 'Mobile App Developer (React Native)',
+    71→    department: 'Engineering',
+    72→    location: 'Accra, Ghana',
+    73→    type: 'Full-time',
+    74→    salaryRange: 'GHS 6,000 – GHS 10,000/mo',
+    75→    description: 'Join our mobile development team to build cross-platform applications for iOS and Android using React Native. You will work on exciting projects spanning fintech, healthcare, and e-commerce industries.',
+    76→    requirements: [
+    77→      '3+ years of mobile app development experience',
+    78→      'Strong proficiency in React Native and TypeScript',
+    79→      'Experience with native iOS (Swift) or Android (Kotlin)',
+    80→      'Knowledge of mobile UI/UX best practices',
+    81→      'Experience with RESTful APIs and GraphQL',
+    82→      'Familiarity with CI/CD pipelines for mobile apps',
+    83→      'Published apps on App Store or Google Play',
+    84→    ],
+    85→    benefits: [
+    86→      'Competitive salary and performance bonuses',
+    87→      'Health insurance coverage',
+    88→      'Flexible hybrid work arrangement',
+    89→      'Conference attendance sponsorship',
+    90→      'Modern development tools and equipment',
+    91→    ],
+    92→    postedDate: '2025-01-08',
+    93→    featured: true,
+    94→  },
+    95→  {
+    96→    id: '3',
+    97→    title: 'UI/UX Designer',
+    98→    department: 'Design',
+    99→    location: 'Remote',
+   100→    type: 'Full-time',
+   101→    salaryRange: 'GHS 5,000 – GHS 9,000/mo',
+   102→    description: 'We are seeking a talented UI/UX Designer to craft beautiful and intuitive digital experiences. You will collaborate closely with developers and product managers to translate user needs into elegant design solutions.',
+   103→    requirements: [
+   104→      '3+ years of UI/UX design experience',
+   105→      'Proficiency in Figma and Adobe Creative Suite',
+   106→      'Strong portfolio demonstrating user-centered design',
+   107→      'Experience with design systems and component libraries',
+   108→      'Knowledge of accessibility standards (WCAG)',
+   109→      'Understanding of responsive and mobile-first design',
+   110→      'User research and usability testing experience',
+   111→    ],
+   112→    benefits: [
+   113→      'Competitive salary with creative freedom',
+   114→      'Figma Professional license provided',
+   115→      'Flexible remote-first work culture',
+   116→      'Annual design conference budget',
+   117→      'Wellness and mental health support',
+   118→    ],
+   119→    postedDate: '2025-01-05',
+   120→    featured: false,
+   121→  },
+   122→  {
+   123→    id: '4',
+   124→    title: 'Digital Marketing Specialist',
+   125→    department: 'Marketing',
+   126→    location: 'Accra, Ghana',
+   127→    type: 'Full-time',
+   128→    salaryRange: 'GHS 3,500 – GHS 6,000/mo',
+   129→    description: 'Help our clients grow their online presence through strategic digital marketing campaigns. You will manage SEO, PPC advertising, social media marketing, and content strategies for diverse business clients.',
+   130→    requirements: [
+   131→      '2+ years of digital marketing experience',
+   132→      'Strong knowledge of SEO/SEM best practices',
+   133→      'Experience with Google Ads, Meta Ads, and analytics tools',
+   134→      'Social media management and content creation skills',
+   135→      'Experience with email marketing platforms',
+   136→      'Data-driven approach with strong analytical skills',
+   137→      'Knowledge of the Ghana/West African digital landscape',
+   138→    ],
+   139→    benefits: [
+   140→      'Performance-based bonuses',
+   141→      'Marketing tool subscriptions (SEMrush, HubSpot, etc.)',
+   142→      'Professional certification sponsorship',
+   143→      'Flexible work arrangements',
+   144→    ],
+   145→    postedDate: '2025-01-03',
+   146→    featured: false,
+   147→  },
+   148→  {
+   149→    id: '5',
+   150→    title: 'DevOps Engineer',
+   151→    department: 'Engineering',
+   152→    location: 'Remote',
+   153→    type: 'Contract',
+   154→    salaryRange: 'GHS 10,000 – GHS 16,000/mo',
+   155→    description: 'We need a skilled DevOps Engineer to design and maintain our cloud infrastructure, CI/CD pipelines, and deployment automation. This is a 6-month contract role with the possibility of extension.',
+   156→    requirements: [
+   157→      '4+ years of DevOps or infrastructure engineering experience',
+   158→      'Strong expertise with AWS or GCP',
+   159→      'Experience with Docker, Kubernetes, and container orchestration',
+   160→      'Knowledge of Infrastructure as Code (Terraform, CloudFormation)',
+   161→      'Experience with CI/CD tools (GitHub Actions, GitLab CI, Jenkins)',
+   162→      'Monitoring and logging tools (Prometheus, Grafana, ELK)',
+   163→      'Security best practices and compliance knowledge',
+   164→    ],
+   165→    benefits: [
+   166→      'Competitive contract rate',
+   167→      'Remote-first with flexible hours',
+   168→      'Equipment allowance',
+   169→      'Potential for full-time conversion',
+   170→    ],
+   171→    postedDate: '2024-12-28',
+   172→    featured: false,
+   173→  },
+   174→  {
+   175→    id: '6',
+   176→    title: 'IT Training Instructor',
+   177→    department: 'Training',
+   178→    location: 'Accra, Ghana',
+   179→    type: 'Part-time',
+   180→    salaryRange: 'GHS 2,000 – GHS 4,000/mo',
+   181→    description: 'Passionate about teaching? Join our training team to deliver high-quality IT skills training programs. You will teach web development, mobile app development, and other technology courses to professionals and beginners.',
+   182→    requirements: [
+   183→      '2+ years of professional experience in IT/tech',
+   184→      'Strong communication and presentation skills',
+   185→      'Experience teaching or mentoring in technology',
+   186→      'Proficiency in web development (HTML, CSS, JavaScript, React)',
+   187→      'Knowledge of Python and/or mobile development is a plus',
+   188→      'Patience and enthusiasm for helping beginners learn',
+   189→      'Available to teach weekends and weekday evenings',
+   190→    ],
+   191→    benefits: [
+   192→      'Flexible part-time schedule',
+   193→      'Access to training materials and resources',
+   194→      'Performance-based bonuses',
+   195→      'Free access to all company training programs',
+   196→      'Networking opportunities with industry professionals',
+   197→    ],
+   198→    postedDate: '2024-12-20',
+   199→    featured: false,
+   200→  },
+   201→];
+   202→
+   203→const departments = ['All Departments', 'Engineering', 'Design', 'Marketing', 'Training'];
+   204→const jobTypes = ['All Types', 'Full-time', 'Part-time', 'Contract'];
+   205→
+   206→const deptColors: Record<string, string> = {
+   207→  Engineering: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',
+   208→  Design: 'bg-violet-500/15 text-violet-400 border border-violet-500/20',
+   209→  Marketing: 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
+   210→  Training: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/20',
+   211→};
+   212→
+   213→const typeColors: Record<string, string> = {
+   214→  'Full-time': 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
+   215→  'Part-time': 'bg-sky-500/15 text-sky-400 border border-sky-500/20',
+   216→  'Contract': 'bg-rose-500/15 text-rose-400 border border-rose-500/20',
+   217→};
+   218→
+   219→const containerVariants = {
+   220→  hidden: { opacity: 0 },
+   221→  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+   222→};
+   223→
+   224→const itemVariants = {
+   225→  hidden: { opacity: 0, y: 12 },
+   226→  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+   227→};
+   228→
+   229→export default function CareersPage() {
+   230→  useSEO({
+   231→    title: 'Careers',
+   232→    description: 'Join Lightworld Technologies — explore open positions in web development, mobile apps, UI/UX design, digital marketing, and more. Build your career with a leading IT company in Ghana.',
+   233→    keywords: ['IT jobs Ghana', 'tech careers Accra', 'software developer jobs', 'web development jobs Ghana', 'Lightworld Technologies careers'],
+   234→  });
+   235→
+   236→  const [jobs] = useState<JobListing[]>(defaultJobs);
+   237→  const [activeDepartment, setActiveDepartment] = useState('All Departments');
+   238→  const [activeType, setActiveType] = useState('All Types');
+   239→  const [applyModalOpen, setApplyModalOpen] = useState(false);
+   240→  const [selectedJob, setSelectedJob] = useState<JobListing | null>(null);
+   241→
+   242→  const filtered = jobs.filter((job) => {
+   243→    const matchDept = activeDepartment === 'All Departments' || job.department === activeDepartment;
+   244→    const matchType = activeType === 'All Types' || job.type === activeType;
+   245→    return matchDept && matchType;
+   246→  });
+   247→
+   248→  const displayed = filtered.slice(0, 4);
+   249→  const hasMore = filtered.length > 4;
+   250→
+   251→  const handleApplyClick = (job: JobListing) => {
+   252→    setSelectedJob(job);
+   253→    setApplyModalOpen(true);
+   254→  };
+   255→
+   256→  return (
+   257→    <main className="bg-[#050810]">
+   258→      {/* Full viewport book page */}
+   259→      <div className="h-[calc(100vh-4rem)] overflow-hidden flex flex-col relative">
+   260→        {/* Subtle gradient orbs */}
+   261→        <div className="absolute top-[-10%] right-[10%] w-[400px] h-[400px] rounded-full bg-emerald-600/[0.04] blur-[100px] pointer-events-none" />
+   262→        <div className="absolute bottom-[-10%] left-[5%] w-[350px] h-[350px] rounded-full bg-amber-600/[0.03] blur-[100px] pointer-events-none" />
+   263→
+   264→        {/* Compact Title Bar */}
+   265→        <div className="shrink-0 px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+   266→          <motion.div
+   267→            className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3"
+   268→            initial={{ opacity: 0, y: -8 }}
+   269→            animate={{ opacity: 1, y: 0 }}
+   270→            transition={{ duration: 0.4 }}
+   271→          >
+   272→            <div className="flex items-center gap-3">
+   273→              <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-amber-500 text-white">
+   274→                <Briefcase className="size-3" />
+   275→                Careers
+   276→              </span>
+   277→              <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+   278→                Open Positions
+   279→              </h1>
+   280→            </div>
+   281→            <p className="text-sm text-white/40">
+   282→              Join Our Team — <span className="text-emerald-400">{filtered.length} position{filtered.length !== 1 ? 's' : ''} available</span>
+   283→            </p>
+   284→          </motion.div>
+   285→
+   286→          {/* Compact filter pills */}
+   287→          <motion.div
+   288→            className="flex flex-wrap items-center gap-2 mt-4"
+   289→            initial={{ opacity: 0 }}
+   290→            animate={{ opacity: 1 }}
+   291→            transition={{ duration: 0.4, delay: 0.1 }}
+   292→          >
+   293→            <span className="text-xs uppercase tracking-wider text-white/25 mr-1">Dept:</span>
+   294→            {departments.map((dept) => (
+   295→              <button
+   296→                key={dept}
+   297→                onClick={() => setActiveDepartment(dept)}
+   298→                className={`text-xs px-2 py-0.5 rounded-full transition-all duration-200 ${
+   299→                  activeDepartment === dept
+   300→                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+   301→                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
+   302→                }`}
+   303→              >
+   304→                {dept}
+   305→              </button>
+   306→            ))}
+   307→            <span className="w-px h-3 bg-white/[0.08] mx-1" />
+   308→            <span className="text-xs uppercase tracking-wider text-white/25 mr-1">Type:</span>
+   309→            {jobTypes.map((type) => (
+   310→              <button
+   311→                key={type}
+   312→                onClick={() => setActiveType(type)}
+   313→                className={`text-xs px-2 py-0.5 rounded-full transition-all duration-200 ${
+   314→                  activeType === type
+   315→                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+   316→                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
+   317→                }`}
+   318→              >
+   319→                {type}
+   320→              </button>
+   321→            ))}
+   322→          </motion.div>
+   323→        </div>
+   324→
+   325→        {/* 2×2 Job Cards Grid */}
+   326→        <div className="flex-1 min-h-0 px-4 sm:px-6 lg:px-8">
+   327→          {displayed.length > 0 ? (
+   328→            <motion.div
+   329→              className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 h-full"
+   330→              variants={containerVariants}
+   331→              initial="hidden"
+   332→              animate="visible"
+   333→            >
+   334→              {displayed.map((job) => (
+   335→                <motion.div
+   336→                  key={job.id}
+   337→                  variants={itemVariants}
+   338→                  className="flex"
+   339→                >
+   340→                  <div className="flex flex-col bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 lg:p-4 hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all duration-300 group w-full">
+   341→                    {/* Card header */}
+   342→                    <div className="flex items-start justify-between gap-2 mb-2">
+   343→                      <div className="min-w-0 flex-1">
+   344→                        <h3 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors truncate">
+   345→                          {job.title}
+   346→                        </h3>
+   347→                        {job.featured && (
+   348→                          <span className="inline-block text-[7px] font-bold uppercase tracking-wider text-amber-400 mt-0.5">★ Featured</span>
+   349→                        )}
+   350→                      </div>
+   351→                      <span className={`shrink-0 text-[8px] px-1.5 py-0.5 rounded-full font-medium ${typeColors[job.type] || ''}`}>
+   352→                        {job.type}
+   353→                      </span>
+   354→                    </div>
+   355→
+   356→                    {/* Meta row */}
+   357→                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2.5">
+   358→                      <span className={`inline-flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded-full font-medium ${deptColors[job.department] || 'bg-white/[0.05] text-white/40 border border-white/[0.08]'}`}>
+   359→                        <Building2 className="size-2.5" />
+   360→                        {job.department}
+   361→                      </span>
+   362→                      <span className="flex items-center gap-1 text-xs text-white/35">
+   363→                        <MapPin className="size-2.5" />
+   364→                        {job.location}
+   365→                      </span>
+   366→                      <span className="flex items-center gap-1 text-xs text-emerald-400/70 font-medium">
+   367→                        <DollarSign className="size-2.5" />
+   368→                        <span className="truncate max-w-[120px]">{job.salaryRange}</span>
+   369→                      </span>
+   370→                    </div>
+   371→
+   372→                    {/* Requirements bullets */}
+   373→                    <ul className="space-y-1 mb-3 flex-1">
+   374→                      {job.requirements.slice(0, 4).map((req, i) => (
+   375→                        <li key={i} className="flex items-start gap-1.5 text-xs text-white/45 leading-tight">
+   376→                          <CheckCircle2 className="size-2.5 text-emerald-500/70 shrink-0 mt-0.5" />
+   377→                          <span className="line-clamp-1">{req}</span>
+   378→                        </li>
+   379→                      ))}
+   380→                      {job.requirements.length > 4 && (
+   381→                        <li className="text-[8px] text-white/25 pl-4">+{job.requirements.length - 4} more requirements</li>
+   382→                      )}
+   383→                    </ul>
+   384→
+   385→                    {/* Apply button */}
+   386→                    <button
+   387→                      onClick={() => handleApplyClick(job)}
+   388→                      className="w-full text-xs font-semibold py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20 flex items-center justify-center gap-1.5"
+   389→                    >
+   390→                      <Send className="size-3" />
+   391→                      Apply Now
+   392→                    </button>
+   393→                  </div>
+   394→                </motion.div>
+   395→              ))}
+   396→            </motion.div>
+   397→          ) : (
+   398→            <motion.div
+   399→              className="h-full flex items-center justify-center"
+   400→              initial={{ opacity: 0 }}
+   401→              animate={{ opacity: 1 }}
+   402→            >
+   403→              <div className="text-center">
+   404→                <div className="size-12 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-3">
+   405→                  <Briefcase className="size-5 text-white/20" />
+   406→                </div>
+   407→                <p className="text-sm text-white/40 mb-3">No positions match your filters</p>
+   408→                <button
+   409→                  onClick={() => { setActiveDepartment('All Departments'); setActiveType('All Types'); }}
+   410→                  className="text-xs px-3 py-1 rounded-full bg-white/[0.05] text-white/50 hover:text-white/70 border border-white/[0.08] transition-colors"
+   411→                >
+   412→                  Clear Filters
+   413→                </button>
+   414→              </div>
+   415→            </motion.div>
+   416→          )}
+   417→        </div>
+   418→
+   419→        {/* Bottom Bar */}
+   420→        <div className="shrink-0 px-4 sm:px-6 lg:px-8 py-3 border-t border-white/[0.04]">
+   421→          <div className="flex items-center justify-between">
+   422→            <a
+   423→              href="mailto:careers@lightworldtechnologies.com?subject=General%20Application"
+   424→              className="group inline-flex items-center gap-2 text-xs text-white/35 hover:text-emerald-400 transition-colors"
+   425→            >
+   426→              <Mail className="size-3.5" />
+   427→              <span>Don&apos;t see a role? Send your CV to <span className="underline underline-offset-2 group-hover:text-emerald-400/80 transition-colors">careers@lightworldtechnologies.com</span></span>
+   428→            </a>
+   429→            {hasMore && (
+   430→              <span className="text-xs text-white/25">
+   431→                Showing 4 of {filtered.length} positions
+   432→              </span>
+   433→            )}
+   434→          </div>
+   435→        </div>
+   436→      </div>
+   437→
+   438→      {/* Application Modal */}
+   439→      <Dialog open={applyModalOpen} onOpenChange={setApplyModalOpen}>
+   440→        <DialogContent
+   441→          className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh] bg-[#0a0f1a] border-white/[0.08]"
+   442→          aria-describedby={undefined}
+   443→        >
+   444→          <div className="relative h-24 bg-gradient-to-br from-emerald-600 via-emerald-600 to-amber-600 flex items-center justify-center">
+   445→            <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.03)_25%,transparent_25%,transparent_75%,rgba(255,255,255,0.03)_75%)] bg-[length:16px_16px]" />
+   446→            <div className="text-center relative z-10">
+   447→              <div className="size-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
+   448→                <FileText className="size-5 text-white" />
+   449→              </div>
+   450→              <h2 className="text-base font-bold text-white">Apply for Position</h2>
+   451→            </div>
+   452→            <button
+   453→              onClick={() => setApplyModalOpen(false)}
+   454→              className="absolute top-3 right-3 size-7 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10"
+   455→              aria-label="Close"
+   456→            >
+   457→              <X className="size-3.5" />
+   458→            </button>
+   459→          </div>
+   460→
+   461→          <div className="p-6">
+   462→            <DialogHeader>
+   463→              <DialogTitle className="text-lg text-white">{selectedJob?.title}</DialogTitle>
+   464→              <DialogDescription className="text-sm text-white/50">
+   465→                {selectedJob?.department} · {selectedJob?.location} · {selectedJob?.type}
+   466→              </DialogDescription>
+   467→            </DialogHeader>
+   468→
+   469→            <ApplicationForm
+   470→              jobTitle={selectedJob?.title || ''}
+   471→              onSuccess={() => setApplyModalOpen(false)}
+   472→            />
+   473→          </div>
+   474→        </DialogContent>
+   475→      </Dialog>
+   476→
+   477→      {/* CTA */}
+   478→      <CTASection />
+   479→    </main>
+   480→  );
+   481→}
+   482→
+   483→function ApplicationForm({ jobTitle, onSuccess }: { jobTitle: string; onSuccess: () => void }) {
+   484→  const [formData, setFormData] = useState({
+   485→    name: '',
+   486→    email: '',
+   487→    phone: '',
+   488→    position: jobTitle,
+   489→    coverLetter: '',
+   490→  });
+   491→  const [resumeFile, setResumeFile] = useState<File | null>(null);
+   492→  const [submitting, setSubmitting] = useState(false);
+   493→  const [submitted, setSubmitted] = useState(false);
+   494→
+   495→  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+   496→    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+   497→  };
+   498→
+   499→  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+   500→    if (e.target.files && e.target.files[0]) {
+   501→      setResumeFile(e.target.files[0]);
+   502→    }
+   503→  };
+   504→
+   505→  const handleSubmit = async (e: React.FormEvent) => {
+   506→    e.preventDefault();
+   507→    if (!formData.name || !formData.email || !formData.position) return;
+   508→
+   509→    setSubmitting(true);
+   510→    try {
+   511→      // Upload resume if present
+   512→      let resumeUrl = '';
+   513→      if (resumeFile) {
+   514→        const uploadForm = new FormData();
+   515→        uploadForm.append('file', resumeFile);
+   516→        const uploadRes = await fetch('/api/upload', {
+   517→          method: 'POST',
+   518→          body: uploadForm,
+   519→        });
+   520→        const uploadData = await uploadRes.json();
+   521→        if (uploadData.success && uploadData.url) {
+   522→          resumeUrl = uploadData.url;
+   523→        }
+   524→      }
+   525→
+   526→      const res = await fetch('/api/careers/apply', {
+   527→        method: 'POST',
+   528→        headers: { 'Content-Type': 'application/json' },
+   529→        body: JSON.stringify({
+   530→          ...formData,
+   531→          resumeUrl,
+   532→        }),
+   533→      });
+   534→
+   535→      if (res.ok) {
+   536→        toast.success('Application submitted!', {
+   537→          description: `We've received your application for ${jobTitle}.`,
+   538→        });
+   539→        setSubmitted(true);
+   540→        setTimeout(onSuccess, 1500);
+   541→      } else {
+   542→        toast.error('Submission failed', {
+   543→          description: 'Please try again or contact us directly.',
+   544→        });
+   545→      }
+   546→    } catch {
+   547→      toast.error('Network error', {
+   548→        description: 'Please check your connection and try again.',
+   549→      });
+   550→    } finally {
+   551→      setSubmitting(false);
+   552→    }
+   553→  };
+   554→
+   555→  if (submitted) {
+   556→    return (
+   557→      <motion.div
+   558→        className="text-center py-8"
+   559→        initial={{ opacity: 0, scale: 0.95 }}
+   560→        animate={{ opacity: 1, scale: 1 }}
+   561→      >
+   562→        <motion.div
+   563→          className="size-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4"
+   564→          initial={{ scale: 0 }}
+   565→          animate={{ scale: 1 }}
+   566→          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+   567→        >
+   568→          <CheckCircle2 className="size-8 text-emerald-400" />
+   569→        </motion.div>
+   570→        <h3 className="text-lg font-semibold text-white mb-1">Application Received!</h3>
+   571→        <p className="text-sm text-white/40">
+   572→          Thank you for your interest. Our team will review your application and get back to you soon.
+   573→        </p>
+   574→      </motion.div>
+   575→    );
+   576→  }
+   577→
+   578→  return (
+   579→    <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+   580→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   581→        <div className="space-y-1.5">
+   582→          <Label htmlFor="app-name" className="text-xs font-medium text-white/60">Full Name *</Label>
+   583→          <Input
+   584→            id="app-name"
+   585→            name="name"
+   586→            value={formData.name}
+   587→            onChange={handleChange}
+   588→            placeholder="Your full name"
+   589→            required
+   590→            disabled={submitting}
+   591→            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
+   592→          />
+   593→        </div>
+   594→        <div className="space-y-1.5">
+   595→          <Label htmlFor="app-email" className="text-xs font-medium text-white/60">Email *</Label>
+   596→          <Input
+   597→            id="app-email"
+   598→            name="email"
+   599→            type="email"
+   600→            value={formData.email}
+   601→            onChange={handleChange}
+   602→            placeholder="you@example.com"
+   603→            required
+   604→            disabled={submitting}
+   605→            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
+   606→          />
+   607→        </div>
+   608→      </div>
+   609→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   610→        <div className="space-y-1.5">
+   611→          <Label htmlFor="app-phone" className="text-xs font-medium text-white/60">Phone</Label>
+   612→          <Input
+   613→            id="app-phone"
+   614→            name="phone"
+   615→            type="tel"
+   616→            value={formData.phone}
+   617→            onChange={handleChange}
+   618→            placeholder="+233 XX XXX XXXX"
+   619→            disabled={submitting}
+   620→            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
+   621→          />
+   622→        </div>
+   623→        <div className="space-y-1.5">
+   624→          <Label htmlFor="app-position" className="text-xs font-medium text-white/60">Position *</Label>
+   625→          <Input
+   626→            id="app-position"
+   627→            name="position"
+   628→            value={formData.position}
+   629→            onChange={handleChange}
+   630→            required
+   631→            disabled={submitting}
+   632→            className="h-9 bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40"
+   633→          />
+   634→        </div>
+   635→      </div>
+   636→      <div className="space-y-1.5">
+   637→        <Label htmlFor="app-cover" className="text-xs font-medium text-white/60">Cover Letter</Label>
+   638→        <Textarea
+   639→          id="app-cover"
+   640→          name="coverLetter"
+   641→          value={formData.coverLetter}
+   642→          onChange={handleChange}
+   643→          placeholder="Tell us why you're a great fit for this role..."
+   644→          rows={3}
+   645→          disabled={submitting}
+   646→          className="bg-white/[0.04] border-white/[0.08] text-white text-sm placeholder:text-white/25 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40 resize-none"
+   647→        />
+   648→      </div>
+   649→      <div className="space-y-1.5">
+   650→        <Label htmlFor="app-resume" className="text-xs font-medium text-white/60">Resume / CV</Label>
+   651→        <div className="flex items-center gap-3">
+   652→          <label
+   653→            htmlFor="app-resume"
+   654→            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-white/[0.08] hover:border-emerald-500/30 cursor-pointer transition-colors text-xs text-white/35 hover:text-emerald-400"
+   655→          >
+   656→            <Upload className="size-3.5" />
+   657→            {resumeFile ? resumeFile.name : 'Upload Resume (PDF, DOC)'}
+   658→            <input
+   659→              id="app-resume"
+   660→              type="file"
+   661→              accept=".pdf,.doc,.docx"
+   662→              onChange={handleFileChange}
+   663→              disabled={submitting}
+   664→              className="sr-only"
+   665→            />
+   666→          </label>
+   667→          {resumeFile && (
+   668→            <button
+   669→              type="button"
+   670→              onClick={() => setResumeFile(null)}
+   671→              className="text-xs text-white/30 hover:text-red-400 transition-colors"
+   672→            >
+   673→              Remove
+   674→            </button>
+   675→          )}
+   676→        </div>
+   677→      </div>
+   678→      <Button
+   679→        type="submit"
+   680→        disabled={submitting || !formData.name || !formData.email}
+   681→        className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:shadow-emerald-500/20 transition-all"
+   682→      >
+   683→        {submitting ? (
+   684→          <>
+   685→            <Loader2 className="size-4 mr-2 animate-spin" />
+   686→            Submitting...
+   687→          </>
+   688→        ) : (
+   689→          <>
+   690→            Submit Application
+   691→            <Send className="size-4 ml-2" />
+   692→          </>
+   693→        )}
+   694→      </Button>
+   695→    </form>
+   696→  );
+   697→}
+   698→

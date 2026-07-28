@@ -316,7 +316,7 @@ function HeroSlide() {
                 <span className="block text-xl lg:text-2xl font-bold text-white tabular-nums">
                   {stat.value}<span className="text-emerald-400/70">{stat.suffix}</span>
                 </span>
-                <span className="block text-[10px] text-white/25 mt-0.5 font-medium">{stat.label}</span>
+                <span className="block text-xs text-white/35 mt-0.5 font-medium">{stat.label}</span>
               </div>
             );
           })}
@@ -335,7 +335,7 @@ function HeroSlide() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full size-2.5 bg-emerald-500" />
           </span>
-          <span className="text-[10px] text-white/40 font-medium">Available for projects</span>
+          <span className="text-[10px] lg:text-xs text-white/40 font-medium">Available for projects</span>
         </div>
       </motion.div>
     </div>
@@ -370,9 +370,9 @@ function AboutSlide() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
               <div className="size-1.5 rounded-full bg-emerald-400" />
-              <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.2em]">Who We Are</span>
+              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-[0.15em]">Who We Are</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-5">
@@ -381,7 +381,7 @@ function AboutSlide() {
               Partner
             </h2>
 
-            <p className="text-sm lg:text-base text-white/40 leading-relaxed mb-6 max-w-lg">
+            <p className="text-sm lg:text-lg text-white/50 leading-relaxed mb-6 max-w-lg">
               At Lightworld Technologies, we combine innovation with expertise to deliver transformative digital solutions.
               From enterprise software to cloud infrastructure, our team of specialists empowers businesses across Africa
               to thrive in the digital age.
@@ -415,13 +415,13 @@ function AboutSlide() {
             {stats.map((stat, i) => (
               <div
                 key={i}
-                className="group relative p-5 lg:p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
+                className="group relative p-5 lg:p-7 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-300"
               >
                 <span className="block text-2xl lg:text-3xl font-extrabold text-white tabular-nums">
                   {stat.value}<span className="text-emerald-400/70">{stat.suffix}</span>
                 </span>
-                <span className="block text-xs font-semibold text-white/60 mt-1">{stat.label}</span>
-                <span className="block text-[10px] text-white/25 mt-0.5">{stat.desc}</span>
+                <span className="block text-sm font-semibold text-white/70 mt-1.5">{stat.label}</span>
+                <span className="block text-xs text-white/35 mt-0.5">{stat.desc}</span>
                 <div className="absolute top-3 right-3 size-8 rounded-lg bg-emerald-500/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <ArrowUpRight className="size-3.5 text-emerald-400" />
                 </div>
@@ -453,10 +453,10 @@ function ServicesSlide() {
             initial={{ opacity: 0, y: -10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4"
           >
             <div className="size-1.5 rounded-full bg-amber-400" />
-            <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-[0.2em]">What We Do</span>
+            <span className="text-xs font-semibold text-amber-400 uppercase tracking-[0.15em]">What We Do</span>
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -470,7 +470,7 @@ function ServicesSlide() {
         </div>
 
         {/* Service Cards Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 lg:gap-5">
           {SERVICES.map((service, i) => (
             <motion.button
               key={i}
@@ -479,13 +479,13 @@ function ServicesSlide() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.4 }}
               onClick={() => navigate(service.page)}
-              className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-4 lg:p-5 cursor-pointer text-left transition-all duration-300 hover:bg-white/[0.07] hover:border-white/[0.15] hover:scale-[1.02]"
+              className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-4 lg:p-6 cursor-pointer text-left transition-all duration-300 hover:bg-white/[0.07] hover:border-white/[0.15] hover:scale-[1.02]"
             >
-              <div className={cn('size-10 lg:size-12 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-lg', service.gradient)}>
+              <div className={cn('size-10 lg:size-12 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3 lg:mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-lg', service.gradient)}>
                 <service.icon className="size-5 lg:size-6 text-white" />
               </div>
-              <h3 className="text-sm lg:text-base font-bold text-white/90 mb-1">{service.title}</h3>
-              <p className="text-[11px] lg:text-xs text-white/35 leading-relaxed line-clamp-2">{service.desc}</p>
+              <h3 className="text-sm lg:text-base font-bold text-white/90 mb-1.5">{service.title}</h3>
+              <p className="text-xs lg:text-sm text-white/40 leading-relaxed line-clamp-2">{service.desc}</p>
               <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
                 <ArrowUpRight className="size-4 text-emerald-400" />
               </div>
@@ -536,9 +536,9 @@ function PortfolioSlide() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
               <div className="size-1.5 rounded-full bg-cyan-400" />
-              <span className="text-[10px] font-semibold text-cyan-400 uppercase tracking-[0.2em]">Our Work</span>
+              <span className="text-xs font-semibold text-cyan-400 uppercase tracking-[0.15em]">Our Work</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-5">
@@ -547,7 +547,7 @@ function PortfolioSlide() {
               For Themselves
             </h2>
 
-            <p className="text-sm lg:text-base text-white/40 leading-relaxed mb-6 max-w-lg">
+            <p className="text-sm lg:text-lg text-white/50 leading-relaxed mb-6 max-w-lg">
               From enterprise platforms to mobile applications, our portfolio showcases the breadth and depth of our technical expertise.
               Every project is crafted with precision, performance, and purpose.
             </p>
@@ -560,7 +560,7 @@ function PortfolioSlide() {
               ].map((item, i) => (
                 <div key={i}>
                   <span className="block text-xl font-bold text-white">{item.count}</span>
-                  <span className="block text-[10px] text-white/30 font-medium">{item.label}</span>
+                  <span className="block text-xs text-white/40 font-medium">{item.label}</span>
                 </div>
               ))}
             </div>
@@ -580,21 +580,21 @@ function PortfolioSlide() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="space-y-3"
+            className="space-y-3 lg:space-y-4"
           >
             {FEATURED_PROJECTS.map((project, i) => (
               <div
                 key={i}
                 className={cn(
-                  'group relative p-4 lg:p-5 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-[1.01]',
+                  'group relative p-4 lg:p-6 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-[1.01]',
                   `bg-gradient-to-br ${project.gradient} border-white/[0.06] hover:border-white/[0.12]`,
                 )}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <span className="text-[10px] font-semibold text-emerald-400/70 uppercase tracking-wider">{project.category}</span>
-                    <h3 className="text-sm lg:text-base font-bold text-white/90 mt-1">{project.title}</h3>
-                    <p className="text-[11px] lg:text-xs text-white/30 mt-1 line-clamp-1">{project.desc}</p>
+                    <span className="text-xs font-semibold text-emerald-400/70 uppercase tracking-wider">{project.category}</span>
+                    <h3 className="text-sm lg:text-base font-bold text-white/90 mt-1.5">{project.title}</h3>
+                    <p className="text-xs lg:text-sm text-white/40 mt-1 line-clamp-1">{project.desc}</p>
                   </div>
                   <ArrowUpRight className="size-4 text-white/20 group-hover:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
                 </div>
@@ -629,10 +629,10 @@ function TestimonialsSlide() {
           initial={{ opacity: 0, y: -10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-8"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-8"
         >
           <div className="size-1.5 rounded-full bg-emerald-400" />
-          <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.2em]">Testimonials</span>
+          <span className="text-xs font-semibold text-emerald-400 uppercase tracking-[0.15em]">Testimonials</span>
         </motion.div>
 
         {/* Stars */}
@@ -681,7 +681,7 @@ function TestimonialsSlide() {
             </div>
             <div className="text-left">
               <p className="text-sm lg:text-base font-semibold text-white/70">{TESTIMONIALS[current].author}</p>
-              <p className="text-[10px] lg:text-xs text-white/30">{TESTIMONIALS[current].role}</p>
+              <p className="text-xs lg:text-sm text-white/40">{TESTIMONIALS[current].role}</p>
             </div>
           </motion.div>
         </AnimatePresence>

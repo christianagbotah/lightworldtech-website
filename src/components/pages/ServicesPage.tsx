@@ -157,9 +157,9 @@ export default function ServicesPage() {
                     </div>
                   )}
 
-                  <div className="p-3 lg:p-4 flex flex-col h-full">
+                  <div className="p-4 lg:p-6 flex flex-col h-full">
                     {/* Icon */}
-                    <div className={`size-9 lg:size-11 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center mb-2 lg:mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-lg shrink-0`}>
+                    <div className={`size-10 lg:size-12 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center mb-2 lg:mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-lg shrink-0`}>
                       <IconComp className="size-4 lg:size-5 text-white" />
                     </div>
 
@@ -167,14 +167,14 @@ export default function ServicesPage() {
                     <h3 className="text-xs lg:text-sm font-bold text-white/90 mb-0.5 lg:mb-1 leading-tight">{service.title}</h3>
 
                     {/* Description */}
-                    <p className="text-xs lg:text-xs text-white/30 leading-relaxed line-clamp-2 mb-2 lg:mb-3">{service.description}</p>
+                    <p className="text-xs lg:text-sm text-white/40 leading-relaxed line-clamp-2 mb-2 lg:mb-3">{service.description}</p>
 
                     {/* Features */}
                     <div className="space-y-0.5 mb-2 lg:mb-3 flex-1">
                       {service.features.slice(0, 4).map((feature: string) => (
                         <div key={feature} className="flex items-center gap-1.5">
-                          <CheckCircle2 className="size-2.5 lg:size-3 text-emerald-400/60 shrink-0" />
-                          <span className="text-xs lg:text-xs text-white/40 leading-tight line-clamp-1">{feature}</span>
+                          <CheckCircle2 className="size-3 lg:size-3.5 text-emerald-400/60 shrink-0" />
+                          <span className="text-xs lg:text-sm text-white/50 leading-tight line-clamp-1">{feature}</span>
                         </div>
                       ))}
                     </div>
@@ -182,7 +182,7 @@ export default function ServicesPage() {
                     {/* Bottom: Price + CTA */}
                     <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
                       {service.priceRange && (
-                        <span className="text-xs lg:text-xs font-semibold text-amber-400/80">{service.priceRange}</span>
+                        <span className="text-xs lg:text-sm font-semibold text-amber-400/80">{service.priceRange}</span>
                       )}
                       <div className="flex items-center gap-1 text-emerald-400 text-xs font-medium group-hover:translate-x-0.5 transition-transform">
                         Details <ArrowRight className="size-3" />

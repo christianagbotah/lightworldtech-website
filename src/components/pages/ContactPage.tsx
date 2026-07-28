@@ -197,7 +197,7 @@ export default function ContactPage() {
           transition={{ duration: 0.4 }}
           className="lg:col-span-7 flex flex-col min-h-0"
         >
-          <div className="flex-1 min-h-0 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-3 lg:p-4 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm p-4 lg:p-6 flex flex-col overflow-hidden">
             {submitted ? (
               <div className="flex-1 flex items-center justify-center">
                 <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
@@ -214,7 +214,7 @@ export default function ContactPage() {
               </div>
             ) : (
               <>
-                <h2 className="text-sm font-bold text-white mb-2 lg:mb-3">Send a Message</h2>
+                <h2 className="text-sm lg:text-base font-bold text-white mb-3 lg:mb-4">Send a Message</h2>
 
                 {submitting && (
                   <motion.div className="mb-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
@@ -301,14 +301,14 @@ export default function ContactPage() {
           {/* Contact Info Cards */}
           <div className="grid grid-cols-2 gap-2">
             {contactItems.map((item) => (
-              <div key={item.label} className="group p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all">
+              <div key={item.label} className="group p-3 lg:p-4 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all">
                 <div className="flex items-start gap-2">
                   <div className="size-7 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
                     <item.icon className="size-3.5 text-amber-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="block text-xs font-semibold text-white/30 uppercase tracking-wider">{item.label}</span>
-                    <span className="block text-xs text-white/60 mt-0.5">{item.value}</span>
+                    <span className="block text-xs lg:text-sm font-semibold text-white/35 uppercase tracking-wider">{item.label}</span>
+                    <span className="block text-xs lg:text-sm text-white/65 mt-0.5">{item.value}</span>
                   </div>
                   {item.copy && <CopyButton text={item.copy} label={item.label} />}
                 </div>
@@ -317,7 +317,7 @@ export default function ContactPage() {
           </div>
 
           {/* Social Media */}
-          <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+          <div className="p-3 lg:p-4 rounded-lg bg-white/[0.03] border border-white/[0.06]">
             <span className="block text-xs font-semibold text-white/30 uppercase tracking-wider mb-2">Follow Us</span>
             <div className="flex items-center gap-2">
               {[

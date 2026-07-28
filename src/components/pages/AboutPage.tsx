@@ -66,13 +66,13 @@ function CompactStatItem({ value, suffix, label, icon: Icon, delay = 0 }: { valu
   const { count, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
 
   return (
-    <div ref={ref} className="flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 group">
-      <div className="size-11 shrink-0 rounded-lg bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md group-hover:shadow-amber-500/20 transition-all duration-300">
+    <div ref={ref} className="flex items-center gap-3 p-4 lg:p-5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 group">
+      <div className="size-12 shrink-0 rounded-lg bg-gradient-to-br from-amber-900/40 to-amber-900/60 flex items-center justify-center group-hover:shadow-md group-hover:shadow-amber-500/20 transition-all duration-300">
         <Icon className="size-5 text-amber-400" />
       </div>
       <div className="min-w-0">
-        <div className="text-xl font-bold text-amber-400 tabular-nums leading-tight">{count}{suffix}</div>
-        <div className="text-sm text-white/50 leading-tight truncate">{label}</div>
+        <div className="text-xl lg:text-2xl font-bold text-amber-400 tabular-nums leading-tight">{count}{suffix}</div>
+        <div className="text-sm text-white/55 leading-tight truncate">{label}</div>
       </div>
     </div>
   );
@@ -114,7 +114,7 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
       >
         {/* Front face */}
         <div className="rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300" style={{ backfaceVisibility: 'hidden' }}>
-          <div className="p-4">
+          <div className="p-4 lg:p-5">
             <div className="flex items-center gap-4">
               <div className="size-11 shrink-0 rounded-full bg-gradient-to-br from-amber-400/50 to-amber-500/50 flex items-center justify-center text-base font-bold text-amber-200 shadow-lg shadow-amber-500/20">
                 {member.name.charAt(0)}
@@ -130,7 +130,7 @@ function TeamFlipCard({ member }: { member: TeamMember }) {
 
         {/* Back face */}
         <div className="absolute inset-0 w-full rounded-xl overflow-hidden border border-emerald-500/30 bg-gradient-to-br from-amber-600 to-amber-500" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-          <div className="p-4 h-full flex flex-col">
+          <div className="p-4 lg:p-5 h-full flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="size-9 shrink-0 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold text-white">
                 {member.name.charAt(0)}
@@ -180,7 +180,7 @@ function TeamExpandCard({ member }: { member: TeamMember }) {
   return (
     <div className="relative rounded-xl">
       <Card className="relative z-10 overflow-hidden border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20 transition-all duration-300 group">
-        <CardContent className="p-4">
+        <CardContent className="p-4 lg:p-5">
           <div className="flex items-center gap-3">
             <div className="size-11 shrink-0 rounded-full bg-gradient-to-br from-amber-400/50 to-amber-500/50 flex items-center justify-center text-base font-bold text-amber-200 transition-transform duration-300 group-hover:scale-110 shadow-lg shadow-amber-500/20">
               {member.name.charAt(0)}
@@ -307,9 +307,9 @@ export default function AboutPage() {
       >
         {/* Left Column — Stats */}
         <motion.div variants={itemVariants} className="md:col-span-3 flex flex-col gap-3">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 shrink-0">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
-            <h2 className="text-base font-semibold text-white/90 uppercase tracking-wider">By the Numbers</h2>
+            <h2 className="text-base lg:text-lg font-semibold text-white/90 uppercase tracking-wider">By the Numbers</h2>
           </div>
           <div className="flex flex-col gap-2 flex-1">
             {stats.map((stat, index) => (
@@ -329,19 +329,19 @@ export default function AboutPage() {
         <motion.div variants={itemVariants} className="md:col-span-5 flex flex-col gap-3 min-h-0">
           <div className="flex items-center gap-2 mb-1 shrink-0">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-amber-400 to-emerald-400" />
-            <h2 className="text-base font-semibold text-white/90 uppercase tracking-wider">Core Values</h2>
+            <h2 className="text-base lg:text-lg font-semibold text-white/90 uppercase tracking-wider">Core Values</h2>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 flex-1 min-h-0 auto-rows-fr">
             {values.map((value, idx) => (
               <motion.div key={value.title} variants={itemVariants} className="min-h-0">
                 <Card className="h-full border-white/[0.06] bg-white/[0.03] backdrop-blur-sm hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-300 group overflow-hidden relative rounded-xl">
                   <div className={`absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx % 3 === 0 ? 'bg-emerald-500/10' : idx % 3 === 1 ? 'bg-amber-500/10' : 'bg-yellow-500/10'}`} />
-                  <CardContent className="p-3.5 relative flex flex-col h-full">
-                    <div className={`size-9 rounded-lg flex items-center justify-center mb-2 shrink-0 group-hover:scale-110 transition-all duration-300 ${idx % 3 === 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md shadow-yellow-500/20'}`}>
-                      <value.icon className="size-3.5 text-white" />
+                  <CardContent className="p-4 lg:p-5 relative flex flex-col h-full">
+                    <div className={`size-10 lg:size-11 rounded-lg flex items-center justify-center mb-2.5 lg:mb-3 shrink-0 group-hover:scale-110 transition-all duration-300 ${idx % 3 === 0 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20' : idx % 3 === 1 ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20' : 'bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-md shadow-yellow-500/20'}`}>
+                      <value.icon className="size-4 lg:size-5 text-white" />
                     </div>
-                    <h3 className="font-semibold text-sm text-white group-hover:text-amber-400 transition-colors leading-tight">{value.title}</h3>
-                    <p className="text-xs text-white/50 leading-relaxed mt-1 line-clamp-2">{value.description}</p>
+                    <h3 className="font-semibold text-sm lg:text-base text-white group-hover:text-amber-400 transition-colors leading-tight">{value.title}</h3>
+                    <p className="text-xs lg:text-sm text-white/50 leading-relaxed mt-1.5 line-clamp-2">{value.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -353,7 +353,7 @@ export default function AboutPage() {
         <motion.div variants={itemVariants} className="md:col-span-4 flex flex-col gap-3 min-h-0">
           <div className="flex items-center gap-2 mb-1 shrink-0">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
-            <h2 className="text-base font-semibold text-white/90 uppercase tracking-wider">Our Team</h2>
+            <h2 className="text-base lg:text-lg font-semibold text-white/90 uppercase tracking-wider">Our Team</h2>
             <span className="text-xs text-white/30 ml-auto hidden md:inline">Click to explore</span>
           </div>
           {loading ? (
