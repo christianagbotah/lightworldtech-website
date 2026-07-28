@@ -172,7 +172,7 @@ export default function ProductsPage() {
 
   return (
     <main>
-      <div className="h-[calc(100vh-4rem)] overflow-hidden bg-background flex flex-col">
+      <div className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
         {/* Subtle background glow */}
         <div className="absolute top-10 left-10 w-40 h-40 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-56 h-56 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
@@ -192,7 +192,7 @@ export default function ProductsPage() {
             <h1 className="text-base lg:text-lg font-bold dark:text-white text-slate-900">
               Our <span className="text-gradient-amber">Products</span>
             </h1>
-            <span className="hidden sm:inline text-xs dark:text-white/30 text-slate-400 uppercase tracking-widest">
+            <span className="hidden sm:inline text-xs dark:text-white/50 text-slate-500 uppercase tracking-widest">
               Coming Soon
             </span>
           </div>
@@ -218,7 +218,7 @@ export default function ProductsPage() {
 
             return (
               <motion.div key={product.id} variants={itemVariants} className="min-h-0">
-                <Card className="h-full dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl p-4 lg:p-5 dark:hover:bg-white/[0.06] hover:bg-slate-50 transition-all duration-300 group overflow-hidden relative flex flex-col">
+                <Card className="h-full dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl p-4 md:p-6 dark:hover:bg-white/[0.06] hover:bg-slate-50 transition-all duration-300 group overflow-hidden relative flex flex-col">
                   {/* Top accent line */}
                   <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${product.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
 
@@ -252,7 +252,7 @@ export default function ProductsPage() {
                     {product.features.map((feature) => (
                       <span
                         key={feature}
-                        className="text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:text-white/45 text-slate-600 whitespace-nowrap"
+                        className="text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:text-white/60 text-slate-700 whitespace-nowrap"
                       >
                         {feature}
                       </span>
@@ -277,7 +277,7 @@ export default function ProductsPage() {
                   ) : (
                     <div className="flex gap-1.5">
                       <div className="relative flex-1">
-                        <Mail className="absolute left-2 top-1/2 -translate-y-1/2 size-3 dark:text-white/25 text-slate-400" />
+                        <Mail className="absolute left-2 top-1/2 -translate-y-1/2 size-3 dark:text-white/40 text-slate-500" />
                         <Input
                           type="email"
                           placeholder="your@email.com"

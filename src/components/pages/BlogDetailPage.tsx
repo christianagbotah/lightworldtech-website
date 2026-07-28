@@ -241,7 +241,7 @@ export default function BlogDetailPage() {
         <div className="container-main flex items-center justify-between py-2 px-4">
           <div className="flex items-center gap-3">
             <BookOpen className="size-4 text-amber-400" />
-            <span className="text-xs font-medium dark:text-white/60 text-slate-500 tabular-nums">{readingProgress}% read</span>
+            <span className="text-xs font-medium dark:text-white/70 text-slate-600 tabular-nums">{readingProgress}% read</span>
           </div>
           <div className="flex items-center gap-2">
             {readingProgress < 100 ? (
@@ -289,7 +289,7 @@ export default function BlogDetailPage() {
                   className={`block text-left w-full py-1.5 px-3 text-sm rounded-md transition-colors ${
                     activeHeading === item.id
                       ? 'bg-amber-500/10 text-amber-400 font-medium'
-                      : 'dark:text-white/40 text-slate-500 dark:hover:bg-white/[0.06] hover:bg-slate-100'
+                      : 'dark:text-white/60 text-slate-600 dark:hover:bg-white/[0.06] hover:bg-slate-100'
                   } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
                 >
                   {item.text}
@@ -314,7 +314,7 @@ export default function BlogDetailPage() {
                 </div>
               ) : (
                 <motion.article
-                  className="prose max-w-none prose-slate dark:prose-invert prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-strong:text-slate-900 dark:prose-strong:text-white"
+                  className="prose max-w-none prose-slate dark:prose-invert prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-700 dark:prose-p:text-white/80 prose-strong:text-slate-900 dark:prose-strong:text-white/90"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
@@ -367,7 +367,7 @@ export default function BlogDetailPage() {
                             className={`block text-left w-full py-1.5 text-sm rounded-md transition-colors ${
                               activeHeading === item.id
                                 ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 font-medium'
-                                : 'dark:text-white/40 text-slate-500 dark:hover:bg-white/[0.06] hover:bg-slate-100'
+                                : 'dark:text-white/60 text-slate-600 dark:hover:bg-white/[0.06] hover:bg-slate-100'
                             } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
                           >
                             {item.text}
@@ -408,7 +408,7 @@ export default function BlogDetailPage() {
                       {post.author.charAt(0)}
                     </div>
                     <h4 className="font-semibold dark:text-white text-slate-900">{post.author}</h4>
-                    <p className="text-xs dark:text-white/30 text-slate-400 mt-1">Contributing Writer</p>
+                    <p className="text-xs dark:text-white/50 text-slate-500 mt-1">Contributing Writer</p>
                   </CardContent>
                 </Card>
 
@@ -427,7 +427,7 @@ export default function BlogDetailPage() {
                           <h4 className="text-sm font-medium line-clamp-2 hover:text-emerald-400 transition-colors dark:text-white text-slate-900">
                             {related.title}
                           </h4>
-                          <p className="text-xs dark:text-white/30 text-slate-400 mt-1">
+                          <p className="text-xs dark:text-white/50 text-slate-500 mt-1">
                             {new Date(related.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                           </p>
                         </CardContent>

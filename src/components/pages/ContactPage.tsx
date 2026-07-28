@@ -61,7 +61,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     }
   };
   return (
-    <button onClick={handleCopy} className="p-1 rounded-md dark:text-white/20 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all shrink-0" aria-label={`Copy ${label}`}>
+    <button onClick={handleCopy} className="p-1 rounded-md dark:text-white/40 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all shrink-0" aria-label={`Copy ${label}`}>
       {copied ? <Check className="size-3 text-amber-500" /> : <Copy className="size-3" />}
     </button>
   );
@@ -167,7 +167,7 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-background flex flex-col">
+    <div className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
       {/* ═══ Compact Title Bar ═══ */}
       <div className="shrink-0 px-4 lg:px-8 pt-2 pb-3">
         <div className="flex items-center gap-3">
@@ -183,7 +183,7 @@ export default function ContactPage() {
               {officeStatus.open && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
               <span className={`relative inline-flex rounded-full size-2 ${officeStatus.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
             </span>
-            <span className="text-xs dark:text-white/30 text-slate-400 font-medium">{officeStatus.label}</span>
+            <span className="text-xs dark:text-white/50 text-slate-500 font-medium">{officeStatus.label}</span>
           </div>
         </div>
       </div>
@@ -264,9 +264,8 @@ export default function ContactPage() {
                     onClick={() => inputRef.current?.click()}
                   >
                     <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
-                    <Upload className="size-3.5 dark:text-white/25 text-slate-400 shrink-0" />
-                    <span className="text-xs dark:text-white/30 text-slate-400">Attach files (max {MAX_FILES}, 10MB each)</span>
-                    <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
+                    <Upload className="size-3.5 dark:text-white/40 text-slate-500 shrink-0" />
+                    <span className="text-xs dark:text-white/45 text-slate-500">Attach files (max {MAX_FILES}, 10MB each)</span>
                   </div>
 
                   {/* File chips */}
@@ -275,7 +274,7 @@ export default function ContactPage() {
                       {attachments.map((att) => (
                         <div key={att.id} className="flex items-center gap-1 px-2 py-0.5 rounded-md dark:bg-white/[0.04] bg-slate-50 border border-slate-200 dark:border-white/[0.06] text-xs dark:text-white/50 text-slate-500">
                           {att.file.name} ({formatFileSize(att.file.size)})
-                          <button onClick={() => removeFile(att.id)} className="dark:text-white/20 text-slate-500 hover:text-red-400 ml-0.5"><X className="size-2.5" /></button>
+                          <button onClick={() => removeFile(att.id)} className="dark:text-white/40 text-slate-500 hover:text-red-400 ml-0.5"><X className="size-2.5" /></button>
                         </div>
                       ))}
                     </div>
@@ -307,7 +306,7 @@ export default function ContactPage() {
                     <item.icon className="size-3.5 text-amber-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="block text-xs lg:text-sm font-semibold dark:text-white/35 text-slate-400 uppercase tracking-wider">{item.label}</span>
+                    <span className="block text-xs lg:text-sm font-semibold dark:text-white/50 text-slate-500 uppercase tracking-wider">{item.label}</span>
                     <span className="block text-xs lg:text-sm dark:text-white/65 text-slate-600 mt-0.5">{item.value}</span>
                   </div>
                   {item.copy && <CopyButton text={item.copy} label={item.label} />}
@@ -318,7 +317,7 @@ export default function ContactPage() {
 
           {/* Social Media */}
           <div className="p-3 lg:p-4 rounded-lg dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06]">
-            <span className="block text-xs font-semibold dark:text-white/30 text-slate-400 uppercase tracking-wider mb-2">Follow Us</span>
+            <span className="block text-xs font-semibold dark:text-white/50 text-slate-500 uppercase tracking-wider mb-2">Follow Us</span>
             <div className="flex items-center gap-2">
               {[
                 { icon: Facebook, label: 'Facebook', color: 'hover:bg-blue-600' },

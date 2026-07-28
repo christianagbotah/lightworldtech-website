@@ -188,7 +188,7 @@ export default function BlogPage() {
             <div className="flex-1" />
 
             {/* Search input - compact */}
-            <div className="relative w-48 lg:w-64 shrink-0">
+            <div className="relative w-36 sm:w-48 lg:w-64 shrink-0">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-500" />
               <Input
                 ref={searchInputRef}
@@ -223,7 +223,7 @@ export default function BlogPage() {
             </div>
             <div className="flex-1" />
             {!loading && (
-              <span className="text-xs dark:text-white/30 text-slate-400 shrink-0 hidden sm:block">
+              <span className="text-xs dark:text-white/40 text-slate-500 shrink-0 hidden sm:block">
                 {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''}
                 {blogSearch && (
                   <span className="text-emerald-400/60"> {'·'} &ldquo;{blogSearch}&rdquo;</span>
@@ -294,7 +294,7 @@ export default function BlogPage() {
                   </h3>
 
                   {/* Excerpt - 2 lines */}
-                  <p className="text-xs lg:text-sm dark:text-white/40 text-slate-500 leading-relaxed line-clamp-2 mb-auto">
+                  <p className="text-xs lg:text-sm dark:text-white/60 text-slate-600 leading-relaxed line-clamp-2 mb-auto">
                     {post.excerpt}
                   </p>
 
@@ -310,18 +310,18 @@ export default function BlogPage() {
                         {post.author?.charAt(0) || 'L'}
                       </span>
                     </div>
-                    <span className="text-xs lg:text-sm dark:text-white/50 text-slate-500 truncate max-w-[80px] lg:max-w-none">
+                    <span className="text-xs lg:text-sm dark:text-white/70 text-slate-600 truncate max-w-[80px] lg:max-w-none">
                       {post.author}
                     </span>
 
                     <div className="flex-1" />
 
-                    <span className="hidden sm:flex items-center gap-1 text-xs dark:text-white/25 text-slate-400">
+                    <span className="hidden sm:flex items-center gap-1 text-xs dark:text-white/40 text-slate-500">
                       <Calendar className="size-2.5" />
                       {new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                     </span>
 
-                    <span className="hidden sm:flex items-center gap-1 text-xs dark:text-white/25 text-slate-400">
+                    <span className="hidden sm:flex items-center gap-1 text-xs dark:text-white/40 text-slate-500">
                       <Clock className="size-2.5" />
                       {post.readTime}
                     </span>
@@ -345,7 +345,7 @@ export default function BlogPage() {
               <FileX className="size-6 dark:text-white/25 text-slate-400" />
             </div>
             <h3 className="text-sm font-medium dark:text-white/50 text-slate-500 mb-1">No results found</h3>
-            <p className="text-xs dark:text-white/30 text-slate-400 mb-4 text-center max-w-xs">
+            <p className="text-xs dark:text-white/50 text-slate-500 mb-4 text-center max-w-xs">
               We couldn&apos;t find any articles matching your search. Try different keywords or clear the filters.
             </p>
             <button

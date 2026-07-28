@@ -826,3 +826,19 @@ Stage Summary:
 - Team cards now have proper rectangular photo/image slot at the top of each card
 - Footer logo background changed from amber gradient to dark slate (no more interfering bg)
 - All logo circles guaranteed to render with dark bg and visible amber border via inline styles
+---
+Task ID: fix-footer-logo-team-photoslot-nav
+Agent: Main Agent
+Task: Fix Footer logo circle bg, team member photo slot, enlarge nav items
+
+Work Log:
+- **Footer logo circle**: Replaced inline-style `background: '#1e293b'` with Tailwind classes `bg-slate-950 border-2 border-amber-400/30` to match Header/Hero style — no more interfering amber gradient circle
+- **Team photo slot**: Created new `TeamPhotoSlot` component showing a User icon + Camera badge + "Photo" label placeholder when no image is set (used by both `TeamFlipCard` and `TeamExpandCard` in AboutPage)
+- **Navigation sizing**: Enlarged md/lg nav link padding (px-4 lg:px-5, py-2 lg:py-2.5), font size (text-[15px] lg:text-base), and CTA button height (h-8 lg:h-10)
+- **Responsive/readability**: Reviewed all inner pages (Services, Portfolio, Blog, Careers, Products, Contact, About) — styling is consistent with professional margins, proper contrast, and responsive grids
+- **Verified via agent-browser**: Team photo placeholders confirmed visible on all 4 member cards, Footer logo circle clean, zero JS errors
+
+Stage Summary:
+- 3 commits made locally (git push failed — GitHub token expired)
+- Key files changed: Footer.tsx, AboutPage.tsx, Header.tsx
+- All pages render correctly on desktop and mobile viewports

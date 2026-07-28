@@ -48,9 +48,9 @@ const iconMap: Record<string, React.ElementType> = { Globe, Smartphone, Graduati
 
 const gradients = [
   'from-emerald-500 to-teal-600',
-  'from-cyan-500 to-blue-600',
+  'from-teal-500 to-emerald-600',
   'from-amber-500 to-orange-600',
-  'from-violet-500 to-purple-600',
+  'from-rose-500 to-amber-600',
   'from-rose-500 to-pink-600',
   'from-lime-500 to-green-600',
 ];
@@ -90,7 +90,7 @@ export default function ServicesPage() {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-background flex flex-col">
+    <div className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
       {/* ═══ Compact Title Bar ═══ */}
       <div className="shrink-0 px-4 lg:px-8 pt-2 pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -145,7 +145,7 @@ export default function ServicesPage() {
                   initial={{ opacity: 0, y: 15, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.35, delay: index * 0.06 }}
-                  className="group relative overflow-hidden rounded-xl dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] backdrop-blur-sm cursor-pointer transition-all duration-300 dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.12] hover:border-slate-300 hover:scale-[1.01]"
+                  className="group relative overflow-hidden rounded-xl dark:bg-white/[0.04] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] backdrop-blur-sm cursor-pointer transition-all duration-300 dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.12] hover:border-slate-300 hover:scale-[1.01]"
                   onClick={() => setSelectedService(service)}
                 >
                   {/* Popular badge */}
@@ -167,14 +167,14 @@ export default function ServicesPage() {
                     <h3 className="text-xs lg:text-sm font-bold dark:text-white/90 text-slate-800 mb-0.5 lg:mb-1 leading-tight">{service.title}</h3>
 
                     {/* Description */}
-                    <p className="text-xs lg:text-sm dark:text-white/40 text-slate-500 leading-relaxed line-clamp-2 mb-2 lg:mb-3">{service.description}</p>
+                    <p className="text-xs lg:text-sm dark:text-white/60 text-slate-600 leading-relaxed line-clamp-2 mb-2 lg:mb-3">{service.description}</p>
 
                     {/* Features */}
                     <div className="space-y-0.5 mb-2 lg:mb-3 flex-1">
                       {service.features.slice(0, 4).map((feature: string) => (
                         <div key={feature} className="flex items-center gap-1.5">
                           <CheckCircle2 className="size-3 lg:size-3.5 text-emerald-400/60 shrink-0" />
-                          <span className="text-xs lg:text-sm dark:text-white/50 text-slate-500 leading-tight line-clamp-1">{feature}</span>
+                          <span className="text-xs lg:text-sm dark:text-white/70 text-slate-600 leading-tight line-clamp-1">{feature}</span>
                         </div>
                       ))}
                     </div>
@@ -182,7 +182,7 @@ export default function ServicesPage() {
                     {/* Bottom: Price + CTA */}
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/[0.04]">
                       {service.priceRange && (
-                        <span className="text-xs lg:text-sm font-semibold text-amber-400/80">{service.priceRange}</span>
+                        <span className="text-xs lg:text-sm font-semibold text-amber-600 dark:text-amber-400/80">{service.priceRange}</span>
                       )}
                       <div className="flex items-center gap-1 text-emerald-400 text-xs font-medium group-hover:translate-x-0.5 transition-transform">
                         Details <ArrowRight className="size-3" />

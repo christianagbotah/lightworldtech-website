@@ -186,7 +186,7 @@ export default function PortfolioPage() {
 
             {/* Results count */}
             {!loading && (
-              <div className="ml-auto flex items-center gap-1.5 dark:text-white/25 text-slate-400">
+              <div className="ml-auto flex items-center gap-1.5 dark:text-white/40 text-slate-500">
                 <Layers className="size-3.5" />
                 <span className="text-xs">{filtered.length} projects</span>
               </div>
@@ -224,11 +224,11 @@ export default function PortfolioPage() {
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/30 to-amber-800/20 rotate-6" />
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/20 to-amber-800/10 -rotate-3" />
                   <div className="relative size-20 rounded-2xl dark:bg-white/[0.04] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] flex items-center justify-center shadow-lg">
-                    <SearchX className="size-8 dark:text-white/30 text-slate-400" />
+                    <SearchX className="size-8 dark:text-white/50 text-slate-400" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold dark:text-white/60 text-slate-500 mb-2">No projects found</h3>
-                <p className="text-sm dark:text-white/40 text-slate-500 mb-5 leading-relaxed">There are no projects in this category yet. Check back soon or browse all our projects.</p>
+                <h3 className="text-lg font-semibold dark:text-white/80 text-slate-700 mb-2">No projects found</h3>
+                <p className="text-sm dark:text-white/60 text-slate-600 mb-5 leading-relaxed">There are no projects in this category yet. Check back soon or browse all our projects.</p>
                 <Button onClick={() => setActiveCategory('all')} className="bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white shadow-md shadow-emerald-500/20 text-sm">
                   <Sparkles className="size-4 mr-2" /> View All Projects
                 </Button>
@@ -288,7 +288,7 @@ export default function PortfolioPage() {
                             </h3>
 
                             {/* Description (2 lines) */}
-                            <p className="text-xs lg:text-sm dark:text-white/40 text-slate-500 leading-relaxed mb-3 line-clamp-2 flex-grow">
+                            <p className="text-xs lg:text-sm dark:text-white/60 text-slate-600 leading-relaxed mb-3 line-clamp-2 flex-grow">
                               {project.description}
                             </p>
 
@@ -303,7 +303,7 @@ export default function PortfolioPage() {
                                 </span>
                               ))}
                               {(project.tags?.length || 0) > 3 && (
-                                <span className="text-xs px-2 py-0.5 rounded-full dark:bg-white/[0.03] bg-slate-100 dark:text-white/25 text-slate-400">
+                                <span className="text-xs px-2 py-0.5 rounded-full dark:bg-white/[0.03] bg-slate-100 dark:text-white/40 text-slate-500">
                                   +{project.tags.length - 3}
                                 </span>
                               )}
