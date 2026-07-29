@@ -7,7 +7,7 @@ import {
   Kanban, UsersRound, GraduationCap, BarChart3, Bell, Mail, Clock, CheckCircle2,
   ArrowRight, Flame, Zap,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -223,24 +223,24 @@ export default function ProductsPage() {
 
             return (
               <motion.div key={product.id} variants={itemVariants} className="min-h-0">
-                <Card className="h-full dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl p-4 md:p-6 dark:hover:bg-white/[0.06] hover:bg-slate-50 transition-all duration-300 group overflow-hidden relative flex flex-col">
-                  {/* Featured Image Banner */}
-                  <div className="overflow-hidden rounded-t-xl">
-                    <div className="relative aspect-video">
-                      <Image
-                        src={product.image}
-                        alt={product.title}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white/90 dark:from-slate-900/90 to-transparent" />
-                    </div>
+                <div className="h-full dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl dark:hover:bg-white/[0.06] hover:bg-slate-50 transition-all duration-300 group overflow-hidden relative flex flex-col shadow-sm">
+                  {/* Featured Image Banner — full card width */}
+                  <div className="relative aspect-[21/9] overflow-hidden shrink-0">
+                    <Image
+                      src={product.image}
+                      alt={product.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      unoptimized
+                    />
+                    {/* Gradient overlay at bottom of image */}
+                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white/90 dark:from-slate-900/90 to-transparent" />
+                    {/* Accent line at bottom of image */}
+                    <div className={`absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r ${product.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
                   </div>
 
-                  {/* Top accent line */}
-                  <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${product.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
-
+                  {/* Content — padded inner section */}
+                  <div className="p-4 md:p-6 flex flex-col flex-1">
                   {/* Header: icon + title + launch badge */}
                   <div className="flex items-start gap-2.5 mb-2">
                     <div className={`size-10 lg:size-12 shrink-0 rounded-xl bg-gradient-to-br ${product.gradient} flex items-center justify-center shadow-lg group-hover:scale-105 group-hover:rotate-1 transition-all duration-300`}>
@@ -322,7 +322,8 @@ export default function ProductsPage() {
                       </Button>
                     </div>
                   )}
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             );
           })}

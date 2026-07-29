@@ -1,0 +1,448 @@
+     1→'use client';
+     2→
+     3→import { useEffect, useState, useMemo } from 'react';
+     4→import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+     5→import { ExternalLink, X, Layers, SearchX, ChevronDown, Sparkles, Maximize2, Briefcase, ArrowRight } from 'lucide-react';
+     6→import Image from 'next/image';
+     7→import { Card, CardContent } from '@/components/ui/card';
+     8→import { Badge } from '@/components/ui/badge';
+     9→import { Button } from '@/components/ui/button';
+    10→import { Skeleton } from '@/components/ui/skeleton';
+    11→import {
+    12→  Dialog,
+    13→  DialogContent,
+    14→  DialogHeader,
+    15→  DialogTitle,
+    16→  DialogDescription,
+    17→} from '@/components/ui/dialog';
+    18→import { useSEO } from '@/hooks/use-seo';
+    19→import CTASection from '@/components/sections/CTASection';
+    20→import ImageLightbox from '@/components/ui/image-lightbox';
+    21→
+    22→const fetcher = (url: string) => fetch(url).then(r => r.json());
+    23→
+    24→interface PortfolioItem {
+    25→  id: string;
+    26→  title: string;
+    27→  description: string;
+    28→  category: string;
+    29→  tags: string[];
+    30→  featured: boolean;
+    31→  clientUrl?: string;
+    32→  fullDescription?: string;
+    33→  image?: string;
+    34→  height?: 'short' | 'tall' | 'medium';
+    35→}
+    36→
+    37→const defaultPortfolio: PortfolioItem[] = [
+    38→  { id: '1', title: 'E-Commerce Platform', description: 'Full-featured online store with payment integration, inventory management, and analytics dashboard.', category: 'Web Development', tags: ['React', 'Node.js', 'PostgreSQL', 'Stripe'], featured: true, clientUrl: '#', image: '/images/portfolio/ecommerce.png', fullDescription: 'A comprehensive e-commerce platform built for a leading retail client in Ghana. The solution includes multi-vendor support, real-time inventory management, integrated payment gateways (MTN MoMo, Visa), and a powerful analytics dashboard for business intelligence.', height: 'tall' },
+    39→  { id: '2', title: 'Healthcare Mobile App', description: 'Patient management app with telemedicine features, appointment scheduling, and health records.', category: 'Mobile App', tags: ['React Native', 'Firebase', 'WebRTC'], featured: true, clientUrl: '#', image: '/images/portfolio/healthcare.png', fullDescription: 'A cross-platform healthcare application that connects patients with doctors virtually. Features include appointment scheduling, electronic health records, prescription management, telemedicine video calls, and push notifications for appointment reminders.', height: 'medium' },
+    40→  { id: '3', title: 'Corporate ERP System', description: 'Enterprise resource planning system for a manufacturing company with supply chain management.', category: 'Software Development', tags: ['Python', 'Django', 'React', 'AWS'], featured: true, clientUrl: '#', image: '/images/portfolio/erp-system.png', fullDescription: 'A full-scale ERP system designed for a Ghanaian manufacturing company. Modules include inventory management, supply chain optimization, HR management, financial accounting, and production planning with real-time reporting dashboards.', height: 'short' },
+    41→  { id: '4', title: 'Real Estate Portal', description: 'Property listing and management platform with virtual tours and advanced search filters.', category: 'Web Development', tags: ['Next.js', 'Prisma', 'MapBox', 'Cloudinary'], featured: true, clientUrl: '#', image: '/images/portfolio/realestate.png', fullDescription: 'A modern real estate listing platform serving the Ghanaian property market. Features include interactive map-based search, virtual property tours, mortgage calculator, agent management, and automated lead generation for property agents.', height: 'medium' },
+    42→  { id: '5', title: 'Restaurant Ordering App', description: 'Table reservation and food ordering system with real-time updates and payment processing.', category: 'Mobile App', tags: ['Flutter', 'Supabase', 'Stripe'], featured: false, clientUrl: '#', image: '/images/portfolio/restaurant-app.png', fullDescription: 'A food ordering and table reservation app for a restaurant chain. Features include real-time menu updates, order tracking, QR code menu scanning, loyalty program integration, and seamless payment processing.', height: 'tall' },
+    43→  { id: '6', title: 'Learning Management System', description: 'Comprehensive LMS for corporate training with course management, progress tracking, and certifications.', category: 'Software Development', tags: ['Vue.js', 'Laravel', 'MySQL'], featured: false, clientUrl: '#', image: '/images/portfolio/lms.png', fullDescription: 'An enterprise learning management system built for corporate training organizations. Features include course authoring tools, video conferencing integration, progress analytics, certificate generation, and SCORM compliance.', height: 'short' },
+    44→  { id: '7', title: 'Travel Booking Website', description: 'Full-service travel booking platform with flight, hotel, and activity reservations.', category: 'Web Development', tags: ['Next.js', 'Tailwind', 'Prisma', 'Amadeus API'], featured: false, clientUrl: '#', image: '/images/portfolio/travel.png', fullDescription: 'A comprehensive travel booking platform for a Ghanaian travel agency. Integrates with Amadeus API for flight search and booking, hotel reservations, local activity bookings, and a personalized itinerary builder.', height: 'medium' },
+    45→  { id: '8', title: 'Fitness Tracker App', description: 'Health and fitness tracking application with workout plans, nutrition logging, and social features.', category: 'Mobile App', tags: ['React Native', 'Node.js', 'MongoDB'], featured: false, clientUrl: '#', image: '/images/portfolio/fitness.png', fullDescription: 'A health and fitness tracking app with workout plan customization, nutrition logging with barcode scanning, social challenges, progress analytics with charts, and integration with wearable devices.', height: 'short' },
+    46→  { id: '9', title: 'Security Monitoring Dashboard', description: 'Real-time security monitoring and alerting system for corporate campuses.', category: 'Software Development', tags: ['Python', 'React', 'WebSocket', 'PostgreSQL'], featured: false, clientUrl: '#', image: '/images/portfolio/security.png', fullDescription: 'A real-time security monitoring system for a corporate campus. Features include live camera feeds, AI-powered threat detection, incident reporting, guard patrol tracking, and automated alert escalation.', height: 'tall' },
+    47→];
+    48→
+    49→const allCategories = ['all', 'Web Development', 'Mobile App', 'Software Development'];
+    50→
+    51→const containerVariants = {
+    52→  hidden: { opacity: 0 },
+    53→  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+    54→};
+    55→
+    56→const itemVariants = {
+    57→  hidden: { opacity: 0, scale: 0.9, y: 10 },
+    58→  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4 } },
+    59→};
+    60→
+    61→// Category color mapping for badges
+    62→const categoryColors: Record<string, string> = {
+    63→  'Web Development': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+    64→  'Mobile App': 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+    65→  'Software Development': 'bg-violet-500/15 text-violet-400 border-violet-500/20',
+    66→};
+    67→
+    68→// Card gradient accents based on category
+    69→const categoryCardAccents: Record<string, string> = {
+    70→  'Web Development': 'from-emerald-500/8 to-emerald-600/3',
+    71→  'Mobile App': 'from-amber-500/8 to-amber-600/3',
+    72→  'Software Development': 'from-violet-500/8 to-violet-600/3',
+    73→};
+    74→
+    75→export default function PortfolioPage() {
+    76→  useSEO({
+    77→    title: 'Portfolio',
+    78→    description: 'Explore our portfolio of web development, mobile app, and software projects. See how Lightworld Technologies delivers innovative solutions for businesses in Ghana and Africa.',
+    79→    keywords: ['portfolio Ghana', 'web development projects', 'mobile app showcase', 'software solutions', 'IT projects Africa', 'Lightworld Technologies work'],
+    80→  });
+    81→  const [portfolio, setPortfolio] = useState<PortfolioItem[]>(defaultPortfolio);
+    82→  const [loading, setLoading] = useState(true);
+    83→  const [activeCategory, setActiveCategory] = useState('all');
+    84→  const [selectedProject, setSelectedProject] = useState<PortfolioItem | null>(null);
+    85→  const [lightboxOpen, setLightboxOpen] = useState(false);
+    86→  const [lightboxIndex, setLightboxIndex] = useState(0);
+    87→  const [visibleCount, setVisibleCount] = useState(9);
+    88→  const itemsPerPage = 6;
+    89→
+    90→  // Reset visible count when category changes
+    91→  const prevCategoryRef = useState(activeCategory);
+    92→  if (prevCategoryRef[0] !== activeCategory) {
+    93→    prevCategoryRef[1](activeCategory);
+    94→    setVisibleCount(9);
+    95→  }
+    96→
+    97→  useEffect(() => {
+    98→    fetcher('/api/portfolio')
+    99→      .then((data) => {
+   100→        if (Array.isArray(data) && data.length > 0) {
+   101→          const merged = data.map((p: Record<string, unknown>, i: number) => ({
+   102→            id: String(p.id || defaultPortfolio[i]?.id || String(i)),
+   103→            title: String(p.title || defaultPortfolio[i]?.title || ''),
+   104→            description: String(p.description || defaultPortfolio[i]?.description || ''),
+   105→            category: String(p.category || defaultPortfolio[i]?.category || ''),
+   106→            tags: Array.isArray(p.tags) ? p.tags.map(String) : (defaultPortfolio[i]?.tags || []),
+   107→            featured: p.featured === true,
+   108→            clientUrl: String(p.clientUrl || defaultPortfolio[i]?.clientUrl || ''),
+   109→            fullDescription: String(p.fullDescription || defaultPortfolio[i]?.fullDescription || ''),
+   110→            image: String(p.image || defaultPortfolio[i]?.image || ''),
+   111→            height: (p.height || defaultPortfolio[i]?.height || ['short', 'medium', 'tall'][i % 3]) as 'short' | 'tall' | 'medium',
+   112→          }));
+   113→          setPortfolio(merged);
+   114→        }
+   115→      })
+   116→      .catch(() => {})
+   117→      .finally(() => setLoading(false));
+   118→  }, []);
+   119→
+   120→  const handleCardClick = (project: PortfolioItem, index: number) => {
+   121→    setSelectedProject(project);
+   122→    setLightboxOpen(true);
+   123→    setLightboxIndex(index);
+   124→  };
+   125→
+   126→  const filtered = activeCategory === 'all'
+   127→    ? portfolio
+   128→    : portfolio.filter(p => p.category === activeCategory);
+   129→
+   130→  const visibleItems = filtered.slice(0, visibleCount);
+   131→  const hasMore = visibleCount < filtered.length;
+   132→
+   133→  const categories = useMemo(() => {
+   134→    const counts: Record<string, number> = {};
+   135→    for (const p of portfolio) {
+   136→      counts[p.category] = (counts[p.category] || 0) + 1;
+   137→    }
+   138→    return allCategories.map(cat => ({
+   139→      name: cat,
+   140→      count: cat === 'all' ? portfolio.length : (counts[cat] || 0),
+   141→    }));
+   142→  }, [portfolio]);
+   143→
+   144→  return (
+   145→    <main className="bg-background min-h-screen">
+   146→      {/* Compact Title Bar */}
+   147→      <section className="relative">
+   148→        {/* Subtle top gradient glow */}
+   149→        <div className="absolute top-0 left-1/4 w-96 h-32 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+   150→        <div className="absolute top-0 right-1/4 w-80 h-24 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+   151→
+   152→        <div className="container-main relative z-10">
+   153→          {/* Badge + Title Row */}
+   154→          <div className="flex items-center gap-4 mb-4">
+   155→            <motion.div
+   156→              initial={{ opacity: 0, scale: 0.9 }}
+   157→              animate={{ opacity: 1, scale: 1 }}
+   158→              transition={{ duration: 0.3 }}
+   159→              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium"
+   160→            >
+   161→              <Briefcase className="size-3" />
+   162→              Our Portfolio
+   163→            </motion.div>
+   164→            <h1 className="text-2xl md:text-3xl font-bold dark:text-white text-slate-900">
+   165→              Projects & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-400">Case Studies</span>
+   166→            </h1>
+   167→          </div>
+   168→
+   169→          {/* Filter Tabs */}
+   170→          <div className="flex items-center gap-2 mb-2">
+   171→            {categories.map((cat) => (
+   172→              <button
+   173→                key={cat.name}
+   174→                onClick={() => setActiveCategory(cat.name)}
+   175→                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
+   176→                  activeCategory === cat.name
+   177→                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 text-white shadow-md shadow-emerald-500/15'
+   178→                    : 'dark:bg-white/[0.04] bg-slate-100 dark:text-white/50 text-slate-500 dark:hover:bg-white/[0.08] hover:bg-slate-200 dark:hover:text-white/70 hover:text-slate-700 border border-slate-200 dark:border-white/[0.06]'
+   179→                }`}
+   180→              >
+   181→                {cat.name === 'all' ? 'All Projects' : cat.name}
+   182→                <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center font-medium ${
+   183→                  activeCategory === cat.name ? 'bg-white/20 text-white' : 'dark:bg-white/[0.06] bg-slate-200 dark:text-white/30 text-slate-400'
+   184→                }`}>
+   185→                  {cat.count}
+   186→                </span>
+   187→              </button>
+   188→            ))}
+   189→
+   190→            {/* Results count */}
+   191→            {!loading && (
+   192→              <div className="ml-auto flex items-center gap-1.5 dark:text-white/40 text-slate-500">
+   193→                <Layers className="size-3.5" />
+   194→                <span className="text-xs">{filtered.length} projects</span>
+   195→              </div>
+   196→            )}
+   197→          </div>
+   198→        </div>
+   199→      </section>
+   200→
+   201→      {/* Main Content — Full Viewport Grid */}
+   202→      <section className="h-[calc(100vh-8rem)] overflow-hidden flex flex-col">
+   203→        <div className="container-main h-full">
+   204→          {loading ? (
+   205→            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-full">
+   206→              {Array.from({ length: 9 }).map((_, i) => (
+   207→                <Card key={i} className="dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] rounded-xl overflow-hidden">
+   208→                  <Skeleton className="h-4 w-28 mb-3 mx-4 mt-4" />
+   209→                  <Skeleton className="h-3 w-full mb-1.5 mx-4" />
+   210→                  <Skeleton className="h-3 w-3/4 mb-3 mx-4" />
+   211→                  <div className="flex gap-1.5 px-4 pb-4">
+   212→                    <Skeleton className="h-4 w-12 rounded-full" />
+   213→                    <Skeleton className="h-4 w-16 rounded-full" />
+   214→                    <Skeleton className="h-4 w-10 rounded-full" />
+   215→                  </div>
+   216→                </Card>
+   217→              ))}
+   218→            </div>
+   219→          ) : filtered.length === 0 ? (
+   220→            <motion.div
+   221→              className="flex items-center justify-center h-full"
+   222→              initial={{ opacity: 0, y: 10 }}
+   223→              animate={{ opacity: 1, y: 0 }}
+   224→            >
+   225→              <div className="text-center max-w-sm">
+   226→                <div className="relative size-20 mx-auto mb-5">
+   227→                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/30 to-amber-800/20 rotate-6" />
+   228→                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-900/20 to-amber-800/10 -rotate-3" />
+   229→                  <div className="relative size-20 rounded-2xl dark:bg-white/[0.04] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] flex items-center justify-center shadow-lg">
+   230→                    <SearchX className="size-8 dark:text-white/50 text-slate-400" />
+   231→                  </div>
+   232→                </div>
+   233→                <h3 className="text-lg font-semibold dark:text-white/80 text-slate-700 mb-2">No projects found</h3>
+   234→                <p className="text-sm dark:text-white/60 text-slate-600 mb-5 leading-relaxed">There are no projects in this category yet. Check back soon or browse all our projects.</p>
+   235→                <Button onClick={() => setActiveCategory('all')} className="bg-gradient-to-r from-emerald-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-white shadow-md shadow-emerald-500/20 text-sm">
+   236→                  <Sparkles className="size-4 mr-2" /> View All Projects
+   237→                </Button>
+   238→              </div>
+   239→            </motion.div>
+   240→          ) : (
+   241→            <LayoutGroup>
+   242→              <motion.div
+   243→                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[calc(100vh-10rem)] overflow-y-auto"
+   244→                variants={containerVariants}
+   245→                initial="hidden"
+   246→                animate="visible"
+   247→              >
+   248→                <AnimatePresence mode="popLayout">
+   249→                  {visibleItems.map((project, index) => {
+   250→                    const accentGradient = categoryCardAccents[project.category] || 'from-slate-500/8 to-slate-600/3';
+   251→                    const badgeColor = categoryColors[project.category] || 'dark:bg-white/10 bg-slate-100 dark:text-white/60 text-slate-500';
+   252→
+   253→                    return (
+   254→                      <motion.div
+   255→                        key={project.id}
+   256→                        variants={itemVariants}
+   257→                        layout
+   258→                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+   259→                        className="h-full"
+   260→                      >
+   261→                        <Card
+   262→                          className={`group relative h-full dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 cursor-pointer dark:hover:bg-white/[0.05] hover:bg-slate-100 ${
+   263→                            project.featured
+   264→                              ? 'hover:border-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/5'
+   265→                              : 'dark:hover:border-white/[0.12] hover:border-slate-300'
+   266→                          }`}
+   267→                          onClick={() => handleCardClick(project, visibleItems.indexOf(project))}
+   268→                        >
+   269→                          {/* Featured glow accent */}
+   270→                          {project.featured && (
+   271→                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+   272→                          )}
+   273→
+   274→                          {/* Card Image */}
+   275→                          {project.image && (
+   276→                            <div className="overflow-hidden rounded-t-xl">
+   277→                              <div className="relative aspect-video">
+   278→                                <Image
+   279→                                  src={project.image}
+   280→                                  alt={project.title}
+   281→                                  fill
+   282→                                  className="object-cover"
+   283→                                  unoptimized
+   284→                                />
+   285→                                <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white/90 dark:from-slate-900/90 to-transparent" />
+   286→                              </div>
+   287→                            </div>
+   288→                          )}
+   289→
+   290→                          <div className="p-4 lg:p-6 flex flex-col h-full">
+   291→                            {/* Top: Category badge + Featured indicator */}
+   292→                            <div className="flex items-center justify-between mb-3">
+   293→                              <Badge className={`text-xs px-2.5 py-0.5 rounded-full border font-medium ${badgeColor}`}>
+   294→                                {project.category}
+   295→                              </Badge>
+   296→                              {project.featured && (
+   297→                                <span className="flex items-center gap-1 text-xs text-amber-400/70">
+   298→                                  <span className="size-1.5 rounded-full bg-amber-400/70 animate-pulse" />
+   299→                                  Featured
+   300→                                </span>
+   301→                              )}
+   302→                            </div>
+   303→
+   304→                            {/* Title */}
+   305→                            <h3 className="text-sm lg:text-base font-semibold mb-2 group-hover:text-emerald-400 transition-colors dark:text-white text-slate-900 leading-snug">
+   306→                              {project.title}
+   307→                            </h3>
+   308→
+   309→                            {/* Description (2 lines) */}
+   310→                            <p className="text-xs lg:text-sm dark:text-white/60 text-slate-600 leading-relaxed mb-3 line-clamp-2 flex-grow">
+   311→                              {project.description}
+   312→                            </p>
+   313→
+   314→                            {/* Tags (max 3) */}
+   315→                            <div className="flex flex-wrap gap-1 mb-3">
+   316→                              {project.tags?.slice(0, 3).map((tag: string) => (
+   317→                                <span
+   318→                                  key={tag}
+   319→                                  className="text-xs lg:text-sm px-2.5 lg:px-3 py-0.5 lg:py-1 rounded-full dark:bg-white/[0.05] bg-slate-100 dark:text-white/40 text-slate-500 border border-slate-100 dark:border-white/[0.04]"
+   320→                                >
+   321→                                  {tag}
+   322→                                </span>
+   323→                              ))}
+   324→                              {(project.tags?.length || 0) > 3 && (
+   325→                                <span className="text-xs px-2 py-0.5 rounded-full dark:bg-white/[0.03] bg-slate-100 dark:text-white/40 text-slate-500">
+   326→                                  +{project.tags.length - 3}
+   327→                                </span>
+   328→                              )}
+   329→                            </div>
+   330→
+   331→                          </div>
+   332→
+   333→                          {/* Bottom accent line */}
+   334→                          <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${accentGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+   335→                        </Card>
+   336→                      </motion.div>
+   337→                    );
+   338→                  })}
+   339→                </AnimatePresence>
+   340→              </motion.div>
+   341→            </LayoutGroup>
+   342→          )}
+   343→        </div>
+   344→      </section>
+   345→
+   346→      {/* Bottom Bar */}
+   347→      <div className="container-main pb-6">
+   348→        <div className="flex items-center justify-between">
+   349→          {/* View All Projects link */}
+   350→          <motion.button
+   351→            className="inline-flex items-center gap-2 text-sm text-emerald-400/70 hover:text-emerald-400 transition-colors group"
+   352→            initial={{ opacity: 0 }}
+   353→            animate={{ opacity: 1 }}
+   354→            transition={{ delay: 0.5 }}
+   355→          >
+   356→            View All Projects
+   357→            <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
+   358→          </motion.button>
+   359→
+   360→          {/* Load More (only if needed) */}
+   361→          {hasMore && !loading && (
+   362→            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+   363→              <Button
+   364→                variant="outline"
+   365→                size="sm"
+   366→                onClick={() => setVisibleCount(prev => prev + itemsPerPage)}
+   367→                className="border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 px-5 text-xs h-8 hover:shadow-md transition-all duration-300"
+   368→              >
+   369→                Load More <ChevronDown className="size-3 ml-1" />
+   370→              </Button>
+   371→            </motion.div>
+   372→          )}
+   373→        </div>
+   374→      </div>
+   375→
+   376→      {/* Quick View Modal */}
+   377→      <Dialog open={!!selectedProject && !lightboxOpen} onOpenChange={() => setSelectedProject(null)}>
+   378→        <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
+   379→          {selectedProject && (
+   380→            <>
+   381→              <div className="relative h-48 bg-gradient-to-br from-emerald-600 to-amber-700 flex items-center justify-center">
+   382→                <div className="absolute inset-0 grid-pattern opacity-20" />
+   383→                <div className="text-center relative z-10 p-6">
+   384→                  <div className="size-14 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
+   385→                    <Maximize2 className="size-6 text-white" />
+   386→                  </div>
+   387→                  <span className="text-white font-bold text-xl opacity-40">{selectedProject.title}</span>
+   388→                </div>
+   389→                <button onClick={() => setSelectedProject(null)} className="absolute top-3 right-3 size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10" aria-label="Close"><X className="size-4" /></button>
+   390→              </div>
+   391→
+   392→              <div className="p-6 space-y-4">
+   393→                <div className="flex items-center justify-between">
+   394→                  <div className="flex gap-1.5">
+   395→                    <Badge className={`text-xs ${categoryColors[selectedProject.category] || 'bg-amber-500/10 text-amber-300'}`}>{selectedProject.category}</Badge>
+   396→                    {selectedProject.featured && <Badge className="bg-amber-500/10 text-amber-300">Featured</Badge>}
+   397→                  </div>
+   398→                  <Button size="sm" onClick={() => { const idx = filtered.findIndex(p => p.id === selectedProject.id); setLightboxIndex(idx >= 0 ? idx : 0); setLightboxOpen(true); }} className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs">
+   399→                    <ExternalLink className="size-3 mr-1" /> Full View
+   400→                  </Button>
+   401→                </div>
+   402→                <DialogHeader className="mt-1"><DialogTitle className="text-xl dark:text-white text-slate-900">{selectedProject.title}</DialogTitle></DialogHeader>
+   403→                <DialogDescription className="text-sm dark:text-white/60 text-slate-500 leading-relaxed">{selectedProject.fullDescription || selectedProject.description}</DialogDescription>
+   404→
+   405→                <div>
+   406→                  <h4 className="text-sm font-semibold dark:text-white text-slate-900 mb-2">Technologies</h4>
+   407→                  <div className="flex flex-wrap gap-1.5">
+   408→                    {selectedProject.tags?.map((tag: string) => (
+   409→                      <Badge key={tag} variant="secondary" className="text-xs dark:bg-white/[0.06] bg-slate-100 dark:text-white/40 text-slate-500">{tag}</Badge>
+   410→                    ))}
+   411→                  </div>
+   412→                </div>
+   413→
+   414→                <div className="flex gap-3 pt-2">
+   415→                  <Button className="bg-emerald-500 hover:bg-emerald-400 text-white flex-1"><ExternalLink className="size-4 mr-2" /> Visit Project</Button>
+   416→                  <Button variant="outline" onClick={() => setSelectedProject(null)} className="flex-1">Close</Button>
+   417→                </div>
+   418→              </div>
+   419→            </>
+   420→          )}
+   421→        </DialogContent>
+   422→      </Dialog>
+   423→
+   424→      {/* Image Lightbox */}
+   425→      <ImageLightbox
+   426→        items={filtered.map(p => ({
+   427→          id: p.id,
+   428→          title: p.title,
+   429→          description: p.fullDescription || p.description,
+   430→          category: p.category,
+   431→          tags: p.tags,
+   432→          featured: p.featured,
+   433→        }))}
+   434→        currentIndex={lightboxIndex}
+   435→        isOpen={lightboxOpen}
+   436→        onClose={() => setLightboxOpen(false)}
+   437→        onNavigate={(index) => {
+   438→          setLightboxIndex(index);
+   439→          setSelectedProject(filtered[index] || null);
+   440→        }}
+   441→      />
+   442→
+   443→      {/* CTA */}
+   444→      <CTASection />
+   445→    </main>
+   446→  );
+   447→}
+   448→

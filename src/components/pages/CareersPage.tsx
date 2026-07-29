@@ -94,6 +94,7 @@ const defaultJobs: JobListing[] = [
     ],
     postedDate: '2025-01-08',
     featured: true,
+    image: '/images/careers/developer.png',
   },
   {
     id: '3',
@@ -203,6 +204,7 @@ const defaultJobs: JobListing[] = [
     ],
     postedDate: '2024-12-20',
     featured: false,
+    image: '/images/careers/designer.png',
   },
 ];
 
