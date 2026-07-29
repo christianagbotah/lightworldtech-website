@@ -842,3 +842,22 @@ Stage Summary:
 - 3 commits made locally (git push failed — GitHub token expired)
 - Key files changed: Footer.tsx, AboutPage.tsx, Header.tsx
 - All pages render correctly on desktop and mobile viewports
+---
+Task ID: featured-images-fix
+Agent: Main Agent
+Task: Fix Products page featured images to cover full card width + add missing career images
+
+Work Log:
+- Diagnosed root cause: shadcn Card component has built-in `py-6` and `gap-6` classes that prevented images from reaching card edges
+- Replaced `<Card>` with plain `<div>` on ProductsPage to eliminate default padding
+- Restructured card: image at top (full-width, aspect-[21/9]), then padded content div below
+- Added `shrink-0` to image container to prevent collapse on mobile viewports
+- Added hover scale effect (`group-hover:scale-105 transition-transform duration-500`) on product images
+- Moved gradient accent line from top of card to bottom of image area
+- Added missing `image` field to Careers job #2 (Mobile App Developer) and job #6 (IT Training Instructor)
+- Verified in browser: images are full-width edge-to-edge on both desktop (263px height) and mobile (157px height)
+
+Stage Summary:
+- Products page now displays featured images covering full card width on all viewports
+- All 4 career job listings now have images
+- Committed and pushed to GitHub (commit 2b66c7f)
