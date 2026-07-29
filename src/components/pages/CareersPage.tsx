@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import Image from 'next/image';
 import { useSEO } from '@/hooks/use-seo';
 import { toast } from 'sonner';
 import CTASection from '@/components/sections/CTASection';
@@ -34,6 +35,7 @@ interface JobListing {
   benefits: string[];
   postedDate: string;
   featured: boolean;
+  image?: string;
 }
 
 const defaultJobs: JobListing[] = [
@@ -64,6 +66,7 @@ const defaultJobs: JobListing[] = [
     ],
     postedDate: '2025-01-10',
     featured: true,
+    image: '/images/careers/developer.png',
   },
   {
     id: '2',
@@ -118,6 +121,7 @@ const defaultJobs: JobListing[] = [
     ],
     postedDate: '2025-01-05',
     featured: false,
+    image: '/images/careers/designer.png',
   },
   {
     id: '4',
@@ -144,6 +148,7 @@ const defaultJobs: JobListing[] = [
     ],
     postedDate: '2025-01-03',
     featured: false,
+    image: '/images/careers/marketing.png',
   },
   {
     id: '5',
@@ -170,6 +175,7 @@ const defaultJobs: JobListing[] = [
     ],
     postedDate: '2024-12-28',
     featured: false,
+    image: '/images/careers/devops.png',
   },
   {
     id: '6',
@@ -256,7 +262,7 @@ export default function CareersPage() {
   return (
     <main className="bg-background">
       {/* Full viewport book page */}
-      <div className="h-[calc(100vh-5rem)] overflow-hidden flex flex-col relative">
+      <div className="h-[calc(100vh-5rem)] overflow-y-auto flex flex-col relative">
         {/* Subtle gradient orbs */}
         <div className="absolute top-[-10%] right-[10%] w-[400px] h-[400px] rounded-full bg-emerald-600/[0.04] blur-[100px] pointer-events-none" />
         <div className="absolute bottom-[-10%] left-[5%] w-[350px] h-[350px] rounded-full bg-amber-600/[0.03] blur-[100px] pointer-events-none" />
@@ -337,7 +343,21 @@ export default function CareersPage() {
                   variants={itemVariants}
                   className="flex"
                 >
-                  <div className="flex flex-col dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl p-4 md:p-5 hover:border-emerald-500/20 dark:hover:bg-white/[0.04] hover:bg-slate-50 transition-all duration-300 group w-full">
+                  <div className="flex flex-col dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl overflow-hidden hover:border-emerald-500/20 dark:hover:bg-white/[0.04] hover:bg-slate-50 transition-all duration-300 group w-full">
+                    {/* Featured Image Banner */}
+                    {job.image && (
+                      <div className="relative aspect-[21/9] overflow-hidden rounded-t-xl">
+                        <Image
+                          src={job.image}
+                          alt={job.title}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white/90 dark:from-slate-900/90 to-transparent" />
+                      </div>
+                    )}
+                    <div className="flex flex-col flex-1 p-4 md:p-5">
                     {/* Card header */}
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="min-w-0 flex-1">
@@ -390,6 +410,7 @@ export default function CareersPage() {
                       <Send className="size-3" />
                       Apply Now
                     </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Kanban, UsersRound, GraduationCap, BarChart3, Bell, Mail, Clock, CheckCircle2,
@@ -20,6 +21,7 @@ const products = [
     id: '1',
     title: 'Project Management Tool',
     description: 'Streamline your team\'s workflow with our intuitive project management solution. Features include task boards, time tracking, Gantt charts, and real-time collaboration for teams of any size.',
+    image: '/images/products/project-tool.png',
     icon: Kanban,
     gradient: 'from-amber-500 to-yellow-600',
     features: ['Task Boards & Kanban', 'Time Tracking', 'Gantt Charts', 'Team Collaboration', 'Automated Reports'],
@@ -29,6 +31,7 @@ const products = [
     id: '2',
     title: 'CRM System',
     description: 'Build stronger relationships with a CRM designed for African businesses. Manage leads, track sales pipelines, automate follow-ups, and gain actionable insights from customer data.',
+    image: '/images/products/crm.png',
     icon: UsersRound,
     gradient: 'from-amber-500 to-amber-600',
     features: ['Lead Management', 'Sales Pipeline', 'Email Automation', 'Customer Analytics', 'Mobile App'],
@@ -38,6 +41,7 @@ const products = [
     id: '3',
     title: 'Learning Platform',
     description: 'Empower your organization with a modern e-learning platform. Create and deliver courses, track learner progress, issue certificates, and build a culture of continuous learning.',
+    image: '/images/products/learning.png',
     icon: GraduationCap,
     gradient: 'from-yellow-500 to-amber-600',
     features: ['Course Builder', 'Video Streaming', 'Progress Tracking', 'Certificates', 'Assessments'],
@@ -47,6 +51,7 @@ const products = [
     id: '4',
     title: 'Analytics Dashboard',
     description: 'Make data-driven decisions with our powerful analytics dashboard. Visualize key metrics, create custom reports, set alerts, and integrate with your existing data sources.',
+    image: '/images/products/analytics.png',
     icon: BarChart3,
     gradient: 'from-amber-400 to-amber-500',
     features: ['Custom Dashboards', 'Real-time Data', 'Export Reports', 'Alert System', 'API Integrations'],
@@ -207,7 +212,7 @@ export default function ProductsPage() {
 
         {/* 2×2 Product Cards Grid */}
         <motion.div
-          className="relative z-10 flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-5 p-3 lg:p-4 overflow-hidden"
+          className="relative z-10 flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-5 p-3 lg:p-4 overflow-y-auto"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -219,6 +224,20 @@ export default function ProductsPage() {
             return (
               <motion.div key={product.id} variants={itemVariants} className="min-h-0">
                 <Card className="h-full dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl p-4 md:p-6 dark:hover:bg-white/[0.06] hover:bg-slate-50 transition-all duration-300 group overflow-hidden relative flex flex-col">
+                  {/* Featured Image Banner */}
+                  <div className="overflow-hidden rounded-t-xl">
+                    <div className="relative aspect-video">
+                      <Image
+                        src={product.image}
+                        alt={product.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white/90 dark:from-slate-900/90 to-transparent" />
+                    </div>
+                  </div>
+
                   {/* Top accent line */}
                   <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${product.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
 

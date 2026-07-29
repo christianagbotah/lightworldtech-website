@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { Search, Clock, Calendar, FileX, Keyboard, ArrowRight, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,6 +21,7 @@ interface BlogPost {
   readTime: string;
   slug: string;
   featured?: boolean;
+  image?: string;
 }
 
 interface CategoryCount {
@@ -28,12 +30,12 @@ interface CategoryCount {
 }
 
 const defaultPosts: BlogPost[] = [
-  { id: '1', title: 'Why Every Business Needs a Professional Website in 2025', excerpt: 'In today\'s digital age, having a professional website is no longer a luxury but a necessity for businesses of all sizes.', category: 'Business', author: 'Lightworld Technologies', date: '2025-01-15', readTime: '5 min read', slug: 'why-every-business-needs-professional-website-2025', featured: true },
-  { id: '2', title: 'The Complete Guide to Mobile App Development', excerpt: 'Learn everything you need to know about developing a mobile app for your business, from planning to launch.', category: 'Mobile Apps', author: 'Kwame Asante', date: '2025-01-10', readTime: '7 min read', slug: 'complete-guide-mobile-app-development-business', featured: true },
-  { id: '3', title: 'Top 10 Web Development Trends to Watch in 2025', excerpt: 'Stay ahead of the curve with these essential web development trends that are shaping the future of the internet.', category: 'Web Development', author: 'Abena Mensah', date: '2025-01-05', readTime: '6 min read', slug: 'top-10-web-development-trends-2025', featured: false },
-  { id: '4', title: 'How School Management Software Transforms Education', excerpt: 'Discover how digital school management systems are revolutionizing education administration in Ghana and across Africa.', category: 'Technology', author: 'Lightworld Technologies', date: '2024-12-28', readTime: '8 min read', slug: 'school-management-software-transforms-education-ghana', featured: true },
-  { id: '5', title: 'UI/UX Design Principles Every Business Owner Should Know', excerpt: 'Understanding basic UI/UX design principles can help you make better decisions about your website and app projects.', category: 'Design', author: 'Abena Mensah', date: '2024-12-20', readTime: '5 min read', slug: 'ui-ux-design-principles-business-owners', featured: false },
-  { id: '6', title: 'SEO Strategies to Grow Your Business Online in Ghana', excerpt: 'Learn effective SEO strategies specifically tailored for businesses operating in Ghana and the West African market.', category: 'SEO & Marketing', author: 'Kofi Amponsah', date: '2024-12-15', readTime: '6 min read', slug: 'seo-strategies-grow-business-online-ghana', featured: false },
+  { id: '1', title: 'Why Every Business Needs a Professional Website in 2025', excerpt: 'In today\'s digital age, having a professional website is no longer a luxury but a necessity for businesses of all sizes.', category: 'Business', author: 'Lightworld Technologies', date: '2025-01-15', readTime: '5 min read', slug: 'why-every-business-needs-professional-website-2025', featured: true, image: '/images/blog/business-website.png' },
+  { id: '2', title: 'The Complete Guide to Mobile App Development', excerpt: 'Learn everything you need to know about developing a mobile app for your business, from planning to launch.', category: 'Mobile Apps', author: 'Kwame Asante', date: '2025-01-10', readTime: '7 min read', slug: 'complete-guide-mobile-app-development-business', featured: true, image: '/images/blog/mobile-dev.png' },
+  { id: '3', title: 'Top 10 Web Development Trends to Watch in 2025', excerpt: 'Stay ahead of the curve with these essential web development trends that are shaping the future of the internet.', category: 'Web Development', author: 'Abena Mensah', date: '2025-01-05', readTime: '6 min read', slug: 'top-10-web-development-trends-2025', featured: false, image: '/images/blog/web-trends.png' },
+  { id: '4', title: 'How School Management Software Transforms Education', excerpt: 'Discover how digital school management systems are revolutionizing education administration in Ghana and across Africa.', category: 'Technology', author: 'Lightworld Technologies', date: '2024-12-28', readTime: '8 min read', slug: 'school-management-software-transforms-education-ghana', featured: true, image: '/images/blog/school-software.png' },
+  { id: '5', title: 'UI/UX Design Principles Every Business Owner Should Know', excerpt: 'Understanding basic UI/UX design principles can help you make better decisions about your website and app projects.', category: 'Design', author: 'Abena Mensah', date: '2024-12-20', readTime: '5 min read', slug: 'ui-ux-design-principles-business-owners', featured: false, image: '/images/blog/uiux-design.png' },
+  { id: '6', title: 'SEO Strategies to Grow Your Business Online in Ghana', excerpt: 'Learn effective SEO strategies specifically tailored for businesses operating in Ghana and the West African market.', category: 'SEO & Marketing', author: 'Kofi Amponsah', date: '2024-12-15', readTime: '6 min read', slug: 'seo-strategies-grow-business-online-ghana', featured: false, image: '/images/blog/seo-marketing.png' },
 ];
 
 const defaultCategories: CategoryCount[] = [
@@ -100,6 +102,7 @@ export default function BlogPage() {
             category: typeof p.category === 'object' ? (p.category as { name?: string }).name || 'Technology' : p.category,
             readTime: typeof p.readTime === 'number' ? p.readTime + ' min read' : p.readTime,
             date: p.date || p.createdAt,
+            image: String(p.image || defaultPosts.find(d => d.slug === p.slug)?.image || ''),
           }));
         } else if (Array.isArray(data) && data.length > 0) {
           mappedPosts = data.map((p: Record<string, unknown>) => ({
@@ -112,6 +115,7 @@ export default function BlogPage() {
             readTime: typeof p.readTime === 'number' ? p.readTime + ' min read' : String(p.readTime || ''),
             slug: String(p.slug || ''),
             featured: p.featured === true,
+            image: String(p.image || defaultPosts.find(d => d.slug === p.slug)?.image || ''),
           }));
         }
         if (mappedPosts.length > 0) setPosts(mappedPosts);
@@ -169,7 +173,7 @@ export default function BlogPage() {
   };
 
   return (
-    <main className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
+    <main className="h-[calc(100vh-5rem)] overflow-y-auto bg-background flex flex-col">
       {/* Compact Title Bar */}
       <div className="shrink-0 px-4 lg:px-8 pt-4 pb-3">
         <div className="flex flex-col gap-3">
@@ -281,6 +285,20 @@ export default function BlogPage() {
                   }`}
                   onClick={() => handlePostClick(post.slug)}
                 >
+                  {/* Featured image */}
+                  {post.image && (
+                    <div className="relative aspect-video overflow-hidden rounded-t-xl -mx-4 lg:-mx-5 -mt-4 lg:-mt-5 mb-3">
+                      <Image
+                        src={post.image}
+                        alt={post.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                      <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/80 dark:from-slate-900/80 to-transparent" />
+                    </div>
+                  )}
+
                   {/* Category badge */}
                   <span className={`inline-flex self-start px-2.5 py-0.5 rounded-full text-xs font-semibold mb-2 ${
                     categoryBadgeColors[post.category] || 'dark:bg-white/10 bg-slate-100 dark:text-white/60 text-slate-500'
