@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin, Clock, DollarSign, Briefcase,
@@ -247,22 +247,31 @@ export default function CareersPage() {
   const [applyModalOpen, setApplyModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobListing | null>(null);
 
+  const [visibleCount, setVisibleCount] = useState(4);
+
   const filtered = jobs.filter((job) => {
     const matchDept = activeDepartment === 'All Departments' || job.department === activeDepartment;
     const matchType = activeType === 'All Types' || job.type === activeType;
     return matchDept && matchType;
   });
 
-  const displayed = filtered.slice(0, 4);
-  const hasMore = filtered.length > 4;
+  const displayed = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
 
   const handleApplyClick = (job: JobListing) => {
     setSelectedJob(job);
     setApplyModalOpen(true);
   };
 
+  // Reset visible count when filters change
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      setVisibleCount(4);
+    });
+  }, [activeDepartment, activeType]);
+
   return (
-    <main className="bg-background">
+    <div className="bg-background">
       {/* Full viewport book page */}
       <div className="h-[calc(100vh-5rem)] overflow-y-auto flex flex-col relative">
         {/* Subtle gradient orbs */}
@@ -449,11 +458,23 @@ export default function CareersPage() {
               <Mail className="size-3.5" />
               <span>Don&apos;t see a role? Send your CV to <span className="underline underline-offset-2 group-hover:text-emerald-400/80 transition-colors">careers@lightworldtechnologies.com</span></span>
             </a>
-            {hasMore && (
+            {hasMore ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs dark:text-white/40 text-slate-500">
+                  Showing {displayed.length} of {filtered.length} positions
+                </span>
+                <button
+                  onClick={() => setVisibleCount(prev => prev + 4)}
+                  className="text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors font-medium"
+                >
+                  Load More
+                </button>
+              </div>
+            ) : filtered.length > 0 ? (
               <span className="text-xs dark:text-white/40 text-slate-500">
-                Showing 4 of {filtered.length} positions
+                {filtered.length} position{filtered.length !== 1 ? 's' : ''} available
               </span>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -499,7 +520,7 @@ export default function CareersPage() {
 
       {/* CTA */}
       <CTASection />
-    </main>
+    </div>
   );
 }
 

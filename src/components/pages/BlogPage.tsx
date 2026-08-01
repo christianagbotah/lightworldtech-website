@@ -173,7 +173,7 @@ export default function BlogPage() {
   };
 
   return (
-    <main className="h-[calc(100vh-5rem)] overflow-y-auto bg-background flex flex-col">
+    <div className="h-[calc(100vh-5rem)] overflow-y-auto bg-background flex flex-col">
       {/* Compact Title Bar */}
       <div className="shrink-0 px-4 lg:px-8 pt-4 pb-3">
         <div className="flex flex-col gap-3">
@@ -379,6 +379,6 @@ export default function BlogPage() {
           </motion.div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

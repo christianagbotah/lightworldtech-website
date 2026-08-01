@@ -325,7 +325,16 @@ export default function ContactPage() {
                 { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-blue-700' },
                 { icon: Instagram, label: 'Instagram', color: 'hover:bg-pink-600' },
               ].map((social) => (
-                <button key={social.label} onClick={() => window.open('#', '_blank')} className={`size-8 rounded-lg border border-slate-200 dark:border-white/[0.06] dark:text-white/30 text-slate-400 flex items-center justify-center transition-all hover:text-white hover:shadow-lg ${social.color}`} aria-label={social.label}>
+                <button key={social.label} onClick={() => {
+                  const urls: Record<string, string> = {
+                    'Facebook': 'https://facebook.com/lightworldtechnologies',
+                    'Twitter': 'https://x.com/lightworldtech',
+                    'LinkedIn': 'https://linkedin.com/company/lightworldtechnologies',
+                    'Instagram': 'https://instagram.com/lightworldtechnologies',
+                  };
+                  const url = urls[social.label];
+                  if (url) window.open(url, '_blank');
+                }} className={`size-8 rounded-lg border border-slate-200 dark:border-white/[0.06] dark:text-white/30 text-slate-400 flex items-center justify-center transition-all hover:text-white hover:shadow-lg ${social.color}`} aria-label={social.label}>
                   <social.icon className="size-3.5" />
                 </button>
               ))}
@@ -356,7 +365,7 @@ export default function ContactPage() {
           {/* Map Preview */}
           <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-white/[0.06] flex-1 min-h-[100px]">
             <iframe
-              src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3770%2C5.5837%2C-0.0070%2C5.6237&layer=mapnik&marker=5.6037%2C-0.1870"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3770%2C5.5837%2C-0.0070%2C5.6237&layer=mapnik&marker=5.6037%2C-0.1870&locale=en"
               width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
               title="Lightworld Technologies Office - Accra, Ghana"
               className="grayscale-[50%] contrast-[1.1] dark:brightness-[0.7] h-full"

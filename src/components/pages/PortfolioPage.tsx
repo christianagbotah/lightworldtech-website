@@ -142,7 +142,7 @@ export default function PortfolioPage() {
   }, [portfolio]);
 
   return (
-    <main className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen">
       {/* Compact Title Bar */}
       <section className="relative">
         {/* Subtle top gradient glow */}
@@ -442,6 +442,6 @@ export default function PortfolioPage() {
 
       {/* CTA */}
       <CTASection />
-    </main>
+    </div>
   );
 }

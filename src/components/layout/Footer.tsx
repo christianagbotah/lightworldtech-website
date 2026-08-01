@@ -32,10 +32,10 @@ const serviceLinks = [
 ];
 
 const socialLinks = [
-  { icon: Facebook, href: '#', label: 'Facebook', hoverColor: 'hover:bg-blue-600 hover:border-blue-600' },
-  { icon: Twitter, href: '#', label: 'Twitter', hoverColor: 'hover:bg-sky-500 hover:border-sky-500' },
-  { icon: Linkedin, href: '#', label: 'LinkedIn', hoverColor: 'hover:bg-blue-700 hover:border-blue-700' },
-  { icon: Instagram, href: '#', label: 'Instagram', hoverColor: 'hover:bg-pink-600 hover:border-pink-600' },
+  { icon: Facebook, href: 'https://facebook.com/lightworldtechnologies', label: 'Facebook', hoverColor: 'hover:bg-blue-600 hover:border-blue-600' },
+  { icon: Twitter, href: 'https://x.com/lightworldtech', label: 'Twitter', hoverColor: 'hover:bg-sky-500 hover:border-sky-500' },
+  { icon: Linkedin, href: 'https://linkedin.com/company/lightworldtechnologies', label: 'LinkedIn', hoverColor: 'hover:bg-blue-700 hover:border-blue-700' },
+  { icon: Instagram, href: 'https://instagram.com/lightworldtechnologies', label: 'Instagram', hoverColor: 'hover:bg-pink-600 hover:border-pink-600' },
 ];
 
 export default function Footer() {

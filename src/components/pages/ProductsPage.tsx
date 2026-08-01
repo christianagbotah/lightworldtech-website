@@ -176,7 +176,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <main>
+    <div>
       <div className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
         {/* Subtle background glow */}
         <div className="absolute top-10 left-10 w-40 h-40 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
@@ -329,6 +329,6 @@ export default function ProductsPage() {
           })}
         </motion.div>
       </div>
-    </main>
+    </div>
   );
 }

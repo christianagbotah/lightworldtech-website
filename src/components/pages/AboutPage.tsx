@@ -41,10 +41,10 @@ const values = [
 ];
 
 const defaultTeam: TeamMember[] = [
-  { id: '1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with 10+ years in IT solutions and digital transformation across Africa. Passionate about leveraging technology to solve real-world challenges and empowering businesses to thrive in the digital age.', skills: ['Strategic Planning', 'Business Development', 'Project Management', 'Digital Transformation'], linkedin: 'https://linkedin.com/in/emmanuel-osei', twitter: 'https://twitter.com/emmanuel_osei', github: 'https://github.com/emmanuel-osei', email: 'emmanuel@lightworldtech.com' },
-  { id: '2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web and mobile technologies. Committed to writing clean, scalable code and mentoring the next generation of developers in Ghana.', skills: ['React', 'Node.js', 'TypeScript', 'System Architecture', 'DevOps'], linkedin: 'https://linkedin.com/in/kwame-asante', twitter: 'https://twitter.com/kwame_asante', github: 'https://github.com/kwame-asante', email: 'kwame@lightworldtech.com' },
-  { id: '3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Award-winning designer passionate about creating intuitive user experiences. Specializes in design systems, accessibility, and user research to create interfaces that users love.', skills: ['UI Design', 'UX Research', 'Figma', 'Design Systems', 'Accessibility'], linkedin: 'https://linkedin.com/in/abena-mensah', twitter: 'https://twitter.com/abena_mensah', github: 'https://github.com/abena-mensah', email: 'abena@lightworldtech.com' },
-  { id: '4', name: 'Kofi Amponsah', role: 'Digital Marketing Lead', bio: 'Digital marketing expert specializing in SEO, social media, and growth strategies. Has helped dozens of businesses increase their online visibility and revenue through data-driven marketing.', skills: ['SEO', 'Content Marketing', 'Google Ads', 'Analytics', 'Social Media'], linkedin: 'https://linkedin.com/in/kofi-amponsah', twitter: 'https://twitter.com/kofi_amponsah', github: 'https://github.com/kofi-amponsah', email: 'kofi@lightworldtech.com' },
+  { id: '1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with 10+ years in IT solutions and digital transformation across Africa. Passionate about leveraging technology to solve real-world challenges and empowering businesses to thrive in the digital age.', skills: ['Strategic Planning', 'Business Development', 'Project Management', 'Digital Transformation'], image: '/images/team/emmanuel.jpg', linkedin: 'https://linkedin.com/in/emmanuel-osei', twitter: 'https://twitter.com/emmanuel_osei', github: 'https://github.com/emmanuel-osei', email: 'emmanuel@lightworldtech.com' },
+  { id: '2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web and mobile technologies. Committed to writing clean, scalable code and mentoring the next generation of developers in Ghana.', skills: ['React', 'Node.js', 'TypeScript', 'System Architecture', 'DevOps'], image: '/images/team/kwame.jpg', linkedin: 'https://linkedin.com/in/kwame-asante', twitter: 'https://twitter.com/kwame_asante', github: 'https://github.com/kwame-asante', email: 'kwame@lightworldtech.com' },
+  { id: '3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Award-winning designer passionate about creating intuitive user experiences. Specializes in design systems, accessibility, and user research to create interfaces that users love.', skills: ['UI Design', 'UX Research', 'Figma', 'Design Systems', 'Accessibility'], image: '/images/team/abena.jpg', linkedin: 'https://linkedin.com/in/abena-mensah', twitter: 'https://twitter.com/abena_mensah', github: 'https://github.com/abena-mensah', email: 'abena@lightworldtech.com' },
+  { id: '4', name: 'Kofi Amponsah', role: 'Digital Marketing Lead', bio: 'Digital marketing expert specializing in SEO, social media, and growth strategies. Has helped dozens of businesses increase their online visibility and revenue through data-driven marketing.', skills: ['SEO', 'Content Marketing', 'Google Ads', 'Analytics', 'Social Media'], image: '/images/team/kofi.jpg', linkedin: 'https://linkedin.com/in/kofi-amponsah', twitter: 'https://twitter.com/kofi_amponsah', github: 'https://github.com/kofi-amponsah', email: 'kofi@lightworldtech.com' },
 ];
 
 const awards = [
@@ -230,7 +230,7 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <main className="h-[calc(100vh-5rem)] overflow-y-auto overflow-x-hidden bg-background">
+    <div className="h-[calc(100vh-5rem)] overflow-y-auto overflow-x-hidden bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6 lg:space-y-8">
 
         {/* ═══ Page Header ═══ */}
@@ -354,6 +354,6 @@ export default function AboutPage() {
         {/* Bottom breathing room */}
         <div className="h-2" />
       </div>
-    </main>
+    </div>
   );
 }

@@ -186,7 +186,7 @@ export default function BlogDetailPage() {
   };
 
   return (
-    <main>
+    <div>
       {/* Hero */}
       <section className="relative pt-32 pb-16 bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 from-white via-slate-100 to-white overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-10" />
@@ -440,6 +440,6 @@ export default function BlogDetailPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

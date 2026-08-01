@@ -76,7 +76,7 @@ export default function Header() {
           {/* Logo */}
           <button onClick={() => handleNav('home')} className="flex items-center gap-2 shrink-0 pr-1.5">
             <div className="size-8 lg:size-9 rounded-full flex items-center justify-center shadow-sm overflow-hidden transition-transform hover:scale-110" style={{ background: 'var(--logo-circle-bg, #0f172a)', border: '2px solid rgba(251, 191, 36, 0.3)' }}>
-              <Image src="/logo.png" alt="Lightworld Technologies" width={28} height={28} className="object-contain" />
+              <Image src="/logo.png" alt="Lightworld Technologies" width={28} height={28} className="object-contain" priority />
             </div>
             <span className={cn(
               'text-sm lg:text-base font-bold transition-colors hidden sm:block',
