@@ -18,7 +18,7 @@ export function OrganizationJsonLd() {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Lightworld Technologies Limited',
+    name: 'Lightworld Technologies Ltd',
     alternateName: 'Lightworld Technologies',
     url: SITE_URL,
     logo: LOGO_URL,
@@ -74,7 +74,7 @@ export function WebSiteJsonLd() {
       'Software engineering, websites, mobile apps, enterprise systems, AI automation, cloud solutions, IT training and technology consultancy.',
     publisher: {
       '@type': 'Organization',
-      name: 'Lightworld Technologies Limited',
+      name: 'Lightworld Technologies Ltd',
       logo: {
         '@type': 'ImageObject',
         url: LOGO_URL,
