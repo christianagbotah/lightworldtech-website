@@ -34,7 +34,6 @@ const navItems = [
   { id: 'portfolio', label: 'Portfolio', icon: FolderOpen, page: 'admin-portfolio' as const },
   { id: 'crm', label: 'CRM Pipeline', icon: GitBranch, page: 'admin-crm' as const },
   { id: 'messages', label: 'Messages', icon: Mail, page: 'admin-messages' as const },
-  { id: 'leads', label: 'CRM Pipeline', icon: Target, page: 'admin-leads' as const },
   { id: 'faqs', label: 'FAQs', icon: HelpCircle, page: 'admin-faqs' as const },
   { id: 'settings', label: 'Settings', icon: Settings, page: 'admin-settings' as const },
 ];
@@ -146,7 +145,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                  adminTab === 'portfolio' ? 'Portfolio' :
                  adminTab === 'crm' ? 'CRM Pipeline' :
                  adminTab === 'messages' ? 'Messages' :
-                 adminTab === 'leads' ? 'CRM Pipeline' :
                  adminTab === 'faqs' ? 'FAQs' :
                  adminTab === 'settings' ? 'Settings' : 'Admin'}
               </h1>
