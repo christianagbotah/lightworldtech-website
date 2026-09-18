@@ -3,6 +3,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { companyProfile } from '@/lib/company-profile';
 import { contentJson, contentText, defaultRecognition } from '@/lib/site-content';
+import { isLeadershipIntent } from '@/lib/assistant-intents';
 
 export type ProjectScopeState = {
   mode: 'project-scope';
@@ -187,7 +188,7 @@ export async function answerConcierge(
     }
   }
 
-  if (/managing director|\bmd\b|rober yaw essuon|leadership|leaders|management|executive/.test(q)) {
+  if (isLeadershipIntent(q)) {
     const leaders = knowledge.team.slice(0, 6).map((person) => person.name + ' — ' + person.role);
     return {
       intent: 'leadership',
