@@ -35,6 +35,7 @@ const groups = [
       ['Insights', '/blog'],
       ['About', '/about'],
       ['Leadership', '/team'],
+      ['Recognition & Press', '/about#recognition'],
       ['Careers', '/careers'],
     ],
   },
