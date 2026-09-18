@@ -182,6 +182,7 @@ export default function Header() {
                         ['Products', '/products'],
                         ['Insights', '/blog'],
                         ['About', '/about'],
+                        ['Leadership', '/team'],
                         ['Careers', '/careers'],
                         ['Contact', '/contact'],
                       ].map(([label, href]) => (
