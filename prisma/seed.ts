@@ -224,21 +224,42 @@ async function seed() {
   console.log('✅ Process steps seeded');
 
   // ===== TEAM MEMBERS =====
+  // Only confirmed Lightworld leadership is activated publicly.
   const teamMembers = [
-    { id: 'team-1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with over 10 years of experience in IT solutions and business development. Passionate about leveraging technology to transform businesses across Africa.', image: '', email: '', linkedin: '', twitter: '', order: 0, active: false },
-    { id: 'team-2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web technologies. Leads our development team in delivering robust and scalable solutions for our clients.', image: '', email: '', linkedin: '', twitter: '', order: 1, active: false },
-    { id: 'team-3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Creative designer with a keen eye for detail. Specializes in creating intuitive and visually stunning user interfaces that enhance user experience.', image: '', email: '', linkedin: '', twitter: '', order: 2, active: false },
-    { id: 'team-4', name: 'Kofi Amponsah', role: 'Digital Marketing Manager', bio: 'Digital marketing expert with a track record of driving growth through SEO, social media, and content marketing strategies.', image: '', email: '', linkedin: '', twitter: '', order: 3, active: false },
+    {
+      id: 'leadership-christian-agbotah',
+      name: 'Christian Agbotah',
+      role: 'CEO & Director',
+      bio: 'Leads the company and its technology direction, product vision, engineering standards and long-term growth.',
+      image: '',
+      email: '',
+      linkedin: '',
+      twitter: '',
+      order: 0,
+      active: true,
+    },
+    {
+      id: 'leadership-rober-yaw-essuon',
+      name: 'Rober Yaw Essuon',
+      role: 'Managing Director',
+      bio: 'Leads management and business execution, helping translate company strategy into coordinated delivery and operations.',
+      image: '',
+      email: '',
+      linkedin: '',
+      twitter: '',
+      order: 1,
+      active: true,
+    },
   ];
 
   for (const t of teamMembers) {
     await db.teamMember.upsert({
       where: { id: t.id },
-      update: { name: t.name, role: t.role, bio: t.bio, active: false },
+      update: { name: t.name, role: t.role, bio: t.bio, order: t.order, active: true },
       create: t,
     });
   }
-  console.log('✅ Team members seeded');
+  console.log('✅ Confirmed leadership seeded');
 
   // ===== TESTIMONIALS =====
   const testimonials = [
@@ -330,7 +351,7 @@ A useful question is not simply “Can the application perform the happy path?�
 Ask instead: **Can the organization safely operate this system every day, understand what happened when something goes wrong, and continue improving it without rebuilding everything?**
 
 That is the standard we use when shaping production systems at Lightworld Technologies.`,
-      coverImage: '',
+      coverImage: '/images/portfolio/erp-system.png',
       author: 'Lightworld Technologies',
       published: true,
       featured: true,
@@ -373,7 +394,7 @@ Administration, reporting, bulk data work, configuration, and complex comparison
 ## One product, multiple working contexts
 
 The strongest mobile-first systems are not separate “mobile” and “desktop” products. They are one coherent service that respects the context of each device and user role.`,
-      coverImage: '',
+      coverImage: '/images/hero-slide-4.png',
       author: 'Lightworld Technologies',
       published: true,
       featured: false,
@@ -419,7 +440,7 @@ Large transformation projects become easier to control when they begin with one 
 ## The decision is operational, not fashionable
 
 The reason to build custom software is not that custom software sounds more advanced. It is that the current way of working is creating enough cost, risk, delay, or lost visibility that a purpose-built system has a clear job to do.`,
-      coverImage: '',
+      coverImage: '/images/services-showcase.png',
       author: 'Lightworld Technologies',
       published: true,
       featured: false,
@@ -470,7 +491,7 @@ Users need a clear path when the model is uncertain, unavailable, or wrong. Good
 ## Build trust through useful constraints
 
 AI automation is strongest when it has a clearly defined role inside a well-designed process. Start narrow, measure the value, keep human controls visible, and expand only when the workflow earns that expansion.`,
-      coverImage: '',
+      coverImage: '/images/hero-slide-2.png',
       author: 'Lightworld Technologies',
       published: true,
       featured: true,
@@ -482,7 +503,7 @@ AI automation is strongest when it has a clearly defined role inside a well-desi
   for (const p of blogPosts) {
     await db.blogPost.upsert({
       where: { id: p.id },
-      update: { title: p.title, slug: p.slug, excerpt: p.excerpt, content: p.content, author: p.author, readTime: p.readTime, categoryId: p.categoryId, published: p.published, featured: p.featured },
+      update: { title: p.title, slug: p.slug, excerpt: p.excerpt, content: p.content, coverImage: p.coverImage, author: p.author, readTime: p.readTime, categoryId: p.categoryId, published: p.published, featured: p.featured },
       create: p,
     });
   }
