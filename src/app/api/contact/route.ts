@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { consumePublicRateLimit } from '@/lib/public-rate-limit';
+import { qualifyLead } from '@/lib/lead-intelligence';
 
 // GET all contact messages
 export async function GET(request: NextRequest) {
@@ -84,6 +85,25 @@ export async function POST(request: NextRequest) {
     const message = await db.contactMessage.create({
       data: parsed.data,
     });
+
+    try {
+      const qualification = qualifyLead(parsed.data);
+      await db.lead.create({
+        data: {
+          contactMessageId: message.id,
+          name: message.name,
+          email: message.email,
+          phone: message.phone,
+          source: 'website-contact',
+          ...qualification,
+          lastActivityAt: message.createdAt,
+        },
+      });
+    } catch (leadError) {
+      // The customer message is authoritative. CRM enrichment must never make
+      // a valid enquiry fail if the lead subsystem is temporarily unavailable.
+      console.error('Lead creation failed for contact message:', leadError);
+    }
 
     return NextResponse.json(
       { success: true, data: message, message: 'Message sent successfully' },
