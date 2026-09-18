@@ -10,6 +10,7 @@ import {
   MessageSquare,
   FolderOpen,
   Mail,
+  GitBranch,
   HelpCircle,
   Settings,
   ArrowLeft,
@@ -31,6 +32,7 @@ const navItems = [
   { id: 'team', label: 'Team Members', icon: Users, page: 'admin-team' as const },
   { id: 'testimonials', label: 'Testimonials', icon: MessageSquare, page: 'admin-testimonials' as const },
   { id: 'portfolio', label: 'Portfolio', icon: FolderOpen, page: 'admin-portfolio' as const },
+  { id: 'crm', label: 'CRM Pipeline', icon: GitBranch, page: 'admin-crm' as const },
   { id: 'messages', label: 'Messages', icon: Mail, page: 'admin-messages' as const },
   { id: 'faqs', label: 'FAQs', icon: HelpCircle, page: 'admin-faqs' as const },
   { id: 'settings', label: 'Settings', icon: Settings, page: 'admin-settings' as const },
@@ -49,7 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
+  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
     setAdminTab(id);
     navigate(page);
     setSidebarOpen(false);
@@ -141,6 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                  adminTab === 'team' ? 'Team Members' :
                  adminTab === 'testimonials' ? 'Testimonials' :
                  adminTab === 'portfolio' ? 'Portfolio' :
+                 adminTab === 'crm' ? 'CRM Pipeline' :
                  adminTab === 'messages' ? 'Messages' :
                  adminTab === 'faqs' ? 'FAQs' :
                  adminTab === 'settings' ? 'Settings' : 'Admin'}
