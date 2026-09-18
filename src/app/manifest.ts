@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Lightworld Technologies Limited',
+    name: 'Lightworld Technologies Ltd',
     short_name: 'Lightworld',
     description: 'Software, apps, enterprise systems, AI automation, cloud, training and technology consultancy.',
     start_url: '/',
