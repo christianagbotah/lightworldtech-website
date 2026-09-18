@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { consumePublicRateLimit } from '@/lib/public-rate-limit';
+import { deriveLeadIntelligence } from '@/lib/lead-intelligence';
 
 // GET all contact messages
 export async function GET(request: NextRequest) {
@@ -81,8 +82,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const message = await db.contactMessage.create({
-      data: parsed.data,
+    const intelligence = deriveLeadIntelligence({
+      subject: parsed.data.subject,
+      message: parsed.data.message,
+    });
+
+    const message = await db.$transaction(async (tx) => {
+      const created = await tx.contactMessage.create({
+        data: parsed.data,
+      });
+
+      await tx.lead.create({
+        data: {
+          contactMessageId: created.id,
+          source: intelligence.source,
+          summary: intelligence.summary,
+          tags: JSON.stringify(intelligence.tags),
+          priority: intelligence.priority,
+        },
+      });
+
+      return created;
     });
 
     return NextResponse.json(
