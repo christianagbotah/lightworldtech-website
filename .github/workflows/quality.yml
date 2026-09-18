@@ -34,6 +34,9 @@ jobs:
       - name: Generate Prisma client
         run: bunx prisma generate
 
+      - name: Type-check application
+        run: bunx tsc --noEmit
+
       - name: Build production application
         run: bun run build
         env:
