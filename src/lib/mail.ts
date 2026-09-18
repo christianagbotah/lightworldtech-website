@@ -80,7 +80,7 @@ export function newsletterConfirmation(email: string) {
       'Website: https://lightworldtech.com\n' +
       'Email: mail@lightworldtech.com\n' +
       'Phone: +233 (024) 361 8186\n\n' +
-      'Lightworld Technologies Limited',
+      'Lightworld Technologies Ltd',
     html:
       '<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#0f172a;line-height:1.65">' +
       '<div style="padding:28px;border:1px solid #e2e8f0;border-radius:24px">' +
@@ -89,7 +89,7 @@ export function newsletterConfirmation(email: string) {
       '<p>Thanks for subscribing. We’ll share occasional notes on products, software engineering, digital operations, AI, training and company news.</p>' +
       '<p><a href="https://lightworldtech.com/blog" style="color:#047857;font-weight:700">Explore Lightworld Insights →</a></p>' +
       '<hr style="border:0;border-top:1px solid #e2e8f0;margin:28px 0">' +
-      '<p style="font-size:13px;color:#64748b">Lightworld Technologies Limited · Ghana<br>mail@lightworldtech.com · +233 (024) 361 8186</p>' +
+      '<p style="font-size:13px;color:#64748b">Lightworld Technologies Ltd · Ghana<br>mail@lightworldtech.com · +233 (024) 361 8186</p>' +
       '</div></div>',
   };
 }
