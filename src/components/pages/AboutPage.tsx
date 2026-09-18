@@ -1,359 +1,253 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
-  Target, Eye, Heart, Users, Lightbulb, Shield, Award, Rocket, UserCheck,
-  Calendar, UsersRound, Twitter, Linkedin, Mail, Github, User, Camera,
-  ChevronRight, MapPin, Sparkles,
+  ArrowRight,
+  BrainCircuit,
+  CheckCircle2,
+  Code2,
+  Compass,
+  GraduationCap,
+  Layers3,
+  MapPin,
+  Network,
+  ShieldCheck,
+  Sparkles,
+  Users,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAnimatedCounter } from '@/hooks/use-animated-counter';
-import { useSEO } from '@/hooks/use-seo';
-import Image from 'next/image';
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
-
-interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  bio: string;
-  skills?: string[];
-  linkedin?: string;
-  twitter?: string;
-  github?: string;
-  email?: string;
-  image?: string;
-}
-
-/* ═══════════════════════════════ DATA ═══════════════════════════════ */
-
-const values = [
-  { icon: Lightbulb, title: 'Innovation', description: 'We embrace new technologies and creative approaches to solve complex challenges.', accent: 'from-emerald-500 to-emerald-600' },
-  { icon: Heart, title: 'Passion', description: 'We are driven by a genuine passion for technology and the positive impact it creates.', accent: 'from-amber-500 to-amber-600' },
-  { icon: Shield, title: 'Integrity', description: 'We conduct business with transparency, honesty, and a strong ethical foundation.', accent: 'from-yellow-500 to-yellow-600' },
-  { icon: Users, title: 'Collaboration', description: 'We believe in the power of teamwork and building strong partnerships with our clients.', accent: 'from-emerald-400 to-teal-500' },
-  { icon: Award, title: 'Excellence', description: 'We strive for the highest quality in everything we do, from code to customer service.', accent: 'from-amber-400 to-orange-500' },
-  { icon: Target, title: 'Results-Driven', description: 'We focus on delivering measurable outcomes that create real business value.', accent: 'from-yellow-400 to-amber-500' },
+const principles = [
+  {
+    icon: Compass,
+    title: 'Start with the real problem',
+    text: 'We care about the business outcome and the people doing the work before we choose a framework, platform or feature list.',
+  },
+  {
+    icon: Layers3,
+    title: 'Design the whole system',
+    text: 'A good interface, the workflow behind it, data, infrastructure and operations should reinforce one another.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Build for production',
+    text: 'Security, access control, recoverability, performance and deployment are design concerns—not a last-week checklist.',
+  },
+  {
+    icon: GraduationCap,
+    title: 'Leave teams stronger',
+    text: 'Documentation, training and thoughtful handover matter because useful technology has to keep working after launch day.',
+  },
 ];
 
-const defaultTeam: TeamMember[] = [
-  { id: '1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with 10+ years in IT solutions and digital transformation across Africa. Passionate about leveraging technology to solve real-world challenges and empowering businesses to thrive in the digital age.', skills: ['Strategic Planning', 'Business Development', 'Project Management', 'Digital Transformation'], image: '/images/team/emmanuel.jpg', linkedin: 'https://linkedin.com/in/emmanuel-osei', twitter: 'https://twitter.com/emmanuel_osei', github: 'https://github.com/emmanuel-osei', email: 'emmanuel@lightworldtech.com' },
-  { id: '2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web and mobile technologies. Committed to writing clean, scalable code and mentoring the next generation of developers in Ghana.', skills: ['React', 'Node.js', 'TypeScript', 'System Architecture', 'DevOps'], image: '/images/team/kwame.jpg', linkedin: 'https://linkedin.com/in/kwame-asante', twitter: 'https://twitter.com/kwame_asante', github: 'https://github.com/kwame-asante', email: 'kwame@lightworldtech.com' },
-  { id: '3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Award-winning designer passionate about creating intuitive user experiences. Specializes in design systems, accessibility, and user research to create interfaces that users love.', skills: ['UI Design', 'UX Research', 'Figma', 'Design Systems', 'Accessibility'], image: '/images/team/abena.jpg', linkedin: 'https://linkedin.com/in/abena-mensah', twitter: 'https://twitter.com/abena_mensah', github: 'https://github.com/abena-mensah', email: 'abena@lightworldtech.com' },
-  { id: '4', name: 'Kofi Amponsah', role: 'Digital Marketing Lead', bio: 'Digital marketing expert specializing in SEO, social media, and growth strategies. Has helped dozens of businesses increase their online visibility and revenue through data-driven marketing.', skills: ['SEO', 'Content Marketing', 'Google Ads', 'Analytics', 'Social Media'], image: '/images/team/kofi.jpg', linkedin: 'https://linkedin.com/in/kofi-amponsah', twitter: 'https://twitter.com/kofi_amponsah', github: 'https://github.com/kofi-amponsah', email: 'kofi@lightworldtech.com' },
+const disciplines = [
+  { icon: Code2, label: 'Software engineering' },
+  { icon: BrainCircuit, label: 'AI & automation' },
+  { icon: Network, label: 'Systems architecture' },
+  { icon: Users, label: 'Experience design' },
+  { icon: ShieldCheck, label: 'Security & reliability' },
+  { icon: GraduationCap, label: 'Training & advisory' },
 ];
 
-const awards = [
-  { title: '2024 Business Excellence Award', organization: 'Ghana Business Excellence Awards', year: '2024' },
-  { title: '2021 MEA Awards Winner', organization: 'Middle East & Africa IT Awards', year: '2021' },
-  { title: 'Top 10 IT Companies in Ghana', organization: 'TechReview Africa', year: '2023' },
-  { title: 'Best Web Development Agency', organization: 'Africa Digital Excellence Awards', year: '2022' },
+const operating = [
+  ['Product mindset', 'We turn requirements into coherent user journeys and measurable product outcomes rather than simply implementing a feature list.'],
+  ['Enterprise discipline', 'We are comfortable with roles, approvals, auditability, integrations, data integrity and the operational detail serious systems require.'],
+  ['Local context', 'We understand the realities teams face in Ghana and across African markets, including connectivity, mobile-first use and operational constraints.'],
+  ['Global standards', 'We design for accessibility, security, modern web performance, maintainability and the expectations of users anywhere in the world.'],
 ];
-
-const stats = [
-  { value: 200, suffix: '+', label: 'Happy Clients', icon: UserCheck },
-  { value: 150, suffix: '+', label: 'Projects Delivered', icon: Rocket },
-  { value: 8, suffix: '+', label: 'Years Experience', icon: Calendar },
-  { value: 50, suffix: '+', label: 'Team Members', icon: UsersRound },
-];
-
-const socialLinks = [
-  { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-[#0077B5]', field: 'linkedin' as const },
-  { icon: Twitter, label: 'Twitter', color: 'hover:bg-[#1DA1F2]', field: 'twitter' as const },
-  { icon: Github, label: 'GitHub', color: 'hover:bg-[#333]', field: 'github' as const },
-  { icon: Mail, label: 'Email', color: 'hover:bg-emerald-700', field: 'email' as const },
-];
-
-/* ═══════════════════════ ANIMATION VARIANTS ═══════════════════════ */
-
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
-const fadeUp = { hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
-
-/* ═══════════════════════════════ COMPONENTS ═══════════════════════ */
-
-function PhotoSlot({ member, sizeClass = 'size-24 lg:size-28' }: { member: TeamMember; sizeClass?: string }) {
-  return (
-    <div className={`relative ${sizeClass} shrink-0 rounded-2xl overflow-hidden dark:bg-slate-800/60 bg-slate-100 border border-slate-200 dark:border-white/[0.06]`}>
-      {member.image ? (
-        <Image src={member.image} alt={member.name} fill className="object-cover object-top" unoptimized />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-200/80 to-slate-300/80 dark:from-slate-800/60 dark:to-slate-900/60 flex flex-col items-center justify-center gap-1.5">
-          <User className="size-8 lg:size-10 text-slate-300 dark:text-slate-600" strokeWidth={1.5} />
-          <div className="flex items-center gap-1">
-            <Camera className="size-2.5 text-slate-400 dark:text-slate-500" />
-            <span className="text-[8px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Photo</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StatPill({ value, suffix, label, icon: Icon, delay = 0 }: { value: number; suffix: string; label: string; icon: React.ElementType; delay?: number }) {
-  const { count, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
-  return (
-    <motion.div ref={ref} variants={fadeUp} className="flex items-center gap-3 px-4 py-3 rounded-xl dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] hover:border-emerald-500/30 dark:hover:bg-white/[0.05] hover:bg-slate-50 transition-all duration-300 group">
-      <div className="size-10 shrink-0 rounded-lg bg-gradient-to-br from-amber-500/80 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform duration-300">
-        <Icon className="size-4.5 text-white" />
-      </div>
-      <div className="min-w-0">
-        <div className="text-xl font-bold text-amber-400 tabular-nums leading-tight">{count}{suffix}</div>
-        <div className="text-xs dark:text-white/50 text-slate-500 leading-tight">{label}</div>
-      </div>
-    </motion.div>
-  );
-}
-
-function TeamCard({ member }: { member: TeamMember }) {
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <motion.div variants={fadeUp}>
-      <Card className="dark:bg-white/[0.03] bg-white border border-slate-100 dark:border-white/[0.06] shadow-sm backdrop-blur-sm hover:shadow-lg hover:shadow-emerald-500/5 hover:border-emerald-500/20 transition-all duration-300 group rounded-xl overflow-hidden">
-        <CardContent className="p-4 lg:p-5">
-          <div className="flex gap-4">
-            {/* Left: Member info */}
-            <div className="flex-1 min-w-0 flex flex-col">
-              <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="font-semibold text-base lg:text-lg dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors truncate">{member.name}</h3>
-                <ChevronRight className={`size-3.5 text-slate-400 dark:text-white/30 shrink-0 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} />
-              </div>
-              <p className="text-xs text-amber-400 font-medium truncate">{member.role}</p>
-              <p className={`text-sm dark:text-white/50 text-slate-500 leading-relaxed mt-1.5 transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}>
-                {member.bio}
-              </p>
-
-              {/* Expandable skills + socials */}
-              <AnimatePresence>
-                {expanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="overflow-hidden"
-                  >
-                    {member.skills && member.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {member.skills.map((skill) => (
-                          <Badge key={skill} variant="secondary" className="text-[10px] lg:text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20 px-1.5 py-0">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex gap-1.5 mt-2.5">
-                      {socialLinks.map(({ icon: SocialIcon, label, color, field }) => {
-                        const href = field === 'email' && member.email ? `mailto:${member.email}` : (member[field] || '#');
-                        return (
-                          <a
-                            key={label}
-                            href={href}
-                            aria-label={`${label} - ${member.name}`}
-                            title={`${label} - ${member.name}`}
-                            className={`size-7 rounded-full dark:bg-white/[0.06] bg-slate-100 dark:text-white/50 text-slate-500 flex items-center justify-center transition-all duration-200 hover:scale-110 hover:text-white ${color}`}
-                          >
-                            <SocialIcon className="size-3.5" />
-                          </a>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className="text-[11px] text-amber-400/80 font-medium mt-1.5 hover:text-amber-400 transition-colors text-left"
-              >
-                {expanded ? 'Show less' : 'View profile'}
-              </button>
-            </div>
-            {/* Right: Portrait photo slot */}
-            <PhotoSlot member={member} sizeClass="size-20 lg:size-24 xl:size-28" />
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
-
-function ValueCard({ value, index }: { value: typeof values[0]; index: number }) {
-  return (
-    <motion.div variants={fadeUp}>
-      <Card className="h-full dark:bg-white/[0.03] bg-white border border-slate-100 dark:border-white/[0.06] shadow-sm hover:border-emerald-500/20 dark:hover:bg-white/[0.05] hover:bg-slate-50 transition-all duration-300 group rounded-xl overflow-hidden relative">
-        <div className={`absolute -top-3 -right-3 w-10 h-10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br ${value.accent}`} style={{ opacity: 0 }} />
-        <CardContent className="p-4 lg:p-5 relative flex flex-col h-full">
-          <div className={`size-10 rounded-lg bg-gradient-to-br ${value.accent} flex items-center justify-center mb-2.5 shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-            <value.icon className="size-4 lg:size-5 text-white" />
-          </div>
-          <h3 className="font-semibold text-sm lg:text-base dark:text-white text-slate-900 group-hover:text-amber-400 transition-colors leading-tight">{value.title}</h3>
-          <p className="text-xs lg:text-sm dark:text-white/45 text-slate-500 leading-relaxed mt-1 line-clamp-2">{value.description}</p>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
-
-/* ═════════════════════════════ MAIN PAGE ═════════════════════════ */
 
 export default function AboutPage() {
-  useSEO({
-    title: 'About Us',
-    description: 'Learn about Lightworld Technologies — a passionate team of innovators dedicated to transforming businesses through technology in Ghana and across Africa.',
-    keywords: ['about Lightworld Technologies', 'IT company Ghana', 'tech team Accra', 'web development company', 'digital transformation Africa'],
-  });
-
-  const [team, setTeam] = useState<TeamMember[]>(defaultTeam);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetcher('/api/team')
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const merged = data.map((t: Record<string, unknown>) => {
-            const defaults = defaultTeam.find(d => d.name === t.name);
-            return {
-              ...t,
-              skills: t.skills || defaults?.skills || [],
-              bio: t.bio || defaults?.bio || '',
-            } as TeamMember;
-          });
-          setTeam(merged);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
   return (
-    <div className="h-[calc(100vh-5rem)] overflow-y-auto overflow-x-hidden bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6 lg:space-y-8">
-
-        {/* ═══ Page Header ═══ */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        >
-          <div className="flex items-center gap-3">
-            <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20 font-semibold">
-              <Sparkles className="size-3 mr-1" />
-              Est. 2016
-            </Badge>
+    <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
+      <section className="lw-hero-grid relative border-b border-slate-200/70 dark:border-white/[0.06]">
+        <div className="container-main py-16 sm:py-20 lg:py-24">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65 }}
+            className="grid gap-12 lg:grid-cols-[1.05fr_.95fr] lg:items-end"
+          >
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold dark:text-white text-slate-900">About <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-400">Lightworld</span></h1>
-              <p className="text-sm dark:text-white/50 text-slate-500 mt-0.5">Driving digital transformation across Africa and beyond.</p>
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+                <Sparkles className="size-3.5" />
+                About Lightworld
+              </div>
+              <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+                We build technology as infrastructure for growth.
+              </h1>
             </div>
-          </div>
-          <div className="flex items-center gap-2 text-xs dark:text-white/40 text-slate-500">
-            <MapPin className="size-3.5 text-emerald-500" />
-            <span>Accra, Ghana</span>
-            <span className="mx-1 text-slate-300 dark:text-white/15">·</span>
-            <span className="flex items-center gap-1"><Award className="size-3.5 text-amber-500" /> Award-Winning Team</span>
-          </div>
-        </motion.div>
-
-        {/* ═══ Stats Strip ═══ */}
-        <motion.div
-          className="grid grid-cols-2 lg:grid-cols-4 gap-3"
-          variants={stagger}
-          initial="hidden"
-          animate="visible"
-        >
-          {stats.map((stat, index) => (
-            <StatPill key={stat.label} value={stat.value} suffix={stat.suffix} label={stat.label} icon={stat.icon} delay={index * 200} />
-          ))}
-        </motion.div>
-
-        {/* ═══ Two-Column: Values + Team ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-
-          {/* Left Column — Core Values */}
-          <motion.div variants={stagger} initial="hidden" animate="visible" className="lg:col-span-5">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-400 to-amber-400" />
-              <h2 className="text-lg font-semibold dark:text-white text-slate-900">Our Core Values</h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {values.map((value, idx) => (
-                <ValueCard key={value.title} value={value} index={idx} />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Right Column — Team Members */}
-          <motion.div variants={stagger} initial="hidden" animate="visible" className="lg:col-span-7">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-1 h-5 rounded-full bg-gradient-to-b from-amber-400 to-emerald-400" />
-              <h2 className="text-lg font-semibold dark:text-white text-slate-900">Meet the Team</h2>
-              <span className="text-xs dark:text-white/30 text-slate-400 ml-auto">Click to expand</span>
-            </div>
-            <div className="space-y-3">
-              {loading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i} className="dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] rounded-xl">
-                    <div className="p-4 flex gap-4 items-center">
-                      <Skeleton className="size-20 rounded-2xl shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-2/3" />
-                        <Skeleton className="h-3 w-1/3" />
-                        <Skeleton className="h-3 w-full" />
-                        <Skeleton className="h-3 w-5/6" />
-                      </div>
-                    </div>
-                  </Card>
-                ))
-              ) : (
-                team.map((member) => (
-                  <TeamCard key={member.id} member={member} />
-                ))
-              )}
+            <div className="lg:pb-1">
+              <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
+                Lightworld Technologies Limited is a Ghanaian technology company focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.
+              </p>
+              <div className="mt-6 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-white/35">
+                <MapPin className="size-4 text-emerald-500" />
+                Accra, Ghana · built with a global outlook
+              </div>
             </div>
           </motion.div>
         </div>
+      </section>
 
-        {/* ═══ Awards Section ═══ */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-1 h-5 rounded-full bg-gradient-to-b from-amber-400 to-yellow-400" />
-            <h2 className="text-lg font-semibold dark:text-white text-slate-900">Recognition & Awards</h2>
+      <section className="section-padding">
+        <div className="container-main">
+          <div className="grid gap-12 lg:grid-cols-[.8fr_1.2fr] lg:gap-20">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Our point of view</p>
+              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Digital transformation should feel practical.</h2>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="space-y-5 text-base leading-8 text-slate-600 dark:text-white/45"
+            >
+              <p>
+                Too many technology projects start with a tool and then search for a problem. We work the other way around: understand the people, the workflow, the operational constraints and the value the business needs to create.
+              </p>
+              <p>
+                Sometimes the answer is a focused website. Sometimes it is a mobile experience, an enterprise platform, an integration layer, an AI-assisted workflow or a training programme. The goal is not to make the solution look complicated. The goal is to make the underlying complexity manageable.
+              </p>
+              <p>
+                That is why our work spans strategy, experience design, engineering, infrastructure and enablement. We want clients to have one accountable technology partner that can stay useful as the problem evolves.
+              </p>
+            </motion.div>
           </div>
-          <div className="rounded-xl dark:bg-white/[0.03] bg-white border border-slate-100 dark:border-white/[0.06] shadow-sm p-4 lg:p-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {awards.map((award, index) => (
-                <motion.div
-                  key={award.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.7 + index * 0.08 }}
-                  className="flex items-start gap-3 p-3 rounded-lg dark:bg-white/[0.03] bg-slate-50 dark:hover:bg-white/[0.06] hover:bg-slate-100 border border-slate-100 dark:border-white/[0.06] hover:border-amber-500/20 transition-all duration-300 group cursor-default"
-                >
-                  <div className="size-9 shrink-0 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform duration-300">
-                    <Award className="size-4 text-white" />
+        </div>
+      </section>
+
+      <section className="section-padding border-y border-slate-200/70 bg-white/70 dark:border-white/[0.06] dark:bg-white/[0.015]">
+        <div className="container-main">
+          <div className="grid gap-3 md:grid-cols-2">
+            {principles.map((principle, index) => (
+              <motion.div
+                key={principle.title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.045 }}
+                className="rounded-[28px] border border-slate-200/70 bg-white p-6 dark:border-white/[0.07] dark:bg-white/[0.025]"
+              >
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                  <principle.icon className="size-5" />
+                </div>
+                <h3 className="mt-7 text-xl font-semibold tracking-tight">{principle.title}</h3>
+                <p className="mt-2 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/36">{principle.text}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section-padding bg-slate-950 text-white dark:bg-[#081119]">
+        <div className="container-main">
+          <div className="grid gap-12 lg:grid-cols-[.75fr_1.25fr] lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">How we are built</p>
+              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Multi-disciplinary by design.</h2>
+              <p className="mt-5 max-w-md text-sm leading-7 text-white/42 sm:text-base">
+                Modern digital work crosses disciplines. Our delivery model brings those disciplines together around the same outcome instead of handing the project from silo to silo.
+              </p>
+              <div className="mt-8 grid grid-cols-2 gap-2">
+                {disciplines.map((item) => (
+                  <div key={item.label} className="flex items-center gap-2.5 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3 text-xs font-medium text-white/50">
+                    <item.icon className="size-4 text-emerald-300" />
+                    {item.label}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold dark:text-white/90 text-slate-800 leading-snug">{award.title}</p>
-                    <p className="text-xs dark:text-white/40 text-slate-500 mt-0.5 leading-relaxed">{award.organization}</p>
-                    <Badge className="mt-1.5 text-[10px] bg-amber-500/10 text-amber-400 border-amber-500/20 px-1.5 py-0 font-semibold">{award.year}</Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              {operating.map(([title, text], index) => (
+                <motion.div
+                  key={title}
+                  initial={{ opacity: 0, x: 16 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  className="grid gap-3 rounded-[24px] border border-white/[0.07] bg-white/[0.03] p-5 sm:grid-cols-[auto_1fr]"
+                >
+                  <span className="font-mono text-xs text-emerald-300/70">0{index + 1}</span>
+                  <div>
+                    <h3 className="font-semibold text-white/88">{title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-white/38">{text}</p>
                   </div>
                 </motion.div>
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
+      </section>
 
-        {/* Bottom breathing room */}
-        <div className="h-2" />
-      </div>
+      <section className="section-padding">
+        <div className="container-main">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="rounded-[32px] border border-slate-200/70 bg-white p-7 dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-8"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Our direction</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em]">Build a technology company with African context and global capability.</h2>
+              <p className="mt-4 text-sm leading-7 text-slate-500 dark:text-white/38">
+                We are growing beyond project delivery into reusable platforms, products, training and long-term technology partnerships—without losing the close understanding of client operations that makes custom work valuable.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="rounded-[32px] border border-emerald-500/15 bg-emerald-500/[0.07] p-7 sm:p-8"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">What clients should expect</p>
+              <div className="mt-4 space-y-3">
+                {[
+                  'Clear communication around scope, risk and trade-offs',
+                  'Interfaces that work across desktop and mobile',
+                  'Engineering choices that can be explained and maintained',
+                  'Security and deployment considered throughout delivery',
+                  'A partner willing to understand the operational detail',
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-3">
+                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-300" />
+                    <span className="text-sm leading-6 text-slate-600 dark:text-white/48">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-padding pt-2">
+        <div className="container-main">
+          <div className="relative overflow-hidden rounded-[36px] bg-gradient-to-br from-emerald-500 to-emerald-700 p-7 text-white sm:p-10 lg:p-12">
+            <div className="lw-dot-grid absolute inset-0 opacity-20" />
+            <div className="relative grid gap-7 lg:grid-cols-[1fr_auto] lg:items-end">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-50/70">Build with us</p>
+                <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">If the problem matters, we are interested in understanding it.</h2>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/contact" className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-emerald-800">
+                  Start a conversation <ArrowRight className="size-4" />
+                </Link>
+                <Link href="/careers" className="inline-flex h-11 items-center gap-2 rounded-full border border-white/25 px-5 text-sm font-semibold text-white">
+                  Work with us
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
