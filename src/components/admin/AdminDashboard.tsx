@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
   Plus, ExternalLink, Inbox, Activity, ArrowUpRight, ArrowDownRight,
-  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick
+  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick, GitBranch
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,8 +78,8 @@ const statCards = [
 ];
 
 const quickActions = [
+  { label: 'Open CRM Pipeline', icon: GitBranch, action: 'admin-crm', color: 'text-amber-600 dark:text-amber-400' },
   { label: 'New Blog Post', icon: Pencil, action: 'admin-blog-editor', color: 'text-emerald-600 dark:text-amber-400' },
-  { label: 'New Service', icon: Plus, action: 'admin-services', color: 'text-emerald-600 dark:text-amber-400' },
   { label: 'View Messages', icon: Inbox, action: 'admin-messages', color: 'text-rose-600 dark:text-rose-400' },
 ];
 
