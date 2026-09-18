@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import PublicShell from '@/components/layout/PublicShell';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Privacy & Cookie Notice',
   description: 'How Lightworld Technologies Ltd handles website data, contact information, newsletter subscriptions and optional first-party analytics.',
