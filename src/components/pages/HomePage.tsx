@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -286,6 +286,52 @@ function CapabilityConsole() {
 }
 
 export default function HomePage({ settings = {} }: { settings?: SiteSettings }) {
+  const [homeCapabilities, setHomeCapabilities] = useState(capabilities);
+  const [homeWork, setHomeWork] = useState(work);
+
+  useEffect(() => {
+    fetch('/api/services?active=true')
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((payload) => {
+        const managed = Array.isArray(payload?.data) ? payload.data : [];
+        if (!managed.length) return;
+        const next = managed.slice(0, 8).map((item: Record<string, unknown>, index: number) => {
+          let tags: string[] = [];
+          if (typeof item.features === 'string' && item.features.trim()) {
+            try {
+              const parsed = JSON.parse(item.features);
+              if (Array.isArray(parsed)) tags = parsed.map(String).slice(0, 4);
+            } catch {
+              tags = item.features.split(',').map((value) => value.trim()).filter(Boolean).slice(0, 4);
+            }
+          }
+          return {
+            icon: capabilities[index]?.icon || Code2,
+            title: String(item.title || capabilities[index]?.title || 'Technology service'),
+            description: String(item.description || ''),
+            tags: tags.length ? tags : (capabilities[index]?.tags || ['Custom delivery']),
+            feature: index === 0 || index === 2,
+          };
+        });
+        setHomeCapabilities(next);
+      })
+      .catch(() => {});
+
+    fetch('/api/portfolio?active=true')
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((payload) => {
+        const managed = Array.isArray(payload?.data) ? payload.data : [];
+        if (!managed.length) return;
+        setHomeWork(managed.slice(0, 3).map((item: Record<string, unknown>, index: number) => ({
+          title: String(item.title || work[index]?.title || 'Project'),
+          category: String(item.category || work[index]?.category || 'Digital product'),
+          description: String(item.description || ''),
+          image: String(item.image || work[index]?.image || '/images/portfolio/erp-system.png'),
+        })));
+      })
+      .catch(() => {});
+  }, []);
+
   const heroEyebrow = contentText(settings, 'home_eyebrow', '{heroEyebrow}');
   const heroTitle = contentText(settings, 'home_title', 'Technology people want to use.');
   const heroDescription = contentText(settings, 'home_description', '{heroDescription}');
@@ -417,7 +463,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
           </Reveal>
 
           <div className="mt-12 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            {capabilities.map((item, index) => (
+            {homeCapabilities.map((item, index) => (
               <Reveal
                 key={item.title}
                 delay={index * 0.035}
@@ -515,7 +561,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
           </Reveal>
 
           <div className="mt-10 grid gap-4 lg:grid-cols-3">
-            {work.map((project, index) => (
+            {homeWork.map((project, index) => (
               <Reveal key={project.title} delay={index * 0.06}>
                 <Link href="/portfolio" className="group block overflow-hidden rounded-[30px] border border-slate-200/70 bg-white dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-white/[0.03]">
