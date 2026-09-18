@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Cookie, X, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,9 +19,9 @@ interface CookiePreferences {
 
 const defaultPreferences: CookiePreferences = {
   essential: true,
-  analytics: true,
+  analytics: false,
   marketing: false,
-  preferences: true,
+  preferences: false,
 };
 
 const categories = [
@@ -39,7 +40,7 @@ const categories = [
   {
     key: 'marketing' as const,
     name: 'Marketing',
-    description: 'Used to track visitors across websites for advertising purposes.',
+    description: 'Reserved for optional marketing integrations. Not required for first-party website analytics.',
     locked: false,
   },
   {
@@ -181,11 +182,10 @@ export default function CookieConsent() {
                     <ShieldCheck className="size-3.5 text-amber-500" />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic.
-                    By clicking &quot;Accept All&quot;, you consent to our use of cookies.{' '}
-                    <button className="text-emerald-600 dark:text-amber-400 hover:underline font-medium">
-                      Read our Cookie Policy
-                    </button>
+                    We use essential browser storage to operate the site. Optional analytics helps us understand consented website usage; optional categories stay off unless you choose them.{' '}
+                    <Link href="/privacy" className="text-emerald-600 dark:text-amber-400 hover:underline font-medium">
+                      Privacy &amp; Cookie Notice
+                    </Link>
                   </p>
                 </div>
 
