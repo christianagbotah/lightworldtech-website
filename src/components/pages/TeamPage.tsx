@@ -39,7 +39,7 @@ export default function TeamPage() {
               </h1>
             </div>
             <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-              Lightworld combines company leadership with a hands-on understanding of technology, operations and delivery. These are the confirmed executive leaders of Lightworld Technologies Limited.
+              Lightworld combines company leadership with a hands-on understanding of technology, operations and delivery. These are the confirmed executive leaders of Lightworld Technologies Ltd.
             </p>
           </motion.div>
         </div>
