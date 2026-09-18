@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   ArrowUpRight,
-  Award,
   Building2,
   BrainCircuit,
   Briefcase,
