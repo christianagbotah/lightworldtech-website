@@ -187,7 +187,7 @@ export default function AdminMessages() {
                         )}
                         <span className={msg.read ? '' : 'font-bold'}>{msg.name}</span>
                         {msg.phone && (
-                          <Phone className="size-3 text-muted-foreground ml-1" title="Phone inquiry" />
+                          <span title="Phone inquiry"><Phone className="size-3 text-muted-foreground ml-1" /></span>
                         )}
                       </div>
                     </TableCell>
