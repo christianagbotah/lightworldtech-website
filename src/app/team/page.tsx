@@ -4,11 +4,11 @@ import TeamPage from '@/components/pages/TeamPage';
 
 export const metadata: Metadata = {
   title: 'Leadership Team',
-  description: 'Meet the executive leadership of Lightworld Technologies Limited: Christian Agbotah, CEO & Director, and Rober Yaw Essuon, Managing Director.',
+  description: 'Meet the executive leadership of Lightworld Technologies Ltd: Christian Agbotah, CEO & Director, and Rober Yaw Essuon, Managing Director.',
   alternates: { canonical: '/team' },
   openGraph: {
     title: 'Leadership | Lightworld Technologies',
-    description: 'Meet the executive leadership of Lightworld Technologies Limited.',
+    description: 'Meet the executive leadership of Lightworld Technologies Ltd.',
     url: '/team',
   },
 };
