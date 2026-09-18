@@ -155,6 +155,9 @@ async function upsertRows(plan: TablePlan, rows: Row[]) {
       for (const field of plan.deferFields) {
         updates[field] = row[field] ?? null;
       }
+      // Prisma's @updatedAt changes on relationship updates. Preserve the
+      // source timestamp explicitly so verification remains lossless.
+      if (row.updatedAt instanceof Date) updates.updatedAt = row.updatedAt;
       await delegate.update({ where: { id: String(row.id) }, data: updates });
     }
   }
