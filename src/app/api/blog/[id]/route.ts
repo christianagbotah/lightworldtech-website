@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 // GET individual blog post
 export async function GET(
@@ -10,16 +11,20 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Admin/editor calls use the database id. Public article routes use the slug.
-    // Only published posts may be resolved by slug.
-    let post = await db.blogPost.findUnique({
-      where: { id },
-      include: { category: true },
-    });
+    const adminRequest = isAdminRequest(request);
+    let post = adminRequest
+      ? await db.blogPost.findUnique({
+          where: { id },
+          include: { category: true },
+        })
+      : null;
 
     if (!post) {
       post = await db.blogPost.findFirst({
-        where: { slug: id, published: true },
+        where: {
+          published: true,
+          OR: [{ id }, { slug: id }],
+        },
         include: { category: true },
       });
     }
@@ -59,6 +64,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -113,6 +120,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { id } = await params;
 
