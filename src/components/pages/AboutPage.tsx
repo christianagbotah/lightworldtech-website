@@ -82,7 +82,7 @@ export default function AboutPage() {
             </div>
             <div className="lg:pb-1">
               <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-                Lightworld Technologies Limited is a Ghanaian technology company focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.
+                Lightworld Technologies Ltd is a Ghanaian technology company focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.
               </p>
               <div className="mt-6 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-white/35">
                 <MapPin className="size-4 text-emerald-500" />
@@ -238,7 +238,7 @@ export default function AboutPage() {
               </div>
               <h2 className="mt-5 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Public signals, linked to their sources.</h2>
               <p className="mt-4 max-w-md text-sm leading-7 text-slate-500 dark:text-white/38">
-                We only feature recognition and coverage we can point back to publicly. Award programme listings below name Lightworld Technologies Limited among their winners.
+                We only feature recognition and coverage we can point back to publicly. Award programme listings below name Lightworld Technologies Ltd among their winners.
               </p>
             </div>
 
