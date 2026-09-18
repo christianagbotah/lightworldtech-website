@@ -32,7 +32,8 @@ const defaultExploreLinks = [
   { label: 'Insights', href: '/blog' },
   { label: 'About', href: '/about' },
   { label: 'Leadership', href: '/team' },
-  { label: 'Recognition & Press', href: '/about#recognition' },
+  { label: 'Trust Center', href: '/trust' },
+  { label: 'Newsroom & Media', href: '/newsroom' },
   { label: 'Careers', href: '/careers' },
 ];
 

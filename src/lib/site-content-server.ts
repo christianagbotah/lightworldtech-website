@@ -41,3 +41,22 @@ export async function getActiveTeamMembers() {
     return [];
   }
 }
+
+
+export async function getLatestPublishedPosts(limit = 3) {
+  try {
+    return await db.blogPost.findMany({
+      where: { published: true },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(6, Math.max(1, limit)),
+      select: {
+        title: true,
+        slug: true,
+        excerpt: true,
+        createdAt: true,
+      },
+    });
+  } catch {
+    return [];
+  }
+}

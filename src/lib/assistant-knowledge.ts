@@ -3,7 +3,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { companyProfile } from '@/lib/company-profile';
 import { contentJson, contentText, defaultRecognition } from '@/lib/site-content';
-import { isLeadershipIntent } from '@/lib/assistant-intents';
+import { isLeadershipIntent, isNewsroomIntent, isTrustIntent } from '@/lib/assistant-intents';
 
 export type ProjectScopeState = {
   mode: 'project-scope';
@@ -20,7 +20,7 @@ export type ConciergeResponse = {
   reply: string;
   suggestions?: string[];
   state?: ProjectScopeState | null;
-  intent?: 'company' | 'services' | 'leadership' | 'portfolio' | 'insights' | 'recognition' | 'contact' | 'project-scope';
+  intent?: 'company' | 'services' | 'leadership' | 'portfolio' | 'insights' | 'recognition' | 'contact' | 'trust' | 'newsroom' | 'project-scope';
   cta?: { label: string; href: string };
   projectBrief?: string;
 };
@@ -199,6 +199,26 @@ export async function answerConcierge(
     };
   }
 
+  if (isTrustIntent(q)) {
+    return {
+      intent: 'trust',
+      reply:
+        'Lightworld’s Trust Center explains current practices around authenticated administration, hashed admin passwords, consent-aware first-party analytics, rate-limited public endpoints, candidate-tested releases, database backups before schema-changing releases, and human-accountable AI. It does not claim third-party certification unless a verified certification is explicitly published.',
+      suggestions: ['How do you handle privacy?', 'What does responsible AI mean?', 'How do I report a security concern?'],
+      cta: { label: 'Open Trust Center', href: '/trust' },
+    };
+  }
+
+  if (isNewsroomIntent(q)) {
+    return {
+      intent: 'newsroom',
+      reply:
+        'The Lightworld Newsroom & Media Center brings together verified company facts, source-linked recognition and press coverage, executive leadership information, recent published insights, and media contact details.',
+      suggestions: ['Show me your awards', 'Who leads Lightworld?', 'How can media contact you?'],
+      cta: { label: 'Open Newsroom', href: '/newsroom' },
+    };
+  }
+
   if (/service|what.*do|offer|solution|capabilit|build/.test(q)) {
     const serviceNames = knowledge.services.map((service) => service.title);
     return {
@@ -243,9 +263,9 @@ export async function answerConcierge(
     return {
       intent: 'recognition',
       reply: awards.length
-        ? 'Published recognition currently listed by Lightworld includes ' + list(awards) + '. The About page links to the source pages.'
+        ? 'Published recognition currently listed by Lightworld includes ' + list(awards) + '. The Newsroom links to the source pages.'
         : 'The About page contains Lightworld’s verified recognition and source links.',
-      cta: { label: 'View recognition', href: '/about#recognition' },
+      cta: { label: 'View recognition', href: '/newsroom#recognition' },
     };
   }
 
