@@ -50,6 +50,24 @@ interface ContactMessage {
   createdAt: string;
 }
 
+interface AnalyticsData {
+  days: number;
+  uniqueSessions: number;
+  pageViews: number;
+  assistantMessages: number;
+  projectScopes: number;
+  contactSubmits: number;
+  topPages: Array<{ path: string; views: number }>;
+  topReferrers: Array<{ referrer: string; events: number }>;
+  daily: Array<{
+    date: string;
+    pageViews: number;
+    sessions: number;
+    assistantMessages: number;
+    leads: number;
+  }>;
+}
+
 const statCards = [
   { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
   { key: 'activeServices' as const, label: 'Services', icon: Briefcase, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
@@ -70,27 +88,29 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
-  const [allMessages, setAllMessages] = useState<ContactMessage[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsRes, postsRes, messagesRes] = await Promise.all([
+        const [statsRes, postsRes, messagesRes, analyticsRes] = await Promise.all([
           fetch('/api/admin/stats'),
           fetch('/api/blog?limit=5'),
-          fetch('/api/contact?limit=500'),
+          fetch('/api/contact?limit=20'),
+          fetch('/api/admin/analytics?days=30'),
         ]);
 
-        if (!statsRes.ok || !postsRes.ok || !messagesRes.ok) {
+        if (!statsRes.ok || !postsRes.ok || !messagesRes.ok || !analyticsRes.ok) {
           throw new Error('Failed to fetch data');
         }
 
-        const [statsData, postsData, messagesData] = await Promise.all([
+        const [statsData, postsData, messagesData, analyticsData] = await Promise.all([
           statsRes.json(),
           postsRes.json(),
           messagesRes.json(),
+          analyticsRes.json(),
         ]);
 
         // The stats API may be wrapped in {success, data}
@@ -107,8 +127,8 @@ export default function AdminDashboard() {
         const posts = Array.isArray(postsData) ? postsData : (postsData.data || []);
         const messages = Array.isArray(messagesData) ? messagesData : (messagesData.data || []);
         setRecentPosts(posts.slice(0, 5));
-        setAllMessages(messages);
         setRecentMessages(messages.slice(0, 5));
+        setAnalytics(analyticsData.data || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -140,20 +160,6 @@ export default function AdminDashboard() {
     );
   }
 
-  const monthlyInquiries = useMemo(() => {
-    const now = new Date();
-    return Array.from({ length: 7 }, (_, offset) => {
-      const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (6 - offset), 1));
-      const year = date.getUTCFullYear();
-      const month = date.getUTCMonth();
-      const value = allMessages.filter((message) => {
-        const created = new Date(message.createdAt);
-        return created.getUTCFullYear() === year && created.getUTCMonth() === month;
-      }).length;
-      return { month: date.toLocaleString('en', { month: 'short', timeZone: 'UTC' }), value };
-    });
-  }, [allMessages]);
-
   const recentActivities = useMemo(() => {
     const messageActivity = recentMessages.map((message) => ({
       id: 'message-' + message.id,
@@ -174,7 +180,8 @@ export default function AdminDashboard() {
       .slice(0, 6);
   }, [recentMessages, recentPosts]);
 
-  const maxInquiry = Math.max(1, ...monthlyInquiries.map((d) => d.value));
+  const trafficData = analytics?.daily.slice(-14) || [];
+  const maxTraffic = Math.max(1, ...trafficData.map((item) => item.pageViews));
 
   return (
     <div className="space-y-6">
@@ -204,13 +211,18 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
-      {/* Live CMS snapshot — database-backed, no placeholder analytics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Consented first-party analytics — last 30 days */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">First-party analytics · last 30 days</p>
+          <span className="text-[10px] text-muted-foreground">Only visitors who allow Analytics are counted</span>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Inquiries', value: allMessages.length, icon: Mail, color: 'text-emerald-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-          { label: 'Unread Inquiries', value: stats?.unreadMessages || 0, icon: Inbox, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/30' },
-          { label: 'Blog Posts', value: stats?.totalPosts || 0, icon: FileText, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30' },
-          { label: 'Active Services', value: stats?.activeServices || 0, icon: Briefcase, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/30' },
+          { label: 'Unique Sessions', value: analytics?.uniqueSessions || 0, icon: Users, color: 'text-emerald-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          { label: 'Page Views', value: analytics?.pageViews || 0, icon: Eye, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30' },
+          { label: 'Assistant Messages', value: analytics?.assistantMessages || 0, icon: MessageSquare, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/30' },
+          { label: 'Contact Submissions', value: analytics?.contactSubmits || 0, icon: Mail, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/30' },
         ].map((item, i) => {
           const Icon = item.icon;
           return (
@@ -235,9 +247,10 @@ export default function AdminDashboard() {
             </motion.div>
           );
         })}
+        </div>
       </div>
 
-      {/* Stats grid */}
+      {/* CMS content snapshot */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {statCards.map((card) => {
           const Icon = card.icon;
@@ -271,7 +284,7 @@ export default function AdminDashboard() {
 
       {/* Charts + Quick Actions row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Monthly Inquiries Chart */}
+        {/* First-party traffic chart */}
         <motion.div
           className="lg:col-span-2"
           initial={{ opacity: 0, y: 10 }}
@@ -283,35 +296,35 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <TrendingUp className="size-4 text-amber-500" />
-                  Monthly Inquiries
+                  Consented Traffic
                 </CardTitle>
-                <span className="text-xs text-muted-foreground">Last 7 months</span>
+                <span className="text-xs text-muted-foreground">Last 14 days</span>
               </div>
             </CardHeader>
             <CardContent className="pt-4">
               <div className="flex items-end gap-3 h-40">
-                {monthlyInquiries.map((item, i) => {
-                  const height = (item.value / maxInquiry) * 100;
-                  const isCurrentMonth = i === monthlyInquiries.length - 1;
+                {trafficData.map((item, i) => {
+                  const height = (item.pageViews / maxTraffic) * 100;
+                  const isCurrentDay = i === trafficData.length - 1;
                   return (
-                    <div key={item.month} className="flex-1 flex flex-col items-center gap-1.5">
-                      <span className="text-xs font-medium text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">{item.value}</span>
+                    <div key={item.date} className="flex-1 flex flex-col items-center gap-1.5">
+                      <span className="text-xs font-medium text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">{item.pageViews}</span>
                       <div className="w-full relative group">
                         {/* Tooltip */}
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-800 text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                          {item.value} inquiries
+                          {item.pageViews} views · {item.sessions} sessions
                           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-200" />
                         </div>
                         <motion.div
-                          className={`w-full rounded-t-lg ${isCurrentMonth ? 'bg-gradient-to-t from-amber-600 to-amber-400' : 'bg-slate-200 dark:bg-slate-700 group-hover:bg-gradient-to-t group-hover:from-amber-600 group-hover:to-amber-400'} transition-all duration-300 cursor-pointer`}
+                          className={`w-full rounded-t-lg ${isCurrentDay ? 'bg-gradient-to-t from-amber-600 to-amber-400' : 'bg-slate-200 dark:bg-slate-700 group-hover:bg-gradient-to-t group-hover:from-amber-600 group-hover:to-amber-400'} transition-all duration-300 cursor-pointer`}
                           initial={{ height: 0 }}
                           animate={{ height: `${height}%` }}
                           transition={{ duration: 0.6, delay: i * 0.08, ease: 'easeOut' }}
                           style={{ minHeight: '4px' }}
                         />
                       </div>
-                      <span className={`text-xs ${isCurrentMonth ? 'font-semibold text-emerald-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
-                        {item.month}
+                      <span className={`text-xs ${isCurrentDay ? 'font-semibold text-emerald-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                        {new Date(item.date + 'T00:00:00Z').toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
                       </span>
                     </div>
                   );

@@ -87,6 +87,7 @@ export default function CookieConsent() {
 
   const savePreferences = (preferences: CookiePreferences) => {
     localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+    window.dispatchEvent(new Event('lw-consent-changed'));
   };
 
   const accept = () => {

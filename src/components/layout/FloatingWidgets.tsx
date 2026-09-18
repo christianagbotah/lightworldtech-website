@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/lib/analytics-client';
 
 // ─── WhatsApp Config ────────────────────────────────────────────────
 const whatsappNumber = '233243618186';
@@ -28,11 +29,25 @@ const whatsappMessage = encodeURIComponent(
 );
 
 // ─── LiveChat Config ────────────────────────────────────────────────
+interface ProjectScopeState {
+  mode: 'project-scope';
+  step: 'service' | 'goal' | 'users' | 'timeline' | 'done';
+  answers: {
+    service?: string;
+    goal?: string;
+    users?: string;
+    timeline?: string;
+  };
+}
+
 interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  suggestions?: string[];
+  cta?: { label: string; href: string };
+  projectBrief?: string;
 }
 
 const quickReplies = [
@@ -43,6 +58,8 @@ const quickReplies = [
 ];
 
 const CHAT_STORAGE_KEY = 'lw-chat-history';
+const ASSISTANT_STATE_KEY = 'lw-assistant-state';
+const PROJECT_BRIEF_KEY = 'lw-project-brief';
 
 function loadChatHistory(): ChatMessage[] {
   try {
@@ -62,6 +79,27 @@ function saveChatHistory(msgs: ChatMessage[]) {
   try {
     if (typeof window === 'undefined') return;
     sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
+  } catch {
+    // ignore
+  }
+}
+
+function loadAssistantState(): ProjectScopeState | null {
+  try {
+    const raw = sessionStorage.getItem(ASSISTANT_STATE_KEY);
+    return raw ? (JSON.parse(raw) as ProjectScopeState) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveAssistantState(state: ProjectScopeState | null) {
+  try {
+    if (!state) {
+      sessionStorage.removeItem(ASSISTANT_STATE_KEY);
+      return;
+    }
+    sessionStorage.setItem(ASSISTANT_STATE_KEY, JSON.stringify(state));
   } catch {
     // ignore
   }
@@ -208,6 +246,7 @@ export default function FloatingWidgets() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
+  const [assistantState, setAssistantState] = useState<ProjectScopeState | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -235,7 +274,9 @@ export default function FloatingWidgets() {
     if (!initializedRef.current) {
       initializedRef.current = true;
       const history = loadChatHistory();
+      const savedState = loadAssistantState();
       queueMicrotask(() => {
+        setAssistantState(savedState);
         if (history.length > 0) {
           setMessages(history);
           setShowQuickReplies(false);
@@ -271,6 +312,7 @@ export default function FloatingWidgets() {
   const handleWhatsappToggle = () => {
     setWhatsappOpen((prev) => {
       const next = !prev;
+      if (next) trackEvent('whatsapp_open');
       if (next) {
         setLiveChatOpen(false);
         setLiveChatMinimized(false);
@@ -287,6 +329,7 @@ export default function FloatingWidgets() {
     setLiveChatOpen((prev) => {
       const next = !prev;
       if (next) {
+        trackEvent('assistant_open');
         setWhatsappOpen(false);
       }
       return next;
@@ -319,6 +362,7 @@ export default function FloatingWidgets() {
       setInputValue('');
       setShowQuickReplies(false);
       setIsTyping(true);
+      trackEvent('assistant_message', { metadata: { direction: 'user' } });
 
       let replyText =
         'I could not reach the company knowledge service just now. You can contact Lightworld at mail@lightworldtech.com or +233 (024) 361 8186.';
@@ -327,10 +371,41 @@ export default function FloatingWidgets() {
         const response = await fetch('/api/assistant', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userMsg.text }),
+          body: JSON.stringify({ message: userMsg.text, state: assistantState }),
         });
         const payload = await response.json();
         if (payload?.reply) replyText = String(payload.reply);
+
+        const nextState = payload?.state ? (payload.state as ProjectScopeState) : null;
+        setAssistantState(nextState);
+        saveAssistantState(nextState);
+
+        if (payload?.intent === 'project-scope') {
+          trackEvent('assistant_project_scope', {
+            metadata: { step: nextState?.step || 'done' },
+          });
+        }
+
+        const botMsg: ChatMessage = {
+          id: `bot-${Date.now()}`,
+          text: replyText,
+          sender: 'bot',
+          timestamp: new Date(),
+          suggestions: Array.isArray(payload?.suggestions)
+            ? payload.suggestions.map(String).slice(0, 8)
+            : undefined,
+          cta:
+            payload?.cta?.label && payload?.cta?.href
+              ? { label: String(payload.cta.label), href: String(payload.cta.href) }
+              : undefined,
+          projectBrief: payload?.projectBrief ? String(payload.projectBrief) : undefined,
+        };
+
+        const withReply = [...updated, botMsg];
+        setMessages(withReply);
+        saveChatHistory(withReply);
+        setIsTyping(false);
+        return;
       } catch {
         // Keep a useful deterministic contact fallback when the assistant API is unavailable.
       }
@@ -347,7 +422,7 @@ export default function FloatingWidgets() {
       saveChatHistory(withReply);
       setIsTyping(false);
     },
-    [messages]
+    [assistantState, messages]
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -440,14 +515,46 @@ export default function FloatingWidgets() {
                         <Bot className="size-3.5 text-white" />
                       </div>
                     )}
-                    <div
-                      className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                        msg.sender === 'user'
-                          ? 'bg-gradient-to-br from-amber-600 to-amber-500 text-white rounded-tr-sm shadow-md shadow-emerald-500/20'
-                          : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-sm rounded-tl-sm border border-slate-100 dark:border-slate-600'
-                      }`}
-                    >
-                      {msg.text}
+                    <div className="max-w-[78%]">
+                      <div
+                        className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                          msg.sender === 'user'
+                            ? 'bg-gradient-to-br from-amber-600 to-amber-500 text-white rounded-tr-sm shadow-md shadow-emerald-500/20'
+                            : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-sm rounded-tl-sm border border-slate-100 dark:border-slate-600'
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+
+                      {msg.sender === 'bot' && msg.suggestions && msg.suggestions.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {msg.suggestions.map((suggestion) => (
+                            <button
+                              key={suggestion}
+                              type="button"
+                              onClick={() => sendMessage(suggestion)}
+                              className="rounded-full border border-amber-300/80 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-400/20 dark:bg-amber-400/[0.06] dark:text-amber-200 dark:hover:bg-amber-400/[0.1]"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {msg.sender === 'bot' && msg.cta && (
+                        <a
+                          href={msg.cta.href}
+                          onClick={() => {
+                            if (msg.projectBrief) {
+                              sessionStorage.setItem(PROJECT_BRIEF_KEY, msg.projectBrief);
+                            }
+                            trackEvent('cta_click', { metadata: { source: 'assistant', label: msg.cta?.label || '' } });
+                          }}
+                          className="mt-2 inline-flex rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-emerald-700"
+                        >
+                          {msg.cta.label}
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))}

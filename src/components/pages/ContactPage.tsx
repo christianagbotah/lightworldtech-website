@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { contentText, type SiteSettings } from '@/lib/site-content';
+import { trackEvent } from '@/lib/analytics-client';
 
 const services = [
   'Website / digital experience',
@@ -39,6 +40,20 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
   });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    try {
+      const projectBrief = sessionStorage.getItem('lw-project-brief');
+      if (!projectBrief) return;
+      setForm((current) => ({
+        ...current,
+        subject: current.subject || 'Project brief from Lightworld Assistant',
+        message: current.message || projectBrief,
+      }));
+    } catch {
+      // Session storage is optional; the form still works without it.
+    }
+  }, []);
 
   const officeOpen = useMemo(() => {
     const now = new Date();
@@ -66,6 +81,12 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
 
       if (!response.ok) throw new Error('Unable to send message');
       setSent(true);
+      trackEvent('contact_submit', { metadata: { service: form.service.slice(0, 120) } });
+      try {
+        sessionStorage.removeItem('lw-project-brief');
+      } catch {
+        // ignore
+      }
       toast.success('Message received.');
     } catch {
       toast.error('Could not send your message right now.', {

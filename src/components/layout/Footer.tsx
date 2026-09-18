@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
+import { trackEvent } from '@/lib/analytics-client';
 
 const defaultBuildLinks = [
   { label: 'Web & product engineering', href: '/services' },
@@ -74,6 +75,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Subscription request failed');
       setEmail('');
+      trackEvent('newsletter_subscribe');
       toast.success('You’re on the list.', {
         description: payload?.emailSent
           ? 'Check your inbox for a confirmation from Lightworld Technologies.'
