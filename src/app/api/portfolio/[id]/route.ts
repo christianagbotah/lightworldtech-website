@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 // GET individual portfolio project
 export async function GET(
@@ -10,9 +11,10 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const project = await db.portfolioProject.findUnique({
-      where: { id },
-    });
+    const adminRequest = isAdminRequest(request);
+    const project = adminRequest
+      ? await db.portfolioProject.findUnique({ where: { id } })
+      : await db.portfolioProject.findFirst({ where: { id, active: true } });
 
     if (!project) {
       return NextResponse.json(
@@ -48,6 +50,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -88,6 +92,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { id } = await params;
 
