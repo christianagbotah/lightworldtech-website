@@ -43,12 +43,11 @@ export function deriveLeadIntelligence(input: {
       ? 'assistant'
       : 'website';
 
+  const isExploratory = /research|exploring|early stage|someday|no fixed deadline|no deadline yet/i.test(haystack);
+  const isUrgent = /urgent|asap|immediately|emergency|this week|within (?:a|one) week|deadline\s*(?:is|:|on|by)|by end of/i.test(haystack);
+
   const priority: LeadIntelligence['priority'] =
-    /urgent|asap|immediately|emergency|this week|deadline/i.test(haystack)
-      ? 'high'
-      : /research|exploring|someday|no fixed deadline/i.test(haystack)
-        ? 'low'
-        : 'normal';
+    isExploratory ? 'low' : isUrgent ? 'high' : 'normal';
 
   const summaryBase = subject
     ? subject + ': ' + message
