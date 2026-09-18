@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'careers' | 'products' | 'admin' | 'admin-dashboard' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
+export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'careers' | 'products' | 'admin' | 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
 
 interface AppState {
   currentPage: Page;
@@ -36,6 +36,7 @@ const publicRoutes: Partial<Record<Page, string>> = {
 
 const adminTabs: Partial<Record<Page, string>> = {
   'admin-dashboard': 'dashboard',
+  'admin-pages': 'pages',
   'admin-services': 'services',
   'admin-blog': 'blog',
   'admin-blog-editor': 'blog-editor',

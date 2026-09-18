@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Briefcase, Layers3, Sparkles } from 'lucide-react';
+import { contentText, type SiteSettings } from '@/lib/site-content';
 
 interface PortfolioItem {
   id: string;
@@ -75,7 +76,7 @@ const capabilityExamples: PortfolioItem[] = [
   },
 ];
 
-export default function PortfolioPage() {
+export default function PortfolioPage({ settings = {} }: { settings?: SiteSettings }) {
   const [items, setItems] = useState<PortfolioItem[]>(capabilityExamples);
   const [usingCms, setUsingCms] = useState(false);
   const [active, setActive] = useState('All');
@@ -132,15 +133,19 @@ export default function PortfolioPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                 <Briefcase className="size-3.5" />
-                Work & solution patterns
+                {contentText(settings, 'portfolio_hero_eyebrow', 'Work & solution patterns')}
               </div>
-              <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">Technology should look good. More importantly, it should work.</h1>
+              <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">{contentText(settings, 'portfolio_hero_title', 'Technology should look good. More importantly, it should work.')}</h1>
             </div>
             <div>
               <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-                {usingCms
-                  ? 'A selection of work published by the Lightworld team across web, mobile and business systems.'
-                  : 'These representative solution patterns show the kinds of products and operational experiences our team is equipped to design and engineer.'}
+                {contentText(
+                  settings,
+                  'portfolio_hero_description',
+                  usingCms
+                    ? 'A selection of work published by the Lightworld team across web, mobile and business systems.'
+                    : 'These representative solution patterns show the kinds of products and operational experiences our team is equipped to design and engineer.',
+                )}
               </p>
               {!usingCms && (
                 <p className="mt-3 text-xs leading-5 text-slate-400 dark:text-white/25">
@@ -230,8 +235,8 @@ export default function PortfolioPage() {
 
           <div className="mt-10 flex flex-col gap-5 rounded-[32px] border border-emerald-500/15 bg-emerald-500/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Have a harder problem than these?</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/38">Good. The most useful work usually starts where a template stops being enough.</p>
+              <h2 className="text-2xl font-semibold tracking-tight">{contentText(settings, 'portfolio_cta_title', 'Have a harder problem than these?')}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/38">{contentText(settings, 'portfolio_cta_description', 'Good. The most useful work usually starts where a template stops being enough.')}</p>
             </div>
             <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white dark:text-slate-950">
               Discuss your project <ArrowRight className="size-4" />

@@ -1,18 +1,24 @@
 import type { Metadata } from 'next';
 import PublicShell from '@/components/layout/PublicShell';
 import AboutPage from '@/components/pages/AboutPage';
+import { contentText } from '@/lib/site-content';
+import { getActiveTeamMembers, getSiteSettings } from '@/lib/site-content-server';
 
-export const metadata: Metadata = {
-  title: 'About',
-  description: 'Learn about Lightworld Technologies Ltd, a Ghanaian technology company building useful digital products, enterprise software and modern IT solutions.',
-  alternates: { canonical: '/about' },
-  openGraph: {
-    title: 'About Lightworld Technologies',
-    description: 'A Ghanaian technology company building useful digital products, enterprise software and modern IT solutions.',
-    url: '/about',
-  },
-};
+export const dynamic = 'force-dynamic';
 
-export default function About() {
-  return <PublicShell><AboutPage /></PublicShell>;
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const title = contentText(settings, 'seo_about_title', 'About');
+  const description = contentText(settings, 'seo_about_description', 'Learn about Lightworld Technologies Ltd, a Ghanaian technology company building useful digital products, enterprise software and modern IT solutions.');
+  return {
+    title,
+    description,
+    alternates: { canonical: '/about' },
+    openGraph: { title: title + ' | Lightworld Technologies', description, url: '/about' },
+  };
+}
+
+export default async function About() {
+  const [settings, team] = await Promise.all([getSiteSettings(), getActiveTeamMembers()]);
+  return <PublicShell><AboutPage settings={settings} team={team} /></PublicShell>;
 }

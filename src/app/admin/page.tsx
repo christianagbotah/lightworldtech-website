@@ -14,11 +14,14 @@ import AdminPortfolio from '@/components/admin/AdminPortfolio';
 import AdminMessages from '@/components/admin/AdminMessages';
 import AdminFAQs from '@/components/admin/AdminFAQs';
 import AdminSettings from '@/components/admin/AdminSettings';
+import AdminPages from '@/components/admin/AdminPages';
 
 function AdminRouter() {
   const { adminTab } = useAppStore();
 
   switch (adminTab) {
+    case 'pages':
+      return <AdminPages />;
     case 'services':
       return <AdminServices />;
     case 'blog':

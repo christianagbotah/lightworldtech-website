@@ -18,6 +18,7 @@ import {
   Workflow,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 
 const productDirections = [
   {
@@ -64,7 +65,22 @@ const productDirections = [
   },
 ];
 
-export default function ProductsPage() {
+export default function ProductsPage({ settings = {} }: { settings?: SiteSettings }) {
+  const managedDirections = contentJson<Array<{ title: string; stage: string; text: string; features: string }>>(
+    settings,
+    'products_directions',
+    productDirections.map((item) => ({
+      title: item.title,
+      stage: item.stage,
+      text: item.text,
+      features: item.features.join(', '),
+    })),
+  ).map((item, index) => ({
+    ...item,
+    icon: productDirections[index]?.icon || PackageSearch,
+    features: item.features.split(',').map((value) => value.trim()).filter(Boolean),
+  }));
+
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [sending, setSending] = useState(false);
@@ -104,13 +120,13 @@ export default function ProductsPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
                 <PackageSearch className="size-3.5" />
-                Product lab
+                {contentText(settings, 'products_hero_eyebrow', 'Product lab')}
               </div>
-              <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">Custom engineering today. Reusable products tomorrow.</h1>
+              <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">{contentText(settings, 'products_hero_title', 'Custom engineering today. Reusable products tomorrow.')}</h1>
             </div>
             <div>
               <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-                Our product direction grows from patterns we repeatedly see in real operations. Instead of publishing speculative launch dates, this page shows the product families and platform ideas we are actively exploring and shaping.
+                {contentText(settings, 'products_hero_description', 'Our product direction grows from patterns we repeatedly see in real operations. Instead of publishing speculative launch dates, this page shows the product families and platform ideas we are actively exploring and shaping.')}
               </p>
             </div>
           </motion.div>
@@ -120,7 +136,7 @@ export default function ProductsPage() {
       <section className="section-padding">
         <div className="container-main">
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {productDirections.map((product, index) => (
+            {managedDirections.map((product, index) => (
               <motion.div
                 key={product.title}
                 initial={{ opacity: 0, y: 16 }}
@@ -156,8 +172,8 @@ export default function ProductsPage() {
                   <Bell className="size-5" />
                 </div>
                 <p className="mt-7 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">Product updates</p>
-                <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Follow what graduates from the lab.</h2>
-                <p className="mt-4 max-w-xl text-sm leading-7 text-white/40">We will share public launches, early-access opportunities and useful product notes when they are ready.</p>
+                <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{contentText(settings, 'products_updates_title', 'Follow what graduates from the lab.')}</h2>
+                <p className="mt-4 max-w-xl text-sm leading-7 text-white/40">{contentText(settings, 'products_updates_description', 'We will share public launches, early-access opportunities and useful product notes when they are ready.')}</p>
               </div>
             </div>
             <div className="border-t border-white/[0.07] bg-white/[0.03] p-7 sm:p-9 lg:flex lg:items-center lg:border-l lg:border-t-0">

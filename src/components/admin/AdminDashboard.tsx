@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
@@ -51,22 +51,12 @@ interface ContactMessage {
 }
 
 const statCards = [
-  { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', trend: '+12%', up: true, borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
-  { key: 'activeServices' as const, label: 'Services', icon: Briefcase, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', trend: '+3%', up: true, borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
-  { key: 'activeTeam' as const, label: 'Team Members', icon: Users, color: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30', trend: '0%', up: true, borderAccent: 'border-l-[3px] border-l-yellow-500 dark:border-l-yellow-400' },
-  { key: 'unreadMessages' as const, label: 'Unread Messages', icon: Mail, color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', trend: '+5', up: true, borderAccent: 'border-l-[3px] border-l-rose-500 dark:border-l-rose-400' },
-  { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30', trend: '+2', up: true, borderAccent: 'border-l-[3px] border-l-cyan-500 dark:border-l-cyan-400' },
-  { key: 'activeTestimonials' as const, label: 'Testimonials', icon: MessageSquare, color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30', trend: '+1', up: true, borderAccent: 'border-l-[3px] border-l-orange-500 dark:border-l-orange-400' },
-];
-
-const monthlyInquiries = [
-  { month: 'Jul', value: 14 },
-  { month: 'Aug', value: 19 },
-  { month: 'Sep', value: 12 },
-  { month: 'Oct', value: 25 },
-  { month: 'Nov', value: 21 },
-  { month: 'Dec', value: 17 },
-  { month: 'Jan', value: 23 },
+  { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
+  { key: 'activeServices' as const, label: 'Services', icon: Briefcase, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
+  { key: 'activeTeam' as const, label: 'Team Members', icon: Users, color: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30', borderAccent: 'border-l-[3px] border-l-yellow-500 dark:border-l-yellow-400' },
+  { key: 'unreadMessages' as const, label: 'Unread Messages', icon: Mail, color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', borderAccent: 'border-l-[3px] border-l-rose-500 dark:border-l-rose-400' },
+  { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30', borderAccent: 'border-l-[3px] border-l-cyan-500 dark:border-l-cyan-400' },
+  { key: 'activeTestimonials' as const, label: 'Testimonials', icon: MessageSquare, color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30', borderAccent: 'border-l-[3px] border-l-orange-500 dark:border-l-orange-400' },
 ];
 
 const quickActions = [
@@ -75,20 +65,12 @@ const quickActions = [
   { label: 'View Messages', icon: Inbox, action: 'admin-messages', color: 'text-rose-600 dark:text-rose-400' },
 ];
 
-const recentActivities = [
-  { id: '1', text: 'New inquiry from Kwame Asante', time: '5 minutes ago', icon: Mail, iconColor: 'text-amber-500' },
-  { id: '2', text: 'Blog post "Web Dev Trends" published', time: '1 hour ago', icon: CheckCircle2, iconColor: 'text-amber-500' },
-  { id: '3', text: 'Portfolio project "ERP System" updated', time: '3 hours ago', icon: FolderOpen, iconColor: 'text-amber-500' },
-  { id: '4', text: 'Team member Abena Osei added', time: 'Yesterday', icon: Users, iconColor: 'text-violet-500' },
-  { id: '5', text: 'Settings updated by admin', time: 'Yesterday', icon: Settings, iconColor: 'text-slate-400' },
-  { id: '6', text: 'New testimonial from Ama Mensah', time: '2 days ago', icon: MessageSquare, iconColor: 'text-cyan-500' },
-];
-
 export default function AdminDashboard() {
   const { navigate } = useAppStore();
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
+  const [allMessages, setAllMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,7 +80,7 @@ export default function AdminDashboard() {
         const [statsRes, postsRes, messagesRes] = await Promise.all([
           fetch('/api/admin/stats'),
           fetch('/api/blog?limit=5'),
-          fetch('/api/contact?limit=5'),
+          fetch('/api/contact?limit=500'),
         ]);
 
         if (!statsRes.ok || !postsRes.ok || !messagesRes.ok) {
@@ -122,8 +104,11 @@ export default function AdminDashboard() {
           activePortfolio: rawStats?.portfolio?.total || 0,
           activeTestimonials: rawStats?.testimonials?.total || 0,
         });
-        setRecentPosts(Array.isArray(postsData) ? postsData : (postsData.data || []));
-        setRecentMessages(Array.isArray(messagesData) ? messagesData : (messagesData.data || []));
+        const posts = Array.isArray(postsData) ? postsData : (postsData.data || []);
+        const messages = Array.isArray(messagesData) ? messagesData : (messagesData.data || []);
+        setRecentPosts(posts.slice(0, 5));
+        setAllMessages(messages);
+        setRecentMessages(messages.slice(0, 5));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -155,7 +140,41 @@ export default function AdminDashboard() {
     );
   }
 
-  const maxInquiry = Math.max(...monthlyInquiries.map((d) => d.value));
+  const monthlyInquiries = useMemo(() => {
+    const now = new Date();
+    return Array.from({ length: 7 }, (_, offset) => {
+      const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (6 - offset), 1));
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth();
+      const value = allMessages.filter((message) => {
+        const created = new Date(message.createdAt);
+        return created.getUTCFullYear() === year && created.getUTCMonth() === month;
+      }).length;
+      return { month: date.toLocaleString('en', { month: 'short', timeZone: 'UTC' }), value };
+    });
+  }, [allMessages]);
+
+  const recentActivities = useMemo(() => {
+    const messageActivity = recentMessages.map((message) => ({
+      id: 'message-' + message.id,
+      text: 'Inquiry from ' + message.name,
+      createdAt: message.createdAt,
+      icon: Mail,
+      iconColor: message.read ? 'text-slate-400' : 'text-amber-500',
+    }));
+    const postActivity = recentPosts.map((post) => ({
+      id: 'post-' + post.id,
+      text: (post.published ? 'Published: ' : 'Draft: ') + post.title,
+      createdAt: post.createdAt,
+      icon: FileText,
+      iconColor: post.published ? 'text-emerald-500' : 'text-slate-400',
+    }));
+    return [...messageActivity, ...postActivity]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 6);
+  }, [recentMessages, recentPosts]);
+
+  const maxInquiry = Math.max(1, ...monthlyInquiries.map((d) => d.value));
 
   return (
     <div className="space-y-6">
@@ -185,13 +204,13 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
-      {/* Quick Stats Row - Analytics Mini Cards */}
+      {/* Live CMS snapshot — database-backed, no placeholder analytics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Visitors', value: '3.2K', trend: '+12.5%', up: true, icon: BarChart3, color: 'text-emerald-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-          { label: 'Bounce Rate', value: '34%', trend: '-2.1%', up: false, icon: MousePointerClick, color: 'text-emerald-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-          { label: 'Avg Session', value: '2m 45s', trend: '+8.3%', up: true, icon: Timer, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30' },
-          { label: 'Conversion Rate', value: '4.8%', trend: '+1.2%', up: true, icon: TrendingUp, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/30' },
+          { label: 'Total Inquiries', value: allMessages.length, icon: Mail, color: 'text-emerald-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          { label: 'Unread Inquiries', value: stats?.unreadMessages || 0, icon: Inbox, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/30' },
+          { label: 'Blog Posts', value: stats?.totalPosts || 0, icon: FileText, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30' },
+          { label: 'Active Services', value: stats?.activeServices || 0, icon: Briefcase, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/30' },
         ].map((item, i) => {
           const Icon = item.icon;
           return (
@@ -203,14 +222,11 @@ export default function AdminDashboard() {
             >
               <Card className="border-border/50 hover:shadow-md hover:border-amber-200 dark:hover:border-amber-800 transition-all duration-300">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="mb-3 flex items-center justify-between">
                     <div className={`p-2 rounded-lg ${item.bg}`}>
                       <Icon className={`size-4 ${item.color}`} />
                     </div>
-                    <span className={`flex items-center gap-0.5 text-xs font-semibold ${item.up ? 'text-emerald-600 dark:text-amber-400' : 'text-red-500 dark:text-red-400'}`}>
-                      {item.up ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-                      {item.trend}
-                    </span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Live</span>
                   </div>
                   <p className="text-xl font-bold text-foreground">{item.value}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
@@ -240,10 +256,6 @@ export default function AdminDashboard() {
                       <p className="text-sm text-muted-foreground">{card.label}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <p className="text-2xl font-bold text-foreground">{value}</p>
-                        <span className={`flex items-center gap-0.5 text-xs font-medium ${card.up ? 'text-emerald-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
-                          {card.up ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-                          {card.trend}
-                        </span>
                       </div>
                     </div>
                     <div className={`p-3 rounded-xl ${card.color}`}>
@@ -446,7 +458,7 @@ export default function AdminDashboard() {
                 </h2>
               </div>
               <div className="max-h-80 overflow-y-auto">
-                {recentActivities.map((activity, i) => {
+                {recentActivities.map((activity) => {
                   const Icon = activity.icon;
                   return (
                     <div key={activity.id} className="flex items-start gap-3 px-5 py-3 hover:bg-muted/50 transition-colors">
@@ -457,7 +469,7 @@ export default function AdminDashboard() {
                         <p className="text-sm text-foreground leading-snug">{activity.text}</p>
                         <div className="flex items-center gap-1 mt-1">
                           <Clock className="size-3 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">{activity.time}</span>
+                          <span className="text-xs text-muted-foreground">{new Date(activity.createdAt).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>

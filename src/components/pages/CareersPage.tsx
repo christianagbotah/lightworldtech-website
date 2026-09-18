@@ -16,6 +16,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
+import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 
 const disciplines = [
   { icon: Code2, title: 'Engineering', text: 'Frontend, backend, mobile, platform and integration work.' },
@@ -34,7 +35,15 @@ const expectations = [
   'Share knowledge so the whole team improves.',
 ];
 
-export default function CareersPage() {
+export default function CareersPage({ settings = {} }: { settings?: SiteSettings }) {
+  const managedDisciplines = contentJson<Array<{ title: string; text: string }>>(
+    settings,
+    'careers_disciplines',
+    disciplines.map(({ title, text }) => ({ title, text })),
+  ).map((item, index) => ({ ...item, icon: disciplines[index]?.icon || Users }));
+  const managedExpectations = contentJson<string[]>(settings, 'careers_expectations', expectations);
+  const careersEmail = contentText(settings, 'careers_email', 'mail@lightworldtech.com');
+
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
       <section className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
@@ -43,17 +52,17 @@ export default function CareersPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                 <Users className="size-3.5" />
-                Careers & talent network
+                {contentText(settings, 'careers_hero_eyebrow', 'Careers & talent network')}
               </div>
-              <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">Come build technology that has to work in the real world.</h1>
+              <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">{contentText(settings, 'careers_hero_title', 'Come build technology that has to work in the real world.')}</h1>
             </div>
             <div>
               <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-                We are building a multidisciplinary technology company in Ghana. Open roles change with project needs, so we do not publish stale vacancies or salary promises as if they were current.
+                {contentText(settings, 'careers_hero_description', 'We are building a multidisciplinary technology company in Ghana. Open roles change with project needs, so we do not publish stale vacancies or salary promises as if they were current.')}
               </p>
               <div className="mt-5 flex items-center gap-2 text-sm text-slate-500 dark:text-white/35">
                 <MapPin className="size-4 text-emerald-500" />
-                Accra, Ghana · role-dependent remote collaboration
+                {contentText(settings, 'careers_location', 'Accra, Ghana · role-dependent remote collaboration')}
               </div>
             </div>
           </motion.div>
@@ -70,7 +79,7 @@ export default function CareersPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              {disciplines.map((item, index) => (
+              {managedDisciplines.map((item, index) => (
                 <motion.div
                   key={item.title}
                   initial={{ opacity: 0, y: 14 }}
@@ -104,7 +113,7 @@ export default function CareersPage() {
             </div>
 
             <div className="space-y-2">
-              {expectations.map((item) => (
+              {managedExpectations.map((item) => (
                 <div key={item} className="flex gap-3 rounded-[22px] border border-white/[0.07] bg-white/[0.03] p-4">
                   <Sparkles className="mt-0.5 size-4 shrink-0 text-emerald-300" />
                   <p className="text-sm leading-6 text-white/48">{item}</p>
@@ -124,8 +133,8 @@ export default function CareersPage() {
               </div>
               <h2 className="mt-7 text-2xl font-semibold tracking-tight">Join the talent network</h2>
               <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-white/38">Send a concise introduction, the kind of work you do, and links to work you are proud of. If there is a strong fit for a current or upcoming need, the team can follow up.</p>
-              <a href="mailto:careers@lightworldtechnologies.com?subject=Lightworld%20Talent%20Network" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                careers@lightworldtechnologies.com <ArrowRight className="size-4" />
+              <a href={'mailto:' + careersEmail + '?subject=Lightworld%20Talent%20Network'} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                {careersEmail} <ArrowRight className="size-4" />
               </a>
             </div>
 

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import {
   LayoutDashboard,
+  PanelsTopLeft,
   Briefcase,
   FileText,
   Users,
@@ -24,6 +25,7 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'admin-dashboard' as const },
+  { id: 'pages', label: 'Page Content', icon: PanelsTopLeft, page: 'admin-pages' as const },
   { id: 'services', label: 'Services', icon: Briefcase, page: 'admin-services' as const },
   { id: 'blog', label: 'Blog Posts', icon: FileText, page: 'admin-blog' as const },
   { id: 'team', label: 'Team Members', icon: Users, page: 'admin-team' as const },
@@ -47,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
+  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
     setAdminTab(id);
     navigate(page);
     setSidebarOpen(false);
@@ -133,6 +135,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Sheet>
               <h1 className="text-sm font-semibold text-foreground capitalize">
                 {adminTab === 'dashboard' ? 'Dashboard' :
+                 adminTab === 'pages' ? 'Page Content' :
                  adminTab === 'blog' ? 'Blog Posts' :
                  adminTab === 'services' ? 'Services' :
                  adminTab === 'team' ? 'Team Members' :

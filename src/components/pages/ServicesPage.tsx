@@ -18,6 +18,7 @@ import {
   Sparkles,
   Workflow,
 } from 'lucide-react';
+import { contentText, type SiteSettings } from '@/lib/site-content';
 
 interface ServiceView {
   id: string;
@@ -120,7 +121,7 @@ const situations = [
   'You want to introduce AI without turning the product into a gimmick.',
 ];
 
-export default function ServicesPage() {
+export default function ServicesPage({ settings = {} }: { settings?: SiteSettings }) {
   const [serviceItems, setServiceItems] = useState<ServiceView[]>(defaultServices);
   const [active, setActive] = useState(defaultServices[0].id);
   const detailsRef = useRef<HTMLDivElement>(null);
@@ -212,15 +213,15 @@ export default function ServicesPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                 <Layers3 className="size-3.5" />
-                End-to-end technology services
+                {contentText(settings, 'services_hero_eyebrow', 'End-to-end technology services')}
               </div>
               <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-                One partner from idea to production.
+                {contentText(settings, 'services_hero_title', 'One partner from idea to production.')}
               </h1>
             </div>
             <div className="lg:pb-1">
               <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-                Lightworld brings product design, software engineering, cloud, security, growth and training together so you can solve the whole problem—not just commission a collection of screens.
+                {contentText(settings, 'services_hero_description', 'Lightworld brings product design, software engineering, cloud, security, growth and training together so you can solve the whole problem—not just commission a collection of screens.')}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="/contact" className="inline-flex h-11 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-600 dark:bg-emerald-400 dark:text-slate-950">
@@ -366,7 +367,7 @@ export default function ServicesPage() {
 
           <div className="mt-10 flex flex-col gap-5 rounded-[32px] border border-emerald-500/15 bg-emerald-500/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div>
-              <h3 className="text-2xl font-semibold tracking-tight">Not sure which service category fits?</h3>
+              <h3 className="text-2xl font-semibold tracking-tight">{contentText(settings, 'services_cta_title', 'Not sure which service category fits?')}</h3>
               <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/38">That is normal. Describe the outcome you need and we will help map the right approach.</p>
             </div>
             <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white transition hover:bg-emerald-400 dark:text-slate-950">

@@ -28,8 +28,9 @@ import ThemeToggle from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 
-const primaryNav = [
+const defaultPrimaryNav = [
   { label: 'Work', href: '/portfolio' },
   { label: 'Products', href: '/products' },
   { label: 'Insights', href: '/blog' },
@@ -61,8 +62,11 @@ const mobileDock = [
   { icon: MessageSquare, label: 'Contact', href: '/contact' },
 ];
 
-export default function Header() {
+export default function Header({ settings = {} }: { settings?: SiteSettings }) {
   const pathname = usePathname();
+  const primaryNav = contentJson<Array<{ label: string; href: string }>>(settings, 'header_primary_links', defaultPrimaryNav);
+  const companyTagline = contentText(settings, 'company_tagline', 'The world of possibilities');
+  const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
   const [mobileOpen, setMobileOpen] = useState(false);
   const isHome = pathname === '/';
 
@@ -215,7 +219,7 @@ export default function Header() {
                     </span>
                     <div>
                       <p className="text-sm font-semibold">Lightworld Technologies</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-emerald-300/70">The world of possibilities</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-emerald-300/70">{companyTagline}</p>
                     </div>
                   </div>
 
@@ -276,7 +280,7 @@ export default function Header() {
                       Start a project
                       <ArrowUpRight className="size-4" />
                     </Link>
-                    <p className="mt-3 text-center text-[10px] text-white/25">Accra, Ghana · mail@lightworldtech.com</p>
+                    <p className="mt-3 text-center text-[10px] text-white/25">Accra, Ghana · {companyEmail}</p>
                   </div>
                 </div>
               </SheetContent>
