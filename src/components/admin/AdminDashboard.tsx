@@ -28,6 +28,7 @@ interface Stats {
   unreadMessages: number;
   activePortfolio: number;
   activeTestimonials: number;
+  crm: CrmSummary;
 }
 
 interface BlogPost {
@@ -53,9 +54,10 @@ interface ContactMessage {
 interface CrmSummary {
   total: number;
   open: number;
+  won: number;
+  lost: number;
   highPriority: number;
   overdueFollowUps: number;
-  byStatus: Record<string, number>;
 }
 
 interface AnalyticsData {
@@ -97,31 +99,28 @@ export default function AdminDashboard() {
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [crm, setCrm] = useState<CrmSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsRes, postsRes, messagesRes, analyticsRes, crmRes] = await Promise.all([
+        const [statsRes, postsRes, messagesRes, analyticsRes] = await Promise.all([
           fetch('/api/admin/stats'),
           fetch('/api/blog?limit=5'),
           fetch('/api/contact?limit=20'),
           fetch('/api/admin/analytics?days=30'),
-          fetch('/api/admin/leads?limit=1'),
         ]);
 
-        if (!statsRes.ok || !postsRes.ok || !messagesRes.ok || !analyticsRes.ok || !crmRes.ok) {
+        if (!statsRes.ok || !postsRes.ok || !messagesRes.ok || !analyticsRes.ok) {
           throw new Error('Failed to fetch data');
         }
 
-        const [statsData, postsData, messagesData, analyticsData, crmData] = await Promise.all([
+        const [statsData, postsData, messagesData, analyticsData] = await Promise.all([
           statsRes.json(),
           postsRes.json(),
           messagesRes.json(),
           analyticsRes.json(),
-          crmRes.json(),
         ]);
 
         // The stats API may be wrapped in {success, data}
@@ -134,13 +133,20 @@ export default function AdminDashboard() {
           unreadMessages: rawStats?.messages?.unread || 0,
           activePortfolio: rawStats?.portfolio?.total || 0,
           activeTestimonials: rawStats?.testimonials?.total || 0,
+          crm: rawStats?.crm || {
+            total: 0,
+            open: 0,
+            won: 0,
+            lost: 0,
+            highPriority: 0,
+            overdueFollowUps: 0,
+          },
         });
         const posts = Array.isArray(postsData) ? postsData : (postsData.data || []);
         const messages = Array.isArray(messagesData) ? messagesData : (messagesData.data || []);
         setRecentPosts(posts.slice(0, 5));
         setRecentMessages(messages.slice(0, 5));
         setAnalytics(analyticsData.data || null);
-        setCrm(crmData.summary || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -272,10 +278,10 @@ export default function AdminDashboard() {
         </div>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[
-            { label: 'Open Leads', value: crm?.open || 0 },
-            { label: 'High Priority', value: crm?.highPriority || 0 },
-            { label: 'Overdue Follow-ups', value: crm?.overdueFollowUps || 0 },
-            { label: 'Won', value: crm?.byStatus?.won || 0 },
+            { label: 'Open Leads', value: stats?.crm.open || 0 },
+            { label: 'High Priority', value: stats?.crm.highPriority || 0 },
+            { label: 'Overdue Follow-ups', value: stats?.crm.overdueFollowUps || 0 },
+            { label: 'Won', value: stats?.crm.won || 0 },
           ].map((item) => (
             <Card key={item.label} className="border-border/50">
               <CardContent className="p-4">
