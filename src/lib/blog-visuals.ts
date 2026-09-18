@@ -16,11 +16,12 @@ const categoryVisuals: Record<string, string> = {
 export function getBlogCoverImage(post: {
   slug: string;
   coverImage?: string | null;
-  category?: { slug?: string | null } | null;
+  category?: { slug?: string | null; name?: string | null } | null;
 }): string {
   if (post.coverImage?.trim()) return post.coverImage;
   if (visualsBySlug[post.slug]) return visualsBySlug[post.slug];
 
   const categorySlug = post.category?.slug || '';
-  return categoryVisuals[categorySlug] || '/images/hero-slide-3.png';
+  const categoryName = (post.category?.name || '').toLowerCase().replace(/\s+/g, '-');
+  return categoryVisuals[categorySlug] || categoryVisuals[categoryName] || '/images/hero-slide-3.png';
 }
