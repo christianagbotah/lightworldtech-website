@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
@@ -25,36 +25,12 @@ interface BlogPost {
   author: string;
   readTime: number;
   createdAt: string;
+  updatedAt: string;
   category?: { name?: string | null } | null;
 }
 
-export default function BlogDetailPage({ slug }: { slug?: string } = {}) {
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [missing, setMissing] = useState(false);
-
-  useEffect(() => {
-    if (!slug) {
-      setMissing(true);
-      setLoading(false);
-      return;
-    }
-
-    fetch('/api/blog/' + encodeURIComponent(slug))
-      .then((response) => {
-        if (!response.ok) throw new Error('Post unavailable');
-        return response.json();
-      })
-      .then((payload) => {
-        if (payload?.success && payload?.data) {
-          setPost(payload.data);
-        } else {
-          setMissing(true);
-        }
-      })
-      .catch(() => setMissing(true))
-      .finally(() => setLoading(false));
-  }, [slug]);
+export default function BlogDetailPage({ initialPost }: { initialPost: BlogPost }) {
+  const post = initialPost;
 
   const publishedDate = useMemo(() => {
     if (!post?.createdAt) return '';
@@ -84,35 +60,6 @@ export default function BlogDetailPage({ slug }: { slug?: string } = {}) {
       // User may cancel native sharing.
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-[70svh] bg-[#f7f9f8] dark:bg-[#050b10]">
-        <div className="container-main py-16">
-          <div className="h-5 w-28 animate-pulse rounded-full bg-slate-200 dark:bg-white/[0.05]" />
-          <div className="mt-8 h-20 max-w-4xl animate-pulse rounded-3xl bg-slate-200 dark:bg-white/[0.05]" />
-          <div className="mt-8 aspect-[16/7] animate-pulse rounded-[32px] bg-slate-200 dark:bg-white/[0.05]" />
-        </div>
-      </div>
-    );
-  }
-
-  if (missing || !post) {
-    return (
-      <section className="container-main flex min-h-[65svh] items-center py-16">
-        <div className="max-w-xl">
-          <FileText className="size-8 text-emerald-500" />
-          <h1 className="mt-5 text-4xl font-semibold tracking-[-0.04em]">This insight is not available.</h1>
-          <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-white/38">
-            It may have been unpublished, moved or the link may be incorrect.
-          </p>
-          <Link href="/blog" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-            <ArrowLeft className="size-4" /> Back to insights
-          </Link>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <article className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
