@@ -14,7 +14,7 @@ interface SEOOptions {
 const defaultSEO = {
   title: 'Home',
   description:
-    'Lightworld Technologies Limited - Leading IT solutions provider in Ghana. Web development, mobile apps, SEO, software development, and IT training.',
+    'Lightworld Technologies Ltd - Leading IT solutions provider in Ghana. Web development, mobile apps, SEO, software development, and IT training.',
   keywords: ['IT company Ghana', 'web development', 'mobile apps', 'SEO', 'software development', 'Accra'],
   ogType: 'website',
 };
