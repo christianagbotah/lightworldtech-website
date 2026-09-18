@@ -211,3 +211,21 @@ model Admin {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+
+// Privacy-conscious first-party product analytics.
+// Deliberately stores no raw IP address, email address, or user-agent fingerprint.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  sessionId String
+  event     String
+  path      String   @default("/")
+  referrer  String   @default("")
+  metadata  String   @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([event, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([path, createdAt])
+}
