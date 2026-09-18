@@ -1288,3 +1288,115 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+
+/* Long-form article typography without an extra typography dependency. */
+.lw-article {
+  font-size: 1rem;
+  line-height: 1.85;
+  color: color-mix(in oklab, currentColor 68%, transparent);
+}
+
+.lw-article > * + * {
+  margin-top: 1.35rem;
+}
+
+.lw-article h2,
+.lw-article h3,
+.lw-article h4 {
+  color: var(--foreground);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  scroll-margin-top: 7rem;
+}
+
+.lw-article h2 {
+  margin-top: 3rem;
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+}
+
+.lw-article h3 {
+  margin-top: 2.25rem;
+  font-size: clamp(1.35rem, 3vw, 1.7rem);
+}
+
+.lw-article h4 {
+  margin-top: 1.75rem;
+  font-size: 1.15rem;
+}
+
+.lw-article p,
+.lw-article li {
+  color: color-mix(in oklab, var(--foreground) 64%, transparent);
+}
+
+.lw-article ul,
+.lw-article ol {
+  padding-left: 1.4rem;
+}
+
+.lw-article ul {
+  list-style: disc;
+}
+
+.lw-article ol {
+  list-style: decimal;
+}
+
+.lw-article li + li {
+  margin-top: 0.55rem;
+}
+
+.lw-article a {
+  color: oklch(0.596 0.145 163.225);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.lw-article blockquote {
+  border-left: 3px solid oklch(0.696 0.17 162.48);
+  padding: 0.25rem 0 0.25rem 1.15rem;
+  color: color-mix(in oklab, var(--foreground) 58%, transparent);
+  font-style: italic;
+}
+
+.lw-article code:not(pre code) {
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: color-mix(in oklab, var(--muted) 75%, transparent);
+  padding: 0.12rem 0.35rem;
+  font-family: var(--font-geist-mono);
+  font-size: 0.9em;
+}
+
+.lw-article pre {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: oklch(0.145 0 0);
+  padding: 1.1rem 1.25rem;
+  color: oklch(0.94 0 0);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.lw-article img {
+  height: auto;
+  max-width: 100%;
+  border-radius: 1.25rem;
+}
+
+.lw-article hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+  .lw-article {
+    font-size: 1.05rem;
+  }
+}
