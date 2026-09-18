@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
+import { getCrmSummary } from '@/lib/crm';
 
 // GET dashboard statistics
 export async function GET(request: NextRequest) {
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
       totalPortfolioProjects,
       totalSubscribers,
       totalCategories,
+      crm,
     ] = await Promise.all([
       db.blogPost.count(),
       db.blogPost.count({ where: { published: true } }),
@@ -35,6 +37,7 @@ export async function GET(request: NextRequest) {
       db.portfolioProject.count(),
       db.newsletterSubscriber.count({ where: { active: true } }),
       db.blogCategory.count(),
+      getCrmSummary(),
     ]);
 
     return NextResponse.json({
@@ -71,6 +74,7 @@ export async function GET(request: NextRequest) {
         categories: {
           total: totalCategories,
         },
+        crm,
       },
     });
   } catch (error) {
