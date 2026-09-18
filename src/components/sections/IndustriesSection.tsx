@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import Image from 'next/image';
 import { GraduationCap, ShoppingBag, Hotel, Building2, HeartPulse, Shield, Home, Plane, UtensilsCrossed, Factory, HandHeart } from 'lucide-react';
 
@@ -18,7 +18,7 @@ const industries = [
   { name: 'Charity', icon: HandHeart, color: 'from-amber-400 to-yellow-500' },
 ];
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -26,7 +26,7 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, scale: 0.85 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.4, type: 'spring', stiffness: 150 } },
 };
