@@ -41,7 +41,7 @@ export async function sendTransactionalMail(message: MailMessage): Promise<void>
   ].join('\r\n');
 
   await new Promise<void>((resolve, reject) => {
-    const child = spawn('/usr/sbin/sendmail', ['-t', '-i'], {
+    const child = spawn('/usr/sbin/sendmail', ['-f', 'mail@lightworldtech.com', '-t', '-i'], {
       stdio: ['pipe', 'ignore', 'pipe'],
     });
 
