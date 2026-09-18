@@ -89,7 +89,7 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/award|recognition|honou?r|winner/.test(q)) {
-    return 'Public award directories list Lightworld Technologies Ltd among winners of the 2021 MEA Business Awards, the 2024 Business Excellence Awards, and the 2026 African Excellence Awards. The About page links to the official winner directories.';
+    return 'Public award directories list Lightworld Technologies Ltd among winners of the 2026 African Excellence Awards, the 2024 Business Excellence Awards, and the 2021 MEA Business Awards. The About page links to the official winner pages.';
   }
 
   if (/ghanaweb|news|press|media|coverage/.test(q)) {
