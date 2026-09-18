@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { contentText, type SiteSettings } from '@/lib/site-content';
 
 const services = [
   'Website / digital experience',
@@ -27,7 +28,7 @@ const services = [
   'Something else',
 ];
 
-export default function ContactPage() {
+export default function ContactPage({ settings = {} }: { settings?: SiteSettings }) {
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -83,14 +84,14 @@ export default function ContactPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                 <Sparkles className="size-3.5" />
-                Start a conversation
+                {contentText(settings, 'contact_hero_eyebrow', 'Start a conversation')}
               </div>
               <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-                Tell us what you want to build, improve or automate.
+                {contentText(settings, 'contact_hero_title', 'Tell us what you want to build, improve or automate.')}
               </h1>
             </div>
             <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-              You do not need a finished technical specification. Share the business problem, the people involved and what a good outcome would look like. We can help shape the next step.
+              {contentText(settings, 'contact_hero_description', 'You do not need a finished technical specification. Share the business problem, the people involved and what a good outcome would look like. We can help shape the next step.')}
             </p>
           </motion.div>
         </div>
@@ -128,8 +129,8 @@ export default function ContactPage() {
                 <>
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Project brief</p>
-                      <h2 className="mt-2 text-2xl font-semibold tracking-tight">A little context is enough to start.</h2>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">{contentText(settings, 'contact_form_eyebrow', 'Project brief')}</p>
+                      <h2 className="mt-2 text-2xl font-semibold tracking-tight">{contentText(settings, 'contact_form_title', 'A little context is enough to start.')}</h2>
                     </div>
                     <span className="hidden rounded-full border border-slate-200 px-3 py-1 text-[10px] font-medium text-slate-400 dark:border-white/[0.07] dark:text-white/25 sm:inline-flex">No obligation</span>
                   </div>
@@ -242,20 +243,20 @@ export default function ContactPage() {
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                <a href="tel:+233243618186" className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-emerald-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                <a href={'tel:' + contentText(settings, 'company_phone1', '+233 (024) 361 8186').replace(/[^+\d]/g, '')} className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-emerald-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <Phone className="size-4 text-emerald-500" />
                   <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Phone</p>
-                  <p className="mt-1 text-sm font-semibold">+233 (024) 361 8186</p>
+                  <p className="mt-1 text-sm font-semibold">{contentText(settings, 'company_phone1', '+233 (024) 361 8186')}</p>
                 </a>
-                <a href="mailto:mail@lightworldtech.com" className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-emerald-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                <a href={'mailto:' + contentText(settings, 'company_email', 'mail@lightworldtech.com')} className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-emerald-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <Mail className="size-4 text-emerald-500" />
                   <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Email</p>
-                  <p className="mt-1 break-all text-sm font-semibold">mail@lightworldtech.com</p>
+                  <p className="mt-1 break-all text-sm font-semibold">{contentText(settings, 'company_email', 'mail@lightworldtech.com')}</p>
                 </a>
                 <div className="rounded-[24px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <MapPin className="size-4 text-emerald-500" />
                   <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Location</p>
-                  <p className="mt-1 text-sm font-semibold">Accra, Ghana</p>
+                  <p className="mt-1 text-sm font-semibold">{contentText(settings, 'company_address', 'Accra, Ghana')}</p>
                 </div>
                 <div className="rounded-[24px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <Clock className="size-4 text-emerald-500" />
