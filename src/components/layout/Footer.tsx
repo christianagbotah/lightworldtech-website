@@ -34,6 +34,7 @@ const groups = [
       ['Products', '/products'],
       ['Insights', '/blog'],
       ['About', '/about'],
+      ['Leadership', '/team'],
       ['Careers', '/careers'],
     ],
   },
@@ -62,10 +63,13 @@ export default function Footer() {
         body: JSON.stringify({ email: email.trim() }),
       });
 
-      if (!response.ok) throw new Error('Subscription request failed');
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Subscription request failed');
       setEmail('');
       toast.success('You’re on the list.', {
-        description: 'We’ll share useful product, engineering and company updates.',
+        description: payload?.emailSent
+          ? 'Check your inbox for a confirmation from Lightworld Technologies.'
+          : 'Subscription saved. Email confirmation may be delayed.',
       });
     } catch {
       toast.error('Could not subscribe right now.', {
