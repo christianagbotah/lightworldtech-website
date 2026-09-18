@@ -12,7 +12,6 @@ import AdminTeam from '@/components/admin/AdminTeam';
 import AdminTestimonials from '@/components/admin/AdminTestimonials';
 import AdminPortfolio from '@/components/admin/AdminPortfolio';
 import AdminMessages from '@/components/admin/AdminMessages';
-import AdminLeads from '@/components/admin/AdminLeads';
 import AdminCRM from '@/components/admin/AdminCRM';
 import AdminFAQs from '@/components/admin/AdminFAQs';
 import AdminSettings from '@/components/admin/AdminSettings';
@@ -40,8 +39,6 @@ function AdminRouter() {
       return <AdminCRM />;
     case 'messages':
       return <AdminMessages />;
-    case 'leads':
-      return <AdminLeads />;
     case 'faqs':
       return <AdminFAQs />;
     case 'settings':
