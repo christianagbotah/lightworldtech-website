@@ -10,10 +10,19 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const post = await db.blogPost.findUnique({
+    // Admin/editor calls use the database id. Public article routes use the slug.
+    // Only published posts may be resolved by slug.
+    let post = await db.blogPost.findUnique({
       where: { id },
       include: { category: true },
     });
+
+    if (!post) {
+      post = await db.blogPost.findFirst({
+        where: { slug: id, published: true },
+        include: { category: true },
+      });
+    }
 
     if (!post) {
       return NextResponse.json(
