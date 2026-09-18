@@ -4,18 +4,22 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
+  ArrowUpRight,
   BrainCircuit,
   CheckCircle2,
   Code2,
   Compass,
   GraduationCap,
+  Newspaper,
   Layers3,
   MapPin,
   Network,
   ShieldCheck,
   Sparkles,
+  Trophy,
   Users,
 } from 'lucide-react';
+import { companyProfile } from '@/lib/company-profile';
 
 const principles = [
   {
@@ -179,6 +183,99 @@ export default function AboutPage() {
                     <p className="mt-2 text-sm leading-6 text-white/38">{text}</p>
                   </div>
                 </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-padding border-y border-slate-200/70 bg-white/70 dark:border-white/[0.06] dark:bg-white/[0.015]">
+        <div className="container-main">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Leadership</p>
+              <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Accountability has names.</h2>
+            </div>
+            <Link href="/team" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+              Meet the leadership team <ArrowRight className="size-4" />
+            </Link>
+          </div>
+
+          <div className="mt-9 grid gap-4 lg:grid-cols-2">
+            {companyProfile.leadership.map((person, index) => (
+              <motion.article
+                key={person.name}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.07 }}
+                className="relative overflow-hidden rounded-[30px] border border-slate-200/70 bg-white p-6 dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-7"
+              >
+                <div className="absolute -right-16 -top-16 size-48 rounded-full bg-emerald-400/10 blur-3xl" />
+                <div className="relative flex items-start gap-5">
+                  <div className="flex size-16 shrink-0 items-center justify-center rounded-[22px] border border-emerald-500/15 bg-gradient-to-br from-emerald-500/15 to-amber-400/10 text-lg font-semibold text-emerald-700 dark:text-emerald-300">
+                    {person.initials}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">{person.role}</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">{person.name}</h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-white/36">{person.description}</p>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section-padding">
+        <div className="container-main">
+          <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
+                <Trophy className="size-3.5" />
+                Recognition & coverage
+              </div>
+              <h2 className="mt-5 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Public signals, linked to their sources.</h2>
+              <p className="mt-4 max-w-md text-sm leading-7 text-slate-500 dark:text-white/38">
+                We only feature recognition and coverage we can point back to publicly. Award programme listings below name Lightworld Technologies Limited among their winners.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {companyProfile.recognition.map((item) => (
+                <a
+                  key={item.year + item.title}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group rounded-[26px] border border-slate-200/70 bg-white p-5 transition hover:-translate-y-0.5 hover:border-amber-300/60 dark:border-white/[0.07] dark:bg-white/[0.025]"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="font-mono text-xs text-amber-600 dark:text-amber-300">{item.year}</span>
+                    <ArrowUpRight className="size-4 text-slate-300 transition group-hover:text-amber-500 dark:text-white/20" />
+                  </div>
+                  <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-white/25">{item.publisher}</p>
+                  <h3 className="mt-2 text-lg font-semibold">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/34">{item.description}</p>
+                </a>
+              ))}
+
+              {companyProfile.coverage.map((item) => (
+                <a
+                  key={item.title}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group rounded-[26px] border border-emerald-500/15 bg-emerald-500/[0.07] p-5 transition hover:-translate-y-0.5"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <Newspaper className="size-5 text-emerald-600 dark:text-emerald-300" />
+                    <ArrowUpRight className="size-4 text-emerald-600/40 transition group-hover:text-emerald-600 dark:text-emerald-300/40" />
+                  </div>
+                  <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700/70 dark:text-emerald-300/60">{item.publisher} coverage</p>
+                  <h3 className="mt-2 text-lg font-semibold leading-snug">{item.title}</h3>
+                </a>
               ))}
             </div>
           </div>
