@@ -189,7 +189,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="section-padding border-y border-slate-200/70 bg-white/70 dark:border-white/[0.06] dark:bg-white/[0.015]">
+      <section id="leadership" className="section-padding scroll-mt-28 border-y border-slate-200/70 bg-white/70 dark:border-white/[0.06] dark:bg-white/[0.015]">
         <div className="container-main">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
@@ -228,7 +228,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="section-padding">
+      <section id="recognition" className="section-padding scroll-mt-28">
         <div className="container-main">
           <div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
             <div>
