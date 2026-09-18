@@ -74,7 +74,8 @@ export default function AdminMessages() {
     try {
       const res = await fetch('/api/contact');
       if (!res.ok) throw new Error('Failed to fetch');
-      setMessages(await res.json());
+      const payload = await res.json();
+      setMessages(Array.isArray(payload) ? payload : (payload.data || []));
     } catch {
       toast.error('Failed to load messages');
     } finally {
