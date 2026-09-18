@@ -80,10 +80,15 @@ export default function ProductsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
-      if (!response.ok) throw new Error('Unable to subscribe');
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to subscribe');
       setSubscribed(true);
       setEmail('');
-      toast.success('Product updates enabled.');
+      toast.success('Product updates enabled.', {
+        description: payload?.emailSent
+          ? 'A confirmation email is on its way.'
+          : 'Subscription saved. Confirmation email may be delayed.',
+      });
     } catch {
       toast.error('Could not subscribe right now.');
     } finally {
