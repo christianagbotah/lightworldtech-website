@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = 'https://www.lightworldtech.com';
 const DESCRIPTION =
-  'Lightworld Technologies Limited builds modern websites, mobile apps, enterprise software, AI-enabled workflows and cloud solutions, with IT training and technology consultancy from Ghana.';
+  'Lightworld Technologies Ltd builds modern websites, mobile apps, enterprise software, AI-enabled workflows and cloud solutions, with IT training and technology consultancy from Ghana.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -41,9 +41,9 @@ export const metadata: Metadata = {
     'cloud solutions Ghana',
     'SEO web development Ghana',
   ],
-  authors: [{ name: 'Lightworld Technologies Limited', url: SITE_URL }],
-  creator: 'Lightworld Technologies Limited',
-  publisher: 'Lightworld Technologies Limited',
+  authors: [{ name: 'Lightworld Technologies Ltd', url: SITE_URL }],
+  creator: 'Lightworld Technologies Ltd',
+  publisher: 'Lightworld Technologies Ltd',
   category: 'technology',
   alternates: {
     canonical: '/',
