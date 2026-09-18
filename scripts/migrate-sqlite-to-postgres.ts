@@ -120,19 +120,20 @@ function delegateFor(plan: TablePlan): any {
   return delegate;
 }
 
-async function assertDestinationEmpty() {
-  if (process.env.ALLOW_DESTINATION_DATA === '1') return;
-
-  const populated: string[] = [];
+async function assertDestinationSafeForSync() {
   for (const plan of plans) {
-    const count = await delegateFor(plan).count();
-    if (count > 0) populated.push(plan.table + '=' + count);
-  }
-  if (populated.length) {
-    throw new Error(
-      'Destination contains business data (' + populated.join(', ') +
-      '). Refusing initial copy. Set ALLOW_DESTINATION_DATA=1 only for an intentional idempotent resync.',
-    );
+    const src = sourceRows(plan);
+    const sourceIds = new Set(src.map((row) => String(row.id)));
+    const destinationIds = (await delegateFor(plan).findMany({ select: { id: true } }))
+      .map((row: { id: string }) => String(row.id));
+
+    const unknown = destinationIds.filter((id: string) => !sourceIds.has(id));
+    if (unknown.length) {
+      throw new Error(
+        'Destination ' + plan.table + ' contains IDs not present in the SQLite source: ' +
+        unknown.slice(0, 5).join(', ') + '. Refusing to overwrite unrelated data.',
+      );
+    }
   }
 }
 
@@ -189,7 +190,7 @@ async function verifyPlan(plan: TablePlan) {
 async function main() {
   console.log('SQLite source:', sourcePath);
   console.log('PostgreSQL destination confirmed.');
-  await assertDestinationEmpty();
+  await assertDestinationSafeForSync();
 
   for (const plan of plans) {
     const rows = sourceRows(plan);
