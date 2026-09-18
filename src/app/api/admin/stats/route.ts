@@ -22,6 +22,9 @@ export async function GET(request: NextRequest) {
       totalPortfolioProjects,
       totalSubscribers,
       totalCategories,
+      totalLeads,
+      openLeads,
+      highPriorityLeads,
     ] = await Promise.all([
       db.blogPost.count(),
       db.blogPost.count({ where: { published: true } }),
@@ -35,6 +38,9 @@ export async function GET(request: NextRequest) {
       db.portfolioProject.count(),
       db.newsletterSubscriber.count({ where: { active: true } }),
       db.blogCategory.count(),
+      db.lead.count(),
+      db.lead.count({ where: { status: { notIn: ['won', 'lost'] } } }),
+      db.lead.count({ where: { priority: 'high', status: { notIn: ['won', 'lost'] } } }),
     ]);
 
     return NextResponse.json({
@@ -70,6 +76,11 @@ export async function GET(request: NextRequest) {
         },
         categories: {
           total: totalCategories,
+        },
+        leads: {
+          total: totalLeads,
+          open: openLeads,
+          highPriority: highPriorityLeads,
         },
       },
     });
