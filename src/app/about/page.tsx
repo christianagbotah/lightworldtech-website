@@ -4,7 +4,7 @@ import AboutPage from '@/components/pages/AboutPage';
 
 export const metadata: Metadata = {
   title: 'About',
-  description: 'Learn about Lightworld Technologies Limited, a Ghanaian technology company building useful digital products, enterprise software and modern IT solutions.',
+  description: 'Learn about Lightworld Technologies Ltd, a Ghanaian technology company building useful digital products, enterprise software and modern IT solutions.',
   alternates: { canonical: '/about' },
   openGraph: {
     title: 'About Lightworld Technologies',
