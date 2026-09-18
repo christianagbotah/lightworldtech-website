@@ -18,6 +18,24 @@ jobs:
     name: Production build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      DATABASE_URL: postgresql://lightworld_ci:lightworld_ci@127.0.0.1:5432/lightworld_ci?schema=public
+      ADMIN_SESSION_SECRET: "ci-only-admin-session-secret-at-least-32-bytes"
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: lightworld_ci
+          POSTGRES_USER: lightworld_ci
+          POSTGRES_PASSWORD: lightworld_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lightworld_ci -d lightworld_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Check out repository
@@ -34,13 +52,17 @@ jobs:
       - name: Generate Prisma client
         run: bunx prisma generate
 
+      - name: Apply PostgreSQL migrations
+        run: bun run db:migrate:deploy
+
+      - name: Verify PostgreSQL migration status
+        run: bun run db:migrate:status
+
       - name: Type-check application
         run: bunx tsc --noEmit
 
       - name: Test security and deterministic intelligence
         run: bun test src/lib/admin-auth.test.ts src/lib/assistant-intents.test.ts src/lib/lead-intelligence.test.ts
-        env:
-          ADMIN_SESSION_SECRET: "ci-only-admin-session-secret-at-least-32-bytes"
 
       - name: Build production application
         run: bun run build
