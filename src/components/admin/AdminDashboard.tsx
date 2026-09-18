@@ -28,6 +28,10 @@ interface Stats {
   unreadMessages: number;
   activePortfolio: number;
   activeTestimonials: number;
+  crmOpen: number;
+  crmHighPriority: number;
+  crmOverdue: number;
+  crmWon: number;
 }
 
 interface BlogPost {
@@ -123,6 +127,10 @@ export default function AdminDashboard() {
           unreadMessages: rawStats?.messages?.unread || 0,
           activePortfolio: rawStats?.portfolio?.total || 0,
           activeTestimonials: rawStats?.testimonials?.total || 0,
+          crmOpen: rawStats?.crm?.open || 0,
+          crmHighPriority: rawStats?.crm?.highPriority || 0,
+          crmOverdue: rawStats?.crm?.overdueFollowUps || 0,
+          crmWon: rawStats?.crm?.won || 0,
         });
         const posts = Array.isArray(postsData) ? postsData : (postsData.data || []);
         const messages = Array.isArray(messagesData) ? messagesData : (messagesData.data || []);
@@ -247,6 +255,43 @@ export default function AdminDashboard() {
             </motion.div>
           );
         })}
+        </div>
+      </div>
+
+      {/* CRM pipeline snapshot */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">CRM pipeline</p>
+          <button
+            type="button"
+            onClick={() => navigate('admin-crm')}
+            className="text-[11px] font-semibold text-amber-600 transition hover:text-amber-700"
+          >
+            Open pipeline
+          </button>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'Open Leads', value: stats?.crmOpen || 0, icon: GitBranch, tone: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30' },
+            { label: 'High Priority', value: stats?.crmHighPriority || 0, icon: ArrowUpRight, tone: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30' },
+            { label: 'Overdue Follow-ups', value: stats?.crmOverdue || 0, icon: Clock, tone: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30' },
+            { label: 'Won', value: stats?.crmWon || 0, icon: CheckCircle2, tone: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30' },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Card key={item.label} className="border-border/50">
+                <CardContent className="flex items-center justify-between p-4">
+                  <div>
+                    <p className="text-xl font-bold text-foreground">{item.value}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{item.label}</p>
+                  </div>
+                  <div className={`rounded-xl p-2.5 ${item.tone}`}>
+                    <Icon className="size-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
