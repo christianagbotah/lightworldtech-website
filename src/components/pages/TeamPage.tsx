@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Building2, ShieldCheck, Sparkles, Users, Workflow } from 'lucide-react';
 import { companyProfile } from '@/lib/company-profile';
+import { contentText, type SiteSettings } from '@/lib/site-content';
 
 const leadershipPrinciples = [
   {
@@ -23,7 +24,38 @@ const leadershipPrinciples = [
   },
 ];
 
-export default function TeamPage() {
+type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  image: string;
+  email: string;
+  linkedin: string;
+  twitter: string;
+};
+
+export default function TeamPage({
+  settings = {},
+  team = [],
+}: {
+  settings?: SiteSettings;
+  team?: TeamMember[];
+}) {
+  const leadership = team.length
+    ? team.map((person) => ({
+        name: person.name,
+        role: person.role,
+        description: person.bio,
+        initials: person.name
+          .split(/\s+/)
+          .map((part) => part[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase(),
+      }))
+    : companyProfile.leadership;
+
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
       <section className="lw-hero-grid relative border-b border-slate-200/70 dark:border-white/[0.06]">
@@ -32,14 +64,14 @@ export default function TeamPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                 <Users className="size-3.5" />
-                Leadership
+                {contentText(settings, 'team_hero_eyebrow', 'Leadership')}
               </div>
               <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-                People accountable for where Lightworld is going.
+                {contentText(settings, 'team_hero_title', 'People accountable for where Lightworld is going.')}
               </h1>
             </div>
             <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-              Lightworld combines company leadership with a hands-on understanding of technology, operations and delivery. These are the confirmed executive leaders of Lightworld Technologies Ltd.
+              {contentText(settings, 'team_hero_description', 'Lightworld combines company leadership with a hands-on understanding of technology, operations and delivery. These are the confirmed executive leaders of Lightworld Technologies Ltd.')}
             </p>
           </motion.div>
         </div>
@@ -48,7 +80,7 @@ export default function TeamPage() {
       <section className="section-padding">
         <div className="container-main">
           <div className="grid gap-4 lg:grid-cols-2">
-            {companyProfile.leadership.map((person, index) => (
+            {leadership.map((person, index) => (
               <motion.article
                 key={person.name}
                 initial={{ opacity: 0, y: 18 }}
@@ -78,8 +110,8 @@ export default function TeamPage() {
       <section className="section-padding border-y border-slate-200/70 bg-slate-950 text-white dark:border-white/[0.06] dark:bg-[#081119]">
         <div className="container-main">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">Leadership model</p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Strategy stays close to delivery.</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">{contentText(settings, 'team_model_eyebrow', 'Leadership model')}</p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">{contentText(settings, 'team_model_title', 'Strategy stays close to delivery.')}</h2>
           </div>
           <div className="mt-10 grid gap-3 md:grid-cols-3">
             {leadershipPrinciples.map((item) => (
