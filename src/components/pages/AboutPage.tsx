@@ -20,6 +20,7 @@ import {
   Users,
 } from 'lucide-react';
 import { companyProfile } from '@/lib/company-profile';
+import { contentJson, contentText, defaultCoverage, defaultRecognition, type SiteSettings } from '@/lib/site-content';
 
 const principles = [
   {
@@ -60,7 +61,52 @@ const operating = [
   ['Global standards', 'We design for accessibility, security, modern web performance, maintainability and the expectations of users anywhere in the world.'],
 ];
 
-export default function AboutPage() {
+type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  image: string;
+  email: string;
+  linkedin: string;
+  twitter: string;
+};
+
+export default function AboutPage({
+  settings = {},
+  team = [],
+}: {
+  settings?: SiteSettings;
+  team?: TeamMember[];
+}) {
+  const cmsPrinciples = contentJson<Array<{ title: string; text: string }>>(
+    settings,
+    'about_principles',
+    principles.map(({ title, text }) => ({ title, text })),
+  ).map((item, index) => ({ ...item, icon: principles[index]?.icon || Compass }));
+
+  const leadership = team.length
+    ? team.map((person) => ({
+        name: person.name,
+        role: person.role,
+        description: person.bio,
+        initials: person.name
+          .split(/\s+/)
+          .map((part) => part[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase(),
+      }))
+    : companyProfile.leadership;
+
+  const recognition = contentJson(settings, 'about_recognition', defaultRecognition);
+  const coverage = contentJson(settings, 'about_coverage', defaultCoverage);
+  const povParagraphs = contentJson<string[]>(settings, 'about_pov_paragraphs', [
+    'Too many technology projects start with a tool and then search for a problem. We work the other way around: understand the people, the workflow, the operational constraints and the value the business needs to create.',
+    'Sometimes the answer is a focused website. Sometimes it is a mobile experience, an enterprise platform, an integration layer, an AI-assisted workflow or a training programme. The goal is not to make the solution look complicated. The goal is to make the underlying complexity manageable.',
+    'That is why our work spans strategy, experience design, engineering, infrastructure and enablement. We want clients to have one accountable technology partner that can stay useful as the problem evolves.',
+  ]);
+
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
       <section className="lw-hero-grid relative border-b border-slate-200/70 dark:border-white/[0.06]">
@@ -74,19 +120,19 @@ export default function AboutPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                 <Sparkles className="size-3.5" />
-                About Lightworld
+                {contentText(settings, 'about_hero_eyebrow', 'About Lightworld')}
               </div>
               <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-                We build technology as infrastructure for growth.
+                {contentText(settings, 'about_hero_title', 'We build technology as infrastructure for growth.')}
               </h1>
             </div>
             <div className="lg:pb-1">
               <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-                Lightworld Technologies Ltd is a Ghanaian technology company focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.
+                {contentText(settings, 'about_hero_description', 'Lightworld Technologies Ltd is a Ghanaian technology company focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.')}
               </p>
               <div className="mt-6 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-white/35">
                 <MapPin className="size-4 text-emerald-500" />
-                Accra, Ghana · built with a global outlook
+                {contentText(settings, 'about_location_line', 'Accra, Ghana · built with a global outlook')}
               </div>
             </div>
           </motion.div>
@@ -101,8 +147,8 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Our point of view</p>
-              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Digital transformation should feel practical.</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">{contentText(settings, 'about_pov_eyebrow', 'Our point of view')}</p>
+              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">{contentText(settings, 'about_pov_title', 'Digital transformation should feel practical.')}</h2>
             </motion.div>
 
             <motion.div
@@ -111,15 +157,7 @@ export default function AboutPage() {
               viewport={{ once: true }}
               className="space-y-5 text-base leading-8 text-slate-600 dark:text-white/45"
             >
-              <p>
-                Too many technology projects start with a tool and then search for a problem. We work the other way around: understand the people, the workflow, the operational constraints and the value the business needs to create.
-              </p>
-              <p>
-                Sometimes the answer is a focused website. Sometimes it is a mobile experience, an enterprise platform, an integration layer, an AI-assisted workflow or a training programme. The goal is not to make the solution look complicated. The goal is to make the underlying complexity manageable.
-              </p>
-              <p>
-                That is why our work spans strategy, experience design, engineering, infrastructure and enablement. We want clients to have one accountable technology partner that can stay useful as the problem evolves.
-              </p>
+              {povParagraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
             </motion.div>
           </div>
         </div>
@@ -128,7 +166,7 @@ export default function AboutPage() {
       <section className="section-padding border-y border-slate-200/70 bg-white/70 dark:border-white/[0.06] dark:bg-white/[0.015]">
         <div className="container-main">
           <div className="grid gap-3 md:grid-cols-2">
-            {principles.map((principle, index) => (
+            {cmsPrinciples.map((principle, index) => (
               <motion.div
                 key={principle.title}
                 initial={{ opacity: 0, y: 16 }}
@@ -202,7 +240,7 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-9 grid gap-4 lg:grid-cols-2">
-            {companyProfile.leadership.map((person, index) => (
+            {leadership.map((person, index) => (
               <motion.article
                 key={person.name}
                 initial={{ opacity: 0, y: 16 }}
@@ -243,7 +281,7 @@ export default function AboutPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              {companyProfile.recognition.map((item) => (
+              {recognition.map((item) => (
                 <a
                   key={item.year + item.title}
                   href={item.href}
@@ -261,7 +299,7 @@ export default function AboutPage() {
                 </a>
               ))}
 
-              {companyProfile.coverage.map((item) => (
+              {coverage.map((item) => (
                 <a
                   key={item.title}
                   href={item.href}
