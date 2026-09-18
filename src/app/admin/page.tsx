@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import AdminLogin from '@/components/admin/AdminLogin';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -42,7 +43,41 @@ function AdminRouter() {
 }
 
 export default function AdminPage() {
-  const { isAdminLoggedIn } = useAppStore();
+  const { isAdminLoggedIn, loginAdmin, logoutAdmin } = useAppStore();
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/admin/auth', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('No active admin session');
+        return response.json();
+      })
+      .then((payload) => {
+        if (!cancelled && payload?.success && payload?.data?.name) {
+          loginAdmin(String(payload.data.name));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) logoutAdmin();
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingSession(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loginAdmin, logoutAdmin]);
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-[#050b10] flex items-center justify-center text-white/45 text-sm">
+        Verifying secure admin session…
+      </div>
+    );
+  }
 
   if (!isAdminLoggedIn) {
     return <div className="min-h-screen"><AdminLogin /></div>;
