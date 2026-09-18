@@ -41,6 +41,7 @@ const companyMenu = [
   { icon: Users, title: 'Leadership', desc: 'Meet the people leading Lightworld', href: '/team' },
   { icon: Award, title: 'Recognition & press', desc: 'Awards and verified media coverage', href: '/about#recognition' },
   { icon: Briefcase, title: 'Careers', desc: 'Talent network and opportunities', href: '/careers' },
+  { icon: ShieldCheck, title: 'Trust & Privacy', desc: 'Privacy, security and responsible data use', href: '/trust' },
   { icon: MessageSquare, title: 'Contact', desc: 'Start a project or conversation', href: '/contact' },
 ];
 
@@ -75,7 +76,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
     return pathname === href || pathname.startsWith(href + '/');
   };
 
-  const companyActive = ['/about', '/team', '/careers', '/contact'].some((href) => active(href));
+  const companyActive = ['/about', '/team', '/careers', '/contact', '/trust', '/privacy', '/cookies', '/terms'].some((href) => active(href));
 
   return (
     <>
@@ -236,6 +237,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                         ['Leadership', '/team'],
                         ['Recognition & Press', '/about#recognition'],
                         ['Careers', '/careers'],
+                        ['Trust & Privacy', '/trust'],
                         ['Contact', '/contact'],
                       ].map(([label, href]) => (
                         <Link
