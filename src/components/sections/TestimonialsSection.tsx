@@ -504,7 +504,7 @@ export default function TestimonialsSection() {
                           <Quote className="size-10 text-amber-400/30 group-hover:text-amber-400/50 transition-colors duration-500" />
                         </div>
                         <p className="dark:text-slate-300 text-slate-600 text-sm leading-relaxed flex-1 mb-6 relative">
-                          &ldquo;{testimonial.content || (testimonial as Record<string, unknown>).quote}&rdquo;
+                          &ldquo;{testimonial.content || String((testimonial as Record<string, unknown>).quote || '')}&rdquo;
                         </p>
                         {/* Star rating with enhanced glow */}
                         <div className="flex gap-1 mb-4 relative">
