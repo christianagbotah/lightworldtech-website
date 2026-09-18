@@ -1,384 +1,235 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { Search, Clock, Calendar, FileX, Keyboard, ArrowRight, Sparkles } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAppStore } from '@/lib/store';
-import { useSEO } from '@/hooks/use-seo';
-
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import {
+  ArrowRight,
+  Calendar,
+  Clock,
+  FileText,
+  Search,
+  Sparkles,
+} from 'lucide-react';
 
 interface BlogPost {
   id: string;
   title: string;
-  excerpt: string;
-  category: string;
-  author: string;
-  date: string;
-  readTime: string;
   slug: string;
-  featured?: boolean;
-  image?: string;
+  excerpt: string;
+  author: string;
+  readTime: number;
+  featured: boolean;
+  coverImage: string;
+  createdAt: string;
+  category?: { name?: string | null; slug?: string | null } | null;
 }
-
-interface CategoryCount {
-  name: string;
-  count: number;
-}
-
-const defaultPosts: BlogPost[] = [
-  { id: '1', title: 'Why Every Business Needs a Professional Website in 2025', excerpt: 'In today\'s digital age, having a professional website is no longer a luxury but a necessity for businesses of all sizes.', category: 'Business', author: 'Lightworld Technologies', date: '2025-01-15', readTime: '5 min read', slug: 'why-every-business-needs-professional-website-2025', featured: true, image: '/images/blog/business-website.png' },
-  { id: '2', title: 'The Complete Guide to Mobile App Development', excerpt: 'Learn everything you need to know about developing a mobile app for your business, from planning to launch.', category: 'Mobile Apps', author: 'Kwame Asante', date: '2025-01-10', readTime: '7 min read', slug: 'complete-guide-mobile-app-development-business', featured: true, image: '/images/blog/mobile-dev.png' },
-  { id: '3', title: 'Top 10 Web Development Trends to Watch in 2025', excerpt: 'Stay ahead of the curve with these essential web development trends that are shaping the future of the internet.', category: 'Web Development', author: 'Abena Mensah', date: '2025-01-05', readTime: '6 min read', slug: 'top-10-web-development-trends-2025', featured: false, image: '/images/blog/web-trends.png' },
-  { id: '4', title: 'How School Management Software Transforms Education', excerpt: 'Discover how digital school management systems are revolutionizing education administration in Ghana and across Africa.', category: 'Technology', author: 'Lightworld Technologies', date: '2024-12-28', readTime: '8 min read', slug: 'school-management-software-transforms-education-ghana', featured: true, image: '/images/blog/school-software.png' },
-  { id: '5', title: 'UI/UX Design Principles Every Business Owner Should Know', excerpt: 'Understanding basic UI/UX design principles can help you make better decisions about your website and app projects.', category: 'Design', author: 'Abena Mensah', date: '2024-12-20', readTime: '5 min read', slug: 'ui-ux-design-principles-business-owners', featured: false, image: '/images/blog/uiux-design.png' },
-  { id: '6', title: 'SEO Strategies to Grow Your Business Online in Ghana', excerpt: 'Learn effective SEO strategies specifically tailored for businesses operating in Ghana and the West African market.', category: 'SEO & Marketing', author: 'Kofi Amponsah', date: '2024-12-15', readTime: '6 min read', slug: 'seo-strategies-grow-business-online-ghana', featured: false, image: '/images/blog/seo-marketing.png' },
-];
-
-const defaultCategories: CategoryCount[] = [
-  { name: 'all', count: 6 },
-  { name: 'Web Development', count: 1 },
-  { name: 'Mobile Apps', count: 1 },
-  { name: 'SEO & Marketing', count: 1 },
-  { name: 'Technology', count: 1 },
-  { name: 'Design', count: 1 },
-  { name: 'Business', count: 1 },
-];
-
-const categoryColors: Record<string, string> = {
-  'all': 'dark:bg-white/10 bg-slate-100 dark:text-white/70 text-slate-600',
-  'Business': 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  'Mobile Apps': 'bg-violet-500/15 text-violet-400 border-violet-500/20',
-  'Web Development': 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
-  'Technology': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  'Design': 'bg-pink-500/15 text-pink-400 border-pink-500/20',
-  'SEO & Marketing': 'bg-orange-500/15 text-orange-400 border-orange-500/20',
-};
-
-const categoryBadgeColors: Record<string, string> = {
-  'Business': 'bg-amber-500/15 text-amber-300',
-  'Mobile Apps': 'bg-violet-500/15 text-violet-300',
-  'Web Development': 'bg-cyan-500/15 text-cyan-300',
-  'Technology': 'bg-emerald-500/15 text-emerald-300',
-  'Design': 'bg-pink-500/15 text-pink-300',
-  'SEO & Marketing': 'bg-orange-500/15 text-orange-300',
-};
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.04 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
-};
 
 export default function BlogPage() {
-  const { navigate, blogSearch, setBlogSearch, blogCategory, setBlogCategory } = useAppStore();
-  useSEO({
-    title: 'Blog',
-    description: 'Insights, tips, and trends from the Lightworld Technologies team. Expert articles on web development, mobile apps, SEO, digital marketing, and technology in Ghana.',
-    keywords: ['tech blog Ghana', 'web development blog', 'mobile app trends', 'SEO tips', 'digital marketing Africa', 'IT insights'],
-  });
-
-  const [posts, setPosts] = useState<BlogPost[]>(defaultPosts);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [localSearch, setLocalSearch] = useState(blogSearch);
-  const [categories, setCategories] = useState<CategoryCount[]>(defaultCategories);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('All');
 
   useEffect(() => {
-    fetcher('/api/blog')
-      .then((data) => {
-        let mappedPosts: BlogPost[] = [];
-        if (data.success && data.data?.posts) {
-          mappedPosts = data.data.posts.map((p: Record<string, unknown>) => ({
-            ...p,
-            category: typeof p.category === 'object' ? (p.category as { name?: string }).name || 'Technology' : p.category,
-            readTime: typeof p.readTime === 'number' ? p.readTime + ' min read' : p.readTime,
-            date: p.date || p.createdAt,
-            image: String(p.image || defaultPosts.find(d => d.slug === p.slug)?.image || ''),
-          }));
-        } else if (Array.isArray(data) && data.length > 0) {
-          mappedPosts = data.map((p: Record<string, unknown>) => ({
-            id: String(p.id || ''),
-            title: String(p.title || ''),
-            excerpt: String(p.excerpt || ''),
-            category: typeof p.category === 'object' ? (p.category as { name?: string }).name || 'Technology' : String(p.category || 'Technology'),
-            author: String(p.author || ''),
-            date: String(p.date || p.createdAt || ''),
-            readTime: typeof p.readTime === 'number' ? p.readTime + ' min read' : String(p.readTime || ''),
-            slug: String(p.slug || ''),
-            featured: p.featured === true,
-            image: String(p.image || defaultPosts.find(d => d.slug === p.slug)?.image || ''),
-          }));
-        }
-        if (mappedPosts.length > 0) setPosts(mappedPosts);
-
-        const counts: Record<string, number> = {};
-        for (const post of (mappedPosts.length > 0 ? mappedPosts : defaultPosts)) {
-          counts[post.category] = (counts[post.category] || 0) + 1;
-        }
-        const cats: CategoryCount[] = [{ name: 'all', count: mappedPosts.length > 0 ? mappedPosts.length : 6 }];
-        for (const [name, count] of Object.entries(counts)) {
-          cats.push({ name, count });
-        }
-        setCategories(cats);
+    fetch('/api/blog?published=true&limit=50')
+      .then((response) => {
+        if (!response.ok) throw new Error('Unable to load insights');
+        return response.json();
       })
-      .catch(() => {})
+      .then((payload) => {
+        const items = Array.isArray(payload?.data) ? payload.data : [];
+        setPosts(items);
+      })
+      .catch(() => setPosts([]))
       .finally(() => setLoading(false));
   }, []);
 
-  // Keyboard shortcut: Ctrl/Cmd + K to focus search
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  const categories = useMemo(
+    () => ['All', ...Array.from(new Set(posts.map((post) => post.category?.name || 'Technology')))],
+    [posts],
+  );
 
-  // Debounced search
-  const handleSearchChange = useCallback((value: string) => {
-    setLocalSearch(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setBlogSearch(value);
-    }, 300);
-  }, [setBlogSearch]);
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return posts.filter((post) => {
+      const postCategory = post.category?.name || 'Technology';
+      const categoryMatch = category === 'All' || postCategory === category;
+      const searchMatch =
+        !query ||
+        post.title.toLowerCase().includes(query) ||
+        post.excerpt.toLowerCase().includes(query) ||
+        post.author.toLowerCase().includes(query);
+      return categoryMatch && searchMatch;
+    });
+  }, [posts, category, search]);
 
-  // Sync local search with store on category change
-  useEffect(() => {
-    setLocalSearch(blogSearch);
-  }, [blogSearch]);
-
-  const filteredPosts = posts.filter((post) => {
-    const matchesCategory = blogCategory === 'all' || post.category === blogCategory;
-    const matchesSearch = !blogSearch ||
-      post.title.toLowerCase().includes(blogSearch.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(blogSearch.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  const handlePostClick = (slug: string) => {
-    navigate('blog-detail', slug);
-  };
+  const featured = filtered.find((post) => post.featured) || filtered[0];
+  const remaining = featured ? filtered.filter((post) => post.id !== featured.id) : filtered;
 
   return (
-    <div className="h-[calc(100vh-5rem)] overflow-y-auto bg-background flex flex-col">
-      {/* Compact Title Bar */}
-      <div className="shrink-0 px-4 lg:px-8 pt-4 pb-3">
-        <div className="flex flex-col gap-3">
-          {/* Row 1: Badge + Title + Search */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2.5 shrink-0">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-semibold border border-emerald-500/20">
-                <Sparkles className="size-3" />
-                Blog
-              </span>
-              <h1 className="text-xl lg:text-2xl font-bold dark:text-white text-slate-900 tracking-tight">
-                Insights &amp; Articles
+    <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
+      <section className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
+        <div className="container-main py-16 sm:py-20 lg:py-24">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end"
+          >
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+                <Sparkles className="size-3.5" />
+                Insights
+              </div>
+              <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+                Useful thinking for people building with technology.
               </h1>
             </div>
+            <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
+              Notes from Lightworld on software engineering, digital operations, product design, AI, cloud, growth and the practical decisions behind modern technology.
+            </p>
+          </motion.div>
+        </div>
+      </section>
 
-            <div className="flex-1" />
-
-            {/* Search input - compact */}
-            <div className="relative w-36 sm:w-48 lg:w-64 shrink-0">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-500" />
-              <Input
-                ref={searchInputRef}
-                placeholder="Search articles..."
-                value={localSearch}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="h-8 pl-8 pr-12 text-sm dark:bg-white/[0.04] bg-slate-100 dark:border-white/[0.08] border-slate-200 rounded-lg dark:text-white text-slate-900 dark:placeholder:text-white/30 placeholder:text-slate-400 focus:border-emerald-500/40 focus:ring-emerald-500/20"
-              />
-              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-1 rounded border dark:border-white/[0.08] border-slate-200 dark:bg-white/[0.04] bg-slate-100 px-1.5 font-mono text-xs font-medium dark:text-white/25 text-slate-400">
-                <Keyboard className="size-2" />
-                {'⌘'}K
-              </kbd>
-            </div>
-          </div>
-
-          {/* Row 2: Category filter pills + result count */}
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-              {categories.map((cat) => (
+      <section className="section-padding">
+        <div className="container-main">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
+              {categories.map((item) => (
                 <button
-                  key={cat.name}
-                  onClick={() => setBlogCategory(cat.name)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all capitalize whitespace-nowrap border ${
-                    blogCategory === cat.name
-                      ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white border-transparent shadow-md shadow-emerald-500/20'
-                      : categoryColors[cat.name] || 'dark:bg-white/[0.04] bg-slate-100 dark:text-white/50 text-slate-500 dark:border-white/[0.06] border-slate-200 dark:hover:bg-white/[0.08] hover:bg-slate-200'
-                  }`}
+                  key={item}
+                  onClick={() => setCategory(item)}
+                  className={
+                    category === item
+                      ? 'shrink-0 rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white dark:bg-emerald-400 dark:text-slate-950'
+                      : 'shrink-0 rounded-full border border-slate-200/80 bg-white px-4 py-2 text-xs font-medium text-slate-500 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white/35'
+                  }
                 >
-                  {cat.name === 'all' ? 'All' : cat.name}
+                  {item}
                 </button>
               ))}
             </div>
-            <div className="flex-1" />
-            {!loading && (
-              <span className="text-xs dark:text-white/40 text-slate-500 shrink-0 hidden sm:block">
-                {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''}
-                {blogSearch && (
-                  <span className="text-emerald-400/60"> {'·'} &ldquo;{blogSearch}&rdquo;</span>
-                )}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Blog Grid */}
-      <div className="flex-1 min-h-0 px-4 lg:px-8 pb-4">
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 h-full">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl p-3 lg:p-4 flex flex-col gap-2.5"
-              >
-                <Skeleton className="h-3 w-16 rounded-full" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <div className="flex-1" />
-                <div className="flex items-center gap-2">
-                  <Skeleton className="size-5 rounded-full" />
-                  <Skeleton className="h-3 w-24" />
-                </div>
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="h-3 w-14" />
-                  <div className="flex-1" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-              </div>
-            ))}
+            <label className="relative block w-full lg:w-80">
+              <span className="sr-only">Search insights</span>
+              <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-white/25" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search insights"
+                className="h-11 w-full rounded-full border border-slate-200/80 bg-white pl-11 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-400 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white dark:placeholder:text-white/20"
+              />
+            </label>
           </div>
-        ) : filteredPosts.length > 0 ? (
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 h-full"
-            key={`${blogCategory}-${blogSearch}`}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredPosts.map((post) => (
-                <motion.div
-                  key={post.id}
-                  variants={itemVariants}
-                  layout
-                  className={`group cursor-pointer rounded-xl p-4 lg:p-5 flex flex-col transition-all duration-300 dark:hover:bg-white/[0.05] hover:bg-slate-100 ${
-                    post.featured
-                      ? 'dark:bg-white/[0.03] bg-white border border-emerald-500/20 shadow-[0_0_20px_-4px_rgba(16,185,129,0.15)] hover:shadow-[0_0_30px_-4px_rgba(16,185,129,0.25)]'
-                      : 'dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 dark:hover:border-white/[0.1] hover:border-slate-300'
-                  }`}
-                  onClick={() => handlePostClick(post.slug)}
+
+          {loading ? (
+            <div className="mt-8 grid gap-4 lg:grid-cols-2">
+              <div className="aspect-[16/10] animate-pulse rounded-[30px] bg-slate-200/70 dark:bg-white/[0.04]" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="min-h-60 animate-pulse rounded-[28px] bg-slate-200/70 dark:bg-white/[0.04]" />
+                ))}
+              </div>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="mt-8 rounded-[30px] border border-slate-200/70 bg-white p-10 text-center dark:border-white/[0.07] dark:bg-white/[0.025]">
+              <FileText className="mx-auto size-7 text-emerald-500" />
+              <h2 className="mt-4 text-xl font-semibold">No published insight matches this view.</h2>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500 dark:text-white/35">
+                Try another category or search term. New articles can be published through the Lightworld CMS.
+              </p>
+            </div>
+          ) : (
+            <>
+              {featured && (
+                <motion.article
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 grid overflow-hidden rounded-[32px] border border-slate-200/70 bg-white dark:border-white/[0.07] dark:bg-white/[0.025] lg:grid-cols-[1.06fr_.94fr]"
                 >
-                  {/* Featured image */}
-                  {post.image && (
-                    <div className="relative aspect-video overflow-hidden rounded-t-xl -mx-4 lg:-mx-5 -mt-4 lg:-mt-5 mb-3">
+                  <div className="relative min-h-[280px] bg-slate-100 dark:bg-white/[0.03] lg:min-h-[420px]">
+                    {featured.coverImage ? (
                       <Image
-                        src={post.image}
-                        alt={post.title}
+                        src={featured.coverImage}
+                        alt=""
                         fill
+                        sizes="(max-width: 1024px) 100vw, 55vw"
                         className="object-cover"
                         unoptimized
                       />
-                      <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/80 dark:from-slate-900/80 to-transparent" />
-                    </div>
-                  )}
-
-                  {/* Category badge */}
-                  <span className={`inline-flex self-start px-2.5 py-0.5 rounded-full text-xs font-semibold mb-2 ${
-                    categoryBadgeColors[post.category] || 'dark:bg-white/10 bg-slate-100 dark:text-white/60 text-slate-500'
-                  }`}>
-                    {post.category}
-                  </span>
-
-                  {/* Title - 2 lines max */}
-                  <h3 className="text-sm lg:text-base font-semibold dark:text-white text-slate-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-emerald-300 transition-colors">
-                    {post.title}
-                  </h3>
-
-                  {/* Excerpt - 2 lines */}
-                  <p className="text-xs lg:text-sm dark:text-white/60 text-slate-600 leading-relaxed line-clamp-2 mb-auto">
-                    {post.excerpt}
-                  </p>
-
-                  {/* Meta row: author, date, read time, read more */}
-                  <div className="flex items-center gap-2 mt-3 lg:mt-4 pt-2.5 lg:pt-3 border-t dark:border-white/[0.06] border-slate-200">
-                    {/* Author avatar */}
-                    <div className={`size-5 rounded-full flex items-center justify-center shrink-0 ${
-                      post.featured
-                        ? 'bg-gradient-to-br from-emerald-400 to-emerald-600'
-                        : 'dark:bg-white/10 bg-slate-100'
-                    }`}>
-                      <span className="dark:text-white text-slate-900 text-[8px] font-bold">
-                        {post.author?.charAt(0) || 'L'}
-                      </span>
-                    </div>
-                    <span className="text-xs lg:text-sm dark:text-white/70 text-slate-600 truncate max-w-[80px] lg:max-w-none">
-                      {post.author}
-                    </span>
-
-                    <div className="flex-1" />
-
-                    <span className="hidden sm:flex items-center gap-1 text-xs dark:text-white/40 text-slate-500">
-                      <Calendar className="size-2.5" />
-                      {new Date(post.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
-                    </span>
-
-                    <span className="hidden sm:flex items-center gap-1 text-xs dark:text-white/40 text-slate-500">
-                      <Clock className="size-2.5" />
-                      {post.readTime}
-                    </span>
-
-                    <span className="flex items-center gap-0.5 text-xs text-emerald-400/80 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                      Read <ArrowRight className="size-3 group-hover:translate-x-0.5 transition-transform" />
-                    </span>
+                    ) : (
+                      <div className="lw-dot-grid absolute inset-0 bg-slate-950 opacity-90" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent" />
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        ) : (
-          <motion.div
-            className="flex flex-col items-center justify-center h-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="size-12 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:border-white/[0.06] border-slate-200 flex items-center justify-center mb-3">
-              <FileX className="size-6 dark:text-white/25 text-slate-400" />
-            </div>
-            <h3 className="text-sm font-medium dark:text-white/50 text-slate-500 mb-1">No results found</h3>
-            <p className="text-xs dark:text-white/50 text-slate-500 mb-4 text-center max-w-xs">
-              We couldn&apos;t find any articles matching your search. Try different keywords or clear the filters.
-            </p>
-            <button
-              onClick={() => {
-                setBlogSearch('');
-                setLocalSearch('');
-                setBlogCategory('all');
-              }}
-              className="px-4 py-1.5 rounded-full text-xs font-medium border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
-            >
-              Clear Filters
-            </button>
-          </motion.div>
-        )}
-      </div>
+
+                  <div className="flex flex-col p-7 sm:p-9 lg:p-10">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
+                        {featured.category?.name || 'Technology'}
+                      </span>
+                      {featured.featured && (
+                        <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-white/20">Featured</span>
+                      )}
+                    </div>
+                    <h2 className="mt-6 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{featured.title}</h2>
+                    <p className="mt-4 text-sm leading-7 text-slate-500 dark:text-white/38 sm:text-base">{featured.excerpt}</p>
+                    <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-400 dark:text-white/25">
+                      <span>{featured.author}</span>
+                      <span className="flex items-center gap-1.5"><Calendar className="size-3.5" />{new Date(featured.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      <span className="flex items-center gap-1.5"><Clock className="size-3.5" />{featured.readTime} min read</span>
+                    </div>
+                    <div className="mt-auto pt-8">
+                      <Link href={'/blog/' + featured.slug} className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                        Read article <ArrowRight className="size-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </motion.article>
+              )}
+
+              {remaining.length > 0 && (
+                <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {remaining.map((post, index) => (
+                    <motion.article
+                      key={post.id}
+                      initial={{ opacity: 0, y: 14 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: Math.min(index * 0.04, 0.18) }}
+                    >
+                      <Link
+                        href={'/blog/' + post.slug}
+                        className="group flex h-full min-h-[330px] flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white dark:border-white/[0.07] dark:bg-white/[0.025]"
+                      >
+                        <div className="relative aspect-[16/8] overflow-hidden bg-slate-100 dark:bg-white/[0.03]">
+                          {post.coverImage ? (
+                            <Image src={post.coverImage} alt="" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition duration-700 group-hover:scale-[1.025]" unoptimized />
+                          ) : (
+                            <div className="lw-dot-grid absolute inset-0 bg-slate-950 opacity-90" />
+                          )}
+                        </div>
+                        <div className="flex flex-1 flex-col p-5">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-600 dark:text-emerald-400">{post.category?.name || 'Technology'}</p>
+                          <h2 className="mt-3 text-xl font-semibold leading-snug tracking-[-0.025em]">{post.title}</h2>
+                          <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-white/35">{post.excerpt}</p>
+                          <div className="mt-auto flex items-center justify-between gap-3 pt-6 text-[11px] text-slate-400 dark:text-white/22">
+                            <span>{post.author}</span>
+                            <span>{post.readTime} min</span>
+                          </div>
+                        </div>
+                      </Link>
+                    </motion.article>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
