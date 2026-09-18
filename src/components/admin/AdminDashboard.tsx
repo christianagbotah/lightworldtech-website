@@ -86,7 +86,7 @@ const statCards = [
 ];
 
 const quickActions = [
-  { label: 'Open CRM Pipeline', icon: GitBranch, action: 'admin-leads', color: 'text-amber-600 dark:text-amber-400' },
+  { label: 'Open CRM Pipeline', icon: GitBranch, action: 'admin-crm', color: 'text-amber-600 dark:text-amber-400' },
   { label: 'New Blog Post', icon: Pencil, action: 'admin-blog-editor', color: 'text-emerald-600 dark:text-amber-400' },
   { label: 'View Messages', icon: Inbox, action: 'admin-messages', color: 'text-rose-600 dark:text-rose-400' },
 ];
@@ -266,7 +266,7 @@ export default function AdminDashboard() {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">CRM pipeline</p>
-          <button onClick={() => navigate('admin-leads')} className="text-xs font-semibold text-amber-700 hover:underline dark:text-amber-300">
+          <button onClick={() => navigate('admin-crm')} className="text-xs font-semibold text-amber-700 hover:underline dark:text-amber-300">
             Open pipeline
           </button>
         </div>
