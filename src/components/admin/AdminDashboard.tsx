@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
   Plus, ExternalLink, Inbox, Activity, ArrowUpRight, ArrowDownRight,
-  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick
+  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick, Target
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ interface Stats {
   unreadMessages: number;
   activePortfolio: number;
   activeTestimonials: number;
+  openLeads: number;
 }
 
 interface BlogPost {
@@ -75,11 +76,13 @@ const statCards = [
   { key: 'unreadMessages' as const, label: 'Unread Messages', icon: Mail, color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', borderAccent: 'border-l-[3px] border-l-rose-500 dark:border-l-rose-400' },
   { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30', borderAccent: 'border-l-[3px] border-l-cyan-500 dark:border-l-cyan-400' },
   { key: 'activeTestimonials' as const, label: 'Testimonials', icon: MessageSquare, color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30', borderAccent: 'border-l-[3px] border-l-orange-500 dark:border-l-orange-400' },
+  { key: 'openLeads' as const, label: 'Open Leads', icon: Target, color: 'text-violet-600 bg-violet-100 dark:bg-violet-900/30', borderAccent: 'border-l-[3px] border-l-violet-500 dark:border-l-violet-400' },
 ];
 
 const quickActions = [
   { label: 'New Blog Post', icon: Pencil, action: 'admin-blog-editor', color: 'text-emerald-600 dark:text-amber-400' },
   { label: 'New Service', icon: Plus, action: 'admin-services', color: 'text-emerald-600 dark:text-amber-400' },
+  { label: 'View Leads', icon: Target, action: 'admin-leads', color: 'text-violet-600 dark:text-violet-400' },
   { label: 'View Messages', icon: Inbox, action: 'admin-messages', color: 'text-rose-600 dark:text-rose-400' },
 ];
 
@@ -123,6 +126,7 @@ export default function AdminDashboard() {
           unreadMessages: rawStats?.messages?.unread || 0,
           activePortfolio: rawStats?.portfolio?.total || 0,
           activeTestimonials: rawStats?.testimonials?.total || 0,
+          openLeads: rawStats?.leads?.open || 0,
         });
         const posts = Array.isArray(postsData) ? postsData : (postsData.data || []);
         const messages = Array.isArray(messagesData) ? messagesData : (messagesData.data || []);
