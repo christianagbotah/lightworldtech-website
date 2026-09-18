@@ -1,446 +1,177 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
-import { ChevronRight, Calendar, Clock, User, ArrowLeft, Share2, List, ChevronDown, Tag, BookOpen } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { useAppStore } from '@/lib/store';
-import { useSEO } from '@/hooks/use-seo';
-import ShareButtons from '@/components/ui/share-buttons';
+import { motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Copy,
+  FileText,
+  Share2,
+} from 'lucide-react';
+import { toast } from 'sonner';
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
-
-interface TOCItem {
+interface BlogPost {
   id: string;
-  text: string;
-  level: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  author: string;
+  readTime: number;
+  createdAt: string;
+  category?: { name?: string | null } | null;
 }
 
-const defaultPost = {
-  id: '1',
-  title: 'Why Every Business Needs a Professional Website in 2025',
-  content: `## Introduction
-
-In today's digital age, having a professional website is no longer a luxury but a necessity for businesses of all sizes. For businesses in Ghana and across Africa, establishing a strong online presence is key to growth.
-
-## Key Benefits of a Professional Website
-
-### 1. Credibility and Trust
-A professional website immediately builds trust with potential customers. It shows that you are a legitimate business committed to serving its clients.
-
-### 2. 24/7 Accessibility
-Unlike a physical store, your website works for you around the clock, allowing customers to learn about your products and services at any time.
-
-### 3. Marketing Hub
-Your website serves as the central hub for all your digital marketing efforts, from SEO to social media.
-
-### 4. Competitive Advantage
-In Ghana's growing digital economy, businesses with professional websites have a significant advantage over those without.
-
-## What Makes a Great Website
-
-- **Mobile-responsive design** - Over 70% of internet users in Ghana access the web via mobile devices
-- **Fast loading speed** - Users expect pages to load in under 3 seconds
-- **Clear calls-to-action** - Guide visitors toward conversion
-- **Search engine optimization** - Ensure your business can be found on Google
-- **Regular updates** - Keep your content fresh and relevant
-
-## Conclusion
-
-Investing in a professional website is one of the smartest business decisions you can make in 2025. Contact Lightworld Technologies today to get started.`,
-  excerpt: 'Discover why having a professional website is essential for businesses in Ghana and across Africa.',
-  category: 'Business',
-  author: 'Lightworld Technologies',
-  date: '2025-01-15',
-  readTime: '5 min read',
-  slug: 'why-every-business-needs-professional-website-2025',
-};
-
-const relatedPosts = [
-  { id: '2', title: 'The Complete Guide to Mobile App Development', category: 'Mobile Apps', date: '2025-01-10', slug: 'complete-guide-mobile-app-development-business' },
-  { id: '4', title: 'How School Management Software Transforms Education', category: 'Technology', date: '2024-12-28', slug: 'school-management-software-transforms-education-ghana' },
-  { id: '6', title: 'SEO Strategies to Grow Your Business Online in Ghana', category: 'SEO & Marketing', date: '2024-12-15', slug: 'seo-strategies-grow-business-online-ghana' },
-];
-
-function parseTOC(content: string): TOCItem[] {
-  const items: TOCItem[] = [];
-  const lines = content.split('\n');
-  for (const line of lines) {
-    const match = line.match(/^(#{2,3})\s+(.+)/);
-    if (match) {
-      const level = match[1].length;
-      const text = match[2].replace(/[*_`]/g, '').trim();
-      const id = text
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/\s+/g, '-');
-      items.push({ id, text, level });
-    }
-  }
-  return items;
-}
-
-function estimateReadTime(content: string): number {
-  // Average reading speed: ~200 words per minute
-  const words = content.split(/\s+/).length;
-  return Math.max(1, Math.ceil(words / 200));
-}
-
-export default function BlogDetailPage({ slug: routeSlug }: { slug?: string } = {}) {
-  const { navigate, blogPostSlug } = useAppStore();
-  const activeSlug = routeSlug || blogPostSlug;
-  useSEO({
-    title: 'Blog Article',
-    description: 'Read this article on the Lightworld Technologies blog - insights on technology, web development, and digital innovation in Ghana.',
-    keywords: ['blog post', 'technology article', 'web development', 'Ghana tech', 'digital innovation'],
-    ogType: 'article',
-  });
-  const [post, setPost] = useState(defaultPost);
+export default function BlogDetailPage({ slug }: { slug?: string } = {}) {
+  const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeHeading, setActiveHeading] = useState('');
-  const [tocOpen, setTocOpen] = useState(false);
-
-  // Reading progress state
-  const [readingProgress, setReadingProgress] = useState(0);
-  const [remainingTime, setRemainingTime] = useState(0);
-  const articleRef = useRef<HTMLElement>(null);
-
-  const tocItems = useMemo(() => parseTOC(post.content), [post.content]);
-  const totalReadTime = useMemo(() => estimateReadTime(post.content), [post.content]);
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
-    const slug = activeSlug || 'future-web-development';
-    fetcher(`/api/blog/${slug}`)
-      .then((data) => {
-        if (data && data.id) setPost(data);
+    if (!slug) {
+      setMissing(true);
+      setLoading(false);
+      return;
+    }
+
+    fetch('/api/blog/' + encodeURIComponent(slug))
+      .then((response) => {
+        if (!response.ok) throw new Error('Post unavailable');
+        return response.json();
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [activeSlug]);
-
-  // Scroll-based reading progress and remaining time
-  const handleScroll = useCallback(() => {
-    const article = articleRef.current;
-    if (!article) return;
-
-    const rect = article.getBoundingClientRect();
-    const articleTop = rect.top + window.scrollY;
-    const articleHeight = rect.height;
-    const scrollY = window.scrollY;
-    const viewportHeight = window.innerHeight;
-
-    // Calculate progress (0-100)
-    const scrolled = scrollY - articleTop + viewportHeight * 0.3;
-    const progress = Math.min(Math.max(scrolled / articleHeight, 0), 1);
-    setReadingProgress(Math.round(progress * 100));
-
-    // Calculate remaining time based on remaining content
-    const remainingProgress = Math.max(1 - progress, 0);
-    setRemainingTime(Math.ceil(remainingProgress * totalReadTime));
-  }, [totalReadTime]);
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
-
-  // IntersectionObserver for active heading tracking
-  useEffect(() => {
-    if (tocItems.length === 0) return;
-
-    const headingElements = tocItems
-      .map((item) => document.getElementById(item.id))
-      .filter((el): el is HTMLElement => el !== null);
-
-    if (headingElements.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((entry) => entry.isIntersecting);
-        if (visible.length > 0) {
-          const sorted = [...visible].sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-          setActiveHeading(sorted[0].target.id);
+      .then((payload) => {
+        if (payload?.success && payload?.data) {
+          setPost(payload.data);
+        } else {
+          setMissing(true);
         }
-      },
-      {
-        rootMargin: '-80px 0px -60% 0px',
-        threshold: 0.1,
+      })
+      .catch(() => setMissing(true))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  const publishedDate = useMemo(() => {
+    if (!post?.createdAt) return '';
+    return new Date(post.createdAt).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }, [post?.createdAt]);
+
+  const share = async () => {
+    if (typeof window === 'undefined' || !post) return;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: post.title,
+          text: post.excerpt,
+          url: window.location.href,
+        });
+        return;
       }
-    );
 
-    headingElements.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, [tocItems]);
-
-  const scrollToHeading = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 90;
-      window.scrollTo({ top, behavior: 'smooth' });
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success('Article link copied.');
+    } catch {
+      // User may cancel native sharing.
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-[70svh] bg-[#f7f9f8] dark:bg-[#050b10]">
+        <div className="container-main py-16">
+          <div className="h-5 w-28 animate-pulse rounded-full bg-slate-200 dark:bg-white/[0.05]" />
+          <div className="mt-8 h-20 max-w-4xl animate-pulse rounded-3xl bg-slate-200 dark:bg-white/[0.05]" />
+          <div className="mt-8 aspect-[16/7] animate-pulse rounded-[32px] bg-slate-200 dark:bg-white/[0.05]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (missing || !post) {
+    return (
+      <section className="container-main flex min-h-[65svh] items-center py-16">
+        <div className="max-w-xl">
+          <FileText className="size-8 text-emerald-500" />
+          <h1 className="mt-5 text-4xl font-semibold tracking-[-0.04em]">This insight is not available.</h1>
+          <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-white/38">
+            It may have been unpublished, moved or the link may be incorrect.
+          </p>
+          <Link href="/blog" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+            <ArrowLeft className="size-4" /> Back to insights
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative pt-32 pb-16 bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 from-white via-slate-100 to-white overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-10" />
-        <div className="container-main relative z-10">
-          <nav className="flex items-center gap-2 text-sm dark:text-slate-400 text-slate-500 mb-6">
-            <button onClick={() => navigate('home')} className="hover:text-amber-400 transition-colors">Home</button>
-            <ChevronRight className="size-3" />
-            <button onClick={() => navigate('blog')} className="hover:text-amber-400 transition-colors">Blog</button>
-            <ChevronRight className="size-3" />
-            <span className="text-amber-400 truncate max-w-[200px]">{post.title}</span>
-          </nav>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold dark:text-white text-slate-900 mb-5 leading-tight">{post.title}</h1>
-            <div className="flex flex-wrap items-center gap-2.5 mb-5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-emerald-500/20 text-xs font-medium">
-                <Tag className="size-3" />
-                {post.category}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full dark:bg-slate-700/50 bg-slate-100 dark:text-slate-300 text-slate-600 dark:border border-slate-600/30 border-slate-200 text-xs font-medium">
-                <Calendar className="size-3" />
-                {new Date(post.date).toLocaleDateString('en-GB', { month: 'long', day: 'numeric', year: 'numeric' })}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full dark:bg-slate-700/50 bg-slate-100 dark:text-slate-300 text-slate-600 dark:border border-slate-600/30 border-slate-200 text-xs font-medium">
-                <Clock className="size-3" />
-                {post.readTime}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm dark:text-slate-400 text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <User className="size-4" />
-                {post.author}
-              </span>
+    <article className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
+      <header className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
+        <div className="container-main py-12 sm:py-16 lg:py-20">
+          <Link href="/blog" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 transition hover:text-emerald-600 dark:text-white/30 dark:hover:text-emerald-300">
+            <ArrowLeft className="size-3.5" />
+            Insights
+          </Link>
+
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mt-8 max-w-5xl">
+            <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+              {post.category?.name || 'Technology'}
+            </span>
+            <h1 className="mt-5 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl lg:text-7xl">{post.title}</h1>
+            {post.excerpt && (
+              <p className="mt-6 max-w-3xl text-base leading-8 text-slate-600 dark:text-white/45 sm:text-lg">{post.excerpt}</p>
+            )}
+
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400 dark:text-white/25">
+              <span>{post.author}</span>
+              <span className="flex items-center gap-1.5"><Calendar className="size-3.5" />{publishedDate}</span>
+              <span className="flex items-center gap-1.5"><Clock className="size-3.5" />{post.readTime} min read</span>
+              <button onClick={share} className="inline-flex items-center gap-1.5 font-medium text-emerald-700 transition hover:text-emerald-600 dark:text-emerald-300">
+                <Share2 className="size-3.5" /> Share
+              </button>
             </div>
           </motion.div>
         </div>
-      </section>
+      </header>
 
-      {/* Reading Progress Bar - Fixed at top of content */}
-      <div className="sticky top-16 z-40 dark:bg-[#050810]/95 bg-background/95 backdrop-blur-sm border-b dark:border-white/[0.04] border-slate-200">
-        <div className="h-1 w-full dark:bg-white/[0.06] bg-slate-200">
-          <motion.div
-            className="h-full bg-gradient-to-r from-amber-500 to-amber-400"
-            initial={{ width: '0%' }}
-            style={{ width: `${readingProgress}%` }}
-            transition={{ duration: 0.15, ease: 'linear' }}
-          />
-        </div>
-        <div className="container-main flex items-center justify-between py-2 px-4">
-          <div className="flex items-center gap-3">
-            <BookOpen className="size-4 text-amber-400" />
-            <span className="text-xs font-medium dark:text-white/70 text-slate-600 tabular-nums">{readingProgress}% read</span>
+      {post.coverImage && (
+        <div className="container-main pt-8">
+          <div className="relative aspect-[16/7] overflow-hidden rounded-[30px] bg-slate-100 dark:bg-white/[0.03]">
+            <Image src={post.coverImage} alt="" fill sizes="(max-width: 1280px) 100vw, 1280px" className="object-cover" unoptimized priority />
           </div>
-          <div className="flex items-center gap-2">
-            {readingProgress < 100 ? (
-              <span className="text-xs dark:text-white/40 text-slate-500">
-                <Clock className="size-3 inline mr-1" />
-                {remainingTime} min remaining
-              </span>
-            ) : (
-              <span className="text-xs text-amber-400 font-medium">
-                ✓ Article complete
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile TOC toggle */}
-      {tocItems.length > 0 && (
-        <div className="lg:hidden sticky top-[88px] z-30 bg-background border-b dark:border-white/[0.04] border-slate-200 px-4">
-          <button
-            onClick={() => setTocOpen(!tocOpen)}
-            className="flex items-center justify-between w-full py-3 text-sm font-medium dark:text-white/60 text-slate-500"
-          >
-            <span className="flex items-center gap-2">
-              <List className="size-4 text-emerald-400" />
-              Table of Contents ({tocItems.length})
-            </span>
-            <ChevronDown className={`size-4 transition-transform duration-200 ${tocOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {tocOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="pb-3 max-h-48 overflow-y-auto"
-            >
-              {tocItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    scrollToHeading(item.id);
-                    setTocOpen(false);
-                  }}
-                  className={`block text-left w-full py-1.5 px-3 text-sm rounded-md transition-colors ${
-                    activeHeading === item.id
-                      ? 'bg-amber-500/10 text-amber-400 font-medium'
-                      : 'dark:text-white/60 text-slate-600 dark:hover:bg-white/[0.06] hover:bg-slate-100'
-                  } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
-                >
-                  {item.text}
-                </button>
-              ))}
-            </motion.div>
-          )}
         </div>
       )}
 
-      {/* Content */}
-      <section className="py-16 lg:py-24 bg-background">
-        <div className="container-main">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Article */}
-            <div className="lg:col-span-2" ref={articleRef}>
-              {loading ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <Skeleton key={i} className="h-4 w-full" />
-                  ))}
-                </div>
-              ) : (
-                <motion.article
-                  className="prose max-w-none prose-slate dark:prose-invert prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-700 dark:prose-p:text-white/80 prose-strong:text-slate-900 dark:prose-strong:text-white/90"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  <ReactMarkdown>{post.content}</ReactMarkdown>
-                </motion.article>
-              )}
-
-              {/* Share section */}
-              <Separator className="my-10" />
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <Button
-                  onClick={() => navigate('blog')}
-                  variant="outline"
-                  className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-                >
-                  <ArrowLeft className="size-4 mr-2" />
-                  Back to Blog
-                </Button>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-sm dark:text-white/40 text-slate-500">
-                    <Share2 className="size-4" />
-                    <span className="font-medium">Share this article</span>
-                  </div>
-                  <ShareButtons
-                    url={typeof window !== 'undefined' ? window.location.href : ''}
-                    title={post.title}
-                    description={post.excerpt}
-                  />
-                </div>
-              </div>
+      <div className="container-main py-10 sm:py-14 lg:py-16">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-16">
+          <div className="min-w-0">
+            <div className="lw-article prose prose-slate max-w-none dark:prose-invert prose-headings:tracking-[-0.025em] prose-p:leading-8 prose-a:text-emerald-600 dark:prose-a:text-emerald-300 prose-img:rounded-2xl">
+              <ReactMarkdown>{post.content}</ReactMarkdown>
             </div>
-
-            {/* Sidebar */}
-            <aside className="hidden lg:block lg:col-span-1">
-              <div className="sticky top-28 space-y-8">
-                {/* Table of Contents */}
-                {tocItems.length > 0 && (
-                  <Card className="dark:border-white/[0.06] border-slate-200 dark:bg-white/[0.04] bg-white">
-                    <CardContent className="p-5">
-                      <h3 className="font-semibold text-sm mb-3 dark:text-white text-slate-900 flex items-center gap-2">
-                        <List className="size-4 text-emerald-400" />
-                        Table of Contents
-                      </h3>
-                      <nav className="space-y-1">
-                        {tocItems.map((item) => (
-                          <button
-                            key={item.id}
-                            onClick={() => scrollToHeading(item.id)}
-                            className={`block text-left w-full py-1.5 text-sm rounded-md transition-colors ${
-                              activeHeading === item.id
-                                ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 font-medium'
-                                : 'dark:text-white/60 text-slate-600 dark:hover:bg-white/[0.06] hover:bg-slate-100'
-                            } ${item.level === 3 ? 'pl-6' : 'pl-3'}`}
-                          >
-                            {item.text}
-                          </button>
-                        ))}
-                      </nav>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Reading progress card */}
-                <Card className="border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <BookOpen className="size-4 text-emerald-400" />
-                      <h3 className="font-semibold text-sm dark:text-white text-slate-900">Reading Progress</h3>
-                    </div>
-                    {/* Progress bar */}
-                    <div className="w-full h-2 rounded-full dark:bg-white/[0.06] bg-slate-200 mb-2">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-300"
-                        style={{ width: `${readingProgress}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs dark:text-white/40 text-slate-500">{readingProgress}%</span>
-                      <span className="text-xs dark:text-white/40 text-slate-500">
-                        {readingProgress < 100 ? `${remainingTime} min left` : 'Complete ✓'}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Author card */}
-                <Card className="dark:border-white/[0.06] border-slate-200 dark:bg-white/[0.04] bg-white">
-                  <CardContent className="p-6 text-center">
-                    <div className="size-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3 text-xl font-bold text-amber-300">
-                      {post.author.charAt(0)}
-                    </div>
-                    <h4 className="font-semibold dark:text-white text-slate-900">{post.author}</h4>
-                    <p className="text-xs dark:text-white/50 text-slate-500 mt-1">Contributing Writer</p>
-                  </CardContent>
-                </Card>
-
-                {/* Related Posts */}
-                <div>
-                  <h3 className="font-semibold text-lg mb-4 dark:text-white text-slate-900">Related Articles</h3>
-                  <div className="space-y-3">
-                    {relatedPosts.map((related) => (
-                      <Card
-                        key={related.id}
-                        className="dark:border-white/[0.06] border-slate-200 dark:bg-white/[0.04] bg-white hover:border-emerald-500/30 hover:shadow-sm transition-all cursor-pointer"
-                        onClick={() => navigate('blog-detail', related.slug)}
-                      >
-                        <CardContent className="p-4">
-                          <Badge variant="secondary" className="text-xs mb-2 dark:bg-white/[0.06] bg-slate-100 dark:text-white/40 text-slate-500">{related.category}</Badge>
-                          <h4 className="text-sm font-medium line-clamp-2 hover:text-emerald-400 transition-colors dark:text-white text-slate-900">
-                            {related.title}
-                          </h4>
-                          <p className="text-xs dark:text-white/50 text-slate-500 mt-1">
-                            {new Date(related.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </aside>
           </div>
+
+          <aside className="hidden lg:block">
+            <div className="sticky top-28 rounded-[24px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-white/20">Article</p>
+              <p className="mt-3 text-sm font-semibold">{post.author}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/30">{publishedDate}</p>
+              <button onClick={share} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700 dark:border-white/[0.08] dark:text-white/45">
+                <Copy className="size-3.5" /> Copy or share
+              </button>
+            </div>
+          </aside>
         </div>
-      </section>
-    </div>
+      </div>
+    </article>
   );
 }
