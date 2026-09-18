@@ -1,378 +1,280 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Send, Phone, Mail, MapPin, Clock, CheckCircle2, Loader2, Copy, Check, CalendarDays, MessageCircle, Facebook, Twitter, Linkedin, Instagram, ExternalLink, Upload, X, FileText, Image as ImageIcon, File, AlertCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { useAppStore } from '@/lib/store';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Send,
+  Sparkles,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { useSEO } from '@/hooks/use-seo';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const MAX_TOTAL_SIZE = 25 * 1024 * 1024;
-const MAX_FILES = 5;
-const ACCEPTED_TYPES = [
-  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-  'application/pdf', 'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'text/plain', 'application/zip',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+const services = [
+  'Website / digital experience',
+  'Mobile application',
+  'Enterprise software / automation',
+  'AI-enabled workflow',
+  'Cloud / DevOps / security',
+  'SEO / digital growth',
+  'Training / consultancy',
+  'Something else',
 ];
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function getFileIcon(type: string) {
-  if (type.startsWith('image/')) return ImageIcon;
-  if (type === 'application/pdf') return FileText;
-  return File;
-}
-
-function getFileColor(type: string): string {
-  if (type.startsWith('image/')) return 'bg-amber-100 dark:bg-amber-900/30 text-emerald-400';
-  if (type === 'application/pdf') return 'bg-red-100 dark:bg-red-900/30 text-red-400';
-  return 'dark:bg-white/[0.06] bg-slate-100 dark:text-white/60 text-slate-500';
-}
-
-interface FileAttachment {
-  id: string;
-  file: File;
-  preview?: string;
-}
-
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      toast.success('Copied!', { description: `${label} copied.` });
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Copy failed');
-    }
-  };
-  return (
-    <button onClick={handleCopy} className="p-1 rounded-md dark:text-white/40 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all shrink-0" aria-label={`Copy ${label}`}>
-      {copied ? <Check className="size-3 text-amber-500" /> : <Copy className="size-3" />}
-    </button>
-  );
-}
-
-function useOfficeStatus() {
-  const status = useMemo(() => {
-    const now = new Date();
-    const utcHours = now.getUTCHours();
-    const day = now.getUTCDay();
-    if (day === 0) return { open: false, label: 'Closed' };
-    if (day === 6) { if (utcHours >= 9 && utcHours < 13) return { open: true, label: 'Open' }; return { open: false, label: 'Closed' }; }
-    if (utcHours >= 8 && utcHours < 17) return { open: true, label: 'Open' };
-    return { open: false, label: 'Closed' };
-  }, []);
-  return status;
-}
-
 export default function ContactPage() {
-  const { navigate } = useAppStore();
-  useSEO({
-    title: 'Contact',
-    description: 'Get in touch with Lightworld Technologies for web development, mobile apps, SEO, and IT solutions in Accra, Ghana.',
-    keywords: ['contact Lightworld Technologies', 'IT company Accra', 'web development contact'],
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    service: services[0],
+    subject: '',
+    message: '',
   });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
-  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
-  const officeStatus = useOfficeStatus();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const officeOpen = useMemo(() => {
+    const now = new Date();
+    const day = now.getUTCDay();
+    const hour = now.getUTCHours();
+    return day >= 1 && day <= 5 && hour >= 8 && hour < 17;
+  }, []);
 
-  const totalSize = useMemo(() => attachments.reduce((sum, f) => sum + f.file.size, 0), [attachments]);
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setSending(true);
 
-  const addFiles = useCallback((newFiles: FileList | File[]) => {
-    const fileArray = Array.from(newFiles);
-    if (attachments.length + fileArray.length > MAX_FILES) { toast.error(`Max ${MAX_FILES} files`); return; }
-    const oversized = fileArray.filter(f => f.size > MAX_FILE_SIZE);
-    if (oversized.length > 0) toast.error('File too large (max 10MB)');
-    const validFiles = fileArray.filter(f => {
-      if (f.size > MAX_FILE_SIZE) return false;
-      if (totalSize + f.size > MAX_TOTAL_SIZE) return false;
-      if (!ACCEPTED_TYPES.includes(f.type) && !f.name.match(/\.(jpg|jpeg|png|gif|webp|svg|pdf|doc|docx|txt|zip|xls|xlsx)$/i)) return false;
-      return true;
-    });
-    if (validFiles.length === 0 && fileArray.length > 0) toast.error('Invalid file type');
-    const newAttachments: FileAttachment[] = validFiles.map(file => {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-      let preview: string | undefined;
-      if (file.type.startsWith('image/')) preview = URL.createObjectURL(file);
-      return { id, file, preview };
-    });
-    setAttachments([...attachments, ...newAttachments]);
-  }, [attachments, setAttachments, totalSize]);
-
-  const removeFile = useCallback((id: string) => {
-    const file = attachments.find(f => f.id === id);
-    if (file?.preview) URL.revokeObjectURL(file.preview);
-    setAttachments(attachments.filter(f => f.id !== id));
-  }, [attachments, setAttachments]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
     try {
-      const res = await fetch('/api/contact', {
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          attachments: attachments.map(a => ({ name: a.file.name, size: a.file.size, type: a.file.type })),
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          subject: form.subject.trim() || form.service,
+          message: '[' + form.service + ']\n\n' + form.message.trim(),
         }),
       });
-      if (res.ok) {
-        toast.success('Message sent!', { description: "We'll respond within 24 hours." });
-        setSubmitted(true);
-        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-        attachments.forEach(a => { if (a.preview) URL.revokeObjectURL(a.preview); });
-        setAttachments([]);
-      } else {
-        toast.error('Failed to send');
-        setError('Something went wrong.');
-      }
+
+      if (!response.ok) throw new Error('Unable to send message');
+      setSent(true);
+      toast.success('Message received.');
     } catch {
-      toast.error('Network error');
-      setError('Check your connection.');
-    } finally { setSubmitting(false); }
+      toast.error('Could not send your message right now.', {
+        description: 'You can also reach Lightworld by email, phone or WhatsApp.',
+      });
+    } finally {
+      setSending(false);
+    }
   };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const contactItems = [
-    { icon: Phone, label: 'Phone', value: '+233 (024) 361 8186', copy: '+233 (024) 361 8186' },
-    { icon: Mail, label: 'Email', value: 'mail@lightworldtech.com', copy: 'mail@lightworldtech.com' },
-    { icon: MapPin, label: 'Location', value: 'Accra, Ghana', copy: '' },
-    { icon: Clock, label: 'Hours', value: 'Mon-Fri: 8AM-5PM', copy: '' },
-  ];
 
   return (
-    <div className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
-      {/* ═══ Compact Title Bar ═══ */}
-      <div className="shrink-0 px-4 lg:px-8 pt-6 pb-5 sm:pt-8">
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-            <div className="size-1.5 rounded-full bg-emerald-400" />
-            <span className="text-xs font-semibold text-emerald-400 uppercase tracking-[0.2em]">Contact</span>
-          </div>
-          <h1 className="text-xl lg:text-2xl font-bold dark:text-white text-slate-900">
-            Get in <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Touch</span>
-          </h1>
-          <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06]">
-            <span className={`relative flex size-2 ${officeStatus.open ? '' : 'opacity-50'}`}>
-              {officeStatus.open && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
-              <span className={`relative inline-flex rounded-full size-2 ${officeStatus.open ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-            </span>
-            <span className="text-xs dark:text-white/50 text-slate-500 font-medium">{officeStatus.label}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══ Main Content ═══ */}
-      <div className="px-4 lg:px-8 pb-16 lg:pb-8 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
-        {/* ── Left: Contact Form ── */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4 }}
-          className="lg:col-span-7 flex flex-col"
-        >
-          <div className="rounded-[28px] dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] backdrop-blur-sm p-4 sm:p-6 lg:p-7 flex flex-col">
-            {submitted ? (
-              <div className="flex-1 flex items-center justify-center">
-                <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-                  <motion.div className="size-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}>
-                    <CheckCircle2 className="size-8 text-emerald-400" />
-                  </motion.div>
-                  <h3 className="text-lg font-bold dark:text-white text-slate-900 mb-1">Message Sent!</h3>
-                  <p className="text-xs dark:text-white/40 text-slate-500 mb-4">We&apos;ll respond within 24 hours.</p>
-                  <div className="flex gap-2 justify-center">
-                    <Button onClick={() => setSubmitted(false)} variant="outline" size="sm" className="text-xs border-slate-300 dark:border-white/[0.1]">Send Another</Button>
-                    <Button onClick={() => navigate('home')} size="sm" className="text-xs bg-emerald-500">Back Home</Button>
-                  </div>
-                </motion.div>
+    <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
+      <section className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
+        <div className="container-main py-16 sm:py-20 lg:py-24">
+          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+                <Sparkles className="size-3.5" />
+                Start a conversation
               </div>
-            ) : (
-              <>
-                <h2 className="text-sm lg:text-base font-bold dark:text-white text-slate-900 mb-3 lg:mb-4">Send a Message</h2>
+              <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+                Tell us what you want to build, improve or automate.
+              </h1>
+            </div>
+            <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
+              You do not need a finished technical specification. Share the business problem, the people involved and what a good outcome would look like. We can help shape the next step.
+            </p>
+          </motion.div>
+        </div>
+      </section>
 
-                {submitting && (
-                  <motion.div className="mb-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                    <Loader2 className="size-3 animate-spin" /> Sending...
-                  </motion.div>
-                )}
-                {error && (
-                  <motion.div className="mb-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 flex items-center gap-1.5" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                    <AlertCircle className="size-3" /> {error}
-                  </motion.div>
-                )}
-
-                <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col gap-2">
-                  <div className="grid grid-cols-2 gap-2">
+      <section className="section-padding">
+        <div className="container-main">
+          <div className="grid gap-5 lg:grid-cols-[1.12fr_.88fr]">
+            <div className="rounded-[32px] border border-slate-200/70 bg-white p-6 shadow-sm dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-8">
+              {sent ? (
+                <div className="flex min-h-[480px] flex-col items-start justify-center">
+                  <span className="flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+                    <CheckCircle2 className="size-7" />
+                  </span>
+                  <h2 className="mt-6 text-3xl font-semibold tracking-[-0.04em]">Thanks. Your message is in.</h2>
+                  <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/38">
+                    The Lightworld team can review the brief and respond using the contact details you provided.
+                  </p>
+                  <div className="mt-7 flex flex-wrap gap-3">
+                    <button
+                      onClick={() => {
+                        setSent(false);
+                        setForm({ name: '', email: '', phone: '', service: services[0], subject: '', message: '' });
+                      }}
+                      className="inline-flex h-11 items-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white dark:bg-emerald-400 dark:text-slate-950"
+                    >
+                      Send another message
+                    </button>
+                    <Link href="/" className="inline-flex h-11 items-center rounded-full border border-slate-200 px-5 text-sm font-semibold dark:border-white/[0.08]">
+                      Back home
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-4">
                     <div>
-                      <Label htmlFor="name" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Full Name *</Label>
-                      <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required disabled={submitting} className="h-9 text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 focus-visible:border-emerald-500/50" />
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Project brief</p>
+                      <h2 className="mt-2 text-2xl font-semibold tracking-tight">A little context is enough to start.</h2>
                     </div>
-                    <div>
-                      <Label htmlFor="email" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Email *</Label>
-                      <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required disabled={submitting} className="h-9 text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 focus-visible:border-emerald-500/50" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label htmlFor="phone" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Phone</Label>
-                      <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+233 XX XXX XXXX" disabled={submitting} className="h-9 text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 focus-visible:border-emerald-500/50" />
-                    </div>
-                    <div>
-                      <Label htmlFor="subject" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Subject *</Label>
-                      <Input id="subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" required disabled={submitting} className="h-9 text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 focus-visible:border-emerald-500/50" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-h-0 flex flex-col">
-                    <Label htmlFor="message" className="text-xs dark:text-white/40 text-slate-500 font-medium mb-0.5 block">Message *</Label>
-                    <Textarea id="message" name="message" value={formData.message} onChange={handleChange} placeholder="Tell us about your project..." required disabled={submitting} className="flex-1 min-h-[80px] text-xs dark:bg-white/[0.04] bg-slate-50 border-slate-200 dark:border-white/[0.08] dark:text-white text-slate-900 placeholder:dark:text-white/20 placeholder:text-slate-400 resize-none focus-visible:border-emerald-500/50" />
+                    <span className="hidden rounded-full border border-slate-200 px-3 py-1 text-[10px] font-medium text-slate-400 dark:border-white/[0.07] dark:text-white/25 sm:inline-flex">No obligation</span>
                   </div>
 
-                  {/* File Upload (compact) */}
-                  <div
-                    className={`border border-dashed rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all ${
-                      isDragOver ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-200 dark:border-white/[0.06] dark:hover:border-white/[0.12] hover:border-slate-300'
-                    }`}
-                    onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-                    onDragLeave={(e) => { e.preventDefault(); setIsDragOver(false); }}
-                    onDrop={(e) => { e.preventDefault(); setIsDragOver(false); if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files); }}
-                    onClick={() => inputRef.current?.click()}
-                  >
-                    <input ref={inputRef} type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.doc,.docx,.txt,.zip,.xls,.xlsx" onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} className="hidden" />
-                    <Upload className="size-3.5 dark:text-white/40 text-slate-500 shrink-0" />
-                    <span className="text-xs dark:text-white/45 text-slate-500">Attach files (max {MAX_FILES}, 10MB each)</span>
-                  </div>
-
-                  {/* File chips */}
-                  {attachments.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {attachments.map((att) => (
-                        <div key={att.id} className="flex items-center gap-1 px-2 py-0.5 rounded-md dark:bg-white/[0.04] bg-slate-50 border border-slate-200 dark:border-white/[0.06] text-xs dark:text-white/50 text-slate-500">
-                          {att.file.name} ({formatFileSize(att.file.size)})
-                          <button onClick={() => removeFile(att.id)} className="dark:text-white/40 text-slate-500 hover:text-red-400 ml-0.5"><X className="size-2.5" /></button>
-                        </div>
-                      ))}
+                  <form onSubmit={submit} className="mt-7 space-y-5">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Name
+                        <input
+                          required
+                          value={form.name}
+                          onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-400 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
+                          placeholder="Your name"
+                        />
+                      </label>
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Work email
+                        <input
+                          required
+                          type="email"
+                          value={form.email}
+                          onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-400 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
+                          placeholder="you@company.com"
+                        />
+                      </label>
                     </div>
-                  )}
 
-                  {/* Submit */}
-                  <Button type="submit" disabled={submitting} className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold h-9 shadow-lg shadow-emerald-500/20 shrink-0">
-                    {submitting ? <><Loader2 className="size-3.5 mr-1.5 animate-spin" />Sending...</> : <>Send Message <Send className="size-3.5 ml-1.5" /></>}
-                  </Button>
-                </form>
-              </>
-            )}
-          </div>
-        </motion.div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Phone <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                        <input
+                          type="tel"
+                          value={form.phone}
+                          onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-400 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
+                          placeholder="+233 ..."
+                        />
+                      </label>
 
-        {/* ── Right: Contact Info ── */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="lg:col-span-5 flex flex-col gap-2 lg:gap-2.5 min-h-0 overflow-y-auto"
-        >
-          {/* Contact Info Cards */}
-          <div className="grid grid-cols-2 gap-2">
-            {contactItems.map((item) => (
-              <div key={item.label} className="group p-3 lg:p-4 rounded-lg dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.12] hover:border-slate-300 transition-all">
-                <div className="flex items-start gap-2">
-                  <div className="size-7 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
-                    <item.icon className="size-3.5 text-amber-400" />
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        What can we help with?
+                        <select
+                          value={form.service}
+                          onChange={(event) => setForm((current) => ({ ...current, service: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-400 dark:border-white/[0.07] dark:bg-[#0c141b] dark:text-white"
+                        >
+                          {services.map((service) => <option key={service}>{service}</option>)}
+                        </select>
+                      </label>
+                    </div>
+
+                    <label className="block space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      Subject <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                      <input
+                        value={form.subject}
+                        onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))}
+                        className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-400 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
+                        placeholder="e.g. Modernize our school management platform"
+                      />
+                    </label>
+
+                    <label className="block space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      What is the problem or opportunity?
+                      <textarea
+                        required
+                        value={form.message}
+                        onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))}
+                        rows={7}
+                        className="w-full resize-y rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-emerald-400 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
+                        placeholder="Tell us what is happening today, who uses the system, what you want to change, and any important deadline or constraint."
+                      />
+                    </label>
+
+                    <button
+                      type="submit"
+                      disabled={sending}
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-6 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-50 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300 sm:w-auto"
+                    >
+                      {sending ? 'Sending…' : 'Send project brief'}
+                      {!sending && <Send className="size-4" />}
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
+
+            <div className="grid gap-4">
+              <div className="rounded-[30px] border border-slate-200/70 bg-slate-950 p-7 text-white dark:border-white/[0.07] dark:bg-[#081119] sm:p-8">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+                    <MessageCircle className="size-5" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="block text-xs lg:text-sm font-semibold dark:text-white/50 text-slate-500 uppercase tracking-wider">{item.label}</span>
-                    <span className="block text-xs lg:text-sm dark:text-white/65 text-slate-600 mt-0.5">{item.value}</span>
-                  </div>
-                  {item.copy && <CopyButton text={item.copy} label={item.label} />}
+                  <span className="inline-flex items-center gap-2 text-[10px] font-medium text-white/30">
+                    <span className={'size-2 rounded-full ' + (officeOpen ? 'bg-emerald-400' : 'bg-white/25')} />
+                    {officeOpen ? 'Business hours now' : 'Outside business hours'}
+                  </span>
+                </div>
+                <h2 className="mt-7 text-3xl font-semibold tracking-[-0.04em]">Prefer a direct conversation?</h2>
+                <p className="mt-3 text-sm leading-7 text-white/40">Use the channel that works best for you. Project details can still be formalized after the first conversation.</p>
+                <a
+                  href="https://wa.me/233243618186?text=Hello%20Lightworld%20Technologies%2C%20I%20would%20like%20to%20discuss%20a%20project."
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-emerald-400 px-5 text-sm font-semibold text-slate-950"
+                >
+                  Open WhatsApp <ArrowRight className="size-4" />
+                </a>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <a href="tel:+233243618186" className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-emerald-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                  <Phone className="size-4 text-emerald-500" />
+                  <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Phone</p>
+                  <p className="mt-1 text-sm font-semibold">+233 (024) 361 8186</p>
+                </a>
+                <a href="mailto:mail@lightworldtech.com" className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-emerald-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                  <Mail className="size-4 text-emerald-500" />
+                  <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Email</p>
+                  <p className="mt-1 break-all text-sm font-semibold">mail@lightworldtech.com</p>
+                </a>
+                <div className="rounded-[24px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                  <MapPin className="size-4 text-emerald-500" />
+                  <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Location</p>
+                  <p className="mt-1 text-sm font-semibold">Accra, Ghana</p>
+                </div>
+                <div className="rounded-[24px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                  <Clock className="size-4 text-emerald-500" />
+                  <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Business hours</p>
+                  <p className="mt-1 text-sm font-semibold">Mon–Fri · 8:00–17:00 GMT</p>
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Social Media */}
-          <div className="p-3 lg:p-4 rounded-lg dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06]">
-            <span className="block text-xs font-semibold dark:text-white/50 text-slate-500 uppercase tracking-wider mb-2">Follow Us</span>
-            <div className="flex items-center gap-2">
-              {[
-                { icon: Facebook, label: 'Facebook', color: 'hover:bg-blue-600' },
-                { icon: Twitter, label: 'Twitter', color: 'hover:bg-sky-500' },
-                { icon: Linkedin, label: 'LinkedIn', color: 'hover:bg-blue-700' },
-                { icon: Instagram, label: 'Instagram', color: 'hover:bg-pink-600' },
-              ].map((social) => (
-                <button key={social.label} onClick={() => {
-                  const urls: Record<string, string> = {
-                    'Facebook': 'https://facebook.com/lightworldtechnologies',
-                    'Twitter': 'https://x.com/lightworldtech',
-                    'LinkedIn': 'https://linkedin.com/company/lightworldtechnologies',
-                    'Instagram': 'https://instagram.com/lightworldtechnologies',
-                  };
-                  const url = urls[social.label];
-                  if (url) window.open(url, '_blank');
-                }} className={`size-8 rounded-lg border border-slate-200 dark:border-white/[0.06] dark:text-white/30 text-slate-400 flex items-center justify-center transition-all hover:text-white hover:shadow-lg ${social.color}`} aria-label={social.label}>
-                  <social.icon className="size-3.5" />
-                </button>
-              ))}
+              <div className="rounded-[26px] border border-emerald-500/15 bg-emerald-500/[0.07] p-5">
+                <p className="text-sm font-semibold">Not ready for a build?</p>
+                <p className="mt-2 text-xs leading-6 text-slate-500 dark:text-white/34">We also help with architecture reviews, technology roadmaps, training and digital transformation planning.</p>
+                <Link href="/services" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                  Explore advisory services <ArrowRight className="size-3.5" />
+                </Link>
+              </div>
             </div>
           </div>
-
-          {/* Schedule a Call */}
-          <div className="relative p-3 rounded-lg bg-gradient-to-br from-amber-600 to-amber-700 overflow-hidden">
-            <div className="absolute inset-0 grid-pattern opacity-10" />
-            <div className="relative z-10 flex items-center gap-3">
-              <div className="size-10 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0">
-                <CalendarDays className="size-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-xs font-bold text-white">Free Consultation</h3>
-                <p className="text-xs text-amber-100/70">30-minute call with our team</p>
-              </div>
-              <Button
-                size="sm"
-                className="bg-white text-amber-600 hover:bg-amber-50 font-semibold text-xs h-7 px-3 shrink-0"
-                onClick={() => window.open('https://wa.me/233243618186?text=Hello!%20I%20would%20like%20to%20schedule%20a%20consultation%20call.', '_blank')}
-              >
-                <MessageCircle className="size-3 mr-1" /> WhatsApp
-              </Button>
-            </div>
-          </div>
-
-          {/* Map Preview */}
-          <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-white/[0.06] flex-1 min-h-[100px]">
-            <iframe
-              src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3770%2C5.5837%2C-0.0070%2C5.6237&layer=mapnik&marker=5.6037%2C-0.1870&locale=en"
-              width="100%" height="100%" style={{ border: 0 }} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
-              title="Lightworld Technologies Office - Accra, Ghana"
-              className="grayscale-[50%] contrast-[1.1] dark:brightness-[0.7] h-full"
-            />
-          </div>
-        </motion.div>
-      </div>
+        </div>
+      </section>
     </div>
   );
 }
