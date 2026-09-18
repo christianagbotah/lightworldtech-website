@@ -33,7 +33,8 @@ The production Next.js configuration does not ignore TypeScript build failures.
 ```bash
 bun install --frozen-lockfile
 bunx prisma generate
-# Run the project's approved database migration/deployment step.
+# Apply the idempotent Phase 3 analytics table/index upgrade.
+bun run db:phase3
 bun run build
 ```
 
@@ -56,3 +57,15 @@ Verify:
 - admin CRUD for services, portfolio, blog, FAQs, team, and testimonials
 - draft/inactive records are not visible to unauthenticated API requests
 - contact-message APIs return 401 without an admin session
+
+## Phase 3 analytics deployment
+
+Phase 3 adds the `AnalyticsEvent` table for consented first-party analytics. The repository does not yet use a historical Prisma migration baseline, so production must run the explicit, idempotent schema command before switching traffic:
+
+```bash
+bun run db:phase3
+```
+
+The command only creates the analytics table and its indexes when missing. It does not alter existing CMS tables. Back up the production SQLite database before any schema-changing release.
+
+Analytics collection deliberately does not persist raw IP addresses, email addresses, or user-agent fingerprints. Public analytics failures must never block the visitor experience, and admin analytics endpoints remain session-protected.

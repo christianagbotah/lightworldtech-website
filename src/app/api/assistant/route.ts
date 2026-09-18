@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { answerConcierge } from '@/lib/assistant-knowledge';
+import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -21,6 +22,17 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const rate = consumePublicRateLimit(request, 'assistant', 40, 5 * 60_000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        reply: 'The assistant has received several requests from this connection. Please try again shortly, or use the Contact page to reach Lightworld.',
+      },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const parsed = schema.safeParse(await request.json());
 

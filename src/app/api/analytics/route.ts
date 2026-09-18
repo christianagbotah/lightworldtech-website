@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
+import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -28,6 +29,14 @@ const analyticsSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const rate = consumePublicRateLimit(request, 'analytics', 240, 60_000);
+  if (!rate.allowed) {
+    return new NextResponse(null, {
+      status: 429,
+      headers: { 'Retry-After': String(rate.retryAfterSeconds) },
+    });
+  }
+
   try {
     const parsed = analyticsSchema.safeParse(await request.json());
     if (!parsed.success) {

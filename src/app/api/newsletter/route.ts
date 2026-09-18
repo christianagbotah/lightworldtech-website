@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { newsletterConfirmation, sendTransactionalMail } from '@/lib/mail';
+import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -20,6 +21,14 @@ async function sendConfirmation(email: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const rate = consumePublicRateLimit(request, 'newsletter', 10, 10 * 60_000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Too many subscription requests. Please try again shortly.' },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const parsed = subscribeSchema.safeParse(await request.json());
 
