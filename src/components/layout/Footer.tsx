@@ -188,7 +188,7 @@ export default function Footer() {
 
         <div className="mt-10 flex flex-col gap-5 border-t border-white/[0.07] pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-white/24">
-            <span>© {new Date().getFullYear()} Lightworld Technologies Limited</span>
+            <span>© {new Date().getFullYear()} Lightworld Technologies Ltd</span>
             <Link href="/contact" className="transition hover:text-white/55">Privacy</Link>
             <Link href="/contact" className="transition hover:text-white/55">Terms</Link>
           </div>
