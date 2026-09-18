@@ -37,8 +37,8 @@ jobs:
       - name: Type-check application
         run: bunx tsc --noEmit
 
-      - name: Test admin security
-        run: bun test src/lib/admin-auth.test.ts
+      - name: Test security and deterministic intelligence
+        run: bun test src/lib/admin-auth.test.ts src/lib/assistant-intents.test.ts src/lib/lead-intelligence.test.ts
         env:
           ADMIN_SESSION_SECRET: "ci-only-admin-session-secret-at-least-32-bytes"
 
