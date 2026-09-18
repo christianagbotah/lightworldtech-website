@@ -1,3 +1,4 @@
+/// <reference types="bun-types" />
 import { beforeAll, describe, expect, test } from 'bun:test';
 import {
   createAdminSessionToken,
