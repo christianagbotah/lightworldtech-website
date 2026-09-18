@@ -81,24 +81,40 @@ export default function PortfolioPage() {
   const [active, setActive] = useState('All');
 
   useEffect(() => {
-    fetch('/api/portfolio')
+    fetch('/api/portfolio?active=true')
       .then((response) => {
         if (!response.ok) throw new Error('Portfolio unavailable');
         return response.json();
       })
-      .then((data) => {
-        if (!Array.isArray(data) || data.length === 0) return;
-        const mapped = data.map((item: Record<string, unknown>, index: number): PortfolioItem => ({
-          id: String(item.id ?? index),
-          title: String(item.title ?? 'Project'),
-          description: String(item.description ?? ''),
-          category: String(item.category ?? 'Digital Product'),
-          tags: Array.isArray(item.tags) ? item.tags.map(String) : [],
-          featured: item.featured === true,
-          clientUrl: item.clientUrl ? String(item.clientUrl) : undefined,
-          fullDescription: item.fullDescription ? String(item.fullDescription) : undefined,
-          image: item.image ? String(item.image) : undefined,
-        }));
+      .then((payload) => {
+        const data = Array.isArray(payload?.data) ? payload.data : [];
+        if (data.length === 0) return;
+
+        const mapped = data.map((item: Record<string, unknown>, index: number): PortfolioItem => {
+          let tags: string[] = [];
+          if (Array.isArray(item.technologies)) {
+            tags = item.technologies.map(String);
+          } else if (typeof item.technologies === 'string' && item.technologies.trim()) {
+            try {
+              const parsed = JSON.parse(item.technologies);
+              if (Array.isArray(parsed)) tags = parsed.map(String);
+            } catch {
+              tags = item.technologies.split(',').map((value) => value.trim()).filter(Boolean);
+            }
+          }
+
+          return {
+            id: String(item.id ?? index),
+            title: String(item.title ?? 'Project'),
+            description: String(item.description ?? ''),
+            category: String(item.category || 'Digital Product'),
+            tags,
+            featured: item.featured === true,
+            clientUrl: item.url ? String(item.url) : undefined,
+            image: item.image ? String(item.image) : undefined,
+          };
+        });
+
         setItems(mapped);
         setUsingCms(true);
       })
