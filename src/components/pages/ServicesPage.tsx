@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ElementType } from 'react';
+import { useEffect, useRef, useState, type ElementType } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -123,7 +123,15 @@ const situations = [
 export default function ServicesPage() {
   const [serviceItems, setServiceItems] = useState<ServiceView[]>(defaultServices);
   const [active, setActive] = useState(defaultServices[0].id);
+  const detailsRef = useRef<HTMLDivElement>(null);
   const selected = serviceItems.find((item) => item.id === active) ?? serviceItems[0] ?? defaultServices[0];
+
+  const selectService = (serviceId: string) => {
+    setActive(serviceId);
+    window.requestAnimationFrame(() => {
+      detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   useEffect(() => {
     fetch('/api/services?active=true')
@@ -237,7 +245,7 @@ export default function ServicesPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.45, delay: index * 0.035 }}
-                onClick={() => setActive(service.id)}
+                onClick={() => selectService(service.id)}
                 className={
                   active === service.id
                     ? 'group rounded-[26px] border border-emerald-400/35 bg-emerald-500/[0.08] p-5 text-left shadow-lg shadow-emerald-950/[0.04] dark:bg-emerald-300/[0.055]'
@@ -258,11 +266,13 @@ export default function ServicesPage() {
           </div>
 
           <motion.div
+            ref={detailsRef}
+            id="service-details"
             key={selected.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.32 }}
-            className="mt-4 grid overflow-hidden rounded-[32px] border border-slate-200/75 bg-white dark:border-white/[0.07] dark:bg-white/[0.025] lg:grid-cols-[.9fr_1.1fr]"
+            className="mt-4 scroll-mt-28 grid overflow-hidden rounded-[32px] border border-slate-200/75 bg-white dark:border-white/[0.07] dark:bg-white/[0.025] lg:grid-cols-[.9fr_1.1fr]"
           >
             <div className="border-b border-slate-200/70 p-6 sm:p-8 lg:border-b-0 lg:border-r dark:border-white/[0.06]">
               <span className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
