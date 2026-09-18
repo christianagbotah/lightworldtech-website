@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, type ElementType } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -19,7 +19,17 @@ import {
   Workflow,
 } from 'lucide-react';
 
-const services = [
+interface ServiceView {
+  id: string;
+  icon: ElementType;
+  eyebrow: string;
+  title: string;
+  summary: string;
+  deliverables: string[];
+  outcomes: string[];
+}
+
+const defaultServices: ServiceView[] = [
   {
     id: 'web',
     icon: Code2,
@@ -111,8 +121,75 @@ const situations = [
 ];
 
 export default function ServicesPage() {
-  const [active, setActive] = useState(services[0].id);
-  const selected = services.find((item) => item.id === active) ?? services[0];
+  const [serviceItems, setServiceItems] = useState<ServiceView[]>(defaultServices);
+  const [active, setActive] = useState(defaultServices[0].id);
+  const selected = serviceItems.find((item) => item.id === active) ?? serviceItems[0] ?? defaultServices[0];
+
+  useEffect(() => {
+    fetch('/api/services?active=true')
+      .then((response) => {
+        if (!response.ok) throw new Error('Unable to load managed services');
+        return response.json();
+      })
+      .then((payload) => {
+        const managed = Array.isArray(payload?.data) ? payload.data : [];
+        if (managed.length === 0) return;
+
+        const idBySlug: Record<string, string> = {
+          'web-development': 'web',
+          'mobile-app-development': 'mobile',
+          'software-development': 'enterprise',
+          'seo-marketing': 'growth',
+          'skills-training': 'training',
+          'web-hosting': 'cloud',
+        };
+
+        const next = [...defaultServices];
+
+        for (const item of managed) {
+          const slug = String(item.slug || '');
+          const targetId = idBySlug[slug];
+          let features: string[] = [];
+
+          if (typeof item.features === 'string' && item.features.trim()) {
+            try {
+              const parsed = JSON.parse(item.features);
+              if (Array.isArray(parsed)) features = parsed.map(String);
+            } catch {
+              features = item.features.split(',').map((value: string) => value.trim()).filter(Boolean);
+            }
+          }
+
+          if (targetId) {
+            const index = next.findIndex((service) => service.id === targetId);
+            if (index >= 0) {
+              next[index] = {
+                ...next[index],
+                title: String(item.title || next[index].title),
+                summary: String(item.description || next[index].summary),
+                deliverables: features.length > 0 ? features : next[index].deliverables,
+              };
+              continue;
+            }
+          }
+
+          next.push({
+            id: 'cms-' + String(item.id || slug || next.length),
+            icon: Sparkles,
+            eyebrow: 'Managed service',
+            title: String(item.title || 'Technology service'),
+            summary: String(item.description || ''),
+            deliverables: features.length > 0 ? features : ['Custom scope based on your requirements'],
+            outcomes: ['Clear scope', 'Practical delivery', 'Long-term maintainability'],
+          });
+        }
+
+        setServiceItems(next);
+      })
+      .catch(() => {
+        // Flagship defaults remain available when the CMS is offline.
+      });
+  }, []);
 
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
@@ -153,7 +230,7 @@ export default function ServicesPage() {
       <section className="section-padding">
         <div className="container-main">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {services.map((service, index) => (
+            {serviceItems.map((service, index) => (
               <motion.button
                 key={service.id}
                 initial={{ opacity: 0, y: 16 }}
