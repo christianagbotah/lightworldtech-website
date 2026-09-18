@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { getBlogCoverImage } from '@/lib/blog-visuals';
 import {
   ArrowRight,
   Calendar,
@@ -152,18 +153,14 @@ export default function BlogPage({ initialPosts }: { initialPosts: BlogPost[] })
                   className="mt-8 grid overflow-hidden rounded-[32px] border border-slate-200/70 bg-white dark:border-white/[0.07] dark:bg-white/[0.025] lg:grid-cols-[1.06fr_.94fr]"
                 >
                   <div className="relative min-h-[280px] bg-slate-100 dark:bg-white/[0.03] lg:min-h-[420px]">
-                    {featured.coverImage ? (
-                      <Image
-                        src={featured.coverImage}
-                        alt=""
-                        fill
-                        sizes="(max-width: 1024px) 100vw, 55vw"
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="lw-dot-grid absolute inset-0 bg-slate-950 opacity-90" />
-                    )}
+                    <Image
+                      src={getBlogCoverImage(featured)}
+                      alt={featured.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 55vw"
+                      className="object-cover transition duration-700 hover:scale-[1.02]"
+                      unoptimized
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent" />
                   </div>
 
@@ -207,11 +204,14 @@ export default function BlogPage({ initialPosts }: { initialPosts: BlogPost[] })
                         className="group flex h-full min-h-[330px] flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white dark:border-white/[0.07] dark:bg-white/[0.025]"
                       >
                         <div className="relative aspect-[16/8] overflow-hidden bg-slate-100 dark:bg-white/[0.03]">
-                          {post.coverImage ? (
-                            <Image src={post.coverImage} alt="" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition duration-700 group-hover:scale-[1.025]" unoptimized />
-                          ) : (
-                            <div className="lw-dot-grid absolute inset-0 bg-slate-950 opacity-90" />
-                          )}
+                          <Image
+                            src={getBlogCoverImage(post)}
+                            alt={post.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className="object-cover transition duration-700 group-hover:scale-[1.04]"
+                            unoptimized
+                          />
                         </div>
                         <div className="flex flex-1 flex-col p-5">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-600 dark:text-emerald-400">{post.category?.name || 'Technology'}</p>
