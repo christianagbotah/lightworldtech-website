@@ -1,40 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
-import { deriveLeadIntelligence } from '@/lib/lead-intelligence';
+import { ensureHistoricalLeads } from '@/lib/crm';
 
 export const runtime = 'nodejs';
-
-async function backfillHistoricalLeads() {
-  const missing = await db.contactMessage.findMany({
-    where: { lead: null },
-    select: { id: true, subject: true, message: true },
-    take: 250,
-  });
-
-  for (const contact of missing) {
-    const intelligence = deriveLeadIntelligence({
-      subject: contact.subject,
-      message: contact.message,
-    });
-
-    try {
-      await db.lead.create({
-        data: {
-          contactMessageId: contact.id,
-          source: intelligence.source,
-          summary: intelligence.summary,
-          tags: JSON.stringify(intelligence.tags),
-          priority: intelligence.priority,
-        },
-      });
-    } catch (error) {
-      // A concurrent CRM request may have created the lead already.
-      const code = (error as { code?: string })?.code;
-      if (code !== 'P2002') throw error;
-    }
-  }
-}
 
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) {
@@ -42,7 +11,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await backfillHistoricalLeads();
+    await ensureHistoricalLeads();
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status')?.trim();
