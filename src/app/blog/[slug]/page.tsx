@@ -86,7 +86,7 @@ export default async function BlogArticle({
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Lightworld Technologies Limited',
+      name: 'Lightworld Technologies Ltd',
       logo: {
         '@type': 'ImageObject',
         url: 'https://www.lightworldtech.com/logo.png',
