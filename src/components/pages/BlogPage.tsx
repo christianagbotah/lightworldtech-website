@@ -26,9 +26,9 @@ interface BlogPost {
   category?: { name?: string | null; slug?: string | null } | null;
 }
 
-export default function BlogPage() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function BlogPage({ initialPosts }: { initialPosts: BlogPost[] }) {
+  const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
@@ -42,8 +42,9 @@ export default function BlogPage() {
         const items = Array.isArray(payload?.data) ? payload.data : [];
         setPosts(items);
       })
-      .catch(() => setPosts([]))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        // Keep server-rendered content if background refresh is unavailable.
+      });
   }, []);
 
   const categories = useMemo(
