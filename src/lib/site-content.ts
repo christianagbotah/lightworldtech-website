@@ -136,6 +136,7 @@ export const cmsGroups: CmsGroup[] = [
           { label: 'Leadership', href: '/team' },
           { label: 'Recognition & Press', href: '/about#recognition' },
           { label: 'Careers', href: '/careers' },
+          { label: 'Trust & Privacy', href: '/trust' },
         ],
         fields: [
           { key: 'label', label: 'Label' },
