@@ -169,7 +169,7 @@ export default function ContactPage() {
   return (
     <div className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
       {/* ═══ Compact Title Bar ═══ */}
-      <div className="shrink-0 px-4 lg:px-8 pt-2 pb-3">
+      <div className="shrink-0 px-4 lg:px-8 pt-6 pb-5 sm:pt-8">
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
             <div className="size-1.5 rounded-full bg-emerald-400" />
@@ -189,15 +189,15 @@ export default function ContactPage() {
       </div>
 
       {/* ═══ Main Content ═══ */}
-      <div className="flex-1 min-h-0 px-4 lg:px-8 pb-4 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 overflow-hidden">
+      <div className="px-4 lg:px-8 pb-16 lg:pb-8 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
         {/* ── Left: Contact Form ── */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4 }}
-          className="lg:col-span-7 flex flex-col min-h-0"
+          className="lg:col-span-7 flex flex-col"
         >
-          <div className="flex-1 min-h-0 rounded-xl dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] backdrop-blur-sm p-4 lg:p-6 flex flex-col overflow-hidden">
+          <div className="rounded-[28px] dark:bg-white/[0.03] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] backdrop-blur-sm p-4 sm:p-6 lg:p-7 flex flex-col">
             {submitted ? (
               <div className="flex-1 flex items-center justify-center">
                 <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
