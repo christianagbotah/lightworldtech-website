@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { CheckCircle, Sparkles, ArrowRight, Zap, Crown, Building2, Star, Shield, Clock, Headphones } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -93,7 +93,7 @@ const trustBadges = [
   { icon: Clock, label: 'Fast Delivery' },
 ];
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -101,7 +101,7 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
@@ -110,7 +110,7 @@ const itemVariants = {
   },
 };
 
-const featureVariants = {
+const featureVariants: Variants = {
   hidden: { opacity: 0, x: -10 },
   visible: (i: number) => ({
     opacity: 1,

@@ -1215,3 +1215,188 @@ summary:hover {
 .animate-ken-burns-b { animation: ken-burns-b 30s ease-in-out infinite; }
 .animate-ken-burns-c { animation: ken-burns-c 28s ease-in-out infinite; }
 .animate-ken-burns-d { animation: ken-burns-d 22s ease-in-out infinite; }
+
+
+/* ============================================
+   LIGHTWORLD FLAGSHIP EXPERIENCE
+   ============================================ */
+
+html {
+  background: var(--background);
+}
+
+body {
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.lw-hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: center top;
+}
+
+.dark .lw-hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+}
+
+.lw-dot-grid {
+  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.28) 1px, transparent 1.25px);
+  background-size: 18px 18px;
+}
+
+.lw-console::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.06), transparent 18%, transparent 76%, rgba(52, 211, 153, 0.035));
+  mix-blend-mode: screen;
+}
+
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+
+/* Long-form article typography without an extra typography dependency. */
+.lw-article {
+  font-size: 1rem;
+  line-height: 1.85;
+  color: color-mix(in oklab, currentColor 68%, transparent);
+}
+
+.lw-article > * + * {
+  margin-top: 1.35rem;
+}
+
+.lw-article h2,
+.lw-article h3,
+.lw-article h4 {
+  color: var(--foreground);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  scroll-margin-top: 7rem;
+}
+
+.lw-article h2 {
+  margin-top: 3rem;
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+}
+
+.lw-article h3 {
+  margin-top: 2.25rem;
+  font-size: clamp(1.35rem, 3vw, 1.7rem);
+}
+
+.lw-article h4 {
+  margin-top: 1.75rem;
+  font-size: 1.15rem;
+}
+
+.lw-article p,
+.lw-article li {
+  color: color-mix(in oklab, var(--foreground) 64%, transparent);
+}
+
+.lw-article ul,
+.lw-article ol {
+  padding-left: 1.4rem;
+}
+
+.lw-article ul {
+  list-style: disc;
+}
+
+.lw-article ol {
+  list-style: decimal;
+}
+
+.lw-article li + li {
+  margin-top: 0.55rem;
+}
+
+.lw-article a {
+  color: oklch(0.596 0.145 163.225);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.lw-article blockquote {
+  border-left: 3px solid oklch(0.696 0.17 162.48);
+  padding: 0.25rem 0 0.25rem 1.15rem;
+  color: color-mix(in oklab, var(--foreground) 58%, transparent);
+  font-style: italic;
+}
+
+.lw-article code:not(pre code) {
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: color-mix(in oklab, var(--muted) 75%, transparent);
+  padding: 0.12rem 0.35rem;
+  font-family: var(--font-geist-mono);
+  font-size: 0.9em;
+}
+
+.lw-article pre {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: oklch(0.145 0 0);
+  padding: 1.1rem 1.25rem;
+  color: oklch(0.94 0 0);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.lw-article img {
+  height: auto;
+  max-width: 100%;
+  border-radius: 1.25rem;
+}
+
+.lw-article hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+  .lw-article {
+    font-size: 1.05rem;
+  }
+}

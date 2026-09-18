@@ -1,313 +1,370 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState, type ElementType } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
-  Globe, Smartphone, GraduationCap, TrendingUp, Code, Server,
-  ChevronRight, CheckCircle2, ArrowRight, Sparkles, X, DollarSign,
+  ArrowRight,
+  ArrowUpRight,
+  BrainCircuit,
+  Check,
+  Cloud,
+  Code2,
+  GraduationCap,
+  Layers3,
+  Search,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  Workflow,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { useSEO } from '@/hooks/use-seo';
-import QuotationForm from '@/components/ui/quotation-form';
-import QuoteCalculator from '@/components/ui/quote-calculator';
-import ServicesComparison from '@/components/ui/services-comparison';
-import CTASection from '@/components/sections/CTASection';
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
-
-interface ServiceItem {
+interface ServiceView {
   id: string;
+  icon: ElementType;
+  eyebrow: string;
   title: string;
-  description: string;
-  icon: string;
-  features: string[];
-  techStack?: string[];
-  priceRange?: string;
+  summary: string;
+  deliverables: string[];
+  outcomes: string[];
 }
 
-const defaultServices: ServiceItem[] = [
-  { id: '1', title: 'Web Development', description: 'Custom, responsive websites and web applications built with cutting-edge technologies for optimal user experience and business growth.', icon: 'Globe', features: ['Custom Website Design', 'E-Commerce Solutions', 'CMS Development', 'Progressive Web Apps', 'API Integration'], techStack: ['Next.js', 'React', 'Node.js', 'TypeScript', 'PostgreSQL', 'Tailwind CSS'], priceRange: 'From GHS 5,000' },
-  { id: '2', title: 'Mobile App Development', description: 'Native and cross-platform mobile applications that deliver exceptional user experiences on iOS and Android devices.', icon: 'Smartphone', features: ['iOS App Development', 'Android App Development', 'Cross-Platform (React Native)', 'App Store Optimization', 'Push Notifications'], techStack: ['React Native', 'Flutter', 'Swift', 'Kotlin', 'Firebase'], priceRange: 'From GHS 8,000' },
-  { id: '3', title: 'Skills Training', description: 'Comprehensive IT skills development programs designed to empower individuals and organizations with modern technical expertise.', icon: 'GraduationCap', features: ['Web Development Bootcamps', 'Data Science Training', 'Cloud Computing Courses', 'Cybersecurity Training', 'Corporate Training Programs'], techStack: ['Python', 'JavaScript', 'AWS', 'Azure', 'Docker'], priceRange: 'From GHS 1,500' },
-  { id: '4', title: 'SEO & Marketing', description: 'Data-driven digital marketing strategies and search engine optimization to boost online visibility and drive organic growth.', icon: 'TrendingUp', features: ['Search Engine Optimization', 'Pay-Per-Click Advertising', 'Social Media Marketing', 'Content Marketing', 'Email Marketing'], techStack: ['Google Analytics', 'SEMrush', 'Meta Ads', 'Google Ads', 'Mailchimp'], priceRange: 'From GHS 2,000/mo' },
-  { id: '5', title: 'Software Development', description: 'Bespoke software solutions tailored to your unique business requirements, from automation tools to enterprise-grade systems.', icon: 'Code', features: ['Custom Software Solutions', 'Enterprise Applications', 'SaaS Development', 'System Integration', 'Process Automation'], techStack: ['Python', 'Django', 'React', 'PostgreSQL', 'Docker', 'AWS'], priceRange: 'From GHS 10,000' },
-  { id: '6', title: 'Web Hosting', description: 'Reliable, secure, and high-performance hosting solutions with guaranteed uptime and round-the-clock technical support.', icon: 'Server', features: ['Shared Hosting', 'VPS Hosting', 'Dedicated Servers', 'Cloud Hosting', 'SSL Certificates'], techStack: ['cPanel', 'Nginx', 'CloudLinux', 'LiteSpeed', "Let's Encrypt"], priceRange: 'From GHS 50/yr' },
+const defaultServices: ServiceView[] = [
+  {
+    id: 'web',
+    icon: Code2,
+    eyebrow: 'Digital products',
+    title: 'Web & product engineering',
+    summary: 'Fast, accessible digital experiences that can grow from a focused website into a serious product platform.',
+    deliverables: ['Corporate & brand websites', 'Customer and partner portals', 'SaaS and web applications', 'E-commerce experiences', 'API integrations', 'Design systems'],
+    outcomes: ['Faster journeys', 'Search-ready architecture', 'Maintainable product foundations'],
+  },
+  {
+    id: 'mobile',
+    icon: Smartphone,
+    eyebrow: 'Mobile',
+    title: 'Mobile app development',
+    summary: 'Native-feeling mobile experiences designed around the way customers, field teams and operators actually use a phone.',
+    deliverables: ['iOS & Android apps', 'Cross-platform applications', 'Offline-first workflows', 'Push notifications', 'Mobile authentication', 'App release support'],
+    outcomes: ['Better field adoption', 'Reliable low-connectivity UX', 'One coherent product experience'],
+  },
+  {
+    id: 'enterprise',
+    icon: Workflow,
+    eyebrow: 'Operations',
+    title: 'Enterprise software & automation',
+    summary: 'Role-aware systems that connect approvals, assets, inventory, people, reporting and day-to-day operations.',
+    deliverables: ['ERP & operational platforms', 'Asset and maintenance systems', 'Inventory & logistics workflows', 'School & institutional systems', 'Internal portals', 'Workflow automation'],
+    outcomes: ['Less manual work', 'Stronger accountability', 'Operational visibility'],
+  },
+  {
+    id: 'ai',
+    icon: BrainCircuit,
+    eyebrow: 'Intelligence',
+    title: 'AI-enabled workflows',
+    summary: 'Practical AI experiences that assist teams with information, decisions and repetitive work without hiding the controls that matter.',
+    deliverables: ['AI assistants', 'Knowledge experiences', 'Document workflows', 'Search & summarization', 'Human-in-the-loop automation', 'AI feature integration'],
+    outcomes: ['Faster knowledge work', 'Consistent execution', 'Auditable assistance'],
+  },
+  {
+    id: 'cloud',
+    icon: Cloud,
+    eyebrow: 'Infrastructure',
+    title: 'Cloud, DevOps & reliability',
+    summary: 'Production foundations for teams that need repeatable releases, observability, recovery and room to scale.',
+    deliverables: ['Cloud architecture', 'CI/CD pipelines', 'VPS & server migrations', 'Containerized deployments', 'Monitoring & backups', 'Performance tuning'],
+    outcomes: ['Safer releases', 'Better uptime posture', 'Lower operational friction'],
+  },
+  {
+    id: 'security',
+    icon: ShieldCheck,
+    eyebrow: 'Trust',
+    title: 'Security engineering',
+    summary: 'Security woven into product architecture, access models and delivery processes rather than added as a final checklist.',
+    deliverables: ['Application hardening', 'Authentication & authorization', 'RBAC design', 'Audit trails', 'Security reviews', 'Release safeguards'],
+    outcomes: ['Reduced risk', 'Traceable actions', 'Stronger production controls'],
+  },
+  {
+    id: 'growth',
+    icon: Search,
+    eyebrow: 'Growth',
+    title: 'SEO & digital performance',
+    summary: 'Technical foundations and user journeys that help people discover, understand and act on what your business offers.',
+    deliverables: ['Technical SEO', 'Information architecture', 'Performance optimization', 'Analytics setup', 'Conversion journeys', 'Content foundations'],
+    outcomes: ['Better discoverability', 'Faster experiences', 'Clearer conversion paths'],
+  },
+  {
+    id: 'training',
+    icon: GraduationCap,
+    eyebrow: 'Capability',
+    title: 'IT training & consultancy',
+    summary: 'Practical training and advisory support that helps organizations make better technology decisions and build capability in-house.',
+    deliverables: ['Software development training', 'Corporate IT training', 'Architecture advisory', 'Digital transformation planning', 'Technology assessments', 'Team enablement'],
+    outcomes: ['Stronger internal skills', 'Clearer roadmaps', 'Better technology decisions'],
+  },
 ];
 
-const iconMap: Record<string, React.ElementType> = { Globe, Smartphone, GraduationCap, TrendingUp, Code, Server };
+const engagement = [
+  ['01', 'Define', 'We clarify the business outcome, users, constraints and what success should look like.'],
+  ['02', 'Shape', 'We turn that into a product scope, experience model, architecture and delivery plan.'],
+  ['03', 'Deliver', 'We build in reviewable slices with quality, security and deployment considered from the start.'],
+  ['04', 'Operate', 'We support launch, handover, training and the next iteration as real usage creates new insight.'],
+];
 
-const gradients = [
-  'from-emerald-500 to-teal-600',
-  'from-teal-500 to-emerald-600',
-  'from-amber-500 to-orange-600',
-  'from-rose-500 to-amber-600',
-  'from-rose-500 to-pink-600',
-  'from-lime-500 to-green-600',
+const situations = [
+  'You need to replace spreadsheets and fragmented manual processes.',
+  'Your current website looks dated or is difficult to discover on search.',
+  'You have a product idea but need both product thinking and engineering.',
+  'Your existing application needs modernization, integration or better reliability.',
+  'Your team needs a trusted technical partner without building every skill in-house.',
+  'You want to introduce AI without turning the product into a gimmick.',
 ];
 
 export default function ServicesPage() {
-  useSEO({
-    title: 'Services',
-    description: 'Professional IT services in Ghana: Web Development, Mobile App Development, SEO & Marketing, Software Development, IT Training, and Web Hosting.',
-    keywords: ['web development Ghana', 'mobile app development', 'SEO services', 'software development', 'IT training Ghana', 'web hosting'],
-  });
-
-  const [services, setServices] = useState(defaultServices);
-  const [loading, setLoading] = useState(true);
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
-  const [quoteOpen, setQuoteOpen] = useState(false);
-  const [quoteServiceId, setQuoteServiceId] = useState('');
-  const [compareOpen, setCompareOpen] = useState(false);
-  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [serviceItems, setServiceItems] = useState<ServiceView[]>(defaultServices);
+  const [active, setActive] = useState(defaultServices[0].id);
+  const selected = serviceItems.find((item) => item.id === active) ?? serviceItems[0] ?? defaultServices[0];
 
   useEffect(() => {
-    fetcher('/api/services')
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const merged = data.map((s: Record<string, unknown>) => {
-            const defaults = defaultServices.find(d => d.title === s.title);
-            return {
-              ...s,
-              techStack: s.techStack || defaults?.techStack || [],
-              priceRange: s.priceRange || defaults?.priceRange || 'Contact us',
-            } as ServiceItem;
-          });
-          setServices(merged);
-        }
+    fetch('/api/services?active=true')
+      .then((response) => {
+        if (!response.ok) throw new Error('Unable to load managed services');
+        return response.json();
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then((payload) => {
+        const managed = Array.isArray(payload?.data) ? payload.data : [];
+        if (managed.length === 0) return;
+
+        const idBySlug: Record<string, string> = {
+          'web-development': 'web',
+          'mobile-app-development': 'mobile',
+          'software-development': 'enterprise',
+          'seo-marketing': 'growth',
+          'skills-training': 'training',
+          'web-hosting': 'cloud',
+        };
+
+        const next = [...defaultServices];
+
+        for (const item of managed) {
+          const slug = String(item.slug || '');
+          const targetId = idBySlug[slug];
+          let features: string[] = [];
+
+          if (typeof item.features === 'string' && item.features.trim()) {
+            try {
+              const parsed = JSON.parse(item.features);
+              if (Array.isArray(parsed)) features = parsed.map(String);
+            } catch {
+              features = item.features.split(',').map((value: string) => value.trim()).filter(Boolean);
+            }
+          }
+
+          if (targetId) {
+            const index = next.findIndex((service) => service.id === targetId);
+            if (index >= 0) {
+              next[index] = {
+                ...next[index],
+                title: String(item.title || next[index].title),
+                summary: String(item.description || next[index].summary),
+                deliverables: features.length > 0 ? features : next[index].deliverables,
+              };
+              continue;
+            }
+          }
+
+          next.push({
+            id: 'cms-' + String(item.id || slug || next.length),
+            icon: Sparkles,
+            eyebrow: 'Managed service',
+            title: String(item.title || 'Technology service'),
+            summary: String(item.description || ''),
+            deliverables: features.length > 0 ? features : ['Custom scope based on your requirements'],
+            outcomes: ['Clear scope', 'Practical delivery', 'Long-term maintainability'],
+          });
+        }
+
+        setServiceItems(next);
+      })
+      .catch(() => {
+        // Flagship defaults remain available when the CMS is offline.
+      });
   }, []);
 
   return (
-    <div className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
-      {/* ═══ Compact Title Bar ═══ */}
-      <div className="shrink-0 px-4 lg:px-8 pt-2 pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <div className="size-1.5 rounded-full bg-emerald-400" />
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-[0.2em]">Our Services</span>
+    <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
+      <section className="lw-hero-grid relative border-b border-slate-200/70 px-4 py-16 dark:border-white/[0.06] sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <div className="container-main">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65 }}
+            className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end"
+          >
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+                <Layers3 className="size-3.5" />
+                End-to-end technology services
+              </div>
+              <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+                One partner from idea to production.
+              </h1>
             </div>
-            <h1 className="text-xl lg:text-2xl font-bold dark:text-white text-slate-900">
-              What We <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Offer</span>
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCompareOpen(true)}
-              className="rounded-full text-xs font-medium border-slate-200 dark:border-white/[0.08] dark:text-white/50 text-slate-500 hover:text-slate-900 dark:hover:text-white dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.15] hover:border-slate-300 px-3 h-8"
-            >
-              Compare Plans
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCalculatorOpen(true)}
-              className="rounded-full text-xs font-medium border-slate-200 dark:border-white/[0.08] dark:text-white/50 text-slate-500 hover:text-slate-900 dark:hover:text-white dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.15] hover:border-slate-300 px-3 h-8"
-            >
-              Cost Calculator
-            </Button>
-          </div>
+            <div className="lg:pb-1">
+              <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
+                Lightworld brings product design, software engineering, cloud, security, growth and training together so you can solve the whole problem—not just commission a collection of screens.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="/contact" className="inline-flex h-11 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-600 dark:bg-emerald-400 dark:text-slate-950">
+                  Discuss your project <ArrowRight className="size-4" />
+                </Link>
+                <Link href="/portfolio" className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-300 px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 dark:border-white/10 dark:text-white/60">
+                  See our work <ArrowUpRight className="size-4" />
+                </Link>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </section>
 
-      {/* ═══ Services Grid ═══ */}
-      <div className="flex-1 min-h-0 px-4 lg:px-8 pb-4">
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 h-full">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="rounded-xl" />
+      <section className="section-padding">
+        <div className="container-main">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {serviceItems.map((service, index) => (
+              <motion.button
+                key={service.id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.45, delay: index * 0.035 }}
+                onClick={() => setActive(service.id)}
+                className={
+                  active === service.id
+                    ? 'group rounded-[26px] border border-emerald-400/35 bg-emerald-500/[0.08] p-5 text-left shadow-lg shadow-emerald-950/[0.04] dark:bg-emerald-300/[0.055]'
+                    : 'group rounded-[26px] border border-slate-200/75 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-emerald-300/50 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]'
+                }
+                aria-pressed={active === service.id}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                    <service.icon className="size-5" />
+                  </span>
+                  <span className="font-mono text-[9px] text-slate-300 dark:text-white/15">{String(index + 1).padStart(2, '0')}</span>
+                </div>
+                <p className="mt-6 text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-600/70 dark:text-emerald-300/55">{service.eyebrow}</p>
+                <h2 className="mt-1.5 text-base font-semibold tracking-tight">{service.title}</h2>
+              </motion.button>
             ))}
           </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 h-full">
-            {services.map((service, index) => {
-              const IconComp = iconMap[service.icon] || Globe;
-              const gradient = gradients[index % gradients.length];
-              const isPopular = index === 1;
 
-              return (
+          <motion.div
+            key={selected.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32 }}
+            className="mt-4 grid overflow-hidden rounded-[32px] border border-slate-200/75 bg-white dark:border-white/[0.07] dark:bg-white/[0.025] lg:grid-cols-[.9fr_1.1fr]"
+          >
+            <div className="border-b border-slate-200/70 p-6 sm:p-8 lg:border-b-0 lg:border-r dark:border-white/[0.06]">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                <selected.icon className="size-6" />
+              </span>
+              <p className="mt-7 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">{selected.eyebrow}</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">{selected.title}</h2>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/38 sm:text-base">{selected.summary}</p>
+
+              <div className="mt-7">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-white/20">Designed for outcomes</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selected.outcomes.map((outcome) => (
+                    <span key={outcome} className="rounded-full border border-slate-200/80 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white/45">
+                      {outcome}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 sm:p-8">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-white/20">Typical scope</p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {selected.deliverables.map((deliverable) => (
+                  <div key={deliverable} className="flex items-start gap-3 rounded-2xl border border-slate-200/65 bg-slate-50/70 p-4 dark:border-white/[0.055] dark:bg-white/[0.02]">
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+                      <Check className="size-3" />
+                    </span>
+                    <span className="text-sm font-medium text-slate-700 dark:text-white/55">{deliverable}</span>
+                  </div>
+                ))}
+              </div>
+              <Link href="/contact" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                Talk to us about this capability <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="section-padding border-y border-slate-200/70 bg-slate-950 text-white dark:border-white/[0.06] dark:bg-[#081119]">
+        <div className="container-main">
+          <div className="grid gap-12 lg:grid-cols-[.75fr_1.25fr]">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                <Sparkles className="size-3.5" />
+                Where we fit
+              </div>
+              <h2 className="mt-5 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Bring us the messy problem.</h2>
+              <p className="mt-4 max-w-md text-sm leading-7 text-white/42 sm:text-base">
+                You do not need to arrive with a finished technical specification. We can help turn a business problem into the right product, platform or roadmap.
+              </p>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              {situations.map((situation, index) => (
                 <motion.div
-                  key={service.id}
-                  initial={{ opacity: 0, y: 15, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.35, delay: index * 0.06 }}
-                  className="group relative overflow-hidden rounded-xl dark:bg-white/[0.04] bg-white shadow-sm border border-slate-100 dark:border-white/[0.06] backdrop-blur-sm cursor-pointer transition-all duration-300 dark:hover:bg-white/[0.06] hover:bg-slate-100 dark:hover:border-white/[0.12] hover:border-slate-300 hover:scale-[1.01]"
-                  onClick={() => setSelectedService(service)}
+                  key={situation}
+                  initial={{ opacity: 0, x: 14 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.04 }}
+                  className="flex gap-3 rounded-[22px] border border-white/[0.07] bg-white/[0.03] p-4"
                 >
-                  {/* Popular badge */}
-                  {isPopular && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <Badge className="bg-gradient-to-r from-emerald-500 to-amber-500 text-white text-[8px] font-semibold shadow-md px-1.5 py-0 h-4 gap-0.5">
-                        <Sparkles className="size-2.5" /> Popular
-                      </Badge>
-                    </div>
-                  )}
-
-                  <div className="p-4 lg:p-6 flex flex-col h-full">
-                    {/* Icon */}
-                    <div className={`size-10 lg:size-12 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center mb-2 lg:mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:shadow-lg shrink-0`}>
-                      <IconComp className="size-4 lg:size-5 text-white" />
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-xs lg:text-sm font-bold dark:text-white/90 text-slate-800 mb-0.5 lg:mb-1 leading-tight">{service.title}</h3>
-
-                    {/* Description */}
-                    <p className="text-xs lg:text-sm dark:text-white/60 text-slate-600 leading-relaxed line-clamp-2 mb-2 lg:mb-3">{service.description}</p>
-
-                    {/* Features */}
-                    <div className="space-y-0.5 mb-2 lg:mb-3 flex-1">
-                      {service.features.slice(0, 4).map((feature: string) => (
-                        <div key={feature} className="flex items-center gap-1.5">
-                          <CheckCircle2 className="size-3 lg:size-3.5 text-emerald-400/60 shrink-0" />
-                          <span className="text-xs lg:text-sm dark:text-white/70 text-slate-600 leading-tight line-clamp-1">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Bottom: Price + CTA */}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/[0.04]">
-                      {service.priceRange && (
-                        <span className="text-xs lg:text-sm font-semibold text-amber-600 dark:text-amber-400/80">{service.priceRange}</span>
-                      )}
-                      <div className="flex items-center gap-1 text-emerald-400 text-xs font-medium group-hover:translate-x-0.5 transition-transform">
-                        Details <ArrowRight className="size-3" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Hover gradient overlay */}
-                  <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-emerald-500/[0.04] to-transparent" />
+                  <Check className="mt-0.5 size-4 shrink-0 text-emerald-300" />
+                  <p className="text-sm leading-6 text-white/50">{situation}</p>
                 </motion.div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
 
-      {/* ═══ Service Detail Dialog ═══ */}
-      <Dialog open={!!selectedService} onOpenChange={() => setSelectedService(null)}>
-        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[85vh] dark:bg-slate-900 bg-white border-slate-200 dark:border-white/[0.08]">
-          <AnimatePresence mode="wait">
-            {selectedService && (
-              <motion.div
-                key={selectedService.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="relative h-32 bg-gradient-to-br from-emerald-600 via-amber-500 to-amber-700 flex items-center justify-center">
-                  <div className="absolute inset-0 grid-pattern opacity-20" />
-                  <div className="text-center relative z-10">
-                    <div className="size-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
-                      {(() => {
-                        const IconComp = iconMap[selectedService.icon] || Globe;
-                        return <IconComp className="size-6 text-white" />;
-                      })()}
-                    </div>
-                    <h2 className="text-xl font-bold text-white">{selectedService.title}</h2>
-                  </div>
-                  <button
-                    onClick={() => setSelectedService(null)}
-                    className="absolute top-3 right-3 size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10"
-                    aria-label="Close"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-
-                <div className="p-5 space-y-4 max-h-[calc(85vh-8rem)] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="text-lg dark:text-white text-slate-900">{selectedService.title}</DialogTitle>
-                    <DialogDescription className="text-sm dark:text-white/60 text-slate-500 leading-relaxed">{selectedService.description}</DialogDescription>
-                  </DialogHeader>
-
-                  <div>
-                    <h4 className="text-xs font-semibold dark:text-white text-slate-900 mb-2 flex items-center gap-1.5">
-                      <CheckCircle2 className="size-3.5 text-amber-400" /> What&apos;s Included
-                    </h4>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {selectedService.features?.map((feature: string) => (
-                        <div key={feature} className="flex items-center gap-1.5 text-xs dark:text-white/60 text-slate-500">
-                          <CheckCircle2 className="size-3 text-amber-500 shrink-0" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {selectedService.techStack && selectedService.techStack.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-semibold dark:text-white text-slate-900 mb-2">Technology Stack</h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {selectedService.techStack.map((tech: string) => (
-                          <Badge key={tech} variant="secondary" className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20">{tech}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedService.priceRange && (
-                    <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <DollarSign className="size-3.5 text-amber-400" />
-                        <span className="text-xs font-semibold dark:text-white text-slate-900">Starting Price</span>
-                      </div>
-                      <p className="text-base font-bold text-amber-400">{selectedService.priceRange}</p>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      onClick={() => { setSelectedService(null); setQuoteServiceId(selectedService.id); setQuoteOpen(true); }}
-                      className="bg-emerald-500 hover:bg-emerald-400 text-white flex-1 text-xs shadow-md h-9"
-                    >
-                      Request a Quote <ArrowRight className="size-3.5 ml-1" />
-                    </Button>
-                    <Button variant="outline" onClick={() => setSelectedService(null)} className="flex-1 border-slate-200 dark:border-white/[0.06] text-xs h-9">Close</Button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </DialogContent>
-      </Dialog>
-
-      {/* ═══ Compare Dialog ═══ */}
-      <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
-        <DialogContent className="sm:max-w-4xl p-0 gap-0 overflow-hidden max-h-[85vh] dark:bg-slate-900 bg-white border-slate-200 dark:border-white/[0.08]">
-          <div className="max-h-[85vh] overflow-y-auto">
-            <ServicesComparison />
+      <section className="section-padding">
+        <div className="container-main">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Engagement model</p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Enough process to reduce risk. Not enough to slow the work.</h2>
           </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* ═══ Calculator Dialog ═══ */}
-      <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
-        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[85vh] dark:bg-slate-900 bg-white border-slate-200 dark:border-white/[0.08]">
-          <div className="max-h-[85vh] overflow-y-auto">
-            <QuoteCalculator />
+          <div className="mt-10 grid gap-3 lg:grid-cols-4">
+            {engagement.map(([number, title, description]) => (
+              <div key={number} className="rounded-[26px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                <span className="font-mono text-xs text-emerald-600 dark:text-emerald-400">{number}</span>
+                <h3 className="mt-7 text-lg font-semibold">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/35">{description}</p>
+              </div>
+            ))}
           </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* ═══ Quotation Form Modal ═══ */}
-      <QuotationForm open={quoteOpen} onOpenChange={setQuoteOpen} preselectedService={quoteServiceId} />
+          <div className="mt-10 flex flex-col gap-5 rounded-[32px] border border-emerald-500/15 bg-emerald-500/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div>
+              <h3 className="text-2xl font-semibold tracking-tight">Not sure which service category fits?</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/38">That is normal. Describe the outcome you need and we will help map the right approach.</p>
+            </div>
+            <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white transition hover:bg-emerald-400 dark:text-slate-950">
+              Start with the problem <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

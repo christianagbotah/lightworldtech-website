@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 // GET all portfolio projects
 export async function GET(request: NextRequest) {
@@ -11,8 +12,9 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
 
     const where: Record<string, unknown> = {};
+    const adminRequest = isAdminRequest(request);
 
-    if (activeOnly === 'true') {
+    if (!adminRequest || activeOnly === 'true') {
       where.active = true;
     }
 
@@ -53,6 +55,8 @@ const createPortfolioSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const body = await request.json();
     const parsed = createPortfolioSchema.safeParse(body);

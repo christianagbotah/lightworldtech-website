@@ -1,0 +1,48 @@
+name: Website Quality Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-build:
+    name: Production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: bunx prisma generate
+
+      - name: Type-check application
+        run: bunx tsc --noEmit
+
+      - name: Test admin security
+        run: bun test src/lib/admin-auth.test.ts
+        env:
+          ADMIN_SESSION_SECRET: "ci-only-admin-session-secret-at-least-32-bytes"
+
+      - name: Build production application
+        run: bun run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"

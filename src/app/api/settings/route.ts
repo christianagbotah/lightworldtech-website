@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { isAdminRequest } from '@/lib/admin-auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
     const settings = await db.siteSetting.findMany({ orderBy: { group: 'asc' } });
     const result: Record<string, string> = {};
@@ -15,6 +18,8 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const entries = await request.json() as Record<string, string>;
 

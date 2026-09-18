@@ -1,101 +1,111 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/ui/json-ld";
+import type { Metadata, Viewport } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/ui/json-ld';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  display: 'swap',
 });
 
-const SITE_URL = "https://www.lightworldtech.com";
-const OG_IMAGE = "https://www.lightworldtech.com/wp-content/uploads/2018/10/Lightworldtech-Logo-favicon-1.png";
-const DESCRIPTION = "Innovative IT solutions provider offering web development, mobile app development, software development, and digital marketing services in Ghana. Transforming businesses through technology.";
+const SITE_URL = 'https://www.lightworldtech.com';
+const DESCRIPTION =
+  'Lightworld Technologies Limited builds modern websites, mobile apps, enterprise software, AI-enabled workflows and cloud solutions, with IT training and technology consultancy from Ghana.';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: 'Lightworld Technologies',
   title: {
-    default: "Lightworld Technologies Limited – The World of Possibilities",
-    template: "%s | Lightworld Technologies",
+    default: 'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
+    template: '%s | Lightworld Technologies',
   },
   description: DESCRIPTION,
   keywords: [
-    "Lightworld Technologies",
-    "Web Development Ghana",
-    "Mobile App Development",
-    "IT Solutions Ghana",
-    "Software Development",
-    "Digital Marketing",
-    "SEO Ghana",
-    "School Management Software",
-    "CRM Development",
-    "Accra Web Design",
-    "Ghana IT Company",
+    'Lightworld Technologies',
+    'software development Ghana',
+    'web development Ghana',
+    'mobile app development Ghana',
+    'enterprise software Ghana',
+    'AI automation Ghana',
+    'IT consulting Ghana',
+    'IT training Ghana',
+    'cloud solutions Ghana',
+    'SEO web development Ghana',
   ],
-  authors: [{ name: "Lightworld Technologies", url: SITE_URL }],
-  creator: "Lightworld Technologies Limited",
-  publisher: "Lightworld Technologies Limited",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  metadataBase: new URL(SITE_URL),
+  authors: [{ name: 'Lightworld Technologies Limited', url: SITE_URL }],
+  creator: 'Lightworld Technologies Limited',
+  publisher: 'Lightworld Technologies Limited',
+  category: 'technology',
   alternates: {
-    canonical: SITE_URL,
+    canonical: '/',
   },
-  category: "technology",
   robots: {
     index: true,
     follow: true,
     googleBot: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
     },
   },
+  manifest: '/manifest.webmanifest',
   icons: {
-    icon: [
-      { url: "https://www.lightworldtech.com/wp-content/uploads/2018/10/Lightworldtech-Logo-favicon-1.png", sizes: "32x32", type: "image/png" },
-    ],
-    apple: [
-      { url: "https://www.lightworldtech.com/wp-content/uploads/2018/10/Lightworldtech-Logo-favicon-1.png" },
-    ],
+    icon: [{ url: '/logo.png', type: 'image/png' }],
+    apple: [{ url: '/logo.png', type: 'image/png' }],
   },
   openGraph: {
-    title: "Lightworld Technologies Limited – The World of Possibilities",
-    description: DESCRIPTION,
-    siteName: "Lightworld Technologies",
-    type: "website",
-    locale: "en_US",
+    type: 'website',
+    locale: 'en_GH',
     url: SITE_URL,
+    siteName: 'Lightworld Technologies',
+    title: 'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
+    description: DESCRIPTION,
     images: [
       {
-        url: OG_IMAGE,
+        url: '/slides/slide-hero.png',
         width: 1200,
         height: 630,
-        alt: "Lightworld Technologies - IT Solutions Ghana",
+        alt: 'Lightworld Technologies digital engineering and IT solutions',
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Lightworld Technologies Limited – The World of Possibilities",
+    card: 'summary_large_image',
+    title: 'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
     description: DESCRIPTION,
-    images: [OG_IMAGE],
-    creator: "@lightworldtech",
+    images: ['/slides/slide-hero.png'],
   },
-  verification: {
-    google: "your-google-verification-code",
+  appleWebApp: {
+    capable: true,
+    title: 'Lightworld Technologies',
+    statusBarStyle: 'black-translucent',
   },
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f9f8' },
+    { media: '(prefers-color-scheme: dark)', color: '#050b10' },
+  ],
 };
 
 export default function RootLayout({
@@ -108,23 +118,15 @@ export default function RootLayout({
       <head>
         <OrganizationJsonLd />
         <WebSiteJsonLd />
-        <meta name="theme-color" content="#059669" />
-        <link rel="icon" href="https://www.lightworldtech.com/wp-content/uploads/2018/10/Lightworldtech-Logo-favicon-1.png" sizes="32x32" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(localStorage.getItem('theme')==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){document.documentElement.classList.add('dark')}`,
+            __html:
+              "try{if(localStorage.getItem('theme')==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){document.documentElement.classList.add('dark')}",
           }}
         />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased bg-background text-foreground`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           {children}
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>

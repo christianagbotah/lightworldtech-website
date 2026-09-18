@@ -219,7 +219,7 @@ export default function AdminLogin() {
                     <Input
                       id="admin-email"
                       type="email"
-                      placeholder="admin@lightworldtech.com"
+                      placeholder="admin@company.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       onFocus={() => setFocusedField('email')}
@@ -289,18 +289,7 @@ export default function AdminLogin() {
                   )}
                 </Button>
               </form>
-
-              {/* Demo credentials hint */}
-              <div className="mt-6 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                <p className="text-xs text-amber-500 dark:text-amber-400 font-medium mb-1">Demo Credentials</p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                  Email: admin@lightworldtech.com
-                </p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                  Password: admin123
-                </p>
-              </div>
-            </CardContent>
+</CardContent>
           </Card>
 
           <p className="text-center text-xs text-muted-foreground mt-6">

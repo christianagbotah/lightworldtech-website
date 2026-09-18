@@ -38,6 +38,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { currentPage, adminTab, setAdminTab, navigate, adminName, logoutAdmin } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/auth', { method: 'DELETE' });
+    } finally {
+      logoutAdmin();
+      navigate('home');
+    }
+  };
+
   const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
     setAdminTab(id);
     navigate(page);
@@ -144,7 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => { logoutAdmin(); navigate('home'); }}
+                onClick={handleLogout}
                 title="Logout"
                 aria-label="Logout"
               >

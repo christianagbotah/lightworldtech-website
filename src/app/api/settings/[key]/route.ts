@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 // GET individual setting by key
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> }
 ) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { key } = await params;
 
@@ -42,6 +45,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> }
 ) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { key } = await params;
     const body = await request.json();

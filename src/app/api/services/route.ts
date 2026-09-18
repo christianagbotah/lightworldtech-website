@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 // GET all services
 export async function GET(request: NextRequest) {
@@ -8,8 +9,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('active');
 
+    const adminRequest = isAdminRequest(request);
     const services = await db.service.findMany({
-      where: activeOnly === 'true' ? { active: true } : undefined,
+      where: !adminRequest || activeOnly === 'true' ? { active: true } : undefined,
       orderBy: { order: 'asc' },
     });
 
@@ -36,6 +38,8 @@ const createServiceSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const body = await request.json();
     const parsed = createServiceSchema.safeParse(body);

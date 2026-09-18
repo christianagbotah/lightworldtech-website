@@ -1,334 +1,205 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { FormEvent, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-  Kanban, UsersRound, GraduationCap, BarChart3, Bell, Mail, Clock, CheckCircle2,
-  ArrowRight, Flame, Zap,
+  ArrowRight,
+  BarChart3,
+  Bell,
+  BrainCircuit,
+  CheckCircle2,
+  GraduationCap,
+  Layers3,
+  Mail,
+  PackageSearch,
+  School,
+  Sparkles,
+  Workflow,
 } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { useSEO } from '@/hooks/use-seo';
-import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
-const products = [
+const productDirections = [
   {
-    id: '1',
-    title: 'Project Management Tool',
-    description: 'Streamline your team\'s workflow with our intuitive project management solution. Features include task boards, time tracking, Gantt charts, and real-time collaboration for teams of any size.',
-    image: '/images/products/project-tool.png',
-    icon: Kanban,
-    gradient: 'from-amber-500 to-yellow-600',
-    features: ['Task Boards & Kanban', 'Time Tracking', 'Gantt Charts', 'Team Collaboration', 'Automated Reports'],
-    launchDate: 'Q4 2026',
+    icon: Workflow,
+    title: 'Operations platforms',
+    stage: 'Product family',
+    text: 'Modular systems for assets, maintenance, inventory, people, approvals and operational reporting.',
+    features: ['Role-aware workflows', 'Auditability', 'Dashboards', 'Mobile operations'],
   },
   {
-    id: '2',
-    title: 'CRM System',
-    description: 'Build stronger relationships with a CRM designed for African businesses. Manage leads, track sales pipelines, automate follow-ups, and gain actionable insights from customer data.',
-    image: '/images/products/crm.png',
-    icon: UsersRound,
-    gradient: 'from-amber-500 to-amber-600',
-    features: ['Lead Management', 'Sales Pipeline', 'Email Automation', 'Customer Analytics', 'Mobile App'],
-    launchDate: 'Q1 2027',
+    icon: School,
+    title: 'Education platforms',
+    stage: 'Product family',
+    text: 'School administration, learning, assessment, billing and communication experiences designed around the institution.',
+    features: ['Administration', 'Assessment', 'Billing', 'Parent & staff journeys'],
   },
   {
-    id: '3',
-    title: 'Learning Platform',
-    description: 'Empower your organization with a modern e-learning platform. Create and deliver courses, track learner progress, issue certificates, and build a culture of continuous learning.',
-    image: '/images/products/learning.png',
-    icon: GraduationCap,
-    gradient: 'from-yellow-500 to-amber-600',
-    features: ['Course Builder', 'Video Streaming', 'Progress Tracking', 'Certificates', 'Assessments'],
-    launchDate: 'Q2 2027',
+    icon: BrainCircuit,
+    title: 'AI-assisted products',
+    stage: 'R&D',
+    text: 'Focused intelligent experiences that help teams search knowledge, interpret information and automate repetitive work.',
+    features: ['Assistants', 'Knowledge', 'Automation', 'Human controls'],
   },
   {
-    id: '4',
-    title: 'Analytics Dashboard',
-    description: 'Make data-driven decisions with our powerful analytics dashboard. Visualize key metrics, create custom reports, set alerts, and integrate with your existing data sources.',
-    image: '/images/products/analytics.png',
     icon: BarChart3,
-    gradient: 'from-amber-400 to-amber-500',
-    features: ['Custom Dashboards', 'Real-time Data', 'Export Reports', 'Alert System', 'API Integrations'],
-    launchDate: 'Q3 2027',
+    title: 'Business intelligence',
+    stage: 'R&D',
+    text: 'Operational dashboards and reporting products that bring data from separate workflows into one decision surface.',
+    features: ['KPIs', 'Alerts', 'Reporting', 'Integrations'],
+  },
+  {
+    icon: GraduationCap,
+    title: 'Learning & skills',
+    stage: 'R&D',
+    text: 'Digital learning and capability-building experiences for companies, institutions and individual learners.',
+    features: ['Courses', 'Progress', 'Assessment', 'Certificates'],
+  },
+  {
+    icon: Layers3,
+    title: 'Reusable industry modules',
+    stage: 'Platform',
+    text: 'Reusable product building blocks that shorten delivery time while keeping room for industry-specific workflows.',
+    features: ['Modular', 'Configurable', 'API-first', 'Multi-tenant ready'],
   },
 ];
 
-const emailSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-});
-
-// Target launch dates for countdown (approximate future dates)
-const launchDates: Record<string, Date> = {
-  '1': new Date('2026-12-01T00:00:00'), // Q4 2026
-  '2': new Date('2027-03-01T00:00:00'), // Q1 2027
-  '3': new Date('2027-06-01T00:00:00'), // Q2 2027
-  '4': new Date('2027-09-01T00:00:00'), // Q3 2027
-};
-
-function useCountdown(targetDate: Date) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    const update = () => {
-      const now = new Date().getTime();
-      const distance = targetDate.getTime() - now;
-      if (distance <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        return;
-      }
-      setTimeLeft({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000),
-      });
-    };
-    update();
-    intervalRef.current = setInterval(update, 1000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [targetDate]);
-
-  return timeLeft;
-}
-
-function CompactCountdown({ targetDate }: { targetDate: Date }) {
-  const { days, hours, minutes, seconds } = useCountdown(targetDate);
-  const isLaunched = days === 0 && hours === 0 && minutes === 0 && seconds === 0;
-
-  if (isLaunched) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-        <Zap className="size-2.5" />
-        Launching now!
-      </span>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:text-white/50 text-slate-500 tabular-nums">
-      <Flame className="size-2.5 text-amber-500 shrink-0" />
-      {days}d {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-    </span>
-  );
-}
-
 export default function ProductsPage() {
-  const { navigate } = useAppStore();
-  useSEO({
-    title: 'Products',
-    description: 'Upcoming products from Lightworld Technologies - Project Management Tool, CRM System, Learning Platform, and Analytics Dashboard.',
-    keywords: ['project management tool', 'CRM system Ghana', 'learning platform', 'analytics dashboard', 'Lightworld Technologies products'],
-  });
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  const [emailInputs, setEmailInputs] = useState<Record<string, string>>({});
-  const [subscribing, setSubscribing] = useState<string | null>(null);
-  const [subscribed, setSubscribed] = useState<Record<string, boolean>>({});
+  const subscribe = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!email.trim()) return;
 
-  const handleSubscribe = useCallback(async (productId: string) => {
-    const email = emailInputs[productId];
-    if (!email) {
-      toast.error('Please enter your email address');
-      return;
-    }
-    const result = emailSchema.safeParse({ email });
-    if (!result.success) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    setSubscribing(productId);
+    setSending(true);
     try {
-      const res = await fetch('/api/newsletter', {
+      const response = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: `product-${productId}` }),
+        body: JSON.stringify({ email: email.trim() }),
       });
-      const data = await res.json();
-      if (data.success) {
-        setSubscribed((prev) => ({ ...prev, [productId]: true }));
-        toast.success('You\'ll be notified when this product launches!');
-      } else {
-        toast.error('Something went wrong. Please try again.');
-      }
+      if (!response.ok) throw new Error('Unable to subscribe');
+      setSubscribed(true);
+      setEmail('');
+      toast.success('Product updates enabled.');
     } catch {
-      toast.error('Something went wrong. Please try again.');
+      toast.error('Could not subscribe right now.');
     } finally {
-      setSubscribing(null);
+      setSending(false);
     }
-  }, [emailInputs]);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
   return (
-    <div>
-      <div className="h-[calc(100vh-5rem)] overflow-hidden bg-background flex flex-col">
-        {/* Subtle background glow */}
-        <div className="absolute top-10 left-10 w-40 h-40 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-56 h-56 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
+      <section className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
+        <div className="container-main py-16 sm:py-20 lg:py-24">
+          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
+                <PackageSearch className="size-3.5" />
+                Product lab
+              </div>
+              <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">Custom engineering today. Reusable products tomorrow.</h1>
+            </div>
+            <div>
+              <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
+                Our product direction grows from patterns we repeatedly see in real operations. Instead of publishing speculative launch dates, this page shows the product families and platform ideas we are actively exploring and shaping.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Compact Title Bar — ~60px */}
-        <motion.div
-          className="relative z-10 flex items-center justify-between px-4 lg:px-6 py-3 border-b dark:border-white/[0.06] border-slate-200"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex items-center gap-3">
-            <Badge className="bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-semibold backdrop-blur-sm shrink-0">
-              <Clock className="size-2.5 mr-1" />
-              Products
-            </Badge>
-            <h1 className="text-base lg:text-lg font-bold dark:text-white text-slate-900">
-              Our <span className="text-gradient-amber">Products</span>
-            </h1>
-            <span className="hidden sm:inline text-xs dark:text-white/50 text-slate-500 uppercase tracking-widest">
-              Coming Soon
-            </span>
-          </div>
-          <button
-            onClick={() => navigate('contact')}
-            className="hidden md:inline-flex items-center gap-1 text-xs dark:text-white/40 text-slate-500 hover:text-emerald-400 transition-colors"
-          >
-            Need a custom solution?
-            <ArrowRight className="size-3" />
-          </button>
-        </motion.div>
-
-        {/* 2×2 Product Cards Grid */}
-        <motion.div
-          className="relative z-10 flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-5 p-3 lg:p-4 overflow-y-auto"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {products.map((product) => {
-            const Icon = product.icon;
-            const isSubscribed = subscribed[product.id];
-
-            return (
-              <motion.div key={product.id} variants={itemVariants} className="min-h-0">
-                <div className="h-full dark:bg-white/[0.03] bg-white dark:border-white/[0.06] border-slate-200 rounded-xl dark:hover:bg-white/[0.06] hover:bg-slate-50 transition-all duration-300 group overflow-hidden relative flex flex-col shadow-sm">
-                  {/* Featured Image Banner — full card width */}
-                  <div className="relative aspect-[21/9] overflow-hidden shrink-0">
-                    <Image
-                      src={product.image}
-                      alt={product.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      unoptimized
-                    />
-                    {/* Gradient overlay at bottom of image */}
-                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white/90 dark:from-slate-900/90 to-transparent" />
-                    {/* Accent line at bottom of image */}
-                    <div className={`absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r ${product.gradient} opacity-60 group-hover:opacity-100 transition-opacity`} />
-                  </div>
-
-                  {/* Content — padded inner section */}
-                  <div className="p-4 md:p-6 flex flex-col flex-1">
-                  {/* Header: icon + title + launch badge */}
-                  <div className="flex items-start gap-2.5 mb-2">
-                    <div className={`size-10 lg:size-12 shrink-0 rounded-xl bg-gradient-to-br ${product.gradient} flex items-center justify-center shadow-lg group-hover:scale-105 group-hover:rotate-1 transition-all duration-300`}>
-                      <Icon className="size-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm lg:text-base font-bold dark:text-white text-slate-900 group-hover:text-emerald-400 transition-colors truncate">
-                          {product.title}
-                        </h3>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <Badge className="text-xs px-2 py-0 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:text-white/40 text-slate-500 border-0 font-normal">
-                          {product.launchDate}
-                        </Badge>
-                        <CompactCountdown targetDate={launchDates[product.id] || new Date()} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Description — 2 lines */}
-                  <p className="text-xs lg:text-sm dark:text-white/45 text-slate-600 leading-relaxed line-clamp-2 mb-2">
-                    {product.description}
-                  </p>
-
-                  {/* Feature pills */}
-                  <div className="flex flex-wrap gap-1 mb-3">
+      <section className="section-padding">
+        <div className="container-main">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {productDirections.map((product, index) => (
+              <motion.div
+                key={product.title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.04 }}
+                className="group flex min-h-[320px] flex-col rounded-[28px] border border-slate-200/70 bg-white p-6 transition hover:-translate-y-0.5 hover:border-emerald-300/50 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                    <product.icon className="size-5" />
+                  </span>
+                  <span className="rounded-full border border-slate-200/80 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:border-white/[0.07] dark:text-white/25">{product.stage}</span>
+                </div>
+                <div className="mt-auto pt-9">
+                  <h2 className="text-xl font-semibold tracking-tight">{product.title}</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/36">{product.text}</p>
+                  <div className="mt-5 flex flex-wrap gap-1.5">
                     {product.features.map((feature) => (
-                      <span
-                        key={feature}
-                        className="text-xs px-2.5 py-0.5 lg:px-3 lg:py-1 rounded-full dark:bg-white/[0.04] bg-slate-100 dark:text-white/60 text-slate-700 whitespace-nowrap"
-                      >
-                        {feature}
-                      </span>
+                      <span key={feature} className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-500 dark:bg-white/[0.04] dark:text-white/28">{feature}</span>
                     ))}
-                  </div>
-
-                  {/* Spacer to push email to bottom */}
-                  <div className="flex-1" />
-
-                  {/* Email Notification — compact */}
-                  {isSubscribed ? (
-                    <motion.div
-                      className="flex items-center gap-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/15"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                    >
-                      <CheckCircle2 className="size-3 text-amber-400 shrink-0" />
-                      <span className="text-xs text-amber-400 font-medium">
-                        You&apos;ll be notified at launch!
-                      </span>
-                    </motion.div>
-                  ) : (
-                    <div className="flex gap-1.5">
-                      <div className="relative flex-1">
-                        <Mail className="absolute left-2 top-1/2 -translate-y-1/2 size-3 dark:text-white/40 text-slate-500" />
-                        <Input
-                          type="email"
-                          placeholder="your@email.com"
-                          value={emailInputs[product.id] || ''}
-                          onChange={(e) => setEmailInputs((prev) => ({ ...prev, [product.id]: e.target.value }))}
-                          className="pl-7 h-7 text-xs dark:bg-white/[0.04] bg-slate-50 dark:border-white/[0.06] border-slate-200 rounded-lg focus:border-amber-400/50 focus:ring-amber-400/10 dark:placeholder:text-white/25 placeholder:text-slate-400"
-                          aria-label={`Email for ${product.title} notifications`}
-                        />
-                      </div>
-                      <Button
-                        onClick={() => handleSubscribe(product.id)}
-                        disabled={subscribing === product.id}
-                        className="h-7 text-xs px-2.5 lg:px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shrink-0 shadow-md shadow-emerald-500/15"
-                      >
-                        {subscribing === product.id ? (
-                          <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                          <>
-                            <Bell className="size-2.5 mr-1" />
-                            <span className="hidden sm:inline">Get Notified</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  )}
                   </div>
                 </div>
               </motion.div>
-            );
-          })}
-        </motion.div>
-      </div>
+            ))}
+          </div>
+
+          <div className="mt-10 grid overflow-hidden rounded-[34px] bg-slate-950 text-white dark:bg-[#081119] lg:grid-cols-[1fr_.8fr]">
+            <div className="relative p-7 sm:p-9 lg:p-11">
+              <div className="absolute -left-16 -top-16 size-64 rounded-full bg-emerald-400/10 blur-3xl" />
+              <div className="relative">
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+                  <Bell className="size-5" />
+                </div>
+                <p className="mt-7 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">Product updates</p>
+                <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Follow what graduates from the lab.</h2>
+                <p className="mt-4 max-w-xl text-sm leading-7 text-white/40">We will share public launches, early-access opportunities and useful product notes when they are ready.</p>
+              </div>
+            </div>
+            <div className="border-t border-white/[0.07] bg-white/[0.03] p-7 sm:p-9 lg:flex lg:items-center lg:border-l lg:border-t-0">
+              {subscribed ? (
+                <div className="flex items-center gap-3 text-emerald-300">
+                  <CheckCircle2 className="size-5" />
+                  <div>
+                    <p className="text-sm font-semibold">You are on the product list.</p>
+                    <p className="mt-1 text-xs text-white/30">We will keep the updates useful.</p>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={subscribe} className="w-full">
+                  <label htmlFor="product-email" className="text-xs font-medium text-white/55">Email for product updates</label>
+                  <div className="mt-3 flex gap-2">
+                    <div className="relative min-w-0 flex-1">
+                      <Mail className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-white/25" />
+                      <input
+                        id="product-email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="you@company.com"
+                        className="h-11 w-full rounded-full border border-white/[0.09] bg-black/20 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-emerald-300/35"
+                      />
+                    </div>
+                    <button disabled={sending} className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-emerald-400 px-5 text-sm font-semibold text-slate-950 disabled:opacity-50">
+                      Subscribe <ArrowRight className="size-4" />
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-8 flex items-center justify-between gap-5 rounded-[26px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
+            <div>
+              <p className="text-sm font-semibold">Need a tailored system instead?</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/30">Our product lab does not replace custom engineering. It makes it stronger.</p>
+            </div>
+            <Link href="/contact" className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+              Talk to us <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

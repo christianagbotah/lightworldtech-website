@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 // GET all blog posts with filtering and pagination
 export async function GET(request: NextRequest) {
@@ -16,7 +17,10 @@ export async function GET(request: NextRequest) {
     // Build where clause
     const where: Record<string, unknown> = {};
 
-    if (published !== null && published !== undefined) {
+    const adminRequest = isAdminRequest(request);
+    if (!adminRequest) {
+      where.published = true;
+    } else if (published !== null && published !== undefined) {
       where.published = published === 'true';
     }
 
@@ -85,6 +89,8 @@ const createBlogPostSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const body = await request.json();
     const parsed = createBlogPostSchema.safeParse(body);

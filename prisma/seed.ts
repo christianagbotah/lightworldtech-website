@@ -1,6 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import { randomBytes, scryptSync } from 'node:crypto';
 
 const db = new PrismaClient();
+
+function hashSeedPassword(password: string): string {
+  const salt = randomBytes(16);
+  const hash = scryptSync(password, salt, 64);
+  return ['scrypt', salt.toString('base64url'), hash.toString('base64url')].join('$');
+}
 
 async function seed() {
   console.log('🌱 Seeding database...');
@@ -210,7 +217,7 @@ async function seed() {
   for (const p of processSteps) {
     await db.processStep.upsert({
       where: { id: p.id },
-      update: { title: p.title, description: p.description },
+      update: { title: p.title, description: p.description, active: false },
       create: p,
     });
   }
@@ -218,16 +225,16 @@ async function seed() {
 
   // ===== TEAM MEMBERS =====
   const teamMembers = [
-    { id: 'team-1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with over 10 years of experience in IT solutions and business development. Passionate about leveraging technology to transform businesses across Africa.', image: '', email: '', linkedin: '', twitter: '', order: 0 },
-    { id: 'team-2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web technologies. Leads our development team in delivering robust and scalable solutions for our clients.', image: '', email: '', linkedin: '', twitter: '', order: 1 },
-    { id: 'team-3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Creative designer with a keen eye for detail. Specializes in creating intuitive and visually stunning user interfaces that enhance user experience.', image: '', email: '', linkedin: '', twitter: '', order: 2 },
-    { id: 'team-4', name: 'Kofi Amponsah', role: 'Digital Marketing Manager', bio: 'Digital marketing expert with a track record of driving growth through SEO, social media, and content marketing strategies.', image: '', email: '', linkedin: '', twitter: '', order: 3 },
+    { id: 'team-1', name: 'Emmanuel Osei', role: 'Founder & CEO', bio: 'Visionary leader with over 10 years of experience in IT solutions and business development. Passionate about leveraging technology to transform businesses across Africa.', image: '', email: '', linkedin: '', twitter: '', order: 0, active: false },
+    { id: 'team-2', name: 'Kwame Asante', role: 'Lead Developer', bio: 'Full-stack developer with expertise in modern web technologies. Leads our development team in delivering robust and scalable solutions for our clients.', image: '', email: '', linkedin: '', twitter: '', order: 1, active: false },
+    { id: 'team-3', name: 'Abena Mensah', role: 'UI/UX Designer', bio: 'Creative designer with a keen eye for detail. Specializes in creating intuitive and visually stunning user interfaces that enhance user experience.', image: '', email: '', linkedin: '', twitter: '', order: 2, active: false },
+    { id: 'team-4', name: 'Kofi Amponsah', role: 'Digital Marketing Manager', bio: 'Digital marketing expert with a track record of driving growth through SEO, social media, and content marketing strategies.', image: '', email: '', linkedin: '', twitter: '', order: 3, active: false },
   ];
 
   for (const t of teamMembers) {
     await db.teamMember.upsert({
       where: { id: t.id },
-      update: { name: t.name, role: t.role, bio: t.bio },
+      update: { name: t.name, role: t.role, bio: t.bio, active: false },
       create: t,
     });
   }
@@ -235,16 +242,16 @@ async function seed() {
 
   // ===== TESTIMONIALS =====
   const testimonials = [
-    { id: 'test-1', name: 'Rev. Samuel Owusu', company: 'Grace Tabernacle Church', role: 'Senior Pastor', content: 'Lightworld Technologies transformed our online presence completely. Our church website now allows members to access sermons, make donations, and stay connected. The team was professional and delivered beyond our expectations.', image: '', rating: 5, order: 0 },
-    { id: 'test-2', name: 'Beatrice Ofori', company: 'EduPrime Academy', role: 'Director', content: 'The school management system they built for us has streamlined our operations significantly. From student enrollment to grade management, everything is now automated and efficient. Highly recommended!', image: '', rating: 5, order: 1 },
-    { id: 'test-3', name: 'Kwabena Danso', company: 'FreshBite Restaurant', role: 'Owner', content: 'Our e-commerce food ordering system is amazing! Customers can now browse our menu, place orders, and pay online. Our revenue has increased by 40% since launching the new platform.', image: '', rating: 5, order: 2 },
-    { id: 'test-4', name: 'Ama Boateng', company: 'Premier Hotels', role: 'General Manager', content: 'The booking system developed by Lightworld Technologies has made our operations seamless. Guests can book rooms, check amenities, and make payments online. Excellent service and support!', image: '', rating: 5, order: 3 },
+    { id: 'test-1', name: 'Rev. Samuel Owusu', company: 'Grace Tabernacle Church', role: 'Senior Pastor', content: 'Lightworld Technologies transformed our online presence completely. Our church website now allows members to access sermons, make donations, and stay connected. The team was professional and delivered beyond our expectations.', image: '', rating: 5, order: 0, active: false },
+    { id: 'test-2', name: 'Beatrice Ofori', company: 'EduPrime Academy', role: 'Director', content: 'The school management system they built for us has streamlined our operations significantly. From student enrollment to grade management, everything is now automated and efficient. Highly recommended!', image: '', rating: 5, order: 1, active: false },
+    { id: 'test-3', name: 'Kwabena Danso', company: 'FreshBite Restaurant', role: 'Owner', content: 'Our e-commerce food ordering system is amazing! Customers can now browse our menu, place orders, and pay online. Our revenue has increased by 40% since launching the new platform.', image: '', rating: 5, order: 2, active: false },
+    { id: 'test-4', name: 'Ama Boateng', company: 'Premier Hotels', role: 'General Manager', content: 'The booking system developed by Lightworld Technologies has made our operations seamless. Guests can book rooms, check amenities, and make payments online. Excellent service and support!', image: '', rating: 5, order: 3, active: false },
   ];
 
   for (const t of testimonials) {
     await db.testimonial.upsert({
       where: { id: t.id },
-      update: { name: t.name, content: t.content },
+      update: { name: t.name, content: t.content, active: false },
       create: t,
     });
   }
@@ -272,300 +279,210 @@ async function seed() {
   const blogPosts = [
     {
       id: 'post-1',
-      title: 'Why Every Business Needs a Professional Website in 2025',
-      slug: 'why-every-business-needs-professional-website-2025',
-      excerpt: 'In today\'s digital age, having a professional website is no longer a luxury but a necessity for businesses of all sizes. Discover why your business needs a strong online presence.',
-      content: `## Why Every Business Needs a Professional Website in 2025
+      title: 'What Production-Ready Business Software Should Include',
+      slug: 'production-ready-business-software-checklist',
+      excerpt: 'A practical checklist for moving beyond a working demo to software a real business can operate, support, secure, and improve.',
+      content: `## Production-ready is more than “it works”
 
-In today's fast-paced digital world, your website is often the first impression potential customers have of your business. A professional, well-designed website can be the difference between winning a new customer and losing them to a competitor.
+A business application can look complete while still missing the things that make it dependable in daily operations. Production readiness is about what happens when real users, real data, permissions, failures, and change enter the picture.
 
-### First Impressions Matter
+### Start with clear user roles
 
-Studies show that it takes users only **50 milliseconds** to form an opinion about your website. That means you have less than a second to make a positive impression. A professional website with a clean design, fast loading times, and intuitive navigation immediately builds trust and credibility.
+Different users should see and do only what their responsibilities require. Good access control makes the system easier to use and reduces avoidable risk.
 
-### 24/7 Accessibility
+A useful starting point is to define:
 
-Unlike a physical store, your website is accessible 24/7, allowing customers to learn about your products and services, make purchases, or contact you at any time. This around-the-clock availability can significantly increase your revenue potential.
+- who can create, review, approve, and close work
+- which records are restricted by team, department, branch, or client
+- which actions require a second approval
+- what administrators can configure without changing code
 
-### Improved Customer Engagement
+### Make important actions traceable
 
-A professional website provides multiple touchpoints for customer engagement:
+When a system affects money, inventory, assets, students, customers, or staff, the business should be able to understand what changed and why.
 
-- **Contact forms** for inquiries
-- **Live chat** for immediate support
-- **Blog posts** for sharing expertise
-- **Social media integration** for community building
+That usually means keeping reliable timestamps, actors, status history, approvals, and audit records for sensitive operations.
 
-### SEO Benefits
+### Design for failure and recovery
 
-Search engine optimization (SEO) is crucial for being found online. A professionally built website is optimized for search engines from the ground up, helping you rank higher in Google search results and attract more organic traffic.
+Production software should assume that networks fail, users retry actions, integrations time out, and servers occasionally need to be restored.
 
-### Competitive Advantage
+Important safeguards can include:
 
-Your competitors likely already have professional websites. If you don't, you're handing them potential customers on a silver platter. A professional website levels the playing field and can even give you an edge.
+- idempotent operations for critical submissions
+- backups with a tested restore procedure
+- useful error messages and retry paths
+- monitoring for failed jobs and integrations
+- controlled deployment and rollback procedures
 
-### Conclusion
+### Treat security as part of the architecture
 
-Investing in a professional website is one of the smartest business decisions you can make in 2025. It's not just about having an online presence – it's about creating a powerful marketing tool that works for you around the clock.
+Authentication is only one layer. Production systems also need authorization, safe secrets management, input validation, secure session handling, dependency maintenance, and clear administrative boundaries.
 
-Contact Lightworld Technologies today to get started with your professional website project.`,
+### Keep the operating team in mind
+
+Documentation, support workflows, configuration screens, logs, and handover material are part of the product. They reduce dependence on individual developers and help the business keep moving.
+
+## The practical test
+
+A useful question is not simply “Can the application perform the happy path?”
+
+Ask instead: **Can the organization safely operate this system every day, understand what happened when something goes wrong, and continue improving it without rebuilding everything?**
+
+That is the standard we use when shaping production systems at Lightworld Technologies.`,
       coverImage: '',
       author: 'Lightworld Technologies',
       published: true,
       featured: true,
-      readTime: 5,
-      categoryId: 'cat-3',
+      readTime: 6,
+      categoryId: 'cat-1',
     },
     {
       id: 'post-2',
-      title: 'The Complete Guide to Mobile App Development for Your Business',
-      slug: 'complete-guide-mobile-app-development-business',
-      excerpt: 'Learn everything you need to know about developing a mobile app for your business, from planning to launch and beyond.',
-      content: `## The Complete Guide to Mobile App Development
+      title: 'Mobile-First Does Not Mean Mobile-Only',
+      slug: 'mobile-first-digital-products-africa',
+      excerpt: 'How to design digital products for mobile-heavy usage without making desktop, tablet, accessibility, and operational workflows an afterthought.',
+      content: `## Start with the device people actually have
 
-Mobile apps have become an essential tool for businesses looking to engage customers and streamline operations. With over 6.8 billion smartphone users worldwide, the opportunity is immense.
+For many services, the phone is the first and most frequent digital touchpoint. That should influence navigation, form design, content density, performance, and how much typing a task requires.
 
-### Why Your Business Needs a Mobile App
+But mobile-first should not become mobile-only.
 
-1. **Direct Marketing Channel** - Push notifications allow you to communicate directly with customers
-2. **Customer Loyalty** - Apps create a more personal connection with your brand
-3. **Brand Recognition** - Increased visibility through app store presence
-4. **Revenue Growth** - In-app purchases and mobile commerce
+### Different jobs need different surfaces
 
-### Planning Your App
+A customer may register on a phone while an accountant reviews the same transaction on a desktop. A technician may update a work order in the field while a supervisor analyses performance on a larger screen.
 
-Before development begins, consider:
+The product should preserve the same underlying workflow while adapting the interface to the job.
 
-- What problem does your app solve?
-- Who is your target audience?
-- What features are essential vs. nice-to-have?
-- What is your budget and timeline?
+### Design for interruption
 
-### Choosing the Right Technology
+Mobile users are frequently interrupted. Forms should preserve progress where practical, actions should provide clear feedback, and long workflows should be broken into understandable steps.
 
-- **Native Development** (iOS/Android) for best performance
-- **Cross-Platform** (React Native/Flutter) for cost efficiency
-- **Progressive Web Apps** for broad accessibility
+### Connectivity is a product decision
 
-### The Development Process
+Where connectivity can be unreliable, teams should decide deliberately which actions can be cached, retried, queued, or completed offline. Not every product needs full offline support, but every product should have a considered failure experience.
 
-At Lightworld Technologies, we follow a structured approach:
+### Keep touch targets and content priorities clear
 
-1. **Discovery & Planning** - Understanding your needs
-2. **UI/UX Design** - Creating intuitive interfaces
-3. **Development** - Building robust applications
-4. **Testing** - Ensuring quality and reliability
-5. **Launch** - Deploying to app stores
-6. **Maintenance** - Ongoing support and updates
+Small screens punish clutter. Prioritize the information needed for the current decision, use comfortable touch targets, and avoid shrinking desktop layouts until they technically fit.
 
-Ready to build your mobile app? Contact us today!`,
+### Desktop still matters
+
+Administration, reporting, bulk data work, configuration, and complex comparison often benefit from larger screens. Responsive design should take advantage of that space rather than stretching a mobile card across a wide monitor.
+
+## One product, multiple working contexts
+
+The strongest mobile-first systems are not separate “mobile” and “desktop” products. They are one coherent service that respects the context of each device and user role.`,
       coverImage: '',
       author: 'Lightworld Technologies',
       published: true,
-      featured: true,
-      readTime: 7,
+      featured: false,
+      readTime: 5,
       categoryId: 'cat-5',
     },
     {
       id: 'post-3',
-      title: 'Top 10 Web Development Trends to Watch in 2025',
-      slug: 'top-10-web-development-trends-2025',
-      excerpt: 'Stay ahead of the curve with these essential web development trends that are shaping the future of the internet.',
-      content: `## Top 10 Web Development Trends in 2025
+      title: 'When Custom Software Makes More Sense Than Another Spreadsheet',
+      slug: 'when-to-build-custom-business-software',
+      excerpt: 'A practical way to decide when spreadsheets and disconnected tools have become an operational constraint rather than a convenience.',
+      content: `## Spreadsheets are excellent tools—until they become the system
 
-The web development landscape is constantly evolving. Here are the top trends you should watch:
+A spreadsheet is often the fastest way to start a process. It is flexible, familiar, and easy to change. The problem begins when a growing operation depends on many copies, manual approvals, private formulas, and people remembering what to do next.
 
-### 1. AI-Powered Development
-AI tools are revolutionizing how we build websites, from code generation to automated testing.
+### Warning signs that the workflow has outgrown the tool
 
-### 2. Progressive Web Apps (PWAs)
-PWAs combine the best of web and mobile apps, offering offline functionality and push notifications.
+Custom software becomes worth considering when several of these are true:
 
-### 3. Server-Side Rendering (SSR)
-Frameworks like Next.js are making SSR the standard for better SEO and performance.
+- multiple people edit the same operational data
+- approvals are handled through calls or chat messages
+- teams cannot easily tell which record is current
+- the same information is typed into several systems
+- access should differ by role or department
+- audit history matters
+- reporting takes hours of manual consolidation
+- missed reminders or handovers create real cost
 
-### 4. Motion UI
-Interactive animations and micro-interactions enhance user engagement.
+### Do not automate a broken process blindly
 
-### 5. Voice Search Optimization
-With the rise of voice assistants, optimizing for voice search is essential.
+Before building software, map the workflow. Identify the real decisions, handoffs, exceptions, and information people need. Sometimes the best first improvement is to simplify the process rather than digitize every existing step.
 
-### 6. WebAssembly
-Near-native performance for web applications using Wasm.
+### Build around outcomes
 
-### 7. Dark Mode
-User preference for dark mode continues to grow across platforms.
+A useful custom system should reduce friction, improve visibility, make accountability clearer, and create reliable data for future decisions.
 
-### 8. API-First Development
-Building with APIs first ensures flexibility and scalability.
+It should also integrate where appropriate. Replacing every existing tool is rarely necessary.
 
-### 9. Cybersecurity Focus
-Security-first development practices are becoming mandatory.
+### Start with the highest-value slice
 
-### 10. Edge Computing
-Reducing latency by processing data closer to users.
+Large transformation projects become easier to control when they begin with one meaningful vertical workflow and expand after users validate it.
 
-Stay updated with the latest trends by following our blog!`,
-      coverImage: '',
-      author: 'Lightworld Technologies',
-      published: true,
-      featured: false,
-      readTime: 6,
-      categoryId: 'cat-2',
-    },
-    {
-      id: 'post-4',
-      title: 'How School Management Software Transforms Education in Ghana',
-      slug: 'school-management-software-transforms-education-ghana',
-      excerpt: 'Discover how digital school management systems are revolutionizing education administration in Ghana and across Africa.',
-      content: `## How School Management Software Transforms Education
+## The decision is operational, not fashionable
 
-Education institutions in Ghana are embracing digital transformation through comprehensive school management software.
-
-### Challenges in Traditional Education Management
-
-- Manual record-keeping is time-consuming and error-prone
-- Communication between teachers, parents, and administration is often delayed
-- Tracking student performance and attendance is difficult
-- Financial management lacks transparency
-
-### How School Management Software Helps
-
-**Student Information Management**
-- Centralized student records
-- Automated enrollment processes
-- Digital report card generation
-
-**Academic Management**
-- Lesson planning tools
-- Grade book automation
-- Performance analytics and reporting
-
-**Communication**
-- Parent-teacher messaging
-- School announcements and notifications
-- Event management
-
-**Financial Management**
-- Fee tracking and invoicing
-- Payment processing integration
-- Financial reporting
-
-### Lightworld Technologies Education Solutions
-
-We specialize in developing school management systems tailored to the unique needs of educational institutions in Ghana. Our solutions include:
-
-- Creche/Primary/JHS management modules
-- SHS/Vocational school systems
-- University and professional training setups
-
-Contact us to learn more about our education solutions.`,
-      coverImage: '',
-      author: 'Lightworld Technologies',
-      published: true,
-      featured: true,
-      readTime: 8,
-      categoryId: 'cat-1',
-    },
-    {
-      id: 'post-5',
-      title: 'UI/UX Design Principles Every Business Owner Should Know',
-      slug: 'ui-ux-design-principles-business-owners',
-      excerpt: 'Understanding basic UI/UX design principles can help you make better decisions about your website and app projects.',
-      content: `## UI/UX Design Principles for Business Owners
-
-Good design is good business. Understanding these principles will help you create better digital products.
-
-### 1. Simplicity is Key
-The best designs are simple and intuitive. Avoid cluttering your interface with unnecessary elements.
-
-### 2. Consistency Matters
-Maintain consistent colors, fonts, and layouts throughout your digital presence.
-
-### 3. Mobile-First Design
-With most users accessing the web via mobile devices, design for mobile first, then scale up.
-
-### 4. Accessibility
-Ensure your designs are usable by people with disabilities. This isn't just good practice - it's the law in many jurisdictions.
-
-### 5. Visual Hierarchy
-Guide users' attention to the most important elements through size, color, and positioning.
-
-### 6. Loading Speed
-Users expect fast-loading websites. Optimize images, use caching, and minimize code.
-
-### 7. Clear Calls-to-Action
-Every page should have a clear next step for the user.
-
-### 8. Feedback
-Provide visual and interactive feedback for user actions.
-
-### Why Partner with Lightworld Technologies
-
-Our design team combines aesthetics with functionality to create digital experiences that drive results.`,
-      coverImage: '',
-      author: 'Lightworld Technologies',
-      published: true,
-      featured: false,
-      readTime: 5,
-      categoryId: 'cat-4',
-    },
-    {
-      id: 'post-6',
-      title: 'SEO Strategies to Grow Your Business Online in Ghana',
-      slug: 'seo-strategies-grow-business-online-ghana',
-      excerpt: 'Learn effective SEO strategies specifically tailored for businesses operating in Ghana and the West African market.',
-      content: `## SEO Strategies for Ghanaian Businesses
-
-Search Engine Optimization is crucial for businesses looking to grow their online presence in Ghana.
-
-### Local SEO Essentials
-
-- **Google My Business** - Claim and optimize your listing
-- **Local Keywords** - Target location-specific search terms
-- **Local Citations** - Ensure your business info is consistent across directories
-
-### On-Page Optimization
-
-- Keyword research and implementation
-- Meta tags and descriptions
-- Header tag optimization
-- Image optimization with alt tags
-- Internal linking strategy
-
-### Content Marketing
-
-- Create valuable, locally relevant content
-- Start a blog addressing local pain points
-- Use Ghana-specific case studies and examples
-- Leverage local events and news
-
-### Technical SEO
-
-- Mobile responsiveness
-- Page speed optimization
-- SSL certificates
-- Schema markup
-- XML sitemaps
-
-### Why SEO Matters for Ghanaian Businesses
-
-With increasing internet penetration and digital adoption in Ghana, businesses that invest in SEO gain a significant competitive advantage.
-
-At Lightworld Technologies, we offer comprehensive SEO services tailored to the Ghanaian market. Contact us to boost your online visibility!`,
+The reason to build custom software is not that custom software sounds more advanced. It is that the current way of working is creating enough cost, risk, delay, or lost visibility that a purpose-built system has a clear job to do.`,
       coverImage: '',
       author: 'Lightworld Technologies',
       published: true,
       featured: false,
       readTime: 6,
       categoryId: 'cat-3',
+    },
+    {
+      id: 'post-4',
+      title: 'A Practical Starting Point for AI Automation in Business',
+      slug: 'practical-ai-automation-business',
+      excerpt: 'Start AI adoption with a bounded workflow, clear human controls, and measurable value instead of adding an assistant to every screen.',
+      content: `## Start with a workflow, not with “AI”
+
+The most useful AI projects usually begin with a repetitive information problem: people spend too much time finding, summarizing, classifying, drafting, or checking something.
+
+That gives the technology a specific job.
+
+### Choose a bounded first use case
+
+Good early candidates have:
+
+- information that can be accessed legitimately
+- a clear input and expected output
+- a human who can verify important results
+- enough repetition for saved time to matter
+- a failure mode the business can tolerate and manage
+
+### Keep people in control where consequences matter
+
+AI can assist with recommendations, drafts, summaries, and prioritization while humans retain approval for consequential actions.
+
+The interface should make it obvious what the system generated, what source material informed it when available, and what the user is expected to review.
+
+### Measure usefulness, not novelty
+
+Useful measures might include time saved, response consistency, reduction in repetitive work, or faster access to internal knowledge.
+
+If a workflow is not becoming meaningfully better, adding more AI features is unlikely to fix the underlying problem.
+
+### Protect business information
+
+Access controls, data retention, provider terms, sensitive information, and auditability should be considered before connecting an AI feature to internal data.
+
+### Design the fallback
+
+Users need a clear path when the model is uncertain, unavailable, or wrong. Good AI UX includes graceful failure rather than pretending confidence.
+
+## Build trust through useful constraints
+
+AI automation is strongest when it has a clearly defined role inside a well-designed process. Start narrow, measure the value, keep human controls visible, and expand only when the workflow earns that expansion.`,
+      coverImage: '',
+      author: 'Lightworld Technologies',
+      published: true,
+      featured: true,
+      readTime: 5,
+      categoryId: 'cat-1',
     },
   ];
 
   for (const p of blogPosts) {
     await db.blogPost.upsert({
       where: { id: p.id },
-      update: { title: p.title, slug: p.slug, content: p.content, published: p.published, featured: p.featured },
+      update: { title: p.title, slug: p.slug, excerpt: p.excerpt, content: p.content, author: p.author, readTime: p.readTime, categoryId: p.categoryId, published: p.published, featured: p.featured },
       create: p,
     });
   }
@@ -573,12 +490,12 @@ At Lightworld Technologies, we offer comprehensive SEO services tailored to the 
 
   // ===== PORTFOLIO PROJECTS =====
   const portfolioProjects = [
-    { id: 'port-1', title: 'Grace Tabernacle Church Website', description: 'Complete church website with live streaming integration, sermon archive, donation system, and member portal.', image: '', url: '', category: 'Church', technologies: JSON.stringify(['Next.js', 'Node.js', 'PostgreSQL', 'Stripe']), featured: true, order: 0 },
-    { id: 'port-2', title: 'EduPrime School Management System', description: 'Comprehensive school management system for a K-12 institution with student records, grade management, and parent communication.', image: '', url: '', category: 'Education', technologies: JSON.stringify(['React', 'Python', 'MySQL']), featured: true, order: 1 },
-    { id: 'port-3', title: 'FreshBite Food Ordering Platform', description: 'E-commerce food ordering and delivery platform with real-time order tracking and payment integration.', image: '', url: '', category: 'E-Commerce', technologies: JSON.stringify(['Next.js', 'Node.js', 'MongoDB', 'Paystack']), featured: true, order: 2 },
-    { id: 'port-4', title: 'Premier Hotels Booking System', description: 'Hotel booking and management system with room availability calendar, online payments, and guest management.', image: '', url: '', category: 'Hospitality', technologies: JSON.stringify(['React', 'Node.js', 'PostgreSQL']), featured: false, order: 3 },
-    { id: 'port-5', title: 'SecureGuard Security Management', description: 'Security company management system with guard scheduling, incident reporting, and client portal.', image: '', url: '', category: 'Security', technologies: JSON.stringify(['React', 'Node.js', 'MongoDB']), featured: false, order: 4 },
-    { id: 'port-6', title: 'MediCare Health Portal', description: 'Healthcare portal for patient record management, appointment scheduling, and telemedicine integration.', image: '', url: '', category: 'Healthcare', technologies: JSON.stringify(['Next.js', 'Python', 'PostgreSQL']), featured: true, order: 5 },
+    { id: 'port-1', title: 'Grace Tabernacle Church Website', description: 'Complete church website with live streaming integration, sermon archive, donation system, and member portal.', image: '', url: '', category: 'Church', technologies: JSON.stringify(['Next.js', 'Node.js', 'PostgreSQL', 'Stripe']), featured: true, order: 0, active: false },
+    { id: 'port-2', title: 'EduPrime School Management System', description: 'Comprehensive school management system for a K-12 institution with student records, grade management, and parent communication.', image: '', url: '', category: 'Education', technologies: JSON.stringify(['React', 'Python', 'MySQL']), featured: true, order: 1, active: false },
+    { id: 'port-3', title: 'FreshBite Food Ordering Platform', description: 'E-commerce food ordering and delivery platform with real-time order tracking and payment integration.', image: '', url: '', category: 'E-Commerce', technologies: JSON.stringify(['Next.js', 'Node.js', 'MongoDB', 'Paystack']), featured: true, order: 2, active: false },
+    { id: 'port-4', title: 'Premier Hotels Booking System', description: 'Hotel booking and management system with room availability calendar, online payments, and guest management.', image: '', url: '', category: 'Hospitality', technologies: JSON.stringify(['React', 'Node.js', 'PostgreSQL']), featured: false, order: 3, active: false },
+    { id: 'port-5', title: 'SecureGuard Security Management', description: 'Security company management system with guard scheduling, incident reporting, and client portal.', image: '', url: '', category: 'Security', technologies: JSON.stringify(['React', 'Node.js', 'MongoDB']), featured: false, order: 4, active: false },
+    { id: 'port-6', title: 'MediCare Health Portal', description: 'Healthcare portal for patient record management, appointment scheduling, and telemedicine integration.', image: '', url: '', category: 'Healthcare', technologies: JSON.stringify(['Next.js', 'Python', 'PostgreSQL']), featured: true, order: 5, active: false },
   ];
 
   for (const p of portfolioProjects) {
@@ -610,12 +527,20 @@ At Lightworld Technologies, we offer comprehensive SEO services tailored to the 
   console.log('✅ FAQs seeded');
 
   // ===== ADMIN ACCOUNT =====
+  const adminSeedPassword =
+    process.env.ADMIN_SEED_PASSWORD ||
+    (process.env.NODE_ENV !== 'production' ? 'admin123' : undefined);
+
+  if (!adminSeedPassword) {
+    throw new Error('ADMIN_SEED_PASSWORD is required when seeding in production');
+  }
+
   await db.admin.upsert({
     where: { email: 'admin@lightworldtech.com' },
     update: {},
     create: {
       email: 'admin@lightworldtech.com',
-      password: 'admin123', // In production, this should be hashed
+      password: hashSeedPassword(adminSeedPassword),
       name: 'System Admin',
       role: 'admin',
     },

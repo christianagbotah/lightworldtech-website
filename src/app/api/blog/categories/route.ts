@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 // GET all blog categories
 export async function GET() {
@@ -32,6 +33,8 @@ const createCategorySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
   try {
     const body = await request.json();
     const parsed = createCategorySchema.safeParse(body);

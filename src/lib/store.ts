@@ -22,16 +22,62 @@ interface AppState {
   logoutAdmin: () => void;
 }
 
+const publicRoutes: Partial<Record<Page, string>> = {
+  home: '/',
+  about: '/about',
+  services: '/services',
+  blog: '/blog',
+  contact: '/contact',
+  portfolio: '/portfolio',
+  careers: '/careers',
+  products: '/products',
+  admin: '/admin',
+};
+
+const adminTabs: Partial<Record<Page, string>> = {
+  'admin-dashboard': 'dashboard',
+  'admin-services': 'services',
+  'admin-blog': 'blog',
+  'admin-blog-editor': 'blog-editor',
+  'admin-team': 'team',
+  'admin-testimonials': 'testimonials',
+  'admin-messages': 'messages',
+  'admin-settings': 'settings',
+  'admin-faqs': 'faqs',
+  'admin-portfolio': 'portfolio',
+};
+
 export const useAppStore = create<AppState>((set) => ({
   currentPage: 'home',
   blogPostSlug: null,
   navigate: (page, slug) => {
-    if (slug) {
-      set({ currentPage: page, blogPostSlug: slug });
-    } else {
-      set({ currentPage: page, blogPostSlug: null });
+    if (typeof window !== 'undefined') {
+      if (page === 'blog-detail' && slug) {
+        window.location.assign('/blog/' + encodeURIComponent(slug));
+        return;
+      }
+
+      const publicRoute = publicRoutes[page];
+      if (publicRoute) {
+        if (page === 'admin' && window.location.pathname === '/admin') {
+          set({ currentPage: page, adminTab: 'dashboard', blogPostSlug: null });
+          return;
+        }
+        window.location.assign(publicRoute);
+        return;
+      }
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    const adminTab = adminTabs[page];
+    set({
+      currentPage: page,
+      blogPostSlug: slug || null,
+      ...(adminTab ? { adminTab } : {}),
+    });
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   },
   mobileMenuOpen: false,
   setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),

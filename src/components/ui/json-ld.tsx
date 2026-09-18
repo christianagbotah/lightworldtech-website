@@ -1,5 +1,3 @@
-'use client';
-
 interface JsonLdProps {
   data: Record<string, unknown>;
 }
@@ -14,20 +12,20 @@ export function JsonLd({ data }: JsonLdProps) {
 }
 
 const SITE_URL = 'https://www.lightworldtech.com';
-const LOGO_URL = 'https://www.lightworldtech.com/wp-content/uploads/2018/10/Lightworldtech-Logo-favicon-1.png';
+const LOGO_URL = SITE_URL + '/logo.png';
 
 export function OrganizationJsonLd() {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Lightworld Technologies Limited',
-    alternateName: 'Lightworld Tech',
+    alternateName: 'Lightworld Technologies',
     url: SITE_URL,
     logo: LOGO_URL,
-    description: 'Innovative IT solutions provider offering web development, mobile app development, software development, and digital marketing services in Ghana.',
+    description:
+      'Technology company in Ghana building websites, mobile applications, enterprise software, AI-enabled workflows and cloud solutions, with IT training and technology consultancy.',
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Accra',
       addressLocality: 'Accra',
       addressRegion: 'Greater Accra',
       addressCountry: 'GH',
@@ -35,31 +33,32 @@ export function OrganizationJsonLd() {
     contactPoint: {
       '@type': 'ContactPoint',
       telephone: '+233-24-361-8186',
-      contactType: 'customer service',
+      contactType: 'sales and customer service',
       email: 'mail@lightworldtech.com',
       availableLanguage: ['English'],
     },
     sameAs: [
-      'https://facebook.com/lightworldtech',
-      'https://twitter.com/lightworldtech',
-      'https://linkedin.com/company/lightworldtech',
-      'https://instagram.com/lightworldtech',
+      'https://facebook.com/lightworldtechnologies',
+      'https://x.com/lightworldtech',
+      'https://linkedin.com/company/lightworldtechnologies',
+      'https://instagram.com/lightworldtechnologies',
     ],
-    foundingDate: '2016',
-    numberOfEmployees: {
-      '@type': 'QuantitativeValue',
-      minValue: 10,
-      maxValue: 50,
-    },
-    areaServed: {
-      '@type': 'GeoCircle',
-      geoMidpoint: {
-        '@type': 'GeoCoordinates',
-        latitude: 5.6037,
-        longitude: -0.1870,
-      },
-      geoRadius: '500 km',
-    },
+    knowsAbout: [
+      'Software development',
+      'Web development',
+      'Mobile application development',
+      'Enterprise software',
+      'Artificial intelligence automation',
+      'Cloud infrastructure',
+      'Cybersecurity',
+      'Search engine optimization',
+      'Information technology training',
+      'Technology consulting',
+    ],
+    areaServed: [
+      { '@type': 'Country', name: 'Ghana' },
+      { '@type': 'Place', name: 'Africa' },
+    ],
   };
 
   return <JsonLd data={data} />;
@@ -70,9 +69,9 @@ export function WebSiteJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Lightworld Technologies',
-    alternateName: 'Lightworld Tech',
     url: SITE_URL,
-    description: 'Innovative IT solutions provider in Ghana - Web Development, Mobile Apps, Software Development, Digital Marketing',
+    description:
+      'Software engineering, websites, mobile apps, enterprise systems, AI automation, cloud solutions, IT training and technology consultancy.',
     publisher: {
       '@type': 'Organization',
       name: 'Lightworld Technologies Limited',
@@ -80,14 +79,6 @@ export function WebSiteJsonLd() {
         '@type': 'ImageObject',
         url: LOGO_URL,
       },
-    },
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${SITE_URL}/blog?search={search_term_string}`,
-      },
-      'query-input': 'required name=search_term_string',
     },
     inLanguage: 'en',
   };
