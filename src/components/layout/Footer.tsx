@@ -15,42 +15,49 @@ import {
   Twitter,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 
-const groups = [
-  {
-    title: 'Build',
-    links: [
-      ['Web & product engineering', '/services'],
-      ['Mobile applications', '/services'],
-      ['Enterprise systems', '/services'],
-      ['AI & automation', '/services'],
-      ['Cloud & DevOps', '/services'],
-    ],
-  },
-  {
-    title: 'Explore',
-    links: [
-      ['Portfolio', '/portfolio'],
-      ['Products', '/products'],
-      ['Insights', '/blog'],
-      ['About', '/about'],
-      ['Leadership', '/team'],
-      ['Recognition & Press', '/about#recognition'],
-      ['Careers', '/careers'],
-    ],
-  },
+const defaultBuildLinks = [
+  { label: 'Web & product engineering', href: '/services' },
+  { label: 'Mobile applications', href: '/services' },
+  { label: 'Enterprise systems', href: '/services' },
+  { label: 'AI & automation', href: '/services' },
+  { label: 'Cloud & DevOps', href: '/services' },
 ];
 
-const socials = [
-  { icon: Linkedin, label: 'LinkedIn', href: 'https://linkedin.com/company/lightworldtechnologies' },
-  { icon: Facebook, label: 'Facebook', href: 'https://facebook.com/lightworldtechnologies' },
-  { icon: Instagram, label: 'Instagram', href: 'https://instagram.com/lightworldtechnologies' },
-  { icon: Twitter, label: 'X', href: 'https://x.com/lightworldtech' },
+const defaultExploreLinks = [
+  { label: 'Portfolio', href: '/portfolio' },
+  { label: 'Products', href: '/products' },
+  { label: 'Insights', href: '/blog' },
+  { label: 'About', href: '/about' },
+  { label: 'Leadership', href: '/team' },
+  { label: 'Recognition & Press', href: '/about#recognition' },
+  { label: 'Careers', href: '/careers' },
 ];
 
-export default function Footer() {
+export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const companyName = contentText(settings, 'company_name', 'Lightworld Technologies Ltd');
+  const tagline = contentText(settings, 'company_tagline', 'The world of possibilities');
+  const description = contentText(
+    settings,
+    'company_description',
+    'Apps, websites, enterprise systems, AI-enabled workflows, cloud infrastructure, training and technology advisory—from Accra to wherever the work needs to go.',
+  );
+  const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
+  const phone = contentText(settings, 'company_phone1', '+233 (024) 361 8186');
+  const address = contentText(settings, 'company_address', 'Accra, Ghana');
+  const buildLinks = contentJson<Array<{ label: string; href: string }>>(settings, 'footer_build_links', defaultBuildLinks);
+  const exploreLinks = contentJson<Array<{ label: string; href: string }>>(settings, 'footer_explore_links', defaultExploreLinks);
+
+  const socials = [
+    { icon: Linkedin, label: 'LinkedIn', href: settings.social_linkedin || '' },
+    { icon: Facebook, label: 'Facebook', href: settings.social_facebook || '' },
+    { icon: Instagram, label: 'Instagram', href: settings.social_instagram || '' },
+    { icon: Twitter, label: 'X', href: settings.social_twitter || '' },
+  ].filter((item) => item.href);
 
   const subscribe = async (event: FormEvent) => {
     event.preventDefault();
@@ -95,48 +102,49 @@ export default function Footer() {
               </span>
               <span>
                 <span className="block text-base font-bold tracking-[-0.02em]">Lightworld Technologies</span>
-                <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.24em] text-emerald-300/70">The world of possibilities</span>
+                <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.24em] text-emerald-300/70">{tagline}</span>
               </span>
             </Link>
 
             <h2 className="mt-7 max-w-xl text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
               We turn ambitious business ideas into technology people can actually use.
             </h2>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-white/38 sm:text-base">
-              Apps, websites, enterprise systems, AI-enabled workflows, cloud infrastructure, training and technology advisory—from Accra to wherever the work needs to go.
-            </p>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-white/38 sm:text-base">{description}</p>
 
             <div className="mt-7 flex flex-wrap gap-2">
               <a
-                href="mailto:mail@lightworldtech.com"
+                href={'mailto:' + companyEmail}
                 className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-xs text-white/55 transition hover:border-emerald-300/20 hover:text-emerald-300"
               >
                 <Mail className="size-3.5" />
-                mail@lightworldtech.com
+                {companyEmail}
               </a>
               <a
-                href="tel:+233243618186"
+                href={'tel:' + phone.replace(/[^+\d]/g, '')}
                 className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-xs text-white/55 transition hover:border-emerald-300/20 hover:text-emerald-300"
               >
                 <Phone className="size-3.5" />
-                +233 (024) 361 8186
+                {phone}
               </a>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-xs text-white/55">
                 <MapPin className="size-3.5" />
-                Accra, Ghana
+                {address}
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-            {groups.map((group) => (
+            {[
+              { title: 'Build', links: buildLinks },
+              { title: 'Explore', links: exploreLinks },
+            ].map((group) => (
               <div key={group.title}>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/22">{group.title}</p>
                 <ul className="mt-4 space-y-3">
-                  {group.links.map(([label, href]) => (
-                    <li key={label}>
-                      <Link href={href} className="text-sm text-white/45 transition hover:text-emerald-300">
-                        {label}
+                  {group.links.map((item) => (
+                    <li key={item.label + item.href}>
+                      <Link href={item.href} className="text-sm text-white/45 transition hover:text-emerald-300">
+                        {item.label}
                       </Link>
                     </li>
                   ))}
@@ -149,7 +157,7 @@ export default function Footer() {
               <ul className="mt-4 space-y-3">
                 <li><Link href="/contact" className="text-sm text-white/45 transition hover:text-emerald-300">Start a project</Link></li>
                 <li><Link href="/careers" className="text-sm text-white/45 transition hover:text-emerald-300">Join the team</Link></li>
-                <li><a href="mailto:mail@lightworldtech.com" className="text-sm text-white/45 transition hover:text-emerald-300">Email us</a></li>
+                <li><a href={'mailto:' + companyEmail} className="text-sm text-white/45 transition hover:text-emerald-300">Email us</a></li>
               </ul>
             </div>
           </div>
@@ -188,7 +196,7 @@ export default function Footer() {
 
         <div className="mt-10 flex flex-col gap-5 border-t border-white/[0.07] pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-white/24">
-            <span>© {new Date().getFullYear()} Lightworld Technologies Ltd</span>
+            <span>© {new Date().getFullYear()} {companyName}</span>
             <Link href="/contact" className="transition hover:text-white/55">Privacy</Link>
             <Link href="/contact" className="transition hover:text-white/55">Terms</Link>
           </div>
