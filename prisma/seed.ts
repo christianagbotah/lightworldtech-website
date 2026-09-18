@@ -15,7 +15,7 @@ async function seed() {
   // ===== SITE SETTINGS =====
   const settings = [
     // General
-    { key: 'company_name', value: 'Lightworld Technologies Limited', type: 'text', group: 'general' },
+    { key: 'company_name', value: 'Lightworld Technologies Ltd', type: 'text', group: 'general' },
     { key: 'company_tagline', value: 'The World of Possibilities', type: 'text', group: 'general' },
     { key: 'company_description', value: 'We are a leading IT solutions company providing cutting-edge software development, web development, mobile app development, and digital marketing services to businesses across Africa and beyond.', type: 'richText', group: 'general' },
     { key: 'company_address', value: 'Accra, Ghana', type: 'text', group: 'contact' },
@@ -46,13 +46,13 @@ async function seed() {
     // About
     { key: 'about_title', value: 'About Lightworld Technologies', type: 'text', group: 'about' },
     { key: 'about_subtitle', value: 'Empowering Businesses Through Technology', type: 'text', group: 'about' },
-    { key: 'about_description', value: 'Lightworld Technologies Limited is a dynamic and innovative IT solutions company based in Ghana. With a team of talented and skilled professionals, we are committed to delivering world-class technology solutions that transform businesses and drive growth.\n\nWe specialize in web development, mobile app development, software development, digital marketing, and IT training. Our mission is to bridge the technology gap and empower businesses with cutting-edge solutions that give them a competitive edge in the digital landscape.\n\nSince our establishment, we have served over 100 clients across various industries including education, healthcare, e-commerce, real estate, hospitality, and more. Our commitment to excellence and innovation has earned us recognition including the 2024 Business Excellence Award and the 2021 MEA Award.', type: 'richText', group: 'about' },
+    { key: 'about_description', value: 'Lightworld Technologies Ltd is a dynamic and innovative IT solutions company based in Ghana. With a team of talented and skilled professionals, we are committed to delivering world-class technology solutions that transform businesses and drive growth.\n\nWe specialize in web development, mobile app development, software development, digital marketing, and IT training. Our mission is to bridge the technology gap and empower businesses with cutting-edge solutions that give them a competitive edge in the digital landscape.\n\nSince our establishment, we have served over 100 clients across various industries including education, healthcare, e-commerce, real estate, hospitality, and more. Our commitment to excellence and innovation has earned us recognition including the 2024 Business Excellence Award and the 2021 MEA Award.', type: 'richText', group: 'about' },
     { key: 'about_mission', value: 'To provide innovative, reliable, and cost-effective IT solutions that empower businesses and individuals to achieve their full potential in the digital age.', type: 'text', group: 'about' },
     { key: 'about_vision', value: 'To be the leading technology solutions provider in Africa, recognized globally for excellence, innovation, and transformative impact on businesses and communities.', type: 'text', group: 'about' },
     { key: 'about_values', value: '["Innovation","Excellence","Integrity","Client Satisfaction","Continuous Learning","Teamwork"]', type: 'json', group: 'about' },
 
     // SEO
-    { key: 'seo_title', value: 'Lightworld Technologies Limited – The World of Possibilities', type: 'text', group: 'seo' },
+    { key: 'seo_title', value: 'Lightworld Technologies Ltd – The World of Possibilities', type: 'text', group: 'seo' },
     { key: 'seo_description', value: 'We develop and design websites, Mobile Apps, School Management Software and other CRMs, Computer Science Training, Beads and Crafts Design Training, etc', type: 'text', group: 'seo' },
     { key: 'seo_keywords', value: 'web development, mobile app development, IT training, SEO, digital marketing, Ghana, Lightworld Technologies', type: 'text', group: 'seo' },
   ];
