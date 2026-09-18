@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { isAdminRequest } from '@/lib/admin-auth';
+import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 // GET all contact messages
 export async function GET(request: NextRequest) {
@@ -61,6 +62,14 @@ const createContactSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const rate = consumePublicRateLimit(request, 'contact', 12, 10 * 60_000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Too many contact submissions. Please try again shortly.' },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = createContactSchema.safeParse(body);
