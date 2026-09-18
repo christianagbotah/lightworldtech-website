@@ -13,15 +13,10 @@ interface ChatMessage {
 }
 
 const quickReplies = [
-  { label: 'Web Development', text: 'I\'m interested in Web Development services' },
-  { label: 'Mobile App', text: 'I\'d like to know about Mobile App development' },
-  { label: 'Get a Quote', text: 'I\'d like to get a quote for a project' },
-];
-
-const autoReplies = [
-  'Thanks for your message! Our team will get back to you shortly. You can also reach us at +233 (024) 361 8186 or mail@lightworldtech.com.',
-  'Great question! Let me connect you with our team. In the meantime, feel free to explore our Services page for more details.',
-  'Thank you for reaching out! We typically respond within 1 business hour. For urgent inquiries, please call us directly.',
+  { label: 'Leadership', text: 'Who leads Lightworld Technologies?' },
+  { label: 'Services', text: 'What services does Lightworld offer?' },
+  { label: 'Awards', text: 'What awards has Lightworld won?' },
+  { label: 'Start a Project', text: 'How can I start a project with Lightworld?' },
 ];
 
 const STORAGE_KEY = 'lw-chat-history';
@@ -77,7 +72,6 @@ export default function LiveChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const initializedRef = useRef(false);
-  const replyIndexRef = useRef(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 2500);
@@ -117,7 +111,7 @@ export default function LiveChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const sendMessage = useCallback((text: string) => {
+  const sendMessage = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
     const userMsg: ChatMessage = {
@@ -134,22 +128,32 @@ export default function LiveChatWidget() {
     setShowQuickReplies(false);
     setIsTyping(true);
 
-    setTimeout(() => {
-      const replyText = autoReplies[replyIndexRef.current % autoReplies.length];
-      replyIndexRef.current += 1;
+    let replyText =
+      'I could not reach the company knowledge service just now. You can contact Lightworld at mail@lightworldtech.com or +233 (024) 361 8186.';
 
-      const botMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        text: replyText,
-        sender: 'bot',
-        timestamp: new Date(),
-      };
+    try {
+      const response = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMsg.text }),
+      });
+      const payload = await response.json();
+      if (payload?.reply) replyText = String(payload.reply);
+    } catch {
+      // A deterministic contact fallback keeps the assistant useful if the API is temporarily unavailable.
+    }
 
-      const withReply = [...updated, botMsg];
-      setMessages(withReply);
-      saveChatHistory(withReply);
-      setIsTyping(false);
-    }, 2000);
+    const botMsg: ChatMessage = {
+      id: `bot-${Date.now()}`,
+      text: replyText,
+      sender: 'bot',
+      timestamp: new Date(),
+    };
+
+    const withReply = [...updated, botMsg];
+    setMessages(withReply);
+    saveChatHistory(withReply);
+    setIsTyping(false);
   }, [messages]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -183,13 +187,13 @@ export default function LiveChatWidget() {
                   <MessageCircle className="size-5 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-white text-sm">Lightworld Support</h4>
+                  <h4 className="font-semibold text-white text-sm">Lightworld Assistant</h4>
                   <div className="flex items-center gap-1.5">
                     <span className="relative flex size-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75" />
                       <span className="relative inline-flex rounded-full size-2 bg-amber-300" />
                     </span>
-                    <span className="text-xs text-amber-100">We&apos;re online</span>
+                    <span className="text-xs text-amber-100">Company knowledge assistant</span>
                   </div>
                 </div>
               </div>
@@ -298,7 +302,7 @@ export default function LiveChatWidget() {
               : 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white animate-pulse-shadow'
           }`}
           size="icon"
-          aria-label={isOpen && !isMinimized ? 'Close live chat' : 'Open live chat'}
+          aria-label={isOpen && !isMinimized ? 'Close Lightworld assistant' : 'Open Lightworld assistant'}
         >
           {isOpen && !isMinimized ? (
             <X className="size-6" />
