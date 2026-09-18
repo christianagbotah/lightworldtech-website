@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   ArrowUpRight,
+  Award,
+  Building2,
   BrainCircuit,
   Briefcase,
   ChevronDown,
@@ -19,6 +21,7 @@ import {
   Search,
   ShieldCheck,
   Smartphone,
+  Users,
   Workflow,
 } from 'lucide-react';
 import ThemeToggle from '@/components/ui/theme-toggle';
@@ -27,11 +30,17 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { cn } from '@/lib/utils';
 
 const primaryNav = [
-  { label: 'Services', href: '/services' },
   { label: 'Work', href: '/portfolio' },
   { label: 'Products', href: '/products' },
   { label: 'Insights', href: '/blog' },
-  { label: 'Company', href: '/about' },
+];
+
+const companyMenu = [
+  { icon: Building2, title: 'About Lightworld', desc: 'Company, direction and how we work', href: '/about' },
+  { icon: Users, title: 'Leadership', desc: 'Meet the people leading Lightworld', href: '/team' },
+  { icon: Award, title: 'Recognition & press', desc: 'Awards and verified media coverage', href: '/about#recognition' },
+  { icon: Briefcase, title: 'Careers', desc: 'Talent network and opportunities', href: '/careers' },
+  { icon: MessageSquare, title: 'Contact', desc: 'Start a project or conversation', href: '/contact' },
 ];
 
 const serviceMenu = [
@@ -61,6 +70,8 @@ export default function Header() {
     if (href === '/') return pathname === '/';
     return pathname === href || pathname.startsWith(href + '/');
   };
+
+  const companyActive = ['/about', '/team', '/careers', '/contact'].some((href) => active(href));
 
   return (
     <>
@@ -126,7 +137,7 @@ export default function Header() {
               </div>
             </div>
 
-            {primaryNav.slice(1).map((item) => (
+            {primaryNav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -141,6 +152,42 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+
+            <div className="group relative">
+              <Link
+                href="/about"
+                className={cn(
+                  'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition',
+                  companyActive
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
+                )}
+                aria-current={active('/about') ? 'page' : undefined}
+              >
+                Company
+                <ChevronDown className="size-3.5 opacity-45 transition-transform group-hover:rotate-180" />
+              </Link>
+
+              <div className="invisible absolute right-0 top-full w-[360px] translate-y-1 pt-4 opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                <div className="rounded-[26px] border border-slate-200/80 bg-white/95 p-2.5 shadow-2xl shadow-slate-950/10 backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#081119]/96 dark:shadow-black/40">
+                  {companyMenu.map((item) => (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className="group/item flex items-start gap-3 rounded-2xl p-3 transition hover:bg-slate-100 dark:hover:bg-white/[0.045]"
+                    >
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-emerald-500/10 bg-emerald-500/[0.07] text-emerald-600 dark:text-emerald-300">
+                        <item.icon className="size-4" />
+                      </span>
+                      <span>
+                        <span className="block text-sm font-semibold text-slate-800 dark:text-white/80">{item.title}</span>
+                        <span className="mt-0.5 block text-xs leading-5 text-slate-400 dark:text-white/28">{item.desc}</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
           </nav>
 
           <div className="flex items-center gap-1.5">
@@ -183,6 +230,7 @@ export default function Header() {
                         ['Insights', '/blog'],
                         ['About', '/about'],
                         ['Leadership', '/team'],
+                        ['Recognition & Press', '/about#recognition'],
                         ['Careers', '/careers'],
                         ['Contact', '/contact'],
                       ].map(([label, href]) => (
