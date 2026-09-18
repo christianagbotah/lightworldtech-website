@@ -91,8 +91,9 @@ function estimateReadTime(content: string): number {
   return Math.max(1, Math.ceil(words / 200));
 }
 
-export default function BlogDetailPage() {
+export default function BlogDetailPage({ slug: routeSlug }: { slug?: string } = {}) {
   const { navigate, blogPostSlug } = useAppStore();
+  const activeSlug = routeSlug || blogPostSlug;
   useSEO({
     title: 'Blog Article',
     description: 'Read this article on the Lightworld Technologies blog - insights on technology, web development, and digital innovation in Ghana.',
@@ -113,14 +114,14 @@ export default function BlogDetailPage() {
   const totalReadTime = useMemo(() => estimateReadTime(post.content), [post.content]);
 
   useEffect(() => {
-    const slug = blogPostSlug || 'future-web-development';
+    const slug = activeSlug || 'future-web-development';
     fetcher(`/api/blog/${slug}`)
       .then((data) => {
         if (data && data.id) setPost(data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [blogPostSlug]);
+  }, [activeSlug]);
 
   // Scroll-based reading progress and remaining time
   const handleScroll = useCallback(() => {

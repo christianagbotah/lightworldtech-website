@@ -1,263 +1,262 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Phone, Mail, Globe, Smartphone, Code, TrendingUp, GraduationCap, Cloud, ChevronDown, X, type LucideIcon } from 'lucide-react';
+import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  ArrowUpRight,
+  BrainCircuit,
+  Briefcase,
+  ChevronDown,
+  Cloud,
+  Code2,
+  GraduationCap,
+  Home,
+  LayoutGrid,
+  Menu,
+  MessageSquare,
+  Search,
+  ShieldCheck,
+  Smartphone,
+  Workflow,
+} from 'lucide-react';
 import ThemeToggle from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
-import { useAppStore } from '@/lib/store';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
-const serviceDropdown: { label: string; desc: string; icon: LucideIcon }[] = [
-  { label: 'Web Development', desc: 'Modern, responsive websites', icon: Globe },
-  { label: 'Mobile App Development', desc: 'iOS & Android apps', icon: Smartphone },
-  { label: 'Software Development', desc: 'Custom enterprise solutions', icon: Code },
-  { label: 'SEO & Digital Marketing', desc: 'Grow your online presence', icon: TrendingUp },
-  { label: 'IT Training', desc: 'Skills development programs', icon: GraduationCap },
-  { label: 'Web Hosting', desc: 'Reliable hosting solutions', icon: Cloud },
+const primaryNav = [
+  { label: 'Services', href: '/services' },
+  { label: 'Work', href: '/portfolio' },
+  { label: 'Products', href: '/products' },
+  { label: 'Insights', href: '/blog' },
+  { label: 'Company', href: '/about' },
 ];
 
-const navLinks = [
-  { label: 'Home', page: 'home' as const },
-  { label: 'About', page: 'about' as const },
-  { label: 'Services', page: 'services' as const },
-  { label: 'Portfolio', page: 'portfolio' as const },
-  { label: 'Blog', page: 'blog' as const },
-  { label: 'Careers', page: 'careers' as const },
-  { label: 'Products', page: 'products' as const },
-  { label: 'Contact', page: 'contact' as const },
+const serviceMenu = [
+  { icon: Code2, title: 'Web & product engineering', desc: 'Websites, portals, SaaS and platforms' },
+  { icon: Smartphone, title: 'Mobile apps', desc: 'Native-feeling iOS and Android experiences' },
+  { icon: Workflow, title: 'Enterprise systems', desc: 'ERP, EAM, workflow and operational software' },
+  { icon: BrainCircuit, title: 'AI & automation', desc: 'Assistive AI and intelligent workflows' },
+  { icon: Cloud, title: 'Cloud & DevOps', desc: 'Deployment, reliability and infrastructure' },
+  { icon: ShieldCheck, title: 'Security engineering', desc: 'Secure architecture and application hardening' },
+  { icon: Search, title: 'SEO & digital growth', desc: 'Search-ready architecture and analytics' },
+  { icon: GraduationCap, title: 'Training & advisory', desc: 'IT skills, consulting and transformation' },
+];
+
+const mobileDock = [
+  { icon: Home, label: 'Home', href: '/' },
+  { icon: LayoutGrid, label: 'Services', href: '/services' },
+  { icon: Briefcase, label: 'Work', href: '/portfolio' },
+  { icon: MessageSquare, label: 'Contact', href: '/contact' },
 ];
 
 export default function Header() {
-  const { currentPage, navigate, mobileMenuOpen, setMobileMenuOpen } = useAppStore();
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const isHome = pathname === '/';
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleMobileMenuChange = (open: boolean) => {
-    setMobileMenuOpen(open);
-    if (!open) setMobileServicesOpen(false);
+  const active = (href: string) => {
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname.startsWith(href + '/');
   };
-
-  const handleNav = (page: 'home' | 'about' | 'services' | 'portfolio' | 'blog' | 'careers' | 'products' | 'contact') => {
-    navigate(page);
-    setMobileMenuOpen(false);
-  };
-
-  const isHomePage = currentPage === 'home';
 
   return (
     <>
-      {/* ═══ Floating Pill Nav ═══ */}
-      <header
-        className={cn(
-          'fixed top-2.5 lg:top-3.5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.25rem)] lg:w-auto lg:max-w-3xl transition-all duration-500',
-        )}
+      <a
+        href="#main-content"
+        className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-xl transition focus:translate-y-0"
       >
-        <nav
-          className={cn(
-            'flex items-center justify-between px-2.5 lg:px-3 py-2 rounded-full transition-all duration-500 backdrop-blur-xl',
-            // Home page: always dark floating
-            isHomePage
-              ? 'bg-[#0a0f1a]/85 border border-white/[0.08]'
-              : 'dark:bg-slate-950/80 bg-white/80 dark:border-white/[0.06] border-slate-200/50',
-            // Scrolled on inner pages
-            scrolled && !isHomePage && 'dark:bg-slate-950/90 border-white/[0.1] shadow-2xl dark:shadow-black/20',
-            scrolled && !isHomePage && 'bg-white/90 border-slate-200/60 shadow-2xl shadow-slate-200/50',
-          )}
-        >
-          {/* Logo */}
-          <button onClick={() => handleNav('home')} className="flex items-center gap-2 shrink-0 pr-1.5">
-            <div className="size-8 lg:size-9 rounded-full flex items-center justify-center shadow-sm overflow-hidden transition-transform hover:scale-110" style={{ background: 'var(--logo-circle-bg, #0f172a)', border: '2px solid rgba(251, 191, 36, 0.3)' }}>
-              <Image src="/logo.png" alt="Lightworld Technologies" width={28} height={28} className="object-contain" priority />
-            </div>
-            <span className={cn(
-              'text-sm lg:text-base font-bold transition-colors hidden sm:block',
-              isHomePage ? 'text-white/90' : 'text-slate-800 dark:text-white/90',
-            )}>
-              Lightworld
+        Skip to content
+      </a>
+
+      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between rounded-full border border-slate-200/75 bg-white/82 px-2.5 shadow-lg shadow-slate-950/[0.04] backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#071018]/82 dark:shadow-black/20 sm:h-16 sm:px-3">
+          <Link href="/" className="group flex min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label="Lightworld Technologies home">
+            <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-300/30 bg-slate-950 sm:size-10">
+              <Image src="/logo.png" alt="" width={34} height={34} className="object-contain" priority />
             </span>
-          </button>
+            <span className="hidden min-w-0 leading-none sm:block">
+              <span className="block truncate text-sm font-bold tracking-[-0.02em] text-slate-900 dark:text-white">Lightworld</span>
+              <span className="mt-1 block text-[8px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-400">Technologies</span>
+            </span>
+          </Link>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-1.5">
-            {navLinks.map((link) => {
-              if (link.page === 'services') {
-                return (
-                  <div key={link.page} className="relative group">
-                    <button
-                      onClick={() => handleNav('services')}
-                      className={cn(
-                        'px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[15px] lg:text-base font-medium transition-all flex items-center gap-1',
-                        currentPage === link.page
-                          ? 'bg-emerald-500/15 text-emerald-400'
-                          : isHomePage
-                            ? 'text-white/40 hover:text-white/80 hover:bg-white/[0.05]'
-                            : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/[0.05]',
-                      )}
-                    >
-                      {link.label}
-                      <ChevronDown className="size-3 opacity-50 transition-transform group-hover:rotate-180" />
-                    </button>
+          <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary navigation">
+            <div className="group relative">
+              <Link
+                href="/services"
+                className={cn(
+                  'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition',
+                  active('/services')
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
+                )}
+                aria-current={active('/services') ? 'page' : undefined}
+              >
+                Services
+                <ChevronDown className="size-3.5 opacity-45 transition-transform group-hover:rotate-180" />
+              </Link>
 
-                    {/* Mega Menu */}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-[440px] p-3 rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 -translate-y-2 group-hover:translate-y-1.5 pt-5 z-50"
-                      style={{
-                        background: 'var(--nav-menu-bg, rgba(15, 23, 42, 0.95))',
-                        backdropFilter: 'blur(20px)',
-                        border: isHomePage ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(255,255,255,0.08)',
-                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
-                      }}
-                    >
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-2 overflow-hidden">
-                        <div className="w-2 h-2 rotate-45 translate-x-[16px] -translate-y-[2px]" style={{ background: 'var(--nav-menu-bg, rgba(15, 23, 42, 0.95))', borderRight: '1px solid rgba(255,255,255,0.06)', borderTop: '1px solid rgba(255,255,255,0.06)' }} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-1">
-                        {serviceDropdown.map((service) => (
-                          <button
-                            key={service.label}
-                            onClick={() => handleNav('services')}
-                            className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-white/[0.06] transition-colors text-left"
-                          >
-                            <div className="size-8 rounded-md bg-emerald-500/10 flex items-center justify-center shrink-0">
-                              <service.icon className="size-4 text-emerald-400" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-white/75">{service.label}</p>
-                              <p className="text-xs text-white/30 mt-0.5">{service.desc}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+              <div className="invisible absolute left-1/2 top-full w-[680px] -translate-x-1/2 translate-y-1 pt-4 opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                <div className="rounded-[28px] border border-slate-200/80 bg-white/95 p-3 shadow-2xl shadow-slate-950/10 backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#081119]/96 dark:shadow-black/40">
+                  <div className="grid grid-cols-2 gap-1">
+                    {serviceMenu.map((item) => (
+                      <Link
+                        key={item.title}
+                        href="/services"
+                        className="group/item flex items-start gap-3 rounded-2xl p-3 transition hover:bg-slate-100 dark:hover:bg-white/[0.045]"
+                      >
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-emerald-500/10 bg-emerald-500/[0.07] text-emerald-600 dark:text-emerald-300">
+                          <item.icon className="size-4" />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-semibold text-slate-800 dark:text-white/80">{item.title}</span>
+                          <span className="mt-0.5 block text-xs leading-5 text-slate-400 dark:text-white/28">{item.desc}</span>
+                        </span>
+                      </Link>
+                    ))}
                   </div>
-                );
-              }
+                  <Link href="/services" className="mt-2 flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600 transition hover:text-emerald-700 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-white/38 dark:hover:text-emerald-300">
+                    Explore every capability
+                    <ArrowUpRight className="size-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
 
-              return (
-                <button
-                  key={link.page}
-                  onClick={() => handleNav(link.page)}
-                  className={cn(
-                    'px-4 lg:px-5 py-2 lg:py-2.5 rounded-full text-[15px] lg:text-base font-medium transition-all',
-                    currentPage === link.page
-                      ? 'bg-emerald-500/15 text-emerald-400'
-                      : isHomePage
-                        ? 'text-white/40 hover:text-white/80 hover:bg-white/[0.05]'
-                        : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/[0.05]',
-                  )}
-                >
-                  {link.label}
-                </button>
-              );
-            })}
-          </div>
+            {primaryNav.slice(1).map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'rounded-full px-4 py-2 text-sm font-medium transition',
+                  active(item.href)
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
+                )}
+                aria-current={active(item.href) ? 'page' : undefined}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <ThemeToggle />
-            <Button
-              onClick={() => handleNav('contact')}
-              size="sm"
-              className={cn(
-                'hidden sm:inline-flex rounded-full text-[15px] lg:text-base font-semibold px-4 lg:px-5 h-8 lg:h-10 shadow-md transition-all',
-                'bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20 hover:shadow-emerald-500/40',
-              )}
+            <Link
+              href="/contact"
+              className="hidden h-10 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-600 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300 sm:inline-flex"
             >
-              Get a Quote
-            </Button>
+              Start a project
+              <ArrowUpRight className="size-3.5" />
+            </Link>
 
-            {/* Mobile Hamburger */}
-            <Sheet open={mobileMenuOpen} onOpenChange={handleMobileMenuChange}>
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden size-8 rounded-full">
-                  {mobileMenuOpen ? <X className="size-4 text-white" /> : <Menu className={cn('size-4', isHomePage ? 'text-white/70' : 'text-slate-600 dark:text-white/70')} />}
-                  <span className="sr-only">Menu</span>
+                <Button variant="ghost" size="icon" className="size-10 rounded-full lg:hidden" aria-label="Open navigation menu">
+                  <Menu className="size-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-72 p-0 bg-[#0a0f1a] border-white/[0.06]">
-                <SheetTitle className="sr-only">Navigation</SheetTitle>
-                <div className="flex flex-col h-full">
-                  {/* Mobile header */}
-                  <div className="flex items-center gap-2.5 px-5 py-4 border-b border-white/[0.06]">
-                    <div className="size-8 rounded-full flex items-center justify-center overflow-hidden" style={{ background: '#0f172a', border: '2px solid rgba(251, 191, 36, 0.3)' }}>
-                      <Image src="/logo.png" alt="Lightworld" width={26} height={26} className="object-contain" />
+              <SheetContent side="right" className="w-[min(92vw,390px)] border-l border-white/[0.07] bg-[#071018] p-0 text-white">
+                <SheetTitle className="sr-only">Lightworld Technologies navigation</SheetTitle>
+                <div className="flex h-full flex-col">
+                  <div className="flex items-center gap-3 border-b border-white/[0.07] px-5 py-5">
+                    <span className="flex size-10 items-center justify-center overflow-hidden rounded-full border border-amber-300/30 bg-slate-950">
+                      <Image src="/logo.png" alt="" width={34} height={34} />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold">Lightworld Technologies</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-emerald-300/70">The world of possibilities</p>
                     </div>
-                    <span className="font-bold text-white/90 text-sm">Lightworld Technologies</span>
                   </div>
 
-                  {/* Mobile nav links */}
-                  <div className="flex-1 overflow-y-auto py-2 px-1">
-                    <AnimatePresence initial={false}>
-                      {navLinks.map((link, index) => (
-                        <motion.button
-                          key={link.page}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.2, delay: index * 0.04 }}
-                          onClick={() => handleNav(link.page)}
+                  <div className="flex-1 overflow-y-auto px-4 py-5">
+                    <p className="px-2 text-[9px] font-semibold uppercase tracking-[0.22em] text-white/20">Explore</p>
+                    <div className="mt-2 grid gap-1">
+                      {[
+                        ['Home', '/'],
+                        ['Services', '/services'],
+                        ['Work', '/portfolio'],
+                        ['Products', '/products'],
+                        ['Insights', '/blog'],
+                        ['About', '/about'],
+                        ['Careers', '/careers'],
+                        ['Contact', '/contact'],
+                      ].map(([label, href]) => (
+                        <Link
+                          key={href}
+                          href={href}
+                          onClick={() => setMobileOpen(false)}
                           className={cn(
-                            'w-full text-left px-4 py-2.5 text-sm font-medium transition-all rounded-lg mx-1',
-                            currentPage === link.page
-                              ? 'text-emerald-400 bg-emerald-500/10'
-                              : 'text-white/50 hover:text-white/80 hover:bg-white/[0.04]',
+                            'flex items-center justify-between rounded-2xl px-3 py-3 text-sm font-medium transition',
+                            active(href)
+                              ? 'bg-emerald-400/10 text-emerald-300'
+                              : 'text-white/55 hover:bg-white/[0.04] hover:text-white/85',
                           )}
                         >
-                          {link.label}
-                        </motion.button>
+                          {label}
+                          <ArrowUpRight className="size-3.5 opacity-30" />
+                        </Link>
                       ))}
-                    </AnimatePresence>
+                    </div>
 
-                    {/* Mobile services sub-links */}
-                    <div className="px-3 mt-1">
-                      <p className="text-[9px] text-white/20 uppercase tracking-[0.2em] font-semibold px-1 mb-2">Services</p>
-                      <div className="space-y-0.5">
-                        {serviceDropdown.map((service) => (
-                          <button
-                            key={service.label}
-                            onClick={() => handleNav('services')}
-                            className="w-full flex items-center gap-2.5 py-2 px-2 text-left text-xs text-white/35 hover:text-emerald-400 hover:bg-white/[0.03] rounded-lg transition-colors"
-                          >
-                            <service.icon className="size-3.5 shrink-0" />
-                            <div>
-                              <p className="font-medium text-white/55">{service.label}</p>
-                              <p className="text-[10px] text-white/20">{service.desc}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
+                    <p className="mt-7 px-2 text-[9px] font-semibold uppercase tracking-[0.22em] text-white/20">Capabilities</p>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {serviceMenu.slice(0, 6).map((item) => (
+                        <Link
+                          key={item.title}
+                          href="/services"
+                          onClick={() => setMobileOpen(false)}
+                          className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3"
+                        >
+                          <item.icon className="size-4 text-emerald-300" />
+                          <span className="mt-3 block text-xs font-medium text-white/65">{item.title}</span>
+                        </Link>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Mobile footer */}
-                  <div className="p-4 border-t border-white/[0.06] space-y-3">
-                    <Button
-                      onClick={() => handleNav('contact')}
-                      className="w-full rounded-full bg-emerald-500 text-white font-semibold hover:bg-emerald-400 h-10"
+                  <div className="border-t border-white/[0.07] p-4">
+                    <Link
+                      href="/contact"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex h-12 items-center justify-center gap-2 rounded-full bg-emerald-400 text-sm font-semibold text-slate-950"
                     >
-                      Get a Quote
-                    </Button>
-                    <div className="flex items-center justify-center gap-4 text-[10px] text-white/25">
-                      <span className="flex items-center gap-1.5"><Phone className="size-3 text-emerald-500/50" /> +233 (024) 361 8186</span>
-                      <span className="flex items-center gap-1.5"><Mail className="size-3 text-emerald-500/50" /> mail@lightworldtech.com</span>
-                    </div>
+                      Start a project
+                      <ArrowUpRight className="size-4" />
+                    </Link>
+                    <p className="mt-3 text-center text-[10px] text-white/25">Accra, Ghana · mail@lightworldtech.com</p>
                   </div>
                 </div>
               </SheetContent>
             </Sheet>
           </div>
-        </nav>
+        </div>
       </header>
 
-      {/* ═══ Spacer for non-home pages ═══ */}
-      {!isHomePage && <div className="h-14 lg:h-16" />}
+      {!isHome && <div className="h-[76px] sm:h-[88px]" aria-hidden="true" />}
+
+      <nav
+        className="fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-40 grid grid-cols-4 rounded-[22px] border border-white/[0.08] bg-[#071018]/92 p-1.5 shadow-2xl shadow-black/30 backdrop-blur-2xl lg:hidden"
+        aria-label="Mobile quick navigation"
+      >
+        {mobileDock.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              'flex min-w-0 flex-col items-center justify-center gap-1 rounded-[17px] px-2 py-2 text-[9px] font-medium transition',
+              active(item.href) ? 'bg-emerald-400/12 text-emerald-300' : 'text-white/34',
+            )}
+            aria-current={active(item.href) ? 'page' : undefined}
+          >
+            <item.icon className="size-[18px]" />
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
     </>
   );
 }
