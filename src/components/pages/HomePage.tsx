@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -284,7 +285,21 @@ function CapabilityConsole() {
   );
 }
 
-export default function HomePage() {
+export default function HomePage({ settings = {} }: { settings?: SiteSettings }) {
+  const heroEyebrow = contentText(settings, 'home_eyebrow', '{heroEyebrow}');
+  const heroTitle = contentText(settings, 'home_title', 'Technology people want to use.');
+  const heroDescription = contentText(settings, 'home_description', '{heroDescription}');
+  const primaryCtaText = contentText(settings, 'home_primary_cta_text', 'Start a project');
+  const primaryCtaLink = contentText(settings, 'home_primary_cta_link', '/contact');
+  const secondaryCtaText = contentText(settings, 'home_secondary_cta_text', 'Explore our work');
+  const secondaryCtaLink = contentText(settings, 'home_secondary_cta_link', '/portfolio');
+  const cmsSignals = contentJson<string[]>(settings, 'home_signals', signals);
+  const industryLabels = contentJson<string[]>(settings, 'home_industries', industries.map((item) => item.label));
+  const cmsIndustries = industryLabels.map((label, index) => ({
+    label,
+    icon: industries[index]?.icon || Building2,
+  }));
+
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
       <section className="lw-hero-grid relative min-h-[92svh] border-b border-slate-200/70 dark:border-white/[0.06]">
@@ -312,8 +327,7 @@ export default function HomePage() {
                 transition={{ duration: 0.72, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-7 max-w-[900px] text-[clamp(3.2rem,8vw,7.4rem)] font-semibold leading-[0.9] tracking-[-0.065em]"
               >
-                Technology people
-                <span className="block bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 bg-clip-text text-transparent">want to use.</span>
+                {heroTitle}
               </motion.h1>
 
               <motion.p
@@ -332,17 +346,17 @@ export default function HomePage() {
                 className="mt-8 flex flex-col gap-3 sm:flex-row"
               >
                 <Link
-                  href="/contact"
+                  href={primaryCtaLink}
                   className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-6 text-sm font-semibold text-white shadow-xl shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-emerald-600 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300"
                 >
-                  Start a project
+                  {primaryCtaText}
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </Link>
                 <Link
-                  href="/portfolio"
+                  href={secondaryCtaLink}
                   className="group inline-flex h-12 items-center justify-center gap-2 rounded-full border border-slate-300/80 bg-white/50 px-6 text-sm font-semibold text-slate-800 backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-slate-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/75 dark:hover:bg-white/[0.06]"
                 >
-                  Explore our work
+                  {secondaryCtaText}
                   <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 </Link>
               </motion.div>
@@ -353,7 +367,7 @@ export default function HomePage() {
                 transition={{ duration: 0.7, delay: 0.34 }}
                 className="mt-10 grid max-w-2xl grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4"
               >
-                {signals.map((signal) => (
+                {cmsSignals.map((signal) => (
                   <div key={signal} className="flex items-start gap-2 text-xs leading-5 text-slate-500 dark:text-white/35">
                     <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
                     <span>{signal}</span>
@@ -395,10 +409,10 @@ export default function HomePage() {
           <Reveal className="grid gap-8 lg:grid-cols-[.72fr_1.28fr] lg:items-end">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">What we build</p>
-              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl lg:text-6xl">More than a website agency.</h2>
+              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl lg:text-6xl">{contentText(settings, 'home_capabilities_title', 'More than a website agency.')}</h2>
             </div>
             <p className="max-w-2xl text-base leading-7 text-slate-600 dark:text-white/45 lg:justify-self-end lg:text-lg">
-              We connect brand, product, software and operations. Start with a focused website or app, then grow into a connected digital ecosystem without changing partners every time the problem gets harder.
+              {contentText(settings, 'home_capabilities_description', 'We connect brand, product, software and operations. Start with a focused website or app, then grow into a connected digital ecosystem without changing partners every time the problem gets harder.')}
             </p>
           </Reveal>
 
@@ -537,7 +551,7 @@ export default function HomePage() {
               <p className="mt-2 text-lg font-semibold">Digital systems for teams doing real work.</p>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-              {industries.map((industry) => (
+              {cmsIndustries.map((industry) => (
                 <div key={industry.label} className="flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white px-3 py-3 text-xs font-medium text-slate-600 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-white/40">
                   <industry.icon className="size-4 text-emerald-500" />
                   {industry.label}
@@ -552,7 +566,8 @@ export default function HomePage() {
         <div className="container-main">
           <Reveal className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">How we deliver</p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Clear enough for the board. Detailed enough for engineering.</h2>
+            <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">{contentText(settings, 'home_process_title', 'Clear enough for the board. Detailed enough for engineering.')}</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 dark:text-white/38">{contentText(settings, 'home_process_description', 'Discovery, design, engineering, launch and continuous improvement stay connected from the first conversation.')}</p>
           </Reveal>
 
           <div className="mt-10 grid gap-3 lg:grid-cols-5">
