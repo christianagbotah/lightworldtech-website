@@ -5,16 +5,19 @@ import FloatingWidgets from '@/components/layout/FloatingWidgets';
 import CookieConsent from '@/components/layout/CookieConsent';
 import ScrollProgress from '@/components/ui/scroll-progress';
 import CommandPalette from '@/components/ui/command-palette';
+import { getSiteSettings } from '@/lib/site-content-server';
 
-export default function PublicShell({ children }: { children: ReactNode }) {
+export default async function PublicShell({ children }: { children: ReactNode }) {
+  const settings = await getSiteSettings();
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <ScrollProgress />
-      <Header />
+      <Header settings={settings} />
       <main id="main-content" className="min-h-[60vh]">
         {children}
       </main>
-      <Footer />
+      <Footer settings={settings} />
       <FloatingWidgets />
       <CookieConsent />
       <CommandPalette />
