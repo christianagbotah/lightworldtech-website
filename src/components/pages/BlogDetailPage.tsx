@@ -14,6 +14,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getBlogCoverImage } from '@/lib/blog-visuals';
 
 interface BlogPost {
   id: string;
@@ -91,13 +92,20 @@ export default function BlogDetailPage({ initialPost }: { initialPost: BlogPost 
         </div>
       </header>
 
-      {post.coverImage && (
-        <div className="container-main pt-8">
-          <div className="relative aspect-[16/7] overflow-hidden rounded-[30px] bg-slate-100 dark:bg-white/[0.03]">
-            <Image src={post.coverImage} alt="" fill sizes="(max-width: 1280px) 100vw, 1280px" className="object-cover" unoptimized priority />
-          </div>
+      <div className="container-main pt-8">
+        <div className="relative aspect-[16/7] overflow-hidden rounded-[30px] bg-slate-100 dark:bg-white/[0.03]">
+          <Image
+            src={getBlogCoverImage(post)}
+            alt={post.title}
+            fill
+            sizes="(max-width: 1280px) 100vw, 1280px"
+            className="object-cover"
+            unoptimized
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent" />
         </div>
-      )}
+      </div>
 
       <div className="container-main py-10 sm:py-14 lg:py-16">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-16">
