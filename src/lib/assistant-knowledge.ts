@@ -187,7 +187,7 @@ export async function answerConcierge(
     }
   }
 
-  if (/managing director|\bmd\b|rober yaw essuon|leadership|leaders|management|executive/.test(q)) {
+  if (/managing director|\bmd\b|rober yaw essuon|who\s+(leads|runs|heads)|\b(leads|leader|leaders|leadership)\b|management|executive/.test(q)) {
     const leaders = knowledge.team.slice(0, 6).map((person) => person.name + ' — ' + person.role);
     return {
       intent: 'leadership',
