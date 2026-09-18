@@ -18,6 +18,7 @@ import {
   LayoutGrid,
   Menu,
   MessageSquare,
+  Newspaper,
   Search,
   ShieldCheck,
   Smartphone,
@@ -39,7 +40,8 @@ const defaultPrimaryNav = [
 const companyMenu = [
   { icon: Building2, title: 'About Lightworld', desc: 'Company, direction and how we work', href: '/about' },
   { icon: Users, title: 'Leadership', desc: 'Meet the people leading Lightworld', href: '/team' },
-  { icon: Award, title: 'Recognition & press', desc: 'Awards and verified media coverage', href: '/about#recognition' },
+  { icon: ShieldCheck, title: 'Trust Center', desc: 'Security, privacy and responsible AI', href: '/trust' },
+  { icon: Newspaper, title: 'Newsroom & media', desc: 'Verified facts, awards and public coverage', href: '/newsroom' },
   { icon: Briefcase, title: 'Careers', desc: 'Talent network and opportunities', href: '/careers' },
   { icon: MessageSquare, title: 'Contact', desc: 'Start a project or conversation', href: '/contact' },
 ];
@@ -75,7 +77,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
     return pathname === href || pathname.startsWith(href + '/');
   };
 
-  const companyActive = ['/about', '/team', '/careers', '/contact'].some((href) => active(href));
+  const companyActive = ['/about', '/team', '/trust', '/newsroom', '/careers', '/contact'].some((href) => active(href));
 
   return (
     <>
@@ -234,7 +236,8 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                         ['Insights', '/blog'],
                         ['About', '/about'],
                         ['Leadership', '/team'],
-                        ['Recognition & Press', '/about#recognition'],
+                        ['Trust Center', '/trust'],
+                        ['Newsroom & Media', '/newsroom'],
                         ['Careers', '/careers'],
                         ['Contact', '/contact'],
                       ].map(([label, href]) => (
