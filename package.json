@@ -15,7 +15,8 @@
     "db:phase4": "prisma db execute --file prisma/phase4-crm.sql --schema prisma/schema.prisma",
     "db:phase6": "prisma db execute --file prisma/phase6-proposals.sql --schema prisma/schema.prisma",
     "db:phase7": "prisma db execute --file prisma/phase7-client-portal.sql --schema prisma/schema.prisma",
-    "db:phase8": "prisma db execute --file prisma/phase8-mail-ops.sql --schema prisma/schema.prisma"
+    "db:phase8": "prisma db execute --file prisma/phase8-mail-ops.sql --schema prisma/schema.prisma",
+    "db:phase9": "prisma db execute --file prisma/phase9-newsletter-campaigns.sql --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
