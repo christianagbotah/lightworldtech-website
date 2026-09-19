@@ -17,12 +17,13 @@ import AdminProposals from '@/components/admin/AdminProposals';
 import AdminClients from '@/components/admin/AdminClients';
 import AdminNewsletter from '@/components/admin/AdminNewsletter';
 import AdminCampaigns from '@/components/admin/AdminCampaigns';
+import AdminGovernance from '@/components/admin/AdminGovernance';
 import AdminFAQs from '@/components/admin/AdminFAQs';
 import AdminSettings from '@/components/admin/AdminSettings';
 import AdminPages from '@/components/admin/AdminPages';
 
 function AdminRouter() {
-  const { adminTab } = useAppStore();
+  const { adminTab, adminRole } = useAppStore();
 
   switch (adminTab) {
     case 'pages':
@@ -49,6 +50,8 @@ function AdminRouter() {
       return <AdminNewsletter />;
     case 'campaigns':
       return <AdminCampaigns />;
+    case 'governance':
+      return adminRole === 'super_admin' ? <AdminGovernance /> : <AdminDashboard />;
     case 'messages':
       return <AdminMessages />;
     case 'faqs':
@@ -74,7 +77,7 @@ export default function AdminPage() {
       })
       .then((payload) => {
         if (!cancelled && payload?.success && payload?.data?.name) {
-          loginAdmin(String(payload.data.name));
+          loginAdmin(String(payload.data.name), String(payload.data.role || 'admin'));
         }
       })
       .catch(() => {
