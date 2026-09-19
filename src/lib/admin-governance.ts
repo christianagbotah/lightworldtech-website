@@ -23,10 +23,16 @@ export async function getActiveAdminContext(request: NextRequest): Promise<Activ
       name: true,
       role: true,
       active: true,
+      authVersion: true,
     },
   });
 
-  if (!admin?.active || admin.email !== session.email) return null;
+  if (
+    !admin?.active ||
+    admin.email !== session.email ||
+    admin.role !== session.role ||
+    admin.authVersion !== session.authVersion
+  ) return null;
 
   return {
     id: admin.id,
