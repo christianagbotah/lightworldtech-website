@@ -3,7 +3,22 @@
 
 PRAGMA foreign_keys=ON;
 
+ALTER TABLE "Admin" ADD COLUMN "recoveryEmail" TEXT NOT NULL DEFAULT '';
 ALTER TABLE "Admin" ADD COLUMN "authVersion" INTEGER NOT NULL DEFAULT 0;
+
+UPDATE "Admin"
+SET "recoveryEmail" = COALESCE(
+  (SELECT "value" FROM "SiteSetting" WHERE "key" = 'company_email' LIMIT 1),
+  ''
+)
+WHERE "id" = (
+  SELECT "id"
+  FROM "Admin"
+  WHERE "active" = 1 AND "role" = 'super_admin'
+  ORDER BY "createdAt" ASC
+  LIMIT 1
+)
+AND "recoveryEmail" = '';
 
 CREATE TABLE IF NOT EXISTS "AdminPasswordResetToken" (
   "id" TEXT NOT NULL PRIMARY KEY,
