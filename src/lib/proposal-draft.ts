@@ -112,7 +112,7 @@ export function generateProposalDraft(input: ProposalDraftInput): ProposalDraft 
   ];
 
   const commercialNotes =
-    'Commercial terms are intentionally not auto-generated. Pricing, taxes, payment milestones, validity period, support terms and any binding delivery dates must be entered and approved by an authorized Lightworld representative.';
+    'Commercial terms are intentionally not auto-generated. Pricing, taxes, payment milestones, validity period, support terms and any binding delivery dates must be entered and approved through human review by an authorized Lightworld representative.';
 
   const nextSteps =
     'Review this draft with the prospect, confirm the decision-makers and discovery participants, resolve open scope questions, then prepare the final commercial proposal for authorized approval before it is sent.';
