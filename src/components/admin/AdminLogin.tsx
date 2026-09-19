@@ -34,7 +34,7 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        loginAdmin(data.data.name || 'Admin');
+        loginAdmin(data.data.name || 'Admin', data.data.role || 'admin');
         toast.success('Welcome back!', { description: 'Logged in successfully.' });
       } else {
         setError(data.error || 'Invalid email or password');
