@@ -1,5 +1,6 @@
 import 'server-only';
 
+import type { Metadata } from 'next';
 import { getSiteSettings } from '@/lib/site-content-server';
 import type { SiteSettings } from '@/lib/site-content';
 
@@ -122,4 +123,40 @@ export async function getSeoConfig(): Promise<SeoConfig> {
 
 export function seoAbsoluteUrl(config: SeoConfig, path: string): string {
   return new URL(path || '/', config.siteUrl + '/').toString();
+}
+
+
+export function buildPageMetadata(
+  config: SeoConfig,
+  input: {
+    title: string;
+    description: string;
+    path: string;
+    openGraphTitle?: string;
+    image?: string;
+  },
+): Metadata {
+  const image = input.image || config.ogImage;
+  const url = seoAbsoluteUrl(config, input.path);
+
+  return {
+    title: input.title,
+    description: input.description,
+    alternates: { canonical: input.path },
+    openGraph: {
+      type: 'website',
+      locale: config.locale,
+      siteName: config.siteName,
+      title: input.openGraphTitle || input.title,
+      description: input.description,
+      url,
+      images: [{ url: image, alt: input.openGraphTitle || input.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: input.openGraphTitle || input.title,
+      description: input.description,
+      images: [image],
+    },
+  };
 }
