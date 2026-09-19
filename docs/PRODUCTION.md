@@ -37,6 +37,7 @@ bunx prisma generate
 bun run db:phase3
 bun run db:phase4
 bun run db:phase6
+bun run db:phase7
 bun run build
 ```
 
@@ -91,3 +92,13 @@ bun run db:phase6
 ```
 
 The assisted proposal generator is intentionally grounded in CRM lead/contact facts and known capability categories. It does not auto-generate prices, payment terms, certifications, client claims, or binding delivery commitments. A proposal remains internal working material until an authenticated admin explicitly moves it to the approved/ready state.
+
+## Phase 7 client portal deployment
+
+Phase 7 adds separate client-portal identities, projects, milestones, approved document links, support tickets/messages and client announcements. Back up the SQLite database before rollout, then run:
+
+```bash
+bun run db:phase7
+```
+
+The upgrade is additive and idempotent. Client accounts are admin-provisioned; there is no public registration route. Temporary passwords must be at least 12 characters, are stored only as scrypt hashes, and clients are forced to replace them before project/ticket data is returned. Configure a dedicated `CLIENT_SESSION_SECRET` in production when possible; the application can fall back to the existing server session secret while preserving token audience separation.
