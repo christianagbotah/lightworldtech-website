@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await (await isAdminRequest(request)))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const settings = await db.siteSetting.findMany({ orderBy: { group: 'asc' } });
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  if (!(await (await isAdminRequest(request)))) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   try {
     const entries = await request.json() as Record<string, string>;
