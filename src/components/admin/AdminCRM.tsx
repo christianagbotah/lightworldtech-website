@@ -6,6 +6,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Clock3,
+  FileSignature,
   Mail,
   MessageSquarePlus,
   Phone,
@@ -29,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { useAppStore } from '@/lib/store';
 
 const stages = [
   { id: 'new', label: 'New' },
@@ -123,6 +125,7 @@ function priorityClass(priority: Priority): string {
 }
 
 export default function AdminCRM() {
+  const { navigate } = useAppStore();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [summary, setSummary] = useState<LeadSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -205,6 +208,28 @@ export default function AdminCRM() {
       toast.success('CRM note added');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not add note');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openProposal = async (lead: Lead) => {
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/proposals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: lead.id }),
+      });
+      if (!response.ok) throw new Error('Could not open proposal workspace');
+      const payload = await response.json();
+      if (payload?.data?.id) {
+        sessionStorage.setItem('lw-open-proposal-id', String(payload.data.id));
+      }
+      navigate('admin-proposals');
+      toast.success(payload.created ? 'Grounded proposal draft created' : 'Existing proposal opened');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not open proposal workspace');
     } finally {
       setSaving(false);
     }
@@ -461,6 +486,14 @@ export default function AdminCRM() {
                 </div>
 
                 <div className="space-y-4 rounded-2xl border border-border/60 bg-muted/15 p-4">
+                  <Button
+                    className="w-full"
+                    disabled={saving}
+                    onClick={() => void openProposal(selected)}
+                  >
+                    <FileSignature className="mr-2 size-4" /> Create / Open Proposal
+                  </Button>
+
                   <div>
                     <Label>Status</Label>
                     <select
