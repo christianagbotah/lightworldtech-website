@@ -17,7 +17,7 @@ export async function sendTransactionalMail(message: MailMessage): Promise<void>
   const boundary = 'lw_' + Date.now().toString(36);
 
   const payload = [
-    'From: Lightworld Technologies <mail@lightworldtech.com>',
+    'From: Lightworld Technologies Ltd <mail@lightworldtech.com>',
     'Reply-To: mail@lightworldtech.com',
     'To: ' + to,
     'Subject: ' + subject,
@@ -73,9 +73,9 @@ export async function sendTransactionalMail(message: MailMessage): Promise<void>
 export function newsletterConfirmation(email: string) {
   return {
     to: email,
-    subject: 'Welcome to Lightworld Technologies updates',
+    subject: 'Welcome to Lightworld Technologies Ltd updates',
     text:
-      'Thanks for subscribing to Lightworld Technologies updates.\n\n' +
+      'Thanks for subscribing to Lightworld Technologies Ltd updates.\n\n' +
       'We will share occasional notes on products, software engineering, digital operations, AI, training and company news.\n\n' +
       'Website: https://lightworldtech.com\n' +
       'Email: mail@lightworldtech.com\n' +
@@ -84,7 +84,7 @@ export function newsletterConfirmation(email: string) {
     html:
       '<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#0f172a;line-height:1.65">' +
       '<div style="padding:28px;border:1px solid #e2e8f0;border-radius:24px">' +
-      '<p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#059669;font-weight:700">Lightworld Technologies</p>' +
+      '<p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#059669;font-weight:700">Lightworld Technologies Ltd</p>' +
       '<h1 style="font-size:28px;line-height:1.15;margin:12px 0">You’re on the list.</h1>' +
       '<p>Thanks for subscribing. We’ll share occasional notes on products, software engineering, digital operations, AI, training and company news.</p>' +
       '<p><a href="https://lightworldtech.com/blog" style="color:#047857;font-weight:700">Explore Lightworld Insights →</a></p>' +
