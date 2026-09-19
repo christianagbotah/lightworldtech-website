@@ -26,6 +26,7 @@ import {
   getSiteSettings,
 } from '@/lib/site-content-server';
 import { companyProfile } from '@/lib/company-profile';
+import { buildPageMetadata, buildSeoConfig } from '@/lib/seo-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,12 +38,11 @@ export async function generateMetadata(): Promise<Metadata> {
     'seo_newsroom_description',
     'Verified company facts, recognition, press coverage, leadership information and public updates from Lightworld Technologies Ltd.',
   );
-  return {
+  return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,
-    alternates: { canonical: '/newsroom' },
-    openGraph: { title, description, url: '/newsroom' },
-  };
+    path: '/newsroom',
+  });
 }
 
 export default async function NewsroomPage() {
