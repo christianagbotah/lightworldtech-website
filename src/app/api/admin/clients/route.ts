@@ -16,14 +16,26 @@ export async function GET(request: NextRequest) {
   const organizations = await db.clientOrganization.findMany({
     include: {
       users: {
-        select: { id: true, name: true, email: true, role: true, active: true, lastLogin: true, createdAt: true },
+        select: { id: true, name: true, email: true, role: true, active: true, lastLogin: true, mustSetPassword: true, inviteExpiresAt: true, createdAt: true },
         orderBy: { createdAt: 'asc' },
       },
       projects: {
-        include: { milestones: { orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] } },
+        include: {
+          milestones: { orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] },
+          documents: { orderBy: { createdAt: 'desc' } },
+          announcements: { orderBy: [{ publishAt: 'desc' }, { createdAt: 'desc' }] },
+        },
         orderBy: { updatedAt: 'desc' },
       },
-      tickets: { orderBy: { createdAt: 'desc' }, take: 50 },
+      tickets: {
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        include: { messages: { orderBy: { createdAt: 'asc' } } },
+      },
+      announcements: {
+        orderBy: [{ publishAt: 'desc' }, { createdAt: 'desc' }],
+        take: 50,
+      },
       _count: { select: { users: true, projects: true, tickets: true } },
     },
     orderBy: [{ status: 'asc' }, { name: 'asc' }],
