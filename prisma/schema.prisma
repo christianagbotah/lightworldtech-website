@@ -247,6 +247,7 @@ model Lead {
   nextFollowUp     DateTime?
   lastContactedAt  DateTime?
   notes            LeadNote[]
+  proposal         Proposal?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -265,4 +266,32 @@ model LeadNote {
   createdAt DateTime @default(now())
 
   @@index([leadId, createdAt])
+}
+
+
+// Human-reviewed proposal / discovery workspace linked one-to-one with a CRM lead.
+model Proposal {
+  id               String   @id @default(cuid())
+  leadId           String   @unique
+  lead             Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  status           String   @default("draft")
+  title            String
+  executiveSummary String   @default("")
+  solution         String   @default("")
+  scope            String   @default("")
+  deliverables     String   @default("[]")
+  assumptions      String   @default("[]")
+  timeline         String   @default("")
+  commercialNotes  String   @default("")
+  nextSteps        String   @default("")
+  version          Int      @default(1)
+  approvedBy       String   @default("")
+  approvedAt       DateTime?
+  sentAt           DateTime?
+  lastGeneratedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, updatedAt])
 }
