@@ -382,7 +382,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                 transition={{ duration: 0.65, delay: 0.14 }}
                 className="mt-7 max-w-2xl text-base leading-7 text-slate-600 dark:text-white/50 sm:text-lg sm:leading-8"
               >
-                Lightworld Technologies designs and builds apps, websites, enterprise platforms, AI-enabled workflows and digital infrastructure—then helps teams adopt, operate and grow them.
+                Lightworld Technologies Ltd designs and builds apps, websites, enterprise platforms, AI-enabled workflows and digital infrastructure—then helps teams adopt, operate and grow them.
               </motion.p>
 
               <motion.div
@@ -462,16 +462,16 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
             </p>
           </Reveal>
 
-          <div className="mt-12 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid items-stretch gap-4 md:grid-cols-2 lg:auto-rows-fr lg:grid-cols-4">
             {homeCapabilities.map((item, index) => (
               <Reveal
                 key={item.title}
                 delay={index * 0.035}
-                className={item.feature ? 'lg:col-span-2' : ''}
+                className="h-full"
               >
                 <Link
                   href="/services"
-                  className="group flex h-full min-h-[245px] flex-col rounded-[28px] border border-slate-200/70 bg-white p-6 shadow-sm shadow-slate-950/[0.02] transition duration-300 hover:-translate-y-1 hover:border-emerald-300/60 hover:shadow-xl hover:shadow-emerald-950/[0.05] dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-emerald-300/20 dark:hover:bg-white/[0.04]"
+                  className="group flex h-full min-h-[280px] flex-col rounded-[28px] border border-slate-200/70 bg-white p-6 shadow-sm shadow-slate-950/[0.02] transition duration-300 hover:-translate-y-1 hover:border-emerald-300/60 hover:shadow-xl hover:shadow-emerald-950/[0.05] dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-emerald-300/20 dark:hover:bg-white/[0.04]"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex size-11 items-center justify-center rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
