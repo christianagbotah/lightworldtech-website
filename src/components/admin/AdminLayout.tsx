@@ -17,6 +17,7 @@ import {
   Building2,
   HelpCircle,
   Settings,
+  ShieldCheck,
   ArrowLeft,
   Menu,
   X,
@@ -41,13 +42,14 @@ const navItems = [
   { id: 'clients', label: 'Client Portal', icon: Building2, page: 'admin-clients' as const },
   { id: 'newsletter', label: 'Newsletter & Mail', icon: MailCheck, page: 'admin-newsletter' as const },
   { id: 'campaigns', label: 'Campaign Studio', icon: Megaphone, page: 'admin-campaigns' as const },
+  { id: 'governance', label: 'Admin Governance', icon: ShieldCheck, page: 'admin-governance' as const, superAdminOnly: true },
   { id: 'messages', label: 'Messages', icon: Mail, page: 'admin-messages' as const },
   { id: 'faqs', label: 'FAQs', icon: HelpCircle, page: 'admin-faqs' as const },
   { id: 'settings', label: 'Settings', icon: Settings, page: 'admin-settings' as const },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { currentPage, adminTab, setAdminTab, navigate, adminName, logoutAdmin } = useAppStore();
+  const { currentPage, adminTab, setAdminTab, navigate, adminName, adminRole, logoutAdmin } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -59,7 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-newsletter' | 'admin-campaigns' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
+  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-newsletter' | 'admin-campaigns' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
     setAdminTab(id);
     navigate(page);
     setSidebarOpen(false);
@@ -79,7 +81,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <ScrollArea className="flex-1 py-3">
         <nav className="space-y-1 px-3">
-          {navItems.map((item) => {
+          {navItems.filter((item) => !('superAdminOnly' in item) || !item.superAdminOnly || adminRole === 'super_admin').map((item) => {
             const Icon = item.icon;
             const isActive = adminTab === item.id;
             return (
@@ -156,6 +158,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                  adminTab === 'clients' ? 'Client Portal' :
                  adminTab === 'newsletter' ? 'Newsletter & Mail' :
                  adminTab === 'campaigns' ? 'Campaign Studio' :
+                 adminTab === 'governance' ? 'Admin Governance' :
                  adminTab === 'messages' ? 'Messages' :
                  adminTab === 'faqs' ? 'FAQs' :
                  adminTab === 'settings' ? 'Settings' : 'Admin'}
@@ -166,7 +169,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
                   <span className="text-amber-700 dark:text-amber-300 text-xs font-bold">{(adminName || 'A').charAt(0).toUpperCase()}</span>
                 </div>
-                <span className="text-sm font-medium text-foreground">{adminName || 'Admin'}</span>
+                <div className="leading-tight">
+                  <span className="block text-sm font-medium text-foreground">{adminName || 'Admin'}</span>
+                  {adminRole === 'super_admin' && <span className="block text-[10px] uppercase tracking-[0.12em] text-amber-600 dark:text-amber-300">Super admin</span>}
+                </div>
               </div>
               <Button
                 variant="ghost"
