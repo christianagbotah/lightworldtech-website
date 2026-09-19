@@ -28,11 +28,12 @@ export async function GET(request: NextRequest) {
       organization: true,
       active: true,
       mustChangePassword: true,
+      sessionVersion: true,
       lastLogin: true,
     },
   });
 
-  if (!account?.active) {
+  if (!account?.active || account.sessionVersion !== session.ver) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
       email: account.email,
       name: account.name,
       organization: account.organization,
+      ver: account.sessionVersion,
     });
 
     const response = NextResponse.json({
