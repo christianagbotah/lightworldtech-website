@@ -81,7 +81,7 @@ const createBlogPostSchema = z.object({
   excerpt: z.string().optional().default(''),
   content: z.string().optional().default(''),
   coverImage: z.string().optional().default(''),
-  author: z.string().optional().default('Lightworld Technologies'),
+  author: z.string().optional().default('Lightworld Technologies Ltd'),
   published: z.boolean().optional().default(false),
   featured: z.boolean().optional().default(false),
   readTime: z.number().int().min(1).optional().default(5),
