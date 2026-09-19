@@ -91,3 +91,15 @@ bun run db:phase6
 ```
 
 The assisted proposal generator is intentionally grounded in CRM lead/contact facts and known capability categories. It does not auto-generate prices, payment terms, certifications, client claims, or binding delivery commitments. A proposal remains internal working material until an authenticated admin explicitly moves it to the approved/ready state.
+
+## Phase 7 client portal deployment
+
+Phase 7 adds the additive `PortalClient`, `ClientProject`, `ClientMilestone`, `ClientDeliverable`, and `ClientTicket` tables. Back up the production SQLite database before the release and run:
+
+```bash
+bun run db:phase7
+```
+
+The client portal uses a signed HttpOnly cookie separate from the admin session. Set `CLIENT_PORTAL_SESSION_SECRET` to a high-entropy value in production when possible; the existing admin session secret is accepted as a compatibility fallback during rollout. Client passwords are stored as scrypt hashes and are never returned by the API.
+
+Portal smoke tests must verify tenant isolation: an authenticated portal client can only read projects, deliverables, milestones and tickets linked to that same portal client ID.
