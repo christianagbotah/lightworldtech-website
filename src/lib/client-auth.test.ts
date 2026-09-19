@@ -4,7 +4,13 @@ import {
   verifyClientSessionToken,
 } from './client-auth';
 import { createAdminSessionToken } from './admin-auth';
-import {\n  CLIENT_INVITE_MAX_AGE_MS,\n  clientActivationUrl,\n  createClientInvite,\n  hashClientInviteToken,\n  resolveClientActivationOrigin,\n} from './client-invite';
+import {
+  CLIENT_INVITE_MAX_AGE_MS,
+  clientActivationUrl,
+  createClientInvite,
+  hashClientInviteToken,
+  resolveClientActivationOrigin,
+} from './client-invite';
 
 process.env.CLIENT_SESSION_SECRET = 'client-test-secret-at-least-32-bytes-long';
 process.env.ADMIN_SESSION_SECRET = 'client-test-secret-at-least-32-bytes-long';
