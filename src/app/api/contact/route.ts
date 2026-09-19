@@ -7,7 +7,7 @@ import { deriveLeadIntelligence } from '@/lib/lead-intelligence';
 
 // GET all contact messages
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const { searchParams } = new URL(request.url);
