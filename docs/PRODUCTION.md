@@ -7,6 +7,7 @@ This document captures the minimum production requirements for the Lightworld Te
 - `DATABASE_URL` — production database connection used by Prisma.
 - `ADMIN_SESSION_SECRET` — high-entropy secret used to sign the HttpOnly admin session cookie. A `NEXTAUTH_SECRET` value is accepted as a fallback, but `ADMIN_SESSION_SECRET` is preferred for clarity.
 - `ADMIN_SEED_PASSWORD` — required only when running `prisma/seed.ts` in production.
+- `CLIENT_SESSION_SECRET` — recommended separate high-entropy secret for client portal sessions. If omitted, the portal falls back to `ADMIN_SESSION_SECRET` but uses a distinct signed namespace and cookie.
 
 Generate the session secret with a cryptographically secure random generator and keep it outside the repository.
 
@@ -37,6 +38,7 @@ bunx prisma generate
 bun run db:phase3
 bun run db:phase4
 bun run db:phase6
+bun run db:phase7
 bun run build
 ```
 
@@ -91,3 +93,17 @@ bun run db:phase6
 ```
 
 The assisted proposal generator is intentionally grounded in CRM lead/contact facts and known capability categories. It does not auto-generate prices, payment terms, certifications, client claims, or binding delivery commitments. A proposal remains internal working material until an authenticated admin explicitly moves it to the approved/ready state.
+
+## Phase 7 client portal deployment
+
+Phase 7 adds an empty-by-default client portal for real client organizations, portal users, projects, milestones and support tickets. Back up the production SQLite database before deployment, then run:
+
+```bash
+bun run db:phase7
+```
+
+The upgrade creates only new client-portal tables and indexes. It does not seed demo clients or alter existing CMS, CRM or proposal records.
+
+Client sessions use the dedicated HttpOnly `lw_client_session` cookie and are cryptographically namespaced separately from admin sessions. Set a distinct `CLIENT_SESSION_SECRET` in production when possible. Every client data request revalidates the portal user and organization and scopes data by the signed session organization rather than by a client-supplied tenant identifier.
+
+Smoke-check `/client`, unauthenticated client APIs (401), admin client APIs (401 without admin session), a provisioned client login in a non-production test database, project/milestone visibility, cross-organization isolation and support ticket creation before switching traffic.
