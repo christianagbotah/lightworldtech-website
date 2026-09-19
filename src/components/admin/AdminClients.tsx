@@ -54,6 +54,7 @@ export default function AdminClients() {
   const [selectedId, setSelectedId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
 
   const [orgForm, setOrgForm] = useState({ name: '', primaryContactName: '', primaryEmail: '', primaryPhone: '' });
   const [userForm, setUserForm] = useState({ name: '', email: '', password: '', role: 'client_admin' });
@@ -85,6 +86,42 @@ export default function AdminClients() {
     projects: organizations.reduce((sum, item) => sum + item._count.projects, 0),
     openTickets: organizations.reduce((sum, item) => sum + item.tickets.filter((ticket) => !['resolved', 'closed'].includes(ticket.status)).length, 0),
   }), [organizations]);
+
+  const patchOrganization = async (id: string, update: Record<string, unknown>) => {
+    try {
+      const response = await fetch('/api/admin/clients/' + id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update),
+      });
+      if (!response.ok) throw new Error('Could not update client organization');
+      await fetchOrganizations();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update client organization');
+    }
+  };
+
+  const patchUser = async (id: string, update: Record<string, unknown>, success?: string) => {
+    try {
+      const response = await fetch('/api/admin/client-users/' + id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Could not update portal user');
+      await fetchOrganizations();
+      if (success) toast.success(success);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update portal user');
+    }
+  };
+
+  const resetUserPassword = async (id: string) => {
+    const password = resetPasswords[id] || '';
+    if (password.length < 10) {
+      toast.error('New password must be at least 10 characters');
+      return;
+    }
+    await patchUser(id, { password }, 'Portal password reset');
+    setResetPasswords((current) => ({ ...current, [id]: '' }));
+  };
 
   const createOrganization = async (event: FormEvent) => {
     event.preventDefault();
@@ -261,15 +298,58 @@ export default function AdminClients() {
         {selected ? (
           <div className="space-y-6">
             <Card className="border-border/60">
-              <CardHeader><CardTitle>{selected.name}</CardTitle></CardHeader>
+              <CardHeader>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle>{selected.name}</CardTitle>
+                  <select
+                    className="h-9 rounded-md border border-input bg-background px-3 text-xs"
+                    value={selected.status}
+                    onChange={(event) => void patchOrganization(selected.id, { status: event.target.value })}
+                  >
+                    <option value="active">Active organization</option>
+                    <option value="inactive">Inactive / revoke portal</option>
+                  </select>
+                </div>
+              </CardHeader>
               <CardContent className="grid gap-5 xl:grid-cols-2">
                 <div className="rounded-2xl border border-border/60 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Portal users</p>
                   <div className="mt-3 space-y-2">
                     {selected.users.map((user) => (
                       <div key={user.id} className="rounded-xl bg-muted/40 p-3">
-                        <p className="text-sm font-semibold">{user.name}</p><p className="text-xs text-muted-foreground">{user.email} · {pretty(user.role)}</p>
-                        <p className="mt-1 text-[10px] text-muted-foreground">{user.lastLogin ? 'Last login ' + new Date(user.lastLogin).toLocaleString() : 'Never signed in'}</p>
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold">{user.name}</p>
+                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">{user.lastLogin ? 'Last login ' + new Date(user.lastLogin).toLocaleString() : 'Never signed in'}</p>
+                          </div>
+                          <Badge variant="outline">{user.active ? 'Active' : 'Revoked'}</Badge>
+                        </div>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                          <select
+                            className="h-9 rounded-md border border-input bg-background px-2 text-xs"
+                            value={user.role}
+                            onChange={(event) => void patchUser(user.id, { role: event.target.value }, 'Portal role updated')}
+                          >
+                            <option value="client_admin">Client admin</option>
+                            <option value="client_member">Client member</option>
+                          </select>
+                          <Button type="button" size="sm" variant="outline" onClick={() => void patchUser(user.id, { active: !user.active }, user.active ? 'Portal access revoked' : 'Portal access restored')}>
+                            {user.active ? 'Revoke access' : 'Restore access'}
+                          </Button>
+                        </div>
+                        <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
+                          <Input
+                            type="password"
+                            minLength={10}
+                            placeholder="New password (10+ chars)"
+                            value={resetPasswords[user.id] || ''}
+                            onChange={(event) => setResetPasswords((current) => ({ ...current, [user.id]: event.target.value }))}
+                          />
+                          <Button type="button" size="sm" variant="outline" onClick={() => void resetUserPassword(user.id)}>
+                            Reset password
+                          </Button>
+                        </div>
                       </div>
                     ))}
                     {!selected.users.length && <p className="text-xs text-muted-foreground">No portal users provisioned.</p>}
