@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       include: { organization: true },
     });
 
-    if (!user || !user.active || user.organization.status !== 'active') {
+    if (!user || !user.active || user.organization.status !== 'active' || user.mustSetPassword) {
       return NextResponse.json({ success: false, error: 'Invalid credentials' }, { status: 401 });
     }
 
