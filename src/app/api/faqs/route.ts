@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('active');
 
-    const adminRequest = isAdminRequest(request);
+    const adminRequest = (await isAdminRequest(request));
     const faqs = await db.fAQ.findMany({
       where: !adminRequest || activeOnly === 'true' ? { active: true } : undefined,
       orderBy: { order: 'asc' },
@@ -34,7 +34,7 @@ const createFAQSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  if (!(await (await isAdminRequest(request)))) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await request.json();
