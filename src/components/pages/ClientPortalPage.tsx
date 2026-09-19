@@ -321,23 +321,26 @@ export default function ClientPortalPage() {
       <div className="container-main space-y-8 py-8 sm:py-10">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            ['Projects', metrics.projects, FolderKanban],
-            ['Open milestones', metrics.pendingMilestones, Clock3],
-            ['Deliverables', metrics.deliverables, FileText],
-            ['Open support', metrics.openTickets, LifeBuoy],
-          ].map(([label, value, Icon]) => (
-            <Card key={String(label)} className="border-slate-200/70 dark:border-white/[0.07]">
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-xs text-muted-foreground">{String(label)}</p>
-                  <p className="mt-1 text-2xl font-bold">{Number(value)}</p>
-                </div>
-                <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-                  <Icon className="size-5" />
-                </span>
-              </CardContent>
-            </Card>
-          ))}
+            { label: 'Projects', value: metrics.projects, icon: FolderKanban },
+            { label: 'Open milestones', value: metrics.pendingMilestones, icon: Clock3 },
+            { label: 'Deliverables', value: metrics.deliverables, icon: FileText },
+            { label: 'Open support', value: metrics.openTickets, icon: LifeBuoy },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Card key={item.label} className="border-slate-200/70 dark:border-white/[0.07]">
+                <CardContent className="flex items-center justify-between p-5">
+                  <div>
+                    <p className="text-xs text-muted-foreground">{item.label}</p>
+                    <p className="mt-1 text-2xl font-bold">{item.value}</p>
+                  </div>
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+                    <Icon className="size-5" />
+                  </span>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         <section className="space-y-4">
