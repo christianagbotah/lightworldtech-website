@@ -16,6 +16,7 @@ import AdminCRM from '@/components/admin/AdminCRM';
 import AdminProposals from '@/components/admin/AdminProposals';
 import AdminClients from '@/components/admin/AdminClients';
 import AdminNewsletter from '@/components/admin/AdminNewsletter';
+import AdminCampaigns from '@/components/admin/AdminCampaigns';
 import AdminFAQs from '@/components/admin/AdminFAQs';
 import AdminSettings from '@/components/admin/AdminSettings';
 import AdminPages from '@/components/admin/AdminPages';
@@ -46,6 +47,8 @@ function AdminRouter() {
       return <AdminClients />;
     case 'newsletter':
       return <AdminNewsletter />;
+    case 'campaigns':
+      return <AdminCampaigns />;
     case 'messages':
       return <AdminMessages />;
     case 'faqs':
