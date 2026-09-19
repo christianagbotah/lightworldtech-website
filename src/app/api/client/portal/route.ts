@@ -22,11 +22,13 @@ export async function GET(request: NextRequest) {
 
     if (!account?.active || account.sessionVersion !== session.ver) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    const { sessionVersion: _sessionVersion, ...safeAccount } = account;
+
     if (account.mustChangePassword) {
       return NextResponse.json({
         success: true,
         requiresPasswordChange: true,
-        data: { account, projects: [], tickets: [], announcements: [] },
+        data: { account: safeAccount, projects: [], tickets: [], announcements: [] },
       });
     }
 
@@ -65,7 +67,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       requiresPasswordChange: false,
-      data: { account, projects, tickets, announcements },
+      data: { account: safeAccount, projects, tickets, announcements },
     });
   } catch (error) {
     console.error('Client portal load failed:', error);
