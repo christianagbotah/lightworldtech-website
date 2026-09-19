@@ -310,6 +310,7 @@ model ClientPortalAccount {
   password           String
   active             Boolean         @default(true)
   mustChangePassword Boolean         @default(true)
+  sessionVersion     Int             @default(1)
   lastLogin          DateTime?
   projects           ClientProject[]
   tickets            ClientTicket[]
