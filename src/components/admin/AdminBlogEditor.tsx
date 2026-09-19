@@ -51,7 +51,7 @@ export default function AdminBlogEditor() {
 
   const [form, setForm] = useState<PostData>({
     title: '', slug: '', excerpt: '', content: '', coverImage: '',
-    author: 'Lightworld Technologies', readTime: 5,
+    author: 'Lightworld Technologies Ltd', readTime: 5,
     published: false, featured: false, categoryId: '',
   });
 
