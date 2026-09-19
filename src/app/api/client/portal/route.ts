@@ -16,10 +16,11 @@ export async function GET(request: NextRequest) {
         organization: true,
         active: true,
         mustChangePassword: true,
+        sessionVersion: true,
       },
     });
 
-    if (!account?.active) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!account?.active || account.sessionVersion !== session.ver) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     if (account.mustChangePassword) {
       return NextResponse.json({
