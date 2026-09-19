@@ -14,6 +14,7 @@ This document captures the minimum production requirements for the Lightworld Te
 - `SMTP_SECURE` — set `true` for implicit TLS on port 465; leave `false` for port 587 so STARTTLS can be negotiated.
 - `SMTP_REQUIRE_TLS` — defaults to `true` for non-implicit-TLS SMTP connections. Do not disable it when authentication is used.
 - `MAIL_FROM` / `MAIL_REPLY_TO` — optional sender identity overrides. Defaults remain the Lightworld Technologies business mailbox.
+- `NEWSLETTER_UNSUBSCRIBE_SECRET` — recommended dedicated high-entropy HMAC secret for signed unsubscribe links. If omitted, the application falls back to the admin/session secret.
 
 Generate the session secret with a cryptographically secure random generator and keep it outside the repository.
 
@@ -46,6 +47,7 @@ bun run db:phase4
 bun run db:phase6
 bun run db:phase7
 bun run db:phase8
+bun run db:phase9
 bun run build
 ```
 
@@ -65,6 +67,8 @@ Verify:
 - `/sitemap.xml`, `/robots.txt`, and `/manifest.webmanifest`
 - public contact and newsletter submissions
 - `/admin` → `Newsletter & Mail`, including transport diagnostics and a test message to an address you control
+- `/admin` → `Campaign Studio`: create a draft, send a test, mark it Ready, and verify a bounded batch in a non-production subscriber list
+- a newsletter unsubscribe link and one-click unsubscribe POST with a test subscriber
 - `/admin` login, page refresh with an active session, and logout
 - admin CRUD for services, portfolio, blog, FAQs, team, and testimonials
 - draft/inactive records are not visible to unauthenticated API requests
@@ -146,3 +150,37 @@ MAIL_REPLY_TO=mail@lightworldtech.com
 Do not commit relay credentials. Configure them in the deployment environment or secret store. After deployment, open **Admin → Newsletter & Mail** and send a transport test to an address you control. A successful SMTP acceptance confirms that the application handed the message to the configured relay; final inbox placement still depends on the receiving provider and the sender domain's DNS/reputation configuration.
 
 The admin screen intentionally exposes only non-secret transport metadata. SMTP passwords are never returned by the API. Failed confirmation attempts are recorded with bounded diagnostic text so newsletter subscriptions remain saved even when outbound mail is temporarily unavailable.
+
+
+## Phase 9 newsletter campaign studio
+
+Phase 9 adds an admin-only campaign authoring and delivery workspace plus signed unsubscribe preferences. Back up the production SQLite database before deployment, then run:
+
+```bash
+bun run db:phase9
+```
+
+The upgrade creates only `NewsletterCampaign` and `NewsletterCampaignDelivery` tables and indexes. Existing subscribers and Phase 8 delivery history remain unchanged.
+
+Set a dedicated unsubscribe signing secret in production:
+
+```bash
+NEWSLETTER_UNSUBSCRIBE_SECRET=<high-entropy-random-secret>
+NEXT_PUBLIC_SITE_URL=https://lightworldtech.com
+```
+
+Campaign safety rules are enforced server-side:
+
+- live delivery can target only records already marked as active newsletter subscribers;
+- arbitrary recipient addresses are accepted only for explicit admin test messages;
+- campaigns must be manually moved from Draft to Ready before live delivery;
+- once live delivery starts, campaign content becomes immutable;
+- each request processes at most 10 subscribers and limits concurrent SMTP sends;
+- failed recipients remain retryable while successfully sent recipients are idempotently skipped;
+- stale in-progress records can be retried after 15 minutes;
+- every live message contains a signed unsubscribe link plus `List-Unsubscribe` and `List-Unsubscribe-Post` one-click headers;
+- campaign body text is HTML-escaped before email rendering.
+
+The admin must continue pressing **Send next batch** until Remaining reaches zero. This is deliberate: the current website runtime does not assume a background queue or cron worker. It prevents a web request from silently becoming an unbounded bulk-mail job and makes delivery progress visible to the operator.
+
+Before sending a real campaign, use a non-production/test subscriber list, verify the SMTP relay, send a campaign test to an address you control, confirm links and formatting, and verify that unsubscribe immediately makes that subscriber inactive.
