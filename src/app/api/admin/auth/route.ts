@@ -9,6 +9,7 @@ import {
   hashAdminPassword,
   verifyAdminPassword,
 } from '@/lib/admin-auth';
+import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 
 const loginSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
       select: { id: true, email: true, name: true, role: true, active: true },
     });
 
-    if (!admin?.active) {
+    if (!admin?.active || admin.email !== session.email || admin.role !== session.role) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -87,6 +88,19 @@ export async function POST(request: NextRequest) {
       role: admin.role,
     });
 
+    await recordAdminAudit({
+      admin: {
+        id: admin.id,
+        email: admin.email,
+        name: admin.name || 'Admin',
+        role: admin.role,
+      },
+      action: 'admin.login',
+      entity: 'Admin',
+      entityId: admin.id,
+      details: { passwordUpgraded: verification.needsUpgrade },
+    });
+
     const response = NextResponse.json({
       success: true,
       data: {
@@ -118,7 +132,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
+  const actor = await getActiveAdminContext(request);
+  if (actor) {
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.logout',
+      entity: 'Admin',
+      entityId: actor.id,
+    });
+  }
+
   const response = NextResponse.json({ success: true, message: 'Logged out' });
   response.cookies.set({
     name: ADMIN_SESSION_COOKIE,
