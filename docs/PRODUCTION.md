@@ -35,6 +35,7 @@ bun install --frozen-lockfile
 bunx prisma generate
 # Apply the idempotent Phase 3 analytics table/index upgrade.
 bun run db:phase3
+bun run db:phase4
 bun run build
 ```
 
@@ -69,3 +70,13 @@ bun run db:phase3
 The command only creates the analytics table and its indexes when missing. It does not alter existing CMS tables. Back up the production SQLite database before any schema-changing release.
 
 Analytics collection deliberately does not persist raw IP addresses, email addresses, or user-agent fingerprints. Public analytics failures must never block the visitor experience, and admin analytics endpoints remain session-protected.
+
+## Phase 4 CRM deployment
+
+Phase 4 adds the additive `Lead` and `LeadNote` tables used by the admin CRM. Production remains on SQLite for this release. Before switching traffic, back up the persistent database and run:
+
+```bash
+bun run db:phase4
+```
+
+The command creates only the CRM tables and indexes when they are missing. Existing `ContactMessage` rows are not rewritten. Historical enquiries are linked into CRM lazily by the protected admin CRM API.
