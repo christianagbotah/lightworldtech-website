@@ -242,18 +242,21 @@ export default function ClientPortalPage() {
 
         <div className="mt-7 grid gap-4 sm:grid-cols-3">
           {[
-            ['Active projects', activeProjects, FolderKanban],
-            ['Total milestones', data?.projects.reduce((sum, project) => sum + project.milestones.length, 0) || 0, CheckCircle2],
-            ['Open support tickets', data?.tickets.filter((item) => !['resolved', 'closed'].includes(item.status)).length || 0, LifeBuoy],
-          ].map(([label, value, Icon]) => (
-            <Card key={String(label)} className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
-              <CardContent className="p-5">
-                <Icon className="size-4 text-emerald-600" />
-                <p className="mt-5 text-2xl font-bold">{value as number}</p>
-                <p className="text-xs text-slate-500 dark:text-white/35">{String(label)}</p>
-              </CardContent>
-            </Card>
-          ))}
+            { label: 'Active projects', value: activeProjects, icon: FolderKanban },
+            { label: 'Total milestones', value: data?.projects.reduce((sum, project) => sum + project.milestones.length, 0) || 0, icon: CheckCircle2 },
+            { label: 'Open support tickets', value: data?.tickets.filter((item) => !['resolved', 'closed'].includes(item.status)).length || 0, icon: LifeBuoy },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Card key={item.label} className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                <CardContent className="p-5">
+                  <Icon className="size-4 text-emerald-600" />
+                  <p className="mt-5 text-2xl font-bold">{item.value}</p>
+                  <p className="text-xs text-slate-500 dark:text-white/35">{item.label}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         <section className="mt-8">
