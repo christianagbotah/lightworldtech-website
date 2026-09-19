@@ -113,27 +113,16 @@ describe('client activation URL safety', () => {
   });
 
   test('encodes activation tokens and never trusts the proxied localhost origin in production', () => {
-    const previousSiteUrl = process.env.SITE_URL;
-    const previousPublicSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-    const previousNodeEnv = process.env.NODE_ENV;
+    const url = clientActivationUrl(
+      'token with spaces',
+      'https://localhost:3007',
+      {
+        configuredOrigin: 'https://localhost:3007',
+        environment: 'production',
+      },
+    );
 
-    try {
-      process.env.SITE_URL = 'https://localhost:3007';
-      delete process.env.NEXT_PUBLIC_SITE_URL;
-      process.env.NODE_ENV = 'production';
-
-      const url = clientActivationUrl('token with spaces', 'https://localhost:3007');
-      expect(url).toBe('https://lightworldtech.com/client/activate?token=token+with+spaces');
-      expect(url).not.toContain('localhost');
-    } finally {
-      if (previousSiteUrl === undefined) delete process.env.SITE_URL;
-      else process.env.SITE_URL = previousSiteUrl;
-
-      if (previousPublicSiteUrl === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
-      else process.env.NEXT_PUBLIC_SITE_URL = previousPublicSiteUrl;
-
-      if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
-      else process.env.NODE_ENV = previousNodeEnv;
-    }
-  });
+    expect(url).toBe('https://lightworldtech.com/client/activate?token=token+with+spaces');
+    expect(url).not.toContain('localhost');
+  });;
 });
