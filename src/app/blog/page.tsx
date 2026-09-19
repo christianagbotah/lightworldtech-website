@@ -7,10 +7,10 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Technology Insights',
-  description: 'Practical insights from Lightworld Technologies on software, websites, mobile products, business systems, AI, cloud and digital transformation.',
+  description: 'Practical insights from Lightworld Technologies Ltd on software, websites, mobile products, business systems, AI, cloud and digital transformation.',
   alternates: { canonical: '/blog' },
   openGraph: {
-    title: 'Lightworld Technologies Insights',
+    title: 'Lightworld Technologies Ltd Insights',
     description: 'Practical thinking on software, product engineering and digital transformation.',
     url: '/blog',
   },
