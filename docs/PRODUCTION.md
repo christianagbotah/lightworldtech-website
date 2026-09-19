@@ -92,3 +92,13 @@ Verify:
 - admin analytics remains protected
 - draft/inactive records are not visible to unauthenticated APIs
 - PM2 remains online with zero unstable restarts
+
+## Phase 4 CRM deployment
+
+Phase 4 adds the additive `Lead` and `LeadNote` tables used by the admin CRM. Before switching production traffic, back up the SQLite database and run:
+
+```bash
+bun run db:phase4
+```
+
+The script creates only the CRM tables and indexes when they are missing. Existing `ContactMessage` rows are left unchanged; the CRM API lazily creates linked lead records for historical enquiries when the admin opens the CRM.
