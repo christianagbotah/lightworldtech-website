@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: '/about' },
-    openGraph: { title: title + ' | Lightworld Technologies', description, url: '/about' },
+    openGraph: { title: title + ' | Lightworld Technologies Ltd', description, url: '/about' },
   };
 }
 
