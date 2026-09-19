@@ -18,6 +18,20 @@ jobs:
     name: Production build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lightworld_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lightworld_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:5432/lightworld_ci?schema=public"
 
@@ -35,6 +49,9 @@ jobs:
 
       - name: Generate Prisma client
         run: bunx prisma generate
+
+      - name: Apply PostgreSQL migrations
+        run: bun run db:deploy
 
       - name: Type-check application
         run: bunx tsc --noEmit
