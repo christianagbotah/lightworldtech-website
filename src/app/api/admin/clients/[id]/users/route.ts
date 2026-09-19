@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { hashAdminPassword, isAdminRequest } from '@/lib/admin-auth';
-import { createClientInvite } from '@/lib/client-invite';
+import { clientActivationUrl, createClientInvite } from '@/lib/client-invite';
 
 const schema = z.object({
   name: z.string().trim().min(2).max(180),
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
     });
 
-    const activationUrl = request.nextUrl.origin + '/client/activate?token=' + encodeURIComponent(invite.token);
+    const activationUrl = clientActivationUrl(invite.token, request.nextUrl.origin);
     return NextResponse.json({ success: true, data: user, activationUrl }, { status: 201 });
   } catch (error) {
     const code = (error as { code?: string })?.code;
