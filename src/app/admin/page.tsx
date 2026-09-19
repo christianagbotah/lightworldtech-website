@@ -39,6 +39,8 @@ function AdminRouter() {
       return <AdminCRM />;
     case 'messages':
       return <AdminMessages />;
+    case 'crm':
+      return <AdminCRM />;
     case 'faqs':
       return <AdminFAQs />;
     case 'settings':
