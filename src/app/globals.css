@@ -1236,10 +1236,13 @@ body {
   isolation: isolate;
   overflow: hidden;
   background-image:
-    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  background-position: center top;
+    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 78% 32%, rgba(52, 211, 153, 0.10), transparent 24%),
+    radial-gradient(circle at 22% 78%, rgba(251, 191, 36, 0.07), transparent 22%);
+  background-size: 48px 48px, 48px 48px, 100% 100%, 100% 100%;
+  background-position: center top, center top, center, center;
+  animation: lw-hero-grid-pan 24s linear infinite;
 }
 
 .lw-hero-grid::before,
@@ -1251,23 +1254,30 @@ body {
 }
 
 .lw-hero-grid::before {
-  width: min(54vw, 760px);
+  width: min(66vw, 860px);
   aspect-ratio: 1;
-  right: -12%;
-  top: -55%;
+  right: -18%;
+  top: -72%;
   border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.16);
   background:
-    radial-gradient(circle at 35% 35%, rgba(52, 211, 153, 0.18), transparent 42%),
-    radial-gradient(circle at 70% 60%, rgba(251, 191, 36, 0.12), transparent 44%);
-  filter: blur(8px);
-  animation: lw-hero-drift 12s ease-in-out infinite alternate;
+    radial-gradient(circle at center, transparent 0 18%, rgba(16, 185, 129, 0.16) 18.2% 18.6%, transparent 18.9% 34%, rgba(245, 158, 11, 0.12) 34.2% 34.55%, transparent 34.9% 49%, rgba(16, 185, 129, 0.10) 49.2% 49.5%, transparent 49.8%),
+    conic-gradient(from 25deg, transparent 0 12%, rgba(16, 185, 129, 0.16) 12.5% 13%, transparent 13.5% 48%, rgba(245, 158, 11, 0.13) 48.5% 49.1%, transparent 49.6% 82%, rgba(16, 185, 129, 0.12) 82.5% 83%, transparent 83.5%);
+  box-shadow:
+    0 0 90px rgba(16, 185, 129, 0.08),
+    inset 0 0 90px rgba(245, 158, 11, 0.035);
+  opacity: 0.86;
+  transform-origin: center;
+  animation: lw-hero-orbit 18s ease-in-out infinite alternate;
 }
 
 .lw-hero-grid::after {
-  inset: 0;
-  background: linear-gradient(112deg, transparent 20%, rgba(52, 211, 153, 0.045) 44%, rgba(251, 191, 36, 0.035) 52%, transparent 72%);
-  background-size: 220% 100%;
-  animation: lw-hero-scan 14s ease-in-out infinite;
+  inset: -20% -12%;
+  background:
+    radial-gradient(circle at 72% 42%, rgba(52, 211, 153, 0.10), transparent 22%),
+    linear-gradient(112deg, transparent 18%, rgba(52, 211, 153, 0.07) 43%, rgba(251, 191, 36, 0.06) 51%, transparent 72%);
+  background-size: 100% 100%, 220% 100%;
+  animation: lw-hero-scan 13s ease-in-out infinite;
 }
 
 .lw-hero-grid > * {
@@ -1277,24 +1287,34 @@ body {
 
 .dark .lw-hero-grid {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.042) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.042) 1px, transparent 1px),
+    radial-gradient(circle at 78% 32%, rgba(52, 211, 153, 0.09), transparent 24%),
+    radial-gradient(circle at 22% 78%, rgba(251, 191, 36, 0.055), transparent 22%);
 }
 
 .dark .lw-hero-grid::before {
-  background:
-    radial-gradient(circle at 35% 35%, rgba(52, 211, 153, 0.12), transparent 42%),
-    radial-gradient(circle at 70% 60%, rgba(251, 191, 36, 0.08), transparent 44%);
+  border-color: rgba(52, 211, 153, 0.12);
+  opacity: 0.72;
+  box-shadow:
+    0 0 100px rgba(52, 211, 153, 0.055),
+    inset 0 0 100px rgba(251, 191, 36, 0.025);
 }
 
-@keyframes lw-hero-drift {
-  0% { transform: translate3d(0, 0, 0) scale(0.94) rotate(-6deg); }
-  100% { transform: translate3d(-12%, 18%, 0) scale(1.08) rotate(7deg); }
+@keyframes lw-hero-grid-pan {
+  0% { background-position: 0 0, 0 0, center, center; }
+  100% { background-position: 48px 24px, 24px 48px, center, center; }
+}
+
+@keyframes lw-hero-orbit {
+  0% { transform: translate3d(0, 0, 0) scale(0.92) rotate(-8deg); }
+  50% { transform: translate3d(-8%, 10%, 0) scale(1.01) rotate(8deg); }
+  100% { transform: translate3d(-15%, 20%, 0) scale(1.08) rotate(20deg); }
 }
 
 @keyframes lw-hero-scan {
-  0%, 100% { background-position: 130% 0; opacity: 0.5; }
-  50% { background-position: -40% 0; opacity: 1; }
+  0%, 100% { background-position: center, 135% 0; opacity: 0.58; }
+  50% { background-position: center, -35% 0; opacity: 1; }
 }
 
 .lw-dot-grid {
