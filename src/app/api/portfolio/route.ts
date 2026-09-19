@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
 
     const where: Record<string, unknown> = {};
-    const adminRequest = isAdminRequest(request);
+    const adminRequest = (await isAdminRequest(request));
 
     if (!adminRequest || activeOnly === 'true') {
       where.active = true;
@@ -55,7 +55,7 @@ const createPortfolioSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  if (!(await (await isAdminRequest(request)))) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await request.json();
