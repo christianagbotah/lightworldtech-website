@@ -3,6 +3,7 @@ import PublicShell from '@/components/layout/PublicShell';
 import TeamPage from '@/components/pages/TeamPage';
 import { contentText } from '@/lib/site-content';
 import { getActiveTeamMembers, getSiteSettings } from '@/lib/site-content-server';
+import { buildPageMetadata, buildSeoConfig } from '@/lib/seo-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,12 +11,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
   const title = contentText(settings, 'seo_team_title', 'Leadership Team');
   const description = contentText(settings, 'seo_team_description', 'Meet the executive leadership of Lightworld Technologies Ltd.');
-  return {
+  return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,
-    alternates: { canonical: '/team' },
-    openGraph: { title: title + ' | Lightworld Technologies', description, url: '/team' },
-  };
+    path: '/team',
+    openGraphTitle: title + ' | Lightworld Technologies',
+  });
 }
 
 export default async function Team() {
