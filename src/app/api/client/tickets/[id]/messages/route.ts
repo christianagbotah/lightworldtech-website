@@ -21,9 +21,9 @@ export async function POST(
     const { id } = await params;
     const account = await db.clientPortalAccount.findUnique({
       where: { id: session.sub },
-      select: { id: true, name: true, active: true, mustChangePassword: true },
+      select: { id: true, name: true, active: true, mustChangePassword: true, sessionVersion: true },
     });
-    if (!account?.active) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!account?.active || account.sessionVersion !== session.ver) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (account.mustChangePassword) {
       return NextResponse.json({ error: 'Password change required' }, { status: 403 });
     }
