@@ -438,23 +438,26 @@ export default function AdminClients() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ['Portal clients', metrics.total, UsersRound],
-          ['Active access', metrics.active, ShieldCheck],
-          ['Projects', metrics.projects, FolderKanban],
-          ['Open support', metrics.openTickets, LifeBuoy],
-        ].map(([label, value, Icon]) => (
-          <Card key={String(label)} className="border-border/60">
-            <CardContent className="flex items-center justify-between p-5">
-              <div>
-                <p className="text-xs text-muted-foreground">{String(label)}</p>
-                <p className="mt-1 text-2xl font-bold">{Number(value)}</p>
-              </div>
-              <span className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
-                <Icon className="size-5" />
-              </span>
-            </CardContent>
-          </Card>
-        ))}
+          { label: 'Portal clients', value: metrics.total, icon: UsersRound },
+          { label: 'Active access', value: metrics.active, icon: ShieldCheck },
+          { label: 'Projects', value: metrics.projects, icon: FolderKanban },
+          { label: 'Open support', value: metrics.openTickets, icon: LifeBuoy },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.label} className="border-border/60">
+              <CardContent className="flex items-center justify-between p-5">
+                <div>
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <p className="mt-1 text-2xl font-bold">{item.value}</p>
+                </div>
+                <span className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                  <Icon className="size-5" />
+                </span>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]">
