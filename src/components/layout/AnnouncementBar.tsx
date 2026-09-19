@@ -6,7 +6,7 @@ import { Megaphone, Sparkles, Award, X, Zap } from 'lucide-react';
 
 const announcements = [
   { id: 1, icon: Sparkles, text: 'New: AI-Powered Solutions now available — Transform your business with intelligent automation' },
-  { id: 2, icon: Award, text: 'Lightworld Technologies wins 2024 Business Excellence Award — Proud to serve Ghana\'s digital future' },
+  { id: 2, icon: Award, text: 'Lightworld Technologies Ltd wins 2024 Business Excellence Award — Proud to serve Ghana\'s digital future' },
   { id: 3, icon: Zap, text: 'Limited Offer: 20% off on all Web Development projects this month — Book your free consultation today' },
   { id: 4, icon: Megaphone, text: 'We\'re hiring! Join our growing team of developers, designers, and digital marketers' },
 ];
