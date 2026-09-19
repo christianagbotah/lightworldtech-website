@@ -295,3 +295,91 @@ model Proposal {
 
   @@index([status, updatedAt])
 }
+
+
+// Secure client portal identities. Separate from the public Client logo/partner model.
+model PortalClient {
+  id          String          @id @default(cuid())
+  companyName String
+  contactName String
+  email       String          @unique
+  password    String
+  active      Boolean         @default(true)
+  lastLogin   DateTime?
+  projects    ClientProject[]
+  tickets     ClientTicket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ClientProject {
+  id          String              @id @default(cuid())
+  clientId    String
+  client      PortalClient        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name        String
+  status      String              @default("active")
+  summary     String              @default("")
+  progress    Int                 @default(0)
+  startDate   DateTime?
+  targetDate  DateTime?
+  milestones  ClientMilestone[]
+  deliverables ClientDeliverable[]
+  tickets     ClientTicket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId, status])
+}
+
+model ClientMilestone {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     ClientProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String        @default("")
+  status      String        @default("pending")
+  dueDate     DateTime?
+  order       Int           @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, order])
+}
+
+model ClientDeliverable {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     ClientProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String        @default("")
+  url         String        @default("")
+  status      String        @default("available")
+  deliveredAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, createdAt])
+}
+
+model ClientTicket {
+  id            String         @id @default(cuid())
+  clientId      String
+  client        PortalClient   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  projectId     String?
+  project       ClientProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  subject       String
+  message       String
+  status        String         @default("open")
+  priority      String         @default("normal")
+  adminResponse String         @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId, status])
+  @@index([projectId, status])
+}
