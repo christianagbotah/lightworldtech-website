@@ -203,6 +203,7 @@ Important deployment behavior: if the currently signed-in administrator is promo
 Governance safeguards enforced server-side:
 
 - only a live database-backed `super_admin` session may call administrator governance APIs;
+- protected admin/CMS API requests revalidate the signed session against the live Admin row, so deactivation, email change or role change invalidates stale access on the next protected request;
 - ordinary admins do not see the Admin Governance navigation item and cannot open the governance workspace through the client router;
 - a super-admin cannot deactivate or demote their own account from the same session;
 - a super-admin cannot change their own email from the same privileged session;
