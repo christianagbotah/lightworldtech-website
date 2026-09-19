@@ -4,6 +4,7 @@ import { z } from 'zod';
 import {
   getMailTransportStatus,
   newsletterConfirmation,
+  sanitizeMailError,
   sendTransactionalMail,
 } from '@/lib/mail';
 import { consumePublicRateLimit } from '@/lib/public-rate-limit';
@@ -13,10 +14,6 @@ export const runtime = 'nodejs';
 const subscribeSchema = z.object({
   email: z.string().email('Valid email is required').transform((value) => value.trim().toLowerCase()),
 });
-
-function safeError(error: unknown): string {
-  return (error instanceof Error ? error.message : String(error)).slice(0, 1200);
-}
 
 async function recordDelivery(input: {
   subscriberId: string | null;
@@ -65,7 +62,7 @@ async function sendConfirmation(subscriberId: string, email: string) {
       subject: message.subject,
       status: 'failed',
       transport,
-      error: safeError(error),
+      error: sanitizeMailError(error),
     });
     return { sent: false, transport };
   }
