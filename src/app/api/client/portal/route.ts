@@ -7,19 +7,44 @@ export async function GET(request: NextRequest) {
   if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
+    const now = new Date();
     const organization = await db.clientOrganization.findUnique({
       where: { id: context.user.organizationId },
       include: {
         projects: {
           orderBy: [{ updatedAt: 'desc' }],
-          include: { milestones: { orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] } },
+          include: {
+            milestones: { orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] },
+            documents: {
+              where: { visibleToClient: true },
+              orderBy: { createdAt: 'desc' },
+              select: {
+                id: true, title: true, description: true, url: true,
+                category: true, createdAt: true,
+              },
+            },
+          },
         },
         tickets: {
           orderBy: { createdAt: 'desc' },
           take: 50,
+          include: {
+            messages: {
+              orderBy: { createdAt: 'asc' },
+              select: {
+                id: true, authorType: true, authorName: true,
+                message: true, createdAt: true,
+              },
+            },
+          },
+        },
+        announcements: {
+          where: { active: true, publishAt: { lte: now } },
+          orderBy: [{ publishAt: 'desc' }, { createdAt: 'desc' }],
+          take: 30,
           select: {
-            id: true, projectId: true, subject: true, message: true,
-            status: true, priority: true, createdAt: true, updatedAt: true,
+            id: true, projectId: true, title: true, body: true,
+            publishAt: true, createdAt: true,
           },
         },
       },
@@ -42,6 +67,7 @@ export async function GET(request: NextRequest) {
         },
         projects: organization.projects,
         tickets: organization.tickets,
+        announcements: organization.announcements,
       },
     });
   } catch (error) {
