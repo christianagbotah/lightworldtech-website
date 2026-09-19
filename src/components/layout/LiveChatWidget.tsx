@@ -13,7 +13,7 @@ interface ChatMessage {
 }
 
 const quickReplies = [
-  { label: 'Leadership', text: 'Who leads Lightworld Technologies?' },
+  { label: 'Leadership', text: 'Who leads Lightworld Technologies Ltd?' },
   { label: 'Services', text: 'What services does Lightworld offer?' },
   { label: 'Awards', text: 'What awards has Lightworld won?' },
   { label: 'Start a Project', text: 'How can I start a project with Lightworld?' },
@@ -90,7 +90,7 @@ export default function LiveChatWidget() {
         } else {
           const welcomeMsg: ChatMessage = {
             id: 'welcome',
-            text: 'Hello! \ud83d\udc4b Welcome to Lightworld Technologies. How can we help you today?',
+            text: 'Hello! \ud83d\udc4b Welcome to Lightworld Technologies Ltd. How can we help you today?',
             sender: 'bot',
             timestamp: new Date(),
           };
