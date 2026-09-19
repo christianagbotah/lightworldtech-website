@@ -4,6 +4,7 @@ import {
   verifyClientSessionToken,
 } from './client-auth';
 import { createAdminSessionToken } from './admin-auth';
+import { CLIENT_INVITE_MAX_AGE_MS, createClientInvite, hashClientInviteToken } from './client-invite';
 
 process.env.CLIENT_SESSION_SECRET = 'client-test-secret-at-least-32-bytes-long';
 process.env.ADMIN_SESSION_SECRET = 'client-test-secret-at-least-32-bytes-long';
@@ -57,5 +58,27 @@ describe('client portal session security', () => {
   test('rejects malformed tokens', () => {
     expect(verifyClientSessionToken('not-a-session-token')).toBeNull();
     expect(verifyClientSessionToken(undefined)).toBeNull();
+  });
+});
+
+
+describe('client activation token security', () => {
+  test('stores only a deterministic hash of a random raw activation token', () => {
+    const invite = createClientInvite();
+    expect(invite.token.length).toBeGreaterThan(20);
+    expect(invite.tokenHash).toBe(hashClientInviteToken(invite.token));
+    expect(invite.tokenHash).not.toContain(invite.token);
+  });
+
+  test('generates unique activation tokens with bounded expiry', () => {
+    const before = Date.now();
+    const first = createClientInvite();
+    const second = createClientInvite();
+    const after = Date.now();
+
+    expect(first.token).not.toBe(second.token);
+    expect(first.tokenHash).not.toBe(second.tokenHash);
+    expect(first.expiresAt.getTime()).toBeGreaterThanOrEqual(before + CLIENT_INVITE_MAX_AGE_MS);
+    expect(first.expiresAt.getTime()).toBeLessThanOrEqual(after + CLIENT_INVITE_MAX_AGE_MS);
   });
 });
