@@ -313,6 +313,7 @@ model ClientPortalAccount {
   lastLogin          DateTime?
   projects           ClientProject[]
   tickets            ClientTicket[]
+  announcements      ClientAnnouncement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -403,4 +404,20 @@ model ClientTicketMessage {
   createdAt DateTime @default(now())
 
   @@index([ticketId, createdAt])
+}
+
+
+model ClientAnnouncement {
+  id          String               @id @default(cuid())
+  accountId   String?
+  account     ClientPortalAccount? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  active      Boolean              @default(true)
+  publishedAt DateTime             @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId, active, publishedAt])
 }
