@@ -23,7 +23,7 @@ export function useSEO(options: SEOOptions = {}) {
   const { currentPage } = useAppStore();
 
   useEffect(() => {
-    const companyName = 'Lightworld Technologies';
+    const companyName = 'Lightworld Technologies Ltd';
     const title = options.title
       ? `${options.title} | ${companyName}`
       : `${defaultSEO.title} | ${companyName}`;
