@@ -32,10 +32,11 @@ export async function POST(request: NextRequest) {
         name: true,
         role: true,
         active: true,
+        recoveryEmail: true,
       },
     });
 
-    if (admin?.active) {
+    if (admin?.active && admin.recoveryEmail) {
       const cooldownSince = new Date(Date.now() - ADMIN_PASSWORD_RESET_COOLDOWN_MS);
       const recent = await db.adminPasswordResetToken.findFirst({
         where: {
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
         const resetUrl = adminPasswordResetUrl(reset.token, request.nextUrl.origin);
 
         try {
-          await sendTransactionalMail(adminPasswordResetMail(admin.email, resetUrl));
+          await sendTransactionalMail(adminPasswordResetMail(admin.recoveryEmail, resetUrl));
           await recordAdminAudit({
             admin: {
               id: admin.id,
