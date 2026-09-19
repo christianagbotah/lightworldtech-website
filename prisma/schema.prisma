@@ -109,7 +109,7 @@ model BlogPost {
   excerpt     String        @default("")
   content     String        @default("")
   coverImage  String        @default("")
-  author      String        @default("Lightworld Technologies")
+  author      String        @default("Lightworld Technologies Ltd")
   published   Boolean       @default(false)
   featured    Boolean       @default(false)
   readTime    Int           @default(5)
