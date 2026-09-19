@@ -42,7 +42,7 @@ export default function AboutSection() {
               <span className="text-gradient" aria-label="Technology">Technology</span>
             </h2>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
-              Lightworld Technologies is a premier IT solutions company based in Ghana. Since our founding, we have been committed to delivering world-class technology services that help businesses of all sizes achieve their goals.
+              Lightworld Technologies Ltd is a premier IT solutions company based in Ghana. Since our founding, we have been committed to delivering world-class technology services that help businesses of all sizes achieve their goals.
             </p>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
               Our team of skilled developers, designers, and digital strategists work collaboratively to craft solutions that are not only technically excellent but also aligned with our clients&apos; business objectives. We believe in building lasting partnerships through trust, transparency, and tangible results.
@@ -92,7 +92,7 @@ export default function AboutSection() {
             >
               <Image
                 src="/images/about-team.png"
-                alt="Lightworld Technologies team of African tech professionals"
+                alt="Lightworld Technologies Ltd team of African tech professionals"
                 width={1152}
                 height={864}
                 className="w-full h-auto object-cover rounded-2xl"
