@@ -124,7 +124,7 @@ export default function AdminLogin() {
                 <Shield className="size-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Lightworld Technologies</h1>
+                <h1 className="text-xl font-bold text-white">Lightworld Technologies Ltd</h1>
                 <p className="text-xs text-amber-200/70">Content Management System</p>
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function AdminLogin() {
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-foreground">Admin Panel</h1>
-                  <p className="text-xs text-muted-foreground">Lightworld Technologies</p>
+                  <p className="text-xs text-muted-foreground">Lightworld Technologies Ltd</p>
                 </div>
               </div>
 
@@ -293,7 +293,7 @@ export default function AdminLogin() {
           </Card>
 
           <p className="text-center text-xs text-muted-foreground mt-6">
-            © {new Date().getFullYear()} Lightworld Technologies. All rights reserved.
+            © {new Date().getFullYear()} Lightworld Technologies Ltd. All rights reserved.
           </p>
         </motion.div>
       </div>
