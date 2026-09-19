@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { getClientSession } from '@/lib/client-auth';
+import { getActiveClientContext } from '@/lib/client-access';
 
 const schema = z.object({
   subject: z.string().trim().min(3).max(240),
@@ -11,8 +11,8 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const session = getClientSession(request);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const context = await getActiveClientContext(request);
+  if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const parsed = schema.safeParse(await request.json());
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     if (parsed.data.projectId) {
       const project = await db.clientProject.findFirst({
-        where: { id: parsed.data.projectId, organizationId: session.organizationId },
+        where: { id: parsed.data.projectId, organizationId: context.user.organizationId },
         select: { id: true },
       });
       if (!project) return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 });
@@ -30,9 +30,9 @@ export async function POST(request: NextRequest) {
 
     const ticket = await db.clientSupportTicket.create({
       data: {
-        organizationId: session.organizationId,
+        organizationId: context.user.organizationId,
         projectId: parsed.data.projectId || null,
-        createdById: session.sub,
+        createdById: context.user.id,
         subject: parsed.data.subject,
         message: parsed.data.message,
         priority: parsed.data.priority,
