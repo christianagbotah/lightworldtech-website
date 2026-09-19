@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
-import { createClientInvite } from '@/lib/client-invite';
+import { clientActivationUrl, createClientInvite } from '@/lib/client-invite';
 
 const schema = z.object({
   active: z.boolean().optional(),
@@ -40,7 +40,7 @@ export async function PUT(
     data.inviteTokenHash = invite.tokenHash;
     data.inviteExpiresAt = invite.expiresAt;
     data.mustSetPassword = true;
-    activationUrl = request.nextUrl.origin + '/client/activate?token=' + encodeURIComponent(invite.token);
+    activationUrl = clientActivationUrl(invite.token, request.nextUrl.origin);
   }
 
   const user = await db.clientPortalUser.update({

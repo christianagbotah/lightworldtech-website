@@ -4,7 +4,13 @@ import {
   verifyClientSessionToken,
 } from './client-auth';
 import { createAdminSessionToken } from './admin-auth';
-import { CLIENT_INVITE_MAX_AGE_MS, createClientInvite, hashClientInviteToken } from './client-invite';
+import {
+  CLIENT_INVITE_MAX_AGE_MS,
+  clientActivationUrl,
+  createClientInvite,
+  hashClientInviteToken,
+  resolveClientActivationOrigin,
+} from './client-invite';
 
 process.env.CLIENT_SESSION_SECRET = 'client-test-secret-at-least-32-bytes-long';
 process.env.ADMIN_SESSION_SECRET = 'client-test-secret-at-least-32-bytes-long';
@@ -81,5 +87,42 @@ describe('client activation token security', () => {
     expect(first.tokenHash).not.toBe(second.tokenHash);
     expect(first.expiresAt.getTime()).toBeGreaterThanOrEqual(before + CLIENT_INVITE_MAX_AGE_MS);
     expect(first.expiresAt.getTime()).toBeLessThanOrEqual(after + CLIENT_INVITE_MAX_AGE_MS);
+  });
+});
+
+
+describe('client activation URL safety', () => {
+  test('never exposes localhost when resolving a production activation origin', () => {
+    expect(
+      resolveClientActivationOrigin({
+        configuredOrigin: 'https://localhost:3007',
+        requestOrigin: 'https://localhost:3007',
+        environment: 'production',
+      }),
+    ).toBe('https://lightworldtech.com');
+  });
+
+  test('uses the configured public production origin when it is safe', () => {
+    expect(
+      resolveClientActivationOrigin({
+        configuredOrigin: 'https://lightworldtech.com',
+        requestOrigin: 'https://localhost:3007',
+        environment: 'production',
+      }),
+    ).toBe('https://lightworldtech.com');
+  });
+
+  test('encodes activation tokens and never trusts the proxied localhost origin in production', () => {
+    const url = clientActivationUrl(
+      'token with spaces',
+      'https://localhost:3007',
+      {
+        configuredOrigin: 'https://localhost:3007',
+        environment: 'production',
+      },
+    );
+
+    expect(url).toBe('https://lightworldtech.com/client/activate?token=token+with+spaces');
+    expect(url).not.toContain('localhost');
   });
 });
