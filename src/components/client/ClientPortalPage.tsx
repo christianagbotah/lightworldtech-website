@@ -7,10 +7,14 @@ import {
   CheckCircle2,
   CircleDot,
   Clock3,
+  ExternalLink,
+  FileText,
   FolderKanban,
   LifeBuoy,
   Loader2,
   LogOut,
+  Megaphone,
+  Send,
   ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -31,6 +35,15 @@ type Milestone = {
   completedAt: string | null;
 };
 
+type DocumentItem = {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  category: string;
+  createdAt: string;
+};
+
 type Project = {
   id: string;
   name: string;
@@ -42,6 +55,15 @@ type Project = {
   startDate: string | null;
   targetDate: string | null;
   milestones: Milestone[];
+  documents: DocumentItem[];
+};
+
+type TicketMessage = {
+  id: string;
+  authorType: string;
+  authorName: string;
+  message: string;
+  createdAt: string;
 };
 
 type Ticket = {
@@ -53,6 +75,16 @@ type Ticket = {
   priority: string;
   createdAt: string;
   updatedAt: string;
+  messages: TicketMessage[];
+};
+
+type Announcement = {
+  id: string;
+  projectId: string | null;
+  title: string;
+  body: string;
+  publishAt: string;
+  createdAt: string;
 };
 
 type PortalData = {
@@ -66,6 +98,7 @@ type PortalData = {
   };
   projects: Project[];
   tickets: Ticket[];
+  announcements: Announcement[];
 };
 
 function statusLabel(value: string): string {
@@ -86,6 +119,8 @@ export default function ClientPortalPage() {
   const [login, setLogin] = useState({ email: '', password: '' });
   const [ticket, setTicket] = useState({ subject: '', message: '', priority: 'normal', projectId: '' });
   const [ticketSending, setTicketSending] = useState(false);
+  const [replies, setReplies] = useState<Record<string, string>>({});
+  const [replyingTicketId, setReplyingTicketId] = useState('');
 
   const loadPortal = async () => {
     const response = await fetch('/api/client/portal', { cache: 'no-store' });
@@ -159,6 +194,28 @@ export default function ClientPortalPage() {
     }
   };
 
+  const replyToTicket = async (ticketId: string) => {
+    const message = (replies[ticketId] || '').trim();
+    if (!message) return;
+    setReplyingTicketId(ticketId);
+    try {
+      const response = await fetch('/api/client/tickets/' + ticketId + '/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to send reply');
+      setReplies((current) => ({ ...current, [ticketId]: '' }));
+      await loadPortal();
+      toast.success('Reply sent');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to send reply');
+    } finally {
+      setReplyingTicketId('');
+    }
+  };
+
   const activeProjects = useMemo(
     () => data?.projects.filter((project) => project.status !== 'completed').length || 0,
     [data],
@@ -184,7 +241,7 @@ export default function ClientPortalPage() {
               Your Lightworld project workspace.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-8 text-white/45">
-              View project progress, milestones and support requests for your organization. Access is provisioned by the Lightworld team for active clients.
+              View project progress, milestones, published documents, announcements and support conversations for your organization.
             </p>
             <a href="/" className="mt-7 inline-flex text-sm font-semibold text-emerald-300">← Back to lightworldtech.com</a>
           </div>
@@ -192,7 +249,7 @@ export default function ClientPortalPage() {
           <Card className="border-white/[0.08] bg-white/[0.035] text-white">
             <CardHeader>
               <CardTitle>Client sign in</CardTitle>
-              <p className="text-sm text-white/38">Use the portal account issued to your organization.</p>
+              <p className="text-sm text-white/38">Use the client account you activated from your one-time Lightworld invitation.</p>
             </CardHeader>
             <CardContent>
               <form onSubmit={signIn} className="space-y-4">
@@ -259,6 +316,23 @@ export default function ClientPortalPage() {
           })}
         </div>
 
+        {Boolean(data?.announcements.length) && (
+          <section className="mt-8">
+            <div className="flex items-center gap-2"><Megaphone className="size-4 text-emerald-600" /><h2 className="text-xl font-semibold">Updates from Lightworld</h2></div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {data?.announcements.map((item) => (
+                <Card key={item.id} className="border-emerald-500/15 bg-emerald-500/[0.04] dark:border-emerald-400/10">
+                  <CardContent className="p-5">
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-500 dark:text-white/40">{item.body}</p>
+                    <p className="mt-3 text-[10px] text-slate-400">{new Date(item.publishAt).toLocaleString()}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="mt-8">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Projects</h2>
@@ -290,6 +364,30 @@ export default function ClientPortalPage() {
                         <div className="mt-5 space-y-2 text-xs text-slate-500 dark:text-white/35">
                           {project.manager && <p>Lightworld lead: <span className="font-medium text-foreground">{project.manager}</span></p>}
                           {project.targetDate && <p className="flex items-center gap-2"><CalendarDays className="size-3.5" /> Target: {new Date(project.targetDate).toLocaleDateString()}</p>}
+                        </div>
+
+                        <div className="mt-6 border-t border-slate-200/70 pt-5 dark:border-white/[0.07]">
+                          <div className="flex items-center gap-2"><FileText className="size-4 text-emerald-600" /><p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">Documents</p></div>
+                          {project.documents.length ? (
+                            <div className="mt-3 space-y-2">
+                              {project.documents.map((document) => (
+                                <a
+                                  key={document.id}
+                                  href={document.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/70 p-3 transition hover:border-emerald-300 dark:border-white/[0.07]"
+                                >
+                                  <div>
+                                    <p className="text-sm font-medium">{document.title}</p>
+                                    {document.description && <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/35">{document.description}</p>}
+                                    <p className="mt-1 text-[10px] text-slate-400">{statusLabel(document.category)}</p>
+                                  </div>
+                                  <ExternalLink className="mt-0.5 size-3.5 shrink-0 text-slate-400" />
+                                </a>
+                              ))}
+                            </div>
+                          ) : <p className="mt-3 text-xs text-slate-400">No client documents published yet.</p>}
                         </div>
                       </div>
 
@@ -326,7 +424,7 @@ export default function ClientPortalPage() {
           )}
         </section>
 
-        <section className="mt-9 grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
+        <section className="mt-9 grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
           <Card className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
             <CardHeader><CardTitle>Request support</CardTitle></CardHeader>
             <CardContent>
@@ -360,17 +458,57 @@ export default function ClientPortalPage() {
           </Card>
 
           <Card className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
-            <CardHeader><CardTitle>Support requests</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Support conversations</CardTitle></CardHeader>
             <CardContent>
               {data?.tickets.length ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {data.tickets.map((item) => (
                     <div key={item.id} className="rounded-2xl border border-slate-200/70 p-4 dark:border-white/[0.07]">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-sm font-semibold">{item.subject}</p>
                         <div className="flex gap-2"><Badge variant="outline">{statusLabel(item.status)}</Badge><Badge variant="outline">{statusLabel(item.priority)}</Badge></div>
                       </div>
-                      <p className="mt-2 line-clamp-3 text-xs leading-5 text-slate-500 dark:text-white/35">{item.message}</p>
+                      <div className="mt-3 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Original request</p>
+                        <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-slate-600 dark:text-white/45">{item.message}</p>
+                      </div>
+                      {item.messages.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {item.messages.map((message) => (
+                            <div key={message.id} className={message.authorType === 'client' ? 'ml-6 rounded-xl bg-emerald-500/[0.07] p-3' : 'mr-6 rounded-xl bg-slate-100 p-3 dark:bg-white/[0.05]'}>
+                              <div className="flex items-center justify-between gap-2 text-[10px] text-slate-400">
+                                <span>{message.authorName} · {message.authorType === 'client' ? 'Client' : 'Lightworld'}</span>
+                                <span>{new Date(message.createdAt).toLocaleString()}</span>
+                              </div>
+                              <p className="mt-1 whitespace-pre-wrap text-xs leading-5">{message.message}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {item.status !== 'closed' && (
+                        <div className="mt-3 flex gap-2">
+                          <Input
+                            value={replies[item.id] || ''}
+                            onChange={(event) => setReplies((current) => ({ ...current, [item.id]: event.target.value }))}
+                            placeholder="Reply to this support request…"
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' && !event.shiftKey) {
+                                event.preventDefault();
+                                void replyToTicket(item.id);
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            onClick={() => void replyToTicket(item.id)}
+                            disabled={replyingTicketId === item.id || !(replies[item.id] || '').trim()}
+                            aria-label="Send support reply"
+                          >
+                            {replyingTicketId === item.id ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                          </Button>
+                        </div>
+                      )}
                       <p className="mt-3 text-[10px] text-slate-400">Opened {new Date(item.createdAt).toLocaleString()}</p>
                     </div>
                   ))}
