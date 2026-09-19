@@ -124,5 +124,5 @@ describe('client activation URL safety', () => {
 
     expect(url).toBe('https://lightworldtech.com/client/activate?token=token+with+spaces');
     expect(url).not.toContain('localhost');
-  });;
+  });
 });
