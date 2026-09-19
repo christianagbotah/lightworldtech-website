@@ -9,6 +9,8 @@ export interface MailMessage {
   subject: string;
   text: string;
   html: string;
+  listUnsubscribeUrl?: string;
+  listUnsubscribePost?: boolean;
 }
 
 export interface MailSendResult {
@@ -163,6 +165,12 @@ export function buildMimeMessage(message: MailMessage, config = smtpConfig()): s
     'Subject: ' + subject,
     'Date: ' + new Date().toUTCString(),
     'Message-ID: ' + buildMessageId(config.from),
+    ...(message.listUnsubscribeUrl
+      ? ['List-Unsubscribe: <' + cleanHeader(message.listUnsubscribeUrl) + '>']
+      : []),
+    ...(message.listUnsubscribeUrl && message.listUnsubscribePost
+      ? ['List-Unsubscribe-Post: List-Unsubscribe=One-Click']
+      : []),
     'MIME-Version: 1.0',
     'Content-Type: multipart/alternative; boundary="' + boundary + '"',
     '',
