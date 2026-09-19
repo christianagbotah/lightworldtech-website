@@ -16,6 +16,7 @@ export interface AdminSession {
   email: string;
   name: string;
   role: string;
+  authVersion: number;
   exp: number;
 }
 
@@ -62,6 +63,7 @@ export function verifyAdminSessionToken(token: string | undefined): AdminSession
 
     const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as AdminSession;
     if (!parsed.sub || !parsed.email || !parsed.exp) return null;
+    if (!Number.isInteger(parsed.authVersion) || parsed.authVersion < 0) return null;
     if (parsed.exp <= Math.floor(Date.now() / 1000)) return null;
 
     return parsed;
@@ -81,13 +83,14 @@ export async function isAdminRequest(request: NextRequest): Promise<boolean> {
   try {
     const admin = await db.admin.findUnique({
       where: { id: session.sub },
-      select: { email: true, role: true, active: true },
+      select: { email: true, role: true, active: true, authVersion: true },
     });
 
     return Boolean(
       admin?.active &&
       admin.email === session.email &&
-      admin.role === session.role
+      admin.role === session.role &&
+      admin.authVersion === session.authVersion
     );
   } catch (error) {
     console.error('Admin session revalidation failed:', error);
