@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // Build where clause
     const where: Record<string, unknown> = {};
 
-    const adminRequest = isAdminRequest(request);
+    const adminRequest = (await isAdminRequest(request));
     if (!adminRequest) {
       where.published = true;
     } else if (published !== null && published !== undefined) {
@@ -89,7 +89,7 @@ const createBlogPostSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  if (!(await (await isAdminRequest(request)))) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await request.json();
