@@ -271,7 +271,7 @@ export default function Preloader() {
                 />
                 <Image
                   src="/logo.png"
-                  alt="Lightworld Technologies"
+                  alt="Lightworld Technologies Ltd"
                   width={48}
                   height={48}
                   className="relative z-10 object-contain"
