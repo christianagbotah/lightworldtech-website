@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
   Plus, ExternalLink, Inbox, Activity, ArrowUpRight, ArrowDownRight,
-  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick
+  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick, GitBranch
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,14 @@ interface ContactMessage {
   createdAt: string;
 }
 
+interface CrmSummary {
+  total: number;
+  open: number;
+  highPriority: number;
+  overdueFollowUps: number;
+  byStatus: Record<string, number>;
+}
+
 interface AnalyticsData {
   days: number;
   uniqueSessions: number;
@@ -78,8 +86,8 @@ const statCards = [
 ];
 
 const quickActions = [
+  { label: 'Open CRM Pipeline', icon: GitBranch, action: 'admin-crm', color: 'text-amber-600 dark:text-amber-400' },
   { label: 'New Blog Post', icon: Pencil, action: 'admin-blog-editor', color: 'text-emerald-600 dark:text-amber-400' },
-  { label: 'New Service', icon: Plus, action: 'admin-services', color: 'text-emerald-600 dark:text-amber-400' },
   { label: 'View Messages', icon: Inbox, action: 'admin-messages', color: 'text-rose-600 dark:text-rose-400' },
 ];
 
@@ -89,28 +97,31 @@ export default function AdminDashboard() {
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [crm, setCrm] = useState<CrmSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsRes, postsRes, messagesRes, analyticsRes] = await Promise.all([
+        const [statsRes, postsRes, messagesRes, analyticsRes, crmRes] = await Promise.all([
           fetch('/api/admin/stats'),
           fetch('/api/blog?limit=5'),
           fetch('/api/contact?limit=20'),
           fetch('/api/admin/analytics?days=30'),
+          fetch('/api/admin/leads?limit=1'),
         ]);
 
-        if (!statsRes.ok || !postsRes.ok || !messagesRes.ok || !analyticsRes.ok) {
+        if (!statsRes.ok || !postsRes.ok || !messagesRes.ok || !analyticsRes.ok || !crmRes.ok) {
           throw new Error('Failed to fetch data');
         }
 
-        const [statsData, postsData, messagesData, analyticsData] = await Promise.all([
+        const [statsData, postsData, messagesData, analyticsData, crmData] = await Promise.all([
           statsRes.json(),
           postsRes.json(),
           messagesRes.json(),
           analyticsRes.json(),
+          crmRes.json(),
         ]);
 
         // The stats API may be wrapped in {success, data}
@@ -129,6 +140,7 @@ export default function AdminDashboard() {
         setRecentPosts(posts.slice(0, 5));
         setRecentMessages(messages.slice(0, 5));
         setAnalytics(analyticsData.data || null);
+        setCrm(crmData.summary || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -247,6 +259,31 @@ export default function AdminDashboard() {
             </motion.div>
           );
         })}
+        </div>
+      </div>
+
+      {/* CRM pipeline snapshot */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">CRM pipeline</p>
+          <button onClick={() => navigate('admin-crm')} className="text-xs font-semibold text-amber-700 hover:underline dark:text-amber-300">
+            Open pipeline
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[
+            { label: 'Open Leads', value: crm?.open || 0 },
+            { label: 'High Priority', value: crm?.highPriority || 0 },
+            { label: 'Overdue Follow-ups', value: crm?.overdueFollowUps || 0 },
+            { label: 'Won', value: crm?.byStatus?.won || 0 },
+          ].map((item) => (
+            <Card key={item.label} className="border-border/50">
+              <CardContent className="p-4">
+                <p className="text-xl font-bold text-foreground">{item.value}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{item.label}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
