@@ -89,7 +89,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
 
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between rounded-full border border-slate-200/75 bg-white/82 px-2.5 shadow-lg shadow-slate-950/[0.04] backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#071018]/82 dark:shadow-black/20 sm:h-16 sm:px-3">
-          <Link href="/" className="group flex min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label="Lightworld Technologies home">
+          <Link href="/" className="group flex min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label="Lightworld Technologies Ltd home">
             <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-300/30 bg-slate-950 sm:size-10">
               <Image src="/logo.png" alt="" width={34} height={34} className="object-contain" priority />
             </span>
@@ -212,14 +212,14 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[min(92vw,390px)] border-l border-white/[0.07] bg-[#071018] p-0 text-white">
-                <SheetTitle className="sr-only">Lightworld Technologies navigation</SheetTitle>
+                <SheetTitle className="sr-only">Lightworld Technologies Ltd navigation</SheetTitle>
                 <div className="flex h-full flex-col">
                   <div className="flex items-center gap-3 border-b border-white/[0.07] px-5 py-5">
                     <span className="flex size-10 items-center justify-center overflow-hidden rounded-full border border-amber-300/30 bg-slate-950">
                       <Image src="/logo.png" alt="" width={34} height={34} />
                     </span>
                     <div>
-                      <p className="text-sm font-semibold">Lightworld Technologies</p>
+                      <p className="text-sm font-semibold">Lightworld Technologies Ltd</p>
                       <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-emerald-300/70">{companyTagline}</p>
                     </div>
                   </div>
