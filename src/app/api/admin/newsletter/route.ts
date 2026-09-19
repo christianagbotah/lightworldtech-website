@@ -5,6 +5,7 @@ import { isAdminRequest } from '@/lib/admin-auth';
 import {
   getMailTransportStatus,
   mailTransportTest,
+  sanitizeMailError,
   sendTransactionalMail,
 } from '@/lib/mail';
 
@@ -14,10 +15,6 @@ const testSchema = z.object({
   action: z.literal('test'),
   email: z.string().trim().email(),
 });
-
-function safeError(error: unknown): string {
-  return (error instanceof Error ? error.message : String(error)).slice(0, 1200);
-}
 
 async function recordTestDelivery(input: {
   recipient: string;
@@ -141,7 +138,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const transport = getMailTransportStatus().mode;
-    const details = safeError(error);
+    const details = sanitizeMailError(error);
     await recordTestDelivery({
       recipient: parsed.data.email,
       subject: message.subject,

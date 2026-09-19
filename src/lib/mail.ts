@@ -9,6 +9,8 @@ export interface MailMessage {
   subject: string;
   text: string;
   html: string;
+  listUnsubscribeUrl?: string;
+  listUnsubscribePost?: boolean;
 }
 
 export interface MailSendResult {
@@ -112,6 +114,24 @@ function smtpConfig(): SmtpConfig {
   };
 }
 
+export function sanitizeMailError(error: unknown): string {
+  let message = error instanceof Error ? error.message : String(error);
+  const sensitiveValues = [
+    process.env.SMTP_PASS,
+    process.env.SMTP_PASSWORD,
+    process.env.SMTP_USER,
+    process.env.SMTP_USERNAME,
+  ].filter((value): value is string => Boolean(value && value.trim()));
+
+  for (const value of sensitiveValues) {
+    message = message.split(value).join('[redacted]');
+    const encoded = Buffer.from(value, 'utf8').toString('base64');
+    if (encoded) message = message.split(encoded).join('[redacted]');
+  }
+
+  return message.slice(0, 1200);
+}
+
 export function getMailTransportStatus(): MailTransportStatus {
   const mode = resolveMode();
   const config = smtpConfig();
@@ -163,6 +183,12 @@ export function buildMimeMessage(message: MailMessage, config = smtpConfig()): s
     'Subject: ' + subject,
     'Date: ' + new Date().toUTCString(),
     'Message-ID: ' + buildMessageId(config.from),
+    ...(message.listUnsubscribeUrl
+      ? ['List-Unsubscribe: <' + cleanHeader(message.listUnsubscribeUrl) + '>']
+      : []),
+    ...(message.listUnsubscribeUrl && message.listUnsubscribePost
+      ? ['List-Unsubscribe-Post: List-Unsubscribe=One-Click']
+      : []),
     'MIME-Version: 1.0',
     'Content-Type: multipart/alternative; boundary="' + boundary + '"',
     '',
