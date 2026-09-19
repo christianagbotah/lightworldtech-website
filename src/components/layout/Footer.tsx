@@ -160,6 +160,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
               <ul className="mt-4 space-y-3">
                 <li><Link href="/contact" className="text-sm text-white/45 transition hover:text-emerald-300">Start a project</Link></li>
                 <li><Link href="/careers" className="text-sm text-white/45 transition hover:text-emerald-300">Join the team</Link></li>
+                <li><Link href="/client" className="text-sm text-white/45 transition hover:text-emerald-300">Client portal</Link></li>
                 <li><a href={'mailto:' + companyEmail} className="text-sm text-white/45 transition hover:text-emerald-300">Email us</a></li>
               </ul>
             </div>
