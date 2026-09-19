@@ -36,6 +36,7 @@ bunx prisma generate
 # Apply the idempotent Phase 3 analytics table/index upgrade.
 bun run db:phase3
 bun run db:phase4
+bun run db:phase6
 bun run build
 ```
 
@@ -80,3 +81,13 @@ bun run db:phase4
 ```
 
 The script creates only the CRM tables and indexes when they are missing. Existing `ContactMessage` rows are left unchanged; the CRM API lazily creates linked lead records for historical enquiries when the admin opens the CRM.
+
+## Phase 6 proposal assistant deployment
+
+Phase 6 adds the additive `ProposalDraft` table for versioned, human-reviewed CRM proposal drafts. Before switching production traffic, back up the SQLite database and run:
+
+```bash
+bun run db:phase6
+```
+
+The script creates only the proposal table and indexes when missing. Existing CRM leads, messages and notes are unchanged. Generated drafts must remain marked for human review until an authenticated admin explicitly approves them. The generator does not create prices, contractual delivery dates or certification claims.
