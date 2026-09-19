@@ -13,5 +13,5 @@ export function isTrustIntent(message: string): boolean {
 export function isNewsroomIntent(message: string): boolean {
   const q = message.trim().toLowerCase();
 
-  return /newsroom|media center|media enquiry|media inquiry|press coverage|press contact|company fact sheet|brand resources?|press kit/.test(q);
+  return /newsroom|media center|media centre|media enquiry|media inquiry|media information|media resources?|media relations?|press coverage|press contact|press kit|press release|\\bpress\\b|journalist|company fact sheet|brand resources?/.test(q);
 }
