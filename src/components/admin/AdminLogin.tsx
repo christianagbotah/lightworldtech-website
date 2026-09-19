@@ -39,6 +39,10 @@ export default function AdminLogin() {
       if (res.ok && data.success) {
         loginAdmin(data.data.name || 'Admin', data.data.role || 'admin');
         toast.success('Welcome back!', { description: 'Logged in successfully.' });
+        // Reload after authentication so tabs opened before a deployment cannot
+        // continue running stale admin JavaScript.
+        window.location.replace('/admin');
+        return;
       } else {
         setError(data.error || 'Invalid email or password');
         toast.error('Login failed', { description: data.error || 'Invalid email or password' });
