@@ -4,7 +4,7 @@ This document captures the minimum production requirements for the Lightworld Te
 
 ## Required environment
 
-- `DATABASE_URL` — production database connection used by Prisma.
+- `DATABASE_URL` — PostgreSQL production connection used by Prisma. Production uses the dedicated `lightworld_website_db` / `lightworld_website_user` pair over the local Unix socket; no database password is stored in the application environment.
 - `ADMIN_SESSION_SECRET` — high-entropy secret used to sign the HttpOnly admin session cookie. A `NEXTAUTH_SECRET` value is accepted as a fallback, but `ADMIN_SESSION_SECRET` is preferred for clarity.
 - `ADMIN_SEED_PASSWORD` — required only when running `prisma/seed.ts` in production.
 - `CLIENT_SESSION_SECRET` — recommended separate high-entropy secret for client portal sessions. If omitted, the portal falls back to `ADMIN_SESSION_SECRET` but uses a distinct signed namespace and cookie.
@@ -235,3 +235,20 @@ Manage these values from **Admin → Settings → SEO & Brand Discovery / Page S
 Keep `seo_site_url` as the production canonical origin including `https://`, for example `https://www.lightworldtech.com`. Invalid or missing values fall back safely to the verified production origin. If the CMS database is temporarily unavailable, public metadata also falls back to built-in verified values rather than failing the site.
 
 After deployment, save one harmless SEO-field change in a non-production/UAT environment and verify the rendered `<head>`, `/sitemap.xml`, `/robots.txt`, a social-preview debugger, and one published blog article before changing production search-verification tokens.
+
+
+## Phase 14 PostgreSQL production baseline
+
+Phase 14 moves the website from SQLite to PostgreSQL. PostgreSQL is now the canonical production datastore for CMS, CRM, client portal, newsletter/campaign, analytics and admin-governance data.
+
+Production uses the dedicated database `lightworld_website_db` and role `lightworld_website_user` over the local PostgreSQL Unix socket. The VPS maps only the root-run website process to that role with a database-specific peer-auth rule, avoiding a stored database password.
+
+The migration history starts at `20260919170000_postgresql_baseline`. Existing production PostgreSQL schema is baselined once with `prisma migrate resolve --applied 20260919170000_postgresql_baseline`; subsequent releases use:
+
+```bash
+bun run db:deploy
+```
+
+The old `db:phase3` through `db:phase13` scripts are retained only as historical/legacy SQLite upgrade material. **Do not run them against PostgreSQL.**
+
+Before the one-time cutover, preserve both the final SQLite file and a PostgreSQL custom-format dump. Validate all table counts, primary IDs and row content before switching the production `DATABASE_URL`. Keep the final SQLite database as a rollback artifact until PostgreSQL operation is proven stable.
