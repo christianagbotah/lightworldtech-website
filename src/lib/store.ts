@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'careers' | 'products' | 'admin' | 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-newsletter' | 'admin-campaigns' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
+export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'careers' | 'products' | 'admin' | 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-newsletter' | 'admin-campaigns' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
 
 interface AppState {
   currentPage: Page;
@@ -18,7 +18,8 @@ interface AppState {
   setContactSubject: (subject: string) => void;
   isAdminLoggedIn: boolean;
   adminName: string;
-  loginAdmin: (name: string) => void;
+  adminRole: string;
+  loginAdmin: (name: string, role?: string) => void;
   logoutAdmin: () => void;
 }
 
@@ -47,6 +48,7 @@ const adminTabs: Partial<Record<Page, string>> = {
   'admin-clients': 'clients',
   'admin-newsletter': 'newsletter',
   'admin-campaigns': 'campaigns',
+  'admin-governance': 'governance',
   'admin-messages': 'messages',
   'admin-settings': 'settings',
   'admin-faqs': 'faqs',
@@ -97,6 +99,7 @@ export const useAppStore = create<AppState>((set) => ({
   setContactSubject: (subject) => set({ contactSubject: subject }),
   isAdminLoggedIn: false,
   adminName: '',
-  loginAdmin: (name) => set({ isAdminLoggedIn: true, adminName: name }),
-  logoutAdmin: () => set({ isAdminLoggedIn: false, adminName: '', adminTab: 'dashboard' }),
+  adminRole: '',
+  loginAdmin: (name, role = 'admin') => set({ isAdminLoggedIn: true, adminName: name, adminRole: role }),
+  logoutAdmin: () => set({ isAdminLoggedIn: false, adminName: '', adminRole: '', adminTab: 'dashboard' }),
 }));
