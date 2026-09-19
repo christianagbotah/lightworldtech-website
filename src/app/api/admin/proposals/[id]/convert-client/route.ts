@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getAdminSession, hashAdminPassword } from '@/lib/admin-auth';
-import { createClientInvite } from '@/lib/client-invite';
+import { clientActivationUrl, createClientInvite } from '@/lib/client-invite';
 
 const schema = z.object({
   organizationName: z.string().trim().min(2).max(180).optional(),
@@ -103,7 +103,7 @@ export async function POST(
         },
         include: { organization: true },
       });
-      activationUrl = request.nextUrl.origin + '/client/activate?token=' + encodeURIComponent(invite.token);
+      activationUrl = clientActivationUrl(invite.token, request.nextUrl.origin);
     } else if (existingUser.mustSetPassword) {
       const invite = createClientInvite();
       existingUser = await db.clientPortalUser.update({
@@ -115,7 +115,7 @@ export async function POST(
         },
         include: { organization: true },
       });
-      activationUrl = request.nextUrl.origin + '/client/activate?token=' + encodeURIComponent(invite.token);
+      activationUrl = clientActivationUrl(invite.token, request.nextUrl.origin);
     }
 
     const project = await db.clientProject.create({
