@@ -38,9 +38,10 @@ jobs:
         run: bunx tsc --noEmit
 
       - name: Test security and deterministic intelligence
-        run: bun test src/lib/admin-auth.test.ts src/lib/assistant-intents.test.ts src/lib/lead-intelligence.test.ts src/lib/proposal-draft.test.ts
+        run: bun test src/lib/admin-auth.test.ts src/lib/client-auth.test.ts src/lib/assistant-intents.test.ts src/lib/lead-intelligence.test.ts src/lib/proposal-draft.test.ts
         env:
           ADMIN_SESSION_SECRET: "ci-only-admin-session-secret-at-least-32-bytes"
+          CLIENT_PORTAL_SESSION_SECRET: "ci-only-client-session-secret-at-least-32-bytes"
 
       - name: Build production application
         run: bun run build
