@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
@@ -178,7 +178,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const recentActivities = useMemo(() => {
+  const recentActivities = (() => {
     const messageActivity = recentMessages.map((message) => ({
       id: 'message-' + message.id,
       text: 'Inquiry from ' + message.name,
@@ -196,7 +196,7 @@ export default function AdminDashboard() {
     return [...messageActivity, ...postActivity]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 6);
-  }, [recentMessages, recentPosts]);
+  })();
 
   const trafficData = analytics?.daily.slice(-14) || [];
   const maxTraffic = Math.max(1, ...trafficData.map((item) => item.pageViews));
