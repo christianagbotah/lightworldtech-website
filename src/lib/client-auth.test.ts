@@ -27,10 +27,12 @@ describe('client session isolation', () => {
       email: 'client@example.com',
       name: 'Client',
       organization: 'Example Ltd',
+      ver: 1,
     });
     const session = verifyClientSessionToken(token);
     expect(session?.sub).toBe('client-1');
     expect(session?.aud).toBe('client');
+    expect(session?.ver).toBe(1);
   });
 
   test('rejects a tampered client session token', () => {
@@ -39,6 +41,7 @@ describe('client session isolation', () => {
       email: 'client@example.com',
       name: 'Client',
       organization: 'Example Ltd',
+      ver: 1,
     });
     expect(verifyClientSessionToken(token + 'tampered')).toBeNull();
   });
