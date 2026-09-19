@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getClientSession } from '@/lib/client-auth';
+import { getActiveClientContext } from '@/lib/client-access';
 
 export async function GET(request: NextRequest) {
-  const session = getClientSession(request);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const context = await getActiveClientContext(request);
+  if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const organization = await db.clientOrganization.findUnique({
-      where: { id: session.organizationId },
+      where: { id: context.user.organizationId },
       include: {
         projects: {
           orderBy: [{ updatedAt: 'desc' }],
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        user: { name: session.name, email: session.email, role: session.role },
+        user: { name: context.user.name, email: context.user.email, role: context.user.role },
         organization: {
           id: organization.id,
           name: organization.name,
