@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/ui/json-ld';
+import { getSeoConfig } from '@/lib/seo-config';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -17,86 +18,76 @@ const geistMono = Geist_Mono({
   display: 'swap',
 });
 
-const SITE_URL = 'https://www.lightworldtech.com';
-const DESCRIPTION =
-  'Lightworld Technologies Ltd builds modern websites, mobile apps, enterprise software, AI-enabled workflows and cloud solutions, with IT training and technology consultancy from Ghana.';
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSeoConfig();
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  applicationName: 'Lightworld Technologies',
-  title: {
-    default: 'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
-    template: '%s | Lightworld Technologies',
-  },
-  description: DESCRIPTION,
-  keywords: [
-    'Lightworld Technologies',
-    'software development Ghana',
-    'web development Ghana',
-    'mobile app development Ghana',
-    'enterprise software Ghana',
-    'AI automation Ghana',
-    'IT consulting Ghana',
-    'IT training Ghana',
-    'cloud solutions Ghana',
-    'SEO web development Ghana',
-  ],
-  authors: [{ name: 'Lightworld Technologies Ltd', url: SITE_URL }],
-  creator: 'Lightworld Technologies Ltd',
-  publisher: 'Lightworld Technologies Ltd',
-  category: 'technology',
-  alternates: {
-    canonical: '/',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+  return {
+    metadataBase: new URL(seo.siteUrl),
+    applicationName: seo.siteName,
+    title: {
+      default: seo.defaultTitle,
+      template: '%s | ' + seo.siteName,
+    },
+    description: seo.description,
+    keywords: seo.keywords,
+    authors: [{ name: seo.legalName, url: seo.siteUrl }],
+    creator: seo.legalName,
+    publisher: seo.legalName,
+    category: 'technology',
+    robots: {
       index: true,
       follow: true,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-      'max-video-preview': -1,
-    },
-  },
-  manifest: '/manifest.webmanifest',
-  icons: {
-    icon: [{ url: '/logo.png', type: 'image/png' }],
-    apple: [{ url: '/logo.png', type: 'image/png' }],
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_GH',
-    url: SITE_URL,
-    siteName: 'Lightworld Technologies',
-    title: 'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
-    description: DESCRIPTION,
-    images: [
-      {
-        url: '/slides/slide-hero.png',
-        width: 1200,
-        height: 630,
-        alt: 'Lightworld Technologies digital engineering and IT solutions',
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
       },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
-    description: DESCRIPTION,
-    images: ['/slides/slide-hero.png'],
-  },
-  appleWebApp: {
-    capable: true,
-    title: 'Lightworld Technologies',
-    statusBarStyle: 'black-translucent',
-  },
-  formatDetection: {
-    telephone: false,
-    email: false,
-    address: false,
-  },
-};
+    },
+    verification: {
+      ...(seo.googleVerification ? { google: seo.googleVerification } : {}),
+      ...(seo.bingVerification ? { other: { 'msvalidate.01': seo.bingVerification } } : {}),
+    },
+    manifest: '/manifest.webmanifest',
+    icons: {
+      icon: [{ url: seo.logoUrl, type: 'image/png' }],
+      apple: [{ url: seo.logoUrl, type: 'image/png' }],
+    },
+    openGraph: {
+      type: 'website',
+      locale: seo.locale,
+      url: seo.siteUrl,
+      siteName: seo.siteName,
+      title: seo.defaultTitle,
+      description: seo.description,
+      images: [
+        {
+          url: seo.ogImage,
+          width: 1200,
+          height: 630,
+          alt: seo.siteName + ' digital engineering and IT solutions',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seo.defaultTitle,
+      description: seo.description,
+      images: [seo.ogImage],
+    },
+    appleWebApp: {
+      capable: true,
+      title: seo.siteName,
+      statusBarStyle: 'black-translucent',
+    },
+    formatDetection: {
+      telephone: false,
+      email: false,
+      address: false,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -108,16 +99,18 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const seo = await getSeoConfig();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <OrganizationJsonLd />
-        <WebSiteJsonLd />
+        <OrganizationJsonLd config={seo} />
+        <WebSiteJsonLd config={seo} />
         <script
           dangerouslySetInnerHTML={{
             __html:
