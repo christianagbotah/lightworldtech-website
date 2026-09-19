@@ -82,7 +82,7 @@ export default async function BlogArticle({
     mainEntityOfPage: 'https://www.lightworldtech.com/blog/' + post.slug,
     author: {
       '@type': 'Organization',
-      name: post.author || 'Lightworld Technologies',
+      name: post.author || 'Lightworld Technologies Ltd',
     },
     publisher: {
       '@type': 'Organization',
