@@ -41,8 +41,9 @@ function safeCtaUrl(value: string): string {
 export function buildNewsletterCampaignMessage(
   campaign: NewsletterCampaignContent,
   subscriber: { id: string; email: string },
+  options: { test?: boolean } = {},
 ): MailMessage {
-  const unsubscribe = newsletterUnsubscribeUrls(subscriber.id);
+  const unsubscribe = options.test ? null : newsletterUnsubscribeUrls(subscriber.id);
   const ctaUrl = safeCtaUrl(campaign.ctaUrl);
   const cta =
     campaign.ctaLabel.trim() && ctaUrl
@@ -69,8 +70,7 @@ export function buildNewsletterCampaignMessage(
       (campaign.ctaLabel.trim() && ctaUrl
         ? '\n\n' + campaign.ctaLabel.trim() + ': ' + ctaUrl
         : '') +
-      '\n\nUnsubscribe: ' +
-      unsubscribe.pageUrl +
+      (unsubscribe ? '\n\nUnsubscribe: ' + unsubscribe.pageUrl : '\n\nTest message — no subscription preferences were changed.') +
       '\n\nLightworld Technologies Ltd',
     html:
       '<div style="background:#f8fafc;padding:28px 12px;font-family:Arial,sans-serif;color:#0f172a;line-height:1.65">' +
@@ -86,12 +86,14 @@ export function buildNewsletterCampaignMessage(
       '</div></div>' +
       '<div style="border-top:1px solid #e2e8f0;padding:20px 32px 26px;font-size:12px;color:#64748b">' +
       '<p style="margin:0 0 8px">Lightworld Technologies Ltd · Ghana</p>' +
-      '<p style="margin:0">You are receiving this because this address subscribed to Lightworld Technologies updates. ' +
-      '<a href="' +
-      escapeHtml(unsubscribe.pageUrl) +
-      '" style="color:#475569">Unsubscribe</a>.</p>' +
+      (unsubscribe
+        ? '<p style="margin:0">You are receiving this because this address subscribed to Lightworld Technologies updates. <a href="' +
+          escapeHtml(unsubscribe.pageUrl) +
+          '" style="color:#475569">Unsubscribe</a>.</p>'
+        : '<p style="margin:0">Campaign test message from the Lightworld Technologies admin workspace.</p>') +
       '</div></div></div>',
-    listUnsubscribeUrl: unsubscribe.oneClickUrl,
-    listUnsubscribePost: true,
+    ...(unsubscribe
+      ? { listUnsubscribeUrl: unsubscribe.oneClickUrl, listUnsubscribePost: true }
+      : {}),
   };
 }
