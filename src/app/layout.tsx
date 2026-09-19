@@ -23,14 +23,14 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  applicationName: 'Lightworld Technologies',
+  applicationName: 'Lightworld Technologies Ltd',
   title: {
-    default: 'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
-    template: '%s | Lightworld Technologies',
+    default: 'Lightworld Technologies Ltd | Software, Apps, AI & Digital Solutions',
+    template: '%s | Lightworld Technologies Ltd',
   },
   description: DESCRIPTION,
   keywords: [
-    'Lightworld Technologies',
+    'Lightworld Technologies Ltd',
     'software development Ghana',
     'web development Ghana',
     'mobile app development Ghana',
@@ -68,27 +68,27 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_GH',
     url: SITE_URL,
-    siteName: 'Lightworld Technologies',
-    title: 'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
+    siteName: 'Lightworld Technologies Ltd',
+    title: 'Lightworld Technologies Ltd | Software, Apps, AI & Digital Solutions',
     description: DESCRIPTION,
     images: [
       {
         url: '/slides/slide-hero.png',
         width: 1200,
         height: 630,
-        alt: 'Lightworld Technologies digital engineering and IT solutions',
+        alt: 'Lightworld Technologies Ltd digital engineering and IT solutions',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
+    title: 'Lightworld Technologies Ltd | Software, Apps, AI & Digital Solutions',
     description: DESCRIPTION,
     images: ['/slides/slide-hero.png'],
   },
   appleWebApp: {
     capable: true,
-    title: 'Lightworld Technologies',
+    title: 'Lightworld Technologies Ltd',
     statusBarStyle: 'black-translucent',
   },
   formatDetection: {
