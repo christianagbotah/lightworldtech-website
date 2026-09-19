@@ -1,6 +1,6 @@
 export const companyProfile = {
   name: 'Lightworld Technologies Ltd',
-  shortName: 'Lightworld Technologies',
+  shortName: 'Lightworld Technologies Ltd',
   country: 'Ghana',
   website: 'https://lightworldtech.com',
   email: 'mail@lightworldtech.com',
@@ -73,7 +73,7 @@ export function answerCompanyQuestion(message: string): string {
   const q = message.trim().toLowerCase();
 
   if (!q) {
-    return 'Ask me about Lightworld Technologies, our leadership, services, recognition, training, or how to start a project.';
+    return 'Ask me about Lightworld Technologies Ltd, our leadership, services, recognition, training, or how to start a project.';
   }
 
   if (/(who|what).*(ceo|chief executive)|\bceo\b|christian agbotah|founder/.test(q)) {
@@ -85,7 +85,7 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/leadership|leaders|management|team|executive/.test(q)) {
-    return 'Lightworld Technologies is led by Christian Agbotah, CEO & Director, and Rober Yaw Essuon, Managing Director. You can view the leadership profile on our Team page.';
+    return 'Lightworld Technologies Ltd is led by Christian Agbotah, CEO & Director, and Rober Yaw Essuon, Managing Director. You can view the leadership profile on our Team page.';
   }
 
   if (/award|recognition|honou?r|winner/.test(q)) {
@@ -93,7 +93,7 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/ghanaweb|news|press|media|coverage/.test(q)) {
-    return 'GhanaWeb published coverage titled “Lightworld Technologies Ltd introduces school management application.” You can find the verified coverage link on our About page.';
+    return 'GhanaWeb published coverage titled “Lightworld Technologies Limited introduces school management application.” You can find the verified coverage link on our About page.';
   }
 
   if (/service|what.*do|offer|solution|build/.test(q)) {
@@ -109,7 +109,7 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/email|phone|contact|reach|whatsapp/.test(q)) {
-    return 'You can reach Lightworld Technologies at mail@lightworldtech.com or +233 (024) 361 8186. You can also use the Contact page to send a project brief.';
+    return 'You can reach Lightworld Technologies Ltd at mail@lightworldtech.com or +233 (024) 361 8186. You can also use the Contact page to send a project brief.';
   }
 
   if (/quote|price|cost|project|hire|consult/.test(q)) {
