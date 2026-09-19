@@ -72,13 +72,17 @@ export async function PATCH(
       role?: 'admin' | 'super_admin';
       active?: boolean;
       password?: string;
+      authVersion?: { increment: number };
     } = {};
 
     if (parsed.data.name !== undefined) data.name = parsed.data.name;
     if (parsed.data.email !== undefined) data.email = parsed.data.email;
     if (parsed.data.role !== undefined) data.role = parsed.data.role;
     if (parsed.data.active !== undefined) data.active = parsed.data.active;
-    if (parsed.data.newPassword !== undefined) data.password = hashAdminPassword(parsed.data.newPassword);
+    if (parsed.data.newPassword !== undefined) {
+      data.password = hashAdminPassword(parsed.data.newPassword);
+      data.authVersion = { increment: 1 };
+    }
 
     const updated = await db.admin.update({
       where: { id: target.id },
