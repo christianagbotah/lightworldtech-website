@@ -12,6 +12,7 @@ import { governanceUpdateError } from '@/lib/admin-governance-policy';
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
   email: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
+  recoveryEmail: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
   role: z.enum(['admin', 'super_admin']).optional(),
   active: z.boolean().optional(),
   newPassword: z.string().min(12).max(200).optional(),
@@ -69,16 +70,22 @@ export async function PATCH(
     const data: {
       name?: string;
       email?: string;
+      recoveryEmail?: string;
       role?: 'admin' | 'super_admin';
       active?: boolean;
       password?: string;
+      authVersion?: { increment: number };
     } = {};
 
     if (parsed.data.name !== undefined) data.name = parsed.data.name;
     if (parsed.data.email !== undefined) data.email = parsed.data.email;
+    if (parsed.data.recoveryEmail !== undefined) data.recoveryEmail = parsed.data.recoveryEmail;
     if (parsed.data.role !== undefined) data.role = parsed.data.role;
     if (parsed.data.active !== undefined) data.active = parsed.data.active;
-    if (parsed.data.newPassword !== undefined) data.password = hashAdminPassword(parsed.data.newPassword);
+    if (parsed.data.newPassword !== undefined) {
+      data.password = hashAdminPassword(parsed.data.newPassword);
+      data.authVersion = { increment: 1 };
+    }
 
     const updated = await db.admin.update({
       where: { id: target.id },
@@ -86,6 +93,7 @@ export async function PATCH(
       select: {
         id: true,
         email: true,
+        recoveryEmail: true,
         name: true,
         role: true,
         active: true,

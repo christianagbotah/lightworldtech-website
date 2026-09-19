@@ -7,6 +7,7 @@ import { getSuperAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 const createSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().transform((value) => value.toLowerCase()),
+  recoveryEmail: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
   role: z.enum(['admin', 'super_admin']).default('admin'),
   password: z.string().min(12).max(200),
 });
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           email: true,
+          recoveryEmail: true,
           name: true,
           role: true,
           active: true,
@@ -95,6 +97,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: parsed.data.name,
         email: parsed.data.email,
+        recoveryEmail: parsed.data.recoveryEmail || parsed.data.email,
         role: parsed.data.role,
         password: hashAdminPassword(parsed.data.password),
         active: true,
@@ -102,6 +105,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         email: true,
+        recoveryEmail: true,
         name: true,
         role: true,
         active: true,

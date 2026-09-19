@@ -38,6 +38,7 @@ import {
 interface AdminAccount {
   id: string;
   email: string;
+  recoveryEmail: string;
   name: string;
   role: string;
   active: boolean;
@@ -77,6 +78,7 @@ interface GovernancePayload {
 interface AdminForm {
   name: string;
   email: string;
+  recoveryEmail: string;
   role: 'admin' | 'super_admin';
   active: boolean;
   password: string;
@@ -85,6 +87,7 @@ interface AdminForm {
 const blankCreate: AdminForm = {
   name: '',
   email: '',
+  recoveryEmail: '',
   role: 'admin',
   active: true,
   password: '',
@@ -148,6 +151,7 @@ export default function AdminGovernance() {
     setEditForm({
       name: admin.name,
       email: admin.email,
+      recoveryEmail: admin.recoveryEmail,
       role: admin.role === 'super_admin' ? 'super_admin' : 'admin',
       active: admin.active,
       password: '',
@@ -166,6 +170,7 @@ export default function AdminGovernance() {
         body: JSON.stringify({
           name: createForm.name,
           email: createForm.email,
+          recoveryEmail: createForm.recoveryEmail || createForm.email,
           role: createForm.role,
           password: createForm.password,
         }),
@@ -190,6 +195,7 @@ export default function AdminGovernance() {
 
     const body: Record<string, unknown> = {
       name: editForm.name,
+      recoveryEmail: editForm.recoveryEmail,
     };
 
     if (editing.id !== data?.actor.id) {
@@ -341,6 +347,9 @@ export default function AdminGovernance() {
                           {admin.id === data.actor.id && <Badge variant="outline">You</Badge>}
                         </div>
                         <p className="mt-0.5 text-xs text-muted-foreground">{admin.email}</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground/75">
+                          Recovery: {admin.recoveryEmail || 'Not configured'}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -447,6 +456,16 @@ export default function AdminGovernance() {
               <Input required type="email" value={createForm.email} onChange={(event) => setCreateForm({ ...createForm, email: event.target.value })} />
             </div>
             <div className="space-y-2">
+              <Label>Recovery email</Label>
+              <Input
+                required
+                type="email"
+                value={createForm.recoveryEmail}
+                onChange={(event) => setCreateForm({ ...createForm, recoveryEmail: event.target.value })}
+                placeholder="Mailbox that receives password reset links"
+              />
+            </div>
+            <div className="space-y-2">
               <Label>Role</Label>
               <select
                 value={createForm.role}
@@ -496,6 +515,19 @@ export default function AdminGovernance() {
                 {editing.id === data.actor.id && (
                   <p className="text-xs text-muted-foreground">Use another super-admin account to change your own email.</p>
                 )}
+              </div>
+              <div className="space-y-2">
+                <Label>Recovery email</Label>
+                <Input
+                  required
+                  type="email"
+                  value={editForm.recoveryEmail}
+                  onChange={(event) => setEditForm({ ...editForm, recoveryEmail: event.target.value })}
+                  placeholder="Mailbox that receives password reset links"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Password reset links are delivered here; it can differ from the CMS login email.
+                </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">

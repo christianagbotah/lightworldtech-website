@@ -25,10 +25,15 @@ export async function GET(request: NextRequest) {
 
     const admin = await db.admin.findUnique({
       where: { id: session.sub },
-      select: { id: true, email: true, name: true, role: true, active: true },
+      select: { id: true, email: true, name: true, role: true, active: true, authVersion: true },
     });
 
-    if (!admin?.active || admin.email !== session.email || admin.role !== session.role) {
+    if (
+      !admin?.active ||
+      admin.email !== session.email ||
+      admin.role !== session.role ||
+      admin.authVersion !== session.authVersion
+    ) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -86,6 +91,7 @@ export async function POST(request: NextRequest) {
       email: admin.email,
       name: admin.name || 'Admin',
       role: admin.role,
+      authVersion: admin.authVersion,
     });
 
     await recordAdminAudit({

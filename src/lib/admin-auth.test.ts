@@ -41,12 +41,14 @@ describe('admin session security', () => {
       email: 'admin@example.com',
       name: 'Admin',
       role: 'admin',
+      authVersion: 0,
     });
 
     const session = verifyAdminSessionToken(token);
     expect(session?.sub).toBe('admin-1');
     expect(session?.email).toBe('admin@example.com');
     expect(session?.role).toBe('admin');
+    expect(session?.authVersion).toBe(0);
   });
 
   test('rejects a tampered session token', () => {
@@ -55,6 +57,7 @@ describe('admin session security', () => {
       email: 'admin@example.com',
       name: 'Admin',
       role: 'admin',
+      authVersion: 0,
     });
 
     const [payload, sig] = token.split('.');
