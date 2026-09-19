@@ -114,3 +114,21 @@ CREATE INDEX IF NOT EXISTS "ClientTicket_projectId_updatedAt_idx"
   ON "ClientTicket"("projectId", "updatedAt");
 CREATE INDEX IF NOT EXISTS "ClientTicketMessage_ticketId_createdAt_idx"
   ON "ClientTicketMessage"("ticketId", "createdAt");
+
+
+CREATE TABLE IF NOT EXISTS "ClientAnnouncement" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "accountId" TEXT,
+  "title" TEXT NOT NULL,
+  "message" TEXT NOT NULL,
+  "active" BOOLEAN NOT NULL DEFAULT 1,
+  "publishedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ClientAnnouncement_accountId_fkey"
+    FOREIGN KEY ("accountId") REFERENCES "ClientPortalAccount" ("id")
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS "ClientAnnouncement_accountId_active_publishedAt_idx"
+  ON "ClientAnnouncement"("accountId", "active", "publishedAt");
