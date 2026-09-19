@@ -25,7 +25,7 @@ import { trackEvent } from '@/lib/analytics-client';
 // ─── WhatsApp Config ────────────────────────────────────────────────
 const whatsappNumber = '233243618186';
 const whatsappMessage = encodeURIComponent(
-  'Hello Lightworld Technologies! I would like to inquire about your services.'
+  'Hello Lightworld Technologies Ltd! I would like to inquire about your services.'
 );
 
 // ─── LiveChat Config ────────────────────────────────────────────────
@@ -51,7 +51,7 @@ interface ChatMessage {
 }
 
 const quickReplies = [
-  { label: 'Leadership', text: 'Who leads Lightworld Technologies?' },
+  { label: 'Leadership', text: 'Who leads Lightworld Technologies Ltd?' },
   { label: 'Services', text: 'What services does Lightworld offer?' },
   { label: 'Awards', text: 'What awards has Lightworld won?' },
   { label: 'Start a Project', text: 'How can I start a project with Lightworld?' },
@@ -283,7 +283,7 @@ export default function FloatingWidgets() {
         } else {
           const welcomeMsg: ChatMessage = {
             id: 'welcome',
-            text: 'Hello! \ud83d\udc4b Welcome to Lightworld Technologies. How can we help you today?',
+            text: 'Hello! \ud83d\udc4b Welcome to Lightworld Technologies Ltd. How can we help you today?',
             sender: 'bot',
             timestamp: new Date(),
           };
@@ -625,7 +625,7 @@ export default function FloatingWidgets() {
                     Chat with us
                   </h4>
                   <p className="text-xs text-emerald-600 dark:text-amber-400">
-                    Lightworld Technologies
+                    Lightworld Technologies Ltd
                   </p>
                 </div>
               </div>
