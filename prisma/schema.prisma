@@ -160,6 +160,7 @@ model ContactMessage {
   subject String   @default("")
   message String
   read    Boolean  @default(false)
+  lead    Lead?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -228,4 +229,40 @@ model AnalyticsEvent {
   @@index([event, createdAt])
   @@index([sessionId, createdAt])
   @@index([path, createdAt])
+}
+
+
+// Corporate CRM record linked one-to-one with a website enquiry.
+// Kept separate from ContactMessage so the original inbox remains intact.
+model Lead {
+  id               String         @id @default(cuid())
+  contactMessageId String         @unique
+  contactMessage   ContactMessage @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
+  status           String         @default("new")
+  priority         String         @default("normal")
+  assignedTo       String         @default("")
+  source           String         @default("website")
+  summary          String         @default("")
+  tags             String         @default("[]")
+  nextFollowUp     DateTime?
+  lastContactedAt  DateTime?
+  notes            LeadNote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, updatedAt])
+  @@index([priority, updatedAt])
+  @@index([nextFollowUp])
+}
+
+model LeadNote {
+  id        String @id @default(cuid())
+  leadId    String
+  lead      Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  note      String
+  author    String @default("Admin")
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
 }
