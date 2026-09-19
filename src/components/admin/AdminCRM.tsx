@@ -1,0 +1,557 @@
+'use client';
+
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  CalendarClock,
+  CheckCircle2,
+  Clock3,
+  Mail,
+  MessageSquarePlus,
+  Phone,
+  RefreshCw,
+  Search,
+  Sparkles,
+  UserRound,
+  UsersRound,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+
+const stages = [
+  { id: 'new', label: 'New' },
+  { id: 'qualified', label: 'Qualified' },
+  { id: 'discovery', label: 'Discovery' },
+  { id: 'proposal', label: 'Proposal' },
+  { id: 'negotiation', label: 'Negotiation' },
+  { id: 'won', label: 'Won' },
+  { id: 'lost', label: 'Lost' },
+] as const;
+
+type Stage = (typeof stages)[number]['id'];
+type Priority = 'low' | 'normal' | 'high';
+
+type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+};
+
+type LeadNote = {
+  id: string;
+  note: string;
+  author: string;
+  createdAt: string;
+};
+
+type Lead = {
+  id: string;
+  contactMessageId: string;
+  status: Stage;
+  priority: Priority;
+  assignedTo: string;
+  source: string;
+  summary: string;
+  tags: string;
+  nextFollowUp: string | null;
+  lastContactedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  contactMessage: ContactMessage;
+  notes: LeadNote[];
+};
+
+type LeadSummary = {
+  total: number;
+  open: number;
+  highPriority: number;
+  overdueFollowUps: number;
+  byStatus: Record<Stage, number>;
+};
+
+function parseTags(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+function inputDateTime(value: string | null): string {
+  if (!value) return '';
+  const date = new Date(value);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
+function apiDateTime(value: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function isOverdue(lead: Lead): boolean {
+  return Boolean(
+    lead.nextFollowUp &&
+      new Date(lead.nextFollowUp).getTime() < Date.now() &&
+      !['won', 'lost'].includes(lead.status),
+  );
+}
+
+function priorityClass(priority: Priority): string {
+  if (priority === 'high') return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300';
+  if (priority === 'low') return 'border-slate-200 bg-slate-50 text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-white/40';
+  return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300';
+}
+
+export default function AdminCRM() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [summary, setSummary] = useState<LeadSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Lead | null>(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [query, setQuery] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [note, setNote] = useState('');
+
+  const fetchLeads = async () => {
+    try {
+      const params = new URLSearchParams({ limit: '200' });
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (priorityFilter !== 'all') params.set('priority', priorityFilter);
+      if (query.trim()) params.set('q', query.trim());
+
+      const response = await fetch('/api/admin/leads?' + params.toString(), { cache: 'no-store' });
+      if (!response.ok) throw new Error('Could not load CRM');
+      const payload = await response.json();
+      setLeads(payload.data || []);
+      setSummary(payload.summary || null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not load CRM');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void fetchLeads();
+    }, query ? 250 : 0);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, priorityFilter, query]);
+
+  const refreshSelected = async (leadId: string) => {
+    const response = await fetch('/api/admin/leads/' + leadId, { cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not refresh lead');
+    const payload = await response.json();
+    setSelected(payload.data);
+  };
+
+  const patchLead = async (lead: Lead, update: Record<string, unknown>, refresh = true) => {
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/leads/' + lead.id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update),
+      });
+      if (!response.ok) throw new Error('Could not update lead');
+      const payload = await response.json();
+      if (selected?.id === lead.id) setSelected(payload.data);
+      if (refresh) await fetchLeads();
+      return payload.data as Lead;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update lead');
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addNote = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selected || !note.trim()) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/leads/' + selected.id + '/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: note.trim() }),
+      });
+      if (!response.ok) throw new Error('Could not add note');
+      setNote('');
+      await refreshSelected(selected.id);
+      await fetchLeads();
+      toast.success('CRM note added');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not add note');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const stageColumns = useMemo(
+    () =>
+      stages.map((stage) => ({
+        ...stage,
+        leads: leads.filter((lead) => lead.status === stage.id),
+      })),
+    [leads],
+  );
+
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <Skeleton className="h-10 w-72" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-24 rounded-2xl" />)}
+        </div>
+        <Skeleton className="h-[520px] rounded-2xl" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Corporate CRM</p>
+          <h1 className="mt-1 text-2xl font-bold text-foreground">Lead Pipeline</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Website and assistant enquiries become trackable opportunities without changing the original inbox message.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => void fetchLeads()}>
+          <RefreshCw className="mr-2 size-4" /> Refresh
+        </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: 'Total leads', value: summary?.total || 0, icon: UsersRound },
+          { label: 'Open pipeline', value: summary?.open || 0, icon: UserRound },
+          { label: 'High priority', value: summary?.highPriority || 0, icon: AlertTriangle },
+          { label: 'Follow-ups overdue', value: summary?.overdueFollowUps || 0, icon: CalendarClock },
+        ].map((item) => (
+          <Card key={item.label} className="border-border/60">
+            <CardContent className="flex items-center justify-between p-5">
+              <div>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+                <p className="mt-1 text-2xl font-bold">{item.value}</p>
+              </div>
+              <span className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                <item.icon className="size-5" />
+              </span>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-3 rounded-2xl border border-border/60 bg-card p-4 lg:grid-cols-[1fr_180px_180px]">
+        <label className="relative">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search name, email, subject, owner or summary"
+            className="pl-9"
+          />
+        </label>
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          aria-label="Filter by status"
+        >
+          <option value="all">All stages</option>
+          {stages.map((stage) => <option key={stage.id} value={stage.id}>{stage.label}</option>)}
+        </select>
+        <select
+          value={priorityFilter}
+          onChange={(event) => setPriorityFilter(event.target.value)}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          aria-label="Filter by priority"
+        >
+          <option value="all">All priorities</option>
+          <option value="high">High priority</option>
+          <option value="normal">Normal priority</option>
+          <option value="low">Low priority</option>
+        </select>
+      </div>
+
+      <div className="overflow-x-auto pb-3">
+        <div className="grid min-w-[1960px] grid-cols-7 gap-3">
+          {stageColumns.map((column) => (
+            <section key={column.id} className="rounded-2xl border border-border/60 bg-muted/20 p-3">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-semibold">{column.label}</h2>
+                  <p className="text-[11px] text-muted-foreground">{summary?.byStatus?.[column.id] || 0} total</p>
+                </div>
+                <Badge variant="secondary">{column.leads.length}</Badge>
+              </div>
+
+              <div className="space-y-3">
+                {column.leads.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                    No leads
+                  </div>
+                )}
+                {column.leads.map((lead) => {
+                  const tags = parseTags(lead.tags);
+                  return (
+                    <button
+                      key={lead.id}
+                      type="button"
+                      onClick={() => setSelected(lead)}
+                      className="w-full rounded-xl border border-border/70 bg-card p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{lead.contactMessage.name}</p>
+                          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{lead.contactMessage.subject || lead.contactMessage.email}</p>
+                        </div>
+                        <span className={'shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase ' + priorityClass(lead.priority)}>
+                          {lead.priority}
+                        </span>
+                      </div>
+
+                      <p className="mt-3 line-clamp-3 text-xs leading-5 text-muted-foreground">
+                        {lead.summary || lead.contactMessage.message}
+                      </p>
+
+                      {tags.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {tags.slice(0, 3).map((tag) => (
+                            <span key={tag} className="rounded-full bg-muted px-2 py-0.5 text-[9px] font-medium text-muted-foreground">{tag}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-2 text-[10px] text-muted-foreground">
+                        <span>{lead.assignedTo || 'Unassigned'}</span>
+                        {lead.nextFollowUp ? (
+                          <span className={isOverdue(lead) ? 'font-semibold text-rose-600' : ''}>
+                            {isOverdue(lead) ? 'Overdue · ' : ''}
+                            {new Date(lead.nextFollowUp).toLocaleDateString()}
+                          </span>
+                        ) : (
+                          <span>No follow-up</span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+
+      <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto">
+          {selected && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex flex-wrap items-center gap-2">
+                  {selected.contactMessage.name}
+                  <Badge variant="secondary">{selected.source}</Badge>
+                  <span className={'rounded-full border px-2 py-0.5 text-[10px] uppercase ' + priorityClass(selected.priority)}>
+                    {selected.priority}
+                  </span>
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="grid gap-6 lg:grid-cols-[1.15fr_.85fr]">
+                <div className="space-y-5">
+                  <div className="grid gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2">
+                    <a href={'mailto:' + selected.contactMessage.email} className="flex items-center gap-2 text-sm font-medium hover:text-amber-600">
+                      <Mail className="size-4 text-muted-foreground" /> {selected.contactMessage.email}
+                    </a>
+                    {selected.contactMessage.phone ? (
+                      <a href={'tel:' + selected.contactMessage.phone} className="flex items-center gap-2 text-sm font-medium hover:text-amber-600">
+                        <Phone className="size-4 text-muted-foreground" /> {selected.contactMessage.phone}
+                      </a>
+                    ) : (
+                      <span className="flex items-center gap-2 text-sm text-muted-foreground"><Phone className="size-4" /> No phone provided</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Intelligence summary</Label>
+                    <Textarea
+                      className="mt-2"
+                      rows={4}
+                      defaultValue={selected.summary}
+                      onBlur={(event) => {
+                        if (event.target.value !== selected.summary) {
+                          void patchLead(selected, { summary: event.target.value });
+                        }
+                      }}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2"
+                      disabled={saving}
+                      onClick={() => void patchLead(selected, { regenerateIntelligence: true })}
+                    >
+                      <Sparkles className="mr-2 size-4" /> Refresh intelligence
+                    </Button>
+                  </div>
+
+                  <div className="rounded-2xl border border-border/60 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Original enquiry</p>
+                    <p className="mt-2 text-sm font-semibold">{selected.contactMessage.subject || 'No subject'}</p>
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{selected.contactMessage.message}</p>
+                    <p className="mt-4 text-[11px] text-muted-foreground">
+                      Received {new Date(selected.contactMessage.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <Label>Internal notes</Label>
+                        <p className="text-xs text-muted-foreground">{selected.notes.length} note{selected.notes.length === 1 ? '' : 's'}</p>
+                      </div>
+                    </div>
+                    <form onSubmit={addNote} className="flex gap-2">
+                      <Textarea
+                        rows={2}
+                        value={note}
+                        onChange={(event) => setNote(event.target.value)}
+                        placeholder="Add discovery notes, next steps, objections or decisions…"
+                      />
+                      <Button type="submit" size="icon" disabled={saving || !note.trim()} aria-label="Add note">
+                        <MessageSquarePlus className="size-4" />
+                      </Button>
+                    </form>
+                    <div className="mt-4 space-y-3">
+                      {selected.notes.map((item) => (
+                        <div key={item.id} className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                          <p className="whitespace-pre-wrap text-sm leading-6">{item.note}</p>
+                          <p className="mt-2 text-[10px] text-muted-foreground">
+                            {item.author} · {new Date(item.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 rounded-2xl border border-border/60 bg-muted/15 p-4">
+                  <div>
+                    <Label>Status</Label>
+                    <select
+                      value={selected.status}
+                      onChange={(event) => void patchLead(selected, { status: event.target.value })}
+                      className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      {stages.map((stage) => <option key={stage.id} value={stage.id}>{stage.label}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label>Priority</Label>
+                    <select
+                      value={selected.priority}
+                      onChange={(event) => void patchLead(selected, { priority: event.target.value })}
+                      className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="high">High</option>
+                      <option value="normal">Normal</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label>Assigned to</Label>
+                    <Input
+                      className="mt-2"
+                      value={selected.assignedTo}
+                      placeholder="e.g. Christian"
+                      onChange={(event) => setSelected({ ...selected, assignedTo: event.target.value })}
+                      onBlur={(event) => void patchLead(selected, { assignedTo: event.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Next follow-up</Label>
+                    <Input
+                      className="mt-2"
+                      type="datetime-local"
+                      value={inputDateTime(selected.nextFollowUp)}
+                      onChange={(event) => {
+                        const iso = apiDateTime(event.target.value);
+                        setSelected({ ...selected, nextFollowUp: iso });
+                        void patchLead(selected, { nextFollowUp: iso });
+                      }}
+                    />
+                    {isOverdue(selected) && (
+                      <p className="mt-2 flex items-center gap-1 text-xs font-medium text-rose-600">
+                        <AlertTriangle className="size-3.5" /> Follow-up is overdue
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Tags</Label>
+                    <Input
+                      className="mt-2"
+                      defaultValue={parseTags(selected.tags).join(', ')}
+                      onBlur={(event) => {
+                        const tags = event.target.value.split(',').map((value) => value.trim()).filter(Boolean);
+                        void patchLead(selected, { tags });
+                      }}
+                    />
+                    <p className="mt-1 text-[10px] text-muted-foreground">Comma-separated</p>
+                  </div>
+
+                  <div className="border-t border-border/60 pt-4">
+                    <p className="text-xs text-muted-foreground">Last contacted</p>
+                    <p className="mt-1 text-sm font-medium">
+                      {selected.lastContactedAt ? new Date(selected.lastContactedAt).toLocaleString() : 'Not recorded'}
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="mt-3 w-full"
+                      disabled={saving}
+                      onClick={() => void patchLead(selected, { lastContactedAt: new Date().toISOString() })}
+                    >
+                      <CheckCircle2 className="mr-2 size-4" /> Mark contacted now
+                    </Button>
+                  </div>
+
+                  <div className="border-t border-border/60 pt-4 text-xs text-muted-foreground">
+                    <p className="flex items-center gap-2"><Clock3 className="size-3.5" /> Lead updated {new Date(selected.updatedAt).toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
