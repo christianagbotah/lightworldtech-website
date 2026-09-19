@@ -198,7 +198,7 @@ export default function AdminDashboard() {
       .slice(0, 6);
   })();
 
-  const trafficData = analytics?.daily.slice(-14) || [];
+  const trafficData = analytics?.daily?.slice(-14) || [];
   const maxTraffic = Math.max(1, ...trafficData.map((item) => item.pageViews));
 
   return (
