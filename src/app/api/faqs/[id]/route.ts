@@ -11,7 +11,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const adminRequest = isAdminRequest(request);
+    const adminRequest = (await isAdminRequest(request));
     const faq = adminRequest
       ? await db.fAQ.findUnique({ where: { id } })
       : await db.fAQ.findFirst({ where: { id, active: true } });
@@ -45,7 +45,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  if (!(await (await isAdminRequest(request)))) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   try {
     const { id } = await params;
@@ -87,7 +87,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  if (!(await (await isAdminRequest(request)))) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   try {
     const { id } = await params;
