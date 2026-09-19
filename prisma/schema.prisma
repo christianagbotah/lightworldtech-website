@@ -168,10 +168,29 @@ model ContactMessage {
 
 // Newsletter subscribers
 model NewsletterSubscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id         String               @id @default(cuid())
+  email      String               @unique
+  active     Boolean              @default(true)
+  deliveries NewsletterDelivery[]
+  createdAt  DateTime             @default(now())
+}
+
+// Delivery audit trail for newsletter confirmations and admin transport tests.
+model NewsletterDelivery {
+  id           String                @id @default(cuid())
+  subscriberId String?
+  subscriber   NewsletterSubscriber? @relation(fields: [subscriberId], references: [id], onDelete: SetNull)
+  recipient    String
+  kind         String                @default("confirmation")
+  subject      String
+  status       String
+  transport    String                @default("")
+  error        String                @default("")
+  createdAt    DateTime              @default(now())
+
+  @@index([status, createdAt])
+  @@index([recipient, createdAt])
+  @@index([subscriberId, createdAt])
 }
 
 // FAQ items

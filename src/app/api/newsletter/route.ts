@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { newsletterConfirmation, sendTransactionalMail } from '@/lib/mail';
+import {
+  getMailTransportStatus,
+  newsletterConfirmation,
+  sendTransactionalMail,
+} from '@/lib/mail';
 import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 export const runtime = 'nodejs';
@@ -10,13 +14,60 @@ const subscribeSchema = z.object({
   email: z.string().email('Valid email is required').transform((value) => value.trim().toLowerCase()),
 });
 
-async function sendConfirmation(email: string) {
+function safeError(error: unknown): string {
+  return (error instanceof Error ? error.message : String(error)).slice(0, 1200);
+}
+
+async function recordDelivery(input: {
+  subscriberId: string | null;
+  recipient: string;
+  subject: string;
+  status: 'sent' | 'failed';
+  transport: string;
+  error?: string;
+}) {
   try {
-    await sendTransactionalMail(newsletterConfirmation(email));
-    return true;
+    await db.newsletterDelivery.create({
+      data: {
+        subscriberId: input.subscriberId,
+        recipient: input.recipient,
+        kind: 'confirmation',
+        subject: input.subject,
+        status: input.status,
+        transport: input.transport,
+        error: input.error || '',
+      },
+    });
   } catch (error) {
+    console.error('Newsletter delivery audit failed:', error);
+  }
+}
+
+async function sendConfirmation(subscriberId: string, email: string) {
+  const message = newsletterConfirmation(email);
+
+  try {
+    const result = await sendTransactionalMail(message);
+    await recordDelivery({
+      subscriberId,
+      recipient: email,
+      subject: message.subject,
+      status: 'sent',
+      transport: result.transport,
+    });
+    return { sent: true, transport: result.transport };
+  } catch (error) {
+    const transport = getMailTransportStatus().mode;
     console.error('Newsletter confirmation email failed:', error);
-    return false;
+    await recordDelivery({
+      subscriberId,
+      recipient: email,
+      subject: message.subject,
+      status: 'failed',
+      transport,
+      error: safeError(error),
+    });
+    return { sent: false, transport };
   }
 }
 
@@ -57,14 +108,14 @@ export async function POST(request: NextRequest) {
       created = true;
     }
 
-    const emailSent = await sendConfirmation(email);
+    const delivery = await sendConfirmation(subscriber.id, email);
 
     return NextResponse.json(
       {
         success: true,
         data: subscriber,
-        emailSent,
-        message: emailSent
+        emailSent: delivery.sent,
+        message: delivery.sent
           ? 'Subscribed. A confirmation email is on its way.'
           : 'Subscribed successfully. Confirmation email delivery is temporarily delayed.',
       },

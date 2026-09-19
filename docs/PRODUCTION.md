@@ -8,6 +8,12 @@ This document captures the minimum production requirements for the Lightworld Te
 - `ADMIN_SESSION_SECRET` — high-entropy secret used to sign the HttpOnly admin session cookie. A `NEXTAUTH_SECRET` value is accepted as a fallback, but `ADMIN_SESSION_SECRET` is preferred for clarity.
 - `ADMIN_SEED_PASSWORD` — required only when running `prisma/seed.ts` in production.
 - `CLIENT_SESSION_SECRET` — recommended separate high-entropy secret for client portal sessions. If omitted, the portal falls back to `ADMIN_SESSION_SECRET` but uses a distinct signed namespace and cookie.
+- `MAIL_TRANSPORT` — use `smtp` in production when an authenticated relay is configured. `auto` uses SMTP when `SMTP_HOST` is present and otherwise falls back to local sendmail.
+- `SMTP_HOST` / `SMTP_PORT` — authenticated relay endpoint. Port `587` with STARTTLS is recommended; port `465` is supported with implicit TLS.
+- `SMTP_USER` / `SMTP_PASS` — relay credentials. Keep these outside the repository and deployment logs.
+- `SMTP_SECURE` — set `true` for implicit TLS on port 465; leave `false` for port 587 so STARTTLS can be negotiated.
+- `SMTP_REQUIRE_TLS` — defaults to `true` for non-implicit-TLS SMTP connections. Do not disable it when authentication is used.
+- `MAIL_FROM` / `MAIL_REPLY_TO` — optional sender identity overrides. Defaults remain the Lightworld Technologies business mailbox.
 
 Generate the session secret with a cryptographically secure random generator and keep it outside the repository.
 
@@ -39,6 +45,7 @@ bun run db:phase3
 bun run db:phase4
 bun run db:phase6
 bun run db:phase7
+bun run db:phase8
 bun run build
 ```
 
@@ -57,6 +64,7 @@ Verify:
 - `/`, `/services`, `/portfolio`, `/products`, `/blog`, `/careers`, and `/contact`
 - `/sitemap.xml`, `/robots.txt`, and `/manifest.webmanifest`
 - public contact and newsletter submissions
+- `/admin` → `Newsletter & Mail`, including transport diagnostics and a test message to an address you control
 - `/admin` login, page refresh with an active session, and logout
 - admin CRUD for services, portfolio, blog, FAQs, team, and testimonials
 - draft/inactive records are not visible to unauthenticated API requests
@@ -107,3 +115,34 @@ The upgrade creates only new client-portal tables and indexes. It does not seed 
 Client sessions use the dedicated HttpOnly `lw_client_session` cookie and are cryptographically namespaced separately from admin sessions. Set a distinct `CLIENT_SESSION_SECRET` in production when possible. Every client data request revalidates the portal user and organization and scopes data by the signed session organization rather than by a client-supplied tenant identifier.
 
 Smoke-check `/client`, unauthenticated client APIs (401), admin client APIs (401 without admin session), a provisioned client login in a non-production test database, project/milestone visibility, cross-organization isolation and support ticket creation before switching traffic.
+
+
+## Phase 8 mail delivery operations
+
+Phase 8 adds a delivery audit trail for newsletter confirmations and an authenticated SMTP relay transport. Back up the production SQLite database before deployment, then run:
+
+```bash
+bun run db:phase8
+```
+
+The schema upgrade creates only the `NewsletterDelivery` table and indexes. Existing newsletter subscribers are preserved.
+
+The website can still use the local `/usr/sbin/sendmail` transport for compatibility, but that path depends on the VPS being permitted to deliver directly to recipient mail servers over outbound SMTP. The production server has previously timed out when attempting direct delivery to Gmail over port 25, so production should use a provider-approved authenticated smart host on port 587 or 465.
+
+Example production relay configuration:
+
+```bash
+MAIL_TRANSPORT=smtp
+SMTP_HOST=smtp.example-provider.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_REQUIRE_TLS=true
+SMTP_USER=<relay-username>
+SMTP_PASS=<relay-password>
+MAIL_FROM="Lightworld Technologies <mail@lightworldtech.com>"
+MAIL_REPLY_TO=mail@lightworldtech.com
+```
+
+Do not commit relay credentials. Configure them in the deployment environment or secret store. After deployment, open **Admin → Newsletter & Mail** and send a transport test to an address you control. A successful SMTP acceptance confirms that the application handed the message to the configured relay; final inbox placement still depends on the receiving provider and the sender domain's DNS/reputation configuration.
+
+The admin screen intentionally exposes only non-secret transport metadata. SMTP passwords are never returned by the API. Failed confirmation attempts are recorded with bounded diagnostic text so newsletter subscriptions remain saved even when outbound mail is temporarily unavailable.
