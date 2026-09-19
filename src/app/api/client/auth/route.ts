@@ -8,6 +8,7 @@ import {
   getClientSession,
 } from '@/lib/client-auth';
 import { hashAdminPassword, verifyAdminPassword } from '@/lib/admin-auth';
+import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -15,6 +16,14 @@ const loginSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const rate = consumePublicRateLimit(request, 'client-login', 15, 10 * 60_000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Too many sign-in attempts. Please try again shortly.' },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const parsed = loginSchema.safeParse(await request.json());
     if (!parsed.success) {
