@@ -266,9 +266,10 @@ model Admin {
   password  String
   name      String          @default("")
   role      String          @default("admin")
-  active    Boolean         @default(true)
-  lastLogin   DateTime?
-  authVersion Int                     @default(0)
+  active        Boolean         @default(true)
+  recoveryEmail String          @default("")
+  lastLogin     DateTime?
+  authVersion   Int             @default(0)
   auditLogs   AdminAuditLog[]
   resetTokens AdminPasswordResetToken[]
 
