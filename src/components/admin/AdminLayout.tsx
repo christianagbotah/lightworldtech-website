@@ -11,6 +11,7 @@ import {
   FolderOpen,
   Mail,
   MailCheck,
+  Megaphone,
   GitBranch,
   FileSignature,
   Building2,
@@ -39,6 +40,7 @@ const navItems = [
   { id: 'proposals', label: 'Proposals', icon: FileSignature, page: 'admin-proposals' as const },
   { id: 'clients', label: 'Client Portal', icon: Building2, page: 'admin-clients' as const },
   { id: 'newsletter', label: 'Newsletter & Mail', icon: MailCheck, page: 'admin-newsletter' as const },
+  { id: 'campaigns', label: 'Campaign Studio', icon: Megaphone, page: 'admin-campaigns' as const },
   { id: 'messages', label: 'Messages', icon: Mail, page: 'admin-messages' as const },
   { id: 'faqs', label: 'FAQs', icon: HelpCircle, page: 'admin-faqs' as const },
   { id: 'settings', label: 'Settings', icon: Settings, page: 'admin-settings' as const },
@@ -57,7 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-newsletter' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
+  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-newsletter' | 'admin-campaigns' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
     setAdminTab(id);
     navigate(page);
     setSidebarOpen(false);
@@ -153,6 +155,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                  adminTab === 'proposals' ? 'Proposals' :
                  adminTab === 'clients' ? 'Client Portal' :
                  adminTab === 'newsletter' ? 'Newsletter & Mail' :
+                 adminTab === 'campaigns' ? 'Campaign Studio' :
                  adminTab === 'messages' ? 'Messages' :
                  adminTab === 'faqs' ? 'FAQs' :
                  adminTab === 'settings' ? 'Settings' : 'Admin'}
