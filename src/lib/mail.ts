@@ -298,7 +298,7 @@ async function command(
 ) {
   await writeSocket(socket, value + '\r\n');
   const reply = await reader.read(timeoutMs);
-  assertReply(reply, expected, value.split(' ')[0]);
+  assertReply(reply, expected, value.includes(' ') ? value.split(' ')[0] : 'SMTP command');
   return reply;
 }
 
