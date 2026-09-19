@@ -138,6 +138,9 @@ const settingsGroups: SettingsGroup[] = [
       { key: 'seo_trust_description', label: 'Trust Center Description', type: 'textarea' },
       { key: 'seo_newsroom_title', label: 'Newsroom Title', type: 'input' },
       { key: 'seo_newsroom_description', label: 'Newsroom Description', type: 'textarea' },
+      { key: 'seo_blog_title', label: 'Blog / Insights Title', type: 'input' },
+      { key: 'seo_blog_social_title', label: 'Blog Social Preview Title', type: 'input' },
+      { key: 'seo_blog_description', label: 'Blog / Insights Description', type: 'textarea' },
     ],
   },
 ];
