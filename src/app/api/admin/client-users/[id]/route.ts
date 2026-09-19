@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { hashAdminPassword, isAdminRequest } from '@/lib/admin-auth';
+import { isAdminRequest } from '@/lib/admin-auth';
+import { createClientInvite } from '@/lib/client-invite';
 
 const schema = z.object({
   active: z.boolean().optional(),
   role: z.enum(['client_admin', 'client_member']).optional(),
-  password: z.string().min(10).max(256).optional(),
+  regenerateInvite: z.boolean().optional(),
 });
 
 export async function PUT(
@@ -32,7 +33,15 @@ export async function PUT(
   const data: Record<string, unknown> = {};
   if (parsed.data.active !== undefined) data.active = parsed.data.active;
   if (parsed.data.role !== undefined) data.role = parsed.data.role;
-  if (parsed.data.password !== undefined) data.password = hashAdminPassword(parsed.data.password);
+
+  let activationUrl: string | undefined;
+  if (parsed.data.regenerateInvite) {
+    const invite = createClientInvite();
+    data.inviteTokenHash = invite.tokenHash;
+    data.inviteExpiresAt = invite.expiresAt;
+    data.mustSetPassword = true;
+    activationUrl = request.nextUrl.origin + '/client/activate?token=' + encodeURIComponent(invite.token);
+  }
 
   const user = await db.clientPortalUser.update({
     where: { id },
@@ -45,9 +54,11 @@ export async function PUT(
       role: true,
       active: true,
       lastLogin: true,
+      mustSetPassword: true,
+      inviteExpiresAt: true,
       updatedAt: true,
     },
   });
 
-  return NextResponse.json({ success: true, data: user });
+  return NextResponse.json({ success: true, data: user, ...(activationUrl ? { activationUrl } : {}) });
 }
