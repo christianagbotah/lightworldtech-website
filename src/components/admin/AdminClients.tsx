@@ -5,12 +5,16 @@ import {
   Building2,
   CalendarClock,
   Copy,
+  FileText,
   FolderKanban,
   KeyRound,
   LifeBuoy,
   Loader2,
+  Megaphone,
   Plus,
   RefreshCw,
+  Send,
+  Trash2,
   Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -30,19 +34,31 @@ type Milestone = {
   id: string; title: string; description: string; status: string; order: number;
   dueDate: string | null; completedAt: string | null;
 };
+type DocumentItem = {
+  id: string; title: string; description: string; url: string;
+  category: string; visibleToClient: boolean; createdAt: string;
+};
+type Announcement = {
+  id: string; projectId: string | null; title: string; body: string;
+  active: boolean; publishAt: string; createdAt: string;
+};
 type Project = {
   id: string; name: string; summary: string; status: string; health: string;
   progress: number; manager: string; startDate: string | null; targetDate: string | null;
-  milestones: Milestone[];
+  milestones: Milestone[]; documents: DocumentItem[]; announcements: Announcement[];
+};
+type TicketMessage = {
+  id: string; authorType: string; authorName: string; message: string; createdAt: string;
 };
 type Ticket = {
   id: string; projectId: string | null; subject: string; message: string;
   status: string; priority: string; createdAt: string; updatedAt: string;
+  messages: TicketMessage[];
 };
 type Organization = {
   id: string; name: string; status: string; primaryContactName: string;
   primaryEmail: string; primaryPhone: string; users: PortalUser[];
-  projects: Project[]; tickets: Ticket[];
+  projects: Project[]; tickets: Ticket[]; announcements: Announcement[];
   _count: { users: number; projects: number; tickets: number };
 };
 
@@ -61,6 +77,9 @@ export default function AdminClients() {
   const [userForm, setUserForm] = useState({ name: '', email: '', role: 'client_admin' });
   const [projectForm, setProjectForm] = useState({ name: '', summary: '', manager: '', targetDate: '' });
   const [milestoneForm, setMilestoneForm] = useState({ projectId: '', title: '', dueDate: '' });
+  const [documentForms, setDocumentForms] = useState<Record<string, { title: string; url: string; description: string; category: string }>>({});
+  const [announcementForm, setAnnouncementForm] = useState({ title: '', body: '', projectId: '' });
+  const [ticketReplies, setTicketReplies] = useState<Record<string, string>>({});
 
   const selected = organizations.find((item) => item.id === selectedId) || organizations[0] || null;
 
@@ -249,6 +268,99 @@ export default function AdminClients() {
       if (!response.ok) throw new Error('Could not update support ticket');
       await fetchOrganizations();
     } catch { toast.error('Could not update support ticket'); }
+  };
+
+  const createDocument = async (event: FormEvent, projectId: string) => {
+    event.preventDefault();
+    const form = documentForms[projectId] || { title: '', url: '', description: '', category: 'document' };
+    if (!form.title.trim() || !form.url.trim()) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/client-projects/' + projectId + '/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, visibleToClient: true }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Could not publish document');
+      setDocumentForms((current) => ({ ...current, [projectId]: { title: '', url: '', description: '', category: 'document' } }));
+      await fetchOrganizations();
+      toast.success('Client document published');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not publish document');
+    } finally { setSaving(false); }
+  };
+
+  const deleteDocument = async (id: string) => {
+    if (!window.confirm('Remove this document from the client portal?')) return;
+    try {
+      const response = await fetch('/api/admin/client-documents/' + id, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Could not remove document');
+      await fetchOrganizations();
+      toast.success('Client document removed');
+    } catch { toast.error('Could not remove document'); }
+  };
+
+  const createAnnouncement = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selected) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/clients/' + selected.id + '/announcements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: announcementForm.title,
+          body: announcementForm.body,
+          projectId: announcementForm.projectId || null,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Could not publish announcement');
+      setAnnouncementForm({ title: '', body: '', projectId: '' });
+      await fetchOrganizations();
+      toast.success('Client announcement published');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not publish announcement');
+    } finally { setSaving(false); }
+  };
+
+  const toggleAnnouncement = async (id: string, active: boolean) => {
+    try {
+      const response = await fetch('/api/admin/client-announcements/' + id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active }),
+      });
+      if (!response.ok) throw new Error('Could not update announcement');
+      await fetchOrganizations();
+    } catch { toast.error('Could not update announcement'); }
+  };
+
+  const deleteAnnouncement = async (id: string) => {
+    if (!window.confirm('Delete this client announcement?')) return;
+    try {
+      const response = await fetch('/api/admin/client-announcements/' + id, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Could not delete announcement');
+      await fetchOrganizations();
+      toast.success('Announcement deleted');
+    } catch { toast.error('Could not delete announcement'); }
+  };
+
+  const replyTicket = async (ticketId: string) => {
+    const message = (ticketReplies[ticketId] || '').trim();
+    if (!message) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/client-tickets/' + ticketId + '/messages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Could not send reply');
+      setTicketReplies((current) => ({ ...current, [ticketId]: '' }));
+      await fetchOrganizations();
+      toast.success('Support reply sent');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not send reply');
+    } finally { setSaving(false); }
   };
 
   if (loading) {
