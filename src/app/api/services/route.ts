@@ -38,7 +38,7 @@ const createServiceSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  if (!(await (await isAdminRequest(request)))) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await request.json();
