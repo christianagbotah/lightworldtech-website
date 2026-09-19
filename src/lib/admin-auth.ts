@@ -6,6 +6,7 @@ import {
   timingSafeEqual,
 } from 'node:crypto';
 import type { NextRequest } from 'next/server';
+import { db } from '@/lib/db';
 
 export const ADMIN_SESSION_COOKIE = 'lw_admin_session';
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 8;
@@ -73,8 +74,25 @@ export function getAdminSession(request: NextRequest): AdminSession | null {
   return verifyAdminSessionToken(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
 }
 
-export function isAdminRequest(request: NextRequest): boolean {
-  return getAdminSession(request) !== null;
+export async function isAdminRequest(request: NextRequest): Promise<boolean> {
+  const session = getAdminSession(request);
+  if (!session) return false;
+
+  try {
+    const admin = await db.admin.findUnique({
+      where: { id: session.sub },
+      select: { email: true, role: true, active: true },
+    });
+
+    return Boolean(
+      admin?.active &&
+      admin.email === session.email &&
+      admin.role === session.role
+    );
+  } catch (error) {
+    console.error('Admin session revalidation failed:', error);
+    return false;
+  }
 }
 
 const HASH_PREFIX = 'scrypt';

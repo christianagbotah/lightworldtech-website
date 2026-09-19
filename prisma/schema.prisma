@@ -261,16 +261,35 @@ model ProcessStep {
 
 // Admin user for CMS
 model Admin {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String          @id @default(cuid())
+  email     String          @unique
   password  String
-  name      String   @default("")
-  role      String   @default("admin")
-  active    Boolean  @default(true)
+  name      String          @default("")
+  role      String          @default("admin")
+  active    Boolean         @default(true)
   lastLogin DateTime?
+  auditLogs AdminAuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AdminAuditLog {
+  id         String @id @default(cuid())
+  adminId    String?
+  admin      Admin? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  adminEmail String @default("")
+  adminName  String @default("")
+  action     String
+  entity     String @default("")
+  entityId   String @default("")
+  details    String @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([adminId, createdAt])
+  @@index([action, createdAt])
+  @@index([entity, entityId])
 }
 
 

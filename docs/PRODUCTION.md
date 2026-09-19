@@ -48,6 +48,7 @@ bun run db:phase6
 bun run db:phase7
 bun run db:phase8
 bun run db:phase9
+bun run db:phase10
 bun run build
 ```
 
@@ -70,6 +71,7 @@ Verify:
 - `/admin` → `Campaign Studio`: create a draft, send a test, mark it Ready, and verify a bounded batch in a non-production subscriber list
 - a newsletter unsubscribe link and one-click unsubscribe POST with a test subscriber
 - `/admin` login, page refresh with an active session, and logout
+- `/admin` → `Admin Governance` is visible only to a super-admin; create a temporary admin, change its role/status, reset its password, and verify the audit trail
 - admin CRUD for services, portfolio, blog, FAQs, team, and testimonials
 - draft/inactive records are not visible to unauthenticated API requests
 - contact-message APIs return 401 without an admin session
@@ -184,3 +186,31 @@ Campaign safety rules are enforced server-side:
 The admin must continue pressing **Send next batch** until Remaining reaches zero. This is deliberate: the current website runtime does not assume a background queue or cron worker. It prevents a web request from silently becoming an unbounded bulk-mail job and makes delivery progress visible to the operator.
 
 Before sending a real campaign, use a non-production/test subscriber list, verify the SMTP relay, send a campaign test to an address you control, confirm links and formatting, and verify that unsubscribe immediately makes that subscriber inactive.
+
+
+## Phase 10 admin governance and audit
+
+Phase 10 adds an administrator governance control plane and an append-only governance audit table. Back up the production SQLite database before deployment, then run:
+
+```bash
+bun run db:phase10
+```
+
+The migration creates only the `AdminAuditLog` table and indexes, then guarantees that the site has at least one active `super_admin`: if none exists, the oldest active administrator is promoted once.
+
+Important deployment behavior: if the currently signed-in administrator is promoted by the migration, the role embedded in the existing signed cookie no longer matches the database. The next `/admin` session validation will reject that stale session. Sign in again to receive the new super-admin role claim.
+
+Governance safeguards enforced server-side:
+
+- only a live database-backed `super_admin` session may call administrator governance APIs;
+- protected admin/CMS API requests revalidate the signed session against the live Admin row, so deactivation, email change or role change invalidates stale access on the next protected request;
+- ordinary admins do not see the Admin Governance navigation item and cannot open the governance workspace through the client router;
+- a super-admin cannot deactivate or demote their own account from the same session;
+- a super-admin cannot change their own email from the same privileged session;
+- no change may deactivate or demote the last active super-admin;
+- administrator email addresses remain unique;
+- administrator passwords are stored with the existing scrypt password hashing implementation;
+- governance actions, successful logins and logouts are recorded in `AdminAuditLog`;
+- password values are never returned by governance APIs or stored in audit details.
+
+This release intentionally introduces only two administrator roles: `admin` and `super_admin`. It does not claim fine-grained per-feature RBAC for every CMS route yet. Existing ordinary admins retain the operating access they had before Phase 10, while super-admin-only account governance is separated and auditable.

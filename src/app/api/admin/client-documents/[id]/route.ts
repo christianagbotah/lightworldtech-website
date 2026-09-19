@@ -15,7 +15,7 @@ const schema = z.object({
 });
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   const parsed = schema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ success: false, error: 'Invalid document update' }, { status: 400 });
@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   const existing = await db.clientDocument.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: 'Document not found' }, { status: 404 });
