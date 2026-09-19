@@ -39,7 +39,10 @@ export async function GET(
   const { id } = await params;
   const proposal = await db.proposal.findUnique({
     where: { id },
-    include: { lead: { include: { contactMessage: true } } },
+    include: {
+      lead: { include: { contactMessage: true } },
+      clientProject: { include: { organization: { select: { id: true, name: true } } } },
+    },
   });
 
   if (!proposal) return NextResponse.json({ error: 'Proposal not found' }, { status: 404 });
@@ -65,7 +68,10 @@ export async function PUT(
 
     const existing = await db.proposal.findUnique({
       where: { id },
-      include: { lead: { include: { contactMessage: true } } },
+      include: {
+      lead: { include: { contactMessage: true } },
+      clientProject: { include: { organization: { select: { id: true, name: true } } } },
+    },
     });
     if (!existing) return NextResponse.json({ error: 'Proposal not found' }, { status: 404 });
 
@@ -135,7 +141,10 @@ export async function PUT(
     const proposal = await db.proposal.update({
       where: { id },
       data,
-      include: { lead: { include: { contactMessage: true } } },
+      include: {
+      lead: { include: { contactMessage: true } },
+      clientProject: { include: { organization: { select: { id: true, name: true } } } },
+    },
     });
 
     return NextResponse.json({ success: true, data: proposal });

@@ -289,9 +289,167 @@ model Proposal {
   approvedAt       DateTime?
   sentAt           DateTime?
   lastGeneratedAt  DateTime?
+  clientProject     ClientProject?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status, updatedAt])
+}
+
+
+// Secure client portal models. Empty by default; admins create real organizations/accounts.
+model ClientOrganization {
+  id                 String             @id @default(cuid())
+  name               String
+  status             String             @default("active")
+  primaryContactName String             @default("")
+  primaryEmail       String             @default("")
+  primaryPhone       String             @default("")
+  users              ClientPortalUser[]
+  projects           ClientProject[]
+  tickets            ClientSupportTicket[]
+  announcements      ClientAnnouncement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, updatedAt])
+  @@index([name])
+}
+
+model ClientPortalUser {
+  id             String             @id @default(cuid())
+  organizationId String
+  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String             @unique
+  password        String
+  name            String
+  role            String             @default("client_admin")
+  active          Boolean            @default(true)
+  lastLogin       DateTime?
+  inviteTokenHash String              @default("")
+  inviteExpiresAt DateTime?
+  mustSetPassword Boolean             @default(true)
+  tickets         ClientSupportTicket[] @relation("ClientTicketCreator")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, active])
+}
+
+model ClientProject {
+  id             String             @id @default(cuid())
+  organizationId String
+  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  proposalId     String?            @unique
+  proposal       Proposal?          @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  name           String
+  summary        String             @default("")
+  status         String             @default("planned")
+  health         String             @default("on_track")
+  progress       Int                @default(0)
+  manager        String             @default("")
+  startDate      DateTime?
+  targetDate     DateTime?
+  milestones     ClientMilestone[]
+  documents      ClientDocument[]
+  announcements  ClientAnnouncement[]
+  tickets        ClientSupportTicket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@index([targetDate])
+}
+
+model ClientMilestone {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     ClientProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String        @default("")
+  status      String        @default("planned")
+  order       Int           @default(0)
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, order])
+  @@index([dueDate])
+}
+
+model ClientSupportTicket {
+  id             String              @id @default(cuid())
+  organizationId String
+  organization   ClientOrganization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        ClientProject?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdById    String
+  createdBy      ClientPortalUser    @relation("ClientTicketCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  subject        String
+  message        String
+  status         String              @default("open")
+  priority       String              @default("normal")
+  messages       ClientTicketMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@index([projectId, status])
+  @@index([createdById, createdAt])
+}
+
+
+model ClientDocument {
+  id              String        @id @default(cuid())
+  projectId       String
+  project         ClientProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title           String
+  description     String        @default("")
+  url             String
+  category        String        @default("document")
+  visibleToClient Boolean       @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, visibleToClient])
+  @@index([createdAt])
+}
+
+model ClientTicketMessage {
+  id         String              @id @default(cuid())
+  ticketId   String
+  ticket     ClientSupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorType String              @default("admin")
+  authorName String
+  message    String
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model ClientAnnouncement {
+  id             String             @id @default(cuid())
+  organizationId String
+  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        ClientProject?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title          String
+  body           String
+  active         Boolean            @default(true)
+  publishAt      DateTime            @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, active, publishAt])
+  @@index([projectId, active, publishAt])
 }

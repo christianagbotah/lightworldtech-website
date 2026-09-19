@@ -20,6 +20,7 @@ import {
   Newspaper,
   Search,
   ShieldCheck,
+  KeyRound,
   Smartphone,
   Users,
   Workflow,
@@ -43,6 +44,7 @@ const companyMenu = [
   { icon: Newspaper, title: 'Newsroom & media', desc: 'Verified facts, awards and public coverage', href: '/newsroom' },
   { icon: Briefcase, title: 'Careers', desc: 'Talent network and opportunities', href: '/careers' },
   { icon: MessageSquare, title: 'Contact', desc: 'Start a project or conversation', href: '/contact' },
+  { icon: KeyRound, title: 'Client Portal', desc: 'Secure project and support workspace', href: '/client' },
 ];
 
 const serviceMenu = [
@@ -76,7 +78,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
     return pathname === href || pathname.startsWith(href + '/');
   };
 
-  const companyActive = ['/about', '/team', '/trust', '/newsroom', '/careers', '/contact'].some((href) => active(href));
+  const companyActive = ['/about', '/team', '/trust', '/newsroom', '/careers', '/contact', '/client'].some((href) => active(href));
 
   return (
     <>

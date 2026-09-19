@@ -45,6 +45,9 @@ export async function GET(request: NextRequest) {
         lead: {
           include: { contactMessage: true },
         },
+        clientProject: {
+          include: { organization: { select: { id: true, name: true } } },
+        },
       },
       orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
       take: 200,
@@ -91,7 +94,10 @@ export async function POST(request: NextRequest) {
     if (lead.proposal) {
       const existing = await db.proposal.findUnique({
         where: { id: lead.proposal.id },
-        include: { lead: { include: { contactMessage: true } } },
+        include: {
+          lead: { include: { contactMessage: true } },
+          clientProject: { include: { organization: { select: { id: true, name: true } } } },
+        },
       });
       return NextResponse.json({ success: true, data: existing, created: false });
     }
@@ -124,7 +130,10 @@ export async function POST(request: NextRequest) {
         nextSteps: draft.nextSteps,
         lastGeneratedAt: new Date(),
       },
-      include: { lead: { include: { contactMessage: true } } },
+      include: {
+        lead: { include: { contactMessage: true } },
+        clientProject: { include: { organization: { select: { id: true, name: true } } } },
+      },
     });
 
     return NextResponse.json({ success: true, data: proposal, created: true }, { status: 201 });

@@ -2,8 +2,10 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
+  Building2,
   CheckCircle2,
   Clock3,
+  Copy,
   FileSignature,
   Mail,
   RefreshCw,
@@ -71,6 +73,12 @@ type Proposal = {
   createdAt: string;
   updatedAt: string;
   lead: Lead;
+  clientProject?: {
+    id: string;
+    name: string;
+    organizationId: string;
+    organization: { id: string; name: string };
+  } | null;
 };
 
 type Summary = {
@@ -115,6 +123,7 @@ export default function AdminProposals() {
   const [leadId, setLeadId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
 
   const fetchData = async () => {
     try {
@@ -215,6 +224,50 @@ export default function AdminProposals() {
     );
     if (!ok) return;
     await patchProposal({ regenerateDraft: true }, 'Proposal regenerated as a new draft version');
+  };
+
+  const convertAcceptedProposal = async () => {
+    if (!selected || selected.status !== 'accepted') return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/proposals/' + selected.id + '/convert-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to create client workspace');
+
+      const project = payload?.data?.project;
+      const organization = payload?.data?.organization;
+      if (project && organization) {
+        setSelected((current) => current ? {
+          ...current,
+          clientProject: {
+            id: String(project.id),
+            name: String(project.name),
+            organizationId: String(project.organizationId),
+            organization: { id: String(organization.id), name: String(organization.name) },
+          },
+        } : current);
+      }
+      if (payload?.activationUrl) {
+        setActivationLinks((current) => ({ ...current, [selected.id]: String(payload.activationUrl) }));
+      }
+      await fetchData();
+      toast.success(payload?.created ? 'Client workspace created' : 'Client workspace already exists');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to create client workspace');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const copyActivationLink = async (proposalId: string) => {
+    const url = activationLinks[proposalId];
+    if (!url) return;
+    await navigator.clipboard.writeText(url);
+    toast.success('Client activation link copied');
   };
 
   if (loading) {
@@ -423,6 +476,35 @@ export default function AdminProposals() {
                   <Button variant="outline" className="w-full" disabled={saving} onClick={() => void regenerate()}>
                     <Sparkles className="mr-2 size-4" /> Regenerate assisted draft
                   </Button>
+
+                  {selected.clientProject ? (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-200">
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Building2 className="size-3.5" /> Client workspace active
+                      </div>
+                      <p className="mt-2">{selected.clientProject.organization.name} · {selected.clientProject.name}</p>
+                    </div>
+                  ) : selected.status === 'accepted' ? (
+                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={saving} onClick={() => void convertAcceptedProposal()}>
+                      <Building2 className="mr-2 size-4" /> Create client workspace
+                    </Button>
+                  ) : (
+                    <p className="rounded-xl border border-dashed border-border p-3 text-[10px] leading-4 text-muted-foreground">
+                      Mark the proposal Accepted before creating a client workspace.
+                    </p>
+                  )}
+
+                  {activationLinks[selected.id] && (
+                    <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/40 dark:bg-amber-950/30">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-800 dark:text-amber-200">One-time client activation link</p>
+                      <div className="flex gap-2">
+                        <Input readOnly value={activationLinks[selected.id]} className="h-9 text-[10px]" />
+                        <Button type="button" size="icon" variant="outline" onClick={() => void copyActivationLink(selected.id)} aria-label="Copy activation link">
+                          <Copy className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="border-t border-border/60 pt-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Prospect</p>
