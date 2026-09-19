@@ -11,7 +11,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const adminRequest = isAdminRequest(request);
+    const adminRequest = await isAdminRequest(request);
     const service = adminRequest
       ? await db.service.findUnique({ where: { id } })
       : await db.service.findFirst({ where: { id, active: true } });
