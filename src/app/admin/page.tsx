@@ -13,6 +13,7 @@ import AdminTestimonials from '@/components/admin/AdminTestimonials';
 import AdminPortfolio from '@/components/admin/AdminPortfolio';
 import AdminMessages from '@/components/admin/AdminMessages';
 import AdminCRM from '@/components/admin/AdminCRM';
+import AdminProposals from '@/components/admin/AdminProposals';
 import AdminFAQs from '@/components/admin/AdminFAQs';
 import AdminSettings from '@/components/admin/AdminSettings';
 import AdminPages from '@/components/admin/AdminPages';
@@ -37,6 +38,8 @@ function AdminRouter() {
       return <AdminPortfolio />;
     case 'crm':
       return <AdminCRM />;
+    case 'proposals':
+      return <AdminProposals />;
     case 'messages':
       return <AdminMessages />;
     case 'faqs':
