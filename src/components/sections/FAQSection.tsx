@@ -13,7 +13,7 @@ import { useAppStore } from '@/lib/store';
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 const defaultFaqs = [
-  { id: '1', question: 'What services does Lightworld Technologies offer?', answer: 'We offer a comprehensive range of IT solutions including web development, mobile app development, skills training, SEO and digital marketing, custom software development, and web hosting services.' },
+  { id: '1', question: 'What services does Lightworld Technologies Ltd offer?', answer: 'We offer a comprehensive range of IT solutions including web development, mobile app development, skills training, SEO and digital marketing, custom software development, and web hosting services.' },
   { id: '2', question: 'How long does it take to complete a project?', answer: 'Project timelines vary depending on the scope and complexity. A simple website typically takes 4-6 weeks, while more complex applications can take 3-6 months. We provide detailed timelines during our initial consultation.' },
   { id: '3', question: 'Do you offer ongoing support and maintenance?', answer: 'Yes, we offer comprehensive support and maintenance packages to ensure your solutions remain up-to-date, secure, and performing optimally. Our support plans are flexible and can be tailored to your needs.' },
   { id: '4', question: 'What technologies do you work with?', answer: 'We work with a wide range of modern technologies including React, Next.js, Node.js, Python, React Native, Flutter, and more. We select the best technology stack for each project based on requirements.' },
@@ -72,7 +72,7 @@ export default function FAQSection() {
               <div className="rounded-2xl overflow-hidden bg-white dark:bg-slate-800">
                 <Image
                   src="/images/hero-slide-1.png"
-                  alt="Technology solutions by Lightworld Technologies"
+                  alt="Technology solutions by Lightworld Technologies Ltd"
                   width={1152}
                   height={864}
                   className="w-full h-auto object-cover"
