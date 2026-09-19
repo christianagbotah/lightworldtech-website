@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
 import {
   CheckCircle2,
   Eye,
@@ -97,7 +98,7 @@ function statusBadge(status: CampaignSummary['status']) {
     sending: 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200',
     sent: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200',
   };
-  return <Badge className={'border-0 hover:' + classes[status] + ' ' + classes[status]}>{status}</Badge>;
+  return <Badge className={'border-0 ' + classes[status]}>{status}</Badge>;
 }
 
 function formFromCampaign(campaign: CampaignSummary): CampaignForm {
