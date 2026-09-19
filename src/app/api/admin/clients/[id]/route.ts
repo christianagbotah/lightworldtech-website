@@ -70,6 +70,7 @@ export async function PUT(
     if (parsed.data.temporaryPassword !== undefined) {
       data.password = hashClientPassword(parsed.data.temporaryPassword);
       data.mustChangePassword = true;
+      data.sessionVersion = { increment: 1 };
     }
 
     const account = await db.clientPortalAccount.update({
