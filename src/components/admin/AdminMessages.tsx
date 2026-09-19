@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Trash2, Mail, MailOpen, Eye, EyeOff, Phone, Copy, Check } from 'lucide-react';
+import { Trash2, Mail, MailOpen, Eye, EyeOff, Phone, Copy, Check, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,6 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
+import { useAppStore } from '@/lib/store';
 
 interface ContactMessage {
   id: string;
@@ -63,6 +64,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 }
 
 export default function AdminMessages() {
+  const { navigate } = useAppStore();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewOpen, setViewOpen] = useState(false);
@@ -74,7 +76,8 @@ export default function AdminMessages() {
     try {
       const res = await fetch('/api/contact');
       if (!res.ok) throw new Error('Failed to fetch');
-      setMessages(await res.json());
+      const payload = await res.json();
+      setMessages(Array.isArray(payload) ? payload : (payload.data || []));
     } catch {
       toast.error('Failed to load messages');
     } finally {
@@ -133,7 +136,7 @@ export default function AdminMessages() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Messages</h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -145,6 +148,9 @@ export default function AdminMessages() {
             )}
           </p>
         </div>
+        <Button variant="outline" onClick={() => navigate('admin-crm')}>
+          <GitBranch className="mr-2 size-4" /> Open CRM Pipeline
+        </Button>
       </div>
 
       <div className="border border-border rounded-xl bg-card overflow-hidden">
