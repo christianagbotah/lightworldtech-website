@@ -522,6 +522,46 @@ export default function AdminClients() {
               </CardContent>
             </Card>
 
+            <Card className="border-border/60">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base"><Megaphone className="size-4 text-amber-600" /> Client announcements</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-5 xl:grid-cols-[.85fr_1.15fr]">
+                <form onSubmit={createAnnouncement} className="space-y-3">
+                  <Input required placeholder="Announcement title" value={announcementForm.title} onChange={(event) => setAnnouncementForm({ ...announcementForm, title: event.target.value })} />
+                  <Textarea required rows={4} placeholder="Client-visible update…" value={announcementForm.body} onChange={(event) => setAnnouncementForm({ ...announcementForm, body: event.target.value })} />
+                  <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={announcementForm.projectId} onChange={(event) => setAnnouncementForm({ ...announcementForm, projectId: event.target.value })}>
+                    <option value="">Organization-wide announcement</option>
+                    {selected.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                  </select>
+                  <Button disabled={saving}><Megaphone className="mr-2 size-4" /> Publish announcement</Button>
+                </form>
+                <div className="space-y-2">
+                  {selected.announcements.map((announcement) => (
+                    <div key={announcement.id} className="rounded-xl border border-border/60 p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold">{announcement.title}</p>
+                          <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{announcement.body}</p>
+                          <p className="mt-2 text-[10px] text-muted-foreground">{announcement.projectId ? 'Project update' : 'Organization-wide'} · {new Date(announcement.publishAt).toLocaleString()}</p>
+                        </div>
+                        <Badge variant="outline">{announcement.active ? 'Published' : 'Hidden'}</Badge>
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <Button type="button" size="sm" variant="outline" onClick={() => void toggleAnnouncement(announcement.id, !announcement.active)}>
+                          {announcement.active ? 'Hide' : 'Publish'}
+                        </Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => void deleteAnnouncement(announcement.id)}>
+                          <Trash2 className="mr-1 size-3.5 text-destructive" /> Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {!selected.announcements.length && <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">No client announcements yet.</p>}
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid gap-4">
               {selected.projects.map((project) => (
                 <Card key={project.id} className="border-border/60">
@@ -546,6 +586,52 @@ export default function AdminClients() {
                       ))}
                       {!project.milestones.length && <p className="text-xs text-muted-foreground">No milestones published.</p>}
                     </div>
+
+                    <div className="mt-5 border-t border-border/60 pt-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground"><FileText className="size-3.5" /> Client documents</p>
+                        <span className="text-[10px] text-muted-foreground">{project.documents.length} published</span>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {project.documents.map((document) => (
+                          <div key={document.id} className="flex items-start justify-between gap-3 rounded-xl border border-border/60 p-3">
+                            <div className="min-w-0">
+                              <a href={document.url} target="_blank" rel="noreferrer" className="text-sm font-medium hover:text-amber-600 hover:underline">{document.title}</a>
+                              {document.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{document.description}</p>}
+                              <p className="mt-1 text-[10px] text-muted-foreground">{pretty(document.category)} · {document.visibleToClient ? 'Visible to client' : 'Internal'}</p>
+                            </div>
+                            <Button type="button" size="icon" variant="ghost" onClick={() => void deleteDocument(document.id)} aria-label="Remove document">
+                              <Trash2 className="size-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                      <form onSubmit={(event) => void createDocument(event, project.id)} className="mt-3 grid gap-2 lg:grid-cols-2">
+                        <Input
+                          required
+                          placeholder="Document title"
+                          value={documentForms[project.id]?.title || ''}
+                          onChange={(event) => setDocumentForms((current) => ({ ...current, [project.id]: { ...(current[project.id] || { url: '', description: '', category: 'document' }), title: event.target.value } }))}
+                        />
+                        <Input
+                          required
+                          placeholder="https://… or /files/…"
+                          value={documentForms[project.id]?.url || ''}
+                          onChange={(event) => setDocumentForms((current) => ({ ...current, [project.id]: { ...(current[project.id] || { title: '', description: '', category: 'document' }), url: event.target.value } }))}
+                        />
+                        <Input
+                          placeholder="Category (document, invoice, guide…)"
+                          value={documentForms[project.id]?.category || 'document'}
+                          onChange={(event) => setDocumentForms((current) => ({ ...current, [project.id]: { ...(current[project.id] || { title: '', url: '', description: '' }), category: event.target.value } }))}
+                        />
+                        <Input
+                          placeholder="Short description"
+                          value={documentForms[project.id]?.description || ''}
+                          onChange={(event) => setDocumentForms((current) => ({ ...current, [project.id]: { ...(current[project.id] || { title: '', url: '', category: 'document' }), description: event.target.value } }))}
+                        />
+                        <Button disabled={saving} variant="outline" className="lg:col-span-2"><Plus className="mr-2 size-4" /> Publish document link</Button>
+                      </form>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -558,9 +644,34 @@ export default function AdminClients() {
                 {selected.tickets.map((ticket) => (
                   <div key={ticket.id} className="rounded-xl border border-border/60 p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div><p className="text-sm font-semibold">{ticket.subject}</p><p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{ticket.message}</p></div>
+                      <div>
+                        <p className="text-sm font-semibold">{ticket.subject}</p>
+                        <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{ticket.message}</p>
+                        <p className="mt-2 text-[10px] text-muted-foreground">{pretty(ticket.priority)} priority · opened {new Date(ticket.createdAt).toLocaleString()}</p>
+                      </div>
                       <select className="h-9 rounded-md border border-input bg-background px-2 text-xs" value={ticket.status} onChange={(e) => void patchTicket(ticket.id, e.target.value)}><option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select>
                     </div>
+                    {ticket.messages.length > 0 && (
+                      <div className="mt-3 space-y-2 border-t border-border/60 pt-3">
+                        {ticket.messages.map((message) => (
+                          <div key={message.id} className={message.authorType === 'admin' ? 'mr-8 rounded-xl bg-amber-50 p-3 dark:bg-amber-950/20' : 'ml-8 rounded-xl bg-muted/50 p-3'}>
+                            <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                              <span>{message.authorName} · {message.authorType === 'admin' ? 'Lightworld' : 'Client'}</span>
+                              <span>{new Date(message.createdAt).toLocaleString()}</span>
+                            </div>
+                            <p className="mt-1 whitespace-pre-wrap text-xs leading-5">{message.message}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {ticket.status !== 'closed' && (
+                      <div className="mt-3 flex gap-2">
+                        <Input value={ticketReplies[ticket.id] || ''} onChange={(event) => setTicketReplies((current) => ({ ...current, [ticket.id]: event.target.value }))} placeholder="Reply as Lightworld…" />
+                        <Button type="button" size="icon" disabled={saving || !(ticketReplies[ticket.id] || '').trim()} onClick={() => void replyTicket(ticket.id)} aria-label="Send support reply">
+                          {saving ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {!selected.tickets.length && <p className="text-xs text-muted-foreground">No support tickets yet.</p>}
