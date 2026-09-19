@@ -5,6 +5,7 @@ import PublicShell from '@/components/layout/PublicShell';
 import BlogDetailPage from '@/components/pages/BlogDetailPage';
 import { JsonLd } from '@/components/ui/json-ld';
 import { db } from '@/lib/db';
+import { getSeoConfig, seoAbsoluteUrl } from '@/lib/seo-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPublishedPost(slug);
+  const [post, seo] = await Promise.all([getPublishedPost(slug), getSeoConfig()]);
 
   if (!post) {
     return {
@@ -31,6 +32,7 @@ export async function generateMetadata({
   }
 
   const canonical = '/blog/' + post.slug;
+  const image = post.coverImage ? seoAbsoluteUrl(seo, post.coverImage) : seo.ogImage;
 
   return {
     title: post.title,
@@ -41,17 +43,19 @@ export async function generateMetadata({
       title: post.title,
       description: post.excerpt,
       type: 'article',
-      url: canonical,
+      url: seoAbsoluteUrl(seo, canonical),
+      siteName: seo.siteName,
+      locale: seo.locale,
       publishedTime: post.createdAt.toISOString(),
       modifiedTime: post.updatedAt.toISOString(),
       authors: [post.author],
-      images: post.coverImage ? [{ url: post.coverImage, alt: post.title }] : undefined,
+      images: [{ url: image, alt: post.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
-      images: post.coverImage ? [post.coverImage] : undefined,
+      images: [image],
     },
   };
 }
@@ -62,7 +66,7 @@ export default async function BlogArticle({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await getPublishedPost(slug);
+  const [post, seo] = await Promise.all([getPublishedPost(slug), getSeoConfig()]);
 
   if (!post) notFound();
 
@@ -79,25 +83,23 @@ export default async function BlogArticle({
     description: post.excerpt,
     datePublished: post.createdAt.toISOString(),
     dateModified: post.updatedAt.toISOString(),
-    mainEntityOfPage: 'https://www.lightworldtech.com/blog/' + post.slug,
+    mainEntityOfPage: seoAbsoluteUrl(seo, '/blog/' + post.slug),
     author: {
       '@type': 'Organization',
       name: post.author || 'Lightworld Technologies',
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Lightworld Technologies Ltd',
+      name: seo.legalName,
       logo: {
         '@type': 'ImageObject',
-        url: 'https://www.lightworldtech.com/logo.png',
+        url: seo.logoUrl,
       },
     },
   };
 
   if (post.coverImage) {
-    articleSchema.image = post.coverImage.startsWith('http')
-      ? post.coverImage
-      : 'https://www.lightworldtech.com' + post.coverImage;
+    articleSchema.image = seoAbsoluteUrl(seo, post.coverImage);
   }
 
   return (
