@@ -66,10 +66,18 @@ export function resolveClientActivationOrigin(options: {
   return production ? PRODUCTION_CLIENT_PORTAL_ORIGIN : 'http://localhost:3000';
 }
 
-export function clientActivationUrl(token: string, requestOrigin?: string): string {
+export function clientActivationUrl(
+  token: string,
+  requestOrigin?: string,
+  options: { configuredOrigin?: string; environment?: string } = {},
+): string {
   const url = new URL(
     '/client/activate',
-    resolveClientActivationOrigin({ requestOrigin }),
+    resolveClientActivationOrigin({
+      requestOrigin,
+      configuredOrigin: options.configuredOrigin,
+      environment: options.environment,
+    }),
   );
   url.searchParams.set('token', token);
   return url.toString();
