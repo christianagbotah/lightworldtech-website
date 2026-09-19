@@ -6,7 +6,7 @@ import { MessageCircle, X, Clock, Shield, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const whatsappNumber = '233243618186';
-const whatsappMessage = encodeURIComponent('Hello Lightworld Technologies! I would like to inquire about your services.');
+const whatsappMessage = encodeURIComponent('Hello Lightworld Technologies Ltd! I would like to inquire about your services.');
 
 export default function WhatsAppButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,7 +37,7 @@ export default function WhatsAppButton() {
               </div>
               <div>
                 <h4 className="font-semibold text-sm text-foreground">Chat with us</h4>
-                <p className="text-xs text-emerald-600 dark:text-amber-400">Lightworld Technologies</p>
+                <p className="text-xs text-emerald-600 dark:text-amber-400">Lightworld Technologies Ltd</p>
               </div>
             </div>
 
