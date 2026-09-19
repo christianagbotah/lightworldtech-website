@@ -15,11 +15,16 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-function clearCookie(response: NextResponse) {
+function secureCookie(request: NextRequest): boolean {
+  const host = request.nextUrl.hostname;
+  return process.env.NODE_ENV === 'production' && host !== 'localhost' && host !== '127.0.0.1';
+}
+
+function clearCookie(response: NextResponse, request: NextRequest) {
   response.cookies.set(CLIENT_SESSION_COOKIE, '', {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: secureCookie(request),
     path: '/',
     maxAge: 0,
   });
@@ -72,7 +77,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set(CLIENT_SESSION_COOKIE, token, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: secureCookie(request),
       path: '/',
       maxAge: CLIENT_SESSION_MAX_AGE,
     });
@@ -95,15 +100,15 @@ export async function GET(request: NextRequest) {
 
   if (!client) {
     const response = NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    clearCookie(response);
+    clearCookie(response, request);
     return response;
   }
 
   return NextResponse.json({ success: true, data: client });
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   const response = NextResponse.json({ success: true });
-  clearCookie(response);
+  clearCookie(response, request);
   return response;
 }
