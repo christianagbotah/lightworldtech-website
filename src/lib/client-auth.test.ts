@@ -50,6 +50,7 @@ describe('client portal session security', () => {
       email: 'admin@example.com',
       name: 'Admin',
       role: 'admin',
+      authVersion: 0,
     });
 
     expect(verifyClientSessionToken(adminToken)).toBeNull();
