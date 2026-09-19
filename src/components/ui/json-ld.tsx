@@ -1,3 +1,5 @@
+import type { SeoConfig } from '@/lib/seo-config';
+
 interface JsonLdProps {
   data: Record<string, unknown>;
 }
@@ -6,43 +8,35 @@ export function JsonLd({ data }: JsonLdProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }}
     />
   );
 }
 
-const SITE_URL = 'https://www.lightworldtech.com';
-const LOGO_URL = SITE_URL + '/logo.png';
-
-export function OrganizationJsonLd() {
-  const data = {
+export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
+  const data: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Lightworld Technologies Ltd',
-    alternateName: 'Lightworld Technologies',
-    url: SITE_URL,
-    logo: LOGO_URL,
-    description:
-      'Technology company in Ghana building websites, mobile applications, enterprise software, AI-enabled workflows and cloud solutions, with IT training and technology consultancy.',
+    name: config.legalName,
+    alternateName: config.siteName,
+    url: config.siteUrl,
+    logo: config.logoUrl,
+    description: config.description,
     address: {
       '@type': 'PostalAddress',
-      addressLocality: 'Accra',
-      addressRegion: 'Greater Accra',
-      addressCountry: 'GH',
+      streetAddress: config.address,
+      addressLocality: config.city,
+      addressRegion: config.region,
+      addressCountry: config.countryCode,
     },
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+233-24-361-8186',
+      telephone: config.phone,
       contactType: 'sales and customer service',
-      email: 'mail@lightworldtech.com',
+      email: config.contactEmail,
       availableLanguage: ['English'],
     },
-    sameAs: [
-      'https://facebook.com/lightworldtechnologies',
-      'https://x.com/lightworldtech',
-      'https://linkedin.com/company/lightworldtechnologies',
-      'https://instagram.com/lightworldtechnologies',
-    ],
+    sameAs: config.socialUrls,
     knowsAbout: [
       'Software development',
       'Web development',
@@ -64,20 +58,19 @@ export function OrganizationJsonLd() {
   return <JsonLd data={data} />;
 }
 
-export function WebSiteJsonLd() {
+export function WebSiteJsonLd({ config }: { config: SeoConfig }) {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Lightworld Technologies',
-    url: SITE_URL,
-    description:
-      'Software engineering, websites, mobile apps, enterprise systems, AI automation, cloud solutions, IT training and technology consultancy.',
+    name: config.siteName,
+    url: config.siteUrl,
+    description: config.description,
     publisher: {
       '@type': 'Organization',
-      name: 'Lightworld Technologies Ltd',
+      name: config.legalName,
       logo: {
         '@type': 'ImageObject',
-        url: LOGO_URL,
+        url: config.logoUrl,
       },
     },
     inLanguage: 'en',

@@ -13,6 +13,7 @@ import {
 import PublicShell from '@/components/layout/PublicShell';
 import { contentJson, contentText } from '@/lib/site-content';
 import { getSiteSettings } from '@/lib/site-content-server';
+import { buildPageMetadata, buildSeoConfig } from '@/lib/seo-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,12 +46,11 @@ export async function generateMetadata(): Promise<Metadata> {
     'seo_trust_description',
     'Review Lightworld Technologies Ltd security, privacy, reliable-delivery and responsible-AI practices.',
   );
-  return {
+  return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,
-    alternates: { canonical: '/trust' },
-    openGraph: { title, description, url: '/trust' },
-  };
+    path: '/trust',
+  });
 }
 
 export default async function TrustPage() {

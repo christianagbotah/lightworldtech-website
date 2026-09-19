@@ -66,6 +66,7 @@ Verify:
 
 - `/`, `/services`, `/portfolio`, `/products`, `/blog`, `/careers`, and `/contact`
 - `/sitemap.xml`, `/robots.txt`, and `/manifest.webmanifest`
+- page source/meta inspection for canonical URL, Open Graph/Twitter image, organization JSON-LD and configured Google/Bing verification tags
 - public contact and newsletter submissions
 - `/admin` → `Newsletter & Mail`, including transport diagnostics and a test message to an address you control
 - `/admin` → `Campaign Studio`: create a draft, send a test, mark it Ready, and verify a bounded batch in a non-production subscriber list
@@ -214,3 +215,23 @@ Governance safeguards enforced server-side:
 - password values are never returned by governance APIs or stored in audit details.
 
 This release intentionally introduces only two administrator roles: `admin` and `super_admin`. It does not claim fine-grained per-feature RBAC for every CMS route yet. Existing ordinary admins retain the operating access they had before Phase 10, while super-admin-only account governance is separated and auditable.
+
+
+## Phase 11 SEO and brand discovery
+
+Phase 11 does not require a database schema migration. It turns the existing `SiteSetting` records into the source of truth for global brand discovery and page-level SEO.
+
+Manage these values from **Admin → Settings → SEO & Brand Discovery / Page SEO**. The implementation now drives:
+
+- canonical site origin used by global metadata, sitemap and robots output;
+- default title, description and keyword metadata;
+- Open Graph and Twitter/X large-image previews;
+- default organization logo and social-preview image;
+- Google and Bing site-verification metadata;
+- organization/WebSite JSON-LD identity, contact and social-profile fields;
+- page-level metadata for Home, Services, About, Portfolio, Products, Contact, Team, Careers, Trust Center, Newsroom and Blog;
+- article metadata and publisher JSON-LD for published blog posts, including fallback social imagery.
+
+Keep `seo_site_url` as the production canonical origin including `https://`, for example `https://www.lightworldtech.com`. Invalid or missing values fall back safely to the verified production origin. If the CMS database is temporarily unavailable, public metadata also falls back to built-in verified values rather than failing the site.
+
+After deployment, save one harmless SEO-field change in a non-production/UAT environment and verify the rendered `<head>`, `/sitemap.xml`, `/robots.txt`, a social-preview debugger, and one published blog article before changing production search-verification tokens.

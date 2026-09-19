@@ -3,6 +3,7 @@ import PublicShell from '@/components/layout/PublicShell';
 import ServicesPage from '@/components/pages/ServicesPage';
 import { contentText } from '@/lib/site-content';
 import { getSiteSettings } from '@/lib/site-content-server';
+import { buildPageMetadata, buildSeoConfig } from '@/lib/seo-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,12 +11,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
   const title = contentText(settings, 'seo_services_title', 'Software, App, Web & IT Services');
   const description = contentText(settings, 'seo_services_description', 'Explore web development, mobile apps, enterprise software, AI automation, cloud and DevOps, security engineering, SEO, IT training and consultancy from Lightworld Technologies.');
-  return {
+  return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,
-    alternates: { canonical: '/services' },
-    openGraph: { title, description, url: '/services' },
-  };
+    path: '/services',
+  });
 }
 
 export default async function Services() {

@@ -1,10 +1,12 @@
 import type { MetadataRoute } from 'next';
 import { db } from '@/lib/db';
+import { getSeoConfig } from '@/lib/seo-config';
 
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = 'https://www.lightworldtech.com';
+  const seo = await getSeoConfig();
+  const base = seo.siteUrl;
   const now = new Date();
 
   const core: MetadataRoute.Sitemap = [
