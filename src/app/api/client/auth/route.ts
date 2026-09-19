@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     where: { id: session.sub },
     include: { organization: true },
   });
-  if (!user || !user.active || user.organization.status !== 'active' || user.organizationId !== session.organizationId) {
+  if (!user || !user.active || user.mustSetPassword || user.organization.status !== 'active' || user.organizationId !== session.organizationId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
