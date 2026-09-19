@@ -79,7 +79,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
       trackEvent('newsletter_subscribe');
       toast.success('You’re on the list.', {
         description: payload?.emailSent
-          ? 'Check your inbox for a confirmation from Lightworld Technologies.'
+          ? 'Check your inbox for a confirmation from Lightworld Technologies Ltd.'
           : 'Subscription saved. Email confirmation may be delayed.',
       });
     } catch {
@@ -104,7 +104,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
                 <Image src="/logo.png" alt="" width={38} height={38} />
               </span>
               <span>
-                <span className="block text-base font-bold tracking-[-0.02em]">Lightworld Technologies</span>
+                <span className="block text-base font-bold tracking-[-0.02em]">Lightworld Technologies Ltd</span>
                 <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.24em] text-emerald-300/70">{tagline}</span>
               </span>
             </Link>
