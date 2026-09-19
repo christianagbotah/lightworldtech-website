@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
   const title = contentText(settings, 'seo_contact_title', 'Contact & Start a Project');
-  const description = contentText(settings, 'seo_contact_description', 'Talk to Lightworld Technologies about a website, mobile app, enterprise system, AI workflow, IT training, cloud project or technology consultancy.');
+  const description = contentText(settings, 'seo_contact_description', 'Talk to Lightworld Technologies Ltd about a website, mobile app, enterprise system, AI workflow, IT training, cloud project or technology consultancy.');
   return {
     title,
     description,
