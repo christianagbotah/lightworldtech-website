@@ -31,7 +31,7 @@ import { z } from 'zod';
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 const defaultTestimonials = [
-  { id: '1', name: 'Rev. Samuel Owusu', company: 'Grace Tabernacle Church', role: 'Senior Pastor', rating: 5, content: 'Lightworld Technologies transformed our online presence completely. Their team delivered a stunning website with live streaming and donation integration. Professional and exceptional.' },
+  { id: '1', name: 'Rev. Samuel Owusu', company: 'Grace Tabernacle Church', role: 'Senior Pastor', rating: 5, content: 'Lightworld Technologies Ltd transformed our online presence completely. Their team delivered a stunning website with live streaming and donation integration. Professional and exceptional.' },
   { id: '2', name: 'Beatrice Ofori', company: 'EduPrime Academy', role: 'Director', rating: 5, content: 'The school management system they built has streamlined our operations significantly. From enrollment to grades, everything is now automated and efficient. Highly recommended!' },
   { id: '3', name: 'Kwabena Danso', company: 'FreshBite Restaurant', role: 'Owner', rating: 5, content: 'Our e-commerce food ordering platform is amazing! Customers can order and pay online. Our revenue has increased by 40% since launching.' },
   { id: '4', name: 'Ama Boateng', company: 'Premier Hotels', role: 'General Manager', rating: 5, content: 'The booking system developed by Lightworld is seamless. Guests can book rooms and make payments online. Excellent service and support!' },
@@ -181,7 +181,7 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                     Share Your Experience
                   </DialogTitle>
                   <DialogDescription className="text-amber-100 text-sm">
-                    Tell us about your experience working with Lightworld Technologies.
+                    Tell us about your experience working with Lightworld Technologies Ltd.
                   </DialogDescription>
                 </DialogHeader>
               </div>
