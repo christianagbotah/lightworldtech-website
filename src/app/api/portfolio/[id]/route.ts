@@ -11,7 +11,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const adminRequest = isAdminRequest(request);
+    const adminRequest = await isAdminRequest(request);
     const project = adminRequest
       ? await db.portfolioProject.findUnique({ where: { id } })
       : await db.portfolioProject.findFirst({ where: { id, active: true } });
