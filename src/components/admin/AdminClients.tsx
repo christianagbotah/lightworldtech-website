@@ -260,13 +260,22 @@ export default function AdminClients() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ['Organizations', counts.organizations, Building2],
-          ['Portal users', counts.users, Users],
-          ['Projects', counts.projects, FolderKanban],
-          ['Open tickets', counts.openTickets, LifeBuoy],
-        ].map(([label, value, Icon]) => (
-          <Card key={String(label)} className="border-border/60"><CardContent className="p-5"><Icon className="size-4 text-amber-600" /><p className="mt-4 text-2xl font-bold">{value as number}</p><p className="text-xs text-muted-foreground">{String(label)}</p></CardContent></Card>
-        ))}
+          { label: 'Organizations', value: counts.organizations, icon: Building2 },
+          { label: 'Portal users', value: counts.users, icon: Users },
+          { label: 'Projects', value: counts.projects, icon: FolderKanban },
+          { label: 'Open tickets', value: counts.openTickets, icon: LifeBuoy },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.label} className="border-border/60">
+              <CardContent className="p-5">
+                <Icon className="size-4 text-amber-600" />
+                <p className="mt-4 text-2xl font-bold">{item.value}</p>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <Card className="border-border/60">
