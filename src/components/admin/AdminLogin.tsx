@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, Loader2, Eye, EyeOff, Shield, Zap, Globe, Code, Users } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, Eye, EyeOff, Shield, Zap, Globe, Code, Users, KeyRound } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,9 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +48,32 @@ export default function AdminLogin() {
       toast.error('Network error', { description: 'Please check your connection.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setResetMessage('');
+    setError('');
+
+    try {
+      const res = await fetch('/api/admin/password-reset/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      const message =
+        data.message ||
+        'If an active administrator uses that email, a password reset link has been sent.';
+      setResetMessage(message);
+      toast.success('Reset request received', { description: message });
+    } catch {
+      setError('Unable to request a password reset right now.');
+      toast.error('Reset request failed');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -289,6 +318,57 @@ export default function AdminLogin() {
                   )}
                 </Button>
               </form>
+
+              <div className="mt-5 border-t pt-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetMode((value) => !value);
+                    setResetMessage('');
+                    setError('');
+                  }}
+                  className="mx-auto flex items-center gap-2 text-sm font-medium text-amber-600 hover:text-amber-500"
+                >
+                  <KeyRound className="size-4" />
+                  {resetMode ? 'Back to sign in' : 'Forgot password?'}
+                </button>
+
+                {resetMode && (
+                  <form onSubmit={handleResetRequest} className="mt-4 space-y-3">
+                    <p className="text-xs leading-5 text-muted-foreground">
+                      Enter your administrator email. If it is active, we will email a secure one-time reset link.
+                    </p>
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="admin@company.com"
+                      required
+                      autoComplete="email"
+                    />
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      disabled={resetLoading}
+                      className="w-full"
+                    >
+                      {resetLoading ? (
+                        <>
+                          <Loader2 className="mr-2 size-4 animate-spin" />
+                          Sending reset link...
+                        </>
+                      ) : (
+                        'Send reset link'
+                      )}
+                    </Button>
+                    {resetMessage && (
+                      <p className="rounded-lg bg-emerald-50 p-3 text-xs leading-5 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+                        {resetMessage}
+                      </p>
+                    )}
+                  </form>
+                )}
+              </div>
 </CardContent>
           </Card>
 
