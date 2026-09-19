@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   Building2,
   CalendarClock,
+  Copy,
   FolderKanban,
   KeyRound,
   LifeBuoy,
@@ -23,7 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 type PortalUser = {
   id: string; name: string; email: string; role: string; active: boolean;
-  lastLogin: string | null; createdAt: string;
+  lastLogin: string | null; mustSetPassword: boolean; inviteExpiresAt: string | null; createdAt: string;
 };
 type Milestone = {
   id: string; title: string; description: string; status: string; order: number;
@@ -54,10 +55,10 @@ export default function AdminClients() {
   const [selectedId, setSelectedId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
+  const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
 
   const [orgForm, setOrgForm] = useState({ name: '', primaryContactName: '', primaryEmail: '', primaryPhone: '' });
-  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', role: 'client_admin' });
+  const [userForm, setUserForm] = useState({ name: '', email: '', role: 'client_admin' });
   const [projectForm, setProjectForm] = useState({ name: '', summary: '', manager: '', targetDate: '' });
   const [milestoneForm, setMilestoneForm] = useState({ projectId: '', title: '', dueDate: '' });
 
@@ -106,21 +107,27 @@ export default function AdminClients() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Could not update portal user');
+      if (payload?.activationUrl) {
+        setActivationLinks((current) => ({ ...current, [id]: String(payload.activationUrl) }));
+      }
       await fetchOrganizations();
       if (success) toast.success(success);
+      return payload;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update portal user');
+      return null;
     }
   };
 
-  const resetUserPassword = async (id: string) => {
-    const password = resetPasswords[id] || '';
-    if (password.length < 10) {
-      toast.error('New password must be at least 10 characters');
-      return;
-    }
-    await patchUser(id, { password }, 'Portal password reset');
-    setResetPasswords((current) => ({ ...current, [id]: '' }));
+  const regenerateInvite = async (id: string) => {
+    await patchUser(id, { regenerateInvite: true }, 'New activation link generated');
+  };
+
+  const copyActivationLink = async (id: string) => {
+    const url = activationLinks[id];
+    if (!url) return;
+    await navigator.clipboard.writeText(url);
+    toast.success('Activation link copied');
   };
 
   const createOrganization = async (event: FormEvent) => {
@@ -151,9 +158,12 @@ export default function AdminClients() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Could not create portal user');
-      setUserForm({ name: '', email: '', password: '', role: 'client_admin' });
+      setUserForm({ name: '', email: '', role: 'client_admin' });
+      if (payload?.activationUrl && payload?.data?.id) {
+        setActivationLinks((current) => ({ ...current, [payload.data.id]: String(payload.activationUrl) }));
+      }
       await fetchOrganizations();
-      toast.success('Portal user provisioned');
+      toast.success('Portal user provisioned — share the activation link securely');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not create portal user');
     } finally { setSaving(false); }
@@ -332,7 +342,10 @@ export default function AdminClients() {
                             <p className="text-xs text-muted-foreground">{user.email}</p>
                             <p className="mt-1 text-[10px] text-muted-foreground">{user.lastLogin ? 'Last login ' + new Date(user.lastLogin).toLocaleString() : 'Never signed in'}</p>
                           </div>
-                          <Badge variant="outline">{user.active ? 'Active' : 'Revoked'}</Badge>
+                          <div className="flex flex-wrap gap-1">
+                            <Badge variant="outline">{user.active ? 'Active' : 'Revoked'}</Badge>
+                            {user.mustSetPassword && <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">Activation pending</Badge>}
+                          </div>
                         </div>
                         <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
                           <select
@@ -347,17 +360,21 @@ export default function AdminClients() {
                             {user.active ? 'Revoke access' : 'Restore access'}
                           </Button>
                         </div>
-                        <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
-                          <Input
-                            type="password"
-                            minLength={10}
-                            placeholder="New password (10+ chars)"
-                            value={resetPasswords[user.id] || ''}
-                            onChange={(event) => setResetPasswords((current) => ({ ...current, [user.id]: event.target.value }))}
-                          />
-                          <Button type="button" size="sm" variant="outline" onClick={() => void resetUserPassword(user.id)}>
-                            Reset password
+                        <div className="mt-2 space-y-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => void regenerateInvite(user.id)}>
+                            <KeyRound className="mr-2 size-3.5" /> {user.mustSetPassword ? 'Generate new activation link' : 'Generate reset link'}
                           </Button>
+                          {activationLinks[user.id] && (
+                            <div className="flex gap-2">
+                              <Input readOnly value={activationLinks[user.id]} className="h-9 text-xs" />
+                              <Button type="button" size="icon" variant="outline" onClick={() => void copyActivationLink(user.id)} aria-label="Copy activation link">
+                                <Copy className="size-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                          {user.mustSetPassword && user.inviteExpiresAt && (
+                            <p className="text-[10px] text-muted-foreground">Current activation window expires {new Date(user.inviteExpiresAt).toLocaleString()}.</p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -366,9 +383,9 @@ export default function AdminClients() {
                   <form onSubmit={createUser} className="mt-4 space-y-3 border-t border-border/60 pt-4">
                     <p className="text-sm font-semibold">Provision user</p>
                     <div className="grid gap-3 sm:grid-cols-2"><Input required placeholder="Name" value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} /><Input required type="email" placeholder="Email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} /></div>
-                    <div className="grid gap-3 sm:grid-cols-2"><Input required minLength={10} type="password" placeholder="Initial password (10+ chars)" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} /><select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="client_admin">Client admin</option><option value="client_member">Client member</option></select></div>
-                    <Button disabled={saving} variant="outline"><KeyRound className="mr-2 size-4" /> Provision account</Button>
-                    <p className="text-[10px] text-muted-foreground">Share initial credentials through an appropriate secure channel; the password is never returned by the API.</p>
+                    <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="client_admin">Client admin</option><option value="client_member">Client member</option></select>
+                    <Button disabled={saving} variant="outline"><KeyRound className="mr-2 size-4" /> Provision & generate activation link</Button>
+                    <p className="text-[10px] text-muted-foreground">Lightworld never sets the client’s password. The API returns a one-time activation URL that expires after 7 days.</p>
                   </form>
                 </div>
 
