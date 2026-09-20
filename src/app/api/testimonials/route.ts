@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('active');
 
-    const adminRequest = isAdminRequest(request);
+    const adminRequest = await isAdminRequest(request);
     const testimonials = await db.testimonial.findMany({
       where: !adminRequest || activeOnly === 'true' ? { active: true } : undefined,
       orderBy: { order: 'asc' },
