@@ -112,6 +112,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'header_services_link', label: 'Services menu landing link', type: 'url', defaultValue: '/services' },
       { key: 'header_services_footer_text', label: 'Services menu footer text', type: 'text', defaultValue: 'Explore every capability' },
       { key: 'header_company_label', label: 'Company menu label', type: 'text', defaultValue: 'Company' },
+      { key: 'header_company_link', label: 'Company menu landing link', type: 'url', defaultValue: '/about' },
       {
         key: 'header_service_menu',
         label: 'Header — Services menu',
