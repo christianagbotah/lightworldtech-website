@@ -37,7 +37,7 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        loginAdmin(data.data.name || 'Admin', data.data.role || 'admin');
+        loginAdmin(data.data.name || 'Admin', data.data.role || 'admin', Array.isArray(data.data.permissions) ? data.data.permissions : []);
         toast.success('Welcome back!', { description: 'Logged in successfully.' });
         // Reload after authentication so tabs opened before a deployment cannot
         // continue running stale admin JavaScript.
