@@ -15,6 +15,7 @@ This document captures the minimum production requirements for the Lightworld Te
 - `SMTP_REQUIRE_TLS` — defaults to `true` for non-implicit-TLS SMTP connections. Do not disable it when authentication is used.
 - `MAIL_FROM` / `MAIL_REPLY_TO` — optional sender identity overrides. Defaults remain the Lightworld Technologies business mailbox.
 - `NEWSLETTER_UNSUBSCRIBE_SECRET` — recommended dedicated high-entropy HMAC secret for signed unsubscribe links. If omitted, the application falls back to the admin/session secret.
+- `UPLOAD_DIR` — persistent filesystem location for CMS uploads. Production must point this outside immutable release directories, for example `/home/lightworld/shared/lightworldtech/uploads`.
 
 Generate the session secret with a cryptographically secure random generator and keep it outside the repository.
 
@@ -41,14 +42,7 @@ The production Next.js configuration does not ignore TypeScript build failures.
 ```bash
 bun install --frozen-lockfile
 bunx prisma generate
-# Apply the idempotent Phase 3 analytics table/index upgrade.
-bun run db:phase3
-bun run db:phase4
-bun run db:phase6
-bun run db:phase7
-bun run db:phase8
-bun run db:phase9
-bun run db:phase10
+bun run db:deploy
 bun run build
 ```
 
@@ -252,3 +246,22 @@ bun run db:deploy
 The old `db:phase3` through `db:phase13` scripts are retained only as historical/legacy SQLite upgrade material. **Do not run them against PostgreSQL.**
 
 Before the one-time cutover, preserve both the final SQLite file and a PostgreSQL custom-format dump. Validate all table counts, primary IDs and row content before switching the production `DATABASE_URL`. Keep the final SQLite database as a rollback artifact until PostgreSQL operation is proven stable.
+
+
+## Phase 15 persistent CMS uploads
+
+Production uploads must never be written into an immutable release directory. Configure:
+
+```bash
+UPLOAD_DIR=/home/lightworld/shared/lightworldtech/uploads
+```
+
+The admin image upload API accepts only authenticated administrator requests, enforces a 5 MB maximum, validates JPG/PNG/GIF/WebP from file signatures, generates random filenames, and stores the bytes in `UPLOAD_DIR`. Uploaded images are served through `/uploads/<random-filename>` with a strict filename allowlist, explicit content type, `nosniff`, and immutable caching.
+
+Create the shared directory before switching a release:
+
+```bash
+install -d -m 0750 /home/lightworld/shared/lightworldtech/uploads
+```
+
+Do not restore the old `public/uploads` release-local write pattern. Files under `UPLOAD_DIR` survive release pruning and normal deployments.
