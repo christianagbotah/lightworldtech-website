@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -46,7 +46,7 @@ function FooterNavLink({
 }: {
   href: string;
   className: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   if (href.startsWith('/')) {
     return <Link href={href} className={className}>{children}</Link>;
