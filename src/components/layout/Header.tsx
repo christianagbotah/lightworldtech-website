@@ -115,11 +115,12 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
   const servicesLink = safeNavigationHref(contentText(settings, 'header_services_link', '/services'), '/services');
   const servicesFooterText = contentText(settings, 'header_services_footer_text', 'Explore every capability');
   const companyLabel = contentText(settings, 'header_company_label', 'Company');
+  const companyLink = safeNavigationHref(contentText(settings, 'header_company_link', '/about'), '/about');
   const headerCtaText = contentText(settings, 'header_cta_text', 'Start a project');
   const headerCtaLink = safeNavigationHref(contentText(settings, 'header_cta_link', '/contact'), '/contact');
   const mobileExplore = [
     { label: 'Home', href: '/' },
-    { label: 'Services', href: '/services' },
+    { label: servicesLabel, href: servicesLink },
     ...primaryNav,
     ...companyMenu.map((item) => ({ label: item.title, href: item.href })),
   ].filter((item, index, items) => items.findIndex((candidate) => candidate.href === item.href) === index);
@@ -161,7 +162,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                 href={servicesLink}
                 className={cn(
                   'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition',
-                  active('/services')
+                  active(servicesLink)
                     ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
                 )}
@@ -219,14 +220,14 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
 
             <div className="group relative">
               <Link
-                href="/about"
+                href={companyLink}
                 className={cn(
                   'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition',
                   companyActive
                     ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
                 )}
-                aria-current={active('/about') ? 'page' : undefined}
+                aria-current={active(companyLink) ? 'page' : undefined}
               >
                 {companyLabel}
                 <ChevronDown className="size-3.5 opacity-45 transition-transform group-hover:rotate-180" />
