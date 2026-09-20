@@ -28,6 +28,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { useAppStore } from '@/lib/store';
+import { hasAdminPermission } from '@/lib/admin-permissions';
 
 type ProposalStatus = 'draft' | 'review' | 'ready' | 'sent' | 'accepted' | 'declined';
 
@@ -114,6 +116,8 @@ function statusClass(status: ProposalStatus): string {
 }
 
 export default function AdminProposals() {
+  const { adminRole, adminPermissions } = useAppStore();
+  const canManageClients = hasAdminPermission(adminRole, adminPermissions, 'clients.manage');
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -227,7 +231,7 @@ export default function AdminProposals() {
   };
 
   const convertAcceptedProposal = async () => {
-    if (!selected || selected.status !== 'accepted') return;
+    if (!canManageClients || !selected || selected.status !== 'accepted') return;
     setSaving(true);
     try {
       const response = await fetch('/api/admin/proposals/' + selected.id + '/convert-client', {
@@ -484,15 +488,15 @@ export default function AdminProposals() {
                       </div>
                       <p className="mt-2">{selected.clientProject.organization.name} · {selected.clientProject.name}</p>
                     </div>
-                  ) : selected.status === 'accepted' ? (
+                  ) : canManageClients && selected.status === 'accepted' ? (
                     <Button className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={saving} onClick={() => void convertAcceptedProposal()}>
                       <Building2 className="mr-2 size-4" /> Create client workspace
                     </Button>
-                  ) : (
+                  ) : canManageClients ? (
                     <p className="rounded-xl border border-dashed border-border p-3 text-[10px] leading-4 text-muted-foreground">
                       Mark the proposal Accepted before creating a client workspace.
                     </p>
-                  )}
+                  ) : null}
 
                   {activationLinks[selected.id] && (
                     <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/40 dark:bg-amber-950/30">
