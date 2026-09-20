@@ -30,21 +30,57 @@ Generate the session secret with a cryptographically secure random generator and
 
 The GitHub `Website Quality Gate` must pass before merging:
 
-1. locked Bun dependency install
-2. Prisma client generation
-3. TypeScript verification with `tsc --noEmit`
-4. Next.js production build
+1. production operations shell syntax validation
+2. locked Bun dependency install
+3. Prisma client generation
+4. PostgreSQL migration deployment against the CI database
+5. TypeScript verification with `tsc --noEmit`
+6. security and deterministic regression tests
+7. Next.js production build
 
 The production Next.js configuration does not ignore TypeScript build failures.
 
-## Suggested deployment sequence
+## Production release and promotion sequence
+
+Production runs the website as the dedicated Linux user `lightworld` under `pm2-lightworld.service`. Do not deploy it through root's PM2 home.
+
+Build each GitHub SHA into an immutable release directory:
 
 ```bash
+SHA=<verified-main-sha>
+STAMP=$(date -u +%Y%m%d-%H%M%S)
+REL=/home/lightworld/releases/lightworldtech-${SHA:0:12}-${STAMP}
+
+git clone https://github.com/christianagbotah/lightworldtech-website.git "$REL"
+cd "$REL"
+git checkout "$SHA"
+ln -sfn /home/lightworld/shared/lightworldtech/.env .env
+
 bun install --frozen-lockfile
 bunx prisma generate
 bun run db:deploy
 bun run build
+
+ln -sfn /home/lightworld/shared/lightworldtech/.env .next/standalone/.env
+printf '%s\n' "$SHA" > .next/standalone/RELEASE_SHA
 ```
+
+Install/update the version-controlled production operations scripts when they change:
+
+```bash
+cd "$REL"
+sudo ./ops/install-production-ops.sh
+```
+
+Promote only through the shared promotion script:
+
+```bash
+sudo /home/lightworld/shared/lightworldtech/ops/promote-release.sh "$REL"
+```
+
+Promotion is serialized with an exclusive lock. Before port 3007 is touched, the release is started as `lightworld` on port 3017 and must pass route, unauthenticated admin/client-auth, and upload-boundary smoke checks. The verified previous live release is then protected by `/home/lightworld/webapps/lightworldtech-previous`. If the live switch or post-switch smoke checks fail, the script restores the previous release.
+
+The release-pruning job uses the same lock, so pruning cannot race a promotion. It preserves the current symlink target, rollback symlink target, any release whose working directory is still in use, and releases younger than the configured minimum age.
 
 If production seeding is explicitly required:
 
@@ -235,7 +271,7 @@ After deployment, save one harmless SEO-field change in a non-production/UAT env
 
 Phase 14 moves the website from SQLite to PostgreSQL. PostgreSQL is now the canonical production datastore for CMS, CRM, client portal, newsletter/campaign, analytics and admin-governance data.
 
-Production uses the dedicated database `lightworld_website_db` and role `lightworld_website_user` over the local PostgreSQL Unix socket. The VPS maps only the root-run website process to that role with a database-specific peer-auth rule, avoiding a stored database password.
+Production uses the dedicated database `lightworld_website_db` and role `lightworld_website_user` over the local PostgreSQL Unix socket. The VPS maps the dedicated `lightworld` application user to that database role with a database-specific peer-auth rule, avoiding a stored database password. The root mapping remains available only for controlled maintenance operations.
 
 The migration history starts at `20260919170000_postgresql_baseline`. Existing production PostgreSQL schema is baselined once with `prisma migrate resolve --applied 20260919170000_postgresql_baseline`; subsequent releases use:
 
@@ -265,3 +301,31 @@ install -d -m 0750 /home/lightworld/shared/lightworldtech/uploads
 ```
 
 Do not restore the old `public/uploads` release-local write pattern. Files under `UPLOAD_DIR` survive release pruning and normal deployments.
+
+
+## Phase 20 deployment safety and dedicated runtime
+
+Production deployment operations are version-controlled under `ops/` and installed into `/home/lightworld/shared/lightworldtech/ops`.
+
+Operational invariants:
+
+- the web process runs as the dedicated `lightworld` Linux user under `pm2-lightworld.service`;
+- root's PM2 home must not be used for the website;
+- `prepare-release-runtime.sh` verifies that `lightworld` can read the protected shared environment and write both the Next.js image cache and persistent upload directory;
+- `promote-release.sh` uses an exclusive deployment lock and proves a candidate on port 3017 before stopping the verified live server on port 3007;
+- the current release is captured as the rollback target before the live switch;
+- failed live promotion restores the verified previous release;
+- `prune-releases.sh` uses the same lock and cannot delete releases while a promotion is in progress;
+- release pruning never removes the current release, the rollback release, an in-use release, or a release younger than the configured minimum age;
+- `RELEASE_SHA` must identify the exact GitHub commit in every promoted standalone artifact.
+
+Service checks:
+
+```bash
+systemctl is-active pm2-lightworld.service
+sudo -u lightworld -H sh -lc 'cd /; pm2 describe lightworldtech'
+readlink -f /home/lightworld/webapps/lightworldtech
+cat /home/lightworld/webapps/lightworldtech/.next/standalone/RELEASE_SHA
+```
+
+After promotion, public `/admin` must remain `private, no-store`; unauthenticated `/api/admin/auth`, `/api/client/auth`, and `/api/upload` must return 401.
