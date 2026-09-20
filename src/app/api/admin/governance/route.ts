@@ -146,6 +146,7 @@ export async function POST(request: NextRequest) {
       details: {
         targetEmail: admin.email,
         targetRole: admin.role,
+        targetPermissions: normalizeAdminPermissions(admin.permissions),
       },
     });
 
