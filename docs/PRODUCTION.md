@@ -343,3 +343,26 @@ The regression suite enforces two invariants:
 - protected admin route files outside the intentional public login/password-recovery entrypoints may not call `getAdminSession(request)` directly.
 
 No database migration is required for Phase 22.
+
+
+## Phase 23 fine-grained administrator permissions
+
+Administrator access is now split into explicit capability areas rather than treating every ordinary admin as a full back-office operator:
+
+- `site.manage` — page content, settings, services, blog, team, testimonials, portfolio, FAQs and CMS uploads;
+- `crm.manage` — enquiries, CRM pipeline, follow-ups, messages and lead notes;
+- `proposals.manage` — proposal creation, review and editing;
+- `clients.manage` — client organizations, users, projects, documents, milestones, announcements and support;
+- `communications.manage` — newsletter subscribers, diagnostics and campaign management.
+
+Super-admins always have all capabilities. Existing ordinary administrators are backfilled with all five permissions by the PostgreSQL migration so Phase 23 is non-breaking; a super-admin can then reduce access deliberately in Admin Governance.
+
+Authorization is enforced against the live `Admin.permissions` value on protected API requests, not only by hiding sidebar links. Cross-module actions follow the same rule: CRM users without proposal access do not see proposal actions, and proposal users without Client Portal access do not see client-conversion controls. Dashboard queries and widgets are permission-scoped to avoid exposing data from modules an administrator cannot access.
+
+Changing an ordinary administrator's permission set increments `authVersion`, invalidating the target account's existing session. Permission assignments and changes are included in the governance audit trail.
+
+Deploy Phase 23 only after the PostgreSQL migration has been applied with:
+
+```bash
+bun run db:deploy
+```
