@@ -27,9 +27,9 @@ export default async function PublicShell({
         {children}
       </main>
       <Footer settings={resolvedSettings} />
-      <FloatingWidgets />
+      <FloatingWidgets settings={resolvedSettings} />
       <CookieConsent />
-      <CommandPalette />
+      <CommandPalette settings={resolvedSettings} />
     </div>
   );
 }
