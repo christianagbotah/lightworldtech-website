@@ -98,10 +98,10 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
   const footerCtaLink = safeNavigationHref(contentText(settings, 'footer_cta_link', '/contact'), '/contact');
 
   const socials = [
-    { icon: Linkedin, label: 'LinkedIn', href: settings.social_linkedin || '' },
-    { icon: Facebook, label: 'Facebook', href: settings.social_facebook || '' },
-    { icon: Instagram, label: 'Instagram', href: settings.social_instagram || '' },
-    { icon: Twitter, label: 'X', href: settings.social_twitter || '' },
+    { icon: Linkedin, label: 'LinkedIn', href: safeNavigationHref(settings.social_linkedin || '', '') },
+    { icon: Facebook, label: 'Facebook', href: safeNavigationHref(settings.social_facebook || '', '') },
+    { icon: Instagram, label: 'Instagram', href: safeNavigationHref(settings.social_instagram || '', '') },
+    { icon: Twitter, label: 'X', href: safeNavigationHref(settings.social_twitter || '', '') },
   ].filter((item) => item.href);
 
   const subscribe = async (event: FormEvent) => {
