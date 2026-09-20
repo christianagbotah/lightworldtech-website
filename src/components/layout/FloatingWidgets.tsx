@@ -21,12 +21,9 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics-client';
-
-// ─── WhatsApp Config ────────────────────────────────────────────────
-const whatsappNumber = '233243618186';
-const whatsappMessage = encodeURIComponent(
-  'Hello Lightworld Technologies! I would like to inquire about your services.'
-);
+import { contentText, type SiteSettings } from '@/lib/site-content';
+import { safeNavigationHref } from '@/lib/navigation-content';
+import { normalizeWhatsappNumber } from '@/lib/contact-content';
 
 // ─── LiveChat Config ────────────────────────────────────────────────
 interface ProjectScopeState {
@@ -49,13 +46,6 @@ interface ChatMessage {
   cta?: { label: string; href: string };
   projectBrief?: string;
 }
-
-const quickReplies = [
-  { label: 'Leadership', text: 'Who leads Lightworld Technologies?' },
-  { label: 'Services', text: 'What services does Lightworld offer?' },
-  { label: 'Awards', text: 'What awards has Lightworld won?' },
-  { label: 'Start a Project', text: 'How can I start a project with Lightworld?' },
-];
 
 const CHAT_STORAGE_KEY = 'lw-chat-history';
 const ASSISTANT_STATE_KEY = 'lw-assistant-state';
@@ -229,7 +219,22 @@ function BackToTopButton() {
 }
 
 // ─── Main FloatingWidgets Component ─────────────────────────────────
-export default function FloatingWidgets() {
+export default function FloatingWidgets({ settings = {} }: { settings?: SiteSettings }) {
+  const companyName = contentText(settings, 'company_name', 'Lightworld Technologies Ltd');
+  const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
+  const companyPhone = contentText(settings, 'company_phone1', '+233 (024) 361 8186');
+  const companyWhatsapp = contentText(settings, 'company_whatsapp', companyPhone);
+  const whatsappNumber = normalizeWhatsappNumber(companyWhatsapp);
+  const whatsappMessage = encodeURIComponent(
+    'Hello ' + companyName + '! I would like to inquire about your services.',
+  );
+  const quickReplies = [
+    { label: 'Leadership', text: 'Who leads ' + companyName + '?' },
+    { label: 'Services', text: 'What services does ' + companyName + ' offer?' },
+    { label: 'Awards', text: 'What awards has ' + companyName + ' won?' },
+    { label: 'Start a Project', text: 'How can I start a project with ' + companyName + '?' },
+  ];
+
   // Visibility (delayed entrance)
   const [visible, setVisible] = useState(false);
 
@@ -365,7 +370,13 @@ export default function FloatingWidgets() {
       trackEvent('assistant_message', { metadata: { direction: 'user' } });
 
       let replyText =
-        'I could not reach the company knowledge service just now. You can contact Lightworld at mail@lightworldtech.com or +233 (024) 361 8186.';
+        'I could not reach the company knowledge service just now. You can contact ' +
+        companyName +
+        ' at ' +
+        companyEmail +
+        ' or ' +
+        companyPhone +
+        '.';
 
       try {
         const response = await fetch('/api/assistant', {
@@ -422,7 +433,7 @@ export default function FloatingWidgets() {
       saveChatHistory(withReply);
       setIsTyping(false);
     },
-    [assistantState, messages]
+    [assistantState, companyEmail, companyName, companyPhone, messages]
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -543,7 +554,7 @@ export default function FloatingWidgets() {
 
                       {msg.sender === 'bot' && msg.cta && (
                         <a
-                          href={msg.cta.href}
+                          href={safeNavigationHref(msg.cta.href, '/contact')}
                           onClick={() => {
                             if (msg.projectBrief) {
                               sessionStorage.setItem(PROJECT_BRIEF_KEY, msg.projectBrief);
@@ -625,7 +636,7 @@ export default function FloatingWidgets() {
                     Chat with us
                   </h4>
                   <p className="text-xs text-emerald-600 dark:text-amber-400">
-                    Lightworld Technologies
+                    {companyName}
                   </p>
                 </div>
               </div>

@@ -402,3 +402,14 @@ The Page SEO group now exposes the settings already consumed by the Insights pag
 PublicShell can reuse settings already loaded by a page, avoiding duplicate SiteSetting queries on Insights, Privacy and Terms.
 
 Phase 25 does not require a database migration. The existing SiteSetting model stores the new keys on first save. Legal-content changes should be reviewed carefully before publication.
+
+
+## Phase 26 live search, managed contact consistency and outbound-link safety
+
+The public command palette now searches current published website content instead of shipping a static demo index. Navigation entries come from the CMS-managed header/company settings, while services, insights, portfolio projects and FAQs are loaded from the existing public APIs only when the palette is opened. The server's existing public filtering continues to exclude inactive services/portfolio/FAQs and unpublished blog posts.
+
+The floating WhatsApp and assistant widgets now reuse managed company settings for company name, email, primary phone and a dedicated `company_whatsapp` number. Ghana local and `+233` display formats are normalized before generating the WhatsApp destination, including legacy formatted values such as `+233 (024) ...`.
+
+Assistant-generated CTA destinations, managed portfolio project URLs and managed footer social links are normalized through the shared safe-navigation policy before rendering. Executable URL schemes therefore fall back or disappear rather than being emitted as clickable links.
+
+Phase 26 requires no database migration. The new `company_whatsapp` setting is stored by the existing SiteSetting model when first saved.

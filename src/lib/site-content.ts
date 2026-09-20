@@ -168,6 +168,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'company_email', label: 'Primary email', type: 'email', defaultValue: 'mail@lightworldtech.com' },
       { key: 'company_phone1', label: 'Primary phone', type: 'text', defaultValue: '+233 (024) 361 8186' },
       { key: 'company_phone2', label: 'Secondary phone', type: 'text', defaultValue: '' },
+      { key: 'company_whatsapp', label: 'WhatsApp number', type: 'text', defaultValue: '+233 24 361 8186', help: 'Use the direct WhatsApp-enabled business number. Ghana local or +233 format is accepted.' },
       { key: 'company_address', label: 'Address / location', type: 'text', defaultValue: 'Accra, Ghana' },
       {
         key: 'header_primary_links',

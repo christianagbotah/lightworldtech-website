@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Briefcase, Layers3, Sparkles } from 'lucide-react';
 import { contentText, type SiteSettings } from '@/lib/site-content';
+import { safeNavigationHref } from '@/lib/navigation-content';
 
 interface PortfolioItem {
   id: string;
@@ -111,7 +112,7 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
             category: String(item.category || 'Digital Product'),
             tags,
             featured: item.featured === true,
-            clientUrl: item.url ? String(item.url) : undefined,
+            clientUrl: item.url ? safeNavigationHref(String(item.url), '') : undefined,
             image: item.image ? String(item.image) : undefined,
           };
         });

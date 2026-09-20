@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CommandDialog,
   CommandEmpty,
@@ -11,288 +12,380 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import {
-  Home,
-  Info,
-  Briefcase,
-  FileText,
-  Mail,
-  FolderOpen,
-  HelpCircle,
-  Search,
-  LayoutDashboard,
-  Globe,
-  Smartphone,
-  GraduationCap,
-  TrendingUp,
-  Code,
-  Server,
-  Package,
   ArrowRight,
+  Bot,
+  Briefcase,
+  Building2,
+  FileText,
+  GraduationCap,
+  Home,
+  LayoutGrid,
+  Mail,
+  MessageSquare,
+  Newspaper,
+  Package,
+  Search,
+  ShieldCheck,
+  Smartphone,
+  Users,
+  Workflow,
+  Code2,
+  BrainCircuit,
+  Cloud,
+  KeyRound,
   type LucideIcon,
 } from 'lucide-react';
-import { useAppStore, type Page } from '@/lib/store';
+import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
+import {
+  normalizeNavigationLinks,
+  normalizeNavigationMenu,
+  safeNavigationHref,
+} from '@/lib/navigation-content';
 
 interface SearchItem {
   id: string;
   title: string;
   description: string;
-  group: string;
+  group: 'Pages' | 'Services' | 'Insights' | 'Portfolio' | 'FAQ';
   icon: LucideIcon;
-  action: () => void;
+  href: string;
 }
 
-export default function CommandPalette() {
+interface ServiceRecord {
+  id?: string;
+  title?: string;
+  slug?: string;
+  description?: string;
+}
+
+interface BlogRecord {
+  id?: string;
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  category?: { name?: string | null } | null;
+}
+
+interface PortfolioRecord {
+  id?: string;
+  title?: string;
+  description?: string;
+  category?: string;
+}
+
+interface FaqRecord {
+  id?: string;
+  question?: string;
+  answer?: string;
+}
+
+const navigationIcons = {
+  building: Building2,
+  brain: BrainCircuit,
+  briefcase: Briefcase,
+  cloud: Cloud,
+  code: Code2,
+  graduation: GraduationCap,
+  grid: LayoutGrid,
+  home: Home,
+  key: KeyRound,
+  message: MessageSquare,
+  newspaper: Newspaper,
+  shield: ShieldCheck,
+  smartphone: Smartphone,
+  users: Users,
+  workflow: Workflow,
+} as const;
+
+function iconForKey(key: string): LucideIcon {
+  return navigationIcons[key as keyof typeof navigationIcons] || LayoutGrid;
+}
+
+function iconForHref(href: string): LucideIcon {
+  if (href === '/') return Home;
+  if (href.startsWith('/blog')) return FileText;
+  if (href.startsWith('/portfolio')) return Briefcase;
+  if (href.startsWith('/products')) return Package;
+  if (href.startsWith('/contact')) return Mail;
+  if (href.startsWith('/team')) return Users;
+  if (href.startsWith('/trust')) return ShieldCheck;
+  if (href.startsWith('/newsroom')) return Newspaper;
+  if (href.startsWith('/client')) return KeyRound;
+  return LayoutGrid;
+}
+
+function cleanDescription(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  return normalized ? normalized.slice(0, 180) : fallback;
+}
+
+export default function CommandPalette({ settings = {} }: { settings?: SiteSettings }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const { navigate } = useAppStore();
+  const [loaded, setLoaded] = useState(false);
+  const [services, setServices] = useState<ServiceRecord[]>([]);
+  const [posts, setPosts] = useState<BlogRecord[]>([]);
+  const [projects, setProjects] = useState<PortfolioRecord[]>([]);
+  const [faqs, setFaqs] = useState<FaqRecord[]>([]);
 
-  // Build search index with useMemo to avoid setState in effect
-  const items = useMemo<SearchItem[]>(() => {
-    const searchItems: SearchItem[] = [];
+  const primaryNav = normalizeNavigationLinks(
+    contentJson<unknown>(settings, 'header_primary_links', [
+      { label: 'Work', href: '/portfolio' },
+      { label: 'Products', href: '/products' },
+      { label: 'Insights', href: '/blog' },
+    ]),
+    [
+      { label: 'Work', href: '/portfolio' },
+      { label: 'Products', href: '/products' },
+      { label: 'Insights', href: '/blog' },
+    ],
+  );
 
-    // Navigation pages
-    const pages: { title: string; desc: string; icon: LucideIcon; page: Page }[] = [
-      { title: 'Home', desc: 'Go to the homepage', icon: Home, page: 'home' },
-      { title: 'About Us', desc: 'Learn about our company', icon: Info, page: 'about' },
-      { title: 'Services', desc: 'View our services', icon: Briefcase, page: 'services' },
-      { title: 'Blog', desc: 'Read our latest articles', icon: FileText, page: 'blog' },
-      { title: 'Contact', desc: 'Get in touch with us', icon: Mail, page: 'contact' },
-      { title: 'Portfolio', desc: 'View our work', icon: FolderOpen, page: 'portfolio' },
-      { title: 'Careers', desc: 'Join our team', icon: Briefcase, page: 'careers' },
-      { title: 'Products', desc: 'Upcoming products', icon: Package, page: 'products' },
-    ];
+  const companyMenu = normalizeNavigationMenu(
+    contentJson<unknown>(settings, 'header_company_menu', [
+      { title: 'About Lightworld', desc: 'Company, direction and how we work', href: '/about', icon: 'building' },
+      { title: 'Leadership', desc: 'Meet the people leading Lightworld', href: '/team', icon: 'users' },
+      { title: 'Trust Center', desc: 'Security, privacy and responsible AI', href: '/trust', icon: 'shield' },
+      { title: 'Newsroom & media', desc: 'Verified facts, awards and public coverage', href: '/newsroom', icon: 'newspaper' },
+      { title: 'Careers', desc: 'Talent network and opportunities', href: '/careers', icon: 'briefcase' },
+      { title: 'Contact', desc: 'Start a project or conversation', href: '/contact', icon: 'message' },
+      { title: 'Client Portal', desc: 'Secure project and support workspace', href: '/client', icon: 'key' },
+    ]),
+    [],
+  );
 
-    for (const p of pages) {
-      searchItems.push({
-        id: `page-${p.page}`,
-        title: p.title,
-        description: p.desc,
+  const managedServiceMenu = normalizeNavigationMenu(
+    contentJson<unknown>(settings, 'header_service_menu', []),
+    [],
+  );
+
+  const pageItems = useMemo<SearchItem[]>(() => {
+    const serviceLabel = contentText(settings, 'header_services_label', 'Services');
+    const serviceHref = safeNavigationHref(
+      contentText(settings, 'header_services_link', '/services'),
+      '/services',
+    );
+
+    const raw: SearchItem[] = [
+      {
+        id: 'page-home',
+        title: 'Home',
+        description: 'Go to the homepage',
         group: 'Pages',
-        icon: p.icon,
-        action: () => navigate(p.page),
-      });
-    }
-
-    // Services
-    const services = [
-      { title: 'Web Development', desc: 'Custom websites and web applications', icon: Globe },
-      { title: 'Mobile App Development', desc: 'iOS and Android applications', icon: Smartphone },
-      { title: 'Skills Development', desc: 'IT training programs', icon: GraduationCap },
-      { title: 'SEO & Marketing', desc: 'Digital marketing strategies', icon: TrendingUp },
-      { title: 'Software Development', desc: 'Custom software solutions', icon: Code },
-      { title: 'Hosting & Domain', desc: 'Reliable hosting services', icon: Server },
+        icon: Home,
+        href: '/',
+      },
+      {
+        id: 'page-services',
+        title: serviceLabel,
+        description: 'Explore Lightworld capabilities',
+        group: 'Pages',
+        icon: LayoutGrid,
+        href: serviceHref,
+      },
+      ...primaryNav.map((item) => ({
+        id: 'page-primary-' + item.href + '-' + item.label,
+        title: item.label,
+        description: 'Open ' + item.label,
+        group: 'Pages' as const,
+        icon: iconForHref(item.href),
+        href: item.href,
+      })),
+      ...companyMenu.map((item) => ({
+        id: 'page-company-' + item.href + '-' + item.title,
+        title: item.title,
+        description: item.desc || 'Open ' + item.title,
+        group: 'Pages' as const,
+        icon: iconForKey(item.icon),
+        href: item.href,
+      })),
     ];
 
-    for (const s of services) {
-      searchItems.push({
-        id: `service-${s.title}`,
-        title: s.title,
-        description: s.desc,
-        group: 'Services',
-        icon: s.icon,
-        action: () => navigate('services'),
-      });
+    return raw.filter(
+      (item, index, items) =>
+        items.findIndex((candidate) => candidate.href === item.href && candidate.title === item.title) === index,
+    );
+  }, [companyMenu, primaryNav, settings]);
+
+  const serviceItems = useMemo<SearchItem[]>(() => {
+    if (services.length > 0) {
+      return services
+        .filter((service) => typeof service.title === 'string' && service.title.trim())
+        .map((service, index) => ({
+          id: 'service-' + (service.id || service.slug || index),
+          title: String(service.title).trim(),
+          description: cleanDescription(service.description, 'Lightworld service'),
+          group: 'Services',
+          icon: iconForKey(managedServiceMenu[index]?.icon || 'grid'),
+          href: '/services',
+        }));
     }
 
-    // Blog posts (defaults)
-    const blogPosts = [
-      { title: 'Why Every Business Needs a Professional Website in 2025', desc: 'Business' },
-      { title: 'The Complete Guide to Mobile App Development', desc: 'Mobile Apps' },
-      { title: 'Top 10 Web Development Trends to Watch in 2025', desc: 'Web Development' },
-      { title: 'How School Management Software Transforms Education', desc: 'Technology' },
-      { title: 'UI/UX Design Principles Every Business Owner Should Know', desc: 'Design' },
-      { title: 'SEO Strategies to Grow Your Business Online in Ghana', desc: 'SEO & Marketing' },
-    ];
+    return managedServiceMenu.map((service, index) => ({
+      id: 'service-menu-' + index + '-' + service.title,
+      title: service.title,
+      description: service.desc || 'Lightworld service',
+      group: 'Services',
+      icon: iconForKey(service.icon),
+      href: service.href,
+    }));
+  }, [managedServiceMenu, services]);
 
-    for (const p of blogPosts) {
-      searchItems.push({
-        id: `blog-${p.title}`,
-        title: p.title,
-        description: p.desc,
-        group: 'Blog Posts',
-        icon: FileText,
-        action: () => navigate('blog'),
-      });
-    }
+  const insightItems = useMemo<SearchItem[]>(
+    () =>
+      posts
+        .filter((post) => post.title?.trim() && post.slug?.trim())
+        .slice(0, 20)
+        .map((post, index) => ({
+          id: 'insight-' + (post.id || post.slug || index),
+          title: String(post.title).trim(),
+          description: cleanDescription(post.category?.name || post.excerpt, 'Published insight'),
+          group: 'Insights',
+          icon: FileText,
+          href: '/blog/' + String(post.slug).trim(),
+        })),
+    [posts],
+  );
 
-    // Portfolio projects
-    const projects = [
-      { title: 'Grace Tabernacle Church Website', desc: 'Church' },
-      { title: 'EduPrime School Management System', desc: 'Education' },
-      { title: 'FreshBite Food Ordering Platform', desc: 'E-Commerce' },
-      { title: 'Premier Hotels Booking System', desc: 'Hospitality' },
-      { title: 'SecureGuard Security Management', desc: 'Security' },
-      { title: 'MediCare Health Portal', desc: 'Healthcare' },
-    ];
+  const portfolioItems = useMemo<SearchItem[]>(
+    () =>
+      projects
+        .filter((project) => project.title?.trim())
+        .slice(0, 20)
+        .map((project, index) => ({
+          id: 'portfolio-' + (project.id || index),
+          title: String(project.title).trim(),
+          description: cleanDescription(project.category || project.description, 'Published project'),
+          group: 'Portfolio',
+          icon: Briefcase,
+          href: '/portfolio',
+        })),
+    [projects],
+  );
 
-    for (const p of projects) {
-      searchItems.push({
-        id: `portfolio-${p.title}`,
-        title: p.title,
-        description: p.desc,
-        group: 'Portfolio',
-        icon: FolderOpen,
-        action: () => navigate('portfolio'),
-      });
-    }
+  const faqItems = useMemo<SearchItem[]>(
+    () =>
+      faqs
+        .filter((faq) => faq.question?.trim())
+        .slice(0, 20)
+        .map((faq, index) => ({
+          id: 'faq-' + (faq.id || index),
+          title: String(faq.question).trim(),
+          description: cleanDescription(faq.answer, 'Frequently asked question'),
+          group: 'FAQ',
+          icon: MessageSquare,
+          href: '/',
+        })),
+    [faqs],
+  );
 
-    // FAQs
-    const faqs = [
-      { title: 'How long does it take to build a website?', desc: 'FAQ' },
-      { title: 'Do you provide website maintenance and support?', desc: 'FAQ' },
-      { title: 'What technologies do you use for web development?', desc: 'FAQ' },
-      { title: 'Can you help with existing website redesign?', desc: 'FAQ' },
-      { title: 'Do you offer payment plans for projects?', desc: 'FAQ' },
-      { title: 'Do you provide training on how to manage the website?', desc: 'FAQ' },
-    ];
+  const items = useMemo(
+    () => [...pageItems, ...serviceItems, ...insightItems, ...portfolioItems, ...faqItems],
+    [pageItems, serviceItems, insightItems, portfolioItems, faqItems],
+  );
 
-    for (const f of faqs) {
-      searchItems.push({
-        id: `faq-${f.title}`,
-        title: f.title,
-        description: f.desc,
-        group: 'FAQ',
-        icon: HelpCircle,
-        action: () => navigate('home'),
-      });
-    }
-
-    return searchItems;
-  }, [navigate]);
-
-  // Cmd+K keyboard shortcut
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        // Don't trigger if user is typing in an input/textarea
-        const target = e.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-          return;
-        }
-        e.preventDefault();
-        setOpen((prev) => !prev);
-      }
-      if (e.key === 'Escape' && open) {
-        setOpen(false);
-      }
+    if (!open || loaded) return;
+
+    let cancelled = false;
+    Promise.allSettled([
+      fetch('/api/services?active=true', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+      fetch('/api/blog?published=true&limit=20', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+      fetch('/api/portfolio?active=true', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+      fetch('/api/faqs?active=true', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+    ]).then((results) => {
+      if (cancelled) return;
+      const values = results.map((result) => result.status === 'fulfilled' ? result.value : null);
+      setServices(Array.isArray(values[0]?.data) ? values[0].data : []);
+      setPosts(Array.isArray(values[1]?.data) ? values[1].data : []);
+      setProjects(Array.isArray(values[2]?.data) ? values[2].data : []);
+      setFaqs(Array.isArray(values[3]?.data) ? values[3].data : []);
+      setLoaded(true);
+    });
+
+    return () => {
+      cancelled = true;
     };
+  }, [loaded, open]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        const target = event.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+        event.preventDefault();
+        setOpen((current) => !current);
+      }
+      if (event.key === 'Escape' && open) setOpen(false);
+    };
+
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open]);
 
-  const runAction = useCallback((action: () => void) => {
-    setOpen(false);
-    action();
-  }, []);
+  const openHref = useCallback(
+    (rawHref: string) => {
+      const href = safeNavigationHref(rawHref, '/');
+      setOpen(false);
+      if (href.startsWith('/')) {
+        router.push(href);
+        return;
+      }
+      window.location.assign(href);
+    },
+    [router],
+  );
+
+  const groups: Array<SearchItem['group']> = ['Pages', 'Services', 'Insights', 'Portfolio', 'FAQ'];
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Search pages, services, blog posts..." />
+      <CommandInput placeholder="Search pages, services, insights, projects and FAQs..." />
       <CommandList>
         <CommandEmpty>
           <div className="flex flex-col items-center gap-2 py-4">
             <Search className="size-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No results found</p>
+            <p className="text-sm text-muted-foreground">No published content matches your search.</p>
           </div>
         </CommandEmpty>
-        <CommandGroup heading="Pages">
-          {items
-            .filter((item) => item.group === 'Pages')
-            .map((item) => (
-              <CommandItem
-                key={item.id}
-                onSelect={() => runAction(item.action)}
-                className="cursor-pointer"
-              >
-                <item.icon className="size-4 text-amber-500 dark:text-amber-400" />
-                <span className="flex-1">{item.title}</span>
-                <span className="text-xs text-muted-foreground">{item.description}</span>
-                <ArrowRight className="size-3 text-muted-foreground/50 ml-2" />
-              </CommandItem>
-            ))}
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Services">
-          {items
-            .filter((item) => item.group === 'Services')
-            .map((item) => (
-              <CommandItem
-                key={item.id}
-                onSelect={() => runAction(item.action)}
-                className="cursor-pointer"
-              >
-                <item.icon className="size-4 text-amber-500 dark:text-amber-400" />
-                <div className="flex-1">
-                  <span>{item.title}</span>
-                  <p className="text-xs text-muted-foreground">{item.description}</p>
-                </div>
-                <ArrowRight className="size-3 text-muted-foreground/50" />
-              </CommandItem>
-            ))}
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Blog Posts">
-          {items
-            .filter((item) => item.group === 'Blog Posts')
-            .map((item) => (
-              <CommandItem
-                key={item.id}
-                onSelect={() => runAction(item.action)}
-                className="cursor-pointer"
-              >
-                <item.icon className="size-4 text-amber-500 dark:text-amber-400" />
-                <div className="flex-1 min-w-0">
-                  <span className="truncate block">{item.title}</span>
-                </div>
-                <span className="text-xs text-muted-foreground shrink-0">{item.description}</span>
-              </CommandItem>
-            ))}
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Portfolio">
-          {items
-            .filter((item) => item.group === 'Portfolio')
-            .map((item) => (
-              <CommandItem
-                key={item.id}
-                onSelect={() => runAction(item.action)}
-                className="cursor-pointer"
-              >
-                <item.icon className="size-4 text-amber-500 dark:text-amber-400" />
-                <div className="flex-1 min-w-0">
-                  <span className="truncate block">{item.title}</span>
-                </div>
-                <span className="text-xs text-muted-foreground shrink-0">{item.description}</span>
-              </CommandItem>
-            ))}
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="FAQ">
-          {items
-            .filter((item) => item.group === 'FAQ')
-            .map((item) => (
-              <CommandItem
-                key={item.id}
-                onSelect={() => runAction(item.action)}
-                className="cursor-pointer"
-              >
-                <item.icon className="size-4 text-slate-400 dark:text-slate-500" />
-                <div className="flex-1 min-w-0">
-                  <span className="truncate block text-sm">{item.title}</span>
-                </div>
-              </CommandItem>
-            ))}
-        </CommandGroup>
+
+        {groups.map((group, groupIndex) => {
+          const groupItems = items.filter((item) => item.group === group);
+          if (groupItems.length === 0) return null;
+
+          return (
+            <div key={group}>
+              {groupIndex > 0 && <CommandSeparator />}
+              <CommandGroup heading={group}>
+                {groupItems.map((item) => (
+                  <CommandItem
+                    key={item.id}
+                    onSelect={() => openHref(item.href)}
+                    className="cursor-pointer"
+                  >
+                    <item.icon className="size-4 text-amber-500 dark:text-amber-400" />
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate">{item.title}</span>
+                      <p className="truncate text-xs text-muted-foreground">{item.description}</p>
+                    </div>
+                    <ArrowRight className="ml-2 size-3 shrink-0 text-muted-foreground/50" />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </div>
+          );
+        })}
       </CommandList>
-      {/* Footer hint */}
-      <div className="border-t border-border px-4 py-2 flex items-center justify-between text-xs text-muted-foreground">
-        <span>Search across all content</span>
+
+      <div className="flex items-center justify-between border-t border-border px-4 py-2 text-xs text-muted-foreground">
+        <span>Search current published website content</span>
         <div className="flex items-center gap-2">
-          <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono">↑↓</kbd>
+          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">↑↓</kbd>
           <span>Navigate</span>
-          <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono">↵</kbd>
+          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">↵</kbd>
           <span>Select</span>
-          <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono">Esc</kbd>
-          <span>Close</span>
+          <Bot className="ml-1 size-3" />
         </div>
       </div>
     </CommandDialog>
