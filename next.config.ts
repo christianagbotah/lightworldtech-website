@@ -28,6 +28,12 @@ const securityHeaders = [
   { key: 'Content-Security-Policy', value: contentSecurityPolicy },
 ];
 
+const privateNoStoreHeaders = [
+  { key: 'Cache-Control', value: 'private, no-store, no-cache, must-revalidate, max-age=0' },
+  { key: 'Pragma', value: 'no-cache' },
+  { key: 'Expires', value: '0' },
+];
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
@@ -45,9 +51,28 @@ const nextConfig: NextConfig = {
         source: '/admin/:path*',
         headers: [
           ...securityHeaders,
-          { key: 'Cache-Control', value: 'private, no-store, no-cache, must-revalidate, max-age=0' },
-          { key: 'Pragma', value: 'no-cache' },
-          { key: 'Expires', value: '0' },
+          ...privateNoStoreHeaders,
+        ],
+      },
+      {
+        source: '/api/admin/:path*',
+        headers: [
+          ...securityHeaders,
+          ...privateNoStoreHeaders,
+        ],
+      },
+      {
+        source: '/api/client/:path*',
+        headers: [
+          ...securityHeaders,
+          ...privateNoStoreHeaders,
+        ],
+      },
+      {
+        source: '/api/upload',
+        headers: [
+          ...securityHeaders,
+          ...privateNoStoreHeaders,
         ],
       },
       {
