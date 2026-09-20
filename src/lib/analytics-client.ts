@@ -1,5 +1,7 @@
 'use client';
 
+import { parseCookiePreferences } from '@/lib/cookie-consent';
+
 export type AnalyticsEventName =
   | 'session_start'
   | 'page_view'
@@ -21,14 +23,8 @@ function analyticsAllowed(): boolean {
   if (typeof window === 'undefined') return false;
   if (navigator.doNotTrack === '1') return false;
 
-  try {
-    const raw = localStorage.getItem(CONSENT_KEY);
-    if (!raw) return false;
-    const prefs = JSON.parse(raw) as { analytics?: boolean };
-    return prefs.analytics === true;
-  } catch {
-    return false;
-  }
+  const prefs = parseCookiePreferences(localStorage.getItem(CONSENT_KEY));
+  return prefs.analytics;
 }
 
 function getSessionId(): string {
