@@ -366,3 +366,18 @@ Deploy Phase 23 only after the PostgreSQL migration has been applied with:
 ```bash
 bun run db:deploy
 ```
+
+
+## Phase 24 full-site CMS completion for Insights and legal pages
+
+The Page Content CMS now controls the live public copy for three previously incomplete areas:
+
+- Insights / Blog landing page hero, search placeholder and empty-state messaging;
+- Privacy & Cookie Notice hero, last-updated line, regulator information, section content and privacy-request block;
+- Website Terms hero, last-updated line and section content.
+
+The Page SEO group now exposes the settings already consumed by the Insights page and adds editable Privacy and Terms search metadata. Current public wording remains the default fallback, so deploying Phase 24 does not change legal copy unless an administrator deliberately edits and saves the new CMS fields.
+
+PublicShell can now reuse settings already loaded by a page, avoiding duplicate SiteSetting queries on Insights, Privacy and Terms.
+
+Phase 24 does not require a database migration. The existing SiteSetting model stores the new keys on first save. Legal-content changes should be reviewed carefully before publication.
