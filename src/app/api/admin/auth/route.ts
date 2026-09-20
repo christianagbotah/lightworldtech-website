@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { z } from 'zod';
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE,
@@ -10,11 +9,8 @@ import {
   verifyAdminPassword,
 } from '@/lib/admin-auth';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
-
-const loginSchema = z.object({
-  email: z.string().email('Valid email is required'),
-  password: z.string().min(1, 'Password is required'),
-});
+import { adminLoginSchema } from '@/lib/login-input';
+import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,9 +41,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rate = consumePublicRateLimit(request, 'admin-login', 8, 10 * 60_000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Too many sign-in attempts. Please try again shortly.' },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
+    );
+  }
+
   try {
-    const body = await request.json();
-    const parsed = loginSchema.safeParse(body);
+    const parsed = adminLoginSchema.safeParse(await request.json().catch(() => null));
 
     if (!parsed.success) {
       return NextResponse.json(
