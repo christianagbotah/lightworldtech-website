@@ -27,7 +27,7 @@ export function normalizeCookiePreferences(value: unknown): CookiePreferences {
     essential: true,
     analytics: record.analytics === true,
     marketing: false,
-    preferences: record.preferences === true,
+    preferences: false,
   };
 }
 
