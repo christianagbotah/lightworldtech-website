@@ -149,6 +149,8 @@ export async function PATCH(
         newRole: updated.role,
         previousActive: target.active,
         newActive: updated.active,
+        previousPermissions: normalizeAdminPermissions(target.permissions),
+        newPermissions: normalizeAdminPermissions(updated.permissions),
       },
     });
 
