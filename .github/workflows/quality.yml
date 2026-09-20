@@ -60,7 +60,7 @@ jobs:
         run: bunx tsc --noEmit
 
       - name: Test security and deterministic intelligence
-        run: bun test src/lib/admin-auth.test.ts src/lib/assistant-intents.test.ts src/lib/lead-intelligence.test.ts src/lib/proposal-draft.test.ts src/lib/client-auth.test.ts src/lib/mail.test.ts src/lib/newsletter-campaign.test.ts src/lib/admin-governance-policy.test.ts src/lib/admin-permissions.test.ts src/lib/upload-storage.test.ts src/lib/careers-application.test.ts src/lib/public-rate-limit.test.ts src/lib/login-input.test.ts src/lib/next-config-security.test.ts src/lib/admin-guard-await.test.ts
+        run: bun test src/lib/admin-auth.test.ts src/lib/assistant-intents.test.ts src/lib/lead-intelligence.test.ts src/lib/proposal-draft.test.ts src/lib/client-auth.test.ts src/lib/mail.test.ts src/lib/newsletter-campaign.test.ts src/lib/admin-governance-policy.test.ts src/lib/admin-permissions.test.ts src/lib/site-content.test.ts src/lib/upload-storage.test.ts src/lib/careers-application.test.ts src/lib/public-rate-limit.test.ts src/lib/login-input.test.ts src/lib/next-config-security.test.ts src/lib/admin-guard-await.test.ts
         env:
           ADMIN_SESSION_SECRET: "ci-only-admin-session-secret-at-least-32-bytes"
           CLIENT_SESSION_SECRET: "ci-only-client-session-secret-at-least-32-bytes"
