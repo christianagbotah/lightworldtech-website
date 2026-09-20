@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics-client';
 import { contentText, type SiteSettings } from '@/lib/site-content';
 import { safeNavigationHref } from '@/lib/navigation-content';
+import { normalizeWhatsappNumber } from '@/lib/contact-content';
 
 // ─── LiveChat Config ────────────────────────────────────────────────
 interface ProjectScopeState {
@@ -222,7 +223,8 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
   const companyName = contentText(settings, 'company_name', 'Lightworld Technologies Ltd');
   const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
   const companyPhone = contentText(settings, 'company_phone1', '+233 (024) 361 8186');
-  const whatsappNumber = companyPhone.replace(/\D/g, '');
+  const companyWhatsapp = contentText(settings, 'company_whatsapp', companyPhone);
+  const whatsappNumber = normalizeWhatsappNumber(companyWhatsapp);
   const whatsappMessage = encodeURIComponent(
     'Hello ' + companyName + '! I would like to inquire about your services.',
   );
