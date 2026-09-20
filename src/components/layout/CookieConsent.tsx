@@ -1,119 +1,124 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Cookie, X, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { contentText, type SiteSettings } from '@/lib/site-content';
+import {
+  acceptedCurrentCookiePreferences,
+  defaultCookiePreferences,
+  normalizeCookiePreferences,
+  parseCookiePreferences,
+  type CookiePreferences,
+} from '@/lib/cookie-consent';
 
 const STORAGE_KEY = 'lw-cookie-consent';
 const PREFERENCES_KEY = 'lw-cookie-preferences';
 
-interface CookiePreferences {
-  essential: boolean;
-  analytics: boolean;
-  marketing: boolean;
-  preferences: boolean;
-}
-
-const defaultPreferences: CookiePreferences = {
-  essential: true,
-  analytics: false,
-  marketing: false,
-  preferences: false,
-};
-
-const categories = [
-  {
-    key: 'essential' as const,
-    name: 'Essential',
-    description: 'Required for the website to function properly. Cannot be disabled.',
-    locked: true,
-  },
-  {
-    key: 'analytics' as const,
-    name: 'Analytics',
-    description: 'Help us understand how visitors interact with our website.',
-    locked: false,
-  },
-  {
-    key: 'marketing' as const,
-    name: 'Marketing',
-    description: 'Reserved for optional marketing integrations. Not required for first-party website analytics.',
-    locked: false,
-  },
-  {
-    key: 'preferences' as const,
-    name: 'Preferences',
-    description: 'Allow the website to remember choices you make (e.g., theme, language).',
-    locked: false,
-  },
-];
+type VisiblePreferenceKey = 'essential' | 'analytics' | 'preferences';
 
 function loadSavedPrefs(): CookiePreferences {
-  if (typeof window === 'undefined') return defaultPreferences;
-  const saved = localStorage.getItem(PREFERENCES_KEY);
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch {
-      // ignore
-    }
-  }
-  return defaultPreferences;
+  if (typeof window === 'undefined') return { ...defaultCookiePreferences };
+  return parseCookiePreferences(localStorage.getItem(PREFERENCES_KEY));
 }
 
-export default function CookieConsent() {
+export default function CookieConsent({ settings = {} }: { settings?: SiteSettings }) {
   const [show, setShow] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
-  const [prefs, setPrefs] = useState<CookiePreferences>(defaultPreferences);
+  const [prefs, setPrefs] = useState<CookiePreferences>(defaultCookiePreferences);
   const [showSettingsBtn, setShowSettingsBtn] = useState(false);
+
+  const title = contentText(settings, 'cookie_consent_title', 'We value your privacy');
+  const description = contentText(
+    settings,
+    'cookie_consent_description',
+    'We use essential browser storage to operate the site. Optional analytics helps us understand consented website usage; optional categories stay off unless you choose them.',
+  );
+  const privacyLinkLabel = contentText(settings, 'cookie_privacy_link_label', 'Privacy & Cookie Notice');
+  const customizeLabel = contentText(settings, 'cookie_customize_label', 'Customize');
+  const declineLabel = contentText(settings, 'cookie_decline_label', 'Decline optional');
+  const acceptLabel = contentText(settings, 'cookie_accept_label', 'Accept current optional');
+  const categoriesTitle = contentText(settings, 'cookie_categories_title', 'Cookie categories');
+  const alwaysOnLabel = contentText(settings, 'cookie_always_on_label', 'Always on');
+  const saveLabel = contentText(settings, 'cookie_save_label', 'Save preferences');
+  const settingsLabel = contentText(settings, 'cookie_settings_label', 'Cookie settings');
+
+  const categories: Array<{
+    key: VisiblePreferenceKey;
+    name: string;
+    description: string;
+    locked: boolean;
+  }> = [
+    {
+      key: 'essential',
+      name: contentText(settings, 'cookie_essential_name', 'Essential'),
+      description: contentText(
+        settings,
+        'cookie_essential_description',
+        'Required for the website to function properly. Cannot be disabled.',
+      ),
+      locked: true,
+    },
+    {
+      key: 'analytics',
+      name: contentText(settings, 'cookie_analytics_name', 'Analytics'),
+      description: contentText(
+        settings,
+        'cookie_analytics_description',
+        'Optional first-party analytics that helps us understand which pages and journeys are useful.',
+      ),
+      locked: false,
+    },
+    {
+      key: 'preferences',
+      name: contentText(settings, 'cookie_preferences_name', 'Preferences'),
+      description: contentText(
+        settings,
+        'cookie_preferences_description',
+        'Allow the website to remember optional experience choices you make.',
+      ),
+      locked: false,
+    },
+  ];
 
   useEffect(() => {
     const consent = localStorage.getItem(STORAGE_KEY);
     if (consent) {
       const saved = loadSavedPrefs();
-      // Use setTimeout to avoid synchronous setState in effect
       const timer = setTimeout(() => {
         setShowSettingsBtn(true);
         setPrefs(saved);
       }, 0);
       return () => clearTimeout(timer);
-    } else {
-      const timer = setTimeout(() => setShow(true), 1500);
-      return () => clearTimeout(timer);
     }
+
+    const timer = setTimeout(() => setShow(true), 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   const savePreferences = (preferences: CookiePreferences) => {
-    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+    const normalized = normalizeCookiePreferences(preferences);
+    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(normalized));
+    setPrefs(normalized);
     window.dispatchEvent(new Event('lw-consent-changed'));
   };
 
   const accept = () => {
     localStorage.setItem(STORAGE_KEY, 'accepted');
-    const allAccepted: CookiePreferences = {
-      essential: true,
-      analytics: true,
-      marketing: true,
-      preferences: true,
-    };
-    savePreferences(allAccepted);
+    savePreferences(acceptedCurrentCookiePreferences);
     setShow(false);
+    setShowCustomize(false);
     setShowSettingsBtn(true);
   };
 
   const decline = () => {
     localStorage.setItem(STORAGE_KEY, 'declined');
-    const allDeclined: CookiePreferences = {
-      essential: true,
-      analytics: false,
-      marketing: false,
-      preferences: false,
-    };
-    savePreferences(allDeclined);
+    savePreferences(defaultCookiePreferences);
     setShow(false);
+    setShowCustomize(false);
     setShowSettingsBtn(true);
   };
 
@@ -125,34 +130,32 @@ export default function CookieConsent() {
     setShowSettingsBtn(true);
   };
 
-  const togglePref = (key: keyof CookiePreferences) => {
+  const togglePref = (key: VisiblePreferenceKey) => {
     if (key === 'essential') return;
-    setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
+    setPrefs((current) =>
+      normalizeCookiePreferences({
+        ...current,
+        [key]: !current[key],
+      }),
+    );
   };
 
   const openSettings = () => {
-    const saved = localStorage.getItem(PREFERENCES_KEY);
-    if (saved) {
-      try {
-        setPrefs(JSON.parse(saved));
-      } catch {
-        // ignore
-      }
-    }
+    setPrefs(loadSavedPrefs());
     setShow(true);
     setShowCustomize(true);
   };
 
   return (
     <>
-      {/* Cookie Settings button (shown in footer area) */}
       {showSettingsBtn && !show && (
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="fixed bottom-6 left-6 z-50 size-10 rounded-full bg-slate-800 dark:bg-slate-700 text-slate-400 hover:text-amber-400 shadow-lg hover:shadow-xl flex items-center justify-center transition-colors"
+          className="fixed bottom-24 left-4 z-50 flex size-10 items-center justify-center rounded-full bg-slate-800 text-slate-400 shadow-lg transition-colors hover:text-amber-400 hover:shadow-xl dark:bg-slate-700 sm:left-6 lg:bottom-6"
           onClick={openSettings}
-          aria-label="Cookie Settings"
+          aria-label={settingsLabel}
+          title={settingsLabel}
         >
           <Cookie className="size-4" />
         </motion.button>
@@ -165,70 +168,68 @@ export default function CookieConsent() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 z-[60] p-4 sm:p-6"
+            className="fixed inset-x-0 bottom-0 z-[80] p-3 sm:p-6"
           >
-            <div className="max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-              {/* Main consent bar */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 sm:p-6">
-                {/* Icon */}
-                <div className="size-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+            <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+              <div className="flex flex-col items-start gap-4 p-4 sm:p-6 lg:flex-row lg:items-center">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
                   <Cookie className="size-5 text-emerald-600 dark:text-amber-400" />
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-foreground">We value your privacy</h3>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-foreground">{title}</h3>
                     <ShieldCheck className="size-3.5 text-amber-500" />
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    We use essential browser storage to operate the site. Optional analytics helps us understand consented website usage; optional categories stay off unless you choose them.{' '}
-                    <Link href="/privacy" className="text-emerald-600 dark:text-amber-400 hover:underline font-medium">
-                      Privacy &amp; Cookie Notice
+                  <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    {description}{' '}
+                    <Link
+                      href="/privacy"
+                      className="font-medium text-emerald-600 hover:underline dark:text-amber-400"
+                    >
+                      {privacyLinkLabel}
                     </Link>
                   </p>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowCustomize(!showCustomize)}
-                    className="text-xs border-slate-300 dark:border-slate-600 h-8 gap-1"
+                    onClick={() => setShowCustomize((current) => !current)}
+                    className="h-8 gap-1 border-slate-300 text-xs dark:border-slate-600"
                   >
                     <Settings className="size-3" />
-                    Customize
+                    {customizeLabel}
                     {showCustomize ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={decline}
-                    className="text-xs border-slate-300 dark:border-slate-600 h-8"
+                    className="h-8 border-slate-300 text-xs dark:border-slate-600"
                   >
-                    Decline
+                    {declineLabel}
                   </Button>
                   <Button
                     size="sm"
                     onClick={accept}
-                    className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white h-8"
+                    className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700"
                   >
-                    Accept All
+                    {acceptLabel}
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={decline}
-                    className="size-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hidden sm:flex"
+                    className="hidden size-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 sm:flex"
                   >
                     <X className="size-4" />
-                    <span className="sr-only">Close</span>
+                    <span className="sr-only">{declineLabel}</span>
                   </Button>
                 </div>
               </div>
 
-              {/* Customize dropdown */}
               <AnimatePresence>
                 {showCustomize && (
                   <motion.div
@@ -238,29 +239,34 @@ export default function CookieConsent() {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-4">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cookie Categories</p>
-                      {categories.map((cat) => (
+                    <div className="space-y-3 border-t border-slate-100 px-4 pb-4 pt-4 dark:border-slate-700 sm:px-6 sm:pb-6">
+                      <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {categoriesTitle}
+                      </p>
+                      {categories.map((category) => (
                         <div
-                          key={cat.key}
-                          className="flex items-center justify-between gap-4 py-2 px-3 rounded-lg bg-slate-50 dark:bg-slate-700/50"
+                          key={category.key}
+                          className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-700/50"
                         >
-                          <div className="flex-1 min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-foreground">{cat.name}</span>
-                              {cat.locked && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 font-medium">
-                                  Always on
+                              <span className="text-sm font-medium text-foreground">{category.name}</span>
+                              {category.locked && (
+                                <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-600 dark:text-slate-400">
+                                  {alwaysOnLabel}
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{cat.description}</p>
+                            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                              {category.description}
+                            </p>
                           </div>
                           <Switch
-                            checked={prefs[cat.key]}
-                            disabled={cat.locked}
-                            onCheckedChange={() => togglePref(cat.key)}
+                            checked={prefs[category.key]}
+                            disabled={category.locked}
+                            onCheckedChange={() => togglePref(category.key)}
                             className="data-[state=checked]:bg-emerald-600"
+                            aria-label={category.name}
                           />
                         </div>
                       ))}
@@ -268,9 +274,9 @@ export default function CookieConsent() {
                         <Button
                           size="sm"
                           onClick={acceptCustomized}
-                          className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                          className="bg-emerald-600 text-xs text-white hover:bg-emerald-700"
                         >
-                          Save Preferences
+                          {saveLabel}
                         </Button>
                       </div>
                     </div>
