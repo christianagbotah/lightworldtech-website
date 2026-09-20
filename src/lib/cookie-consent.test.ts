@@ -26,7 +26,7 @@ describe('cookie consent preference model', () => {
       essential: true,
       analytics: true,
       marketing: false,
-      preferences: true,
+      preferences: false,
     });
   });
 
