@@ -18,7 +18,7 @@ import {
 const STORAGE_KEY = 'lw-cookie-consent';
 const PREFERENCES_KEY = 'lw-cookie-preferences';
 
-type VisiblePreferenceKey = 'essential' | 'analytics' | 'preferences';
+type VisiblePreferenceKey = 'essential' | 'analytics';
 
 function loadSavedPrefs(): CookiePreferences {
   if (typeof window === 'undefined') return { ...defaultCookiePreferences };
@@ -40,7 +40,7 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
   const privacyLinkLabel = contentText(settings, 'cookie_privacy_link_label', 'Privacy & Cookie Notice');
   const customizeLabel = contentText(settings, 'cookie_customize_label', 'Customize');
   const declineLabel = contentText(settings, 'cookie_decline_label', 'Decline optional');
-  const acceptLabel = contentText(settings, 'cookie_accept_label', 'Accept current optional');
+  const acceptLabel = contentText(settings, 'cookie_accept_label', 'Accept analytics');
   const categoriesTitle = contentText(settings, 'cookie_categories_title', 'Cookie categories');
   const alwaysOnLabel = contentText(settings, 'cookie_always_on_label', 'Always on');
   const saveLabel = contentText(settings, 'cookie_save_label', 'Save preferences');
@@ -69,16 +69,6 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
         settings,
         'cookie_analytics_description',
         'Optional first-party analytics that helps us understand which pages and journeys are useful.',
-      ),
-      locked: false,
-    },
-    {
-      key: 'preferences',
-      name: contentText(settings, 'cookie_preferences_name', 'Preferences'),
-      description: contentText(
-        settings,
-        'cookie_preferences_description',
-        'Allow the website to remember optional experience choices you make.',
       ),
       locked: false,
     },
