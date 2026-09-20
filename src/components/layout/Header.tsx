@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
+import { normalizeNavigationLinks, normalizeNavigationMenu, safeNavigationHref } from '@/lib/navigation-content';
 
 const defaultPrimaryNav = [
   { label: 'Work', href: '/portfolio' },
@@ -37,48 +38,102 @@ const defaultPrimaryNav = [
   { label: 'Insights', href: '/blog' },
 ];
 
-const companyMenu = [
-  { icon: Building2, title: 'About Lightworld', desc: 'Company, direction and how we work', href: '/about' },
-  { icon: Users, title: 'Leadership', desc: 'Meet the people leading Lightworld', href: '/team' },
-  { icon: ShieldCheck, title: 'Trust Center', desc: 'Security, privacy and responsible AI', href: '/trust' },
-  { icon: Newspaper, title: 'Newsroom & media', desc: 'Verified facts, awards and public coverage', href: '/newsroom' },
-  { icon: Briefcase, title: 'Careers', desc: 'Talent network and opportunities', href: '/careers' },
-  { icon: MessageSquare, title: 'Contact', desc: 'Start a project or conversation', href: '/contact' },
-  { icon: KeyRound, title: 'Client Portal', desc: 'Secure project and support workspace', href: '/client' },
+const defaultCompanyMenu = [
+  { icon: 'building', title: 'About Lightworld', desc: 'Company, direction and how we work', href: '/about' },
+  { icon: 'users', title: 'Leadership', desc: 'Meet the people leading Lightworld', href: '/team' },
+  { icon: 'shield', title: 'Trust Center', desc: 'Security, privacy and responsible AI', href: '/trust' },
+  { icon: 'newspaper', title: 'Newsroom & media', desc: 'Verified facts, awards and public coverage', href: '/newsroom' },
+  { icon: 'briefcase', title: 'Careers', desc: 'Talent network and opportunities', href: '/careers' },
+  { icon: 'message', title: 'Contact', desc: 'Start a project or conversation', href: '/contact' },
+  { icon: 'key', title: 'Client Portal', desc: 'Secure project and support workspace', href: '/client' },
 ];
 
-const serviceMenu = [
-  { icon: Code2, title: 'Web & product engineering', desc: 'Websites, portals, SaaS and platforms' },
-  { icon: Smartphone, title: 'Mobile apps', desc: 'Native-feeling iOS and Android experiences' },
-  { icon: Workflow, title: 'Enterprise systems', desc: 'ERP, EAM, workflow and operational software' },
-  { icon: BrainCircuit, title: 'AI & automation', desc: 'Assistive AI and intelligent workflows' },
-  { icon: Cloud, title: 'Cloud & DevOps', desc: 'Deployment, reliability and infrastructure' },
-  { icon: ShieldCheck, title: 'Security engineering', desc: 'Secure architecture and application hardening' },
-  { icon: Search, title: 'SEO & digital growth', desc: 'Search-ready architecture and analytics' },
-  { icon: GraduationCap, title: 'Training & advisory', desc: 'IT skills, consulting and transformation' },
+const defaultServiceMenu = [
+  { icon: 'code', title: 'Web & product engineering', desc: 'Websites, portals, SaaS and platforms', href: '/services' },
+  { icon: 'smartphone', title: 'Mobile apps', desc: 'Native-feeling iOS and Android experiences', href: '/services' },
+  { icon: 'workflow', title: 'Enterprise systems', desc: 'ERP, EAM, workflow and operational software', href: '/services' },
+  { icon: 'brain', title: 'AI & automation', desc: 'Assistive AI and intelligent workflows', href: '/services' },
+  { icon: 'cloud', title: 'Cloud & DevOps', desc: 'Deployment, reliability and infrastructure', href: '/services' },
+  { icon: 'shield', title: 'Security engineering', desc: 'Secure architecture and application hardening', href: '/services' },
+  { icon: 'search', title: 'SEO & digital growth', desc: 'Search-ready architecture and analytics', href: '/services' },
+  { icon: 'graduation', title: 'Training & advisory', desc: 'IT skills, consulting and transformation', href: '/services' },
 ];
 
-const mobileDock = [
-  { icon: Home, label: 'Home', href: '/' },
-  { icon: LayoutGrid, label: 'Services', href: '/services' },
-  { icon: Briefcase, label: 'Work', href: '/portfolio' },
-  { icon: MessageSquare, label: 'Contact', href: '/contact' },
+const defaultMobileDock = [
+  { icon: 'home', title: 'Home', desc: '', href: '/' },
+  { icon: 'grid', title: 'Services', desc: '', href: '/services' },
+  { icon: 'briefcase', title: 'Work', desc: '', href: '/portfolio' },
+  { icon: 'message', title: 'Contact', desc: '', href: '/contact' },
 ];
+
+const navigationIcons = {
+  building: Building2,
+  brain: BrainCircuit,
+  briefcase: Briefcase,
+  cloud: Cloud,
+  code: Code2,
+  graduation: GraduationCap,
+  grid: LayoutGrid,
+  home: Home,
+  key: KeyRound,
+  message: MessageSquare,
+  newspaper: Newspaper,
+  search: Search,
+  shield: ShieldCheck,
+  smartphone: Smartphone,
+  users: Users,
+  workflow: Workflow,
+} as const;
+
+function navigationIcon(key: string) {
+  return navigationIcons[key as keyof typeof navigationIcons] || LayoutGrid;
+}
 
 export default function Header({ settings = {} }: { settings?: SiteSettings }) {
   const pathname = usePathname();
-  const primaryNav = contentJson<Array<{ label: string; href: string }>>(settings, 'header_primary_links', defaultPrimaryNav);
+  const primaryNav = normalizeNavigationLinks(
+    contentJson<unknown>(settings, 'header_primary_links', defaultPrimaryNav),
+    defaultPrimaryNav,
+  );
+  const serviceMenu = normalizeNavigationMenu(
+    contentJson<unknown>(settings, 'header_service_menu', defaultServiceMenu),
+    defaultServiceMenu,
+  );
+  const companyMenu = normalizeNavigationMenu(
+    contentJson<unknown>(settings, 'header_company_menu', defaultCompanyMenu),
+    defaultCompanyMenu,
+  );
+  const mobileDock = normalizeNavigationMenu(
+    contentJson<unknown>(settings, 'header_mobile_dock_links', defaultMobileDock),
+    defaultMobileDock,
+  ).slice(0, 4);
+  const companyName = contentText(settings, 'company_name', 'Lightworld Technologies Ltd');
   const companyTagline = contentText(settings, 'company_tagline', 'The world of possibilities');
   const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
+  const companyAddress = contentText(settings, 'company_address', 'Accra, Ghana');
+  const servicesLabel = contentText(settings, 'header_services_label', 'Services');
+  const servicesLink = safeNavigationHref(contentText(settings, 'header_services_link', '/services'), '/services');
+  const servicesFooterText = contentText(settings, 'header_services_footer_text', 'Explore every capability');
+  const companyLabel = contentText(settings, 'header_company_label', 'Company');
+  const companyLink = safeNavigationHref(contentText(settings, 'header_company_link', '/about'), '/about');
+  const headerCtaText = contentText(settings, 'header_cta_text', 'Start a project');
+  const headerCtaLink = safeNavigationHref(contentText(settings, 'header_cta_link', '/contact'), '/contact');
+  const mobileExplore = [
+    { label: 'Home', href: '/' },
+    { label: servicesLabel, href: servicesLink },
+    ...primaryNav,
+    ...companyMenu.map((item) => ({ label: item.title, href: item.href })),
+  ].filter((item, index, items) => items.findIndex((candidate) => candidate.href === item.href) === index);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isHome = pathname === '/';
 
   const active = (href: string) => {
+    if (!href.startsWith('/')) return false;
     if (href === '/') return pathname === '/';
     return pathname === href || pathname.startsWith(href + '/');
   };
 
-  const companyActive = ['/about', '/team', '/trust', '/newsroom', '/careers', '/contact', '/client'].some((href) => active(href));
+  const companyActive = companyMenu.some((item) => active(item.href));
 
   return (
     <>
@@ -91,53 +146,56 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
 
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between rounded-full border border-slate-200/75 bg-white/82 px-2.5 shadow-lg shadow-slate-950/[0.04] backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#071018]/82 dark:shadow-black/20 sm:h-16 sm:px-3">
-          <Link href="/" className="group flex min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label="Lightworld Technologies home">
+          <Link href="/" className="group flex min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label={companyName + ' home'}>
             <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-300/30 bg-slate-950 sm:size-10">
               <Image src="/logo.png" alt="" width={34} height={34} className="object-contain" priority />
             </span>
             <span className="hidden min-w-0 leading-none sm:block">
-              <span className="block truncate text-sm font-bold tracking-[-0.02em] text-slate-900 dark:text-white">Lightworld</span>
-              <span className="mt-1 block text-[8px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-400">Technologies</span>
+              <span className="block max-w-44 truncate text-sm font-bold tracking-[-0.02em] text-slate-900 dark:text-white">{companyName}</span>
+              <span className="mt-1 block max-w-44 truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">{companyTagline}</span>
             </span>
           </Link>
 
           <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary navigation">
             <div className="group relative">
               <Link
-                href="/services"
+                href={servicesLink}
                 className={cn(
                   'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition',
-                  active('/services')
+                  active(servicesLink)
                     ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
                 )}
                 aria-current={active('/services') ? 'page' : undefined}
               >
-                Services
+                {servicesLabel}
                 <ChevronDown className="size-3.5 opacity-45 transition-transform group-hover:rotate-180" />
               </Link>
 
               <div className="invisible absolute left-1/2 top-full w-[680px] -translate-x-1/2 translate-y-1 pt-4 opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                 <div className="rounded-[28px] border border-slate-200/80 bg-white/95 p-3 shadow-2xl shadow-slate-950/10 backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#081119]/96 dark:shadow-black/40">
                   <div className="grid grid-cols-2 gap-1">
-                    {serviceMenu.map((item) => (
+                    {serviceMenu.map((item) => {
+                      const Icon = navigationIcon(item.icon);
+                      return (
                       <Link
-                        key={item.title}
-                        href="/services"
+                        key={item.title + item.href}
+                        href={item.href}
                         className="group/item flex items-start gap-3 rounded-2xl p-3 transition hover:bg-slate-100 dark:hover:bg-white/[0.045]"
                       >
                         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-emerald-500/10 bg-emerald-500/[0.07] text-emerald-600 dark:text-emerald-300">
-                          <item.icon className="size-4" />
+                          <Icon className="size-4" />
                         </span>
                         <span>
                           <span className="block text-sm font-semibold text-slate-800 dark:text-white/80">{item.title}</span>
                           <span className="mt-0.5 block text-xs leading-5 text-slate-400 dark:text-white/28">{item.desc}</span>
                         </span>
                       </Link>
-                    ))}
+                      );
+                    })}
                   </div>
-                  <Link href="/services" className="mt-2 flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600 transition hover:text-emerald-700 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-white/38 dark:hover:text-emerald-300">
-                    Explore every capability
+                  <Link href={servicesLink} className="mt-2 flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600 transition hover:text-emerald-700 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-white/38 dark:hover:text-emerald-300">
+                    {servicesFooterText}
                     <ArrowUpRight className="size-3.5" />
                   </Link>
                 </div>
@@ -162,36 +220,39 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
 
             <div className="group relative">
               <Link
-                href="/about"
+                href={companyLink}
                 className={cn(
                   'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition',
                   companyActive
                     ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
                 )}
-                aria-current={active('/about') ? 'page' : undefined}
+                aria-current={active(companyLink) ? 'page' : undefined}
               >
-                Company
+                {companyLabel}
                 <ChevronDown className="size-3.5 opacity-45 transition-transform group-hover:rotate-180" />
               </Link>
 
               <div className="invisible absolute right-0 top-full w-[360px] translate-y-1 pt-4 opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                 <div className="rounded-[26px] border border-slate-200/80 bg-white/95 p-2.5 shadow-2xl shadow-slate-950/10 backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#081119]/96 dark:shadow-black/40">
-                  {companyMenu.map((item) => (
+                  {companyMenu.map((item) => {
+                    const Icon = navigationIcon(item.icon);
+                    return (
                     <Link
-                      key={item.title}
+                      key={item.title + item.href}
                       href={item.href}
                       className="group/item flex items-start gap-3 rounded-2xl p-3 transition hover:bg-slate-100 dark:hover:bg-white/[0.045]"
                     >
                       <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-emerald-500/10 bg-emerald-500/[0.07] text-emerald-600 dark:text-emerald-300">
-                        <item.icon className="size-4" />
+                        <Icon className="size-4" />
                       </span>
                       <span>
                         <span className="block text-sm font-semibold text-slate-800 dark:text-white/80">{item.title}</span>
                         <span className="mt-0.5 block text-xs leading-5 text-slate-400 dark:text-white/28">{item.desc}</span>
                       </span>
                     </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -200,10 +261,10 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
           <div className="flex items-center gap-1.5">
             <ThemeToggle />
             <Link
-              href="/contact"
+              href={headerCtaLink}
               className="hidden h-10 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-600 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300 sm:inline-flex"
             >
-              Start a project
+              {headerCtaText}
               <ArrowUpRight className="size-3.5" />
             </Link>
 
@@ -221,7 +282,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                       <Image src="/logo.png" alt="" width={34} height={34} />
                     </span>
                     <div>
-                      <p className="text-sm font-semibold">Lightworld Technologies</p>
+                      <p className="text-sm font-semibold">{companyName}</p>
                       <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-emerald-300/70">{companyTagline}</p>
                     </div>
                   </div>
@@ -229,19 +290,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                   <div className="flex-1 overflow-y-auto px-4 py-5">
                     <p className="px-2 text-[9px] font-semibold uppercase tracking-[0.22em] text-white/20">Explore</p>
                     <div className="mt-2 grid gap-1">
-                      {[
-                        ['Home', '/'],
-                        ['Services', '/services'],
-                        ['Work', '/portfolio'],
-                        ['Products', '/products'],
-                        ['Insights', '/blog'],
-                        ['About', '/about'],
-                        ['Leadership', '/team'],
-                        ['Trust Center', '/trust'],
-                        ['Newsroom & Media', '/newsroom'],
-                        ['Careers', '/careers'],
-                        ['Contact', '/contact'],
-                      ].map(([label, href]) => (
+                      {mobileExplore.map(({ label, href }) => (
                         <Link
                           key={href}
                           href={href}
@@ -261,30 +310,33 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
 
                     <p className="mt-7 px-2 text-[9px] font-semibold uppercase tracking-[0.22em] text-white/20">Capabilities</p>
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      {serviceMenu.slice(0, 6).map((item) => (
+                      {serviceMenu.slice(0, 6).map((item) => {
+                        const Icon = navigationIcon(item.icon);
+                        return (
                         <Link
-                          key={item.title}
-                          href="/services"
+                          key={item.title + item.href}
+                          href={item.href}
                           onClick={() => setMobileOpen(false)}
                           className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3"
                         >
-                          <item.icon className="size-4 text-emerald-300" />
+                          <Icon className="size-4 text-emerald-300" />
                           <span className="mt-3 block text-xs font-medium text-white/65">{item.title}</span>
                         </Link>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
                   <div className="border-t border-white/[0.07] p-4">
                     <Link
-                      href="/contact"
+                      href={headerCtaLink}
                       onClick={() => setMobileOpen(false)}
                       className="flex h-12 items-center justify-center gap-2 rounded-full bg-emerald-400 text-sm font-semibold text-slate-950"
                     >
-                      Start a project
+                      {headerCtaText}
                       <ArrowUpRight className="size-4" />
                     </Link>
-                    <p className="mt-3 text-center text-[10px] text-white/25">Accra, Ghana · {companyEmail}</p>
+                    <p className="mt-3 text-center text-[10px] text-white/25">{companyAddress} · {companyEmail}</p>
                   </div>
                 </div>
               </SheetContent>
@@ -299,9 +351,11 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
         className="fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-40 grid grid-cols-4 rounded-[22px] border border-white/[0.08] bg-[#071018]/92 p-1.5 shadow-2xl shadow-black/30 backdrop-blur-2xl lg:hidden"
         aria-label="Mobile quick navigation"
       >
-        {mobileDock.map((item) => (
+        {mobileDock.map((item) => {
+          const Icon = navigationIcon(item.icon);
+          return (
           <Link
-            key={item.href}
+            key={item.title + item.href}
             href={item.href}
             className={cn(
               'flex min-w-0 flex-col items-center justify-center gap-1 rounded-[17px] px-2 py-2 text-[9px] font-medium transition',
@@ -309,10 +363,11 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
             )}
             aria-current={active(item.href) ? 'page' : undefined}
           >
-            <item.icon className="size-[18px]" />
-            <span>{item.label}</span>
+            <Icon className="size-[18px]" />
+            <span>{item.title}</span>
           </Link>
-        ))}
+          );
+        })}
       </nav>
     </>
   );

@@ -366,3 +366,24 @@ Deploy Phase 23 only after the PostgreSQL migration has been applied with:
 ```bash
 bun run db:deploy
 ```
+
+
+## Phase 24 CMS-complete shared navigation
+
+The Global & Navigation CMS group now controls the live shared navigation and footer chrome rather than only the top-level desktop links.
+
+Managed surfaces include:
+
+- desktop Services mega-menu entries, descriptions, destinations and supported icon keys;
+- desktop Company menu entries, descriptions, destinations and supported icon keys;
+- Services and Company group labels and landing links;
+- the header call-to-action label and destination;
+- mobile Explore navigation, derived from the managed primary and Company menus so desktop/mobile stay consistent;
+- mobile capability cards, derived from the managed Services menu;
+- the four-item mobile quick dock;
+- footer Build, Explore and Connect links;
+- footer headline, newsletter copy and closing CTA.
+
+Managed navigation destinations are normalized before rendering. Internal paths and explicit `http:`, `https:`, `mailto:` and `tel:` links are allowed. Executable schemes such as `javascript:`, protocol-relative links and control-character input fall back to a safe local destination.
+
+No database migration or environment-variable change is required for Phase 24. Existing sites continue to use the current navigation as defaults until an administrator saves customized values.
