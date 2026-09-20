@@ -12,8 +12,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get('unread');
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const requestedPage = parseInt(searchParams.get('page') || '1', 10);
+    const requestedLimit = parseInt(searchParams.get('limit') || '20', 10);
+    const page = Number.isFinite(requestedPage) ? Math.max(1, requestedPage) : 1;
+    const limit = Number.isFinite(requestedLimit) ? Math.min(100, Math.max(1, requestedLimit)) : 20;
 
     const where: Record<string, unknown> = {};
     if (unreadOnly === 'true') {
@@ -55,11 +57,11 @@ export async function GET(request: NextRequest) {
 
 // POST submit contact form
 const createContactSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Valid email is required'),
-  phone: z.string().optional().default(''),
-  subject: z.string().optional().default(''),
-  message: z.string().min(1, 'Message is required'),
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  email: z.string().trim().max(254).email('Valid email is required').transform((value) => value.toLowerCase()),
+  phone: z.string().trim().max(50).optional().default(''),
+  subject: z.string().trim().max(200).optional().default(''),
+  message: z.string().trim().min(1, 'Message is required').max(8000),
 });
 
 export async function POST(request: NextRequest) {
@@ -72,8 +74,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const parsed = createContactSchema.safeParse(body);
+    const parsed = createContactSchema.safeParse(
+      await request.json().catch(() => null),
+    );
 
     if (!parsed.success) {
       return NextResponse.json(
