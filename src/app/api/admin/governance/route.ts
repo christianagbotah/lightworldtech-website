@@ -3,14 +3,27 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { hashAdminPassword } from '@/lib/admin-auth';
 import { getSuperAdminContext, recordAdminAudit } from '@/lib/admin-governance';
+import { ALL_ADMIN_PERMISSIONS, normalizeAdminPermissions } from '@/lib/admin-permissions';
+
+const permissionSchema = z.enum([
+  'site.manage',
+  'crm.manage',
+  'proposals.manage',
+  'clients.manage',
+  'communications.manage',
+]);
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().transform((value) => value.toLowerCase()),
   recoveryEmail: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
   role: z.enum(['admin', 'super_admin']).default('admin'),
+  permissions: z.array(permissionSchema).default([]),
   password: z.string().min(12).max(200),
-});
+}).refine(
+  (value) => value.role === 'super_admin' || value.permissions.length > 0,
+  { message: 'Assign at least one permission to an administrator', path: ['permissions'] },
+);
 
 export async function GET(request: NextRequest) {
   const actor = await getSuperAdminContext(request);
@@ -26,6 +39,7 @@ export async function GET(request: NextRequest) {
           recoveryEmail: true,
           name: true,
           role: true,
+          permissions: true,
           active: true,
           lastLogin: true,
           createdAt: true,
@@ -54,7 +68,10 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         actor,
-        admins,
+        admins: admins.map((admin) => ({
+          ...admin,
+          permissions: normalizeAdminPermissions(admin.permissions),
+        })),
         auditLogs,
         summary: {
           totalAdmins: admins.length,
@@ -99,6 +116,11 @@ export async function POST(request: NextRequest) {
         email: parsed.data.email,
         recoveryEmail: parsed.data.recoveryEmail || parsed.data.email,
         role: parsed.data.role,
+        permissions: JSON.stringify(
+          parsed.data.role === 'super_admin'
+            ? ALL_ADMIN_PERMISSIONS
+            : normalizeAdminPermissions(parsed.data.permissions),
+        ),
         password: hashAdminPassword(parsed.data.password),
         active: true,
       },
@@ -108,6 +130,7 @@ export async function POST(request: NextRequest) {
         recoveryEmail: true,
         name: true,
         role: true,
+        permissions: true,
         active: true,
         lastLogin: true,
         createdAt: true,
@@ -126,7 +149,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, data: admin }, { status: 201 });
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...admin,
+        permissions: normalizeAdminPermissions(admin.permissions),
+      },
+    }, { status: 201 });
   } catch (error) {
     console.error('Failed to create administrator:', error);
     return NextResponse.json(
