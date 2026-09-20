@@ -107,8 +107,14 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
     contentJson<unknown>(settings, 'header_mobile_dock_links', defaultMobileDock),
     defaultMobileDock,
   ).slice(0, 4);
+  const companyName = contentText(settings, 'company_name', 'Lightworld Technologies Ltd');
   const companyTagline = contentText(settings, 'company_tagline', 'The world of possibilities');
   const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
+  const companyAddress = contentText(settings, 'company_address', 'Accra, Ghana');
+  const servicesLabel = contentText(settings, 'header_services_label', 'Services');
+  const servicesLink = safeNavigationHref(contentText(settings, 'header_services_link', '/services'), '/services');
+  const servicesFooterText = contentText(settings, 'header_services_footer_text', 'Explore every capability');
+  const companyLabel = contentText(settings, 'header_company_label', 'Company');
   const headerCtaText = contentText(settings, 'header_cta_text', 'Start a project');
   const headerCtaLink = safeNavigationHref(contentText(settings, 'header_cta_link', '/contact'), '/contact');
   const mobileExplore = [
@@ -139,20 +145,20 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
 
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between rounded-full border border-slate-200/75 bg-white/82 px-2.5 shadow-lg shadow-slate-950/[0.04] backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#071018]/82 dark:shadow-black/20 sm:h-16 sm:px-3">
-          <Link href="/" className="group flex min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label="Lightworld Technologies home">
+          <Link href="/" className="group flex min-w-0 items-center gap-2.5 rounded-full pr-2" aria-label={companyName + ' home'}>
             <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-300/30 bg-slate-950 sm:size-10">
               <Image src="/logo.png" alt="" width={34} height={34} className="object-contain" priority />
             </span>
             <span className="hidden min-w-0 leading-none sm:block">
-              <span className="block truncate text-sm font-bold tracking-[-0.02em] text-slate-900 dark:text-white">Lightworld</span>
-              <span className="mt-1 block text-[8px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-400">Technologies</span>
+              <span className="block max-w-44 truncate text-sm font-bold tracking-[-0.02em] text-slate-900 dark:text-white">{companyName}</span>
+              <span className="mt-1 block max-w-44 truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">{companyTagline}</span>
             </span>
           </Link>
 
           <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary navigation">
             <div className="group relative">
               <Link
-                href="/services"
+                href={servicesLink}
                 className={cn(
                   'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition',
                   active('/services')
@@ -161,7 +167,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                 )}
                 aria-current={active('/services') ? 'page' : undefined}
               >
-                Services
+                {servicesLabel}
                 <ChevronDown className="size-3.5 opacity-45 transition-transform group-hover:rotate-180" />
               </Link>
 
@@ -187,8 +193,8 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                       );
                     })}
                   </div>
-                  <Link href="/services" className="mt-2 flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600 transition hover:text-emerald-700 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-white/38 dark:hover:text-emerald-300">
-                    Explore every capability
+                  <Link href={servicesLink} className="mt-2 flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600 transition hover:text-emerald-700 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-white/38 dark:hover:text-emerald-300">
+                    {servicesFooterText}
                     <ArrowUpRight className="size-3.5" />
                   </Link>
                 </div>
@@ -222,7 +228,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                 )}
                 aria-current={active('/about') ? 'page' : undefined}
               >
-                Company
+                {companyLabel}
                 <ChevronDown className="size-3.5 opacity-45 transition-transform group-hover:rotate-180" />
               </Link>
 
@@ -275,7 +281,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                       <Image src="/logo.png" alt="" width={34} height={34} />
                     </span>
                     <div>
-                      <p className="text-sm font-semibold">Lightworld Technologies</p>
+                      <p className="text-sm font-semibold">{companyName}</p>
                       <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-emerald-300/70">{companyTagline}</p>
                     </div>
                   </div>
@@ -329,7 +335,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                       {headerCtaText}
                       <ArrowUpRight className="size-4" />
                     </Link>
-                    <p className="mt-3 text-center text-[10px] text-white/25">Accra, Ghana · {companyEmail}</p>
+                    <p className="mt-3 text-center text-[10px] text-white/25">{companyAddress} · {companyEmail}</p>
                   </div>
                 </div>
               </SheetContent>
