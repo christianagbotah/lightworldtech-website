@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import AdminPermissionPicker from '@/components/admin/AdminPermissionPicker';
 import {
   Table,
   TableBody,
@@ -41,6 +42,7 @@ interface AdminAccount {
   recoveryEmail: string;
   name: string;
   role: string;
+  permissions: string[];
   active: boolean;
   lastLogin: string | null;
   createdAt: string;
@@ -65,6 +67,7 @@ interface GovernancePayload {
     email: string;
     name: string;
     role: string;
+    permissions: string[];
   };
   admins: AdminAccount[];
   auditLogs: AuditLog[];
@@ -80,6 +83,7 @@ interface AdminForm {
   email: string;
   recoveryEmail: string;
   role: 'admin' | 'super_admin';
+  permissions: string[];
   active: boolean;
   password: string;
 }
@@ -89,6 +93,7 @@ const blankCreate: AdminForm = {
   email: '',
   recoveryEmail: '',
   role: 'admin',
+  permissions: [],
   active: true,
   password: '',
 };
@@ -153,6 +158,7 @@ export default function AdminGovernance() {
       email: admin.email,
       recoveryEmail: admin.recoveryEmail,
       role: admin.role === 'super_admin' ? 'super_admin' : 'admin',
+      permissions: admin.permissions || [],
       active: admin.active,
       password: '',
     });
@@ -172,6 +178,7 @@ export default function AdminGovernance() {
           email: createForm.email,
           recoveryEmail: createForm.recoveryEmail || createForm.email,
           role: createForm.role,
+          permissions: createForm.permissions,
           password: createForm.password,
         }),
       });
@@ -201,6 +208,7 @@ export default function AdminGovernance() {
     if (editing.id !== data?.actor.id) {
       body.email = editForm.email;
       body.role = editForm.role;
+      body.permissions = editForm.permissions;
       body.active = editForm.active;
     }
 
@@ -358,6 +366,11 @@ export default function AdminGovernance() {
                         : 'border-0 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}>
                         {roleLabel(admin.role)}
                       </Badge>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {admin.role === 'super_admin'
+                          ? 'Full access'
+                          : admin.permissions.length + ' permission' + (admin.permissions.length === 1 ? '' : 's')}
+                      </p>
                     </TableCell>
                     <TableCell>
                       <Badge variant={admin.active ? 'default' : 'secondary'}>
@@ -477,13 +490,32 @@ export default function AdminGovernance() {
               </select>
             </div>
             <div className="space-y-2">
+              <Label>Access permissions</Label>
+              {createForm.role === 'super_admin' ? (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-200">
+                  Super-admin accounts automatically have full access to every CMS and governance area.
+                </p>
+              ) : (
+                <>
+                  <AdminPermissionPicker
+                    value={createForm.permissions}
+                    onChange={(permissions) => setCreateForm({ ...createForm, permissions })}
+                  />
+                  <p className="text-xs text-muted-foreground">Assign only the areas this administrator needs.</p>
+                </>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label>Temporary password</Label>
               <Input required minLength={12} type="password" autoComplete="new-password" value={createForm.password} onChange={(event) => setCreateForm({ ...createForm, password: event.target.value })} />
               <p className="text-xs text-muted-foreground">Minimum 12 characters. Share it through a secure channel.</p>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={creating}>
+              <Button
+                type="submit"
+                disabled={creating || (createForm.role === 'admin' && createForm.permissions.length === 0)}
+              >
                 {creating && <Loader2 className="mr-2 size-4 animate-spin" />}
                 Create account
               </Button>
@@ -556,6 +588,25 @@ export default function AdminGovernance() {
                 </div>
               </div>
               <div className="space-y-2">
+                <Label>Access permissions</Label>
+                {editForm.role === 'super_admin' ? (
+                  <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-200">
+                    Super-admin accounts automatically have full access to every CMS and governance area.
+                  </p>
+                ) : (
+                  <>
+                    <AdminPermissionPicker
+                      value={editForm.permissions}
+                      onChange={(permissions) => setEditForm({ ...editForm, permissions })}
+                      disabled={editing.id === data.actor.id}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Permission changes revoke the target administrator&apos;s current session.
+                    </p>
+                  </>
+                )}
+              </div>
+              <div className="space-y-2">
                 <Label>Reset password</Label>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-3 size-4 text-muted-foreground" />
@@ -575,7 +626,10 @@ export default function AdminGovernance() {
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={saving}>
+                <Button
+                  type="submit"
+                  disabled={saving || (editForm.role === 'admin' && editForm.permissions.length === 0)}
+                >
                   {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
                   Save changes
                 </Button>

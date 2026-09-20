@@ -21,43 +21,46 @@ import AdminGovernance from '@/components/admin/AdminGovernance';
 import AdminFAQs from '@/components/admin/AdminFAQs';
 import AdminSettings from '@/components/admin/AdminSettings';
 import AdminPages from '@/components/admin/AdminPages';
+import { hasAdminPermission, type AdminPermission } from '@/lib/admin-permissions';
 
 function AdminRouter() {
-  const { adminTab, adminRole } = useAppStore();
+  const { adminTab, adminRole, adminPermissions } = useAppStore();
+  const can = (permission: AdminPermission) =>
+    hasAdminPermission(adminRole, adminPermissions, permission);
 
   switch (adminTab) {
     case 'pages':
-      return <AdminPages />;
+      return can('site.manage') ? <AdminPages /> : <AdminDashboard />;
     case 'services':
-      return <AdminServices />;
+      return can('site.manage') ? <AdminServices /> : <AdminDashboard />;
     case 'blog':
-      return <AdminBlog />;
+      return can('site.manage') ? <AdminBlog /> : <AdminDashboard />;
     case 'blog-editor':
-      return <AdminBlogEditor />;
+      return can('site.manage') ? <AdminBlogEditor /> : <AdminDashboard />;
     case 'team':
-      return <AdminTeam />;
+      return can('site.manage') ? <AdminTeam /> : <AdminDashboard />;
     case 'testimonials':
-      return <AdminTestimonials />;
+      return can('site.manage') ? <AdminTestimonials /> : <AdminDashboard />;
     case 'portfolio':
-      return <AdminPortfolio />;
+      return can('site.manage') ? <AdminPortfolio /> : <AdminDashboard />;
     case 'crm':
-      return <AdminCRM />;
+      return can('crm.manage') ? <AdminCRM /> : <AdminDashboard />;
     case 'proposals':
-      return <AdminProposals />;
+      return can('proposals.manage') ? <AdminProposals /> : <AdminDashboard />;
     case 'clients':
-      return <AdminClients />;
+      return can('clients.manage') ? <AdminClients /> : <AdminDashboard />;
     case 'newsletter':
-      return <AdminNewsletter />;
+      return can('communications.manage') ? <AdminNewsletter /> : <AdminDashboard />;
     case 'campaigns':
-      return <AdminCampaigns />;
+      return can('communications.manage') ? <AdminCampaigns /> : <AdminDashboard />;
     case 'governance':
       return adminRole === 'super_admin' ? <AdminGovernance /> : <AdminDashboard />;
     case 'messages':
-      return <AdminMessages />;
+      return can('crm.manage') ? <AdminMessages /> : <AdminDashboard />;
     case 'faqs':
-      return <AdminFAQs />;
+      return can('site.manage') ? <AdminFAQs /> : <AdminDashboard />;
     case 'settings':
-      return <AdminSettings />;
+      return can('site.manage') ? <AdminSettings /> : <AdminDashboard />;
     default:
       return <AdminDashboard />;
   }
@@ -77,7 +80,7 @@ export default function AdminPage() {
       })
       .then((payload) => {
         if (!cancelled && payload?.success && payload?.data?.name) {
-          loginAdmin(String(payload.data.name), String(payload.data.role || 'admin'));
+          loginAdmin(String(payload.data.name), String(payload.data.role || 'admin'), Array.isArray(payload.data.permissions) ? payload.data.permissions : []);
         }
       })
       .catch(() => {

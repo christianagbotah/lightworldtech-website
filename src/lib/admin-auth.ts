@@ -7,6 +7,7 @@ import {
 } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { hasAdminPermission, requiredAdminPermissionForPath } from '@/lib/admin-permissions';
 
 export const ADMIN_SESSION_COOKIE = 'lw_admin_session';
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 8;
@@ -83,15 +84,19 @@ export async function isAdminRequest(request: NextRequest): Promise<boolean> {
   try {
     const admin = await db.admin.findUnique({
       where: { id: session.sub },
-      select: { email: true, role: true, active: true, authVersion: true },
+      select: { email: true, role: true, active: true, authVersion: true, permissions: true },
     });
 
-    return Boolean(
+    const validSession = Boolean(
       admin?.active &&
       admin.email === session.email &&
       admin.role === session.role &&
       admin.authVersion === session.authVersion
     );
+    if (!validSession || !admin) return false;
+
+    const requiredPermission = requiredAdminPermissionForPath(request.nextUrl.pathname);
+    return !requiredPermission || hasAdminPermission(admin.role, admin.permissions, requiredPermission);
   } catch (error) {
     console.error('Admin session revalidation failed:', error);
     return false;

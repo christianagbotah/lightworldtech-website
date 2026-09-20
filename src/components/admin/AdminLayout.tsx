@@ -28,28 +28,29 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { hasAdminPermission, type AdminPermission } from '@/lib/admin-permissions';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'admin-dashboard' as const },
-  { id: 'pages', label: 'Page Content', icon: PanelsTopLeft, page: 'admin-pages' as const },
-  { id: 'services', label: 'Services', icon: Briefcase, page: 'admin-services' as const },
-  { id: 'blog', label: 'Blog Posts', icon: FileText, page: 'admin-blog' as const },
-  { id: 'team', label: 'Team Members', icon: Users, page: 'admin-team' as const },
-  { id: 'testimonials', label: 'Testimonials', icon: MessageSquare, page: 'admin-testimonials' as const },
-  { id: 'portfolio', label: 'Portfolio', icon: FolderOpen, page: 'admin-portfolio' as const },
-  { id: 'crm', label: 'CRM Pipeline', icon: GitBranch, page: 'admin-crm' as const },
-  { id: 'proposals', label: 'Proposals', icon: FileSignature, page: 'admin-proposals' as const },
-  { id: 'clients', label: 'Client Portal', icon: Building2, page: 'admin-clients' as const },
-  { id: 'newsletter', label: 'Newsletter & Mail', icon: MailCheck, page: 'admin-newsletter' as const },
-  { id: 'campaigns', label: 'Campaign Studio', icon: Megaphone, page: 'admin-campaigns' as const },
+  { id: 'pages', label: 'Page Content', icon: PanelsTopLeft, page: 'admin-pages' as const, permission: 'site.manage' as AdminPermission },
+  { id: 'services', label: 'Services', icon: Briefcase, page: 'admin-services' as const, permission: 'site.manage' as AdminPermission },
+  { id: 'blog', label: 'Blog Posts', icon: FileText, page: 'admin-blog' as const, permission: 'site.manage' as AdminPermission },
+  { id: 'team', label: 'Team Members', icon: Users, page: 'admin-team' as const, permission: 'site.manage' as AdminPermission },
+  { id: 'testimonials', label: 'Testimonials', icon: MessageSquare, page: 'admin-testimonials' as const, permission: 'site.manage' as AdminPermission },
+  { id: 'portfolio', label: 'Portfolio', icon: FolderOpen, page: 'admin-portfolio' as const, permission: 'site.manage' as AdminPermission },
+  { id: 'crm', label: 'CRM Pipeline', icon: GitBranch, page: 'admin-crm' as const, permission: 'crm.manage' as AdminPermission },
+  { id: 'proposals', label: 'Proposals', icon: FileSignature, page: 'admin-proposals' as const, permission: 'proposals.manage' as AdminPermission },
+  { id: 'clients', label: 'Client Portal', icon: Building2, page: 'admin-clients' as const, permission: 'clients.manage' as AdminPermission },
+  { id: 'newsletter', label: 'Newsletter & Mail', icon: MailCheck, page: 'admin-newsletter' as const, permission: 'communications.manage' as AdminPermission },
+  { id: 'campaigns', label: 'Campaign Studio', icon: Megaphone, page: 'admin-campaigns' as const, permission: 'communications.manage' as AdminPermission },
   { id: 'governance', label: 'Admin Governance', icon: ShieldCheck, page: 'admin-governance' as const, superAdminOnly: true },
-  { id: 'messages', label: 'Messages', icon: Mail, page: 'admin-messages' as const },
-  { id: 'faqs', label: 'FAQs', icon: HelpCircle, page: 'admin-faqs' as const },
-  { id: 'settings', label: 'Settings', icon: Settings, page: 'admin-settings' as const },
+  { id: 'messages', label: 'Messages', icon: Mail, page: 'admin-messages' as const, permission: 'crm.manage' as AdminPermission },
+  { id: 'faqs', label: 'FAQs', icon: HelpCircle, page: 'admin-faqs' as const, permission: 'site.manage' as AdminPermission },
+  { id: 'settings', label: 'Settings', icon: Settings, page: 'admin-settings' as const, permission: 'site.manage' as AdminPermission },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { currentPage, adminTab, setAdminTab, navigate, adminName, adminRole, logoutAdmin } = useAppStore();
+  const { currentPage, adminTab, setAdminTab, navigate, adminName, adminRole, adminPermissions, logoutAdmin } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -81,7 +82,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <ScrollArea className="flex-1 py-3">
         <nav className="space-y-1 px-3">
-          {navItems.filter((item) => !('superAdminOnly' in item) || !item.superAdminOnly || adminRole === 'super_admin').map((item) => {
+          {navItems.filter((item) => {
+            if ('superAdminOnly' in item && item.superAdminOnly && adminRole !== 'super_admin') return false;
+            if ('permission' in item && item.permission && !hasAdminPermission(adminRole, adminPermissions, item.permission)) return false;
+            return true;
+          }).map((item) => {
             const Icon = item.icon;
             const isActive = adminTab === item.id;
             return (

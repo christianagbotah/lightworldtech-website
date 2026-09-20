@@ -270,6 +270,7 @@ model Admin {
   recoveryEmail String          @default("")
   lastLogin     DateTime?
   authVersion   Int             @default(0)
+  permissions   String          @default("[]")
   auditLogs   AdminAuditLog[]
   resetTokens AdminPasswordResetToken[]
 

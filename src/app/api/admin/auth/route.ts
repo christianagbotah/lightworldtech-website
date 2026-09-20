@@ -4,32 +4,18 @@ import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE,
   createAdminSessionToken,
-  getAdminSession,
   hashAdminPassword,
   verifyAdminPassword,
 } from '@/lib/admin-auth';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { adminLoginSchema } from '@/lib/login-input';
 import { consumePublicRateLimit } from '@/lib/public-rate-limit';
+import { normalizeAdminPermissions } from '@/lib/admin-permissions';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = getAdminSession(request);
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const admin = await db.admin.findUnique({
-      where: { id: session.sub },
-      select: { id: true, email: true, name: true, role: true, active: true, authVersion: true },
-    });
-
-    if (
-      !admin?.active ||
-      admin.email !== session.email ||
-      admin.role !== session.role ||
-      admin.authVersion !== session.authVersion
-    ) {
+    const admin = await getActiveAdminContext(request);
+    if (!admin) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -97,6 +83,8 @@ export async function POST(request: NextRequest) {
       authVersion: admin.authVersion,
     });
 
+    const permissions = normalizeAdminPermissions(admin.permissions);
+
     await recordAdminAudit({
       admin: {
         id: admin.id,
@@ -117,6 +105,7 @@ export async function POST(request: NextRequest) {
         email: admin.email,
         name: admin.name || 'Admin',
         role: admin.role,
+        permissions,
       },
       message: 'Login successful',
     });

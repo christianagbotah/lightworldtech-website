@@ -8,12 +8,20 @@ import {
   recordAdminAudit,
 } from '@/lib/admin-governance';
 import { governanceUpdateError } from '@/lib/admin-governance-policy';
+import { ALL_ADMIN_PERMISSIONS, normalizeAdminPermissions } from '@/lib/admin-permissions';
 
 const updateSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
   email: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
   recoveryEmail: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
   role: z.enum(['admin', 'super_admin']).optional(),
+  permissions: z.array(z.enum([
+    'site.manage',
+    'crm.manage',
+    'proposals.manage',
+    'clients.manage',
+    'communications.manage',
+  ])).optional(),
   active: z.boolean().optional(),
   newPassword: z.string().min(12).max(200).optional(),
 }).refine((value) => Object.keys(value).length > 0, 'At least one change is required');
@@ -57,6 +65,18 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: policyError }, { status: 409 });
     }
 
+    const nextRole = parsed.data.role ?? target.role;
+    const nextPermissions = nextRole === 'super_admin'
+      ? ALL_ADMIN_PERMISSIONS
+      : normalizeAdminPermissions(parsed.data.permissions ?? target.permissions);
+
+    if (nextRole === 'admin' && nextPermissions.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Assign at least one permission to an administrator' },
+        { status: 400 },
+      );
+    }
+
     if (parsed.data.email && parsed.data.email !== target.email) {
       const emailOwner = await db.admin.findUnique({ where: { email: parsed.data.email } });
       if (emailOwner && emailOwner.id !== target.id) {
@@ -72,6 +92,7 @@ export async function PATCH(
       email?: string;
       recoveryEmail?: string;
       role?: 'admin' | 'super_admin';
+      permissions?: string;
       active?: boolean;
       password?: string;
       authVersion?: { increment: number };
@@ -80,10 +101,17 @@ export async function PATCH(
     if (parsed.data.name !== undefined) data.name = parsed.data.name;
     if (parsed.data.email !== undefined) data.email = parsed.data.email;
     if (parsed.data.recoveryEmail !== undefined) data.recoveryEmail = parsed.data.recoveryEmail;
-    if (parsed.data.role !== undefined) data.role = parsed.data.role;
+    if (parsed.data.role !== undefined) {
+      data.role = parsed.data.role;
+      data.permissions = JSON.stringify(nextPermissions);
+    } else if (parsed.data.permissions !== undefined) {
+      data.permissions = JSON.stringify(nextPermissions);
+    }
     if (parsed.data.active !== undefined) data.active = parsed.data.active;
     if (parsed.data.newPassword !== undefined) {
       data.password = hashAdminPassword(parsed.data.newPassword);
+    }
+    if (parsed.data.newPassword !== undefined || parsed.data.permissions !== undefined) {
       data.authVersion = { increment: 1 };
     }
 
@@ -96,6 +124,7 @@ export async function PATCH(
         recoveryEmail: true,
         name: true,
         role: true,
+        permissions: true,
         active: true,
         lastLogin: true,
         createdAt: true,
@@ -120,10 +149,18 @@ export async function PATCH(
         newRole: updated.role,
         previousActive: target.active,
         newActive: updated.active,
+        previousPermissions: normalizeAdminPermissions(target.permissions),
+        newPermissions: normalizeAdminPermissions(updated.permissions),
       },
     });
 
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...updated,
+        permissions: normalizeAdminPermissions(updated.permissions),
+      },
+    });
   } catch (error) {
     console.error('Failed to update administrator:', error);
     return NextResponse.json(
