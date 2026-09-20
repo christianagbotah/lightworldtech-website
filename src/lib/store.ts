@@ -19,7 +19,8 @@ interface AppState {
   isAdminLoggedIn: boolean;
   adminName: string;
   adminRole: string;
-  loginAdmin: (name: string, role?: string) => void;
+  adminPermissions: string[];
+  loginAdmin: (name: string, role?: string, permissions?: string[]) => void;
   logoutAdmin: () => void;
 }
 
@@ -100,6 +101,18 @@ export const useAppStore = create<AppState>((set) => ({
   isAdminLoggedIn: false,
   adminName: '',
   adminRole: '',
-  loginAdmin: (name, role = 'admin') => set({ isAdminLoggedIn: true, adminName: name, adminRole: role }),
-  logoutAdmin: () => set({ isAdminLoggedIn: false, adminName: '', adminRole: '', adminTab: 'dashboard' }),
+  adminPermissions: [],
+  loginAdmin: (name, role = 'admin', permissions = []) => set({
+    isAdminLoggedIn: true,
+    adminName: name,
+    adminRole: role,
+    adminPermissions: permissions,
+  }),
+  logoutAdmin: () => set({
+    isAdminLoggedIn: false,
+    adminName: '',
+    adminRole: '',
+    adminPermissions: [],
+    adminTab: 'dashboard',
+  }),
 }));
