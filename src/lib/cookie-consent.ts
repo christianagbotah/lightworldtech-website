@@ -16,7 +16,7 @@ export const acceptedCurrentCookiePreferences: CookiePreferences = {
   essential: true,
   analytics: true,
   marketing: false,
-  preferences: true,
+  preferences: false,
 };
 
 export function normalizeCookiePreferences(value: unknown): CookiePreferences {
