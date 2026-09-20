@@ -98,6 +98,10 @@ export function requiredAdminPermissionForPath(
     return 'communications.manage';
   }
 
+  if (pathname.startsWith('/api/admin/analytics')) {
+    return 'site.manage';
+  }
+
   if (
     pathname.startsWith('/api/admin/services') ||
     pathname.startsWith('/api/admin/team') ||
