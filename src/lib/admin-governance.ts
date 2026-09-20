@@ -3,12 +3,19 @@ import 'server-only';
 import type { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { getAdminSession } from '@/lib/admin-auth';
+import {
+  normalizeAdminPermissions,
+  hasAdminPermission,
+  requiredAdminPermissionForPath,
+  type AdminPermission,
+} from '@/lib/admin-permissions';
 
 export type ActiveAdminContext = {
   id: string;
   email: string;
   name: string;
   role: string;
+  permissions: AdminPermission[];
 };
 
 export async function getActiveAdminContext(request: NextRequest): Promise<ActiveAdminContext | null> {
@@ -24,6 +31,7 @@ export async function getActiveAdminContext(request: NextRequest): Promise<Activ
       role: true,
       active: true,
       authVersion: true,
+      permissions: true,
     },
   });
 
@@ -34,11 +42,18 @@ export async function getActiveAdminContext(request: NextRequest): Promise<Activ
     admin.authVersion !== session.authVersion
   ) return null;
 
+  const permissions = normalizeAdminPermissions(admin.permissions);
+  const requiredPermission = requiredAdminPermissionForPath(request.nextUrl.pathname);
+  if (requiredPermission && !hasAdminPermission(admin.role, permissions, requiredPermission)) {
+    return null;
+  }
+
   return {
     id: admin.id,
     email: admin.email,
     name: admin.name || 'Admin',
     role: admin.role,
+    permissions,
   };
 }
 
