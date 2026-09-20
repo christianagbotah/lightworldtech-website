@@ -4,7 +4,6 @@ import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE,
   createAdminSessionToken,
-  getAdminSession,
   hashAdminPassword,
   verifyAdminPassword,
 } from '@/lib/admin-auth';
@@ -92,7 +91,6 @@ export async function POST(request: NextRequest) {
         email: admin.email,
         name: admin.name || 'Admin',
         role: admin.role,
-        permissions,
       },
       action: 'admin.login',
       entity: 'Admin',
