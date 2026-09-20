@@ -1,39 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import {
+  careersApplicationMessage,
+  careersApplicationSchema,
+} from '@/lib/careers-application';
+import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { name, email, phone, position, coverLetter, resumeUrl } = body;
+  const rate = consumePublicRateLimit(request, 'careers-apply', 6, 10 * 60_000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Too many application submissions. Please try again shortly.' },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
+    );
+  }
 
-    if (!name || !email || !position) {
+  try {
+    const parsed = careersApplicationSchema.safeParse(
+      await request.json().catch(() => null),
+    );
+
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Name, email, and position are required.' },
-        { status: 400 }
+        {
+          success: false,
+          error: 'Invalid application',
+          details: parsed.error.flatten(),
+        },
+        { status: 400 },
       );
     }
 
-    // Store as a contact message with careers tag
+    const application = parsed.data;
+
     await db.contactMessage.create({
       data: {
-        name,
-        email,
-        phone: phone || '',
-        subject: `Job Application: ${position}`,
-        message: coverLetter
-          ? `${coverLetter}\n\n---\nResume: ${resumeUrl || 'Not uploaded'}`
-          : `Position: ${position}\nResume: ${resumeUrl || 'Not uploaded'}`,
+        name: application.name,
+        email: application.email,
+        phone: application.phone,
+        subject: 'Job Application: ' + application.position,
+        message: careersApplicationMessage(application),
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Application submitted successfully!',
-    });
-  } catch {
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Application submitted successfully!',
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error('Career application submission failed:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to submit application.' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
