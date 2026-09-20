@@ -156,13 +156,13 @@ export const cmsGroups: CmsGroup[] = [
         label: 'Mobile quick dock',
         type: 'objectList',
         defaultValue: [
-          { label: 'Home', href: '/', icon: 'home' },
-          { label: 'Services', href: '/services', icon: 'grid' },
-          { label: 'Work', href: '/portfolio', icon: 'briefcase' },
-          { label: 'Contact', href: '/contact', icon: 'message' },
+          { title: 'Home', href: '/', icon: 'home' },
+          { title: 'Services', href: '/services', icon: 'grid' },
+          { title: 'Work', href: '/portfolio', icon: 'briefcase' },
+          { title: 'Contact', href: '/contact', icon: 'message' },
         ],
         fields: [
-          { key: 'label', label: 'Label' },
+          { key: 'title', label: 'Label' },
           { key: 'href', label: 'Link', type: 'url' },
           { key: 'icon', label: 'Icon key' },
         ],
