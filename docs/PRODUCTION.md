@@ -413,3 +413,14 @@ The floating WhatsApp and assistant widgets now reuse managed company settings f
 Assistant-generated CTA destinations, managed portfolio project URLs and managed footer social links are normalized through the shared safe-navigation policy before rendering. Executable URL schemes therefore fall back or disappear rather than being emitted as clickable links.
 
 Phase 26 requires no database migration. The new `company_whatsapp` setting is stored by the existing SiteSetting model when first saved.
+
+
+## Phase 27 CMS-managed cookie and privacy-consent surface
+
+The public cookie-consent banner now reads its visible wording from the existing Page Content CMS instead of maintaining a second hard-coded privacy message. Administrators can manage the banner title, description, Privacy & Cookie Notice link label, action labels, category heading, "Always on" label, and each consent-category name/description alongside the main Privacy and Terms content.
+
+The underlying consent behavior is unchanged: essential storage remains mandatory, optional categories remain separately controllable, and the existing `lw-cookie-consent` / `lw-cookie-preferences` browser keys continue to drive analytics consent.
+
+The action row now wraps on narrow screens so Customize, Decline and Accept All remain usable without horizontal overflow.
+
+Phase 27 requires no database migration. New cookie-copy keys use the existing SiteSetting store and retain today's public wording as defaults until explicitly edited in Admin.

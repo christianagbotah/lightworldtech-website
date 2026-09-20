@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Cookie, X, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { contentText, type SiteSettings } from '@/lib/site-content';
 
 const STORAGE_KEY = 'lw-cookie-consent';
 const PREFERENCES_KEY = 'lw-cookie-preferences';
@@ -24,33 +25,6 @@ const defaultPreferences: CookiePreferences = {
   preferences: false,
 };
 
-const categories = [
-  {
-    key: 'essential' as const,
-    name: 'Essential',
-    description: 'Required for the website to function properly. Cannot be disabled.',
-    locked: true,
-  },
-  {
-    key: 'analytics' as const,
-    name: 'Analytics',
-    description: 'Help us understand how visitors interact with our website.',
-    locked: false,
-  },
-  {
-    key: 'marketing' as const,
-    name: 'Marketing',
-    description: 'Reserved for optional marketing integrations. Not required for first-party website analytics.',
-    locked: false,
-  },
-  {
-    key: 'preferences' as const,
-    name: 'Preferences',
-    description: 'Allow the website to remember choices you make (e.g., theme, language).',
-    locked: false,
-  },
-];
-
 function loadSavedPrefs(): CookiePreferences {
   if (typeof window === 'undefined') return defaultPreferences;
   const saved = localStorage.getItem(PREFERENCES_KEY);
@@ -64,7 +38,34 @@ function loadSavedPrefs(): CookiePreferences {
   return defaultPreferences;
 }
 
-export default function CookieConsent() {
+export default function CookieConsent({ settings = {} }: { settings?: SiteSettings }) {
+  const categories = [
+    {
+      key: 'essential' as const,
+      name: contentText(settings, 'cookie_essential_name', 'Essential'),
+      description: contentText(settings, 'cookie_essential_description', 'Required for the website to function properly. Cannot be disabled.'),
+      locked: true,
+    },
+    {
+      key: 'analytics' as const,
+      name: contentText(settings, 'cookie_analytics_name', 'Analytics'),
+      description: contentText(settings, 'cookie_analytics_description', 'Help us understand how visitors interact with our website.'),
+      locked: false,
+    },
+    {
+      key: 'marketing' as const,
+      name: contentText(settings, 'cookie_marketing_name', 'Marketing'),
+      description: contentText(settings, 'cookie_marketing_description', 'Reserved for optional marketing integrations. Not required for first-party website analytics.'),
+      locked: false,
+    },
+    {
+      key: 'preferences' as const,
+      name: contentText(settings, 'cookie_preferences_name', 'Preferences'),
+      description: contentText(settings, 'cookie_preferences_description', 'Allow the website to remember choices you make, such as theme or language.'),
+      locked: false,
+    },
+  ];
+
   const [show, setShow] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
   const [prefs, setPrefs] = useState<CookiePreferences>(defaultPreferences);
@@ -178,19 +179,23 @@ export default function CookieConsent() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-foreground">We value your privacy</h3>
+                    <h3 className="text-sm font-semibold text-foreground">{contentText(settings, 'cookie_banner_title', 'We value your privacy')}</h3>
                     <ShieldCheck className="size-3.5 text-amber-500" />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    We use essential browser storage to operate the site. Optional analytics helps us understand consented website usage; optional categories stay off unless you choose them.{' '}
+                    {contentText(
+                      settings,
+                      'cookie_banner_description',
+                      'We use essential browser storage to operate the site. Optional analytics helps us understand consented website usage; optional categories stay off unless you choose them.',
+                    )}{' '}
                     <Link href="/privacy" className="text-emerald-600 dark:text-amber-400 hover:underline font-medium">
-                      Privacy &amp; Cookie Notice
+                      {contentText(settings, 'cookie_privacy_link_label', 'Privacy & Cookie Notice')}
                     </Link>
                   </p>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
@@ -198,7 +203,7 @@ export default function CookieConsent() {
                     className="text-xs border-slate-300 dark:border-slate-600 h-8 gap-1"
                   >
                     <Settings className="size-3" />
-                    Customize
+                    {contentText(settings, 'cookie_customize_label', 'Customize')}
                     {showCustomize ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
                   </Button>
                   <Button
@@ -207,14 +212,14 @@ export default function CookieConsent() {
                     onClick={decline}
                     className="text-xs border-slate-300 dark:border-slate-600 h-8"
                   >
-                    Decline
+                    {contentText(settings, 'cookie_decline_label', 'Decline')}
                   </Button>
                   <Button
                     size="sm"
                     onClick={accept}
                     className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white h-8"
                   >
-                    Accept All
+                    {contentText(settings, 'cookie_accept_all_label', 'Accept All')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -239,7 +244,9 @@ export default function CookieConsent() {
                     className="overflow-hidden"
                   >
                     <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-4">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cookie Categories</p>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        {contentText(settings, 'cookie_categories_title', 'Cookie Categories')}
+                      </p>
                       {categories.map((cat) => (
                         <div
                           key={cat.key}
@@ -250,7 +257,7 @@ export default function CookieConsent() {
                               <span className="text-sm font-medium text-foreground">{cat.name}</span>
                               {cat.locked && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 font-medium">
-                                  Always on
+                                  {contentText(settings, 'cookie_always_on_label', 'Always on')}
                                 </span>
                               )}
                             </div>
@@ -270,7 +277,7 @@ export default function CookieConsent() {
                           onClick={acceptCustomized}
                           className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
-                          Save Preferences
+                          {contentText(settings, 'cookie_save_preferences_label', 'Save Preferences')}
                         </Button>
                       </div>
                     </div>
