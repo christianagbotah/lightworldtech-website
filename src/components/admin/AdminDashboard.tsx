@@ -274,8 +274,6 @@ export default function AdminDashboard() {
         })}
         </div>
       </div>
-
-      </div>
       )}
 
       {/* CRM pipeline snapshot */}
@@ -302,8 +300,6 @@ export default function AdminDashboard() {
             </Card>
           ))}
         </div>
-      </div>
-
       </div>
       )}
 
@@ -475,8 +471,6 @@ export default function AdminDashboard() {
             )}
           </CardContent>
         </Card>
-
-        </Card>
         )}
 
         {/* Recent messages */}
@@ -519,8 +513,6 @@ export default function AdminDashboard() {
               </Table>
             )}
           </CardContent>
-        </Card>
-
         </Card>
         )}
 
