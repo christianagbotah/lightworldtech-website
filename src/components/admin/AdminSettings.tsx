@@ -38,6 +38,7 @@ const settingsGroups: SettingsGroup[] = [
     fields: [
       { key: 'company_phone1', label: 'Phone 1', type: 'input' },
       { key: 'company_phone2', label: 'Phone 2', type: 'input' },
+      { key: 'company_whatsapp', label: 'WhatsApp Number', type: 'input' },
       { key: 'company_email', label: 'Email', type: 'input' },
       { key: 'company_address', label: 'Address', type: 'textarea' },
     ],
