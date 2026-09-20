@@ -43,7 +43,7 @@ export default async function Blog() {
   }));
 
   return (
-    <PublicShell>
+    <PublicShell settings={settings}>
       <BlogPage initialPosts={initialPosts} settings={settings} />
     </PublicShell>
   );
