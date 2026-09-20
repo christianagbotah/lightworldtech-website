@@ -2,7 +2,8 @@ import { randomBytes } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { getAdminSession, hashAdminPassword } from '@/lib/admin-auth';
+import { hashAdminPassword } from '@/lib/admin-auth';
+import { getActiveAdminContext } from '@/lib/admin-governance';
 import { clientActivationUrl, createClientInvite } from '@/lib/client-invite';
 
 const schema = z.object({
@@ -15,7 +16,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = getAdminSession(request);
+  const session = await getActiveAdminContext(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {

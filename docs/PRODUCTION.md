@@ -329,3 +329,17 @@ cat /home/lightworld/webapps/lightworldtech/.next/standalone/RELEASE_SHA
 ```
 
 After promotion, public `/admin` must remain `private, no-store`; unauthenticated `/api/admin/auth`, `/api/client/auth`, and `/api/upload` must return 401.
+
+
+## Phase 22 live administrator session revalidation
+
+Protected administrator APIs must not treat a validly signed cookie as sufficient authorization on its own. Before protected data is returned or mutated, the request revalidates the administrator against the live `Admin` row and requires the account to remain active with matching email, role and `authVersion`.
+
+This closes the remaining cookie-only authorization paths in proposal editing, CRM notes, client-support replies and proposal-to-client conversion. Deactivation, role changes, email changes and password/governance actions that advance `authVersion` therefore invalidate access on the next protected request rather than waiting for the eight-hour cookie lifetime to expire.
+
+The regression suite enforces two invariants:
+
+- admin mutation handlers must use `await isAdminRequest(request)`, a checked `await getActiveAdminContext(request)`, or a checked `await getSuperAdminContext(request)`;
+- protected admin route files outside the intentional public login/password-recovery entrypoints may not call `getAdminSession(request)` directly.
+
+No database migration is required for Phase 22.

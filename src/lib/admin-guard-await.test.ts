@@ -111,8 +111,8 @@ function explicitlyRejectsMissing(body: string, variable: string | null): boolea
 function hasRecognizedAdminGuard(body: string): boolean {
   if (body.includes('await isAdminRequest(request)')) return true;
 
-  const session = assignedGuardVariable(body, 'getAdminSession(request)');
-  if (explicitlyRejectsMissing(body, session)) return true;
+  const activeAdmin = assignedGuardVariable(body, 'await getActiveAdminContext(request)');
+  if (explicitlyRejectsMissing(body, activeAdmin)) return true;
 
   const superAdmin = assignedGuardVariable(body, 'await getSuperAdminContext(request)');
   return explicitlyRejectsMissing(body, superAdmin);
@@ -157,6 +157,23 @@ describe('API authorization guardrails', () => {
         if (body !== null && !hasRecognizedAdminGuard(body)) {
           violations.push(relativePath + ' ' + method);
         }
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
+
+  test('protected admin APIs do not rely on cookie-only sessions', () => {
+    const adminRoot = join(process.cwd(), 'src', 'app', 'api', 'admin');
+    const violations: string[] = [];
+
+    for (const path of routeFiles(adminRoot)) {
+      const relativePath = relative(adminRoot, path).replaceAll('\\', '/');
+      if (PUBLIC_ADMIN_MUTATION_ROUTES.has(relativePath)) continue;
+
+      const source = readFileSync(path, 'utf8');
+      if (source.includes('getAdminSession(request)')) {
+        violations.push(relativePath);
       }
     }
 
