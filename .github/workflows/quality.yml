@@ -39,6 +39,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Validate production operations scripts
+        run: bash -n ops/*.sh
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
