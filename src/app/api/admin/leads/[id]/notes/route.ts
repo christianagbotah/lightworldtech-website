@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { getAdminSession } from '@/lib/admin-auth';
+import { getActiveAdminContext } from '@/lib/admin-governance';
 
 const createNoteSchema = z.object({
   note: z.string().trim().min(1).max(4000),
@@ -11,7 +11,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = getAdminSession(request);
+  const session = await getActiveAdminContext(request);
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
