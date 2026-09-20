@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useAppStore } from '@/lib/store';
+import { hasAdminPermission } from '@/lib/admin-permissions';
 
 interface Stats {
   totalPosts: number;
@@ -94,7 +95,9 @@ const quickActions = [
 ];
 
 export default function AdminDashboard() {
-  const { navigate } = useAppStore();
+  const { navigate, adminRole, adminPermissions } = useAppStore();
+  const canSite = hasAdminPermission(adminRole, adminPermissions, 'site.manage');
+  const canCrm = hasAdminPermission(adminRole, adminPermissions, 'crm.manage');
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
@@ -106,24 +109,26 @@ export default function AdminDashboard() {
     async function fetchData() {
       try {
         const [statsRes, postsRes, messagesRes, analyticsRes] = await Promise.all([
-          fetch('/api/admin/stats'),
-          fetch('/api/blog?limit=5'),
-          fetch('/api/contact?limit=20'),
-          fetch('/api/admin/analytics?days=30'),
+          fetch('/api/admin/stats', { cache: 'no-store' }),
+          canSite ? fetch('/api/blog?limit=5', { cache: 'no-store' }) : Promise.resolve(null),
+          canCrm ? fetch('/api/contact?limit=20', { cache: 'no-store' }) : Promise.resolve(null),
+          canSite ? fetch('/api/admin/analytics?days=30', { cache: 'no-store' }) : Promise.resolve(null),
         ]);
 
-        if (!statsRes.ok || !postsRes.ok || !messagesRes.ok || !analyticsRes.ok) {
-          throw new Error('Failed to fetch data');
+        if (
+          !statsRes.ok ||
+          (postsRes && !postsRes.ok) ||
+          (messagesRes && !messagesRes.ok) ||
+          (analyticsRes && !analyticsRes.ok)
+        ) {
+          throw new Error('Failed to fetch authorized dashboard data');
         }
 
-        const [statsData, postsData, messagesData, analyticsData] = await Promise.all([
-          statsRes.json(),
-          postsRes.json(),
-          messagesRes.json(),
-          analyticsRes.json(),
-        ]);
+        const statsData = await statsRes.json();
+        const postsData = postsRes ? await postsRes.json() : { data: [] };
+        const messagesData = messagesRes ? await messagesRes.json() : { data: [] };
+        const analyticsData = analyticsRes ? await analyticsRes.json() : { data: null };
 
-        // The stats API may be wrapped in {success, data}
         const rawStats = statsData.data || statsData;
 
         setStats({
@@ -142,6 +147,7 @@ export default function AdminDashboard() {
             overdueFollowUps: 0,
           },
         });
+
         const posts = Array.isArray(postsData) ? postsData : (postsData.data || []);
         const messages = Array.isArray(messagesData) ? messagesData : (messagesData.data || []);
         setRecentPosts(posts.slice(0, 5));
@@ -153,8 +159,8 @@ export default function AdminDashboard() {
         setLoading(false);
       }
     }
-    fetchData();
-  }, []);
+    void fetchData();
+  }, [canSite, canCrm]);
 
   if (loading) {
     return (
@@ -230,6 +236,7 @@ export default function AdminDashboard() {
       </motion.div>
 
       {/* Consented first-party analytics — last 30 days */}
+      {canSite && (
       <div>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">First-party analytics · last 30 days</p>
@@ -268,7 +275,11 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      </div>
+      )}
+
       {/* CRM pipeline snapshot */}
+      {canCrm && (
       <div>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">CRM pipeline</p>
@@ -293,9 +304,12 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* CMS content snapshot */}
+      </div>
+      )}
+
+      {/* Permission-scoped content snapshot */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {statCards.map((card) => {
+        {statCards.filter((card) => card.key === 'unreadMessages' ? canCrm : canSite).map((card) => {
           const Icon = card.icon;
           const value = stats?.[card.key] || 0;
           return (
@@ -388,7 +402,10 @@ export default function AdminDashboard() {
               <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="pt-4 space-y-3">
-              {quickActions.map((action, i) => {
+              {quickActions.filter((action) => {
+                if (action.action === 'admin-crm' || action.action === 'admin-messages') return canCrm;
+                return canSite;
+              }).map((action, i) => {
                 const Icon = action.icon;
                 return (
                   <motion.button
@@ -417,6 +434,7 @@ export default function AdminDashboard() {
       {/* Recent data tables + Activity feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent posts */}
+        {canSite && (
         <Card className="border-border/50">
           <CardContent className="p-0">
             <div className="px-5 py-4 border-b border-border">
@@ -458,7 +476,11 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
+        </Card>
+        )}
+
         {/* Recent messages */}
+        {canCrm && (
         <Card className="border-border/50">
           <CardContent className="p-0">
             <div className="px-5 py-4 border-b border-border">
@@ -499,7 +521,11 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
+        </Card>
+        )}
+
         {/* Recent Activity */}
+        {(canSite || canCrm) && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -535,6 +561,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </motion.div>
+        )}
       </div>
     </div>
   );
