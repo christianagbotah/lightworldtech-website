@@ -413,3 +413,14 @@ The floating WhatsApp and assistant widgets now reuse managed company settings f
 Assistant-generated CTA destinations, managed portfolio project URLs and managed footer social links are normalized through the shared safe-navigation policy before rendering. Executable URL schemes therefore fall back or disappear rather than being emitted as clickable links.
 
 Phase 26 requires no database migration. The new `company_whatsapp` setting is stored by the existing SiteSetting model when first saved.
+
+
+## Phase 27 consent CMS alignment and privacy hardening
+
+The cookie/privacy control now reuses the managed legal-content settings instead of carrying a separate hard-coded privacy message. Administrators can edit the consent title, description, privacy-link label, action labels and the currently active Essential/Analytics category descriptions from Page Content → Privacy & Website Terms.
+
+Consent state is normalized through a shared helper before it is stored or read. Essential storage is always enabled. Analytics remains disabled unless the visitor explicitly accepts it. Marketing and other inactive optional categories are forced off, including legacy browser values, so the current website does not pre-consent a visitor to future integrations that are not yet present.
+
+The analytics client consumes the same normalized consent state. The cookie-settings control is also moved above the mobile navigation dock on smaller screens so it remains accessible without overlapping primary navigation.
+
+Phase 27 requires no database migration. The new copy settings use the existing SiteSetting store on first save.
