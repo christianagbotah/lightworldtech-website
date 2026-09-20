@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { db } from '@/lib/db';
 import {
   CLIENT_SESSION_COOKIE,
@@ -9,11 +8,7 @@ import {
 } from '@/lib/client-auth';
 import { hashAdminPassword, verifyAdminPassword } from '@/lib/admin-auth';
 import { consumePublicRateLimit } from '@/lib/public-rate-limit';
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1).max(256),
-});
+import { clientLoginSchema } from '@/lib/login-input';
 
 export async function POST(request: NextRequest) {
   const rate = consumePublicRateLimit(request, 'client-login', 15, 10 * 60_000);
@@ -25,12 +20,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const parsed = loginSchema.safeParse(await request.json());
+    const parsed = clientLoginSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) {
       return NextResponse.json({ success: false, error: 'Invalid credentials' }, { status: 400 });
     }
 
-    const email = parsed.data.email.trim().toLowerCase();
+    const email = parsed.data.email;
     const user = await db.clientPortalUser.findUnique({
       where: { email },
       include: { organization: true },
