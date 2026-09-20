@@ -387,3 +387,18 @@ Managed surfaces include:
 Managed navigation destinations are normalized before rendering. Internal paths and explicit `http:`, `https:`, `mailto:` and `tel:` links are allowed. Executable schemes such as `javascript:`, protocol-relative links and control-character input fall back to a safe local destination.
 
 No database migration or environment-variable change is required for Phase 24. Existing sites continue to use the current navigation as defaults until an administrator saves customized values.
+
+
+## Phase 25 full-site CMS completion for Insights and legal pages
+
+The Page Content CMS now controls the live public copy for three previously incomplete areas:
+
+- Insights / Blog landing page hero, search placeholder and empty-state messaging;
+- Privacy & Cookie Notice hero, last-updated line, regulator information, section content and privacy-request block;
+- Website Terms hero, last-updated line and section content.
+
+The Page SEO group now exposes the settings already consumed by the Insights page and adds editable Privacy and Terms search metadata. Current public wording remains the default fallback, so deploying Phase 25 does not change legal copy unless an administrator deliberately edits and saves the new CMS fields.
+
+PublicShell can reuse settings already loaded by a page, avoiding duplicate SiteSetting queries on Insights, Privacy and Terms.
+
+Phase 25 does not require a database migration. The existing SiteSetting model stores the new keys on first save. Legal-content changes should be reviewed carefully before publication.

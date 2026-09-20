@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { getBlogCoverImage } from '@/lib/blog-visuals';
+import { contentText, type SiteSettings } from '@/lib/site-content';
 import {
   ArrowRight,
   Calendar,
@@ -27,11 +28,25 @@ interface BlogPost {
   category?: { name?: string | null; slug?: string | null } | null;
 }
 
-export default function BlogPage({ initialPosts }: { initialPosts: BlogPost[] }) {
+export default function BlogPage({ initialPosts, settings = {} }: { initialPosts: BlogPost[]; settings?: SiteSettings }) {
   const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const heroEyebrow = contentText(settings, 'blog_hero_eyebrow', 'Insights');
+  const heroTitle = contentText(settings, 'blog_hero_title', 'Useful thinking for people building with technology.');
+  const heroDescription = contentText(
+    settings,
+    'blog_hero_description',
+    'Notes from Lightworld on software engineering, digital operations, product design, AI, cloud, growth and the practical decisions behind modern technology.',
+  );
+  const searchPlaceholder = contentText(settings, 'blog_search_placeholder', 'Search insights');
+  const emptyTitle = contentText(settings, 'blog_empty_title', 'No published insight matches this view.');
+  const emptyDescription = contentText(
+    settings,
+    'blog_empty_description',
+    'Try another category or search term. New articles can be published through the Lightworld CMS.',
+  );
 
   useEffect(() => {
     fetch('/api/blog?published=true&limit=50')
@@ -83,14 +98,14 @@ export default function BlogPage({ initialPosts }: { initialPosts: BlogPost[] })
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                 <Sparkles className="size-3.5" />
-                Insights
+                {heroEyebrow}
               </div>
               <h1 className="mt-6 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-                Useful thinking for people building with technology.
+                {heroTitle}
               </h1>
             </div>
             <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-white/45 sm:text-lg sm:leading-8">
-              Notes from Lightworld on software engineering, digital operations, product design, AI, cloud, growth and the practical decisions behind modern technology.
+              {heroDescription}
             </p>
           </motion.div>
         </div>
@@ -121,7 +136,7 @@ export default function BlogPage({ initialPosts }: { initialPosts: BlogPost[] })
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search insights"
+                placeholder={searchPlaceholder}
                 className="h-11 w-full rounded-full border border-slate-200/80 bg-white pl-11 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-400 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white dark:placeholder:text-white/20"
               />
             </label>
@@ -139,9 +154,9 @@ export default function BlogPage({ initialPosts }: { initialPosts: BlogPost[] })
           ) : filtered.length === 0 ? (
             <div className="mt-8 rounded-[30px] border border-slate-200/70 bg-white p-10 text-center dark:border-white/[0.07] dark:bg-white/[0.025]">
               <FileText className="mx-auto size-7 text-emerald-500" />
-              <h2 className="mt-4 text-xl font-semibold">No published insight matches this view.</h2>
+              <h2 className="mt-4 text-xl font-semibold">{emptyTitle}</h2>
               <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500 dark:text-white/35">
-                Try another category or search term. New articles can be published through the Lightworld CMS.
+                {emptyDescription}
               </p>
             </div>
           ) : (

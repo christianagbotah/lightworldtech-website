@@ -26,12 +26,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Blog() {
-  const posts = await db.blogPost.findMany({
-    where: { published: true },
-    include: { category: true },
-    orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
-    take: 50,
-  });
+  const [posts, settings] = await Promise.all([
+    db.blogPost.findMany({
+      where: { published: true },
+      include: { category: true },
+      orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+      take: 50,
+    }),
+    getSiteSettings(),
+  ]);
 
   const initialPosts = posts.map((post) => ({
     ...post,
@@ -40,8 +43,8 @@ export default async function Blog() {
   }));
 
   return (
-    <PublicShell>
-      <BlogPage initialPosts={initialPosts} />
+    <PublicShell settings={settings}>
+      <BlogPage initialPosts={initialPosts} settings={settings} />
     </PublicShell>
   );
 }
