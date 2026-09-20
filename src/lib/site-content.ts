@@ -81,6 +81,81 @@ export const defaultCoverage = [
   },
 ];
 
+
+export const defaultPrivacySections = [
+  {
+    title: 'Information you choose to give us',
+    body: "When you send a project brief, contact us, join the newsletter, or apply for an opportunity, we process the information you submit so we can respond to that request and operate the relevant service.\n\nDepending on the form, this may include your name, email address, phone number, organization, project details, application information, and the content of your message.",
+  },
+  {
+    title: 'Optional first-party analytics',
+    body: "If you allow Analytics in our privacy controls, Lightworld records limited first-party events so we can understand which pages are useful and how visitors move through the website.\n\nThe analytics record contains a random browser-session identifier, event name, page path, referring domain and limited event metadata. The analytics database is designed not to store your raw IP address, email address, or a user-agent fingerprint.\n\nAnalytics is optional. If you decline it, the public website and its essential features remain available.",
+  },
+  {
+    title: 'Cookies and browser storage',
+    body: "Essential browser storage supports functions such as your privacy choice and temporary session state. Optional analytics storage is used only after Analytics is enabled.\n\nYou can accept, decline, or customize optional categories from the privacy panel. You can reopen the panel later using the cookie-settings control on the website.\n\nMarketing storage is not required for the current first-party analytics feature. If advertising or third-party marketing integrations are introduced, they should remain subject to the privacy choice presented to you.",
+  },
+  {
+    title: 'Why we process information',
+    body: "We use information to respond to enquiries, prepare and discuss project work, provide requested communications, operate and secure the website, understand consented website usage, improve our services, and meet applicable legal or operational obligations.",
+  },
+  {
+    title: 'Sharing and service providers',
+    body: "We may use hosting, infrastructure, email, security and other operational service providers where needed to run the website and provide requested services. We do not describe analytics data as being sold to advertisers, and our first-party analytics implementation is designed to remain inside Lightworld’s website database.",
+  },
+  {
+    title: 'Retention and security',
+    body: "We keep information for as long as reasonably necessary for the purpose for which it was collected, legitimate operational needs, security, dispute handling and applicable legal requirements. Retention can differ by record type.\n\nWe use access controls and other technical and organizational safeguards intended to protect the information under our control. No internet service can promise absolute security.",
+  },
+  {
+    title: 'Your choices and requests',
+    body: "You may contact us to ask about personal information we hold about you or to request an appropriate correction, access or deletion, subject to applicable law and records we may need to retain.\n\nFor website analytics, you can change your optional privacy preferences from the cookie-settings control at any time.",
+  },
+];
+
+export const defaultTermsSections = [
+  {
+    title: 'Purpose of this website',
+    body: 'lightworldtech.com presents information about Lightworld Technologies Ltd, its capabilities, products, public content, career opportunities and ways to contact the company. Website content is general information unless a separate written agreement says otherwise.',
+  },
+  {
+    title: 'Project discussions and quotations',
+    body: 'Submitting a contact form, using the assistant, discussing a project or receiving an initial scope does not by itself create a contract or guarantee a particular price, delivery date or outcome. Commercial commitments are established through the applicable proposal, statement of work, contract or other written agreement.',
+  },
+  {
+    title: 'Website assistant',
+    body: 'The Lightworld Assistant is intended to help visitors navigate public company information and prepare an initial project brief. Its project-scoping output is a starting point for discussion and may require validation by the Lightworld team.',
+  },
+  {
+    title: 'Intellectual property',
+    body: "Unless otherwise stated, the website’s original branding, interface, copy, graphics and software are owned by or licensed to Lightworld Technologies Ltd. You may view and use the site for its intended purpose, but you may not present Lightworld material as your own or misuse the site in a way that infringes applicable rights.",
+  },
+  {
+    title: 'Acceptable use',
+    body: 'Do not attempt to disrupt the website, bypass access controls, misuse public forms or APIs, introduce malicious code, scrape the service in a way that harms availability, or use the site for unlawful activity. We may restrict abusive traffic to protect the service and other visitors.',
+  },
+  {
+    title: 'External links',
+    body: "The website may link to third-party services, publications, social platforms and award or press sources. A link does not make Lightworld responsible for a third party’s availability, security, content or privacy practices.",
+  },
+  {
+    title: 'Availability and changes',
+    body: 'We work to keep the website accurate and available, but features may change and temporary interruption can occur. Public descriptions of services, research directions and products can also change as the company develops them.',
+  },
+  {
+    title: 'Liability',
+    body: 'To the extent permitted by applicable law, the public website is provided for general informational and communication purposes. Project-specific warranties, responsibilities and remedies are governed by the written agreement for that engagement rather than by this public page.',
+  },
+  {
+    title: 'Privacy',
+    body: 'Use of personal information through this website is described in our Privacy & Cookie Notice.',
+  },
+  {
+    title: 'Contact',
+    body: 'Questions about these website terms can be sent to mail@lightworldtech.com.',
+  },
+];
+
 export const cmsGroups: CmsGroup[] = [
   {
     id: 'global',
@@ -388,6 +463,59 @@ export const cmsGroups: CmsGroup[] = [
     ],
   },
   {
+    id: 'blog',
+    title: 'Insights / Blog',
+    description: 'On-page copy for the public Insights landing page. Individual articles and categories remain in the Blog module.',
+    fields: [
+      { key: 'blog_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Insights' },
+      { key: 'blog_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Useful thinking for people building with technology.' },
+      { key: 'blog_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'Notes from Lightworld on software engineering, digital operations, product design, AI, cloud, growth and the practical decisions behind modern technology.' },
+      { key: 'blog_search_placeholder', label: 'Search placeholder', type: 'text', defaultValue: 'Search insights' },
+      { key: 'blog_empty_title', label: 'Empty-state title', type: 'text', defaultValue: 'No published insight matches this view.' },
+      { key: 'blog_empty_description', label: 'Empty-state description', type: 'textarea', defaultValue: 'Try another category or search term. New articles can be published through the Lightworld CMS.' },
+    ],
+  },
+  {
+    id: 'legal',
+    title: 'Privacy & Website Terms',
+    description: 'Editable public legal-page copy. Review legal changes carefully before publishing.',
+    fields: [
+      { key: 'privacy_eyebrow', label: 'Privacy eyebrow', type: 'text', defaultValue: 'Privacy & cookies' },
+      { key: 'privacy_title', label: 'Privacy title', type: 'textarea', defaultValue: 'Clear choices. Minimal data. Useful technology.' },
+      { key: 'privacy_intro', label: 'Privacy introduction', type: 'textarea', defaultValue: 'This notice explains how Lightworld Technologies Ltd handles information through lightworldtech.com.' },
+      { key: 'privacy_last_updated', label: 'Privacy last-updated line', type: 'text', defaultValue: '18 September 2026' },
+      { key: 'privacy_regulator_note', label: 'Privacy regulatory note', type: 'textarea', defaultValue: 'Ghana’s Data Protection Act, 2012 (Act 843) establishes the national framework for the protection and processing of personal data. This page is a practical website notice and is not a substitute for legal advice.' },
+      { key: 'privacy_regulator_label', label: 'Regulator link label', type: 'text', defaultValue: 'Data Protection Commission' },
+      { key: 'privacy_regulator_url', label: 'Regulator URL', type: 'url', defaultValue: 'https://dpc.gov.gh/' },
+      {
+        key: 'privacy_sections',
+        label: 'Privacy sections',
+        type: 'objectList',
+        defaultValue: defaultPrivacySections,
+        fields: [
+          { key: 'title', label: 'Section title' },
+          { key: 'body', label: 'Section body', type: 'textarea' },
+        ],
+        help: 'Separate paragraphs inside a section with a blank line.',
+      },
+      { key: 'privacy_request_title', label: 'Privacy request heading', type: 'text', defaultValue: 'Questions or privacy requests' },
+      { key: 'privacy_request_text', label: 'Privacy request text', type: 'textarea', defaultValue: 'Email us with enough information for us to understand your request. For general project enquiries, use the Contact page.' },
+      { key: 'terms_eyebrow', label: 'Terms eyebrow', type: 'text', defaultValue: 'Website terms' },
+      { key: 'terms_title', label: 'Terms title', type: 'textarea', defaultValue: 'Terms for using the Lightworld website.' },
+      { key: 'terms_last_updated', label: 'Terms last-updated line', type: 'text', defaultValue: '18 September 2026' },
+      {
+        key: 'terms_sections',
+        label: 'Terms sections',
+        type: 'objectList',
+        defaultValue: defaultTermsSections,
+        fields: [
+          { key: 'title', label: 'Section title' },
+          { key: 'body', label: 'Section body', type: 'textarea' },
+        ],
+      },
+    ],
+  },
+  {
     id: 'seo',
     title: 'Page SEO',
     description: 'Search title and description for each flagship page.',
@@ -408,6 +536,13 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'seo_careers_description', label: 'Careers description', type: 'textarea', defaultValue: 'Explore career opportunities and ways to build ambitious technology products with Lightworld Technologies in Ghana.' },
       { key: 'seo_contact_title', label: 'Contact title', type: 'text', defaultValue: 'Contact & Start a Project' },
       { key: 'seo_contact_description', label: 'Contact description', type: 'textarea', defaultValue: 'Talk to Lightworld Technologies about a website, mobile app, enterprise system, AI workflow, IT training, cloud project or technology consultancy.' },
+      { key: 'seo_blog_title', label: 'Insights title', type: 'text', defaultValue: 'Technology Insights' },
+      { key: 'seo_blog_description', label: 'Insights description', type: 'textarea', defaultValue: 'Practical insights from Lightworld Technologies on software, websites, mobile products, business systems, AI, cloud and digital transformation.' },
+      { key: 'seo_blog_social_title', label: 'Insights social title', type: 'text', defaultValue: 'Lightworld Technologies Insights' },
+      { key: 'seo_privacy_title', label: 'Privacy title', type: 'text', defaultValue: 'Privacy & Cookie Notice' },
+      { key: 'seo_privacy_description', label: 'Privacy description', type: 'textarea', defaultValue: 'How Lightworld Technologies Ltd handles website data, contact information, newsletter subscriptions and optional first-party analytics.' },
+      { key: 'seo_terms_title', label: 'Terms title', type: 'text', defaultValue: 'Website Terms' },
+      { key: 'seo_terms_description', label: 'Terms description', type: 'textarea', defaultValue: 'Website terms for lightworldtech.com, operated by Lightworld Technologies Ltd.' },
       { key: 'seo_trust_title', label: 'Trust Center title', type: 'text', defaultValue: 'Trust Center | Security, Privacy & Responsible AI' },
       { key: 'seo_trust_description', label: 'Trust Center description', type: 'textarea', defaultValue: 'Review Lightworld Technologies Ltd security, privacy, reliable-delivery and responsible-AI practices.' },
       { key: 'seo_newsroom_title', label: 'Newsroom title', type: 'text', defaultValue: 'Newsroom & Media Center' },
