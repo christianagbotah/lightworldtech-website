@@ -69,7 +69,6 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
   const [show, setShow] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
   const [prefs, setPrefs] = useState<CookiePreferences>(defaultPreferences);
-  const [showSettingsBtn, setShowSettingsBtn] = useState(false);
 
   useEffect(() => {
     const consent = localStorage.getItem(STORAGE_KEY);
@@ -77,7 +76,6 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
       const saved = loadSavedPrefs();
       // Use setTimeout to avoid synchronous setState in effect
       const timer = setTimeout(() => {
-        setShowSettingsBtn(true);
         setPrefs(saved);
       }, 0);
       return () => clearTimeout(timer);
@@ -102,7 +100,6 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
     };
     savePreferences(allAccepted);
     setShow(false);
-    setShowSettingsBtn(true);
   };
 
   const decline = () => {
@@ -115,7 +112,6 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
     };
     savePreferences(allDeclined);
     setShow(false);
-    setShowSettingsBtn(true);
   };
 
   const acceptCustomized = () => {
@@ -123,7 +119,6 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
     savePreferences(prefs);
     setShow(false);
     setShowCustomize(false);
-    setShowSettingsBtn(true);
   };
 
   const togglePref = (key: keyof CookiePreferences) => {
@@ -144,21 +139,14 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
     setShowCustomize(true);
   };
 
+  useEffect(() => {
+    const handleOpenSettings = () => openSettings();
+    window.addEventListener('lw-open-cookie-settings', handleOpenSettings);
+    return () => window.removeEventListener('lw-open-cookie-settings', handleOpenSettings);
+  }, []);
+
   return (
     <>
-      {/* Cookie Settings button (shown in footer area) */}
-      {showSettingsBtn && !show && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="fixed bottom-6 left-6 z-50 size-10 rounded-full bg-slate-800 dark:bg-slate-700 text-slate-400 hover:text-amber-400 shadow-lg hover:shadow-xl flex items-center justify-center transition-colors"
-          onClick={openSettings}
-          aria-label="Cookie Settings"
-        >
-          <Cookie className="size-4" />
-        </motion.button>
-      )}
-
       <AnimatePresence>
         {show && (
           <motion.div
