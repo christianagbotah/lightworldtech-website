@@ -12,7 +12,7 @@ import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 export const runtime = 'nodejs';
 
 const subscribeSchema = z.object({
-  email: z.string().email('Valid email is required').transform((value) => value.trim().toLowerCase()),
+  email: z.string().trim().max(254).email('Valid email is required').transform((value) => value.toLowerCase()),
 });
 
 async function recordDelivery(input: {
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const parsed = subscribeSchema.safeParse(await request.json());
+    const parsed = subscribeSchema.safeParse(await request.json().catch(() => null));
 
     if (!parsed.success) {
       return NextResponse.json(
