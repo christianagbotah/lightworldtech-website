@@ -4,7 +4,7 @@ import {
   hasAdminPermission,
   normalizeAdminPermissions,
   requiredAdminPermissionForPath,
-} from '@/lib/admin-permissions';
+} from './admin-permissions';
 
 describe('admin permissions', () => {
   test('normalizes only recognized unique permissions', () => {
