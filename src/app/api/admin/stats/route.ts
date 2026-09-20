@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { isAdminRequest } from '@/lib/admin-auth';
+import { getActiveAdminContext } from '@/lib/admin-governance';
 import { getCrmSummary } from '@/lib/crm';
+import { hasAdminPermission } from '@/lib/admin-permissions';
 
-// GET dashboard statistics
+// GET dashboard statistics, scoped to the administrator's live permissions.
 export async function GET(request: NextRequest) {
-  if (!(await isAdminRequest(request))) {
+  const admin = await getActiveAdminContext(request);
+  if (!admin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const canSite = hasAdminPermission(admin.role, admin.permissions, 'site.manage');
+  const canCrm = hasAdminPermission(admin.role, admin.permissions, 'crm.manage');
+  const canCommunications = hasAdminPermission(
+    admin.role,
+    admin.permissions,
+    'communications.manage',
+  );
 
   try {
     const [
@@ -25,19 +35,37 @@ export async function GET(request: NextRequest) {
       totalCategories,
       crm,
     ] = await Promise.all([
-      db.blogPost.count(),
-      db.blogPost.count({ where: { published: true } }),
-      db.service.count(),
-      db.service.count({ where: { active: true } }),
-      db.teamMember.count(),
-      db.testimonial.count(),
-      db.contactMessage.count({ where: { read: false } }),
-      db.contactMessage.count(),
-      db.fAQ.count(),
-      db.portfolioProject.count(),
-      db.newsletterSubscriber.count({ where: { active: true } }),
-      db.blogCategory.count(),
-      getCrmSummary(),
+      canSite ? db.blogPost.count() : Promise.resolve(0),
+      canSite ? db.blogPost.count({ where: { published: true } }) : Promise.resolve(0),
+      canSite ? db.service.count() : Promise.resolve(0),
+      canSite ? db.service.count({ where: { active: true } }) : Promise.resolve(0),
+      canSite ? db.teamMember.count() : Promise.resolve(0),
+      canSite ? db.testimonial.count() : Promise.resolve(0),
+      canCrm ? db.contactMessage.count({ where: { read: false } }) : Promise.resolve(0),
+      canCrm ? db.contactMessage.count() : Promise.resolve(0),
+      canSite ? db.fAQ.count() : Promise.resolve(0),
+      canSite ? db.portfolioProject.count() : Promise.resolve(0),
+      canCommunications
+        ? db.newsletterSubscriber.count({ where: { active: true } })
+        : Promise.resolve(0),
+      canSite ? db.blogCategory.count() : Promise.resolve(0),
+      canCrm ? getCrmSummary() : Promise.resolve({
+        total: 0,
+        open: 0,
+        won: 0,
+        lost: 0,
+        highPriority: 0,
+        overdueFollowUps: 0,
+        byStatus: {
+          new: 0,
+          qualified: 0,
+          discovery: 0,
+          proposal: 0,
+          negotiation: 0,
+          won: 0,
+          lost: 0,
+        },
+      }),
     ]);
 
     return NextResponse.json({
@@ -69,7 +97,7 @@ export async function GET(request: NextRequest) {
           total: totalPortfolioProjects,
         },
         newsletter: {
-          totalSubscribers: totalSubscribers,
+          totalSubscribers,
         },
         categories: {
           total: totalCategories,
@@ -81,7 +109,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching admin stats:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch dashboard statistics' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
