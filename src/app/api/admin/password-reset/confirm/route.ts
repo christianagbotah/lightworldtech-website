@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { hashAdminPassword } from '@/lib/admin-auth';
 import { hashAdminPasswordResetToken } from '@/lib/admin-password-reset';
 import { recordAdminAudit } from '@/lib/admin-governance';
+import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 const confirmSchema = z.object({
   token: z.string().min(32).max(200),
@@ -13,6 +14,14 @@ const confirmSchema = z.object({
 const INVALID_MESSAGE = 'This reset link is invalid or has expired. Request a new password reset link.';
 
 export async function POST(request: NextRequest) {
+  const rate = consumePublicRateLimit(request, 'admin-password-reset-confirm', 12, 10 * 60_000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Too many password reset attempts. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
+    );
+  }
+
   const parsed = confirmSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: INVALID_MESSAGE }, { status: 400 });
