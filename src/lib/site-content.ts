@@ -108,6 +108,10 @@ export const cmsGroups: CmsGroup[] = [
           { key: 'href', label: 'Link', type: 'url' },
         ],
       },
+      { key: 'header_services_label', label: 'Services menu label', type: 'text', defaultValue: 'Services' },
+      { key: 'header_services_link', label: 'Services menu landing link', type: 'url', defaultValue: '/services' },
+      { key: 'header_services_footer_text', label: 'Services menu footer text', type: 'text', defaultValue: 'Explore every capability' },
+      { key: 'header_company_label', label: 'Company menu label', type: 'text', defaultValue: 'Company' },
       {
         key: 'header_service_menu',
         label: 'Header — Services menu',
@@ -170,6 +174,11 @@ export const cmsGroups: CmsGroup[] = [
       },
       { key: 'header_cta_text', label: 'Header CTA text', type: 'text', defaultValue: 'Start a project' },
       { key: 'header_cta_link', label: 'Header CTA link', type: 'url', defaultValue: '/contact' },
+      { key: 'footer_headline', label: 'Footer headline', type: 'textarea', defaultValue: 'We turn ambitious business ideas into technology people can actually use.' },
+      { key: 'footer_newsletter_title', label: 'Footer newsletter title', type: 'text', defaultValue: 'Useful technology, not inbox noise.' },
+      { key: 'footer_newsletter_description', label: 'Footer newsletter description', type: 'textarea', defaultValue: 'Occasional notes on product design, software engineering, digital operations and what we are building.' },
+      { key: 'footer_cta_text', label: 'Footer CTA text', type: 'text', defaultValue: 'Let’s talk' },
+      { key: 'footer_cta_link', label: 'Footer CTA link', type: 'url', defaultValue: '/contact' },
       {
         key: 'footer_connect_links',
         label: 'Footer — Connect links',
