@@ -9,15 +9,24 @@ import {
 } from '@/lib/admin-password-reset';
 import { sendTransactionalMail } from '@/lib/mail';
 import { recordAdminAudit } from '@/lib/admin-governance';
+import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 
 const requestSchema = z.object({
-  email: z.string().trim().email().transform((value) => value.toLowerCase()),
+  email: z.string().trim().max(254).email().transform((value) => value.toLowerCase()),
 });
 
 const GENERIC_MESSAGE =
   'If an active administrator uses that email, a secure password reset link has been sent.';
 
 export async function POST(request: NextRequest) {
+  const rate = consumePublicRateLimit(request, 'admin-password-reset-request', 6, 15 * 60_000);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Too many password reset requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
+    );
+  }
+
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
