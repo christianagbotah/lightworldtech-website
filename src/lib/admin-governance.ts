@@ -63,7 +63,7 @@ export async function getSuperAdminContext(request: NextRequest): Promise<Active
 }
 
 export async function recordAdminAudit(input: {
-  admin?: ActiveAdminContext | null;
+  admin?: Pick<ActiveAdminContext, 'id' | 'email' | 'name' | 'role'> | null;
   action: string;
   entity?: string;
   entityId?: string;
