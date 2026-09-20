@@ -334,6 +334,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
       const next = !prev;
       if (next) trackEvent('whatsapp_open');
       if (next) {
+        setActionsOpen(false);
         setLiveChatOpen(false);
         setLiveChatMinimized(false);
       }
@@ -343,6 +344,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
 
   const handleLiveChatToggle = () => {
     if (liveChatMinimized) {
+      setActionsOpen(false);
       setLiveChatMinimized(false);
       return;
     }
@@ -350,6 +352,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
       const next = !prev;
       if (next) {
         trackEvent('assistant_open');
+        setActionsOpen(false);
         setWhatsappOpen(false);
       }
       return next;
@@ -470,7 +473,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
   const anyPopupOpen = whatsappOpen || (liveChatOpen && !liveChatMinimized);
 
   return (
-    <div className="fixed bottom-24 right-4 z-[70] flex flex-col items-end gap-3 sm:right-6 lg:bottom-6">
+    <div className="fixed bottom-24 right-4 z-[70] flex flex-col items-end gap-2 sm:right-6 lg:bottom-6">
       {/* ─── Popup Area (above button row) ────────────────────── */}
       <div className="flex items-end gap-2 justify-end">
         {/* LiveChat Popup */}

@@ -24,6 +24,8 @@ describe('public appearance and quick actions', () => {
     expect(widgets).toContain("window.dispatchEvent(new Event('lw-open-cookie-settings'))");
     expect(widgets).toContain('hasCookieConsent &&');
     expect(widgets).toContain('<BackToTopButton />');
+    expect(widgets.split('setActionsOpen(false)').length - 1).toBeGreaterThanOrEqual(3);
+    expect(widgets).toContain('flex flex-col items-end gap-2 sm:right-6 lg:bottom-6');
   });
 
   test('reopens cookie preferences from the shared quick-action tray without a separate fixed icon', () => {
