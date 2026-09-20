@@ -11,6 +11,8 @@ import {
   ArrowUp,
   Clock,
   Shield,
+  Cookie,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -164,7 +166,7 @@ function BackToTopButton() {
           }}
           whileTap={{ scale: 0.95 }}
           onClick={scrollToTop}
-          className="group"
+          className="group relative"
           aria-label="Back to top"
         >
           <svg
@@ -237,6 +239,8 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
 
   // Visibility (delayed entrance)
   const [visible, setVisible] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [hasCookieConsent, setHasCookieConsent] = useState(false);
 
   // BackToTop
   const [backToTopVisible, setBackToTopVisible] = useState(false);
@@ -272,6 +276,17 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Keep the cookie-settings action in sync with the consent lifecycle.
+  useEffect(() => {
+    const syncCookieConsent = () => {
+      setHasCookieConsent(Boolean(localStorage.getItem('lw-cookie-consent')));
+    };
+
+    syncCookieConsent();
+    window.addEventListener('lw-consent-changed', syncCookieConsent);
+    return () => window.removeEventListener('lw-consent-changed', syncCookieConsent);
   }, []);
 
   // Initialize chat
@@ -348,6 +363,10 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
   const handleLiveChatClose = () => {
     setLiveChatOpen(false);
     setLiveChatMinimized(false);
+  };
+
+  const handleCookieSettings = () => {
+    window.dispatchEvent(new Event('lw-open-cookie-settings'));
   };
 
   const sendMessage = useCallback(
@@ -452,13 +471,6 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
 
   return (
     <div className="fixed bottom-24 right-4 z-[70] flex flex-col items-end gap-3 sm:right-6 lg:bottom-6">
-      {/* ─── BackToTop (above the widget row) ─────────────────── */}
-      <TooltipProvider delayDuration={200}>
-        <AnimatePresence>
-          {backToTopVisible && <BackToTopButton />}
-        </AnimatePresence>
-      </TooltipProvider>
-
       {/* ─── Popup Area (above button row) ────────────────────── */}
       <div className="flex items-end gap-2 justify-end">
         {/* LiveChat Popup */}
@@ -672,73 +684,150 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
         </AnimatePresence>
       </div>
 
-      {/* ─── Button Row (pill-shaped container) ────────────────── */}
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }}
-        className={cn(
-          'relative rounded-2xl shadow-xl border p-1.5 flex items-center gap-1',
-          'bg-white/90 dark:bg-slate-800/90 backdrop-blur-md',
-          'border-slate-200/50 dark:border-slate-700/50',
-          anyPopupOpen && 'shadow-2xl'
-        )}
-      >
-        {/* WhatsApp Button */}
-        <Button
-          onClick={handleWhatsappToggle}
-          size="icon"
-          className={cn(
-            'size-11 rounded-xl transition-all duration-300 shrink-0',
-            whatsappOpen
-              ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-md'
-              : 'bg-[#25D366] hover:bg-[#20BD5A] text-white shadow-md hover:shadow-lg'
-          )}
-          aria-label={whatsappOpen ? 'Close WhatsApp chat' : 'Open WhatsApp chat'}
-        >
-          {whatsappOpen ? (
-            <X className="size-5" />
-          ) : (
-            <MessageCircle className="size-5" />
-          )}
-        </Button>
+      {/* ─── Collapsible Quick Actions ───────────────────────── */}
+      <TooltipProvider delayDuration={200}>
+        <div className="flex flex-col items-end gap-2">
+          <AnimatePresence initial={false}>
+            {actionsOpen && (
+              <motion.div
+                key="quick-actions"
+                initial={{ opacity: 0, y: 14, scale: 0.94 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 14, scale: 0.94 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className={cn(
+                  'flex flex-col items-end gap-2 rounded-2xl border p-1.5 shadow-xl backdrop-blur-md',
+                  'bg-white/90 dark:bg-slate-800/90',
+                  'border-slate-200/60 dark:border-slate-700/60',
+                  anyPopupOpen && 'shadow-2xl'
+                )}
+              >
+                <AnimatePresence initial={false}>
+                  {backToTopVisible && (
+                    <motion.div
+                      key="back-to-top-action"
+                      initial={{ opacity: 0, y: 8, scale: 0.85 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.85 }}
+                    >
+                      <BackToTopButton />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-        {/* Divider */}
-        <div className="w-px h-6 bg-slate-200/80 dark:bg-slate-600/50 shrink-0" />
+                {hasCookieConsent && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.button
+                        type="button"
+                        initial={{ opacity: 0, y: 8, scale: 0.85 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        whileHover={{ scale: 1.08, y: -1 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={handleCookieSettings}
+                        className="flex size-10 items-center justify-center rounded-full bg-slate-800 text-slate-200 shadow-lg transition hover:bg-slate-700 hover:text-amber-300 dark:bg-slate-700 dark:hover:bg-slate-600"
+                        aria-label="Cookie settings"
+                      >
+                        <Cookie className="size-4" />
+                      </motion.button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="text-xs">
+                      Cookie settings
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
-        {/* LiveChat Button */}
-        <div className="relative">
-          <Button
-            onClick={handleLiveChatToggle}
-            size="icon"
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleWhatsappToggle}
+                      size="icon"
+                      className={cn(
+                        'size-10 rounded-full transition-all duration-300 shrink-0',
+                        whatsappOpen
+                          ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-md'
+                          : 'bg-[#25D366] hover:bg-[#20BD5A] text-white shadow-md hover:shadow-lg'
+                      )}
+                      aria-label={whatsappOpen ? 'Close WhatsApp chat' : 'Open WhatsApp chat'}
+                    >
+                      {whatsappOpen ? (
+                        <X className="size-4.5" />
+                      ) : (
+                        <MessageCircle className="size-4.5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="text-xs">
+                    WhatsApp
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative">
+                      <Button
+                        onClick={handleLiveChatToggle}
+                        size="icon"
+                        className={cn(
+                          'size-10 rounded-full transition-all duration-300 shrink-0',
+                          liveChatOpen && !liveChatMinimized
+                            ? 'bg-slate-600 hover:bg-slate-700 text-white shadow-md'
+                            : 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white shadow-md hover:shadow-lg'
+                        )}
+                        aria-label={
+                          liveChatOpen && !liveChatMinimized
+                            ? 'Close Lightworld assistant'
+                            : 'Open Lightworld assistant'
+                        }
+                      >
+                        {liveChatOpen && !liveChatMinimized ? (
+                          <X className="size-4.5" />
+                        ) : (
+                          <Bot className="size-4.5" />
+                        )}
+                      </Button>
+
+                      {!liveChatOpen && messages.length <= 1 && (
+                        <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center">
+                          <span className="absolute size-4 rounded-full bg-amber-400 animate-ping opacity-75" />
+                          <span className="relative flex size-3 rounded-full bg-amber-400" />
+                        </span>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="text-xs">
+                    Lightworld assistant
+                  </TooltipContent>
+                </Tooltip>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <motion.button
+            type="button"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }}
+            whileHover={{ scale: 1.06, y: -1 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setActionsOpen((open) => !open)}
             className={cn(
-              'size-11 rounded-xl transition-all duration-300 shrink-0',
-              liveChatOpen && !liveChatMinimized
-                ? 'bg-slate-600 hover:bg-slate-700 text-white shadow-md'
-                : 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white shadow-md hover:shadow-lg'
+              'flex size-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-colors',
+              'bg-slate-950 text-white border-slate-800 hover:bg-emerald-600 hover:border-emerald-500',
+              'dark:bg-white dark:text-slate-950 dark:border-white/80 dark:hover:bg-emerald-300 dark:hover:border-emerald-300'
             )}
-            aria-label={
-              liveChatOpen && !liveChatMinimized
-                ? 'Close Lightworld assistant'
-                : 'Open Lightworld assistant'
-            }
+            aria-label={actionsOpen ? 'Close quick actions' : 'Open quick actions'}
+            aria-expanded={actionsOpen}
           >
-            {liveChatOpen && !liveChatMinimized ? (
-              <X className="size-5" />
-            ) : (
-              <Bot className="size-5" />
-            )}
-          </Button>
-
-          {/* Notification badge */}
-          {!liveChatOpen && messages.length <= 1 && (
-            <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center">
-              <span className="absolute size-4 rounded-full bg-amber-400 animate-ping opacity-75" />
-              <span className="relative flex size-3 rounded-full bg-amber-400" />
-            </span>
-          )}
+            <Plus
+              className={cn(
+                'size-5 transition-transform duration-300',
+                actionsOpen && 'rotate-45'
+              )}
+            />
+          </motion.button>
         </div>
-      </motion.div>
+      </TooltipProvider>
     </div>
   );
 }
