@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { getAdminSession } from '@/lib/admin-auth';
+import { getActiveAdminContext } from '@/lib/admin-governance';
 import { generateProposalDraft } from '@/lib/proposal-draft';
 
 const statusSchema = z.enum(['draft', 'review', 'ready', 'sent', 'accepted', 'declined']);
@@ -33,7 +33,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = getAdminSession(request);
+  const session = await getActiveAdminContext(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
@@ -53,7 +53,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = getAdminSession(request);
+  const session = await getActiveAdminContext(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
