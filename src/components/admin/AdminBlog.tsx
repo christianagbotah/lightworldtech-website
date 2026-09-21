@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 interface BlogPost {
   id: string;
@@ -142,17 +143,18 @@ export default function AdminBlog() {
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Blog Posts</h1>
-          <p className="text-muted-foreground text-sm mt-1">{posts.length} posts</p>
-        </div>
-        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-          <Button onClick={handleCreate} className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-emerald-500/25 h-11">
-            <Plus className="h-4 w-4 mr-2" /> New Post
-          </Button>
-        </motion.div>
-      </div>
+      <AdminPageHeader
+        eyebrow="Website & content"
+        title="Blog Posts"
+        description={posts.length + ' post' + (posts.length === 1 ? '' : 's') + ' in the publishing workspace.'}
+        actions={
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button onClick={handleCreate}>
+              <Plus className="mr-2 size-4" /> New Post
+            </Button>
+          </motion.div>
+        }
+      />
 
       {/* Search input */}
       <div className="relative">
