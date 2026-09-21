@@ -20,7 +20,9 @@ describe('admin backend and responsive UX regression coverage', () => {
 
     expect(crm).toContain('max-w-full overflow-x-auto');
     expect(crm).toContain('min-w-[1960px]');
-    expect(crm).toContain('w-[calc(100vw-2rem)] max-w-4xl overflow-x-hidden');
+    expect(crm).toContain('max-w-[min(96vw,1440px)]');
+    expect(crm).toContain('Original customer enquiry');
+    expect(crm).toContain('max-h-[48vh] overflow-y-auto');
   });
 
   test('keeps the client portal workspace inside the viewport', () => {
@@ -45,6 +47,31 @@ describe('admin backend and responsive UX regression coverage', () => {
       expect(value).toContain(endpoint);
       expect(value).not.toContain(endpoint.replace('/api/', '/api/admin/'));
     }
+  });
+
+  test('supports dashboard drill-downs and a real authenticated health signal', () => {
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    const health = source('src/app/api/admin/health/route.ts');
+
+    expect(dashboard).toContain("sessionStorage.setItem('lw-open-message-id'");
+    expect(dashboard).toContain("sessionStorage.setItem('lw-crm-status-filter'");
+    expect(dashboard).toContain("fetch('/api/admin/health'");
+    expect(dashboard).toContain('Analytics drill-down');
+    expect(messages).toContain("sessionStorage.getItem('lw-open-message-id')");
+    expect(messages).toContain('max-w-5xl');
+    expect(health).toContain('getActiveAdminContext(request)');
+    expect(health).toContain('await db.$queryRaw');
+  });
+
+  test('keeps blog admin contracts aligned with wrapped API responses', () => {
+    const blog = source('src/components/admin/AdminBlog.tsx');
+    const editor = source('src/components/admin/AdminBlogEditor.tsx');
+
+    expect(blog).toContain('payload.data || []');
+    expect(blog).toContain("params.set('published', 'true')");
+    expect(blog).toContain("params.set('featured', 'true')");
+    expect(editor).toContain('const post = payload.data || payload');
   });
 
   test('validates and atomically persists CMS settings', () => {
