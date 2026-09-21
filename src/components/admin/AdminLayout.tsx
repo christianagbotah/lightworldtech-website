@@ -154,7 +154,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
         <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-600 to-amber-700 flex items-center justify-center">
           <span className="text-white font-bold text-sm">LW</span>
@@ -165,7 +165,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      <ScrollArea className="flex-1 py-3">
+      <ScrollArea className="min-h-0 flex-1 py-3">
         <nav className="space-y-1 px-3">
           {visibleNavItems.map((item) => {
             const Icon = item.icon;
@@ -206,7 +206,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-muted/30">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 border-r border-border bg-card flex-col fixed inset-y-0 left-0 z-30">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden h-dvh min-h-0 w-64 flex-col overflow-hidden border-r border-border bg-card lg:flex">
         {sidebarContent}
       </aside>
 
