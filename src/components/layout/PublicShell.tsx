@@ -19,7 +19,7 @@ export default async function PublicShell({
   const resolvedSettings = settings ?? await getSiteSettings();
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="lw-corporate-brand min-h-screen bg-background text-foreground">
       <AnalyticsTracker />
       <ScrollProgress />
       <Header settings={resolvedSettings} />
