@@ -77,6 +77,13 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: '/api/support-attachments/:path*',
+        headers: [
+          ...securityHeaders,
+          ...privateNoStoreHeaders,
+        ],
+      },
+      {
         source: '/:path*',
         headers: securityHeaders,
       },
