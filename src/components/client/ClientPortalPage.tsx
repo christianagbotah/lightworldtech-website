@@ -22,6 +22,7 @@ import {
   Paperclip,
   Upload,
   Download,
+  Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -98,6 +99,9 @@ type Ticket = {
   resolvedAt: string | null;
   lastActivityAt: string;
   unreadByClient: boolean;
+  clientRating: number | null;
+  clientFeedback: string;
+  ratedAt: string | null;
   createdAt: string;
   updatedAt: string;
   messages: TicketMessage[];
@@ -153,6 +157,8 @@ export default function ClientPortalPage() {
   const [replies, setReplies] = useState<Record<string, string>>({});
   const [replyingTicketId, setReplyingTicketId] = useState('');
   const [uploadingTicketId, setUploadingTicketId] = useState('');
+  const [ratingDrafts, setRatingDrafts] = useState<Record<string, { rating: number; feedback: string }>>({});
+  const [ratingTicketId, setRatingTicketId] = useState('');
 
   const loadPortal = async () => {
     const response = await fetch('/api/client/portal', { cache: 'no-store' });
@@ -251,6 +257,30 @@ export default function ClientPortalPage() {
       toast.error(error instanceof Error ? error.message : 'Unable to create ticket');
     } finally {
       setTicketSending(false);
+    }
+  };
+
+  const submitTicketRating = async (ticketId: string) => {
+    const draft = ratingDrafts[ticketId] || { rating: 0, feedback: '' };
+    if (draft.rating < 1 || draft.rating > 5) return;
+    setRatingTicketId(ticketId);
+    try {
+      const response = await fetch('/api/client/tickets/' + ticketId + '/rating', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: draft.rating,
+          feedback: draft.feedback.trim(),
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to submit satisfaction feedback');
+      await loadPortal();
+      toast.success('Thank you for rating Lightworld support');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to submit satisfaction feedback');
+    } finally {
+      setRatingTicketId('');
     }
   };
 
@@ -682,6 +712,77 @@ export default function ClientPortalPage() {
                           ))}
                         </div>
                       )}
+                      {['resolved', 'closed'].includes(item.status) && (
+                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+                          {item.ratedAt && item.clientRating ? (
+                            <div>
+                              <p className="flex items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-200">
+                                <Star className="size-4 fill-current" /> Your support rating
+                              </p>
+                              <p className="mt-2 text-lg font-bold text-amber-900 dark:text-amber-100">{item.clientRating}/5</p>
+                              {item.clientFeedback && <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-amber-900/70 dark:text-amber-200/65">{item.clientFeedback}</p>}
+                              <p className="mt-2 text-[10px] text-amber-900/55 dark:text-amber-200/50">Thank you for your feedback.</p>
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-xs font-semibold text-amber-900 dark:text-amber-200">How was Lightworld support?</p>
+                              <p className="mt-1 text-[10px] text-amber-900/65 dark:text-amber-200/60">Rate this resolved case once. Your feedback helps us improve service quality.</p>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {[1, 2, 3, 4, 5].map((rating) => {
+                                  const selectedRating = ratingDrafts[item.id]?.rating || 0;
+                                  return (
+                                    <button
+                                      key={rating}
+                                      type="button"
+                                      onClick={() => setRatingDrafts((current) => ({
+                                        ...current,
+                                        [item.id]: {
+                                          rating,
+                                          feedback: current[item.id]?.feedback || '',
+                                        },
+                                      }))}
+                                      className={
+                                        'flex size-9 items-center justify-center rounded-lg border transition ' +
+                                        (rating <= selectedRating
+                                          ? 'border-amber-500 bg-amber-500 text-white'
+                                          : 'border-amber-300 bg-background text-amber-600 hover:border-amber-500')
+                                      }
+                                      aria-label={'Rate support ' + rating + ' out of 5'}
+                                    >
+                                      <Star className={'size-4 ' + (rating <= selectedRating ? 'fill-current' : '')} />
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <Textarea
+                                className="mt-3 bg-background"
+                                rows={3}
+                                maxLength={2000}
+                                value={ratingDrafts[item.id]?.feedback || ''}
+                                onChange={(event) => setRatingDrafts((current) => ({
+                                  ...current,
+                                  [item.id]: {
+                                    rating: current[item.id]?.rating || 0,
+                                    feedback: event.target.value,
+                                  },
+                                }))}
+                                placeholder="Optional feedback about your support experience…"
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="mt-3"
+                                disabled={ratingTicketId === item.id || !(ratingDrafts[item.id]?.rating)}
+                                onClick={() => void submitTicketRating(item.id)}
+                              >
+                                {ratingTicketId === item.id && <Loader2 className="mr-2 size-3.5 animate-spin" />}
+                                Submit rating
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <div className="mt-3 border-t border-slate-200/70 pt-3 dark:border-white/[0.07]">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
