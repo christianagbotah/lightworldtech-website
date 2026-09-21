@@ -80,7 +80,7 @@ export default function AnnouncementBar() {
     <AnimatePresence>
       {!dismissed && (
         <motion.div
-          className="relative z-[51] bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 overflow-hidden"
+          className="relative z-[51] bg-gradient-to-r from-slate-950 via-amber-950 to-slate-950 overflow-hidden"
           style={{ backgroundSize: '200% 100%' }}
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 40, opacity: 1 }}
@@ -124,8 +124,8 @@ export default function AnnouncementBar() {
           </div>
 
           {/* Gradient edge fades */}
-          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-emerald-900 to-transparent pointer-events-none z-10" />
-          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-emerald-900 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-slate-950 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-slate-950 to-transparent pointer-events-none z-10" />
 
           {/* Close button */}
           <button
