@@ -217,6 +217,9 @@ export default function AdminMessages() {
       });
       setReplyBody('');
       await Promise.all([loadReplies(replyingTo.id), fetchMessages()]);
+      setReplyOpen(false);
+      setViewing({ ...replyingTo, read: true });
+      setViewOpen(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Reply could not be sent');
       if (replyingTo) await loadReplies(replyingTo.id);
