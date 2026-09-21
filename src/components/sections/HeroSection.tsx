@@ -308,7 +308,7 @@ export default function HeroSection() {
               }`}
               aria-label={`Go to slide ${index + 1}`}
             >
-              {/* Inactive dot (emerald-400) */}
+              {/* Inactive dot (amber-400) */}
               <span
                 className={`absolute inset-0 rounded-full bg-amber-400/60 transition-opacity duration-300 ${
                   index === currentSlide ? 'opacity-0' : 'opacity-100'
