@@ -3,7 +3,7 @@ export type SiteSettings = Record<string, string>;
 export type CmsSimpleField = {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'url' | 'email';
+  type: 'text' | 'textarea' | 'url' | 'email' | 'image';
   defaultValue: string;
   help?: string;
 };
@@ -316,6 +316,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'home_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Ghana-built. Global-ready.' },
       { key: 'home_title', label: 'Hero title', type: 'textarea', defaultValue: 'Technology people want to use.' },
       { key: 'home_description', label: 'Hero description', type: 'textarea', defaultValue: 'We design and engineer websites, mobile apps, enterprise software, AI-enabled workflows and cloud systems that make real work simpler.' },
+      { key: 'home_hero_image', label: 'Hero image', type: 'image', defaultValue: '', help: 'Optional. Choose a Media Library image to layer behind the existing hero motion treatment.' },
       { key: 'home_primary_cta_text', label: 'Primary CTA text', type: 'text', defaultValue: 'Start a project' },
       { key: 'home_primary_cta_link', label: 'Primary CTA link', type: 'url', defaultValue: '/contact' },
       { key: 'home_secondary_cta_text', label: 'Secondary CTA text', type: 'text', defaultValue: 'Explore our work' },
@@ -336,6 +337,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'about_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'About Lightworld' },
       { key: 'about_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'We build technology as infrastructure for growth.' },
       { key: 'about_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'Lightworld Technologies Ltd is a Ghanaian technology company focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.' },
+      { key: 'about_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'about_location_line', label: 'Location line', type: 'text', defaultValue: 'Tema, Ghana · built with a global outlook' },
       { key: 'about_pov_eyebrow', label: 'Point-of-view eyebrow', type: 'text', defaultValue: 'Our point of view' },
       { key: 'about_pov_title', label: 'Point-of-view title', type: 'text', defaultValue: 'Digital transformation should feel practical.' },
@@ -393,6 +395,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'services_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Capabilities' },
       { key: 'services_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Technology capabilities that connect strategy to execution.' },
       { key: 'services_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'Choose a focused engagement or combine capabilities into one delivery team across product, enterprise software, AI, infrastructure, security, growth and training.' },
+      { key: 'services_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'services_cta_title', label: 'Closing CTA title', type: 'text', defaultValue: 'Not sure which service fits?' },
       { key: 'services_cta_description', label: 'Closing CTA description', type: 'textarea', defaultValue: 'Describe the business problem and we can help shape the right technical approach.' },
     ],
@@ -405,6 +408,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'products_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Product lab' },
       { key: 'products_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Custom engineering today. Reusable products tomorrow.' },
       { key: 'products_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'Our product direction grows from patterns we repeatedly see in real operations. Instead of publishing speculative launch dates, this page shows the product families and platform ideas we are actively exploring and shaping.' },
+      { key: 'products_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       {
         key: 'products_directions',
         label: 'Product directions',
@@ -436,6 +440,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'portfolio_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Work & solution patterns' },
       { key: 'portfolio_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Technology should look good. More importantly, it should work.' },
       { key: 'portfolio_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'A selection of work published by the Lightworld team across web, mobile and business systems.' },
+      { key: 'portfolio_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'portfolio_cta_title', label: 'Closing CTA title', type: 'text', defaultValue: 'Have a harder problem than these?' },
       { key: 'portfolio_cta_description', label: 'Closing CTA description', type: 'textarea', defaultValue: 'Good. The most useful work usually starts where a template stops being enough.' },
     ],
@@ -448,6 +453,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'team_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Leadership' },
       { key: 'team_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'People accountable for where Lightworld is going.' },
       { key: 'team_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'Lightworld combines company leadership with a hands-on understanding of technology, operations and delivery. These are the confirmed executive leaders of Lightworld Technologies Ltd.' },
+      { key: 'team_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'team_model_eyebrow', label: 'Leadership model eyebrow', type: 'text', defaultValue: 'Leadership model' },
       { key: 'team_model_title', label: 'Leadership model title', type: 'text', defaultValue: 'Strategy stays close to delivery.' },
     ],
@@ -460,6 +466,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'careers_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Careers & talent network' },
       { key: 'careers_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Come build technology that has to work in the real world.' },
       { key: 'careers_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'We are building a multidisciplinary technology company in Ghana. Open roles change with project needs, so we do not publish stale vacancies or salary promises as if they were current.' },
+      { key: 'careers_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'careers_location', label: 'Location / work style', type: 'text', defaultValue: 'Tema, Ghana · role-dependent remote collaboration' },
       {
         key: 'careers_disciplines',
@@ -496,6 +503,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'contact_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Start a conversation' },
       { key: 'contact_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Tell us what you want to build, improve or automate.' },
       { key: 'contact_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'You do not need a finished technical specification. Share the business problem, the people involved and what a good outcome would look like. We can help shape the next step.' },
+      { key: 'contact_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'contact_form_eyebrow', label: 'Form eyebrow', type: 'text', defaultValue: 'Project brief' },
       { key: 'contact_form_title', label: 'Form title', type: 'text', defaultValue: 'A little context is enough to start.' },
     ],
@@ -558,6 +566,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'blog_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Insights' },
       { key: 'blog_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Useful thinking for people building with technology.' },
       { key: 'blog_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'Notes from Lightworld on software engineering, digital operations, product design, AI, cloud, growth and the practical decisions behind modern technology.' },
+      { key: 'blog_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'blog_search_placeholder', label: 'Search placeholder', type: 'text', defaultValue: 'Search insights' },
       { key: 'blog_empty_title', label: 'Empty-state title', type: 'text', defaultValue: 'No published insight matches this view.' },
       { key: 'blog_empty_description', label: 'Empty-state description', type: 'textarea', defaultValue: 'Try another category or search term. New articles can be published through the Lightworld CMS.' },
