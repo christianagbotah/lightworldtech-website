@@ -197,7 +197,7 @@ export default function AdminTestimonials() {
                 </TableRow>
               ) : (
                 testimonials.map((t) => (
-                  <TableRow key={t.id}>
+                  <TableRow key={t.id} onClick={(event) => { event.stopPropagation(); openEdit(t); }} className="cursor-pointer hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors">
                     <TableCell className="font-medium text-sm">{t.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">{t.company || '—'}</TableCell>
                     <TableCell className="text-center hidden md:table-cell">{renderStars(t.rating)}</TableCell>
@@ -208,13 +208,13 @@ export default function AdminTestimonials() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => toggleActive(t)}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); void toggleActive(t); }}>
                           {t.active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); openEdit(t); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => { setDeleting(t); setDeleteOpen(true); }}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); setDeleting(t); setDeleteOpen(true); }}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
