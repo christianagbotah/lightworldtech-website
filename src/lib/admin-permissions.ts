@@ -102,7 +102,10 @@ export function requiredAdminPermissionForPath(
     return 'clients.manage';
   }
 
-  if (pathname.startsWith('/api/admin/newsletter')) {
+  if (
+    pathname.startsWith('/api/admin/newsletter') ||
+    pathname.startsWith('/api/admin/sms')
+  ) {
     return 'communications.manage';
   }
 
