@@ -741,7 +741,7 @@ export default function ClientPortalPage() {
                   <Label htmlFor="client-profile-email">Email</Label>
                   <Input id="client-profile-email" value={data?.user.email || ''} readOnly disabled />
                   <p className="text-[11px] leading-4 text-slate-400">
-                    Email changes require Lightworld verification to protect account ownership.
+                    Email is managed by Lightworld; changes require verification to protect account ownership.
                   </p>
                 </div>
               </div>
