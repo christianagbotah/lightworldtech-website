@@ -231,7 +231,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
                           />
                         </div>
                         <div className="flex flex-1 flex-col p-5">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-600 dark:text-emerald-400">{post.category?.name || 'Technology'}</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-amber-600 dark:text-amber-300">{post.category?.name || 'Technology'}</p>
                           <h2 className="mt-3 text-xl font-semibold leading-snug tracking-[-0.025em]">{post.title}</h2>
                           <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-white/35">{post.excerpt}</p>
                           <div className="mt-auto flex items-center justify-between gap-3 pt-6 text-[11px] text-slate-400 dark:text-white/22">
