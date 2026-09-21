@@ -409,9 +409,12 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
         const payload = await response.json();
         if (payload?.reply) replyText = String(payload.reply);
 
-        const nextState = payload?.state ? (payload.state as ProjectScopeState) : null;
-        setAssistantState(nextState);
-        saveAssistantState(nextState);
+        let nextState = assistantState;
+        if (Object.prototype.hasOwnProperty.call(payload, 'state')) {
+          nextState = payload?.state ? (payload.state as ProjectScopeState) : null;
+          setAssistantState(nextState);
+          saveAssistantState(nextState);
+        }
 
         if (payload?.intent === 'project-scope') {
           trackEvent('assistant_project_scope', {
