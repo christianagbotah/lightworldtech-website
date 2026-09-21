@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
   const canClients = hasAdminPermission(admin.role, admin.permissions, 'clients.manage');
   const canProposals = hasAdminPermission(admin.role, admin.permissions, 'proposals.manage');
   const canComms = hasAdminPermission(admin.role, admin.permissions, 'communications.manage');
+  const canFinance = hasAdminPermission(admin.role, admin.permissions, 'finance.manage');
 
   if (canCrm) {
     const [unreadMessages, overdueFollowUps] = await Promise.all([
@@ -112,6 +113,72 @@ export async function GET(request: NextRequest) {
         message: proposalsNeedingReview + ' proposal' + (proposalsNeedingReview === 1 ? ' needs' : 's need') + ' human review.',
         count: proposalsNeedingReview,
         action: 'admin-proposals',
+      });
+    }
+  }
+
+  if (canFinance) {
+    const now = new Date();
+    const renewalWindow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+    const [overdueInvoices, overdueBills, renewalCandidates] = await Promise.all([
+      db.clientInvoice.count({
+        where: {
+          dueDate: { lt: now },
+          status: { notIn: ['draft', 'void', 'paid'] },
+        },
+      }),
+      db.financeVendorBill.count({
+        where: {
+          dueDate: { lt: now },
+          status: { notIn: ['void', 'paid'] },
+        },
+      }),
+      db.clientServiceAccount.findMany({
+        where: {
+          status: { in: ['active', 'suspended'] },
+          expiryDate: { gte: now, lte: renewalWindow },
+        },
+        select: { expiryDate: true, renewalNoticeDays: true },
+        take: 1000,
+      }),
+    ]);
+
+    const renewalsDue = renewalCandidates.filter((service) => {
+      if (!service.expiryDate) return false;
+      const days = Math.ceil((service.expiryDate.getTime() - now.getTime()) / 86400000);
+      return days <= service.renewalNoticeDays;
+    }).length;
+
+    if (overdueInvoices > 0) {
+      notices.push({
+        id: 'finance-overdue-invoices',
+        severity: 'critical',
+        title: 'Customer invoices overdue',
+        message: overdueInvoices + ' customer invoice' + (overdueInvoices === 1 ? ' is' : 's are') + ' past the due date.',
+        count: overdueInvoices,
+        action: 'admin-finance',
+      });
+    }
+
+    if (overdueBills > 0) {
+      notices.push({
+        id: 'finance-overdue-bills',
+        severity: 'warning',
+        title: 'Supplier bills overdue',
+        message: overdueBills + ' supplier bill' + (overdueBills === 1 ? ' is' : 's are') + ' past the due date.',
+        count: overdueBills,
+        action: 'admin-finance',
+      });
+    }
+
+    if (renewalsDue > 0) {
+      notices.push({
+        id: 'finance-service-renewals',
+        severity: 'warning',
+        title: 'Service renewals due',
+        message: renewalsDue + ' client service' + (renewalsDue === 1 ? ' is' : 's are') + ' inside the renewal-notice window.',
+        count: renewalsDue,
+        action: 'admin-finance',
       });
     }
   }
