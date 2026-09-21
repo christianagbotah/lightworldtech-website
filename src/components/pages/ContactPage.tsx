@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -13,10 +13,20 @@ import {
   Phone,
   Send,
   Sparkles,
+  TriangleAlert,
+  XCircle,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { contentText, type SiteSettings } from '@/lib/site-content';
 import { trackEvent } from '@/lib/analytics-client';
+
+type SubmissionStatus = 'idle' | 'success' | 'warning' | 'error';
+
+const GOOGLE_MAPS_PLACE_ID = 'ChIJl7EfYil_3w8R126pXLqlMgw';
+const GOOGLE_MAPS_OPEN_URL =
+  'https://www.google.com/maps/search/?api=1&query=Lightworld%20Technologies%20Limited%2C%20Tema%2C%20Ghana&query_place_id=' +
+  GOOGLE_MAPS_PLACE_ID;
+const GOOGLE_MAPS_EMBED_URL =
+  'https://maps.google.com/maps?q=place_id%3A' + GOOGLE_MAPS_PLACE_ID + '&z=16&output=embed';
 
 const services = [
   'Website / digital experience',
@@ -39,7 +49,9 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
     message: '',
   });
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle');
+  const [responseMessage, setResponseMessage] = useState('');
+  const responseRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -62,9 +74,24 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
     return day >= 1 && day <= 5 && hour >= 8 && hour < 17;
   }, []);
 
+  useEffect(() => {
+    if (submissionStatus === 'idle') return;
+    const frame = window.requestAnimationFrame(() => {
+      responseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [submissionStatus]);
+
+  const resetResponse = () => {
+    setSubmissionStatus('idle');
+    setResponseMessage('');
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setSending(true);
+
+    resetResponse();
 
     try {
       const response = await fetch('/api/contact', {
@@ -78,20 +105,40 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
           message: '[' + form.service + ']\n\n' + form.message.trim(),
         }),
       });
+      const payload = await response.json().catch(() => null);
 
-      if (!response.ok) throw new Error('Unable to send message');
-      setSent(true);
+      if (!response.ok) {
+        if (response.status === 429) {
+          setSubmissionStatus('warning');
+          setResponseMessage(
+            payload?.error ||
+              'We have received several submissions from this connection. Please wait a little and try again, or contact us directly.',
+          );
+        } else {
+          setSubmissionStatus('error');
+          setResponseMessage(
+            payload?.error ||
+              'We could not send your message right now. Your form details are still here, so you can try again or contact us directly.',
+          );
+        }
+        return;
+      }
+
+      setSubmissionStatus('success');
+      setResponseMessage(
+        'Thank you. The Lightworld team has received your message and can review the brief using the contact details you provided.',
+      );
       trackEvent('contact_submit', { metadata: { service: form.service.slice(0, 120) } });
       try {
         sessionStorage.removeItem('lw-project-brief');
       } catch {
         // ignore
       }
-      toast.success('Message received.');
     } catch {
-      toast.error('Could not send your message right now.', {
-        description: 'You can also reach Lightworld by email, phone or WhatsApp.',
-      });
+      setSubmissionStatus('error');
+      setResponseMessage(
+        'We could not reach the server to send your message. Your form details are still here, so you can try again or contact us directly.',
+      );
     } finally {
       setSending(false);
     }
@@ -122,28 +169,96 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
         <div className="container-main">
           <div className="grid gap-5 lg:grid-cols-[1.12fr_.88fr]">
             <div className="rounded-[32px] border border-slate-200/70 bg-white p-6 shadow-sm dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-8">
-              {sent ? (
-                <div className="flex min-h-[480px] flex-col items-start justify-center">
-                  <span className="flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-                    <CheckCircle2 className="size-7" />
+              {submissionStatus !== 'idle' ? (
+                <div
+                  ref={responseRef}
+                  role={submissionStatus === 'success' ? 'status' : 'alert'}
+                  aria-live="polite"
+                  className="flex min-h-[480px] flex-col items-center justify-center px-2 py-10 text-center"
+                >
+                  <span
+                    className={
+                      'flex size-24 items-center justify-center rounded-full border shadow-sm ' +
+                      (submissionStatus === 'success'
+                        ? 'border-emerald-200/70 bg-emerald-50 text-emerald-600 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300'
+                        : submissionStatus === 'warning'
+                          ? 'border-amber-200/80 bg-amber-50 text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300'
+                          : 'border-rose-200/80 bg-rose-50 text-rose-600 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300')
+                    }
+                  >
+                    {submissionStatus === 'success' ? (
+                      <CheckCircle2 className="size-12" strokeWidth={1.8} />
+                    ) : submissionStatus === 'warning' ? (
+                      <TriangleAlert className="size-12" strokeWidth={1.8} />
+                    ) : (
+                      <XCircle className="size-12" strokeWidth={1.8} />
+                    )}
                   </span>
-                  <h2 className="mt-6 text-3xl font-semibold tracking-[-0.04em]">Thanks. Your message is in.</h2>
-                  <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/38">
-                    The Lightworld team can review the brief and respond using the contact details you provided.
+
+                  <p
+                    className={
+                      'mt-7 text-[11px] font-semibold uppercase tracking-[0.2em] ' +
+                      (submissionStatus === 'success'
+                        ? 'text-emerald-600 dark:text-emerald-300'
+                        : submissionStatus === 'warning'
+                          ? 'text-amber-600 dark:text-amber-300'
+                          : 'text-rose-600 dark:text-rose-300')
+                    }
+                  >
+                    {submissionStatus === 'success'
+                      ? 'Message sent successfully'
+                      : submissionStatus === 'warning'
+                        ? 'Please try again shortly'
+                        : 'Message not sent'}
                   </p>
-                  <div className="mt-7 flex flex-wrap gap-3">
-                    <button
-                      onClick={() => {
-                        setSent(false);
-                        setForm({ name: '', email: '', phone: '', service: services[0], subject: '', message: '' });
-                      }}
-                      className="inline-flex h-11 items-center rounded-full bg-slate-950 px-5 text-sm font-semibold text-white dark:bg-emerald-400 dark:text-slate-950"
-                    >
-                      Send another message
-                    </button>
-                    <Link href="/" className="inline-flex h-11 items-center rounded-full border border-slate-200 px-5 text-sm font-semibold dark:border-white/[0.08]">
-                      Back home
-                    </Link>
+                  <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+                    {submissionStatus === 'success'
+                      ? 'Thank you for contacting Lightworld.'
+                      : submissionStatus === 'warning'
+                        ? 'Your message is still with you.'
+                        : 'We could not complete the submission.'}
+                  </h2>
+                  <p className="mt-4 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/42">
+                    {responseMessage}
+                  </p>
+
+                  <div className="mt-8 flex w-full max-w-xl flex-wrap items-center justify-center gap-3">
+                    {submissionStatus === 'success' ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetResponse();
+                            setForm({ name: '', email: '', phone: '', service: services[0], subject: '', message: '' });
+                          }}
+                          className="inline-flex h-11 items-center justify-center rounded-full bg-amber-500 px-6 text-sm font-semibold text-slate-950 transition hover:bg-amber-400"
+                        >
+                          Send another message
+                        </button>
+                        <Link
+                          href="/"
+                          className="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 px-6 text-sm font-semibold transition hover:border-amber-300 hover:text-amber-700 dark:border-white/[0.08] dark:hover:border-amber-300/40 dark:hover:text-amber-300"
+                        >
+                          Back home
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={resetResponse}
+                          className="inline-flex h-11 items-center justify-center rounded-full bg-amber-500 px-6 text-sm font-semibold text-slate-950 transition hover:bg-amber-400"
+                        >
+                          Return to form
+                        </button>
+                        <a
+                          href={'mailto:' + contentText(settings, 'company_email', 'mail@lightworldtech.com')}
+                          className="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 px-6 text-sm font-semibold transition hover:border-amber-300 hover:text-amber-700 dark:border-white/[0.08] dark:hover:border-amber-300/40 dark:hover:text-amber-300"
+                        >
+                          Email Lightworld
+                        </a>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -277,7 +392,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                 <div className="rounded-[24px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <MapPin className="size-4 text-emerald-500" />
                   <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Location</p>
-                  <p className="mt-1 text-sm font-semibold">{contentText(settings, 'company_address', 'Accra, Ghana')}</p>
+                  <p className="mt-1 text-sm font-semibold">{contentText(settings, 'company_address', 'Tema, Ghana')}</p>
                 </div>
                 <div className="rounded-[24px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <Clock className="size-4 text-emerald-500" />
@@ -292,6 +407,44 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                 <Link href="/services" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                   Explore advisory services <ArrowRight className="size-3.5" />
                 </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 overflow-hidden rounded-[32px] border border-slate-200/70 bg-white shadow-sm dark:border-white/[0.07] dark:bg-white/[0.025]">
+            <div className="grid lg:grid-cols-[.36fr_.64fr]">
+              <div className="flex flex-col justify-center p-6 sm:p-8">
+                <span className="flex size-12 items-center justify-center rounded-2xl border border-amber-500/15 bg-amber-500/10 text-amber-600 dark:text-amber-300">
+                  <MapPin className="size-5" />
+                </span>
+                <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-300">
+                  Visit us
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">
+                  Find Lightworld Technologies Limited on Google Maps.
+                </h2>
+                <p className="mt-4 max-w-md text-sm leading-7 text-slate-500 dark:text-white/40">
+                  Our verified business listing is in Tema, Ghana. Use the map for the exact pin and directions.
+                </p>
+                <a
+                  href={GOOGLE_MAPS_OPEN_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 inline-flex h-11 w-fit items-center gap-2 rounded-full bg-amber-500 px-5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400"
+                >
+                  Open in Google Maps <ArrowRight className="size-4" />
+                </a>
+              </div>
+
+              <div className="min-h-[360px] border-t border-slate-200/70 bg-slate-100 dark:border-white/[0.07] dark:bg-white/[0.02] lg:min-h-[420px] lg:border-l lg:border-t-0">
+                <iframe
+                  title="Lightworld Technologies Limited location on Google Maps"
+                  src={GOOGLE_MAPS_EMBED_URL}
+                  className="h-[360px] w-full border-0 lg:h-full lg:min-h-[420px]"
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
             </div>
           </div>
