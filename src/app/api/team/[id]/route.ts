@@ -11,9 +11,10 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const member = await db.teamMember.findUnique({
-      where: { id },
-    });
+    const adminRequest = await isAdminRequest(request);
+    const member = adminRequest
+      ? await db.teamMember.findUnique({ where: { id } })
+      : await db.teamMember.findFirst({ where: { id, active: true } });
 
     if (!member) {
       return NextResponse.json(
