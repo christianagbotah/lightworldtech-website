@@ -3,15 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
-  AlertTriangle,
-  ArrowDownLeft,
+   ArrowDownLeft,
   ArrowUpRight,
   Building2,
   CalendarClock,
   CircleDollarSign,
   FileText,
-  Landmark,
-  Loader2,
+   Loader2,
   Plus,
   ReceiptText,
   RefreshCw,
@@ -359,11 +357,6 @@ export default function AdminFinance() {
   useEffect(() => {
     void load();
   }, []);
-
-  const selectedOrganization = useMemo(
-    () => data?.organizations.find((item) => item.id === serviceForm.organizationId || item.id === invoiceForm.organizationId || item.id === receiptForm.organizationId),
-    [data?.organizations, serviceForm.organizationId, invoiceForm.organizationId, receiptForm.organizationId],
-  );
 
   const receiptInvoices = useMemo(
     () => (data?.invoices || []).filter((invoice) =>
