@@ -474,7 +474,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
         <div className="container-main">
           <Reveal className="grid gap-8 lg:grid-cols-[.72fr_1.28fr] lg:items-end">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">What we build</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">What we build</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl lg:text-6xl">{contentText(settings, 'home_capabilities_title', 'More than a website agency.')}</h2>
             </div>
             <p className="max-w-2xl text-base leading-7 text-slate-600 dark:text-white/45 lg:justify-self-end lg:text-lg">
@@ -499,7 +499,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                 >
                   <Link
                     href="/services"
-                    className="group flex h-full min-h-[245px] flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-sm shadow-slate-950/[0.02] transition duration-300 hover:-translate-y-1 hover:border-emerald-300/60 hover:shadow-xl hover:shadow-emerald-950/[0.05] dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-emerald-300/20 dark:hover:bg-white/[0.04]"
+                    className="group flex h-full min-h-[245px] flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-sm shadow-slate-950/[0.02] transition duration-300 hover:-translate-y-1 hover:border-amber-300/60 hover:shadow-xl hover:shadow-emerald-950/[0.05] dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-amber-300/20 dark:hover:bg-white/[0.04]"
                   >
                     {featuredImage && (
                       <div className="relative h-28 overflow-hidden border-b border-slate-200/60 dark:border-white/[0.06]">
@@ -605,7 +605,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
         <div className="container-main">
           <Reveal className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Selected capabilities</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Selected capabilities</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Built to solve, not to decorate.</h2>
             </div>
             <Link href="/portfolio" className="group inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-white/50">
@@ -664,7 +664,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
       <section className="section-padding">
         <div className="container-main">
           <Reveal className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">How we deliver</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">How we deliver</p>
             <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">{contentText(settings, 'home_process_title', 'Clear enough for the board. Detailed enough for engineering.')}</h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 dark:text-white/38">{contentText(settings, 'home_process_description', 'Discovery, design, engineering, launch and continuous improvement stay connected from the first conversation.')}</p>
           </Reveal>
@@ -674,7 +674,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               <Reveal key={number} delay={index * 0.045}>
                 <div className="h-full rounded-[26px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs text-emerald-600 dark:text-emerald-400">{number}</span>
+                    <span className="font-mono text-xs text-amber-600 dark:text-amber-300">{number}</span>
                     {index < process.length - 1 && <ArrowRight className="hidden size-3.5 text-slate-300 lg:block dark:text-white/15" />}
                   </div>
                   <h3 className="mt-8 text-lg font-semibold">{title}</h3>
