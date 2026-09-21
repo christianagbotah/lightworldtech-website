@@ -136,6 +136,14 @@ type Summary = {
   awaitingClient: number;
 };
 
+type SupportAgent = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  lastLogin: string | null;
+};
+
 const categories = [
   ['all', 'All categories'],
   ['technical', 'Technical support'],
@@ -185,6 +193,14 @@ export default function AdminSupportDesk() {
   const [priority, setPriority] = useState('all');
   const [category, setCategory] = useState('all');
   const [sla, setSla] = useState('all');
+  const [assignedToFilter, setAssignedToFilter] = useState('all');
+  const [agents, setAgents] = useState<SupportAgent[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkPriority, setBulkPriority] = useState('');
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [bulkAssignee, setBulkAssignee] = useState('');
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<TicketDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -200,8 +216,9 @@ export default function AdminSupportDesk() {
     if (priority !== 'all') value.set('priority', priority);
     if (category !== 'all') value.set('category', category);
     if (sla !== 'all') value.set('sla', sla);
+    if (assignedToFilter !== 'all') value.set('assignedTo', assignedToFilter);
     return value;
-  }, [query, status, priority, category, sla]);
+  }, [query, status, priority, category, sla, assignedToFilter]);
 
   const loadTickets = async () => {
     setLoading(true);
@@ -211,7 +228,9 @@ export default function AdminSupportDesk() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Unable to load Support Desk');
-      setTickets(payload.data || []);
+      const nextTickets: TicketListItem[] = payload.data || [];
+      setTickets(nextTickets);
+      setSelectedIds((current) => new Set([...current].filter((id) => nextTickets.some((ticket) => ticket.id === id))));
       setSummary(payload.summary || {
         total: 0, open: 0, unread: 0, highPriority: 0, breached: 0, awaitingClient: 0,
       });
@@ -235,6 +254,92 @@ export default function AdminSupportDesk() {
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.toString()]);
+
+  useEffect(() => {
+    fetch('/api/admin/support-agents', { cache: 'no-store' })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || 'Unable to load support agents');
+        setAgents(payload.data || []);
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : 'Unable to load support agents');
+      });
+  }, []);
+
+  const agentLabel = (email: string) => {
+    if (!email) return 'Unassigned';
+    const agent = agents.find((item) => item.email === email);
+    return agent ? agent.name + ' · ' + agent.email : email;
+  };
+
+  const allVisibleSelected = tickets.length > 0 && tickets.every((ticket) => selectedIds.has(ticket.id));
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllVisible = () => {
+    setSelectedIds(allVisibleSelected ? new Set() : new Set(tickets.map((ticket) => ticket.id)));
+  };
+
+  const applyBulk = async (patch: Record<string, unknown>) => {
+    const ids = [...selectedIds];
+    if (!ids.length) return;
+    setBulkUpdating(true);
+    try {
+      const response = await fetch('/api/admin/support-tickets/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, ...patch }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to update selected tickets');
+      toast.success(String(payload?.data?.updated || ids.length) + ' support ticket(s) updated');
+      setSelectedIds(new Set());
+      setBulkPriority('');
+      setBulkStatus('');
+      setBulkAssignee('');
+      await loadTickets();
+      if (selected) await openTicket(selected.id);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update selected tickets');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const response = await fetch('/api/admin/support-tickets/export?' + params.toString(), {
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error || 'Unable to export Support Desk');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'lightworld-support-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Support Desk export downloaded');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to export Support Desk');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const openTicket = async (id: string) => {
     setDetailLoading(true);
@@ -352,6 +457,7 @@ export default function AdminSupportDesk() {
     setPriority('all');
     setCategory('all');
     setSla('all');
+    setAssignedToFilter('all');
   };
 
   const kpis = [
@@ -372,9 +478,15 @@ export default function AdminSupportDesk() {
             Manage client cases, SLA response deadlines, assignment, conversations and private staff notes from one queue.
           </p>
         </div>
-        <Button variant="outline" onClick={() => void loadTickets()}>
-          <RefreshCw className="mr-2 size-4" /> Refresh queue
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => void exportCsv()} disabled={exporting}>
+            {exporting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+            Export CSV
+          </Button>
+          <Button variant="outline" onClick={() => void loadTickets()}>
+            <RefreshCw className="mr-2 size-4" /> Refresh queue
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -398,7 +510,7 @@ export default function AdminSupportDesk() {
         })}
       </div>
 
-      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 xl:grid-cols-[minmax(0,1fr)_160px_150px_180px_150px_auto]">
+      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 xl:grid-cols-[minmax(0,1fr)_150px_140px_170px_150px_190px_auto]">
         <label className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ticket, client, subject, email or assignee" className="pl-9" />
@@ -424,14 +536,69 @@ export default function AdminSupportDesk() {
           <option value="all">All SLA states</option>
           <option value="breached">SLA breached</option>
         </select>
+        <select value={assignedToFilter} onChange={(event) => setAssignedToFilter(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+          <option value="all">All agents</option>
+          <option value="unassigned">Unassigned</option>
+          {agents.map((agent) => <option key={agent.id} value={agent.email}>{agent.name}</option>)}
+        </select>
         <Button type="button" variant="ghost" onClick={resetFilters}>Clear</Button>
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <p className="text-sm font-semibold">{selectedIds.size} ticket{selectedIds.size === 1 ? '' : 's'} selected</p>
+              <p className="mt-1 text-xs text-muted-foreground">Bulk status changes are limited to 25 cases per request; assignment/priority can update up to 100.</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3 xl:min-w-[760px]">
+              <div className="flex gap-2">
+                <select value={bulkAssignee} onChange={(event) => setBulkAssignee(event.target.value)} className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs">
+                  <option value="">Choose assignee</option>
+                  <option value="__unassigned__">Unassigned</option>
+                  {agents.map((agent) => <option key={agent.id} value={agent.email}>{agent.name}</option>)}
+                </select>
+                <Button size="sm" variant="outline" disabled={bulkUpdating || !bulkAssignee} onClick={() => void applyBulk({ assignedTo: bulkAssignee === '__unassigned__' ? '' : bulkAssignee })}>Assign</Button>
+              </div>
+              <div className="flex gap-2">
+                <select value={bulkPriority} onChange={(event) => setBulkPriority(event.target.value)} className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs">
+                  <option value="">Choose priority</option>
+                  <option value="high">High</option>
+                  <option value="normal">Normal</option>
+                  <option value="low">Low</option>
+                </select>
+                <Button size="sm" variant="outline" disabled={bulkUpdating || !bulkPriority} onClick={() => void applyBulk({ priority: bulkPriority })}>Apply</Button>
+              </div>
+              <div className="flex gap-2">
+                <select value={bulkStatus} onChange={(event) => setBulkStatus(event.target.value)} className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs">
+                  <option value="">Choose status</option>
+                  <option value="open">Open</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="awaiting_client">Awaiting client</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <Button size="sm" variant="outline" disabled={bulkUpdating || !bulkStatus || selectedIds.size > 25} onClick={() => void applyBulk({ status: bulkStatus })}>Apply</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
         <div className="max-w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40">
+                <TableHead className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={toggleAllVisible}
+                    aria-label="Select all visible support tickets"
+                    className="size-4 rounded border-border accent-amber-600"
+                  />
+                </TableHead>
                 <TableHead>Ticket</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Subject</TableHead>
@@ -445,16 +612,25 @@ export default function AdminSupportDesk() {
             <TableBody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow key={index}><TableCell colSpan={8}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
+                  <TableRow key={index}><TableCell colSpan={9}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
                 ))
               ) : tickets.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No tickets match this view.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">No tickets match this view.</TableCell></TableRow>
               ) : tickets.map((ticket) => (
                 <TableRow
                   key={ticket.id}
                   onClick={() => void openTicket(ticket.id)}
                   className={'cursor-pointer transition hover:bg-amber-50/50 dark:hover:bg-amber-950/10 ' + (ticket.unreadByAdmin ? 'border-l-[3px] border-l-amber-500' : '')}
                 >
+                  <TableCell onClick={(event) => event.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(ticket.id)}
+                      onChange={() => toggleSelected(ticket.id)}
+                      aria-label={'Select ' + ticket.ticketNumber}
+                      className="size-4 rounded border-border accent-amber-600"
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {ticket.unreadByAdmin && <span className="size-2 rounded-full bg-amber-500" />}
@@ -478,7 +654,7 @@ export default function AdminSupportDesk() {
                       <Badge variant="outline">Within SLA</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-xs">{ticket.assignedTo || 'Unassigned'}</TableCell>
+                  <TableCell className="max-w-[220px] truncate text-xs">{agentLabel(ticket.assignedTo)}</TableCell>
                   <TableCell className="text-right text-xs text-muted-foreground">{new Date(ticket.lastActivityAt).toLocaleString()}</TableCell>
                 </TableRow>
               ))}
@@ -674,14 +850,21 @@ export default function AdminSupportDesk() {
                     </div>
                     <div>
                       <Label htmlFor="support-assignee">Assignee</Label>
-                      <Input
+                      <select
                         id="support-assignee"
-                        defaultValue={selected.assignedTo}
-                        placeholder="e.g. Support Team"
-                        onBlur={(event) => {
-                          if (event.target.value.trim() !== selected.assignedTo) void updateTicket({ assignedTo: event.target.value.trim() });
-                        }}
-                      />
+                        value={selected.assignedTo}
+                        onChange={(event) => void updateTicket({ assignedTo: event.target.value })}
+                        disabled={saving}
+                        className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      >
+                        <option value="">Unassigned</option>
+                        {selected.assignedTo && !agents.some((agent) => agent.email === selected.assignedTo) && (
+                          <option value={selected.assignedTo}>{selected.assignedTo}</option>
+                        )}
+                        {agents.map((agent) => (
+                          <option key={agent.id} value={agent.email}>{agent.name} · {agent.email}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -713,7 +896,7 @@ export default function AdminSupportDesk() {
 
                   <div className="rounded-xl border border-border/60 bg-background p-4 text-xs">
                     <p className="flex items-center gap-2 font-semibold"><UserRound className="size-4 text-amber-600" /> Ownership</p>
-                    <p className="mt-2 text-muted-foreground">{selected.assignedTo || 'Unassigned'}</p>
+                    <p className="mt-2 text-muted-foreground">{agentLabel(selected.assignedTo)}</p>
                     <p className="mt-3 text-muted-foreground">Last activity</p>
                     <p className="font-medium">{new Date(selected.lastActivityAt).toLocaleString()}</p>
                   </div>
