@@ -542,6 +542,9 @@ model ClientSupportTicket {
   lastActivityAt     DateTime            @default(now())
   unreadByAdmin      Boolean             @default(true)
   unreadByClient     Boolean             @default(false)
+  clientRating       Int?
+  clientFeedback     String              @default("")
+  ratedAt            DateTime?
   messages           ClientTicketMessage[]
   internalNotes      ClientTicketInternalNote[]
   attachments        ClientTicketAttachment[]
