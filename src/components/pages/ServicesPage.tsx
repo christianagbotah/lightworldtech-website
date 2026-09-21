@@ -216,7 +216,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
             className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end"
           >
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
                 <Layers3 className="size-3.5" />
                 {contentText(settings, 'services_hero_eyebrow', 'End-to-end technology services')}
               </div>
@@ -229,7 +229,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
                 {contentText(settings, 'services_hero_description', 'Lightworld brings product design, software engineering, cloud, security, growth and training together so you can solve the whole problem—not just commission a collection of screens.')}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/contact" className="inline-flex h-11 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-600 dark:bg-emerald-400 dark:text-slate-950">
+                <Link href="/contact" className="inline-flex h-11 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-amber-600 dark:bg-amber-400 dark:text-slate-950">
                   Discuss your project <ArrowRight className="size-4" />
                 </Link>
                 <Link href="/portfolio" className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-300 px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 dark:border-white/10 dark:text-white/60">
@@ -254,18 +254,18 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
                 onClick={() => selectService(service.id)}
                 className={
                   active === service.id
-                    ? 'group rounded-[26px] border border-emerald-400/35 bg-emerald-500/[0.08] p-5 text-left shadow-lg shadow-emerald-950/[0.04] dark:bg-emerald-300/[0.055]'
-                    : 'group rounded-[26px] border border-slate-200/75 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-emerald-300/50 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]'
+                    ? 'group rounded-[26px] border border-amber-400/40 bg-amber-500/[0.08] p-5 text-left shadow-lg shadow-amber-950/[0.05] dark:bg-amber-300/[0.055]'
+                    : 'group rounded-[26px] border border-slate-200/75 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-amber-300/60 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]'
                 }
                 aria-pressed={active === service.id}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <span className="flex size-10 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                  <span className="flex size-10 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
                     <service.icon className="size-5" />
                   </span>
                   <span className="font-mono text-[9px] text-slate-300 dark:text-white/15">{String(index + 1).padStart(2, '0')}</span>
                 </div>
-                <p className="mt-6 text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-600/70 dark:text-emerald-300/55">{service.eyebrow}</p>
+                <p className="mt-6 text-[9px] font-semibold uppercase tracking-[0.18em] text-amber-600/75 dark:text-amber-300/60">{service.eyebrow}</p>
                 <h2 className="mt-1.5 text-base font-semibold tracking-tight">{service.title}</h2>
               </motion.button>
             ))}
@@ -281,10 +281,10 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
             className="mt-4 scroll-mt-28 grid overflow-hidden rounded-[32px] border border-slate-200/75 bg-white dark:border-white/[0.07] dark:bg-white/[0.025] lg:grid-cols-[.9fr_1.1fr]"
           >
             <div className="border-b border-slate-200/70 p-6 sm:p-8 lg:border-b-0 lg:border-r dark:border-white/[0.06]">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
                 <selected.icon className="size-6" />
               </span>
-              <p className="mt-7 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">{selected.eyebrow}</p>
+              <p className="mt-7 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-300">{selected.eyebrow}</p>
               <h2 className="mt-2 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">{selected.title}</h2>
               <p className="mt-4 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/38 sm:text-base">{selected.summary}</p>
 
@@ -315,14 +315,14 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {selected.deliverables.map((deliverable) => (
                   <div key={deliverable} className="flex items-start gap-3 rounded-2xl border border-slate-200/65 bg-slate-50/70 p-4 dark:border-white/[0.055] dark:bg-white/[0.02]">
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-amber-600 dark:text-amber-300">
                       <Check className="size-3" />
                     </span>
                     <span className="text-sm font-medium text-slate-700 dark:text-white/55">{deliverable}</span>
                   </div>
                 ))}
               </div>
-              <Link href="/contact" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+              <Link href="/contact" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
                 Talk to us about this capability <ArrowRight className="size-4" />
               </Link>
             </div>
@@ -334,7 +334,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
         <div className="container-main">
           <div className="grid gap-12 lg:grid-cols-[.75fr_1.25fr]">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">
                 <Sparkles className="size-3.5" />
                 Where we fit
               </div>
@@ -354,7 +354,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
                   transition={{ delay: index * 0.04 }}
                   className="flex gap-3 rounded-[22px] border border-white/[0.07] bg-white/[0.03] p-4"
                 >
-                  <Check className="mt-0.5 size-4 shrink-0 text-emerald-300" />
+                  <Check className="mt-0.5 size-4 shrink-0 text-amber-300" />
                   <p className="text-sm leading-6 text-white/50">{situation}</p>
                 </motion.div>
               ))}
@@ -366,26 +366,26 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
       <section className="section-padding">
         <div className="container-main">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Engagement model</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Engagement model</p>
             <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Enough process to reduce risk. Not enough to slow the work.</h2>
           </div>
 
           <div className="mt-10 grid gap-3 lg:grid-cols-4">
             {engagement.map(([number, title, description]) => (
               <div key={number} className="rounded-[26px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
-                <span className="font-mono text-xs text-emerald-600 dark:text-emerald-400">{number}</span>
+                <span className="font-mono text-xs text-amber-600 dark:text-amber-300">{number}</span>
                 <h3 className="mt-7 text-lg font-semibold">{title}</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/35">{description}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-10 flex flex-col gap-5 rounded-[32px] border border-emerald-500/15 bg-emerald-500/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="mt-10 flex flex-col gap-5 rounded-[32px] border border-amber-500/15 bg-amber-500/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div>
               <h3 className="text-2xl font-semibold tracking-tight">{contentText(settings, 'services_cta_title', 'Not sure which service category fits?')}</h3>
               <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/38">{contentText(settings, 'services_cta_description', 'Describe the business problem and we can help shape the right technical approach.')}</p>
             </div>
-            <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white transition hover:bg-emerald-400 dark:text-slate-950">
+            <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-amber-500 px-5 text-sm font-semibold text-white transition hover:bg-amber-400 dark:text-slate-950">
               Start with the problem <ArrowRight className="size-4" />
             </Link>
           </div>
