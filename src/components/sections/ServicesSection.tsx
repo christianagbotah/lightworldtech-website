@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -135,11 +136,12 @@ export default function ServicesSection() {
               const IconComp = iconMap[service.icon] || Globe;
               return (
                 <motion.div key={service.id} variants={itemVariants}>
-                  <div className="group rounded-xl p-[1.5px] bg-gradient-to-br from-slate-200/80 via-slate-200/80 to-slate-200/80 dark:from-slate-700/60 dark:via-slate-700/60 dark:to-slate-700/60 hover:from-emerald-400 hover:via-amber-300 hover:to-amber-400 dark:hover:from-emerald-500 dark:hover:via-amber-400 dark:hover:to-amber-500 transition-all duration-500 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-amber-400/10 cursor-pointer">
-                    <Card
-                      className="h-full border-0 bg-white dark:bg-slate-800/80 backdrop-blur-sm transition-all duration-500 overflow-hidden relative rounded-[10px]"
-                      onClick={() => navigate('services')}
-                    >
+                  <Link
+                    href="/services"
+                    aria-label={`Explore ${service.title}`}
+                    className="group block rounded-xl p-[1.5px] bg-gradient-to-br from-slate-200/80 via-slate-200/80 to-slate-200/80 dark:from-slate-700/60 dark:via-slate-700/60 dark:to-slate-700/60 hover:from-emerald-400 hover:via-amber-300 hover:to-amber-400 dark:hover:from-emerald-500 dark:hover:via-amber-400 dark:hover:to-amber-500 transition-all duration-500 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-amber-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60 focus-visible:ring-offset-2"
+                  >
+                    <Card className="h-full border-0 bg-white dark:bg-slate-800/80 backdrop-blur-sm transition-all duration-500 overflow-hidden relative rounded-[10px]">
                     {/* Shimmer/shine effect on hover */}
                     <div className="absolute inset-0 overflow-hidden rounded-lg pointer-events-none z-10">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/0 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out skew-x-12 scale-x-150 group-hover:via-white/20" />
@@ -171,7 +173,7 @@ export default function ServicesSection() {
                       </span>
                     </CardContent>
                     </Card>
-                  </div>
+                  </Link>
                 </motion.div>
               );
             })}
