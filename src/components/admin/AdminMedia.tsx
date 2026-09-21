@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 type MediaItem = {
   filename: string;
@@ -165,33 +166,23 @@ export default function AdminMedia() {
         className="hidden"
       />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <Images className="size-5 text-amber-600" />
-            <h1 className="text-2xl font-bold tracking-tight">Media Library</h1>
-          </div>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Upload, review and reuse CMS images stored in persistent production storage.
-            Deletion is blocked while an image is referenced by managed content.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={() => void loadMedia()} disabled={loading}>
-            <RefreshCw className={'mr-2 size-4 ' + (loading ? 'animate-spin' : '')} />
-            Refresh
-          </Button>
-          <Button
-            type="button"
-            className="bg-amber-600 text-white hover:bg-amber-700"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Upload className="mr-2 size-4" />}
-            Upload image
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        eyebrow="Website & content"
+        title="Media Library"
+        description="Upload, review and reuse CMS images stored in persistent production storage. Deletion is blocked while an image is referenced by managed content."
+        actions={
+          <>
+            <Button type="button" variant="outline" onClick={() => void loadMedia()} disabled={loading}>
+              <RefreshCw className={'mr-2 size-4 ' + (loading ? 'animate-spin' : '')} />
+              Refresh
+            </Button>
+            <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+              {uploading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Upload className="mr-2 size-4" />}
+              Upload image
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card className="border-border/60">

@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 type SettingsData = Record<string, string>;
 
@@ -207,10 +208,11 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage your website configuration</p>
-      </div>
+      <AdminPageHeader
+        eyebrow="Administration"
+        title="Settings"
+        description="Manage global company information, contact details, brand metadata, SEO and website configuration."
+      />
 
       <div className="space-y-6">
         {settingsGroups.map((group) => (
@@ -253,7 +255,6 @@ export default function AdminSettings() {
                 <Button
                   onClick={() => saveGroup(group)}
                   disabled={saving === group.id}
-                  className="bg-emerald-600 hover:bg-emerald-700"
                 >
                   {saving === group.id ? (
                     <>

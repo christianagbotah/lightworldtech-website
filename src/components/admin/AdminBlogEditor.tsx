@@ -18,6 +18,7 @@ import {
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
 import AdminMediaField from '@/components/admin/AdminMediaField';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 interface Category {
   id: string;
@@ -159,32 +160,26 @@ export default function AdminBlogEditor() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('admin-blog')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {isEditing ? 'Edit Post' : 'New Post'}
-            </h1>
-            <p className="text-muted-foreground text-sm mt-0.5">
-              {isEditing ? 'Update your blog post' : 'Create a new blog post'}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => handleSave(false)} disabled={saving}>
-            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-            Save Draft
-          </Button>
-          <Button onClick={() => handleSave(true)} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
-            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-            {form.published ? 'Update' : 'Publish'}
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        eyebrow="Website & content"
+        title={isEditing ? 'Edit Post' : 'New Post'}
+        description={isEditing ? 'Update the article content, media, metadata and publication state.' : 'Create a new article with reusable media, metadata and publication controls.'}
+        actions={
+          <>
+            <Button variant="ghost" onClick={() => navigate('admin-blog')}>
+              <ArrowLeft className="mr-2 size-4" /> Back to posts
+            </Button>
+            <Button variant="outline" onClick={() => handleSave(false)} disabled={saving}>
+              {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}
+              Save Draft
+            </Button>
+            <Button onClick={() => handleSave(true)} disabled={saving}>
+              {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Send className="mr-2 size-4" />}
+              {form.published ? 'Update' : 'Publish'}
+            </Button>
+          </>
+        }
+      />
 
       {/* Form */}
       <div className="border border-border rounded-xl bg-card p-6 space-y-6">

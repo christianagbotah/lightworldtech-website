@@ -37,6 +37,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 interface CampaignSummary {
   id: string;
@@ -291,22 +292,21 @@ export default function AdminCampaigns() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Newsletter Campaign Studio</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Draft, preview, test and deliver campaigns to {activeSubscribers} active subscriber{activeSubscribers === 1 ? '' : 's'}.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => void loadCampaigns()}>
-            <RefreshCw className="mr-2 size-4" /> Refresh
-          </Button>
-          <Button onClick={() => setCreateOpen(true)}>
-            <FilePlus2 className="mr-2 size-4" /> New campaign
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        eyebrow="Communications"
+        title="Newsletter Campaign Studio"
+        description={'Draft, preview, test and deliver campaigns to ' + activeSubscribers + ' active subscriber' + (activeSubscribers === 1 ? '.' : 's.')}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => void loadCampaigns()}>
+              <RefreshCw className="mr-2 size-4" /> Refresh
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <FilePlus2 className="mr-2 size-4" /> New campaign
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
         <Card className="border-border/50">

@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/table';
 import { toast } from 'sonner';
 import AdminMediaField from '@/components/admin/AdminMediaField';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 interface PortfolioProject {
   id: string;
@@ -175,15 +176,16 @@ export default function AdminPortfolio() {
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Portfolio</h1>
-          <p className="text-muted-foreground text-sm mt-1">{projects.length} projects</p>
-        </div>
-        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
-          <Plus className="h-4 w-4 mr-2" /> Add Project
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Website & content"
+        title="Portfolio"
+        description={projects.length + ' portfolio project' + (projects.length === 1 ? '' : 's') + ' available for showcasing.'}
+        actions={
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 size-4" /> Add Project
+          </Button>
+        }
+      />
 
       <div className="border border-border rounded-xl bg-card overflow-hidden">
         <div className="max-w-full overflow-x-auto max-h-[600px] overflow-y-auto">
@@ -297,7 +299,7 @@ export default function AdminPortfolio() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleSave} disabled={saving}>
               {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>

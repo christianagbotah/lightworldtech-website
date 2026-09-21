@@ -38,6 +38,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import AdminPermissionPicker from '@/components/admin/AdminPermissionPicker';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import {
   Table,
   TableBody,
@@ -300,27 +301,23 @@ export default function AdminGovernance() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="size-6 text-amber-600" />
-            <h1 className="text-2xl font-bold">Admin Governance</h1>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Super-admin controls for administrator accounts and governance-sensitive audit activity.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => void load(true)} disabled={refreshing}>
-            <RefreshCw className={refreshing ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />
-            Refresh
-          </Button>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="mr-2 size-4" />
-            Add administrator
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        eyebrow="Administration"
+        title="Admin Governance"
+        description="Super-admin controls for administrator accounts and governance-sensitive audit activity."
+        actions={
+          <>
+            <Button variant="outline" onClick={() => void load(true)} disabled={refreshing}>
+              <RefreshCw className={refreshing ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />
+              Refresh
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="mr-2 size-4" />
+              Add administrator
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-border/50">
