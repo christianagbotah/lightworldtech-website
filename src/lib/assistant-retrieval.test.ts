@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   findBestFaqMatch,
   findBestProcessStepMatch,
@@ -59,5 +61,18 @@ describe('assistant CMS retrieval', () => {
     expect(isProcessOverviewIntent('What is your development process?')).toBe(true);
     expect(isProcessOverviewIntent('Can you show me the project steps?')).toBe(true);
     expect(isProcessOverviewIntent('Who leads Lightworld?')).toBe(false);
+  });
+});
+
+
+describe('assistant process routing precedence', () => {
+  test('evaluates full-process intent before a matching individual step', () => {
+    const knowledge = readFileSync(join(process.cwd(), 'src/lib/assistant-knowledge.ts'), 'utf8');
+    const overview = knowledge.indexOf('if (isProcessOverviewIntent(message))');
+    const individual = knowledge.indexOf('const processStepMatch = findBestProcessStepMatch(message, knowledge.processSteps)');
+
+    expect(overview).toBeGreaterThan(-1);
+    expect(individual).toBeGreaterThan(-1);
+    expect(overview).toBeLessThan(individual);
   });
 });
