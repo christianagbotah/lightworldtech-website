@@ -334,7 +334,7 @@ export default function AdminGovernance() {
           <CardTitle className="text-base">Administrator accounts</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="max-w-full overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -402,7 +402,7 @@ export default function AdminGovernance() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="max-h-[520px] overflow-auto">
+          <div className="max-h-[520px] max-w-full overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
