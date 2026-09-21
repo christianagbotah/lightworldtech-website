@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Trash2, Mail, MailOpen, Eye, EyeOff, Phone, Copy, Check, GitBranch } from 'lucide-react';
+import { Trash2, Mail, MailOpen, Eye, Phone, Copy, Check, GitBranch, Download, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -46,7 +46,8 @@ interface ContactMessage {
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
+  const handleCopy = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     navigator.clipboard.writeText(text);
     setCopied(true);
     toast.success(`${label} copied to clipboard`);
@@ -66,7 +67,11 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 export default function AdminMessages() {
   const { navigate } = useAppStore();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [totalMessages, setTotalMessages] = useState(0);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewing, setViewing] = useState<ContactMessage | null>(null);
@@ -74,10 +79,13 @@ export default function AdminMessages() {
 
   const fetchMessages = useCallback(async () => {
     try {
-      const res = await fetch('/api/contact');
+      const res = await fetch('/api/contact?limit=100', { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to fetch');
       const payload = await res.json();
-      setMessages(Array.isArray(payload) ? payload : (payload.data || []));
+      const nextMessages = Array.isArray(payload) ? payload : (payload.data || []);
+      setMessages(nextMessages);
+      setTotalMessages(Number(payload?.pagination?.total ?? nextMessages.length));
+      setSelectedIds((current) => new Set([...current].filter((id) => nextMessages.some((message: ContactMessage) => message.id === id))));
     } catch {
       toast.error('Failed to load messages');
     } finally {
@@ -125,6 +133,69 @@ export default function AdminMessages() {
     }
   };
 
+  const allLoadedSelected = messages.length > 0 && selectedIds.size === messages.length;
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllLoaded = () => {
+    setSelectedIds(allLoadedSelected ? new Set() : new Set(messages.map((message) => message.id)));
+  };
+
+  const bulkMark = async (read: boolean) => {
+    const ids = [...selectedIds];
+    if (!ids.length) return;
+    setBulkUpdating(true);
+    try {
+      const response = await fetch('/api/admin/messages/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, read }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to update selected messages');
+
+      setSelectedIds(new Set());
+      await fetchMessages();
+      toast.success(ids.length + ' message' + (ids.length === 1 ? '' : 's') + (read ? ' marked read' : ' marked unread'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update selected messages');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const exportMessages = async () => {
+    setExporting(true);
+    try {
+      const response = await fetch('/api/admin/messages/export', { cache: 'no-store' });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error || 'Unable to export messages');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'lightworld-messages-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Messages export downloaded');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to export messages');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleting) return;
     try {
@@ -154,7 +225,7 @@ export default function AdminMessages() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Messages</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {messages.length} total messages
+            {totalMessages} total messages
             {unreadCount > 0 && (
               <Badge className="ml-2 bg-gradient-to-r from-amber-500 to-amber-400 text-white border-0 shadow-sm">
                 {unreadCount} unread
@@ -162,16 +233,51 @@ export default function AdminMessages() {
             )}
           </p>
         </div>
-        <Button variant="outline" onClick={() => navigate('admin-crm')}>
-          <GitBranch className="mr-2 size-4" /> Open CRM Pipeline
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => void exportMessages()} disabled={exporting}>
+            {exporting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+            Export CSV
+          </Button>
+          <Button variant="outline" onClick={() => navigate('admin-crm')}>
+            <GitBranch className="mr-2 size-4" /> Open CRM Pipeline
+          </Button>
+        </div>
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/40 dark:bg-amber-950/20 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold">{selectedIds.size} selected</p>
+            <p className="text-xs text-muted-foreground">Bulk actions are limited to the currently loaded records.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => void bulkMark(true)} disabled={bulkUpdating}>
+              <MailOpen className="mr-2 size-3.5" /> Mark read
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => void bulkMark(false)} disabled={bulkUpdating}>
+              <Mail className="mr-2 size-3.5" /> Mark unread
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())} disabled={bulkUpdating}>
+              <X className="mr-2 size-3.5" /> Clear
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="border border-border rounded-xl bg-card overflow-hidden">
         <div className="max-w-full overflow-x-auto max-h-[600px] overflow-y-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-gradient-to-r from-muted/80 to-muted/30 dark:from-slate-800/80 dark:to-slate-800/30">
+                <TableHead className="w-10 text-xs font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={allLoadedSelected}
+                    onChange={toggleAllLoaded}
+                    aria-label="Select all loaded messages"
+                    className="size-4 rounded border-border accent-amber-600"
+                  />
+                </TableHead>
                 <TableHead className="text-xs font-semibold">Sender</TableHead>
                 <TableHead className="text-xs font-semibold hidden sm:table-cell">Email</TableHead>
                 <TableHead className="text-xs font-semibold hidden md:table-cell">Subject</TableHead>
@@ -183,7 +289,7 @@ export default function AdminMessages() {
             <TableBody>
               {messages.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No messages yet.
                   </TableCell>
                 </TableRow>
@@ -196,6 +302,15 @@ export default function AdminMessages() {
                       !msg.read ? 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400 bg-amber-50/30 dark:bg-amber-900/5' : 'border-l-[3px] border-l-transparent'
                     }`}
                   >
+                    <TableCell onClick={(event) => event.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(msg.id)}
+                        onChange={() => toggleSelected(msg.id)}
+                        aria-label={'Select message from ' + msg.name}
+                        className="size-4 rounded border-border accent-amber-600"
+                      />
+                    </TableCell>
                     <TableCell className="font-medium text-sm">
                       <div className="flex items-center gap-2">
                         {!msg.read ? (
