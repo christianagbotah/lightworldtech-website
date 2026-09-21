@@ -3,7 +3,11 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
-import { SUPPORT_TICKET_CATEGORIES, supportSla } from '@/lib/support-ticket';
+import {
+  SUPPORT_TICKET_CATEGORIES,
+  notifyClientOfSupportStatus,
+  supportSla,
+} from '@/lib/support-ticket';
 
 const schema = z.object({
   status: z.enum(['open', 'in_progress', 'awaiting_client', 'resolved', 'closed']).optional(),
@@ -18,7 +22,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const parsed = schema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ success: false, error: 'Invalid ticket update', details: parsed.error.flatten() }, { status: 400 });
 
-  const existing = await db.clientSupportTicket.findUnique({ where: { id } });
+  const existing = await db.clientSupportTicket.findUnique({
+    where: { id },
+    include: {
+      createdBy: { select: { name: true, email: true } },
+    },
+  });
   if (!existing) return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
 
   const actor = await getActiveAdminContext(request);
@@ -43,6 +52,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   const ticket = await db.clientSupportTicket.update({ where: { id }, data });
+
+  if (parsed.data.status && parsed.data.status !== existing.status) {
+    await notifyClientOfSupportStatus({
+      to: existing.createdBy.email,
+      customerName: existing.createdBy.name,
+      ticketNumber: ticket.ticketNumber,
+      subject: ticket.subject,
+      status: ticket.status,
+    });
+  }
 
   await db.clientTicketEvent.create({
     data: {
