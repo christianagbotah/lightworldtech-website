@@ -19,6 +19,7 @@ import AdminSupportDesk from '@/components/admin/AdminSupportDesk';
 import AdminFinance from '@/components/admin/AdminFinance';
 import AdminNewsletter from '@/components/admin/AdminNewsletter';
 import AdminCampaigns from '@/components/admin/AdminCampaigns';
+import AdminSms from '@/components/admin/AdminSms';
 import AdminGovernance from '@/components/admin/AdminGovernance';
 import AdminFAQs from '@/components/admin/AdminFAQs';
 import AdminSettings from '@/components/admin/AdminSettings';
@@ -59,6 +60,8 @@ function AdminRouter() {
       return can('communications.manage') ? <AdminNewsletter /> : <AdminDashboard />;
     case 'campaigns':
       return can('communications.manage') ? <AdminCampaigns /> : <AdminDashboard />;
+    case 'sms':
+      return can('communications.manage') ? <AdminSms /> : <AdminDashboard />;
     case 'governance':
       return adminRole === 'super_admin' ? <AdminGovernance /> : <AdminDashboard />;
     case 'messages':
