@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { getActiveClientContext } from '@/lib/client-access';
 import { invoiceBalance, invoiceStatusFromBalance, paymentUnallocated, sumAmounts } from '@/lib/finance';
+import { hubtelConfiguration } from '@/lib/hubtel';
 
 export async function GET(request: NextRequest) {
   const context = await getActiveClientContext(request);
@@ -216,6 +217,7 @@ export async function GET(request: NextRequest) {
           services,
           invoices,
           payments,
+          onlinePaymentsAvailable: hubtelConfiguration().payments,
         },
       },
     });
