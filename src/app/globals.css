@@ -164,11 +164,11 @@
   }
   /* Corporate gold text selection */
   ::selection {
-    background-color: oklch(0.765 0.177 163.223 / 30%);
+    background-color: oklch(0.828 0.189 84.429 / 30%);
     color: oklch(0.208 0.042 265.755);
   }
   .dark ::selection {
-    background-color: oklch(0.596 0.145 163.225 / 40%);
+    background-color: oklch(0.666 0.179 58.318 / 40%);
     color: oklch(0.985 0 0);
   }
   /* Improved global focus-visible ring */
@@ -215,22 +215,22 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.596 0.145 163.225 / 20%);
+  background: oklch(0.666 0.179 58.318 / 20%);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.596 0.145 163.225 / 40%);
+  background: oklch(0.666 0.179 58.318 / 40%);
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: oklch(0.596 0.145 163.225 / 25%);
+  background: oklch(0.666 0.179 58.318 / 25%);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.596 0.145 163.225 / 45%);
+  background: oklch(0.666 0.179 58.318 / 45%);
 }
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: oklch(0.596 0.145 163.225 / 25%) transparent;
+  scrollbar-color: oklch(0.666 0.179 58.318 / 25%) transparent;
 }
 
 /* ============================================
@@ -245,8 +245,8 @@
 
 /* Pulse glow animation */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px oklch(0.596 0.145 163.225 / 20%); }
-  50% { box-shadow: 0 0 40px oklch(0.596 0.145 163.225 / 40%); }
+  0%, 100% { box-shadow: 0 0 20px oklch(0.666 0.179 58.318 / 20%); }
+  50% { box-shadow: 0 0 40px oklch(0.666 0.179 58.318 / 40%); }
 }
 
 .animate-float {
@@ -381,23 +381,23 @@
 /* Grid pattern */
 .grid-pattern {
   background-image: 
-    linear-gradient(oklch(0.596 0.145 163.225 / 5%) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.596 0.145 163.225 / 5%) 1px, transparent 1px);
+    linear-gradient(oklch(0.666 0.179 58.318 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.666 0.179 58.318 / 5%) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
 /* Dot pattern */
 .dot-pattern {
-  background-image: radial-gradient(oklch(0.596 0.145 163.225 / 15%) 1px, transparent 1px);
+  background-image: radial-gradient(oklch(0.666 0.179 58.318 / 15%) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 /* Mesh gradient pattern */
 .mesh-pattern {
   background-image: 
-    radial-gradient(at 20% 30%, oklch(0.765 0.177 163.223 / 15%) 0px, transparent 60%),
+    radial-gradient(at 20% 30%, oklch(0.828 0.189 84.429 / 15%) 0px, transparent 60%),
     radial-gradient(at 80% 70%, oklch(0.828 0.189 84.429 / 12%) 0px, transparent 60%),
-    radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 8%) 0px, transparent 70%);
+    radial-gradient(at 50% 50%, oklch(0.769 0.188 70.08 / 8%) 0px, transparent 70%);
 }
 
 /* ============================================
@@ -437,21 +437,21 @@
 /* Dark mode grid pattern - more subtle */
 .dark .grid-pattern {
   background-image: 
-    linear-gradient(oklch(0.765 0.177 163.223 / 5%) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.765 0.177 163.223 / 5%) 1px, transparent 1px);
+    linear-gradient(oklch(0.828 0.189 84.429 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.828 0.189 84.429 / 5%) 1px, transparent 1px);
 }
 
 /* Dark mode dot pattern */
 .dark .dot-pattern {
-  background-image: radial-gradient(oklch(0.765 0.177 163.223 / 10%) 1px, transparent 1px);
+  background-image: radial-gradient(oklch(0.828 0.189 84.429 / 10%) 1px, transparent 1px);
 }
 
 /* Dark mode mesh pattern */
 .dark .mesh-pattern {
   background-image: 
-    radial-gradient(at 20% 30%, oklch(0.765 0.177 163.223 / 10%) 0px, transparent 60%),
+    radial-gradient(at 20% 30%, oklch(0.828 0.189 84.429 / 10%) 0px, transparent 60%),
     radial-gradient(at 80% 70%, oklch(0.828 0.189 84.429 / 8%) 0px, transparent 60%),
-    radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 5%) 0px, transparent 70%);
+    radial-gradient(at 50% 50%, oklch(0.769 0.188 70.08 / 5%) 0px, transparent 70%);
 }
 
 /* ============================================
@@ -544,7 +544,7 @@
 
 .prose blockquote {
   border-left: 4px solid oklch(0.666 0.179 58.318);
-  background: linear-gradient(135deg, oklch(0.979 0.021 166.113 / 50%), oklch(0.987 0.022 95.277 / 30%));
+  background: linear-gradient(135deg, oklch(0.987 0.022 95.277 / 50%), oklch(0.987 0.022 95.277 / 30%));
   border-radius: 0 8px 8px 0;
   padding: 1rem 1.25rem;
   margin: 1.5rem 0;
@@ -553,7 +553,7 @@
 
 .dark .prose blockquote {
   border-left-color: oklch(0.769 0.188 70.08);
-  background: linear-gradient(135deg, oklch(0.508 0.118 165.612 / 20%), oklch(0.555 0.163 48.998 / 10%));
+  background: linear-gradient(135deg, oklch(0.473 0.137 46.201 / 20%), oklch(0.555 0.163 48.998 / 10%));
 }
 
 /* ============================================
@@ -569,7 +569,7 @@
   z-index: 100;
   transition: width 100ms ease-out;
   border-radius: 0 2px 2px 0;
-  box-shadow: 0 0 8px oklch(0.596 0.145 163.225 / 40%);
+  box-shadow: 0 0 8px oklch(0.666 0.179 58.318 / 40%);
 }
 
 /* ============================================
@@ -686,8 +686,8 @@
 
 /* Pulse soft shadow */
 @keyframes pulse-shadow {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.596 0.145 163.225 / 20%); }
-  50% { box-shadow: 0 0 0 12px oklch(0.596 0.145 163.225 / 0%); }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.666 0.179 58.318 / 20%); }
+  50% { box-shadow: 0 0 0 12px oklch(0.666 0.179 58.318 / 0%); }
 }
 
 .animate-pulse-shadow {
@@ -719,10 +719,10 @@
 }
 .card-hover-lift:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px oklch(0.596 0.145 163.225 / 12%), 0 4px 12px oklch(0 0 0 / 6%);
+  box-shadow: 0 12px 40px oklch(0.666 0.179 58.318 / 12%), 0 4px 12px oklch(0 0 0 / 6%);
 }
 .dark .card-hover-lift:hover {
-  box-shadow: 0 12px 40px oklch(0.596 0.145 163.225 / 8%), 0 4px 12px oklch(0 0 0 / 20%);
+  box-shadow: 0 12px 40px oklch(0.666 0.179 58.318 / 8%), 0 4px 12px oklch(0 0 0 / 20%);
 }
 
 /* Shimmer sweep overlay for cards */
@@ -753,8 +753,8 @@
 .diagonal-stripes {
   background-image: repeating-linear-gradient(
     -45deg,
-    oklch(0.596 0.145 163.225 / 3%) 0px,
-    oklch(0.596 0.145 163.225 / 3%) 1px,
+    oklch(0.666 0.179 58.318 / 3%) 0px,
+    oklch(0.666 0.179 58.318 / 3%) 1px,
     transparent 1px,
     transparent 12px
   );
@@ -762,8 +762,8 @@
 .dark .diagonal-stripes {
   background-image: repeating-linear-gradient(
     -45deg,
-    oklch(0.596 0.145 163.225 / 4%) 0px,
-    oklch(0.596 0.145 163.225 / 4%) 1px,
+    oklch(0.666 0.179 58.318 / 4%) 0px,
+    oklch(0.666 0.179 58.318 / 4%) 1px,
     transparent 1px,
     transparent 12px
   );
@@ -843,7 +843,7 @@
 
 /* Glow border on focus */
 .glow-focus:focus-within {
-  box-shadow: 0 0 0 3px oklch(0.596 0.145 163.225 / 20%), 0 0 20px oklch(0.596 0.145 163.225 / 10%);
+  box-shadow: 0 0 0 3px oklch(0.666 0.179 58.318 / 20%), 0 0 20px oklch(0.666 0.179 58.318 / 10%);
 }
 
 .dark .glow-focus:focus-within {
@@ -1001,7 +1001,7 @@
 
 /* 4. Glow text effect */
 .text-glow {
-  text-shadow: 0 0 20px oklch(0.596 0.145 163.225 / 30%), 0 0 40px oklch(0.596 0.145 163.225 / 15%);
+  text-shadow: 0 0 20px oklch(0.666 0.179 58.318 / 30%), 0 0 40px oklch(0.666 0.179 58.318 / 15%);
 }
 .dark .text-glow {
   text-shadow: 0 0 20px oklch(0.769 0.188 70.08 / 30%), 0 0 40px oklch(0.769 0.188 70.08 / 15%);
