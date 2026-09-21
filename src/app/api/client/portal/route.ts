@@ -36,6 +36,18 @@ export async function GET(request: NextRequest) {
                 message: true, createdAt: true,
               },
             },
+            attachments: {
+              orderBy: { createdAt: 'desc' },
+              select: {
+                id: true,
+                originalName: true,
+                mimeType: true,
+                sizeBytes: true,
+                uploadedByType: true,
+                uploadedByName: true,
+                createdAt: true,
+              },
+            },
           },
         },
         announcements: {
