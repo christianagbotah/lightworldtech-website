@@ -19,6 +19,7 @@ import {
   Workflow,
 } from 'lucide-react';
 import { contentText, type SiteSettings } from '@/lib/site-content';
+import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 
 interface ServiceView {
   id: string;
@@ -205,8 +206,9 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
 
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
-      <section className="lw-hero-grid relative border-b border-slate-200/70 px-4 py-16 dark:border-white/[0.06] sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        <div className="container-main">
+      <section className="lw-hero-grid relative border-b border-slate-200/70 px-4 py-16 dark:border-white/[0.06] sm:px-6 sm:py-20 lg:px-8 lg:py-24 overflow-hidden">
+        <CmsHeroMedia settings={settings} settingKey="services_hero_image" />
+        <div className="relative container-main z-10">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
