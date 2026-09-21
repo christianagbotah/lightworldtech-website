@@ -38,6 +38,8 @@ describe('admin permissions', () => {
 
   test('maps protected API areas to the correct permission', () => {
     expect(requiredAdminPermissionForPath('/api/admin/leads')).toBe('crm.manage');
+    expect(requiredAdminPermissionForPath('/api/admin/messages/export')).toBe('crm.manage');
+    expect(requiredAdminPermissionForPath('/api/admin/messages/bulk')).toBe('crm.manage');
     expect(requiredAdminPermissionForPath('/api/contact/abc')).toBe('crm.manage');
     expect(requiredAdminPermissionForPath('/api/admin/proposals/abc')).toBe('proposals.manage');
     expect(requiredAdminPermissionForPath('/api/admin/proposals/abc/convert-client')).toBe('clients.manage');
