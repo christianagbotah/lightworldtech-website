@@ -15,6 +15,9 @@ import {
   Sparkles,
   UserRound,
   UsersRound,
+  BookmarkPlus,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +26,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -89,6 +93,15 @@ type LeadSummary = {
   byStatus: Record<Stage, number>;
 };
 
+type SavedCrmView = {
+  id: string;
+  name: string;
+  status: string;
+  priority: string;
+  query: string;
+  overdueOnly: boolean;
+};
+
 function parseTags(value: string): string[] {
   try {
     const parsed = JSON.parse(value);
@@ -135,6 +148,10 @@ export default function AdminCRM() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [query, setQuery] = useState('');
+  const [overdueOnly, setOverdueOnly] = useState(false);
+  const [savedViews, setSavedViews] = useState<SavedCrmView[]>([]);
+  const [saveViewOpen, setSaveViewOpen] = useState(false);
+  const [viewName, setViewName] = useState('');
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
 
@@ -144,6 +161,7 @@ export default function AdminCRM() {
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (priorityFilter !== 'all') params.set('priority', priorityFilter);
       if (query.trim()) params.set('q', query.trim());
+      if (overdueOnly) params.set('overdue', 'true');
 
       const response = await fetch('/api/admin/leads?' + params.toString(), { cache: 'no-store' });
       if (!response.ok) throw new Error('Could not load CRM');
@@ -161,6 +179,7 @@ export default function AdminCRM() {
     if (typeof window !== 'undefined') {
       const requestedStatus = sessionStorage.getItem('lw-crm-status-filter');
       const requestedPriority = sessionStorage.getItem('lw-crm-priority-filter');
+      const requestedOverdue = sessionStorage.getItem('lw-crm-overdue-filter');
       if (requestedStatus) {
         setStatusFilter(requestedStatus);
         sessionStorage.removeItem('lw-crm-status-filter');
@@ -168,6 +187,31 @@ export default function AdminCRM() {
       if (requestedPriority) {
         setPriorityFilter(requestedPriority);
         sessionStorage.removeItem('lw-crm-priority-filter');
+      }
+      if (requestedOverdue === '1') {
+        setOverdueOnly(true);
+        sessionStorage.removeItem('lw-crm-overdue-filter');
+      }
+
+      try {
+        const stored = JSON.parse(localStorage.getItem('lw-crm-saved-views') || '[]');
+        if (Array.isArray(stored)) {
+          setSavedViews(
+            stored.filter((item): item is SavedCrmView =>
+              Boolean(
+                item &&
+                typeof item.id === 'string' &&
+                typeof item.name === 'string' &&
+                typeof item.status === 'string' &&
+                typeof item.priority === 'string' &&
+                typeof item.query === 'string' &&
+                typeof item.overdueOnly === 'boolean',
+              ),
+            ).slice(0, 20),
+          );
+        }
+      } catch {
+        localStorage.removeItem('lw-crm-saved-views');
       }
     }
   }, []);
@@ -178,7 +222,7 @@ export default function AdminCRM() {
     }, query ? 250 : 0);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, priorityFilter, query]);
+  }, [statusFilter, priorityFilter, query, overdueOnly]);
 
   useEffect(() => {
     if (!leads.length || typeof window === 'undefined') return;
@@ -188,6 +232,49 @@ export default function AdminCRM() {
     sessionStorage.removeItem('lw-open-lead-id');
     if (match) setSelected(match);
   }, [leads]);
+
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setPriorityFilter('all');
+    setQuery('');
+    setOverdueOnly(false);
+  };
+
+  const persistSavedViews = (views: SavedCrmView[]) => {
+    setSavedViews(views);
+    localStorage.setItem('lw-crm-saved-views', JSON.stringify(views));
+  };
+
+  const saveCurrentView = () => {
+    const name = viewName.trim();
+    if (!name) return;
+    const next: SavedCrmView[] = [
+      ...savedViews.filter((view) => view.name.toLowerCase() !== name.toLowerCase()),
+      {
+        id: crypto.randomUUID(),
+        name,
+        status: statusFilter,
+        priority: priorityFilter,
+        query,
+        overdueOnly,
+      },
+    ].slice(-20);
+    persistSavedViews(next);
+    setViewName('');
+    setSaveViewOpen(false);
+    toast.success('CRM view saved');
+  };
+
+  const applySavedView = (view: SavedCrmView) => {
+    setStatusFilter(view.status);
+    setPriorityFilter(view.priority);
+    setQuery(view.query);
+    setOverdueOnly(view.overdueOnly);
+  };
+
+  const deleteSavedView = (id: string) => {
+    persistSavedViews(savedViews.filter((view) => view.id !== id));
+  };
 
   const refreshSelected = async (leadId: string) => {
     const response = await fetch('/api/admin/leads/' + leadId, { cache: 'no-store' });
@@ -300,55 +387,89 @@ export default function AdminCRM() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Total leads', value: summary?.total || 0, icon: UsersRound },
-          { label: 'Open pipeline', value: summary?.open || 0, icon: UserRound },
-          { label: 'High priority', value: summary?.highPriority || 0, icon: AlertTriangle },
-          { label: 'Follow-ups overdue', value: summary?.overdueFollowUps || 0, icon: CalendarClock },
+          { label: 'Total leads', value: summary?.total || 0, icon: UsersRound, onClick: clearFilters },
+          { label: 'Open pipeline', value: summary?.open || 0, icon: UserRound, onClick: () => { setStatusFilter('all'); setPriorityFilter('all'); setOverdueOnly(false); } },
+          { label: 'High priority', value: summary?.highPriority || 0, icon: AlertTriangle, onClick: () => { setPriorityFilter('high'); setOverdueOnly(false); } },
+          { label: 'Follow-ups overdue', value: summary?.overdueFollowUps || 0, icon: CalendarClock, onClick: () => setOverdueOnly(true) },
         ].map((item) => (
-          <Card key={item.label} className="border-border/60">
-            <CardContent className="flex items-center justify-between p-5">
-              <div>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className="mt-1 text-2xl font-bold">{item.value}</p>
-              </div>
-              <span className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
-                <item.icon className="size-5" />
-              </span>
-            </CardContent>
-          </Card>
+          <button key={item.label} type="button" onClick={item.onClick} className="text-left">
+            <Card className="h-full border-border/60 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md">
+              <CardContent className="flex items-center justify-between p-5">
+                <div>
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <p className="mt-1 text-2xl font-bold">{item.value}</p>
+                </div>
+                <span className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                  <item.icon className="size-5" />
+                </span>
+              </CardContent>
+            </Card>
+          </button>
         ))}
       </div>
 
-      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
-        <label className="relative">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search name, email, subject, owner or summary"
-            className="pl-9"
-          />
-        </label>
-        <select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          aria-label="Filter by status"
-        >
-          <option value="all">All stages</option>
-          {stages.map((stage) => <option key={stage.id} value={stage.id}>{stage.label}</option>)}
-        </select>
-        <select
-          value={priorityFilter}
-          onChange={(event) => setPriorityFilter(event.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          aria-label="Filter by priority"
-        >
-          <option value="all">All priorities</option>
-          <option value="high">High priority</option>
-          <option value="normal">Normal priority</option>
-          <option value="low">Low priority</option>
-        </select>
+      <div className="rounded-2xl border border-border/60 bg-card p-4">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_170px_auto]">
+          <label className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search name, email, subject, owner or summary"
+              className="pl-9"
+            />
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            aria-label="Filter by status"
+          >
+            <option value="all">All stages</option>
+            {stages.map((stage) => <option key={stage.id} value={stage.id}>{stage.label}</option>)}
+          </select>
+          <select
+            value={priorityFilter}
+            onChange={(event) => setPriorityFilter(event.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            aria-label="Filter by priority"
+          >
+            <option value="all">All priorities</option>
+            <option value="high">High priority</option>
+            <option value="normal">Normal priority</option>
+            <option value="low">Low priority</option>
+          </select>
+          <Button
+            type="button"
+            variant={overdueOnly ? 'default' : 'outline'}
+            onClick={() => setOverdueOnly((value) => !value)}
+            className={overdueOnly ? 'bg-rose-600 hover:bg-rose-700' : ''}
+          >
+            <CalendarClock className="mr-2 size-4" /> Overdue only
+          </Button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+          <span className="mr-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Saved views</span>
+          {savedViews.map((view) => (
+            <span key={view.id} className="inline-flex items-center rounded-full border border-border bg-muted/40 pl-3 text-xs">
+              <button type="button" onClick={() => applySavedView(view)} className="py-1.5 font-medium hover:text-amber-700 dark:hover:text-amber-300">
+                {view.name}
+              </button>
+              <button type="button" onClick={() => deleteSavedView(view.id)} className="ml-1 rounded-full p-1.5 text-muted-foreground hover:bg-rose-100 hover:text-rose-700 dark:hover:bg-rose-950/40" aria-label={'Delete saved view ' + view.name}>
+                <X className="size-3" />
+              </button>
+            </span>
+          ))}
+          <Button type="button" size="sm" variant="outline" onClick={() => setSaveViewOpen(true)}>
+            <BookmarkPlus className="mr-2 size-3.5" /> Save current view
+          </Button>
+          {(statusFilter !== 'all' || priorityFilter !== 'all' || query || overdueOnly) && (
+            <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
+              <Trash2 className="mr-2 size-3.5" /> Clear filters
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-3">
@@ -419,6 +540,30 @@ export default function AdminCRM() {
           ))}
         </div>
       </div>
+
+      <Dialog open={saveViewOpen} onOpenChange={setSaveViewOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save CRM view</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="crm-view-name">View name</Label>
+            <Input
+              id="crm-view-name"
+              value={viewName}
+              onChange={(event) => setViewName(event.target.value)}
+              placeholder="e.g. High Priority Web Leads"
+              maxLength={80}
+              autoFocus
+            />
+            <p className="text-xs text-muted-foreground">Saves the current search, stage, priority and overdue filters on this browser.</p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setSaveViewOpen(false)}>Cancel</Button>
+            <Button type="button" onClick={saveCurrentView} disabled={!viewName.trim()}>Save view</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent className="max-h-[94vh] w-[calc(100vw-1.5rem)] max-w-[min(96vw,1440px)] overflow-x-hidden overflow-y-auto p-0">
