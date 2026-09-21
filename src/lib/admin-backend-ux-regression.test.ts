@@ -137,6 +137,29 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("label: 'Support Desk'");
   });
 
+  test('keeps support evidence private and records a ticket activity timeline', () => {
+    const schema = source('prisma/schema.prisma');
+    const clientUpload = source('src/app/api/client/tickets/[id]/attachments/route.ts');
+    const adminUpload = source('src/app/api/admin/support-tickets/[id]/attachments/route.ts');
+    const download = source('src/app/api/support-attachments/[id]/route.ts');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const clientPortal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(schema).toContain('model ClientTicketAttachment');
+    expect(schema).toContain('model ClientTicketEvent');
+    expect(clientUpload).toContain('detectSupportAttachment');
+    expect(clientUpload).toContain("uploadedByType: 'client'");
+    expect(adminUpload).toContain("uploadedByType: 'admin'");
+    expect(download).toContain("hasAdminPermission(admin.role, admin.permissions, 'clients.manage')");
+    expect(download).toContain('client.user.organizationId === attachment.ticket.organizationId');
+    expect(download).toContain("'Cache-Control': 'private, no-store, max-age=0'");
+    expect(download).toContain("'X-Content-Type-Options': 'nosniff'");
+    expect(support).toContain('Evidence & attachments');
+    expect(support).toContain('Activity timeline');
+    expect(clientPortal).toContain('Add evidence');
+    expect(clientPortal).toContain("'/api/support-attachments/' + attachment.id");
+  });
+
   test('supports audited enterprise exports and bounded message bulk actions', () => {
     const crm = source('src/components/admin/AdminCRM.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
