@@ -359,7 +359,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
             href={item.href}
             className={cn(
               'flex min-w-0 flex-col items-center justify-center gap-1 rounded-[17px] px-2 py-2 text-[9px] font-medium transition',
-              active(item.href) ? 'bg-emerald-400/12 text-amber-300' : 'text-white/34',
+              active(item.href) ? 'bg-amber-400/12 text-amber-300' : 'text-white/34',
             )}
             aria-current={active(item.href) ? 'page' : undefined}
           >
