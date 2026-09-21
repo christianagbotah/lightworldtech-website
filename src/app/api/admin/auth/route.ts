@@ -11,6 +11,11 @@ import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance'
 import { adminLoginSchema } from '@/lib/login-input';
 import { consumePublicRateLimit } from '@/lib/public-rate-limit';
 import { normalizeAdminPermissions } from '@/lib/admin-permissions';
+import {
+  decryptTotpSecret,
+  verifyRecoveryCode,
+  verifyTotpCode,
+} from '@/lib/admin-totp';
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,7 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = parsed.data;
+    const { email, password, totpCode } = parsed.data;
     const admin = await db.admin.findUnique({ where: { email } });
 
     if (!admin || !admin.active) {
@@ -63,6 +68,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let recoveryCodeUsed = false;
+    let remainingRecoveryCodes: string[] | null = null;
+
+    if (admin.totpEnabled) {
+      if (!totpCode) {
+        return NextResponse.json(
+          {
+            success: false,
+            requiresTotp: true,
+            error: 'Two-factor authentication code required',
+          },
+          { status: 428 },
+        );
+      }
+
+      let secondFactorValid = false;
+      try {
+        const secret = decryptTotpSecret(admin.totpSecret);
+        secondFactorValid = verifyTotpCode(secret, totpCode);
+
+        if (!secondFactorValid) {
+          const recovery = verifyRecoveryCode(admin.totpRecoveryCodes, totpCode);
+          if (recovery.valid) {
+            secondFactorValid = true;
+            recoveryCodeUsed = true;
+            remainingRecoveryCodes = recovery.remaining;
+          }
+        }
+      } catch (error) {
+        console.error('Administrator MFA verification failed:', error);
+        return NextResponse.json(
+          { success: false, error: 'Two-factor authentication is temporarily unavailable' },
+          { status: 500 },
+        );
+      }
+
+      if (!secondFactorValid) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid two-factor authentication code' },
+          { status: 401 },
+        );
+      }
+    }
+
     const passwordUpdate = verification.needsUpgrade
       ? { password: hashAdminPassword(password) }
       : {};
@@ -71,6 +120,7 @@ export async function POST(request: NextRequest) {
       where: { id: admin.id },
       data: {
         ...passwordUpdate,
+        ...(remainingRecoveryCodes ? { totpRecoveryCodes: JSON.stringify(remainingRecoveryCodes) } : {}),
         lastLogin: new Date(),
       },
     });
@@ -95,7 +145,11 @@ export async function POST(request: NextRequest) {
       action: 'admin.login',
       entity: 'Admin',
       entityId: admin.id,
-      details: { passwordUpgraded: verification.needsUpgrade },
+      details: {
+        passwordUpgraded: verification.needsUpgrade,
+        mfa: admin.totpEnabled,
+        recoveryCodeUsed,
+      },
     });
 
     const response = NextResponse.json({
