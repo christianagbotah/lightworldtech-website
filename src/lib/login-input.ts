@@ -15,6 +15,7 @@ const boundedPassword = z
 export const adminLoginSchema = z.object({
   email: normalizedEmail,
   password: boundedPassword,
+  totpCode: z.string().trim().max(32).optional(),
 });
 
 export const clientLoginSchema = z.object({
