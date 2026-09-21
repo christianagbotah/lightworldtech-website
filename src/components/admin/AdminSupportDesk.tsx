@@ -26,6 +26,7 @@ import {
   Gauge,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -518,24 +519,22 @@ export default function AdminSupportDesk() {
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-600">Enterprise Support Desk</p>
-          <h1 className="mt-1 text-2xl font-bold">Client support operations</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Manage client cases, SLA response deadlines, assignment, conversations and private staff notes from one queue.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => void exportCsv()} disabled={exporting}>
-            {exporting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
-            Export CSV
-          </Button>
-          <Button variant="outline" onClick={() => void loadTickets()}>
-            <RefreshCw className="mr-2 size-4" /> Refresh queue
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        eyebrow="Enterprise Support Desk"
+        title="Client support operations"
+        description="Manage client cases, SLA response deadlines, assignment, conversations and private staff notes from one queue."
+        actions={
+          <>
+            <Button variant="outline" onClick={() => void exportCsv()} disabled={exporting}>
+              {exporting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+              Export CSV
+            </Button>
+            <Button variant="outline" onClick={() => void loadTickets()}>
+              <RefreshCw className="mr-2 size-4" /> Refresh queue
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {kpis.map((item) => {
