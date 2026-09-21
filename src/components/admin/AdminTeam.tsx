@@ -187,7 +187,7 @@ export default function AdminTeam() {
 
   const toggleActive = async (member: TeamMember) => {
     try {
-      const res = await fetch(`/api/admin/team/${member.id}`, {
+      const res = await fetch(`/api/team/${member.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !member.active }),
