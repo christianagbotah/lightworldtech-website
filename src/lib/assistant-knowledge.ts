@@ -394,16 +394,6 @@ export async function answerConcierge(
     };
   }
 
-  const processStepMatch = findBestProcessStepMatch(message, knowledge.processSteps);
-  if (processStepMatch) {
-    return {
-      intent: 'process',
-      reply: processStepMatch.title + ': ' + processStepMatch.description,
-      suggestions: ['Show me the full process', 'Start a project'],
-      cta: { label: 'View services', href: '/services' },
-    };
-  }
-
   if (isProcessOverviewIntent(message)) {
     const processTitles = knowledge.processSteps.map((step) => step.title);
     return {
@@ -414,6 +404,16 @@ export async function answerConcierge(
           '. The exact sequence can be adapted after the team reviews your project scope.'
         : 'Lightworld confirms the delivery steps during project planning so the process fits the scope, users and timeline.',
       suggestions: ['What happens during testing?', 'Start a project'],
+      cta: { label: 'View services', href: '/services' },
+    };
+  }
+
+  const processStepMatch = findBestProcessStepMatch(message, knowledge.processSteps);
+  if (processStepMatch) {
+    return {
+      intent: 'process',
+      reply: processStepMatch.title + ': ' + processStepMatch.description,
+      suggestions: ['Show me the full process', 'Start a project'],
       cta: { label: 'View services', href: '/services' },
     };
   }
