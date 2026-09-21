@@ -13,6 +13,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain('w-full overflow-x-hidden');
     expect(layout).toContain('lg:w-[calc(100%-16rem)]');
     expect(layout).toContain('min-w-0 max-w-full flex-1 overflow-x-hidden');
+    expect(layout).toContain('h-dvh min-h-0');
+    expect(layout).toContain('min-h-0 flex-1 py-3');
   });
 
   test('keeps the wide CRM board inside its own horizontal scroller', () => {
@@ -228,6 +230,54 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(portal).toContain('Account & billing');
     expect(portal).toContain('Invoice history');
     expect(portal).toContain('Payment / receipt history');
+  });
+
+  test('keeps Support Desk filters responsive and aligned on desktop', () => {
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+
+    expect(support).toContain('sm:grid-cols-2 lg:grid-cols-3');
+    expect(support).toContain('xl:grid-cols-[minmax(220px,2fr)_repeat(4,minmax(0,1fr))_minmax(140px,1.2fr)_auto]');
+    expect(support).toContain('xl:items-center');
+  });
+
+  test('provides CSV export from the shared table primitive', () => {
+    const table = source('src/components/ui/table.tsx');
+
+    expect(table).toContain('Export CSV');
+    expect(table).toContain('downloadTableCsv');
+    expect(table).toContain('data-export-ignore');
+    expect(table).toContain('overscroll-x-contain');
+  });
+
+  test('implements Hubtel invoice payments and templated SMS operations safely', () => {
+    const schema = source('prisma/schema.prisma');
+    const hubtel = source('src/lib/hubtel.ts');
+    const payment = source('src/lib/hubtel-payment.ts');
+    const callback = source('src/app/api/payments/hubtel/callback/route.ts');
+    const sms = source('src/lib/sms.ts');
+    const smsAdmin = source('src/components/admin/AdminSms.tsx');
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(schema).toContain('model HubtelPaymentIntent');
+    expect(schema).toContain('model SmsTemplate');
+    expect(schema).toContain('model SmsCampaign');
+    expect(schema).toContain('model SmsMessage');
+    expect(hubtel).toContain('https://smsc.hubtel.com/v1/messages/send');
+    expect(hubtel).toContain('HUBTEL_CHECKOUT_INITIATE_URL');
+    expect(hubtel).toContain('HUBTEL_TRANSACTION_STATUS_URL');
+    expect(payment).toContain('checkHubtelPaymentStatus');
+    expect(payment).toContain("source: 'hubtel'");
+    expect(payment).toContain("status: 'recording'");
+    expect(callback).toContain('finalizeHubtelPayment');
+    expect(sms).toContain('dispatchDueSms');
+    expect(sms).toContain('HUBTEL_SMS_BATCH_SIZE');
+    expect(smsAdmin).toContain('SMS, campaigns, scheduling & OTP');
+    expect(smsAdmin).toContain('Reusable SMS templates');
+    expect(smsAdmin).toContain('Scheduled campaigns');
+    expect(portal).toContain('Pay with Hubtel');
+    expect(portal).toContain('/api/client/payments/hubtel/status?reference=');
+    expect(layout).toContain("label: 'SMS & OTP'");
   });
 
   test('supports audited enterprise exports and bounded message bulk actions', () => {
