@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import AdminMediaField from '@/components/admin/AdminMediaField';
 import { cmsGroups, type CmsField } from '@/lib/site-content';
 
 type Values = Record<string, string>;
@@ -307,6 +308,18 @@ export default function AdminPages() {
                     <Plus className="mr-2 size-4" /> Add item
                   </Button>
                 </div>
+              );
+            }
+
+            if (field.type === 'image') {
+              return (
+                <AdminMediaField
+                  key={field.key}
+                  label={field.label}
+                  value={values[field.key] ?? field.defaultValue}
+                  onChange={(value) => setValue(field.key, value)}
+                  help={field.help}
+                />
               );
             }
 
