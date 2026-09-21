@@ -138,7 +138,7 @@ export function createRecoveryCodes(count = 10): string[] {
 
 export function hashRecoveryCode(code: string): string {
   return createHash('sha256')
-    .update(code.trim().toUpperCase().replace(/\s/g, ''))
+    .update(code.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''))
     .digest('base64url');
 }
 
