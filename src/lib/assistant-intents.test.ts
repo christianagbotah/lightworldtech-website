@@ -66,6 +66,9 @@ describe('assistant completed-project follow-up intent', () => {
     expect(isCompletedProjectPreparationIntent('What should I prepare for the first discussion?')).toBe(true);
     expect(isCompletedProjectChangeIntent('Can I change the brief later?')).toBe(true);
     expect(isCompletedProjectContextIntent('What about my project?')).toBe(true);
+    expect(isCompletedProjectNextStepsIntent('What happens after submission?')).toBe(true);
+    expect(isCompletedProjectChangeIntent('Open my project brief')).toBe(false);
+    expect(isCompletedProjectContextIntent('Open my project brief')).toBe(true);
   });
 
   test('recognizes a deliberate new-project restart without hijacking normal service questions', () => {
