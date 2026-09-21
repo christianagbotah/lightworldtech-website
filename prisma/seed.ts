@@ -18,7 +18,7 @@ async function seed() {
     { key: 'company_name', value: 'Lightworld Technologies Ltd', type: 'text', group: 'general' },
     { key: 'company_tagline', value: 'The World of Possibilities', type: 'text', group: 'general' },
     { key: 'company_description', value: 'We are a leading IT solutions company providing cutting-edge software development, web development, mobile app development, and digital marketing services to businesses across Africa and beyond.', type: 'richText', group: 'general' },
-    { key: 'company_address', value: 'Accra, Ghana', type: 'text', group: 'contact' },
+    { key: 'company_address', value: 'Tema, Ghana', type: 'text', group: 'contact' },
     { key: 'company_phone1', value: '+233 (024) 361 8186', type: 'text', group: 'contact' },
     { key: 'company_phone2', value: '+233 (055) 467 2081', type: 'text', group: 'contact' },
     { key: 'company_email', value: 'mail@lightworldtech.com', type: 'text', group: 'contact' },
