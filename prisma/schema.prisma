@@ -269,8 +269,11 @@ model Admin {
   active        Boolean         @default(true)
   recoveryEmail String          @default("")
   lastLogin     DateTime?
-  authVersion   Int             @default(0)
-  permissions   String          @default("[]")
+  authVersion       Int             @default(0)
+  permissions       String          @default("[]")
+  totpSecret        String          @default("")
+  totpEnabled       Boolean         @default(false)
+  totpRecoveryCodes String          @default("[]")
   auditLogs   AdminAuditLog[]
   resetTokens AdminPasswordResetToken[]
 
