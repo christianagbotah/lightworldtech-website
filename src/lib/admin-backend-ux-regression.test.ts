@@ -74,7 +74,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(crm).toContain("params.set('overdue', 'true')");
     expect(crm).toContain('Save current view');
     expect(leads).toContain("searchParams.get('overdue') === 'true'");
-    expect(leads).toContain("status: { notIn: ['won', 'lost'] }");
+    expect(leads).toContain("where.status = status && status !== 'all' ? status : { notIn: ['won', 'lost'] }");
   });
 
   test('invalidates administrator sessions on sensitive governance changes', () => {
