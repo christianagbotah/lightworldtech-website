@@ -53,7 +53,7 @@ export default function IndustriesSection() {
           {/* Left column: header + description */}
           <div className="order-2 lg:order-1">
             <motion.span
-              className="inline-block text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider mb-3 px-3 py-1 rounded-full bg-emerald-50 dark:bg-amber-400/10 border border-emerald-200 dark:border-amber-400/20"
+              className="inline-block text-sm font-semibold text-amber-600 dark:text-amber-300 uppercase tracking-wider mb-3 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-400/10 border border-amber-200 dark:border-amber-400/20"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: '-100px' }}
