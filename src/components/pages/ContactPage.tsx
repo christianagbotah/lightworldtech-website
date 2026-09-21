@@ -273,12 +273,14 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     <span className="hidden rounded-full border border-slate-200 px-3 py-1 text-[10px] font-medium text-slate-400 dark:border-white/[0.07] dark:text-white/25 sm:inline-flex">No obligation</span>
                   </div>
 
-                  <form onSubmit={submit} className="mt-7 space-y-5">
+                  <form onSubmit={submit} className="mt-7 space-y-5" aria-busy={sending}>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
                         Name
                         <input
                           required
+                          name="name"
+                          autoComplete="name"
                           value={form.name}
                           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                           className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
@@ -290,6 +292,9 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                         <input
                           required
                           type="email"
+                          name="email"
+                          autoComplete="email"
+                          inputMode="email"
                           value={form.email}
                           onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
                           className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
@@ -303,6 +308,9 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                         Phone <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <input
                           type="tel"
+                          name="phone"
+                          autoComplete="tel"
+                          inputMode="tel"
                           value={form.phone}
                           onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
                           className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
@@ -313,6 +321,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                       <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
                         What can we help with?
                         <select
+                          name="service"
                           value={form.service}
                           onChange={(event) => setForm((current) => ({ ...current, service: event.target.value }))}
                           className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-[#0c141b] dark:text-white"
@@ -325,6 +334,8 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     <label className="block space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
                       Subject <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                       <input
+                        name="subject"
+                        autoComplete="off"
                         value={form.subject}
                         onChange={(event) => setForm((current) => ({ ...current, subject: event.target.value }))}
                         className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
@@ -336,6 +347,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                       What is the problem or opportunity?
                       <textarea
                         required
+                        name="message"
                         value={form.message}
                         onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))}
                         rows={7}
@@ -347,6 +359,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     <button
                       type="submit"
                       disabled={sending}
+                      aria-disabled={sending}
                       className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-6 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:opacity-50 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300 sm:w-auto"
                     >
                       {sending ? 'Sending…' : 'Send project brief'}
