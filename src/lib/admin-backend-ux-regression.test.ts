@@ -60,7 +60,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("sessionStorage.setItem('lw-crm-overdue-filter', '1')");
     expect(notifications).toContain('getActiveAdminContext(request)');
     expect(notifications).toContain("'overdue-followups'");
-    expect(notifications).toContain("'open-client-tickets'");
+    expect(notifications).toContain("'support-sla-breached'");
+    expect(notifications).toContain("'unread-client-tickets'");
     expect(notifications).toContain("'newsletter-failures'");
   });
 
@@ -102,6 +103,38 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(crm).not.toContain("href={'mailto:' + selected.contactMessage.email}");
     expect(proposals).toContain("sessionStorage.setItem('lw-reply-message-id'");
     expect(proposals).not.toContain("href={'mailto:' + selected.lead.contactMessage.email}");
+  });
+
+  test('implements the enterprise Support Desk across admin and client portal', () => {
+    const schema = source('prisma/schema.prisma');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const listApi = source('src/app/api/admin/support-tickets/route.ts');
+    const detailApi = source('src/app/api/admin/support-tickets/[id]/route.ts');
+    const notesApi = source('src/app/api/admin/support-tickets/[id]/notes/route.ts');
+    const clientCreate = source('src/app/api/client/tickets/route.ts');
+    const clientReply = source('src/app/api/client/tickets/[id]/messages/route.ts');
+    const adminReply = source('src/app/api/admin/client-tickets/[id]/messages/route.ts');
+    const clientPortal = source('src/components/client/ClientPortalPage.tsx');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(schema).toContain('ticketNumber       String              @unique');
+    expect(schema).toContain('firstResponseDueAt DateTime?');
+    expect(schema).toContain('internalNotes      ClientTicketInternalNote[]');
+    expect(schema).toContain('model ClientTicketInternalNote');
+    expect(support).toContain('Enterprise Support Desk');
+    expect(support).toContain('Private staff notes');
+    expect(support).toContain('SLA breached');
+    expect(listApi).toContain('supportSlaState');
+    expect(detailApi).toContain('unreadByAdmin: false');
+    expect(notesApi).toContain("'admin.support_ticket_internal_note_added'");
+    expect(clientCreate).toContain('nextSupportTicketNumber');
+    expect(clientCreate).toContain('notifySupportDesk');
+    expect(clientReply).toContain("status === 'awaiting_client'");
+    expect(adminReply).toContain('notifyClientOfSupportReply');
+    expect(adminReply).toContain("status: nextStatus");
+    expect(clientPortal).toContain('Search ticket number or subject');
+    expect(clientPortal).toContain('ticket.category');
+    expect(layout).toContain("label: 'Support Desk'");
   });
 
   test('supports audited enterprise exports and bounded message bulk actions', () => {
