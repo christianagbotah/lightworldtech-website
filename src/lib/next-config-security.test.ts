@@ -20,7 +20,12 @@ describe('private API cache-control policy', () => {
   test('marks authenticated admin, client, and upload APIs private and no-store', async () => {
     const rules = await configuredHeaders();
 
-    for (const source of ['/api/admin/:path*', '/api/client/:path*', '/api/upload']) {
+    for (const source of [
+      '/api/admin/:path*',
+      '/api/client/:path*',
+      '/api/upload',
+      '/api/support-attachments/:path*',
+    ]) {
       const rule = rules.find((entry) => entry.source === source);
       expect(rule).toBeDefined();
       expect(headerValue(rule, 'Cache-Control')).toBe(
