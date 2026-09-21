@@ -40,6 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 type SmsTemplate = {
   id: string;
@@ -429,19 +430,17 @@ export default function AdminSms() {
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-600">Hubtel Messaging</p>
-          <h1 className="mt-1 text-2xl font-bold">SMS, campaigns, scheduling & OTP</h1>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Send transactional SMS, bulk campaigns, scheduled messages and reusable templates from one auditable workspace.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => void load()} disabled={loading}>
-          <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />
-          Refresh
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Hubtel Messaging"
+        title="SMS, campaigns, scheduling & OTP"
+        description="Send transactional SMS, bulk campaigns, scheduled messages and reusable templates from one auditable workspace."
+        actions={
+          <Button variant="outline" onClick={() => void load()} disabled={loading}>
+            <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />
+            Refresh
+          </Button>
+        }
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
