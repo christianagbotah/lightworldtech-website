@@ -64,6 +64,7 @@ const navItems = [
   { id: 'finance', label: 'Finance & Accounts', icon: Landmark, page: 'admin-finance' as const, permission: 'finance.manage' as AdminPermission },
   { id: 'newsletter', label: 'Newsletter & Mail', icon: MailCheck, page: 'admin-newsletter' as const, permission: 'communications.manage' as AdminPermission },
   { id: 'campaigns', label: 'Campaign Studio', icon: Megaphone, page: 'admin-campaigns' as const, permission: 'communications.manage' as AdminPermission },
+  { id: 'sms', label: 'SMS & OTP', icon: MessageSquare, page: 'admin-sms' as const, permission: 'communications.manage' as AdminPermission },
   { id: 'governance', label: 'Admin Governance', icon: ShieldCheck, page: 'admin-governance' as const, superAdminOnly: true },
   { id: 'messages', label: 'Messages', icon: Mail, page: 'admin-messages' as const, permission: 'crm.manage' as AdminPermission },
   { id: 'faqs', label: 'FAQs', icon: HelpCircle, page: 'admin-faqs' as const, permission: 'site.manage' as AdminPermission },
@@ -147,7 +148,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-support' | 'admin-finance' | 'admin-newsletter' | 'admin-campaigns' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
+  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-support' | 'admin-finance' | 'admin-newsletter' | 'admin-campaigns' | 'admin-sms' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
     setAdminTab(id);
     navigate(page);
     setSidebarOpen(false);
@@ -246,6 +247,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                  adminTab === 'finance' ? 'Finance & Accounts' :
                  adminTab === 'newsletter' ? 'Newsletter & Mail' :
                  adminTab === 'campaigns' ? 'Campaign Studio' :
+                 adminTab === 'sms' ? 'SMS & OTP' :
                  adminTab === 'governance' ? 'Admin Governance' :
                  adminTab === 'messages' ? 'Messages' :
                  adminTab === 'faqs' ? 'FAQs' :
