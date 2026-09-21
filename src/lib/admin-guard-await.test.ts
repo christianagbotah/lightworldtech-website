@@ -106,15 +106,11 @@ function assignedGuardVariable(body: string, expression: string): string | null 
 
 function explicitlyRejectsMissing(body: string, variable: string | null): boolean {
   if (!variable) return false;
-  const escaped = variable.replace(/[$]/g, '\\function explicitlyRejectsMissing(body: string, variable: string | null): boolean {
-  if (!variable) return false;
   const escaped = variable.replace(/[$]/g, '\\$&');
-  return new RegExp('if\\s*\\(\\s*!\\s*' + escaped + '\\s*\\)').test(body);
-}');
 
   // Accept either `if (!actor)` or the stricter fail-closed shape
   // `if (!actor || !hasRequiredPermission(...))`. Do not accept `&&`,
-  // because a missing actor could then bypass the branch.
+  // because a missing actor could then bypass the rejection branch.
   return new RegExp(
     'if\\s*\\(\\s*!\\s*' + escaped + '(?:\\s*\\)|\\s*\\|\\|)',
   ).test(body);
