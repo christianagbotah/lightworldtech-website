@@ -157,7 +157,7 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', duration: 0.6, delay: 0.2 }}
-                className="size-20 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30"
+                className="size-20 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30"
               >
                 <CheckCircle2 className="size-10 text-white" />
               </motion.div>
