@@ -32,6 +32,47 @@ export function supportSla(priority: SupportTicketPriority, createdAt = new Date
   };
 }
 
+export async function reconcileSupportEscalations(now = new Date()): Promise<number> {
+  const breached = await db.clientSupportTicket.findMany({
+    where: {
+      escalatedAt: null,
+      status: { notIn: ['resolved', 'closed'] },
+      OR: [
+        { firstRespondedAt: null, firstResponseDueAt: { lt: now } },
+        { resolutionDueAt: { lt: now } },
+      ],
+    },
+    select: {
+      id: true,
+      ticketNumber: true,
+    },
+    take: 100,
+    orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
+  });
+
+  if (!breached.length) return 0;
+
+  await db.$transaction(async (tx) => {
+    for (const ticket of breached) {
+      await tx.clientSupportTicket.update({
+        where: { id: ticket.id },
+        data: { escalatedAt: now },
+      });
+      await tx.clientTicketEvent.create({
+        data: {
+          ticketId: ticket.id,
+          type: 'sla_escalated',
+          actorType: 'system',
+          actorName: 'Lightworld SLA Monitor',
+          details: JSON.stringify({ ticketNumber: ticket.ticketNumber }),
+        },
+      });
+    }
+  });
+
+  return breached.length;
+}
+
 export function supportSlaState(ticket: {
   status: string;
   firstResponseDueAt: Date | null;
