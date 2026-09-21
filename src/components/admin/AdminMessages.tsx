@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Trash2, Mail, MailOpen, Eye, Phone, Copy, Check, GitBranch, Download, Loader2, X } from 'lucide-react';
+import { Trash2, Mail, MailOpen, Eye, Phone, Copy, Check, GitBranch, Download, Loader2, X, Send, Reply } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -44,6 +47,26 @@ interface ContactMessage {
   createdAt: string;
 }
 
+interface ContactReply {
+  id: string;
+  authorName: string;
+  authorEmail: string;
+  recipient: string;
+  subject: string;
+  body: string;
+  status: string;
+  transport: string;
+  error: string;
+  sentAt: string | null;
+  createdAt: string;
+}
+
+function replySubject(subject: string): string {
+  const value = subject.trim();
+  if (!value) return 'Re: Your enquiry to Lightworld Technologies';
+  return /^re:/i.test(value) ? value : 'Re: ' + value;
+}
+
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -73,9 +96,16 @@ export default function AdminMessages() {
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewing, setViewing] = useState<ContactMessage | null>(null);
+  const [replyingTo, setReplyingTo] = useState<ContactMessage | null>(null);
   const [deleting, setDeleting] = useState<ContactMessage | null>(null);
+  const [replySubjectValue, setReplySubjectValue] = useState('');
+  const [replyBody, setReplyBody] = useState('');
+  const [replyHistory, setReplyHistory] = useState<ContactReply[]>([]);
+  const [replyHistoryLoading, setReplyHistoryLoading] = useState(false);
+  const [replySending, setReplySending] = useState(false);
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -97,13 +127,29 @@ export default function AdminMessages() {
 
   useEffect(() => {
     if (!messages.length || typeof window === 'undefined') return;
-    const requestedId = sessionStorage.getItem('lw-open-message-id');
+    const requestedReplyId = sessionStorage.getItem('lw-reply-message-id');
+    const requestedViewId = sessionStorage.getItem('lw-open-message-id');
+    const requestedId = requestedReplyId || requestedViewId;
     if (!requestedId) return;
+
     const match = messages.find((message) => message.id === requestedId);
+    sessionStorage.removeItem('lw-reply-message-id');
     sessionStorage.removeItem('lw-open-message-id');
+
+    if (match && requestedReplyId) {
+      setReplyingTo(match);
+      setReplySubjectValue(replySubject(match.subject));
+      setReplyBody('');
+      setReplyOpen(true);
+      void loadReplies(match.id);
+      if (!match.read) void markRead(match, true);
+      return;
+    }
+
     if (match) {
       setViewing(match);
       setViewOpen(true);
+      void loadReplies(match.id);
       if (!match.read) void markRead(match, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -111,11 +157,71 @@ export default function AdminMessages() {
 
   const unreadCount = messages.filter(m => !m.read).length;
 
+  const loadReplies = async (messageId: string) => {
+    setReplyHistoryLoading(true);
+    try {
+      const response = await fetch('/api/admin/messages/' + encodeURIComponent(messageId) + '/replies', {
+        cache: 'no-store',
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Could not load reply history');
+      setReplyHistory(Array.isArray(payload.data) ? payload.data : []);
+    } catch (error) {
+      setReplyHistory([]);
+      toast.error(error instanceof Error ? error.message : 'Could not load reply history');
+    } finally {
+      setReplyHistoryLoading(false);
+    }
+  };
+
   const handleView = (msg: ContactMessage) => {
     setViewing(msg);
     setViewOpen(true);
+    void loadReplies(msg.id);
     if (!msg.read) {
-      markRead(msg, true);
+      void markRead(msg, true);
+    }
+  };
+
+  const openReply = (msg: ContactMessage) => {
+    setReplyingTo(msg);
+    setReplySubjectValue(replySubject(msg.subject));
+    setReplyBody('');
+    setViewOpen(false);
+    setReplyOpen(true);
+    void loadReplies(msg.id);
+    if (!msg.read) void markRead(msg, true);
+  };
+
+  const sendReply = async () => {
+    if (!replyingTo || !replySubjectValue.trim() || !replyBody.trim()) return;
+    setReplySending(true);
+
+    try {
+      const response = await fetch(
+        '/api/admin/messages/' + encodeURIComponent(replyingTo.id) + '/replies',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject: replySubjectValue.trim(),
+            body: replyBody.trim(),
+          }),
+        },
+      );
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Reply could not be sent');
+
+      toast.success('Reply sent', {
+        description: 'Delivered to ' + replyingTo.email + ' from the Lightworld admin portal.',
+      });
+      setReplyBody('');
+      await Promise.all([loadReplies(replyingTo.id), fetchMessages()]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Reply could not be sent');
+      if (replyingTo) await loadReplies(replyingTo.id);
+    } finally {
+      setReplySending(false);
     }
   };
 
@@ -353,6 +459,9 @@ export default function AdminMessages() {
                         <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); handleView(msg); }} title="View">
                           <Eye className="h-4 w-4" />
                         </Button>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); openReply(msg); }} title="Reply internally">
+                          <Reply className="h-4 w-4 text-amber-600" />
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); void markRead(msg, !msg.read); }} title={msg.read ? 'Mark unread' : 'Mark read'}>
                           {msg.read ? <Mail className="h-4 w-4" /> : <MailOpen className="h-4 w-4" />}
                         </Button>
@@ -387,6 +496,51 @@ export default function AdminMessages() {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Customer message</p>
                   <p className="mt-4 whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground">{viewing.message}</p>
                 </div>
+
+                <div className="mt-5 rounded-2xl border border-border/60 bg-card p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Internal correspondence history</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Replies sent from the Lightworld admin portal.</p>
+                    </div>
+                    <Badge variant="outline">{replyHistory.length} repl{replyHistory.length === 1 ? 'y' : 'ies'}</Badge>
+                  </div>
+
+                  <div className="mt-4 max-h-[34vh] space-y-3 overflow-y-auto pr-1">
+                    {replyHistoryLoading ? (
+                      <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                        <Loader2 className="mr-2 size-4 animate-spin" /> Loading reply history…
+                      </div>
+                    ) : replyHistory.length === 0 ? (
+                      <p className="rounded-xl bg-muted/40 px-4 py-5 text-center text-sm text-muted-foreground">No internal replies sent yet.</p>
+                    ) : replyHistory.map((reply) => (
+                      <div key={reply.id} className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold">{reply.authorName || 'Administrator'}</p>
+                            <p className="text-[11px] text-muted-foreground">{new Date(reply.createdAt).toLocaleString()}</p>
+                          </div>
+                          <Badge className={
+                            reply.status === 'sent'
+                              ? 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200'
+                              : reply.status === 'failed'
+                                ? 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-200'
+                                : 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200'
+                          }>
+                            {reply.status === 'sent' ? 'Sent' : reply.status === 'failed' ? 'Failed' : 'Sending'}
+                          </Badge>
+                        </div>
+                        <p className="mt-3 text-xs font-semibold">{reply.subject}</p>
+                        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">{reply.body}</p>
+                        {reply.status === 'failed' && reply.error && (
+                          <p className="mt-3 rounded-lg bg-rose-50 p-2 text-xs text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
+                            Delivery failed. The attempt remains in the audit history.
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
               <aside className="space-y-5 border-t border-border bg-muted/15 p-6 lg:border-l lg:border-t-0">
                 <div className="grid gap-4 text-sm">
@@ -420,9 +574,9 @@ export default function AdminMessages() {
                 <div className="border-t border-border pt-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Quick actions</p>
                   <div className="mt-3 grid gap-2">
-                    <a href={'mailto:' + viewing.email} className="inline-flex h-10 items-center justify-center rounded-md bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700">
-                      Reply by email
-                    </a>
+                    <Button onClick={() => openReply(viewing)} className="bg-amber-600 text-white hover:bg-amber-700">
+                      <Reply className="mr-2 size-4" /> Reply internally
+                    </Button>
                     {viewing.phone && (
                       <a href={'tel:' + viewing.phone} className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-semibold hover:bg-muted">
                         Call customer
@@ -438,6 +592,115 @@ export default function AdminMessages() {
           )}
           <DialogFooter className="border-t border-border px-6 py-4">
             <Button variant="outline" onClick={() => setViewOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={replyOpen} onOpenChange={(open) => {
+        if (!replySending) setReplyOpen(open);
+      }}>
+        <DialogContent className="max-h-[94vh] w-[calc(100vw-2rem)] max-w-5xl overflow-y-auto p-0" aria-describedby={undefined}>
+          <DialogHeader className="border-b border-border px-6 py-5">
+            <DialogTitle className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                <Reply className="size-5" />
+              </span>
+              <span>
+                Reply internally
+                {replyingTo && <span className="ml-2 text-sm font-normal text-muted-foreground">to {replyingTo.name}</span>}
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {replyingTo && (
+            <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,.85fr)]">
+              <div className="min-w-0 space-y-5 p-6">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200">
+                  This reply is sent directly from the Lightworld website mail transport and recorded against this customer enquiry. No Gmail, Outlook or external mail client is opened.
+                </div>
+
+                <div className="space-y-2">
+                  <Label>To</Label>
+                  <Input value={replyingTo.name + ' <' + replyingTo.email + '>'} readOnly className="bg-muted/40" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="internal-reply-subject">Subject</Label>
+                  <Input
+                    id="internal-reply-subject"
+                    value={replySubjectValue}
+                    onChange={(event) => setReplySubjectValue(event.target.value)}
+                    maxLength={200}
+                    placeholder="Reply subject"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="internal-reply-body">Message</Label>
+                  <Textarea
+                    id="internal-reply-body"
+                    value={replyBody}
+                    onChange={(event) => setReplyBody(event.target.value)}
+                    maxLength={8000}
+                    rows={12}
+                    placeholder={'Write your reply to ' + replyingTo.name + '…'}
+                    className="min-h-[280px] resize-y leading-6"
+                  />
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>A Lightworld Technologies signature and original-enquiry context are appended automatically.</span>
+                    <span>{replyBody.length.toLocaleString()} / 8,000</span>
+                  </div>
+                </div>
+              </div>
+
+              <aside className="min-w-0 space-y-5 border-t border-border bg-muted/15 p-6 lg:border-l lg:border-t-0">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Original enquiry</p>
+                  <div className="mt-3 rounded-xl border border-border/60 bg-background p-4">
+                    <p className="text-sm font-semibold">{replyingTo.subject || 'Website enquiry'}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{new Date(replyingTo.createdAt).toLocaleString()}</p>
+                    <p className="mt-3 max-h-40 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">{replyingTo.message}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Previous replies</p>
+                    <Badge variant="outline">{replyHistory.length}</Badge>
+                  </div>
+                  <div className="mt-3 max-h-[310px] space-y-2 overflow-y-auto pr-1">
+                    {replyHistoryLoading ? (
+                      <p className="py-6 text-center text-xs text-muted-foreground">Loading history…</p>
+                    ) : replyHistory.length === 0 ? (
+                      <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">No previous replies.</p>
+                    ) : replyHistory.slice().reverse().map((reply) => (
+                      <div key={reply.id} className="rounded-xl border border-border/60 bg-background p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="truncate text-xs font-semibold">{reply.subject}</p>
+                          <span className={reply.status === 'sent' ? 'text-[10px] font-semibold text-emerald-600' : 'text-[10px] font-semibold text-rose-600'}>
+                            {reply.status}
+                          </span>
+                        </div>
+                        <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{reply.body}</p>
+                        <p className="mt-2 text-[10px] text-muted-foreground">{new Date(reply.createdAt).toLocaleString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </aside>
+            </div>
+          )}
+
+          <DialogFooter className="border-t border-border px-6 py-4">
+            <Button variant="outline" onClick={() => setReplyOpen(false)} disabled={replySending}>Cancel</Button>
+            <Button
+              onClick={() => void sendReply()}
+              disabled={replySending || !replySubjectValue.trim() || !replyBody.trim()}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
+              {replySending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Send className="mr-2 size-4" />}
+              {replySending ? 'Sending…' : 'Send reply'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
