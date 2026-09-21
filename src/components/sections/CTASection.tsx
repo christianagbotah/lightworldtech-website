@@ -44,7 +44,7 @@ export default function CTASection() {
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-amber-600 dark:from-emerald-800 dark:via-emerald-900 dark:to-amber-900 py-20 md:py-28 relative overflow-hidden animate-gradient-shift" style={{ backgroundSize: '200% 200%' }}>
+      <div className="bg-gradient-to-br from-slate-950 via-amber-950 to-amber-700 dark:from-slate-950 dark:via-slate-900 dark:to-amber-950 py-20 md:py-28 relative overflow-hidden animate-gradient-shift" style={{ backgroundSize: '200% 200%' }}>
         {/* Parallax background layer */}
         <motion.div className="absolute inset-0 z-0" style={{ scale: bgScale, y: bgY }}>
           <Image
@@ -54,7 +54,7 @@ export default function CTASection() {
             className="object-cover"
             aria-hidden="true"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-700/92 via-emerald-800/88 to-amber-700/85 dark:from-emerald-900/95 dark:via-slate-900/92 dark:to-amber-900/90" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/94 via-amber-950/90 to-amber-800/86 dark:from-slate-950/96 dark:via-slate-900/94 dark:to-amber-950/92" />
         </motion.div>
 
         {/* Mesh pattern overlay */}
@@ -165,7 +165,7 @@ export default function CTASection() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
               {/* Primary CTA with glow shadow */}
               <div className="relative group">
-                <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-400 via-amber-400 to-amber-400 rounded-xl opacity-40 group-hover:opacity-80 blur-xl transition-all duration-700 animate-glow-pulse" />
+                <div className="absolute -inset-1.5 bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300 rounded-xl opacity-40 group-hover:opacity-80 blur-xl transition-all duration-700 animate-glow-pulse" />
                 <Button
                   onClick={() => navigate('contact')}
                   size="lg"
