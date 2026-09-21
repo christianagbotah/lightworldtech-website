@@ -11,6 +11,7 @@ describe('safe CSV export', () => {
     expect(csvCell('+SUM(A1:A2)')).toBe('"\'+SUM(A1:A2)"');
     expect(csvCell('-10+20')).toBe('"\'-10+20"');
     expect(csvCell('@cmd')).toBe('"\'@cmd"');
+    expect(csvCell('\t=HYPERLINK("https://example.com")')).toBe('"\'\t=HYPERLINK(""https://example.com"")"');
   });
 
   test('emits UTF-8 BOM and CRLF rows', () => {
