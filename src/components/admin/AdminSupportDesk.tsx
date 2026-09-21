@@ -22,6 +22,8 @@ import {
   Download,
   Upload,
   Activity,
+  Star,
+  Gauge,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +70,9 @@ type TicketListItem = {
   lastActivityAt: string;
   unreadByAdmin: boolean;
   unreadByClient: boolean;
+  clientRating: number | null;
+  clientFeedback: string;
+  ratedAt: string | null;
   createdAt: string;
   organization: { id: string; name: string };
   project: { id: string; name: string } | null;
@@ -134,6 +139,15 @@ type Summary = {
   highPriority: number;
   breached: number;
   awaitingClient: number;
+  performance: {
+    windowDays: number;
+    avgFirstResponseMinutes: number | null;
+    avgResolutionMinutes: number | null;
+    slaCompliancePct: number | null;
+    csatAverage: number | null;
+    csatResponses: number;
+    resolvedSamples: number;
+  };
 };
 
 type SupportAgent = {
@@ -172,6 +186,17 @@ function statusClass(status: string): string {
   return 'border-0 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200';
 }
 
+function formatDuration(minutes: number | null): string {
+  if (minutes === null) return 'No data';
+  if (minutes < 60) return minutes + 'm';
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  if (hours < 24) return hours + 'h' + (remainder ? ' ' + remainder + 'm' : '');
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return days + 'd' + (remainingHours ? ' ' + remainingHours + 'h' : '');
+}
+
 function priorityClass(priority: string): string {
   if (priority === 'high') return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
   if (priority === 'low') return 'border-0 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200';
@@ -187,6 +212,15 @@ export default function AdminSupportDesk() {
     highPriority: 0,
     breached: 0,
     awaitingClient: 0,
+    performance: {
+      windowDays: 90,
+      avgFirstResponseMinutes: null,
+      avgResolutionMinutes: null,
+      slaCompliancePct: null,
+      csatAverage: null,
+      csatResponses: 0,
+      resolvedSamples: 0,
+    },
   });
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('all');
@@ -232,7 +266,21 @@ export default function AdminSupportDesk() {
       setTickets(nextTickets);
       setSelectedIds((current) => new Set([...current].filter((id) => nextTickets.some((ticket) => ticket.id === id))));
       setSummary(payload.summary || {
-        total: 0, open: 0, unread: 0, highPriority: 0, breached: 0, awaitingClient: 0,
+        total: 0,
+        open: 0,
+        unread: 0,
+        highPriority: 0,
+        breached: 0,
+        awaitingClient: 0,
+        performance: {
+          windowDays: 90,
+          avgFirstResponseMinutes: null,
+          avgResolutionMinutes: null,
+          slaCompliancePct: null,
+          csatAverage: null,
+          csatResponses: 0,
+          resolvedSamples: 0,
+        },
       });
 
       if (typeof window !== 'undefined') {
@@ -509,6 +557,41 @@ export default function AdminSupportDesk() {
           );
         })}
       </div>
+
+      <Card className="border-border/60">
+        <CardContent className="p-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <Gauge className="size-4 text-amber-600" /> Service performance
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">Rolling {summary.performance.windowDays}-day operational metrics from actual ticket timestamps.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:min-w-[760px]">
+              <div className="rounded-xl bg-muted/40 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Avg first response</p>
+                <p className="mt-1 text-lg font-bold">{formatDuration(summary.performance.avgFirstResponseMinutes)}</p>
+              </div>
+              <div className="rounded-xl bg-muted/40 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Avg resolution</p>
+                <p className="mt-1 text-lg font-bold">{formatDuration(summary.performance.avgResolutionMinutes)}</p>
+              </div>
+              <div className="rounded-xl bg-muted/40 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">SLA compliance</p>
+                <p className="mt-1 text-lg font-bold">{summary.performance.slaCompliancePct === null ? 'No data' : summary.performance.slaCompliancePct + '%'}</p>
+              </div>
+              <div className="rounded-xl bg-muted/40 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">CSAT</p>
+                <p className="mt-1 flex items-center gap-1 text-lg font-bold">
+                  {summary.performance.csatAverage === null ? 'No data' : summary.performance.csatAverage + '/5'}
+                  {summary.performance.csatAverage !== null && <Star className="size-4 fill-current text-amber-500" />}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{summary.performance.csatResponses} response{summary.performance.csatResponses === 1 ? '' : 's'}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 xl:grid-cols-[minmax(0,1fr)_150px_140px_170px_150px_190px_auto]">
         <label className="relative">
@@ -893,6 +976,17 @@ export default function AdminSupportDesk() {
                       </div>
                     </div>
                   </div>
+
+                  {selected.clientRating && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs dark:border-amber-900/40 dark:bg-amber-950/20">
+                      <p className="flex items-center gap-2 font-semibold text-amber-900 dark:text-amber-200">
+                        <Star className="size-4 fill-current" /> Client satisfaction
+                      </p>
+                      <p className="mt-2 text-2xl font-bold text-amber-900 dark:text-amber-100">{selected.clientRating}/5</p>
+                      {selected.clientFeedback && <p className="mt-2 whitespace-pre-wrap leading-5 text-amber-900/75 dark:text-amber-200/70">{selected.clientFeedback}</p>}
+                      {selected.ratedAt && <p className="mt-2 text-[10px] text-amber-900/60 dark:text-amber-200/55">Submitted {new Date(selected.ratedAt).toLocaleString()}</p>}
+                    </div>
+                  )}
 
                   <div className="rounded-xl border border-border/60 bg-background p-4 text-xs">
                     <p className="flex items-center gap-2 font-semibold"><UserRound className="size-4 text-amber-600" /> Ownership</p>
