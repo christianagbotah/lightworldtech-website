@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
   }
 
   const now = new Date();
-  const updated = await db.$transaction(async (tx) => {
-    const results = [];
+  const updatedCount = await db.$transaction(async (tx) => {
+    let count = 0;
     for (const ticket of tickets) {
       const data: Record<string, unknown> = {};
       if (parsed.data.status !== undefined) {
@@ -112,9 +112,9 @@ export async function POST(request: NextRequest) {
           }),
         },
       });
-      results.push(changed);
+      count += 1;
     }
-    return results;
+    return count;
   });
 
   if (parsed.data.status !== undefined) {
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     entity: 'ClientSupportTicket',
     details: {
       requestedCount: parsed.data.ids.length,
-      updatedCount: updated.length,
+      updatedCount,
       fields: {
         status: parsed.data.status,
         priority: parsed.data.priority,
@@ -151,6 +151,6 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    data: { updated: updated.length },
+    data: { updated: updatedCount },
   });
 }
