@@ -7,6 +7,7 @@ import {
   isCompletedProjectPricingIntent,
   isCompletedProjectPreparationIntent,
   isCompletedProjectRestartIntent,
+  isCompletedProjectStatusIntent,
   isLeadershipIntent,
   isNewsroomIntent,
   isTrustIntent,
@@ -69,6 +70,8 @@ describe('assistant completed-project follow-up intent', () => {
     expect(isCompletedProjectNextStepsIntent('What happens after submission?')).toBe(true);
     expect(isCompletedProjectChangeIntent('Open my project brief')).toBe(false);
     expect(isCompletedProjectContextIntent('Open my project brief')).toBe(true);
+    expect(isCompletedProjectStatusIntent('Any update on my project?')).toBe(true);
+    expect(isCompletedProjectChangeIntent('Any update on my project?')).toBe(false);
   });
 
   test('recognizes a deliberate new-project restart without hijacking normal service questions', () => {
