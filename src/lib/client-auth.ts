@@ -10,6 +10,7 @@ export interface ClientSession {
   email: string;
   name: string;
   role: string;
+  authVersion: number;
   exp: number;
 }
 
@@ -61,6 +62,7 @@ export function verifyClientSessionToken(token: string | undefined): ClientSessi
 
     const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as ClientSession;
     if (!parsed.sub || !parsed.organizationId || !parsed.email || !parsed.exp) return null;
+    if (!Number.isInteger(parsed.authVersion) || parsed.authVersion < 0) return null;
     if (parsed.exp <= Math.floor(Date.now() / 1000)) return null;
 
     return parsed;
