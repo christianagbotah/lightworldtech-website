@@ -81,6 +81,7 @@ const capabilityExamples: PortfolioItem[] = [
 export default function PortfolioPage({ settings = {} }: { settings?: SiteSettings }) {
   const [items, setItems] = useState<PortfolioItem[]>(capabilityExamples);
   const [usingCms, setUsingCms] = useState(false);
+  const [cmsUnavailable, setCmsUnavailable] = useState(false);
   const [active, setActive] = useState('All');
 
   useEffect(() => {
@@ -120,8 +121,9 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
 
         setItems(mapped);
         setUsingCms(true);
+        setCmsUnavailable(false);
       })
-      .catch(() => {});
+      .catch(() => setCmsUnavailable(true));
   }, []);
 
   const categories = useMemo(() => ['All', ...Array.from(new Set(items.map((item) => item.category)))], [items]);
@@ -151,8 +153,14 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
                 )}
               </p>
               {!usingCms && (
-                <p className="mt-3 text-xs leading-5 text-slate-400 dark:text-white/25">
-                  Client-specific case studies can be added through the existing portfolio CMS when approved for publication.
+                <p
+                  className="mt-3 text-xs leading-5 text-slate-400 dark:text-white/25"
+                  role={cmsUnavailable ? 'status' : undefined}
+                  aria-live={cmsUnavailable ? 'polite' : undefined}
+                >
+                  {cmsUnavailable
+                    ? 'The live portfolio feed is temporarily unavailable, so representative solution patterns are shown instead.'
+                    : 'Client-specific case studies can be added through the existing portfolio CMS when approved for publication.'}
                 </p>
               )}
             </div>
