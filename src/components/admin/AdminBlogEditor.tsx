@@ -75,17 +75,18 @@ export default function AdminBlogEditor() {
       try {
         const res = await fetch(`/api/blog/${blogPostSlug}`);
         if (!res.ok) throw new Error('Post not found');
-        const post = await res.json();
+        const payload = await res.json();
+        const post = payload.data || payload;
         setForm({
-          title: post.title,
-          slug: post.slug,
-          excerpt: post.excerpt,
-          content: post.content,
-          coverImage: post.coverImage,
-          author: post.author,
-          readTime: post.readTime,
-          published: post.published,
-          featured: post.featured,
+          title: post.title || '',
+          slug: post.slug || '',
+          excerpt: post.excerpt || '',
+          content: post.content || '',
+          coverImage: post.coverImage || '',
+          author: post.author || 'Lightworld Technologies',
+          readTime: post.readTime || 5,
+          published: Boolean(post.published),
+          featured: Boolean(post.featured),
           categoryId: post.categoryId || '',
         });
         setAutoSlug(false);
