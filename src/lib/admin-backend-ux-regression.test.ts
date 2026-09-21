@@ -209,6 +209,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('Finance & Accounts');
     expect(finance).toContain('Customer accounts');
     expect(finance).toContain('Suppliers & expenses');
+    expect(finance).toContain('Manage service');
+    expect(finance).toContain('Save service change');
+    expect(finance).toContain('Service history');
+    expect(finance).toContain("changeType: 'renewal'");
     expect(finance).toContain('Debtors');
     expect(finance).toContain('Creditors');
     expect(dashboard).toContain('netCashflow');
