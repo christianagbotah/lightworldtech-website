@@ -11,6 +11,7 @@ const permissionSchema = z.enum([
   'proposals.manage',
   'clients.manage',
   'communications.manage',
+  'finance.manage',
 ]);
 
 const createSchema = z.object({
