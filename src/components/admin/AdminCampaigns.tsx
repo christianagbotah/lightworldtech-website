@@ -281,7 +281,7 @@ export default function AdminCampaigns() {
     return (
       <div className="space-y-5">
         <Skeleton className="h-10 w-72" />
-        <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
+        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
           <Skeleton className="h-[520px] rounded-xl" />
           <Skeleton className="h-[520px] rounded-xl" />
         </div>
@@ -308,7 +308,7 @@ export default function AdminCampaigns() {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
         <Card className="border-border/50">
           <CardHeader>
             <CardTitle className="text-base">Campaigns</CardTitle>
@@ -442,7 +442,7 @@ export default function AdminCampaigns() {
               </CardContent>
             </Card>
 
-            <div className="grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
+            <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]">
               <Card className="border-border/50">
                 <CardHeader><CardTitle className="text-base">Test & delivery controls</CardTitle></CardHeader>
                 <CardContent className="space-y-5">
