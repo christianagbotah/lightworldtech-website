@@ -67,9 +67,10 @@ export default function AdminPortfolio() {
 
   const fetchProjects = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/portfolio');
+      const res = await fetch('/api/portfolio');
       if (!res.ok) throw new Error('Failed to fetch');
-      setProjects(await res.json());
+      const payload = await res.json();
+      setProjects(payload.data || []);
     } catch {
       toast.error('Failed to load projects');
     } finally {
@@ -105,7 +106,7 @@ export default function AdminPortfolio() {
     try {
       const techArray = form.technologies.split(',').map(t => t.trim()).filter(Boolean);
       const payload = { ...form, technologies: JSON.stringify(techArray) };
-      const url = editing ? `/api/admin/portfolio/${editing.id}` : '/api/admin/portfolio';
+      const url = editing ? `/api/portfolio/${editing.id}` : '/api/portfolio';
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!res.ok) {
@@ -125,7 +126,7 @@ export default function AdminPortfolio() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/portfolio/${deleting.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/portfolio/${deleting.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
       toast.success('Project deleted');
       setDeleteOpen(false);
@@ -138,7 +139,7 @@ export default function AdminPortfolio() {
 
   const toggleActive = async (p: PortfolioProject) => {
     try {
-      const res = await fetch(`/api/admin/portfolio/${p.id}`, {
+      const res = await fetch(`/api/portfolio/${p.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !p.active }),
       });
@@ -151,7 +152,7 @@ export default function AdminPortfolio() {
 
   const toggleFeatured = async (p: PortfolioProject) => {
     try {
-      const res = await fetch(`/api/admin/portfolio/${p.id}`, {
+      const res = await fetch(`/api/portfolio/${p.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ featured: !p.featured }),
       });
