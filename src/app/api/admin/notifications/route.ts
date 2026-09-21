@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { getMailTransportStatus } from '@/lib/mail';
+import { reconcileSupportEscalations } from '@/lib/support-ticket';
 
 type Notice = {
   id: string;
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (canClients) {
+    await reconcileSupportEscalations();
     const now = new Date();
     const [unreadTickets, slaBreached] = await Promise.all([
       db.clientSupportTicket.count({
