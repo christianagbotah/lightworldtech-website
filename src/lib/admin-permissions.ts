@@ -91,7 +91,8 @@ export function requiredAdminPermissionForPath(
   if (
     pathname.startsWith('/api/admin/clients') ||
     pathname.startsWith('/api/admin/client-') ||
-    pathname.startsWith('/api/admin/support-tickets')
+    pathname.startsWith('/api/admin/support-tickets') ||
+    pathname.startsWith('/api/admin/support-agents')
   ) {
     return 'clients.manage';
   }
