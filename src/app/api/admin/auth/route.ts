@@ -160,6 +160,7 @@ export async function POST(request: NextRequest) {
         name: admin.name || 'Admin',
         role: admin.role,
         permissions,
+        recoveryCodeUsed,
       },
       message: 'Login successful',
     });
