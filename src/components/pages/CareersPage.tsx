@@ -52,7 +52,7 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
         <div className="relative container-main py-16 sm:py-20 lg:py-24 z-10">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
                 <Users className="size-3.5" />
                 {contentText(settings, 'careers_hero_eyebrow', 'Careers & talent network')}
               </div>
@@ -63,7 +63,7 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
                 {contentText(settings, 'careers_hero_description', 'We are building a multidisciplinary technology company in Ghana. Open roles change with project needs, so we do not publish stale vacancies or salary promises as if they were current.')}
               </p>
               <div className="mt-5 flex items-center gap-2 text-sm text-slate-500 dark:text-white/35">
-                <MapPin className="size-4 text-emerald-500" />
+                <MapPin className="size-4 text-amber-500" />
                 {contentText(settings, 'careers_location', 'Tema, Ghana · role-dependent remote collaboration')}
               </div>
             </div>
@@ -75,7 +75,7 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
         <div className="container-main">
           <div className="grid gap-12 lg:grid-cols-[.75fr_1.25fr]">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Where talent fits</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-400">Where talent fits</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Different disciplines. One delivery team.</h2>
               <p className="mt-4 max-w-md text-sm leading-7 text-slate-500 dark:text-white/38">Even when there is no advertised vacancy, we are interested in strong people whose work aligns with the company we are building.</p>
             </div>
@@ -90,7 +90,7 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
                   transition={{ delay: index * 0.04 }}
                   className="rounded-[26px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]"
                 >
-                  <span className="flex size-10 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                  <span className="flex size-10 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
                     <item.icon className="size-5" />
                   </span>
                   <h3 className="mt-6 text-lg font-semibold">{item.title}</h3>
@@ -106,10 +106,10 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
         <div className="container-main">
           <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
             <div>
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+              <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-400/10 text-amber-300">
                 <Rocket className="size-5" />
               </div>
-              <p className="mt-7 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">How we think about the work</p>
+              <p className="mt-7 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">How we think about the work</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em]">High ownership without pretending one person knows everything.</h2>
               <p className="mt-5 max-w-xl text-sm leading-7 text-white/40 sm:text-base">The best delivery teams ask good questions, surface risk early and care about what happens after the code is merged.</p>
             </div>
@@ -117,7 +117,7 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
             <div className="space-y-2">
               {managedExpectations.map((item) => (
                 <div key={item} className="flex gap-3 rounded-[22px] border border-white/[0.07] bg-white/[0.03] p-4">
-                  <Sparkles className="mt-0.5 size-4 shrink-0 text-emerald-300" />
+                  <Sparkles className="mt-0.5 size-4 shrink-0 text-amber-300" />
                   <p className="text-sm leading-6 text-white/48">{item}</p>
                 </div>
               ))}
@@ -130,23 +130,23 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
         <div className="container-main">
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-[32px] border border-slate-200/70 bg-white p-7 dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-8">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+              <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
                 <Mail className="size-5" />
               </div>
               <h2 className="mt-7 text-2xl font-semibold tracking-tight">Join the talent network</h2>
               <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-white/38">Send a concise introduction, the kind of work you do, and links to work you are proud of. If there is a strong fit for a current or upcoming need, the team can follow up.</p>
-              <a href={'mailto:' + careersEmail + '?subject=Lightworld%20Talent%20Network'} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+              <a href={'mailto:' + careersEmail + '?subject=Lightworld%20Talent%20Network'} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
                 {careersEmail} <ArrowRight className="size-4" />
               </a>
             </div>
 
-            <div className="rounded-[32px] border border-emerald-500/15 bg-emerald-500/[0.07] p-7 sm:p-8">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+            <div className="rounded-[32px] border border-amber-500/15 bg-amber-500/[0.07] p-7 sm:p-8">
+              <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-300">
                 <GraduationCap className="size-5" />
               </div>
               <h2 className="mt-7 text-2xl font-semibold tracking-tight">Still growing your skills?</h2>
               <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-white/38">Lightworld also works in training and capability building. A career relationship can start with learning, mentorship and practical project exposure.</p>
-              <Link href="/services" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+              <Link href="/services" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
                 Explore training & advisory <ArrowRight className="size-4" />
               </Link>
             </div>
