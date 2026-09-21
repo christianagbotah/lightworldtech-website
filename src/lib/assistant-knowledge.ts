@@ -11,6 +11,7 @@ import {
   isCompletedProjectPricingIntent,
   isCompletedProjectPreparationIntent,
   isCompletedProjectRestartIntent,
+  isCompletedProjectStatusIntent,
   isLeadershipIntent,
   isNewsroomIntent,
   isTrustIntent,
@@ -222,6 +223,22 @@ function answerCompletedProjectFollowUp(
       reply:
         'For the first project discussion, it helps to have any existing documents, screenshots, workflows, brand materials, integrations, examples you like, known constraints and decision-makers available. You do not need everything perfectly prepared — the brief you already created gives the team a structured starting point, and missing details can be clarified during discovery.',
       suggestions: ['What happens after I submit?', 'How is pricing estimated?', 'Can I change the brief later?', 'Who will contact me?'],
+    };
+  }
+
+  if (isCompletedProjectStatusIntent(message)) {
+    return {
+      ...common,
+      reply:
+        'I can keep the brief context in this chat, but this public assistant cannot see a live project or proposal status. If you have already submitted the brief, use the Client Portal when you have access to it, or contact the ' +
+        companyName +
+        ' team at ' +
+        companyEmail +
+        ' or ' +
+        companyPhone +
+        ' for a verified update.',
+      suggestions: ['Open the Client Portal', 'What happens after I submit?', 'Who will contact me?'],
+      cta: { label: 'Open Client Portal', href: '/client' },
     };
   }
 
