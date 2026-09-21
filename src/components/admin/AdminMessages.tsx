@@ -87,6 +87,20 @@ export default function AdminMessages() {
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
+  useEffect(() => {
+    if (!messages.length || typeof window === 'undefined') return;
+    const requestedId = sessionStorage.getItem('lw-open-message-id');
+    if (!requestedId) return;
+    const match = messages.find((message) => message.id === requestedId);
+    sessionStorage.removeItem('lw-open-message-id');
+    if (match) {
+      setViewing(match);
+      setViewOpen(true);
+      if (!match.read) void markRead(match, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
+
   const unreadCount = messages.filter(m => !m.read).length;
 
   const handleView = (msg: ContactMessage) => {
@@ -177,7 +191,8 @@ export default function AdminMessages() {
                 messages.map((msg) => (
                   <TableRow
                     key={msg.id}
-                    className={`hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200 ${
+                    onClick={() => handleView(msg)}
+                    className={`cursor-pointer hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200 ${
                       !msg.read ? 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400 bg-amber-50/30 dark:bg-amber-900/5' : 'border-l-[3px] border-l-transparent'
                     }`}
                   >
@@ -208,7 +223,7 @@ export default function AdminMessages() {
                       {new Date(msg.createdAt).toLocaleDateString()} {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </TableCell>
                     <TableCell className="text-center">
-                      <button onClick={() => markRead(msg, !msg.read)} className="cursor-pointer">
+                      <button onClick={(event) => { event.stopPropagation(); void markRead(msg, !msg.read); }} className="cursor-pointer">
                         <Badge className={
                           msg.read
                             ? 'bg-gradient-to-r from-slate-400 to-slate-300 dark:from-slate-600 dark:to-slate-500 text-white border-0'
@@ -220,13 +235,13 @@ export default function AdminMessages() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleView(msg)} title="View">
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); handleView(msg); }} title="View">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => markRead(msg, !msg.read)} title={msg.read ? 'Mark unread' : 'Mark read'}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); void markRead(msg, !msg.read); }} title={msg.read ? 'Mark unread' : 'Mark read'}>
                           {msg.read ? <Mail className="h-4 w-4" /> : <MailOpen className="h-4 w-4" />}
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => { setDeleting(msg); setDeleteOpen(true); }}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); setDeleting(msg); setDeleteOpen(true); }}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -241,16 +256,25 @@ export default function AdminMessages() {
 
       {/* View Message Dialog */}
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent className="max-w-lg" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {viewing?.phone ? <Phone className="size-4 text-amber-500" /> : <Mail className="size-4 text-amber-500" />}
-              {viewing?.subject || 'Message Details'}
+        <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] max-w-5xl overflow-x-hidden overflow-y-auto p-0" aria-describedby={undefined}>
+          <DialogHeader className="border-b border-border px-6 py-5">
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                {viewing?.phone ? <Phone className="size-5" /> : <Mail className="size-5" />}
+              </span>
+              <span className="min-w-0 truncate">{viewing?.subject || 'Message Details'}</span>
             </DialogTitle>
           </DialogHeader>
           {viewing && (
-            <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1fr)_300px]">
+              <div className="min-w-0 p-6">
+                <div className="rounded-2xl border border-border/60 bg-muted/20 p-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Customer message</p>
+                  <p className="mt-4 whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground">{viewing.message}</p>
+                </div>
+              </div>
+              <aside className="space-y-5 border-t border-border bg-muted/15 p-6 lg:border-l lg:border-t-0">
+                <div className="grid gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">From:</span>
                   <p className="font-medium">{viewing.name}</p>
@@ -277,14 +301,27 @@ export default function AdminMessages() {
                     {new Date(viewing.createdAt).toLocaleDateString()} {new Date(viewing.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
-              </div>
-              <div className="border-t border-border pt-4">
-                <span className="text-sm text-muted-foreground">Message:</span>
-                <p className="text-sm mt-1 whitespace-pre-wrap leading-relaxed">{viewing.message}</p>
-              </div>
+                </div>
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Quick actions</p>
+                  <div className="mt-3 grid gap-2">
+                    <a href={'mailto:' + viewing.email} className="inline-flex h-10 items-center justify-center rounded-md bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700">
+                      Reply by email
+                    </a>
+                    {viewing.phone && (
+                      <a href={'tel:' + viewing.phone} className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-background px-4 text-sm font-semibold hover:bg-muted">
+                        Call customer
+                      </a>
+                    )}
+                    <Button variant="outline" onClick={() => { setViewOpen(false); navigate('admin-crm'); }}>
+                      <GitBranch className="mr-2 size-4" /> Open CRM Pipeline
+                    </Button>
+                  </div>
+                </div>
+              </aside>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="border-t border-border px-6 py-4">
             <Button variant="outline" onClick={() => setViewOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
