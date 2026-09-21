@@ -767,7 +767,7 @@ export default function AdminFinance() {
                       aria-label={'Open service account for ' + item.organization.name + ': ' + item.name}
                       onClick={() => openServiceManager(item)}
                       onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
+                        if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault();
                           openServiceManager(item);
                         }
