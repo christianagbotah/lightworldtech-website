@@ -18,6 +18,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -586,18 +587,16 @@ export default function AdminFinance() {
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-600">Finance & Accounts</p>
-          <h1 className="mt-1 text-2xl font-bold">Customer accounts and management finance</h1>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Track services, renewals, invoices, receipts, debtors, suppliers, payables, expenses, cashflow and management profit/loss.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => void load()} disabled={loading}>
-          <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} /> Refresh
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Finance & Accounts"
+        title="Customer accounts and management finance"
+        description="Track services, renewals, invoices, receipts, debtors, suppliers, payables, expenses, cashflow and management profit/loss."
+        actions={
+          <Button variant="outline" onClick={() => void load()} disabled={loading}>
+            <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} /> Refresh
+          </Button>
+        }
+      />
 
       <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
         {[
