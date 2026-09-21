@@ -32,6 +32,7 @@ interface BlogPost {
 export default function BlogPage({ initialPosts, settings = {} }: { initialPosts: BlogPost[]; settings?: SiteSettings }) {
   const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
   const [loading, setLoading] = useState(false);
+  const [refreshUnavailable, setRefreshUnavailable] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const heroEyebrow = contentText(settings, 'blog_hero_eyebrow', 'Insights');
@@ -58,8 +59,10 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
       .then((payload) => {
         const items = Array.isArray(payload?.data) ? payload.data : [];
         setPosts(items);
+        setRefreshUnavailable(false);
       })
       .catch(() => {
+        setRefreshUnavailable(true);
         // Keep server-rendered content if background refresh is unavailable.
       });
   }, []);
@@ -143,6 +146,16 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
               />
             </label>
           </div>
+
+          {refreshUnavailable && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mt-4 rounded-2xl border border-amber-200/70 bg-amber-50/70 px-4 py-3 text-xs leading-5 text-amber-900 dark:border-amber-500/15 dark:bg-amber-500/[0.07] dark:text-amber-200"
+            >
+              Live article refresh is temporarily unavailable. Showing the latest server-rendered insights already available on this page.
+            </div>
+          )}
 
           {loading ? (
             <div className="mt-8 grid gap-4 lg:grid-cols-2">
