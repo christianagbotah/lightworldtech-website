@@ -19,7 +19,7 @@ export function isNewsroomIntent(message: string): boolean {
 
 export function isCompletedProjectNextStepsIntent(message: string): boolean {
   const q = message.trim().toLowerCase();
-  return /what\s+happens\s+(after|next)|after\s+i\s+submit|after\s+submitting|what\s+comes\s+next|next\s+steps?|what\s+do\s+i\s+do\s+next|once\s+i\s+submit|after\s+the\s+brief/.test(q);
+  return /what\s+happens\s+(after|next)|after\s+i\s+submit|after\s+submitting|after\s+submission|once\s+(i\s+submit|submitted)|what\s+comes\s+next|next\s+steps?|what\s+do\s+i\s+do\s+next|after\s+the\s+brief/.test(q);
 }
 
 export function isCompletedProjectPricingIntent(message: string): boolean {
@@ -29,7 +29,7 @@ export function isCompletedProjectPricingIntent(message: string): boolean {
 
 export function isCompletedProjectChangeIntent(message: string): boolean {
   const q = message.trim().toLowerCase();
-  return /change|edit|update|correct|modify|add\s+something|forgot\s+to\s+mention|brief/.test(q);
+  return /change|edit|update|correct|modify|add\s+something|forgot\s+to\s+mention/.test(q);
 }
 
 export function isCompletedProjectContactIntent(message: string): boolean {
