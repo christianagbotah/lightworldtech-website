@@ -66,7 +66,7 @@ export default function ServicesSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">Our Expertise</span>
+          <span className="text-sm font-semibold text-amber-600 dark:text-amber-300 uppercase tracking-wider">Our Expertise</span>
           <div className="flex items-center justify-center gap-3 mt-3 mb-1">
             <span className="block w-8 h-[2px] bg-gradient-to-r from-transparent to-emerald-500 dark:to-amber-400 rounded-full" />
             <span className="block w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-amber-400 shadow-sm shadow-emerald-500/50 dark:shadow-amber-400/50" />
@@ -156,17 +156,17 @@ export default function ServicesSection() {
                       <div className="mb-5 relative inline-block">
                         <div className="absolute inset-0 size-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-400 opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500" />
                         <div className="size-14 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-900/60 group-hover:from-amber-100 group-hover:to-amber-100 dark:group-hover:from-amber-800/60 dark:group-hover:to-amber-900/40 flex items-center justify-center transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-amber-200/50 dark:group-hover:shadow-amber-900/30">
-                          <IconComp className="size-6 text-emerald-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                          <IconComp className="size-6 text-amber-600 dark:text-amber-300 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
                         </div>
                       </div>
 
-                      <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+                      <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
                         {service.title}
                       </h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-5">
                         {service.description}
                       </p>
-                      <span className="text-sm font-medium text-emerald-600 dark:text-amber-400 inline-flex items-center gap-2 group-hover:gap-3 transition-all duration-300">
+                      <span className="text-sm font-medium text-amber-600 dark:text-amber-300 inline-flex items-center gap-2 group-hover:gap-3 transition-all duration-300">
                         Learn More <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform duration-300" />
                       </span>
                     </CardContent>
