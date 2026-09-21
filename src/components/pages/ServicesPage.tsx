@@ -28,6 +28,7 @@ interface ServiceView {
   summary: string;
   deliverables: string[];
   outcomes: string[];
+  image?: string;
 }
 
 const defaultServices: ServiceView[] = [
@@ -177,6 +178,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
                 title: String(item.title || next[index].title),
                 summary: String(item.description || next[index].summary),
                 deliverables: features.length > 0 ? features : next[index].deliverables,
+                image: String(item.image || next[index].image || ''),
               };
               continue;
             }
@@ -190,6 +192,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
             summary: String(item.description || ''),
             deliverables: features.length > 0 ? features : ['Custom scope based on your requirements'],
             outcomes: ['Clear scope', 'Practical delivery', 'Long-term maintainability'],
+            image: String(item.image || ''),
           });
         }
 
@@ -296,6 +299,16 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
             </div>
 
             <div className="p-6 sm:p-8">
+              {selected.image && (
+                <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200/70 bg-slate-50 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                  <img
+                    src={selected.image}
+                    alt=""
+                    className="aspect-[16/8] w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              )}
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-white/20">Typical scope</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {selected.deliverables.map((deliverable) => (
