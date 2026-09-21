@@ -75,7 +75,7 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
         <div className="container-main">
           <div className="grid gap-12 lg:grid-cols-[.75fr_1.25fr]">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Where talent fits</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Where talent fits</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Different disciplines. One delivery team.</h2>
               <p className="mt-4 max-w-md text-sm leading-7 text-slate-500 dark:text-white/38">Even when there is no advertised vacancy, we are interested in strong people whose work aligns with the company we are building.</p>
             </div>
