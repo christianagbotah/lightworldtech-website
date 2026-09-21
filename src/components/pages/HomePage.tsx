@@ -481,34 +481,67 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
           </Reveal>
 
           <div className="mt-12 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            {homeCapabilities.map((item, index) => (
-              <Reveal
-                key={item.title}
-                delay={index * 0.035}
-                className={item.feature ? 'lg:col-span-2' : ''}
-              >
-                <Link
-                  href="/services"
-                  className="group flex h-full min-h-[245px] flex-col rounded-[28px] border border-slate-200/70 bg-white p-6 shadow-sm shadow-slate-950/[0.02] transition duration-300 hover:-translate-y-1 hover:border-emerald-300/60 hover:shadow-xl hover:shadow-emerald-950/[0.05] dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-emerald-300/20 dark:hover:bg-white/[0.04]"
+            {homeCapabilities.map((item, index) => {
+              const normalizedTitle = item.title.toLowerCase();
+              const featuredImage = item.feature && normalizedTitle.includes('web')
+                ? '/images/hero-slide-2.png'
+                : item.feature && (normalizedTitle.includes('skill') || normalizedTitle.includes('training'))
+                  ? '/images/hero-slide-1.png'
+                  : null;
+
+              return (
+                <Reveal
+                  key={item.title}
+                  delay={index * 0.035}
+                  className={item.feature ? 'lg:col-span-2' : ''}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex size-11 items-center justify-center rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
-                      <item.icon className="size-5" />
+                  <Link
+                    href="/services"
+                    className="group flex h-full min-h-[245px] flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-sm shadow-slate-950/[0.02] transition duration-300 hover:-translate-y-1 hover:border-emerald-300/60 hover:shadow-xl hover:shadow-emerald-950/[0.05] dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-emerald-300/20 dark:hover:bg-white/[0.04]"
+                  >
+                    {featuredImage && (
+                      <div className="relative h-28 overflow-hidden border-b border-slate-200/60 dark:border-white/[0.06]">
+                        <Image
+                          src={featuredImage}
+                          alt={item.title}
+                          fill
+                          sizes="(max-width: 1024px) 100vw, 50vw"
+                          className="object-cover transition duration-500 group-hover:scale-[1.025]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-slate-950/5 to-transparent" />
+                        <div className="absolute bottom-3 left-4 flex size-10 items-center justify-center rounded-2xl border border-white/35 bg-white/90 text-emerald-700 shadow-lg backdrop-blur-md dark:bg-slate-950/80 dark:text-emerald-300">
+                          <item.icon className="size-5" />
+                        </div>
+                        <div className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full border border-white/35 bg-white/85 text-slate-700 shadow-sm backdrop-blur-md transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 dark:bg-slate-950/75 dark:text-white/75">
+                          <ArrowUpRight className="size-4" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-1 flex-col p-6">
+                      {!featuredImage && (
+                        <div className="flex items-start justify-between">
+                          <div className="flex size-11 items-center justify-center rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                            <item.icon className="size-5" />
+                          </div>
+                          <ArrowUpRight className="size-4 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-500 dark:text-white/15" />
+                        </div>
+                      )}
+
+                      <div className={featuredImage ? 'mt-0' : 'mt-8'}>
+                        <h3 className="text-xl font-semibold tracking-tight">{item.title}</h3>
+                        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-white/38">{item.description}</p>
+                        <div className="mt-5 flex flex-wrap gap-1.5">
+                          {item.tags.map((tag) => (
+                            <span key={tag} className="rounded-full border border-slate-200/80 px-2.5 py-1 text-[10px] font-medium text-slate-400 dark:border-white/[0.07] dark:text-white/25">{tag}</span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <ArrowUpRight className="size-4 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-500 dark:text-white/15" />
-                  </div>
-                  <div className="mt-auto pt-8">
-                    <h3 className="text-xl font-semibold tracking-tight">{item.title}</h3>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-white/38">{item.description}</p>
-                    <div className="mt-5 flex flex-wrap gap-1.5">
-                      {item.tags.map((tag) => (
-                        <span key={tag} className="rounded-full border border-slate-200/80 px-2.5 py-1 text-[10px] font-medium text-slate-400 dark:border-white/[0.07] dark:text-white/25">{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
+                  </Link>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
