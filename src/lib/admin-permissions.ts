@@ -113,7 +113,10 @@ export function requiredAdminPermissionForPath(
     return 'finance.manage';
   }
 
-  if (pathname.startsWith('/api/admin/analytics')) {
+  if (
+    pathname.startsWith('/api/admin/analytics') ||
+    pathname.startsWith('/api/admin/media')
+  ) {
     return 'site.manage';
   }
 
