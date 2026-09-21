@@ -593,7 +593,7 @@ export default function AdminSupportDesk() {
         </CardContent>
       </Card>
 
-      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 xl:grid-cols-[minmax(0,1fr)_150px_140px_170px_150px_190px_auto]">
+      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(220px,2fr)_repeat(4,minmax(0,1fr))_minmax(140px,1.2fr)_auto] xl:items-center">
         <label className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ticket, client, subject, email or assignee" className="pl-9" />
@@ -670,7 +670,7 @@ export default function AdminSupportDesk() {
 
       <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
         <div className="max-w-full overflow-x-auto">
-          <Table>
+          <Table hideExport exportFileName="lightworld-support-desk">
             <TableHeader>
               <TableRow className="bg-muted/40">
                 <TableHead className="w-10">
