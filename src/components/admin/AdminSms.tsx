@@ -244,8 +244,7 @@ export default function AdminSms() {
     setBusy('campaign');
     const recipients = campaign.audienceType === 'manual'
       ? campaign.recipients
-          .split(/?
-/)
+          .split(/\r?\n/)
           .map((line) => line.trim())
           .filter(Boolean)
           .map((line) => {
