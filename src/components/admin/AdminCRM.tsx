@@ -362,6 +362,12 @@ export default function AdminCRM() {
     }
   };
 
+  const openInternalReply = (lead: Lead) => {
+    sessionStorage.setItem('lw-reply-message-id', lead.contactMessageId);
+    setSelected(null);
+    navigate('admin-messages');
+  };
+
   const openProposal = async (lead: Lead) => {
     if (!canManageProposals) return;
     setSaving(true);
@@ -624,9 +630,16 @@ export default function AdminCRM() {
               <div className="grid min-w-0 gap-0 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,.7fr)]">
                 <div className="min-w-0 space-y-6 p-6">
                   <div className="grid gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2">
-                    <a href={'mailto:' + selected.contactMessage.email} className="flex items-center gap-2 text-sm font-medium hover:text-amber-600">
-                      <Mail className="size-4 text-muted-foreground" /> {selected.contactMessage.email}
-                    </a>
+                    <button
+                      type="button"
+                      onClick={() => openInternalReply(selected)}
+                      className="flex min-w-0 items-center gap-2 text-left text-sm font-medium hover:text-amber-600"
+                      title="Reply from the Lightworld admin portal"
+                    >
+                      <Mail className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{selected.contactMessage.email}</span>
+                      <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-amber-700 dark:text-amber-300">Reply</span>
+                    </button>
                     {selected.contactMessage.phone ? (
                       <a href={'tel:' + selected.contactMessage.phone} className="flex items-center gap-2 text-sm font-medium hover:text-amber-600">
                         <Phone className="size-4 text-muted-foreground" /> {selected.contactMessage.phone}
