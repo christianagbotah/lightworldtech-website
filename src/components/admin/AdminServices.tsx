@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/table';
 import { toast } from 'sonner';
 import AdminMediaField from '@/components/admin/AdminMediaField';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 interface Service {
   id: string;
@@ -186,15 +187,16 @@ export default function AdminServices() {
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Services</h1>
-          <p className="text-muted-foreground text-sm mt-1">{services.length} services total</p>
-        </div>
-        <Button onClick={openCreate} className="bg-amber-600 text-white hover:bg-amber-700">
-          <Plus className="h-4 w-4 mr-2" /> Add Service
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Website & content"
+        title="Services"
+        description={services.length + ' service' + (services.length === 1 ? '' : 's') + ' available for the public service catalogue.'}
+        actions={
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 size-4" /> Add Service
+          </Button>
+        }
+      />
 
       <div className="border border-border rounded-xl bg-card overflow-hidden">
         <div className="max-w-full overflow-x-auto max-h-[600px] overflow-y-auto">
@@ -306,7 +308,7 @@ export default function AdminServices() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleSave} disabled={saving} className="">
               {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
