@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
   Plus, ExternalLink, Inbox, Activity, ArrowUpRight, ArrowDownRight,
-  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick, GitBranch
+  Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick, GitBranch,
+  Database, HardDrive, ShieldAlert
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,6 +75,33 @@ interface HealthData {
   mail: { status: 'healthy' | 'attention'; mode: string; configured: boolean; warning: string };
 }
 
+interface BackupArtifact {
+  kind: 'database' | 'uploads';
+  timestamp: string;
+  sizeBytes: number;
+  ageHours: number;
+  freshness: 'fresh' | 'stale';
+}
+
+interface BackupData {
+  status: 'healthy' | 'attention' | 'missing';
+  database: BackupArtifact | null;
+  uploads: BackupArtifact | null;
+  checkedAt: string;
+  restoreVerification: {
+    status: 'not_verified';
+    message: string;
+  };
+}
+
+function formatBytes(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  const amount = value / 1024 ** index;
+  return amount.toFixed(index === 0 ? 0 : amount >= 10 ? 1 : 2) + ' ' + units[index];
+}
+
 interface AnalyticsData {
   days: number;
   uniqueSessions: number;
@@ -116,19 +144,24 @@ export default function AdminDashboard() {
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [health, setHealth] = useState<HealthData | null>(null);
+  const [backup, setBackup] = useState<BackupData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsRes, postsRes, messagesRes, analyticsRes, healthRes] = await Promise.all([
+        const [statsRes, postsRes, messagesRes, analyticsRes, healthRes, backupRes] = await Promise.all([
           fetch('/api/admin/stats', { cache: 'no-store' }),
           canSite ? fetch('/api/blog?limit=5', { cache: 'no-store' }) : Promise.resolve(null),
           canCrm ? fetch('/api/contact?limit=20', { cache: 'no-store' }) : Promise.resolve(null),
           canSite ? fetch('/api/admin/analytics?days=30', { cache: 'no-store' }) : Promise.resolve(null),
           fetch('/api/admin/health', { cache: 'no-store' }),
+          adminRole === 'super_admin'
+            ? fetch('/api/admin/operations/backup-status', { cache: 'no-store' })
+            : Promise.resolve(null),
         ]);
 
         if (
@@ -146,6 +179,7 @@ export default function AdminDashboard() {
         const messagesData = messagesRes ? await messagesRes.json() : { data: [] };
         const analyticsData = analyticsRes ? await analyticsRes.json() : { data: null };
         const healthData = await healthRes.json();
+        const backupData = backupRes && backupRes.ok ? await backupRes.json() : { data: null };
 
         const rawStats = statsData.data || statsData;
 
@@ -172,6 +206,7 @@ export default function AdminDashboard() {
         setRecentMessages(messages.slice(0, 5));
         setAnalytics(analyticsData.data || null);
         setHealth(healthData.data || null);
+        setBackup(backupData.data || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -179,7 +214,7 @@ export default function AdminDashboard() {
       }
     }
     void fetchData();
-  }, [canSite, canCrm]);
+  }, [canSite, canCrm, adminRole]);
 
   const openMessage = (messageId: string) => {
     sessionStorage.setItem('lw-open-message-id', messageId);
@@ -357,6 +392,44 @@ export default function AdminDashboard() {
           ))}
         </div>
       </div>
+      )}
+
+      {adminRole === 'super_admin' && (
+        <button type="button" onClick={() => setBackupOpen(true)} className="block w-full text-left">
+          <Card className="border-border/60 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md">
+            <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className={
+                  'flex size-11 shrink-0 items-center justify-center rounded-xl ' +
+                  (backup?.status === 'healthy'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                    : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300')
+                }>
+                  <HardDrive className="size-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">Recovery readiness</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {backup?.status === 'healthy'
+                      ? 'Fresh database and uploads backup artifacts detected.'
+                      : backup
+                        ? 'Backup freshness needs attention.'
+                        : 'Backup status could not be confirmed.'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 sm:text-right">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Database backup</p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {backup?.database ? backup.database.ageHours + 'h ago' : 'Not detected'}
+                  </p>
+                </div>
+                <ArrowUpRight className="size-4 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </button>
       )}
 
       {/* Permission-scoped content snapshot */}
@@ -618,6 +691,58 @@ export default function AdminDashboard() {
         </motion.div>
         )}
       </div>
+
+      <Dialog open={backupOpen} onOpenChange={setBackupOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HardDrive className="size-5 text-amber-600" />
+              Recovery readiness
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              { label: 'PostgreSQL database', artifact: backup?.database, icon: Database },
+              { label: 'Uploaded files', artifact: backup?.uploads, icon: FolderOpen },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.label} className="rounded-2xl border border-border/60 p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                      <Icon className="size-5" />
+                    </span>
+                    <Badge variant={item.artifact?.freshness === 'fresh' ? 'default' : 'secondary'}>
+                      {item.artifact?.freshness === 'fresh' ? 'Fresh' : item.artifact ? 'Stale' : 'Missing'}
+                    </Badge>
+                  </div>
+                  <p className="mt-4 font-semibold">{item.label}</p>
+                  {item.artifact ? (
+                    <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                      <p>Latest artifact: {new Date(item.artifact.timestamp).toLocaleString()}</p>
+                      <p>Age: {item.artifact.ageHours} hours</p>
+                      <p>Size: {formatBytes(item.artifact.sizeBytes)}</p>
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-xs text-rose-600">No matching backup artifact detected.</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/20">
+            <p className="flex items-center gap-2 text-sm font-semibold text-amber-900 dark:text-amber-200">
+              <ShieldAlert className="size-4" /> Restore verification
+            </p>
+            <p className="mt-2 text-xs leading-5 text-amber-900/75 dark:text-amber-200/70">
+              {backup?.restoreVerification.message ||
+                'Backup artifacts are checked for presence and freshness only. A successful restore rehearsal has not been verified by this panel.'}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
         <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] max-w-5xl overflow-y-auto">
