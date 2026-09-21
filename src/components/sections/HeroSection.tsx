@@ -133,7 +133,7 @@ export default function HeroSection() {
 
       {/* ===== Animated gradient orbs (decorative, visible through overlay) ===== */}
       <motion.div
-        className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"
+        className="absolute -top-40 -right-40 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"
         animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -143,21 +143,21 @@ export default function HeroSection() {
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-400/10 rounded-full blur-3xl pointer-events-none"
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
       />
 
       {/* ===== Floating decorative dots ===== */}
-      <div className="absolute top-20 left-10 w-2 h-2 rounded-full bg-emerald-400/40 animate-float pointer-events-none" style={{ animationDelay: '0s' }} />
+      <div className="absolute top-20 left-10 w-2 h-2 rounded-full bg-amber-400/40 animate-float pointer-events-none" style={{ animationDelay: '0s' }} />
       <div className="absolute top-40 right-20 w-3 h-3 rounded-full bg-amber-400/30 animate-float pointer-events-none" style={{ animationDelay: '1s' }} />
       <div className="absolute bottom-40 left-1/4 w-2 h-2 rounded-full bg-amber-300/40 animate-float pointer-events-none" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 rounded-full bg-emerald-300/40 animate-float pointer-events-none" style={{ animationDelay: '0.5s' }} />
+      <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 rounded-full bg-amber-300/40 animate-float pointer-events-none" style={{ animationDelay: '0.5s' }} />
 
       {/* ===== Left Arrow Navigation ===== */}
       <button
         onClick={goPrev}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-emerald-500/80 hover:border-emerald-400/50 transition-all duration-300 hover:scale-110 group"
+        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-amber-500/80 hover:border-amber-400/50 transition-all duration-300 hover:scale-110 group"
         aria-label="Previous slide"
       >
         <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 group-hover:-translate-x-0.5 transition-transform" />
@@ -166,7 +166,7 @@ export default function HeroSection() {
       {/* ===== Right Arrow Navigation ===== */}
       <button
         onClick={goNext}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-emerald-500/80 hover:border-emerald-400/50 transition-all duration-300 hover:scale-110 group"
+        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-amber-500/80 hover:border-amber-400/50 transition-all duration-300 hover:scale-110 group"
         aria-label="Next slide"
       >
         <ChevronRight className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-0.5 transition-transform" />
@@ -200,7 +200,7 @@ export default function HeroSection() {
             transition={{ duration: 0.7, delay: 0.15 }}
           >
             <span className="text-white drop-shadow-lg">The World of{'\u00A0'}</span>
-            <span className="text-gradient bg-gradient-to-r from-emerald-400 via-emerald-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg">
+            <span className="text-gradient bg-gradient-to-r from-amber-300 via-amber-200 to-amber-500 bg-clip-text text-transparent drop-shadow-lg">
               Possibilities
             </span>
           </motion.h1>
@@ -237,11 +237,11 @@ export default function HeroSection() {
           >
             {/* Primary CTA with animated glow border */}
             <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 via-amber-400 to-amber-400 rounded-lg opacity-60 group-hover:opacity-100 blur-sm transition-opacity duration-500 animate-glow-pulse" />
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 via-amber-300 to-amber-500 rounded-lg opacity-60 group-hover:opacity-100 blur-sm transition-opacity duration-500 animate-glow-pulse" />
               <Button
                 onClick={() => navigate('services')}
                 size="lg"
-                className="relative bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl transition-all px-8 h-12 text-base group"
+                className="relative bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg hover:shadow-xl transition-all px-8 h-12 text-base group"
               >
                 Explore Our Services
                 <ArrowRight className="size-4 ml-1 group-hover:translate-x-1 transition-transform" />
@@ -304,13 +304,13 @@ export default function HeroSection() {
               className={`group relative rounded-full transition-all duration-300 ${
                 index === currentSlide
                   ? 'w-8 h-3'
-                  : 'w-3 h-3 hover:bg-emerald-400/80'
+                  : 'w-3 h-3 hover:bg-amber-400/80'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             >
               {/* Inactive dot (emerald-400) */}
               <span
-                className={`absolute inset-0 rounded-full bg-emerald-400/60 transition-opacity duration-300 ${
+                className={`absolute inset-0 rounded-full bg-amber-400/60 transition-opacity duration-300 ${
                   index === currentSlide ? 'opacity-0' : 'opacity-100'
                 }`}
               />
@@ -328,7 +328,7 @@ export default function HeroSection() {
         <div className="w-full h-[2px] rounded-full overflow-hidden bg-white/10">
           <div
             ref={progressBarRef}
-            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-amber-400 origin-left"
+            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 origin-left"
             style={{
               animation: `progress-fill ${AUTO_ADVANCE_MS}ms linear forwards`,
               animationPlayState: isPaused ? 'paused' : 'running',
