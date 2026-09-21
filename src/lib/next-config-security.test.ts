@@ -44,5 +44,8 @@ describe('private API cache-control policy', () => {
 
     expect(headerValue(adminApi, 'X-Content-Type-Options')).toBe('nosniff');
     expect(headerValue(adminApi, 'Content-Security-Policy')).toContain("default-src 'self'");
+    expect(headerValue(adminApi, 'Content-Security-Policy')).toContain(
+      "frame-src 'self' https://www.google.com https://maps.google.com",
+    );
   });
 });
