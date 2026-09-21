@@ -44,7 +44,7 @@ export default function AdminLogin() {
 
       if (res.ok && data.success) {
         loginAdmin(data.data.name || 'Admin', data.data.role || 'admin', Array.isArray(data.data.permissions) ? data.data.permissions : []);
-        toast.success('Welcome back!', { description: data.recoveryCodeUsed ? 'Signed in with a recovery code.' : 'Logged in successfully.' });
+        toast.success('Welcome back!', { description: data.data?.recoveryCodeUsed ? 'Signed in with a recovery code.' : 'Logged in successfully.' });
         // Reload after authentication so tabs opened before a deployment cannot
         // continue running stale admin JavaScript.
         window.location.replace('/admin');
