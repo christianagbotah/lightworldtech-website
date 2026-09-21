@@ -1,0 +1,20 @@
+[Unit]
+Description=Lightworld scheduled SMS dispatcher
+After=network-online.target pm2-lightworld.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=lightworld
+Group=lightworld
+WorkingDirectory=/home/lightworld/webapps/lightworldtech
+ExecStart=/home/lightworld/shared/lightworldtech/ops/run-sms-dispatch.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target
