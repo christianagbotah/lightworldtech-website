@@ -544,6 +544,8 @@ model ClientSupportTicket {
   unreadByClient     Boolean             @default(false)
   messages           ClientTicketMessage[]
   internalNotes      ClientTicketInternalNote[]
+  attachments        ClientTicketAttachment[]
+  events             ClientTicketEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -600,6 +602,37 @@ model ClientTicketInternalNote {
   createdAt DateTime @default(now())
 
   @@index([ticketId, createdAt])
+}
+
+model ClientTicketAttachment {
+  id             String              @id @default(cuid())
+  ticketId       String
+  ticket         ClientSupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  originalName   String
+  storageName    String              @unique
+  mimeType       String
+  sizeBytes      Int
+  uploadedByType String
+  uploadedByName String
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model ClientTicketEvent {
+  id        String              @id @default(cuid())
+  ticketId  String
+  ticket    ClientSupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  type      String
+  actorType String
+  actorName String
+  details   String              @default("{}")
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+  @@index([type, createdAt])
 }
 
 model ClientAnnouncement {
