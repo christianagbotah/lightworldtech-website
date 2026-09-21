@@ -44,6 +44,22 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   const ticket = await db.clientSupportTicket.update({ where: { id }, data });
 
+  await db.clientTicketEvent.create({
+    data: {
+      ticketId: ticket.id,
+      type: 'ticket_updated',
+      actorType: 'admin',
+      actorName: actor.name || actor.email,
+      details: JSON.stringify({
+        changedFields: Object.keys(parsed.data),
+        status: ticket.status,
+        priority: ticket.priority,
+        category: ticket.category,
+        assignedTo: ticket.assignedTo,
+      }),
+    },
+  });
+
   await recordAdminAudit({
     admin: actor,
     action: 'admin.support_ticket_updated',
