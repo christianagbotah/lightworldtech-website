@@ -149,7 +149,7 @@ export default function AboutPage({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">{contentText(settings, 'about_pov_eyebrow', 'Our point of view')}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">{contentText(settings, 'about_pov_eyebrow', 'Our point of view')}</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">{contentText(settings, 'about_pov_title', 'Digital transformation should feel practical.')}</h2>
             </motion.div>
 
@@ -233,7 +233,7 @@ export default function AboutPage({
         <div className="container-main">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Leadership</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Leadership</p>
               <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Accountability has names.</h2>
             </div>
             <Link href="/team" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
@@ -257,7 +257,7 @@ export default function AboutPage({
                     {person.initials}
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">{person.role}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">{person.role}</p>
                     <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">{person.name}</h3>
                     <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-white/36">{person.description}</p>
                   </div>
@@ -311,7 +311,7 @@ export default function AboutPage({
                 >
                   <div className="flex items-start justify-between gap-4">
                     <Newspaper className="size-5 text-emerald-600 dark:text-emerald-300" />
-                    <ArrowUpRight className="size-4 text-emerald-600/40 transition group-hover:text-emerald-600 dark:text-emerald-300/40" />
+                    <ArrowUpRight className="size-4 text-emerald-600/40 transition group-hover:text-amber-600 dark:text-emerald-300/40" />
                   </div>
                   <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700/70 dark:text-emerald-300/60">{item.publisher} coverage</p>
                   <h3 className="mt-2 text-lg font-semibold leading-snug">{item.title}</h3>
@@ -331,7 +331,7 @@ export default function AboutPage({
               viewport={{ once: true }}
               className="rounded-[32px] border border-slate-200/70 bg-white p-7 dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-8"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Our direction</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-300">Our direction</p>
               <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em]">Build a technology company with African context and global capability.</h2>
               <p className="mt-4 text-sm leading-7 text-slate-500 dark:text-white/38">
                 We are growing beyond project delivery into reusable platforms, products, training and long-term technology partnerships—without losing the close understanding of client operations that makes custom work valuable.

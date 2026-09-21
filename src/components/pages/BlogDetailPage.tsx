@@ -66,7 +66,7 @@ export default function BlogDetailPage({ initialPost }: { initialPost: BlogPost 
     <article className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
       <header className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
         <div className="container-main py-12 sm:py-16 lg:py-20">
-          <Link href="/blog" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 transition hover:text-emerald-600 dark:text-white/30 dark:hover:text-emerald-300">
+          <Link href="/blog" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 transition hover:text-amber-600 dark:text-white/30 dark:hover:text-amber-300">
             <ArrowLeft className="size-3.5" />
             Insights
           </Link>

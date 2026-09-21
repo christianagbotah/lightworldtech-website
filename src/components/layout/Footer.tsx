@@ -137,7 +137,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
   return (
     <footer className="relative overflow-hidden border-t border-white/[0.07] bg-[#04090d] pb-24 text-white lg:pb-0">
       <div className="lw-dot-grid pointer-events-none absolute inset-0 opacity-[0.08]" />
-      <div className="pointer-events-none absolute -right-24 top-10 size-80 rounded-full bg-emerald-400/10 blur-[120px]" />
+      <div className="pointer-events-none absolute -right-24 top-10 size-80 rounded-full bg-amber-400/10 blur-[120px]" />
 
       <div className="container-main relative py-14 sm:py-16 lg:py-20">
         <div className="grid gap-12 lg:grid-cols-[1.2fr_.8fr] lg:gap-20">
@@ -148,7 +148,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
               </span>
               <span>
                 <span className="block text-base font-bold tracking-[-0.02em]">{companyName}</span>
-                <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.24em] text-emerald-300/70">{tagline}</span>
+                <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.24em] text-amber-300/70">{tagline}</span>
               </span>
             </Link>
 
@@ -160,14 +160,14 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
             <div className="mt-7 flex flex-wrap gap-2">
               <a
                 href={'mailto:' + companyEmail}
-                className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-xs text-white/55 transition hover:border-emerald-300/20 hover:text-emerald-300"
+                className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-xs text-white/55 transition hover:border-amber-300/25 hover:text-amber-300"
               >
                 <Mail className="size-3.5" />
                 {companyEmail}
               </a>
               <a
                 href={'tel:' + phone.replace(/[^+\d]/g, '')}
-                className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-xs text-white/55 transition hover:border-emerald-300/20 hover:text-emerald-300"
+                className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-xs text-white/55 transition hover:border-amber-300/25 hover:text-amber-300"
               >
                 <Phone className="size-3.5" />
                 {phone}
@@ -189,7 +189,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
                 <ul className="mt-4 space-y-3">
                   {group.links.map((item) => (
                     <li key={item.label + item.href}>
-                      <FooterNavLink href={item.href} className="text-sm text-white/45 transition hover:text-emerald-300">
+                      <FooterNavLink href={item.href} className="text-sm text-white/45 transition hover:text-amber-300">
                         {item.label}
                       </FooterNavLink>
                     </li>
@@ -203,7 +203,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
               <ul className="mt-4 space-y-3">
                 {connectLinks.map((item) => (
                   <li key={item.label + item.href}>
-                    <FooterNavLink href={item.href} className="text-sm text-white/45 transition hover:text-emerald-300">
+                    <FooterNavLink href={item.href} className="text-sm text-white/45 transition hover:text-amber-300">
                       {item.label}
                     </FooterNavLink>
                   </li>
@@ -230,13 +230,13 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
                 placeholder="you@company.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="h-11 w-full rounded-full border border-white/[0.09] bg-black/20 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-emerald-300/35"
+                className="h-11 w-full rounded-full border border-white/[0.09] bg-black/20 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-amber-300/45"
               />
             </div>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-slate-950 transition hover:bg-emerald-300 disabled:opacity-50"
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-amber-400 text-slate-950 transition hover:bg-amber-300 disabled:opacity-50"
               aria-label="Subscribe"
             >
               <Send className="size-4" />
@@ -259,14 +259,14 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={social.label}
-                className="flex size-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.025] text-white/35 transition hover:-translate-y-0.5 hover:border-emerald-300/20 hover:text-emerald-300"
+                className="flex size-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.025] text-white/35 transition hover:-translate-y-0.5 hover:border-amber-300/25 hover:text-amber-300"
               >
                 <social.icon className="size-3.5" />
               </a>
             ))}
             <FooterNavLink
               href={footerCtaLink}
-              className="ml-1 inline-flex h-9 items-center gap-1.5 rounded-full bg-white px-4 text-xs font-semibold text-slate-950 transition hover:bg-emerald-300"
+              className="ml-1 inline-flex h-9 items-center gap-1.5 rounded-full bg-white px-4 text-xs font-semibold text-slate-950 transition hover:bg-amber-200"
             >
               {footerCtaText} <ArrowRight className="size-3.5" />
             </FooterNavLink>

@@ -145,10 +145,10 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.04 }}
-                className="group flex min-h-[320px] flex-col rounded-[28px] border border-slate-200/70 bg-white p-6 transition hover:-translate-y-0.5 hover:border-emerald-300/50 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]"
+                className="group flex min-h-[320px] flex-col rounded-[28px] border border-slate-200/70 bg-white p-6 transition hover:-translate-y-0.5 hover:border-amber-300/60 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]"
               >
                 <div className="flex items-start justify-between">
-                  <span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                  <span className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
                     <product.icon className="size-5" />
                   </span>
                   <span className="rounded-full border border-slate-200/80 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:border-white/[0.07] dark:text-white/25">{product.stage}</span>

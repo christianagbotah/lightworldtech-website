@@ -11,7 +11,7 @@ function AnimatedStat({ value, suffix, label, delay = 0 }: { value: number; suff
   const { displayValue, ref } = useAnimatedCounter({ end: value, suffix, startOnView: false, startDelay: delay });
   return (
     <div className="text-center" ref={ref}>
-      <div className="text-3xl sm:text-4xl font-bold text-emerald-600 dark:text-amber-400 mb-1 tabular-nums">{displayValue}</div>
+      <div className="text-3xl sm:text-4xl font-bold text-amber-600 dark:text-amber-300 mb-1 tabular-nums">{displayValue}</div>
       <div className="text-sm text-slate-500 dark:text-slate-400">{label}</div>
     </div>
   );
@@ -36,7 +36,7 @@ export default function AboutSection() {
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.6 }}
           >
-            <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">Who We Are</span>
+            <span className="text-sm font-semibold text-amber-600 dark:text-amber-300 uppercase tracking-wider">Who We Are</span>
             <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-6 text-slate-900 dark:text-white">
               Innovating the Future of{' '}
               <span className="text-gradient" aria-label="Technology">Technology</span>
@@ -57,7 +57,7 @@ export default function AboutSection() {
                   whileHover={{ y: -2 }}
                 >
                   <div className="size-10 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center shrink-0">
-                    <item.icon className="size-5 text-emerald-600 dark:text-amber-400" />
+                    <item.icon className="size-5 text-amber-600 dark:text-amber-300" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm mb-1 text-slate-900 dark:text-white">{item.title}</h4>
@@ -69,7 +69,7 @@ export default function AboutSection() {
 
             <Button
               onClick={() => navigate('about')}
-              className="bg-emerald-600 hover:bg-emerald-700 dark:bg-amber-500 dark:hover:bg-emerald-600 text-white shadow-md hover:shadow-lg transition-shadow"
+              className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-400 text-white shadow-md hover:shadow-lg transition-shadow"
             >
               Learn More About Us
               <ArrowRight className="size-4 ml-1" />
@@ -85,7 +85,7 @@ export default function AboutSection() {
             className="relative"
           >
             {/* Gradient border wrapper */}
-            <div className="absolute -inset-[3px] rounded-2xl bg-gradient-to-br from-emerald-400 via-amber-400 to-emerald-500 opacity-75 blur-[1px]" />
+            <div className="absolute -inset-[3px] rounded-2xl bg-gradient-to-br from-amber-500 via-amber-300 to-amber-600 opacity-75 blur-[1px]" />
             <motion.div
               className="relative rounded-2xl overflow-hidden shadow-xl"
               whileHover={{ y: -8, transition: { duration: 0.4, ease: 'easeOut' } }}

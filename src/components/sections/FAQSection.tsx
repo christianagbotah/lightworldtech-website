@@ -137,7 +137,7 @@ export default function FAQSection() {
               viewport={{ once: true, margin: '-100px' }}
               transition={{ duration: 0.6 }}
             >
-              <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">FAQ</span>
+              <span className="text-sm font-semibold text-amber-600 dark:text-amber-300 uppercase tracking-wider">FAQ</span>
               <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Frequently Asked Questions</h2>
               <p className="text-slate-600 dark:text-slate-300">
                 Find answers to common questions about our services and processes.
@@ -190,7 +190,7 @@ export default function FAQSection() {
                         >
                           <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline py-4 text-slate-900 dark:text-white data-[state=open]:text-amber-500 dark:data-[state=open]:text-amber-400 transition-colors [&>svg]:text-slate-400 [&>svg]:data-[state=open]:text-emerald-600 dark:[&>svg]:data-[state=open]:text-amber-400">
                             <span className="flex items-center gap-3">
-                              <span className="relative size-7 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-amber-400 shrink-0 shadow-sm border border-amber-200/50 dark:border-amber-700/30">
+                              <span className="relative size-7 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center text-xs font-bold text-amber-600 dark:text-amber-300 shrink-0 shadow-sm border border-amber-200/50 dark:border-amber-700/30">
                                 {String(index + 1).padStart(2, '0')}
                                 {index < filteredFaqs.length - 1 && (
                                   <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-px h-3 bg-gradient-to-b from-amber-300/40 to-transparent dark:from-amber-600/30" aria-hidden="true" />

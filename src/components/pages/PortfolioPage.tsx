@@ -216,7 +216,7 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
                       <p className="mt-2 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/36">{project.description}</p>
                     </div>
                     {project.clientUrl && project.clientUrl !== '#' ? (
-                      <a href={project.clientUrl} target="_blank" rel="noreferrer" className="flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition hover:border-emerald-300 hover:text-emerald-600 dark:border-white/[0.07] dark:text-white/25">
+                      <a href={project.clientUrl} target="_blank" rel="noreferrer" className="flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition hover:border-amber-300 hover:text-amber-600 dark:border-white/[0.07] dark:text-white/25">
                         <ArrowUpRight className="size-4" />
                         <span className="sr-only">Open project</span>
                       </a>

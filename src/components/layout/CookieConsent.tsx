@@ -161,7 +161,7 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 sm:p-6">
                 {/* Icon */}
                 <div className="size-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                  <Cookie className="size-5 text-emerald-600 dark:text-amber-400" />
+                  <Cookie className="size-5 text-amber-600 dark:text-amber-300" />
                 </div>
 
                 {/* Content */}
@@ -176,7 +176,7 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
                       'cookie_banner_description',
                       'We use essential browser storage to operate the site. Optional analytics helps us understand consented website usage; optional categories stay off unless you choose them.',
                     )}{' '}
-                    <Link href="/privacy" className="text-emerald-600 dark:text-amber-400 hover:underline font-medium">
+                    <Link href="/privacy" className="text-amber-600 dark:text-amber-300 hover:underline font-medium">
                       {contentText(settings, 'cookie_privacy_link_label', 'Privacy & Cookie Notice')}
                     </Link>
                   </p>
@@ -205,7 +205,7 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
                   <Button
                     size="sm"
                     onClick={accept}
-                    className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white h-8"
+                    className="text-xs bg-amber-600 hover:bg-amber-700 text-white h-8"
                   >
                     {contentText(settings, 'cookie_accept_all_label', 'Accept All')}
                   </Button>
@@ -255,7 +255,7 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
                             checked={prefs[cat.key]}
                             disabled={cat.locked}
                             onCheckedChange={() => togglePref(cat.key)}
-                            className="data-[state=checked]:bg-emerald-600"
+                            className="data-[state=checked]:bg-amber-600"
                           />
                         </div>
                       ))}
@@ -263,7 +263,7 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
                         <Button
                           size="sm"
                           onClick={acceptCustomized}
-                          className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                          className="text-xs bg-amber-600 hover:bg-amber-700 text-white"
                         >
                           {contentText(settings, 'cookie_save_preferences_label', 'Save Preferences')}
                         </Button>

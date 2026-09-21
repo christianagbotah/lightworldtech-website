@@ -161,7 +161,7 @@ export default function PortfolioSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">
+          <span className="text-sm font-semibold text-amber-600 dark:text-amber-300 uppercase tracking-wider">
             Portfolio
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
@@ -189,7 +189,7 @@ export default function PortfolioSection() {
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
           <Badge
             variant="outline"
-            className="px-4 py-1.5 text-xs font-medium border-emerald-300 dark:border-emerald-600/50 text-slate-600 dark:text-slate-300 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-full"
+            className="px-4 py-1.5 text-xs font-medium border-amber-300 dark:border-amber-600/50 text-slate-600 dark:text-slate-300 bg-amber-50/50 dark:bg-amber-900/10 rounded-full"
           >
             Web
           </Badge>
@@ -210,7 +210,7 @@ export default function PortfolioSection() {
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
           <Badge
             variant="outline"
-            className="px-4 py-1.5 text-xs font-medium border-emerald-300 dark:border-emerald-600/50 text-slate-600 dark:text-slate-300 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-full"
+            className="px-4 py-1.5 text-xs font-medium border-amber-300 dark:border-amber-600/50 text-slate-600 dark:text-slate-300 bg-amber-50/50 dark:bg-amber-900/10 rounded-full"
           >
             Real Estate
           </Badge>
@@ -234,7 +234,7 @@ export default function PortfolioSection() {
                   relative px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer
                   ${
                     isActive
-                      ? 'bg-gradient-to-r from-emerald-500 to-amber-500 text-white shadow-md shadow-emerald-500/25 dark:shadow-amber-500/25'
+                      ? 'bg-gradient-to-r from-amber-600 to-amber-400 text-white shadow-md shadow-amber-500/25 dark:shadow-amber-500/25'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }
                 `}
@@ -284,7 +284,7 @@ export default function PortfolioSection() {
                     className={isFirst ? 'sm:col-span-2 lg:col-span-2' : ''}
                   >
                     <Card
-                      className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-2xl dark:hover:shadow-emerald-900/20 transition-all duration-500 cursor-pointer"
+                      className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-2xl dark:hover:shadow-amber-900/20 transition-all duration-500 cursor-pointer"
                       onClick={() => setSelectedProject(project)}
                     >
                       {/* ── Tech-themed visual card ── */}
@@ -345,7 +345,7 @@ export default function PortfolioSection() {
                       {/* ── Card body ── */}
                       <CardContent className="p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors line-clamp-1">
                             {project.title}
                           </h3>
                           {/* View counter / eye icon */}
@@ -385,7 +385,7 @@ export default function PortfolioSection() {
               <Button
                 onClick={() => navigate('portfolio')}
                 size="lg"
-                className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40 transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-lg shadow-amber-600/25 hover:shadow-amber-600/40 transition-all duration-300 hover:scale-105"
               >
                 View All Projects
                 <ArrowRight className="size-4 ml-2" />
@@ -433,7 +433,7 @@ export default function PortfolioSection() {
                     {selectedProject.category}
                   </Badge>
                   {selectedProject.featured && (
-                    <Badge className="mb-2 ml-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 border-0">
+                    <Badge className="mb-2 ml-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-0">
                       Featured
                     </Badge>
                   )}
@@ -467,7 +467,7 @@ export default function PortfolioSection() {
                 {/* Actions */}
                 <div className="flex gap-3 pt-2">
                   <a href={selectedProject.clientUrl && selectedProject.clientUrl !== '#' ? selectedProject.clientUrl : undefined} target="_blank" rel="noopener noreferrer">
-                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 cursor-pointer">
+                    <Button className="bg-amber-600 hover:bg-amber-700 text-white flex-1 cursor-pointer">
                       <ExternalLink className="size-4 mr-2" />
                       Visit Project
                     </Button>

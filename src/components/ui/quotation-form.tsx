@@ -194,7 +194,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', duration: 0.6, delay: 0.2 }}
-                className="size-20 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30"
+                className="size-20 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30"
               >
                 <CheckCircle2 className="size-10 text-white" />
               </motion.div>
@@ -235,10 +235,10 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                           <div
                             className={`size-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
                               isActive
-                                ? 'bg-white text-emerald-600 shadow-md'
+                                ? 'bg-white text-amber-600 shadow-md'
                                 : isCompleted
                                   ? 'bg-amber-400 text-white'
-                                  : 'bg-emerald-600/30 text-amber-200'
+                                  : 'bg-amber-600/25 text-amber-200'
                             }`}
                           >
                             {isCompleted ? (
@@ -256,7 +256,7 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
                           </span>
                         </div>
                         {index < steps.length - 1 && (
-                          <div className={`h-px flex-1 mx-2 transition-colors duration-300 ${isCompleted ? 'bg-amber-400' : 'bg-emerald-600/30'}`} />
+                          <div className={`h-px flex-1 mx-2 transition-colors duration-300 ${isCompleted ? 'bg-amber-400' : 'bg-amber-600/25'}`} />
                         )}
                       </div>
                     );

@@ -208,7 +208,7 @@ function BackToTopButton() {
               </linearGradient>
             </defs>
           </svg>
-          <div className="size-10 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-colors">
+          <div className="size-10 rounded-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-colors">
             <ArrowUp className="size-4" />
           </div>
         </motion.button>
@@ -586,7 +586,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                             }
                             trackEvent('cta_click', { metadata: { source: 'assistant', label: msg.cta?.label || '' } });
                           }}
-                          className="mt-2 inline-flex rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-emerald-700"
+                          className="mt-2 inline-flex rounded-full bg-amber-600 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-amber-700"
                         >
                           {msg.cta.label}
                         </a>
@@ -601,7 +601,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                       <button
                         key={reply.label}
                         onClick={() => handleQuickReply(reply.text)}
-                        className="px-3 py-1.5 rounded-full text-xs font-medium border border-amber-300 dark:border-emerald-500 text-amber-500 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shadow-sm hover:shadow-md"
+                        className="px-3 py-1.5 rounded-full text-xs font-medium border border-amber-300 dark:border-amber-500 text-amber-500 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shadow-sm hover:shadow-md"
                       >
                         {reply.label}
                       </button>
@@ -660,7 +660,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                   <h4 className="font-semibold text-sm text-foreground">
                     Chat with us
                   </h4>
-                  <p className="text-xs text-emerald-600 dark:text-amber-400">
+                  <p className="text-xs text-amber-600 dark:text-amber-300">
                     {companyName}
                   </p>
                 </div>
@@ -826,8 +826,8 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
             onClick={() => setActionsOpen((open) => !open)}
             className={cn(
               'flex size-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-colors',
-              'bg-slate-950 text-white border-slate-800 hover:bg-emerald-600 hover:border-emerald-500',
-              'dark:bg-white dark:text-slate-950 dark:border-white/80 dark:hover:bg-emerald-300 dark:hover:border-emerald-300'
+              'bg-slate-950 text-white border-slate-800 hover:bg-amber-600 hover:border-amber-500',
+              'dark:bg-white dark:text-slate-950 dark:border-white/80 dark:hover:bg-amber-300 dark:hover:border-amber-300'
             )}
             aria-label={actionsOpen ? 'Close quick actions' : 'Open quick actions'}
             aria-expanded={actionsOpen}
