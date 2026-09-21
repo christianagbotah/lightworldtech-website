@@ -434,6 +434,7 @@ model ClientOrganization {
   services           ClientServiceAccount[]
   invoices           ClientInvoice[]
   payments           ClientPayment[]
+  paymentIntents     HubtelPaymentIntent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -714,6 +715,7 @@ model ClientInvoice {
   createdBy      String             @default("Admin")
   lines          ClientInvoiceLine[]
   allocations    ClientPaymentAllocation[]
+  paymentIntents  HubtelPaymentIntent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -748,11 +750,14 @@ model ClientPayment {
   currency       String             @default("GHS")
   amount         Decimal            @db.Decimal(18, 2)
   paidAt         DateTime
-  method         String             @default("bank_transfer")
-  reference      String             @default("")
-  notes          String             @default("")
-  receivedBy     String             @default("Admin")
-  allocations    ClientPaymentAllocation[]
+  method            String             @default("bank_transfer")
+  reference         String             @default("")
+  source            String             @default("manual")
+  providerReference String             @default("")
+  notes             String             @default("")
+  receivedBy        String             @default("Admin")
+  allocations       ClientPaymentAllocation[]
+  hubtelIntent      HubtelPaymentIntent?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -773,6 +778,135 @@ model ClientPaymentAllocation {
 
   @@unique([paymentId, invoiceId])
   @@index([invoiceId])
+}
+
+model HubtelPaymentIntent {
+  id                    String             @id @default(cuid())
+  clientReference       String             @unique
+  organizationId        String
+  organization          ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoiceId             String
+  invoice               ClientInvoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  recordedPaymentId     String?            @unique
+  recordedPayment       ClientPayment?     @relation(fields: [recordedPaymentId], references: [id], onDelete: SetNull)
+  currency              String             @default("GHS")
+  amount                Decimal            @db.Decimal(18, 2)
+  payerName             String             @default("")
+  payerEmail            String             @default("")
+  payerPhone            String             @default("")
+  status                String             @default("pending")
+  checkoutId            String             @default("")
+  checkoutUrl           String             @default("")
+  checkoutDirectUrl     String             @default("")
+  hubtelTransactionId   String             @default("")
+  externalTransactionId String             @default("")
+  paymentMethod         String             @default("")
+  providerResponse      String             @default("{}")
+  lastStatusCheckAt     DateTime?
+  paidAt                DateTime?
+  expiresAt             DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@index([invoiceId, status])
+  @@index([status, createdAt])
+  @@index([hubtelTransactionId])
+}
+
+model SmsTemplate {
+  id          String        @id @default(cuid())
+  name        String
+  key         String        @unique
+  category    String        @default("general")
+  body        String
+  variables   String        @default("[]")
+  active      Boolean       @default(true)
+  system      Boolean       @default(false)
+  campaigns   SmsCampaign[]
+  messages    SmsMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, category])
+  @@index([name])
+}
+
+model SmsCampaign {
+  id             String                 @id @default(cuid())
+  name           String
+  templateId     String?
+  template       SmsTemplate?           @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  senderId       String                 @default("")
+  body           String
+  status         String                 @default("draft")
+  audienceType   String                 @default("manual")
+  scheduledAt    DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  recipientCount Int                    @default(0)
+  sentCount      Int                    @default(0)
+  failedCount    Int                    @default(0)
+  createdBy      String                 @default("Admin")
+  recipients     SmsCampaignRecipient[]
+  messages       SmsMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([templateId])
+  @@index([createdAt])
+}
+
+model SmsCampaignRecipient {
+  id        String      @id @default(cuid())
+  campaignId String
+  campaign  SmsCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  phone     String
+  name      String      @default("")
+  variables String      @default("{}")
+  status    String      @default("pending")
+  attempts  Int         @default(0)
+  error     String      @default("")
+  sentAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([campaignId, phone])
+  @@index([campaignId, status])
+}
+
+model SmsMessage {
+  id                String       @id @default(cuid())
+  templateId        String?
+  template          SmsTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  campaignId        String?
+  campaign          SmsCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  recipient         String
+  senderId          String
+  content           String
+  clientReference   String       @unique
+  status            String       @default("queued")
+  providerMessageId String       @default("")
+  networkId         String       @default("")
+  rate              Decimal?     @db.Decimal(18, 4)
+  error             String       @default("")
+  scheduledAt       DateTime?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  createdBy         String       @default("Admin")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([campaignId, status])
+  @@index([recipient, createdAt])
+  @@index([status, scheduledAt])
+  @@index([providerMessageId])
 }
 
 model FinanceVendor {
