@@ -28,6 +28,7 @@ import {
   CircleAlert,
   Info,
   LifeBuoy,
+  Landmark,
   Keyboard,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
@@ -60,6 +61,7 @@ const navItems = [
   { id: 'proposals', label: 'Proposals', icon: FileSignature, page: 'admin-proposals' as const, permission: 'proposals.manage' as AdminPermission },
   { id: 'clients', label: 'Client Portal', icon: Building2, page: 'admin-clients' as const, permission: 'clients.manage' as AdminPermission },
   { id: 'support', label: 'Support Desk', icon: LifeBuoy, page: 'admin-support' as const, permission: 'clients.manage' as AdminPermission },
+  { id: 'finance', label: 'Finance & Accounts', icon: Landmark, page: 'admin-finance' as const, permission: 'finance.manage' as AdminPermission },
   { id: 'newsletter', label: 'Newsletter & Mail', icon: MailCheck, page: 'admin-newsletter' as const, permission: 'communications.manage' as AdminPermission },
   { id: 'campaigns', label: 'Campaign Studio', icon: Megaphone, page: 'admin-campaigns' as const, permission: 'communications.manage' as AdminPermission },
   { id: 'governance', label: 'Admin Governance', icon: ShieldCheck, page: 'admin-governance' as const, superAdminOnly: true },
@@ -145,7 +147,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-support' | 'admin-newsletter' | 'admin-campaigns' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
+  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-support' | 'admin-finance' | 'admin-newsletter' | 'admin-campaigns' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
     setAdminTab(id);
     navigate(page);
     setSidebarOpen(false);
@@ -241,6 +243,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                  adminTab === 'proposals' ? 'Proposals' :
                  adminTab === 'clients' ? 'Client Portal' :
                  adminTab === 'support' ? 'Support Desk' :
+                 adminTab === 'finance' ? 'Finance & Accounts' :
                  adminTab === 'newsletter' ? 'Newsletter & Mail' :
                  adminTab === 'campaigns' ? 'Campaign Studio' :
                  adminTab === 'governance' ? 'Admin Governance' :
@@ -389,7 +392,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         description="Search and navigate Lightworld administrator workspaces"
         className="max-w-2xl"
       >
-        <CommandInput placeholder="Search dashboard, CRM, clients, content, mail or governance…" />
+        <CommandInput placeholder="Search dashboard, CRM, clients, finance, content, mail or governance…" />
         <CommandList className="max-h-[420px]">
           <CommandEmpty>No matching administrator workspace.</CommandEmpty>
           <CommandGroup heading="Workspaces">
