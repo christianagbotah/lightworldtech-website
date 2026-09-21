@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
       };
     })
     .filter((item) => Number(item.balance) > 0)
-    .sort((a, b) => b.balance.localeCompare(a.balance))
+    .sort((a, b) => Number(b.balance) - Number(a.balance))
     .slice(0, 500);
 
   const creditors = bills
