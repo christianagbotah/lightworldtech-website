@@ -62,7 +62,7 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
               </p>
               <div className="mt-5 flex items-center gap-2 text-sm text-slate-500 dark:text-white/35">
                 <MapPin className="size-4 text-emerald-500" />
-                {contentText(settings, 'careers_location', 'Accra, Ghana · role-dependent remote collaboration')}
+                {contentText(settings, 'careers_location', 'Tema, Ghana · role-dependent remote collaboration')}
               </div>
             </div>
           </motion.div>
