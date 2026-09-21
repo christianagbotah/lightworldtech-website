@@ -8,6 +8,11 @@ import {
   type AssistantHistoryTurn,
 } from '@/lib/assistant-generative';
 import {
+  findBestFaqMatch,
+  findBestProcessStepMatch,
+  isProcessOverviewIntent,
+} from '@/lib/assistant-retrieval';
+import {
   isCompletedProjectChangeIntent,
   isCompletedProjectContactIntent,
   isCompletedProjectContextIntent,
@@ -36,7 +41,7 @@ export type ConciergeResponse = {
   reply: string;
   suggestions?: string[];
   state?: ProjectScopeState | null;
-  intent?: 'company' | 'services' | 'leadership' | 'portfolio' | 'insights' | 'recognition' | 'contact' | 'trust' | 'newsroom' | 'project-scope' | 'grounded-ai';
+  intent?: 'company' | 'services' | 'leadership' | 'portfolio' | 'insights' | 'recognition' | 'contact' | 'trust' | 'newsroom' | 'project-scope' | 'grounded-ai' | 'faq' | 'process';
   cta?: { label: string; href: string };
   projectBrief?: string;
 };
@@ -44,7 +49,7 @@ export type ConciergeResponse = {
 type Knowledge = Awaited<ReturnType<typeof loadKnowledge>>;
 
 async function loadKnowledge() {
-  const [settingsRows, services, team, portfolio, posts] = await Promise.all([
+  const [settingsRows, services, team, portfolio, posts, faqs, processSteps] = await Promise.all([
     db.siteSetting.findMany({ select: { key: true, value: true } }),
     db.service.findMany({
       where: { active: true },
@@ -68,6 +73,16 @@ async function loadKnowledge() {
       take: 5,
       select: { title: true, slug: true, excerpt: true },
     }),
+    db.fAQ.findMany({
+      where: { active: true },
+      orderBy: { order: 'asc' },
+      select: { question: true, answer: true },
+    }),
+    db.processStep.findMany({
+      where: { active: true },
+      orderBy: { order: 'asc' },
+      select: { title: true, description: true },
+    }),
   ]);
 
   const settings = Object.fromEntries(settingsRows.map((row) => [row.key, row.value]));
@@ -79,6 +94,8 @@ async function loadKnowledge() {
     team,
     portfolio,
     posts,
+    faqs,
+    processSteps,
     recognition,
   };
 }
@@ -357,6 +374,50 @@ export async function answerConcierge(
     };
   }
 
+  if (!state && isCompletedProjectNextStepsIntent(message)) {
+    return {
+      intent: 'process',
+      reply:
+        'After you submit a project brief, the Lightworld team reviews the project type, goals, users and timeline you provided. They will contact you if anything needs clarification, then the next discussion is used to confirm scope, delivery approach and the estimate or proposal before implementation begins.',
+      suggestions: ['Start a project', 'How is pricing estimated?', 'Who will contact me?'],
+      cta: { label: 'Start a project brief', href: '/contact' },
+    };
+  }
+
+  const faqMatch = findBestFaqMatch(message, knowledge.faqs);
+  if (faqMatch) {
+    return {
+      intent: 'faq',
+      reply: faqMatch.answer,
+      suggestions: ['Start a project', 'What is your delivery process?', 'How can I contact Lightworld?'],
+      cta: { label: 'Explore services', href: '/services' },
+    };
+  }
+
+  const processStepMatch = findBestProcessStepMatch(message, knowledge.processSteps);
+  if (processStepMatch) {
+    return {
+      intent: 'process',
+      reply: processStepMatch.title + ': ' + processStepMatch.description,
+      suggestions: ['Show me the full process', 'Start a project'],
+      cta: { label: 'View services', href: '/services' },
+    };
+  }
+
+  if (isProcessOverviewIntent(message)) {
+    const processTitles = knowledge.processSteps.map((step) => step.title);
+    return {
+      intent: 'process',
+      reply: processTitles.length
+        ? 'Our currently published website delivery process moves through ' +
+          processTitles.join(' → ') +
+          '. The exact sequence can be adapted after the team reviews your project scope.'
+        : 'Lightworld confirms the delivery steps during project planning so the process fits the scope, users and timeline.',
+      suggestions: ['What happens during testing?', 'Start a project'],
+      cta: { label: 'View services', href: '/services' },
+    };
+  }
+
   if (/service|what.*do|offer|solution|capabilit|build/.test(q)) {
     const serviceNames = knowledge.services.map((service) => service.title);
     return {
@@ -458,6 +519,8 @@ export async function answerConcierge(
         title: post.title,
         excerpt: post.excerpt,
       })),
+      faqs: knowledge.faqs,
+      processSteps: knowledge.processSteps,
       recognition: knowledge.recognition.map((item) => ({
         year: item.year,
         title: item.title,
