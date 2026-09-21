@@ -520,18 +520,30 @@ model ClientMilestone {
 }
 
 model ClientSupportTicket {
-  id             String              @id @default(cuid())
-  organizationId String
-  organization   ClientOrganization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  projectId      String?
-  project        ClientProject?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  createdById    String
-  createdBy      ClientPortalUser    @relation("ClientTicketCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  subject        String
-  message        String
-  status         String              @default("open")
-  priority       String              @default("normal")
-  messages       ClientTicketMessage[]
+  id                 String              @id @default(cuid())
+  ticketNumber       String              @unique
+  organizationId     String
+  organization       ClientOrganization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId          String?
+  project            ClientProject?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdById        String
+  createdBy          ClientPortalUser    @relation("ClientTicketCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  subject            String
+  message            String
+  category           String              @default("general")
+  status             String              @default("open")
+  priority           String              @default("normal")
+  assignedTo         String              @default("")
+  firstResponseDueAt DateTime?
+  resolutionDueAt    DateTime?
+  firstRespondedAt   DateTime?
+  resolvedAt         DateTime?
+  escalatedAt        DateTime?
+  lastActivityAt     DateTime            @default(now())
+  unreadByAdmin      Boolean             @default(true)
+  unreadByClient     Boolean             @default(false)
+  messages           ClientTicketMessage[]
+  internalNotes      ClientTicketInternalNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -539,6 +551,11 @@ model ClientSupportTicket {
   @@index([organizationId, status])
   @@index([projectId, status])
   @@index([createdById, createdAt])
+  @@index([priority, status, updatedAt])
+  @@index([assignedTo, status])
+  @@index([firstResponseDueAt])
+  @@index([resolutionDueAt])
+  @@index([lastActivityAt])
 }
 
 
@@ -566,6 +583,19 @@ model ClientTicketMessage {
   authorType String              @default("admin")
   authorName String
   message    String
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model ClientTicketInternalNote {
+  id            String              @id @default(cuid())
+  ticketId      String
+  ticket        ClientSupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorAdminId String              @default("")
+  authorName    String              @default("Admin")
+  note          String
 
   createdAt DateTime @default(now())
 
