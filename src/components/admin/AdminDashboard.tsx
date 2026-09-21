@@ -12,6 +12,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -80,12 +86,12 @@ interface AnalyticsData {
 }
 
 const statCards = [
-  { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
-  { key: 'activeServices' as const, label: 'Services', icon: Briefcase, color: 'text-emerald-600 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
-  { key: 'activeTeam' as const, label: 'Team Members', icon: Users, color: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30', borderAccent: 'border-l-[3px] border-l-yellow-500 dark:border-l-yellow-400' },
-  { key: 'unreadMessages' as const, label: 'Unread Messages', icon: Mail, color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', borderAccent: 'border-l-[3px] border-l-rose-500 dark:border-l-rose-400' },
-  { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30', borderAccent: 'border-l-[3px] border-l-cyan-500 dark:border-l-cyan-400' },
-  { key: 'activeTestimonials' as const, label: 'Testimonials', icon: MessageSquare, color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30', borderAccent: 'border-l-[3px] border-l-orange-500 dark:border-l-orange-400' },
+  { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, action: 'admin-blog' as const, color: 'text-amber-700 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
+  { key: 'activeServices' as const, label: 'Services', icon: Briefcase, action: 'admin-services' as const, color: 'text-amber-700 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
+  { key: 'activeTeam' as const, label: 'Team Members', icon: Users, action: 'admin-team' as const, color: 'text-yellow-700 bg-yellow-100 dark:bg-yellow-900/30', borderAccent: 'border-l-[3px] border-l-yellow-500 dark:border-l-yellow-400' },
+  { key: 'unreadMessages' as const, label: 'Unread Messages', icon: Mail, action: 'admin-messages' as const, color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', borderAccent: 'border-l-[3px] border-l-rose-500 dark:border-l-rose-400' },
+  { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, action: 'admin-portfolio' as const, color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30', borderAccent: 'border-l-[3px] border-l-cyan-500 dark:border-l-cyan-400' },
+  { key: 'activeTestimonials' as const, label: 'Testimonials', icon: MessageSquare, action: 'admin-testimonials' as const, color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30', borderAccent: 'border-l-[3px] border-l-orange-500 dark:border-l-orange-400' },
 ];
 
 const quickActions = [
@@ -104,6 +110,7 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -162,6 +169,17 @@ export default function AdminDashboard() {
     void fetchData();
   }, [canSite, canCrm]);
 
+  const openMessage = (messageId: string) => {
+    sessionStorage.setItem('lw-open-message-id', messageId);
+    navigate('admin-messages');
+  };
+
+  const openCrm = (filter?: { status?: string; priority?: string }) => {
+    if (filter?.status) sessionStorage.setItem('lw-crm-status-filter', filter.status);
+    if (filter?.priority) sessionStorage.setItem('lw-crm-priority-filter', filter.priority);
+    navigate('admin-crm');
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -187,6 +205,8 @@ export default function AdminDashboard() {
   const recentActivities = (() => {
     const messageActivity = recentMessages.map((message) => ({
       id: 'message-' + message.id,
+      targetId: message.id,
+      type: 'message' as const,
       text: 'Inquiry from ' + message.name,
       createdAt: message.createdAt,
       icon: Mail,
@@ -194,6 +214,8 @@ export default function AdminDashboard() {
     }));
     const postActivity = recentPosts.map((post) => ({
       id: 'post-' + post.id,
+      targetId: post.id,
+      type: 'post' as const,
       text: (post.published ? 'Published: ' : 'Draft: ') + post.title,
       createdAt: post.createdAt,
       icon: FileText,
@@ -257,8 +279,9 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 + i * 0.05 }}
             >
-              <Card className="border-border/50 hover:shadow-md hover:border-amber-200 dark:hover:border-amber-800 transition-all duration-300">
-                <CardContent className="p-4">
+              <button type="button" onClick={() => setAnalyticsOpen(true)} className="block w-full text-left">
+                <Card className="border-border/50 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md dark:hover:border-amber-800">
+                  <CardContent className="p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div className={`p-2 rounded-lg ${item.bg}`}>
                       <Icon className={`size-4 ${item.color}`} />
@@ -267,8 +290,9 @@ export default function AdminDashboard() {
                   </div>
                   <p className="text-xl font-bold text-foreground">{item.value}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </button>
             </motion.div>
           );
         })}
@@ -287,17 +311,24 @@ export default function AdminDashboard() {
         </div>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[
-            { label: 'Open Leads', value: stats?.crm.open || 0 },
-            { label: 'High Priority', value: stats?.crm.highPriority || 0 },
-            { label: 'Overdue Follow-ups', value: stats?.crm.overdueFollowUps || 0 },
-            { label: 'Won', value: stats?.crm.won || 0 },
+            { label: 'Open Leads', value: stats?.crm.open || 0, onClick: () => openCrm() },
+            { label: 'High Priority', value: stats?.crm.highPriority || 0, onClick: () => openCrm({ priority: 'high' }) },
+            { label: 'Overdue Follow-ups', value: stats?.crm.overdueFollowUps || 0, onClick: () => openCrm() },
+            { label: 'Won', value: stats?.crm.won || 0, onClick: () => openCrm({ status: 'won' }) },
           ].map((item) => (
-            <Card key={item.label} className="border-border/50">
-              <CardContent className="p-4">
-                <p className="text-xl font-bold text-foreground">{item.value}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{item.label}</p>
-              </CardContent>
-            </Card>
+            <button key={item.label} type="button" onClick={item.onClick} className="text-left">
+              <Card className="h-full border-border/50 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xl font-bold text-foreground">{item.value}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{item.label}</p>
+                    </div>
+                    <ArrowUpRight className="size-4 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+            </button>
           ))}
         </div>
       </div>
@@ -315,8 +346,9 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className={`border-border/50 hover:shadow-md transition-all duration-300 ${card.borderAccent}`}>
-                <CardContent className="p-5">
+              <button type="button" onClick={() => navigate(card.action)} className="block w-full text-left">
+                <Card className={`border-border/50 hover:-translate-y-0.5 hover:shadow-md hover:border-amber-300 transition-all duration-300 ${card.borderAccent}`}>
+                  <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">{card.label}</p>
@@ -328,8 +360,9 @@ export default function AdminDashboard() {
                       <Icon className="h-5 w-5" />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </button>
             </motion.div>
           );
         })}
@@ -379,7 +412,7 @@ export default function AdminDashboard() {
                       <span className={`text-xs ${isCurrentDay ? 'font-semibold text-emerald-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
                         {new Date(item.date + 'T00:00:00Z').toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
                       </span>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -452,7 +485,7 @@ export default function AdminDashboard() {
                 </TableHeader>
                 <TableBody>
                   {recentPosts.map((post) => (
-                    <TableRow key={post.id} className="hover:bg-emerald-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
+                    <TableRow key={post.id} onClick={() => navigate('admin-blog-editor', post.id)} className="cursor-pointer hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
                       <TableCell className="font-medium text-sm max-w-[180px] truncate">{post.title}</TableCell>
                       <TableCell>
                         {post.published ? (
@@ -496,7 +529,7 @@ export default function AdminDashboard() {
                 </TableHeader>
                 <TableBody>
                   {recentMessages.map((msg) => (
-                    <TableRow key={msg.id} className={`hover:bg-emerald-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200 ${!msg.read ? 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' : ''}`}>
+                    <TableRow key={msg.id} onClick={() => openMessage(msg.id)} className={`cursor-pointer hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200 ${!msg.read ? 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' : ''}`}>
                       <TableCell className="font-medium text-sm">
                         <span className="flex items-center gap-2">
                           {!msg.read && <span className="relative flex size-2 shrink-0"><span className="animate-ping absolute inline-flex size-full rounded-full bg-amber-400 opacity-75" /><span className="relative inline-flex rounded-full size-2 bg-amber-500" /></span>}
@@ -535,7 +568,12 @@ export default function AdminDashboard() {
                 {recentActivities.map((activity) => {
                   const Icon = activity.icon;
                   return (
-                    <div key={activity.id} className="flex items-start gap-3 px-5 py-3 hover:bg-muted/50 transition-colors">
+                    <button
+                      key={activity.id}
+                      type="button"
+                      onClick={() => activity.type === 'message' ? openMessage(activity.targetId) : navigate('admin-blog-editor', activity.targetId)}
+                      className="flex w-full items-start gap-3 px-5 py-3 text-left hover:bg-muted/50 transition-colors"
+                    >
                       <div className={`size-8 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5`}>
                         <Icon className={`size-3.5 ${activity.iconColor}`} />
                       </div>
@@ -555,6 +593,43 @@ export default function AdminDashboard() {
         </motion.div>
         )}
       </div>
+
+      <Dialog open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
+        <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] max-w-5xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="size-5 text-amber-600" />
+              Analytics drill-down · last {analytics?.days || 30} days
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="rounded-2xl border border-border/60 p-5">
+              <h3 className="font-semibold">Top pages</h3>
+              <div className="mt-4 space-y-3">
+                {(analytics?.topPages || []).slice(0, 10).map((item, index) => (
+                  <div key={item.path + index} className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
+                    <span className="min-w-0 truncate text-sm">{item.path}</span>
+                    <Badge variant="secondary">{item.views} views</Badge>
+                  </div>
+                ))}
+                {!analytics?.topPages?.length && <p className="text-sm text-muted-foreground">No page-view data yet.</p>}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-border/60 p-5">
+              <h3 className="font-semibold">Top referrers</h3>
+              <div className="mt-4 space-y-3">
+                {(analytics?.topReferrers || []).slice(0, 10).map((item, index) => (
+                  <div key={item.referrer + index} className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
+                    <span className="min-w-0 truncate text-sm">{item.referrer || 'Direct / unknown'}</span>
+                    <Badge variant="secondary">{item.events} events</Badge>
+                  </div>
+                ))}
+                {!analytics?.topReferrers?.length && <p className="text-sm text-muted-foreground">No referrer data yet.</p>}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
