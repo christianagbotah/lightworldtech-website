@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
+import AdminMediaField from '@/components/admin/AdminMediaField';
 
 interface Category {
   id: string;
@@ -219,15 +220,12 @@ export default function AdminBlogEditor() {
           />
         </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="post-cover">Cover Image URL</Label>
-          <Input
-            id="post-cover"
-            value={form.coverImage}
-            onChange={(e) => setForm(f => ({ ...f, coverImage: e.target.value }))}
-            placeholder="https://example.com/image.jpg"
-          />
-        </div>
+        <AdminMediaField
+          label="Cover image"
+          value={form.coverImage}
+          onChange={(coverImage) => setForm((current) => ({ ...current, coverImage }))}
+          help="Choose a reusable CMS image or enter an external image URL."
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="grid gap-2">

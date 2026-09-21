@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Pencil, Trash2, Eye, EyeOff, Upload, ImageIcon, Loader2, Linkedin, Twitter } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, Linkedin, Twitter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,6 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
+import AdminMediaField from '@/components/admin/AdminMediaField';
 
 interface TeamMember {
   id: string;
@@ -63,9 +64,6 @@ export default function AdminTeam() {
   const [deleting, setDeleting] = useState<TeamMember | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyMember);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchMembers = useCallback(async () => {
     try {
@@ -133,55 +131,6 @@ export default function AdminTeam() {
       fetchMembers();
     } catch {
       toast.error('Failed to delete member');
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      toast.error('Invalid file type. Use JPG, PNG, GIF, or WebP.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File too large. Max 5MB.');
-      return;
-    }
-
-    setUploading(true);
-    setUploadProgress(0);
-
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 90) { clearInterval(progressInterval); return 90; }
-        return prev + 10;
-      });
-    }, 200);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
-
-      setForm((f) => ({ ...f, image: data.data.url }));
-      toast.success('Image uploaded successfully');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed');
-    } finally {
-      clearInterval(progressInterval);
-      setTimeout(() => {
-        setUploading(false);
-        setUploadProgress(0);
-      }, 500);
     }
   };
 
@@ -317,54 +266,12 @@ export default function AdminTeam() {
                 <Input type="number" value={form.order} onChange={(e) => setForm(f => ({ ...f, order: parseInt(e.target.value) || 0 }))} />
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label>Image</Label>
-              <div className="flex gap-2 items-center">
-                <Input value={form.image} onChange={(e) => setForm(f => ({ ...f, image: e.target.value }))} placeholder="https://example.com/photo.jpg" className="flex-1" />
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md"
-                  aria-label="Upload image"
-                >
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                </Button>
-              </div>
-              {uploading && (
-                <div className="mt-1">
-                  <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-amber-500 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">Uploading... {uploadProgress}%</p>
-                </div>
-              )}
-              {form.image && !uploading && (
-                <div className="mt-2 relative inline-block">
-                  <img
-                    src={form.image}
-                    alt="Preview"
-                    className="size-16 rounded-lg object-cover border border-slate-200 dark:border-slate-700"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                  <div className="absolute -bottom-1 -right-1 size-4 bg-amber-500 rounded-full flex items-center justify-center">
-                    <ImageIcon className="size-2.5 text-white" />
-                  </div>
-                </div>
-              )}
-            </div>
+            <AdminMediaField
+              label="Profile image"
+              value={form.image}
+              onChange={(image) => setForm((current) => ({ ...current, image }))}
+              help="Choose an existing team image or upload a new one to the shared Media Library."
+            />
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label className="flex items-center gap-1.5">LinkedIn <Linkedin className="size-3.5 text-blue-600" /></Label>
