@@ -81,6 +81,7 @@ export function requiredAdminPermissionForPath(
 
   if (
     pathname.startsWith('/api/admin/leads') ||
+    pathname.startsWith('/api/admin/messages') ||
     pathname === '/api/contact' ||
     pathname.startsWith('/api/contact/')
   ) {
