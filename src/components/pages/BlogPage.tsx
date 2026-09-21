@@ -123,11 +123,13 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
               {categories.map((item) => (
                 <button
                   key={item}
+                  type="button"
+                  aria-pressed={category === item}
                   onClick={() => setCategory(item)}
                   className={
                     category === item
-                      ? 'shrink-0 rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white dark:bg-emerald-400 dark:text-slate-950'
-                      : 'shrink-0 rounded-full border border-slate-200/80 bg-white px-4 py-2 text-xs font-medium text-slate-500 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white/35'
+                      ? 'shrink-0 min-h-10 rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white dark:bg-emerald-400 dark:text-slate-950'
+                      : 'shrink-0 min-h-10 rounded-full border border-slate-200/80 bg-white px-4 py-2 text-xs font-medium text-slate-500 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white/35'
                   }
                 >
                   {item}
