@@ -609,7 +609,7 @@ export default function AdminDashboard() {
                           <span className="text-xs text-muted-foreground">{new Date(activity.createdAt).toLocaleString()}</span>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
