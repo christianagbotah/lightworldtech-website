@@ -1,0 +1,4 @@
+ALTER TABLE "Admin"
+ADD COLUMN "totpSecret" TEXT NOT NULL DEFAULT '',
+ADD COLUMN "totpEnabled" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "totpRecoveryCodes" TEXT NOT NULL DEFAULT '[]';
