@@ -103,11 +103,6 @@ export function requiredAdminPermissionForPath(
   }
 
   if (
-    pathname.startsWith('/api/admin/services') ||
-    pathname.startsWith('/api/admin/team') ||
-    pathname.startsWith('/api/admin/testimonials') ||
-    pathname.startsWith('/api/admin/portfolio') ||
-    pathname.startsWith('/api/admin/faqs') ||
     pathname === '/api/upload' ||
     pathname.startsWith('/api/services') ||
     pathname.startsWith('/api/team') ||
