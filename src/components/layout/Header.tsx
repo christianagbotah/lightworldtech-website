@@ -296,7 +296,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                           href={href}
                           onClick={() => setMobileOpen(false)}
                           className={cn(
-                            'flex items-center justify-between rounded-2xl px-3 py-3 text-sm font-medium transition',
+                            'flex items-center justify-between rounded-2xl px-3 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60',
                             active(href)
                               ? 'bg-amber-400/10 text-amber-300'
                               : 'text-white/55 hover:bg-white/[0.04] hover:text-white/85',
@@ -317,7 +317,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                           key={item.title + item.href}
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
-                          className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3"
+                          className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
                         >
                           <Icon className="size-4 text-amber-300" />
                           <span className="mt-3 block text-xs font-medium text-white/65">{item.title}</span>
@@ -331,7 +331,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                     <Link
                       href={headerCtaLink}
                       onClick={() => setMobileOpen(false)}
-                      className="flex h-12 items-center justify-center gap-2 rounded-full bg-amber-400 text-sm font-semibold text-slate-950"
+                      className="flex h-12 items-center justify-center gap-2 rounded-full bg-amber-400 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70"
                     >
                       {headerCtaText}
                       <ArrowUpRight className="size-4" />
@@ -358,7 +358,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
             key={item.title + item.href}
             href={item.href}
             className={cn(
-              'flex min-w-0 flex-col items-center justify-center gap-1 rounded-[17px] px-2 py-2 text-[9px] font-medium transition',
+              'flex min-w-0 flex-col items-center justify-center gap-1 rounded-[17px] px-2 py-2 text-[9px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60',
               active(item.href) ? 'bg-amber-400/12 text-amber-300' : 'text-white/34',
             )}
             aria-current={active(item.href) ? 'page' : undefined}
