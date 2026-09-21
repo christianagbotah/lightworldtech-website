@@ -99,7 +99,7 @@ export default function TeamPage({
                     </div>
                     <span className="font-mono text-[10px] text-slate-300 dark:text-white/15">0{index + 1}</span>
                   </div>
-                  <p className="mt-8 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">{person.role}</p>
+                  <p className="mt-8 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-300">{person.role}</p>
                   <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{person.name}</h2>
                   <p className="mt-4 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/38 sm:text-base">{person.description}</p>
                 </div>
