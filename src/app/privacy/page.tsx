@@ -35,7 +35,7 @@ function paragraphs(value: string): string[] {
 export default async function PrivacyPage() {
   const settings = await getSiteSettings();
   const companyName = contentText(settings, 'company_name', 'Lightworld Technologies Ltd');
-  const companyAddress = contentText(settings, 'company_address', 'Accra, Ghana');
+  const companyAddress = contentText(settings, 'company_address', 'Tema, Ghana');
   const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
   const sections = contentJson<Array<{ title: string; body: string }>>(
     settings,
