@@ -23,6 +23,14 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(crm).toContain('w-[calc(100vw-2rem)] max-w-4xl overflow-x-hidden');
   });
 
+  test('keeps the client portal workspace inside the viewport', () => {
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(portal).toContain('w-full overflow-x-hidden');
+    expect(portal).toContain('lg:grid-cols-[minmax(0,.75fr)_minmax(0,1.25fr)]');
+    expect(portal).toContain('lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]');
+  });
+
   test('uses canonical validated CMS endpoints from admin screens', () => {
     const files = [
       ['src/components/admin/AdminServices.tsx', '/api/services'],
