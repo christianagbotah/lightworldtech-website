@@ -15,6 +15,8 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [totpRequired, setTotpRequired] = useState(false);
+  const [totpCode, setTotpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -31,22 +33,34 @@ export default function AdminLogin() {
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          ...(totpRequired && totpCode.trim() ? { totpCode: totpCode.trim() } : {}),
+        }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
         loginAdmin(data.data.name || 'Admin', data.data.role || 'admin', Array.isArray(data.data.permissions) ? data.data.permissions : []);
-        toast.success('Welcome back!', { description: 'Logged in successfully.' });
+        toast.success('Welcome back!', { description: data.recoveryCodeUsed ? 'Signed in with a recovery code.' : 'Logged in successfully.' });
         // Reload after authentication so tabs opened before a deployment cannot
         // continue running stale admin JavaScript.
         window.location.replace('/admin');
         return;
-      } else {
-        setError(data.error || 'Invalid email or password');
-        toast.error('Login failed', { description: data.error || 'Invalid email or password' });
       }
+
+      if (data?.requiresTotp) {
+        setTotpRequired(true);
+        setTotpCode('');
+        setError('');
+        toast.success('Password verified', { description: 'Enter your authenticator or recovery code.' });
+        return;
+      }
+
+      setError(data.error || (totpRequired ? 'Invalid two-factor authentication code' : 'Invalid email or password'));
+      toast.error('Login failed', { description: data.error || 'Unable to sign in' });
     } catch {
       setError('Network error. Please try again.');
       toast.error('Network error', { description: 'Please check your connection.' });
@@ -228,8 +242,14 @@ export default function AdminLogin() {
               </div>
 
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-foreground mb-1">Welcome back</h2>
-                <p className="text-sm text-muted-foreground">Sign in to access the CMS dashboard</p>
+                <h2 className="text-2xl font-bold text-foreground mb-1">
+                  {totpRequired ? 'Two-factor authentication' : 'Welcome back'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {totpRequired
+                    ? 'Enter the current code from your authenticator app or one unused recovery code.'
+                    : 'Sign in to access the CMS dashboard'}
+                </p>
               </div>
 
               {error && (
@@ -258,6 +278,7 @@ export default function AdminLogin() {
                       onFocus={() => setFocusedField('email')}
                       onBlur={() => setFocusedField(null)}
                       required
+                      disabled={totpRequired}
                       className={`pl-10 transition-all duration-300 ${
                         focusedField === 'email'
                           ? 'border-amber-400 ring-2 ring-amber-400/20 shadow-sm shadow-amber-400/10'
@@ -286,6 +307,7 @@ export default function AdminLogin() {
                       onFocus={() => setFocusedField('password')}
                       onBlur={() => setFocusedField(null)}
                       required
+                      disabled={totpRequired}
                       className={`pl-10 pr-10 transition-all duration-300 ${
                         focusedField === 'password'
                           ? 'border-amber-400 ring-2 ring-amber-400/20 shadow-sm shadow-amber-400/10'
@@ -307,23 +329,57 @@ export default function AdminLogin() {
                   </div>
                 </div>
 
+                {totpRequired && (
+                  <motion.div
+                    className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <Label htmlFor="admin-totp" className="flex items-center gap-1.5 text-foreground">
+                      <KeyRound className="size-3.5 text-amber-500" />
+                      Authenticator or recovery code
+                    </Label>
+                    <Input
+                      id="admin-totp"
+                      value={totpCode}
+                      onChange={(event) => setTotpCode(event.target.value.replace(/\s/g, '').slice(0, 32))}
+                      placeholder="123456 or XXXXX-XXXXX"
+                      autoComplete="one-time-code"
+                      inputMode="text"
+                      autoFocus
+                      className="text-center font-mono text-base tracking-[0.16em]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTotpRequired(false);
+                        setTotpCode('');
+                        setError('');
+                      }}
+                      className="text-xs font-medium text-amber-700 hover:underline dark:text-amber-300"
+                    >
+                      Use a different account or password
+                    </button>
+                  </motion.div>
+                )}
+
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (totpRequired && !totpCode.trim())}
                   className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg shadow-emerald-600/25 hover:shadow-xl hover:shadow-amber-600/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
                 >
                   {loading ? (
                     <>
                       <Loader2 className="size-4 mr-2 animate-spin" />
-                      Signing in...
+                      {totpRequired ? 'Verifying code...' : 'Signing in...'}
                     </>
                   ) : (
-                    'Sign In'
+                    totpRequired ? 'Verify & Sign In' : 'Sign In'
                   )}
                 </Button>
               </form>
 
-              <div className="mt-5 border-t pt-5">
+              {!totpRequired && <div className="mt-5 border-t pt-5">
                 <button
                   type="button"
                   onClick={() => {
@@ -372,7 +428,7 @@ export default function AdminLogin() {
                     )}
                   </form>
                 )}
-              </div>
+              </div>}
 </CardContent>
           </Card>
 
