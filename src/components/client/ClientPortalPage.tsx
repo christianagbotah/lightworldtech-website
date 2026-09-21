@@ -260,7 +260,7 @@ export default function ClientPortalPage() {
   if (!signedIn) {
     return (
       <div className="min-h-screen bg-[#050b10] px-4 py-12 text-white">
-        <div className="mx-auto grid min-h-[80vh] max-w-5xl items-center gap-10 lg:grid-cols-[1fr_.8fr]">
+        <div className="mx-auto grid min-h-[80vh] min-w-0 max-w-5xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,.8fr)]">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/15 bg-amber-400/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">
               <ShieldCheck className="size-3.5" /> Secure Client Portal
@@ -352,7 +352,7 @@ export default function ClientPortalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
       <header className="border-b border-slate-200/70 bg-white/85 backdrop-blur dark:border-white/[0.07] dark:bg-[#071018]/90">
         <div className="container-main flex min-h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -366,14 +366,14 @@ export default function ClientPortalPage() {
         </div>
       </header>
 
-      <main className="container-main py-8 sm:py-10">
+      <main className="container-main min-w-0 max-w-full py-8 sm:py-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Client portal</p>
             <h1 className="mt-1 text-3xl font-semibold tracking-[-0.04em]">Welcome, {data?.user.name}</h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-white/38">Project visibility and support for {data?.organization.name}.</p>
           </div>
-          <div className="text-xs text-slate-400 dark:text-white/28">{data?.user.email}</div>
+          <div className="min-w-0 break-all text-right text-xs text-slate-400 dark:text-white/28">{data?.user.email}</div>
         </div>
 
         <div className="mt-7 grid gap-4 sm:grid-cols-3">
@@ -422,7 +422,7 @@ export default function ClientPortalPage() {
               {data.projects.map((project) => (
                 <Card key={project.id} className="overflow-hidden border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <CardContent className="p-0">
-                    <div className="grid gap-6 p-6 lg:grid-cols-[.75fr_1.25fr]">
+                    <div className="grid min-w-0 gap-6 p-6 lg:grid-cols-[minmax(0,.75fr)_minmax(0,1.25fr)]">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="outline">{statusLabel(project.status)}</Badge>
@@ -503,7 +503,7 @@ export default function ClientPortalPage() {
           )}
         </section>
 
-        <section className="mt-9 grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
+        <section className="mt-9 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]">
           <Card className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
             <CardHeader><CardTitle>Request support</CardTitle></CardHeader>
             <CardContent>
