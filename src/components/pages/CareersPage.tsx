@@ -17,6 +17,7 @@ import {
   Users,
 } from 'lucide-react';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
+import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 
 const disciplines = [
   { icon: Code2, title: 'Engineering', text: 'Frontend, backend, mobile, platform and integration work.' },
@@ -46,8 +47,9 @@ export default function CareersPage({ settings = {} }: { settings?: SiteSettings
 
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
-      <section className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
-        <div className="container-main py-16 sm:py-20 lg:py-24">
+      <section className="lw-hero-grid relative border-b border-slate-200/70 dark:border-white/[0.06] overflow-hidden">
+        <CmsHeroMedia settings={settings} settingKey="careers_hero_image" />
+        <div className="relative container-main py-16 sm:py-20 lg:py-24 z-10">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">

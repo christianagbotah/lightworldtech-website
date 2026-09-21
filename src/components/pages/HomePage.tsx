@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
+import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -366,13 +367,14 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
 
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
-      <section className="lw-hero-grid relative min-h-[92svh] border-b border-slate-200/70 dark:border-white/[0.06]">
+      <section className="lw-hero-grid relative min-h-[92svh] border-b border-slate-200/70 dark:border-white/[0.06] overflow-hidden">
+        <CmsHeroMedia settings={settings} settingKey="home_hero_image" />
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-[8%] top-24 size-72 rounded-full bg-emerald-300/20 blur-[120px] dark:bg-emerald-500/10" />
           <div className="absolute right-[8%] top-32 size-72 rounded-full bg-amber-300/20 blur-[120px] dark:bg-amber-400/[0.07]" />
         </div>
 
-        <div className="container-main relative flex min-h-[92svh] items-center py-28 sm:py-32 lg:py-36">
+        <div className="container-main relative flex min-h-[92svh] items-center py-28 sm:py-32 lg:py-36 z-10">
           <div className="grid w-full items-center gap-14 lg:grid-cols-[1.02fr_.98fr] lg:gap-12">
             <div className="max-w-3xl">
               <motion.div

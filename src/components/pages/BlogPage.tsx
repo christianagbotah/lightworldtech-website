@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { getBlogCoverImage } from '@/lib/blog-visuals';
 import { contentText, type SiteSettings } from '@/lib/site-content';
+import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import {
   ArrowRight,
   Calendar,
@@ -87,8 +88,9 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
 
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
-      <section className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
-        <div className="container-main py-16 sm:py-20 lg:py-24">
+      <section className="lw-hero-grid relative border-b border-slate-200/70 dark:border-white/[0.06] overflow-hidden">
+        <CmsHeroMedia settings={settings} settingKey="blog_hero_image" />
+        <div className="relative container-main py-16 sm:py-20 lg:py-24 z-10">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
