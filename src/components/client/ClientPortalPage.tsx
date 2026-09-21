@@ -17,6 +17,8 @@ import {
   Megaphone,
   Send,
   ShieldCheck,
+  Search,
+  AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -69,11 +71,20 @@ type TicketMessage = {
 
 type Ticket = {
   id: string;
+  ticketNumber: string;
   projectId: string | null;
   subject: string;
   message: string;
+  category: string;
   status: string;
   priority: string;
+  assignedTo: string;
+  firstResponseDueAt: string | null;
+  resolutionDueAt: string | null;
+  firstRespondedAt: string | null;
+  resolvedAt: string | null;
+  lastActivityAt: string;
+  unreadByClient: boolean;
   createdAt: string;
   updatedAt: string;
   messages: TicketMessage[];
@@ -121,7 +132,9 @@ export default function ClientPortalPage() {
   const [resetMode, setResetMode] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMessage, setResetMessage] = useState('');
-  const [ticket, setTicket] = useState({ subject: '', message: '', priority: 'normal', projectId: '' });
+  const [ticket, setTicket] = useState({ subject: '', message: '', priority: 'normal', category: 'general', projectId: '' });
+  const [ticketSearch, setTicketSearch] = useState('');
+  const [ticketStatus, setTicketStatus] = useState('all');
   const [ticketSending, setTicketSending] = useState(false);
   const [replies, setReplies] = useState<Record<string, string>>({});
   const [replyingTicketId, setReplyingTicketId] = useState('');
@@ -207,12 +220,13 @@ export default function ClientPortalPage() {
           subject: ticket.subject,
           message: ticket.message,
           priority: ticket.priority,
+          category: ticket.category,
           projectId: ticket.projectId || null,
         }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Unable to create ticket');
-      setTicket({ subject: '', message: '', priority: 'normal', projectId: '' });
+      setTicket({ subject: '', message: '', priority: 'normal', category: 'general', projectId: '' });
       await loadPortal();
       toast.success('Support request submitted');
     } catch (error) {
@@ -248,6 +262,21 @@ export default function ClientPortalPage() {
     () => data?.projects.filter((project) => project.status !== 'completed').length || 0,
     [data],
   );
+
+  const visibleTickets = useMemo(() => {
+    const query = ticketSearch.trim().toLowerCase();
+    return (data?.tickets || []).filter((item) => {
+      if (ticketStatus !== 'all' && item.status !== ticketStatus) return false;
+      if (!query) return true;
+      return [
+        item.ticketNumber,
+        item.subject,
+        item.message,
+        item.category,
+        item.assignedTo,
+      ].some((value) => String(value || '').toLowerCase().includes(query));
+    });
+  }, [data?.tickets, ticketSearch, ticketStatus]);
 
   if (!sessionChecked) {
     return (
@@ -526,6 +555,18 @@ export default function ClientPortalPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
+                  <Label>Category</Label>
+                  <select value={ticket.category} onChange={(event) => setTicket({ ...ticket, category: event.target.value })} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                    <option value="technical">Technical support</option>
+                    <option value="billing">Billing</option>
+                    <option value="hosting">Hosting</option>
+                    <option value="project_change">Project change</option>
+                    <option value="training">Training</option>
+                    <option value="account">Account</option>
+                    <option value="general">General</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
                   <Label>Details</Label>
                   <Textarea required minLength={3} rows={5} value={ticket.message} onChange={(event) => setTicket({ ...ticket, message: event.target.value })} />
                 </div>
@@ -537,15 +578,53 @@ export default function ClientPortalPage() {
           </Card>
 
           <Card className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
-            <CardHeader><CardTitle>Support conversations</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Support conversations</CardTitle>
+              <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_170px]">
+                <label className="relative">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    value={ticketSearch}
+                    onChange={(event) => setTicketSearch(event.target.value)}
+                    placeholder="Search ticket number or subject"
+                    className="pl-9"
+                  />
+                </label>
+                <select
+                  value={ticketStatus}
+                  onChange={(event) => setTicketStatus(event.target.value)}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="all">All statuses</option>
+                  <option value="open">Open</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="awaiting_client">Awaiting client</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+            </CardHeader>
             <CardContent>
-              {data?.tickets.length ? (
+              {visibleTickets.length ? (
                 <div className="space-y-4">
-                  {data.tickets.map((item) => (
+                  {visibleTickets.map((item) => (
                     <div key={item.id} className="rounded-2xl border border-slate-200/70 p-4 dark:border-white/[0.07]">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-semibold">{item.subject}</p>
-                        <div className="flex gap-2"><Badge variant="outline">{statusLabel(item.status)}</Badge><Badge variant="outline">{statusLabel(item.priority)}</Badge></div>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono text-[11px] font-bold text-amber-700 dark:text-amber-300">{item.ticketNumber}</span>
+                            {item.unreadByClient && <span className="size-2 rounded-full bg-amber-500" title="New Lightworld activity" />}
+                          </div>
+                          <p className="mt-1 text-sm font-semibold">{item.subject}</p>
+                          <p className="mt-1 text-[10px] text-slate-400">
+                            {statusLabel(item.category)}
+                            {item.assignedTo ? ' · Assigned to ' + item.assignedTo : ''}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline">{statusLabel(item.status)}</Badge>
+                          <Badge variant="outline">{statusLabel(item.priority)}</Badge>
+                        </div>
                       </div>
                       <div className="mt-3 rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Original request</p>
@@ -588,12 +667,17 @@ export default function ClientPortalPage() {
                           </Button>
                         </div>
                       )}
-                      <p className="mt-3 text-[10px] text-slate-400">Opened {new Date(item.createdAt).toLocaleString()}</p>
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
+                        <span>Opened {new Date(item.createdAt).toLocaleString()}</span>
+                        <span>Last activity {new Date(item.lastActivityAt || item.updatedAt).toLocaleString()}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="rounded-2xl border border-dashed border-slate-300 p-5 text-xs text-slate-400 dark:border-white/10">No support requests yet.</p>
+                <p className="rounded-2xl border border-dashed border-slate-300 p-5 text-xs text-slate-400 dark:border-white/10">
+                  {data?.tickets.length ? 'No support tickets match this filter.' : 'No support requests yet.'}
+                </p>
               )}
             </CardContent>
           </Card>
