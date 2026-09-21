@@ -57,6 +57,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     },
   });
 
+  await db.clientTicketEvent.create({
+    data: {
+      ticketId: ticket.id,
+      type: 'client_reply',
+      actorType: 'client',
+      actorName: context.user.name,
+      details: JSON.stringify({ messageId: message.id, status: nextStatus }),
+    },
+  });
+
   await notifySupportDesk({
     ticketNumber: ticket.ticketNumber,
     organizationName: context.organization.name,
