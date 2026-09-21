@@ -144,6 +144,9 @@ export default function ClientPortalPage() {
     if (!response.ok) throw new Error('Unable to load the client portal');
     const payload = await response.json();
     setData(payload.data);
+    if (Array.isArray(payload?.data?.tickets) && payload.data.tickets.some((item: Ticket) => item.unreadByClient)) {
+      void fetch('/api/client/tickets/read', { method: 'POST' }).catch(() => undefined);
+    }
   };
 
   useEffect(() => {
