@@ -317,7 +317,7 @@ export default function AdminProposals() {
         ))}
       </div>
 
-      <form onSubmit={createProposal} className="grid gap-3 rounded-2xl border border-border/60 bg-card p-4 lg:grid-cols-[1fr_auto]">
+      <form onSubmit={createProposal} className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
         <div>
           <Label htmlFor="proposal-lead">Create proposal from CRM lead</Label>
           <select
@@ -339,7 +339,7 @@ export default function AdminProposals() {
         </Button>
       </form>
 
-      <div className="grid gap-3 rounded-2xl border border-border/60 bg-card p-4 lg:grid-cols-[1fr_190px]">
+      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 lg:grid-cols-[minmax(0,1fr)_190px]">
         <label className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -392,7 +392,7 @@ export default function AdminProposals() {
       </div>
 
       <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent className="max-h-[94vh] max-w-5xl overflow-y-auto">
+        <DialogContent className="max-h-[94vh] w-[calc(100vw-2rem)] max-w-5xl overflow-x-hidden overflow-y-auto">
           {selected && (
             <>
               <DialogHeader>
@@ -406,7 +406,7 @@ export default function AdminProposals() {
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+              <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
                 <div className="space-y-5">
                   <div>
                     <Label>Proposal title</Label>
