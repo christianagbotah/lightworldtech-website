@@ -175,11 +175,13 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
               {categories.map((category) => (
                 <button
                   key={category}
+                  type="button"
+                  aria-pressed={active === category}
                   onClick={() => setActive(category)}
                   className={
                     active === category
-                      ? 'shrink-0 rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white dark:bg-emerald-400 dark:text-slate-950'
-                      : 'shrink-0 rounded-full border border-slate-200/80 bg-white px-4 py-2 text-xs font-medium text-slate-500 transition hover:border-slate-300 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white/35'
+                      ? 'shrink-0 min-h-10 rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white dark:bg-emerald-400 dark:text-slate-950'
+                      : 'shrink-0 min-h-10 rounded-full border border-slate-200/80 bg-white px-4 py-2 text-xs font-medium text-slate-500 transition hover:border-slate-300 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white/35'
                   }
                 >
                   {category}
@@ -224,7 +226,7 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
                       <p className="mt-2 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/36">{project.description}</p>
                     </div>
                     {project.clientUrl && project.clientUrl !== '#' ? (
-                      <a href={project.clientUrl} target="_blank" rel="noreferrer" className="flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition hover:border-amber-300 hover:text-amber-600 dark:border-white/[0.07] dark:text-white/25">
+                      <a href={project.clientUrl} target="_blank" rel="noreferrer" className="flex size-11 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition hover:border-amber-300 hover:text-amber-600 focus-visible:ring-2 focus-visible:ring-amber-500/60 dark:border-white/[0.07] dark:text-white/25">
                         <ArrowUpRight className="size-4" />
                         <span className="sr-only">Open project</span>
                       </a>
