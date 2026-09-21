@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   UserCog,
   Users,
+  ShieldAlert,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -126,6 +137,8 @@ export default function AdminGovernance() {
   const [editOpen, setEditOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  const [revokeOpen, setRevokeOpen] = useState(false);
   const [createForm, setCreateForm] = useState<AdminForm>(blankCreate);
   const [editing, setEditing] = useState<AdminAccount | null>(null);
   const [editForm, setEditForm] = useState<AdminForm>(blankCreate);
@@ -234,6 +247,28 @@ export default function AdminGovernance() {
       toast.error(error instanceof Error ? error.message : 'Failed to update administrator');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const revokeSessions = async () => {
+    if (!editing || editing.id === data?.actor.id) return;
+    setRevoking(true);
+    try {
+      const response = await fetch('/api/admin/governance/' + encodeURIComponent(editing.id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ revokeSessions: true }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Failed to revoke administrator sessions');
+
+      toast.success('Administrator sessions revoked');
+      setRevokeOpen(false);
+      await load(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to revoke administrator sessions');
+    } finally {
+      setRevoking(false);
     }
   };
 
@@ -622,8 +657,23 @@ export default function AdminGovernance() {
                 </div>
               </div>
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-200">
-                The system blocks self-deactivation, self-demotion and any change that would leave the site without an active super-admin.
+                The system blocks self-deactivation, self-demotion and any change that would leave the site without an active super-admin. Role, email, permission, password and account-status changes now invalidate existing sessions automatically.
               </div>
+              {editing.id !== data.actor.id && (
+                <div className="flex flex-col gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/50 dark:bg-rose-950/20 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-rose-800 dark:text-rose-200">
+                      <ShieldAlert className="size-4" /> Active sessions
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-rose-700/80 dark:text-rose-200/70">
+                      Force this administrator to sign in again on every device without changing the password.
+                    </p>
+                  </div>
+                  <Button type="button" variant="destructive" onClick={() => setRevokeOpen(true)} className="shrink-0">
+                    Revoke sessions
+                  </Button>
+                </div>
+              )}
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
                 <Button
@@ -638,6 +688,31 @@ export default function AdminGovernance() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={revokeOpen} onOpenChange={setRevokeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke all active sessions?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {editing?.name || editing?.email || 'This administrator'} will be signed out on their next protected request and must authenticate again. Their password will not be changed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={revoking}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                void revokeSessions();
+              }}
+              disabled={revoking}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {revoking && <Loader2 className="mr-2 size-4 animate-spin" />}
+              Revoke sessions
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
