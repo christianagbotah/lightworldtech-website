@@ -383,7 +383,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
           <div className="mt-10 flex flex-col gap-5 rounded-[32px] border border-emerald-500/15 bg-emerald-500/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div>
               <h3 className="text-2xl font-semibold tracking-tight">{contentText(settings, 'services_cta_title', 'Not sure which service category fits?')}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/38">That is normal. Describe the outcome you need and we will help map the right approach.</p>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/38">{contentText(settings, 'services_cta_description', 'Describe the business problem and we can help shape the right technical approach.')}</p>
             </div>
             <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white transition hover:bg-emerald-400 dark:text-slate-950">
               Start with the problem <ArrowRight className="size-4" />
