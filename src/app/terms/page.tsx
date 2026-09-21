@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import PublicShell from '@/components/layout/PublicShell';
+import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import {
   contentJson,
   contentText,
@@ -42,8 +43,9 @@ export default async function TermsPage() {
   return (
     <PublicShell settings={settings}>
       <div className="bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
-        <section className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
-          <div className="container-main py-16 sm:py-20 lg:py-24">
+        <section className="lw-hero-grid relative border-b border-slate-200/70 dark:border-white/[0.06] overflow-hidden">
+          <CmsHeroMedia settings={settings} settingKey="terms_hero_image" />
+          <div className="relative container-main py-16 sm:py-20 lg:py-24 z-10">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">
               {contentText(settings, 'terms_eyebrow', 'Website terms')}
             </p>
