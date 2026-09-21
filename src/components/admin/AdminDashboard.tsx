@@ -437,7 +437,7 @@ export default function AdminDashboard() {
                       <span className={`text-xs ${isCurrentDay ? 'font-semibold text-emerald-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
                         {new Date(item.date + 'T00:00:00Z').toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
                       </span>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
