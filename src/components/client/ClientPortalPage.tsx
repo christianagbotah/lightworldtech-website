@@ -19,6 +19,9 @@ import {
   ShieldCheck,
   Search,
   AlertTriangle,
+  Paperclip,
+  Upload,
+  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +72,16 @@ type TicketMessage = {
   createdAt: string;
 };
 
+type TicketAttachment = {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedByType: string;
+  uploadedByName: string;
+  createdAt: string;
+};
+
 type Ticket = {
   id: string;
   ticketNumber: string;
@@ -88,6 +101,7 @@ type Ticket = {
   createdAt: string;
   updatedAt: string;
   messages: TicketMessage[];
+  attachments: TicketAttachment[];
 };
 
 type Announcement = {
@@ -138,6 +152,7 @@ export default function ClientPortalPage() {
   const [ticketSending, setTicketSending] = useState(false);
   const [replies, setReplies] = useState<Record<string, string>>({});
   const [replyingTicketId, setReplyingTicketId] = useState('');
+  const [uploadingTicketId, setUploadingTicketId] = useState('');
 
   const loadPortal = async () => {
     const response = await fetch('/api/client/portal', { cache: 'no-store' });
@@ -236,6 +251,27 @@ export default function ClientPortalPage() {
       toast.error(error instanceof Error ? error.message : 'Unable to create ticket');
     } finally {
       setTicketSending(false);
+    }
+  };
+
+  const uploadTicketAttachment = async (ticketId: string, file: File | null) => {
+    if (!file) return;
+    setUploadingTicketId(ticketId);
+    try {
+      const form = new FormData();
+      form.set('file', file);
+      const response = await fetch('/api/client/tickets/' + ticketId + '/attachments', {
+        method: 'POST',
+        body: form,
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to upload attachment');
+      await loadPortal();
+      toast.success('Attachment added to support ticket');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to upload attachment');
+    } finally {
+      setUploadingTicketId('');
     }
   };
 
@@ -646,6 +682,48 @@ export default function ClientPortalPage() {
                           ))}
                         </div>
                       )}
+                      <div className="mt-3 border-t border-slate-200/70 pt-3 dark:border-white/[0.07]">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                            <Paperclip className="size-3.5" /> Attachments
+                          </p>
+                          {item.status !== 'closed' && (
+                            <label className="inline-flex cursor-pointer items-center rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold transition hover:border-amber-300 dark:border-white/10">
+                              {uploadingTicketId === item.id ? <Loader2 className="mr-1.5 size-3 animate-spin" /> : <Upload className="mr-1.5 size-3" />}
+                              Add evidence
+                              <input
+                                type="file"
+                                accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                                className="sr-only"
+                                disabled={uploadingTicketId === item.id}
+                                onChange={(event) => {
+                                  const file = event.target.files?.[0] || null;
+                                  void uploadTicketAttachment(item.id, file);
+                                  event.currentTarget.value = '';
+                                }}
+                              />
+                            </label>
+                          )}
+                        </div>
+                        {item.attachments.length ? (
+                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            {item.attachments.map((attachment) => (
+                              <a
+                                key={attachment.id}
+                                href={'/api/support-attachments/' + attachment.id}
+                                className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200/70 p-2.5 text-xs transition hover:border-amber-300 dark:border-white/[0.07]"
+                              >
+                                <Paperclip className="size-3.5 shrink-0 text-amber-600" />
+                                <span className="min-w-0 flex-1 truncate">{attachment.originalName}</span>
+                                <Download className="size-3 shrink-0 text-slate-400" />
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="mt-2 text-[10px] text-slate-400">No files attached.</p>
+                        )}
+                      </div>
+
                       {item.status !== 'closed' && (
                         <div className="mt-3 flex gap-2">
                           <Input
