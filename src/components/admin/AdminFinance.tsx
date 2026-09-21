@@ -240,6 +240,7 @@ type FinanceData = {
 
 type DialogName =
   | 'service'
+  | 'service-manage'
   | 'invoice'
   | 'receipt'
   | 'vendor'
@@ -289,6 +290,19 @@ export default function AdminFinance() {
   const [loading, setLoading] = useState(true);
   const [dialog, setDialog] = useState<DialogName>(null);
   const [saving, setSaving] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [serviceEdit, setServiceEdit] = useState({
+    planName: '',
+    status: 'active',
+    billingCycle: 'annual',
+    recurringAmount: '',
+    expiryDate: '',
+    nextDueDate: '',
+    autoRenew: false,
+    renewalNoticeDays: '30',
+    changeType: 'renewal',
+    changeNotes: '',
+  });
 
   const [serviceForm, setServiceForm] = useState({
     organizationId: '', projectId: '', name: '', serviceType: 'managed_service',
@@ -391,6 +405,63 @@ export default function AdminFinance() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to save finance record');
       return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openServiceManager = (service: Service) => {
+    setSelectedService(service);
+    setServiceEdit({
+      planName: service.planName,
+      status: service.status,
+      billingCycle: service.billingCycle,
+      recurringAmount: service.recurringAmount,
+      expiryDate: service.expiryDate ? service.expiryDate.slice(0, 10) : '',
+      nextDueDate: service.nextDueDate ? service.nextDueDate.slice(0, 10) : '',
+      autoRenew: service.autoRenew,
+      renewalNoticeDays: String(service.renewalNoticeDays),
+      changeType: 'renewal',
+      changeNotes: '',
+    });
+    setDialog('service-manage');
+  };
+
+  const submitServiceUpdate = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selectedService) return;
+    setSaving(true);
+    try {
+      await api('/api/admin/finance/services/' + encodeURIComponent(selectedService.id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planName: serviceEdit.planName,
+          status: serviceEdit.status,
+          billingCycle: serviceEdit.billingCycle,
+          recurringAmount: Number(serviceEdit.recurringAmount || 0),
+          expiryDate: serviceEdit.expiryDate || null,
+          nextDueDate: serviceEdit.nextDueDate || null,
+          autoRenew: serviceEdit.autoRenew,
+          renewalNoticeDays: Number(serviceEdit.renewalNoticeDays || 30),
+          changeType: serviceEdit.changeType,
+          changeNotes: serviceEdit.changeNotes.trim(),
+        }),
+      });
+      toast.success(
+        serviceEdit.changeType === 'renewal'
+          ? 'Service renewal recorded'
+          : serviceEdit.changeType === 'upgrade'
+            ? 'Service upgrade recorded'
+            : serviceEdit.changeType === 'downgrade'
+              ? 'Service downgrade recorded'
+              : 'Service account updated',
+      );
+      setDialog(null);
+      setSelectedService(null);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update client service');
     } finally {
       setSaving(false);
     }
@@ -666,7 +737,12 @@ export default function AdminFinance() {
                 <TableHeader><TableRow><TableHead>Customer / service</TableHead><TableHead>Plan</TableHead><TableHead>Cycle</TableHead><TableHead>Expiry</TableHead><TableHead>Next due</TableHead><TableHead className="text-right">Recurring</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.services.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow
+                      key={item.id}
+                      onClick={() => openServiceManager(item)}
+                      className="cursor-pointer transition hover:bg-amber-50/50 dark:hover:bg-amber-950/10"
+                      title="Open service account"
+                    >
                       <TableCell><p className="font-medium">{item.organization.name}</p><p className="text-xs text-muted-foreground">{item.name}</p></TableCell>
                       <TableCell><p className="text-sm">{item.planName || '—'}</p><Badge className={statusTone(item.status)}>{pretty(item.status)}</Badge></TableCell>
                       <TableCell className="text-sm">{pretty(item.billingCycle)}</TableCell>
@@ -801,6 +877,209 @@ export default function AdminFinance() {
             <Textarea rows={3} placeholder="Service notes" value={serviceForm.notes} onChange={(e) => setServiceForm({ ...serviceForm, notes: e.target.value })} />
             <DialogFooter><Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button><Button disabled={saving}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Create service</Button></DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={dialog === 'service-manage'}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDialog(null);
+            setSelectedService(null);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[94vh] w-[calc(100vw-1.5rem)] max-w-4xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Manage service{selectedService ? ' · ' + selectedService.name : ''}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedService && (
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <form onSubmit={submitServiceUpdate} className="space-y-4">
+                <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Customer</p>
+                  <p className="mt-1 font-semibold">{selectedService.organization.name}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {selectedService.project?.name || 'No linked project'} · {selectedService.currency}
+                  </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>Change type</Label>
+                    <select
+                      value={serviceEdit.changeType}
+                      onChange={(event) => setServiceEdit({ ...serviceEdit, changeType: event.target.value })}
+                      className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="renewal">Renewal</option>
+                      <option value="upgrade">Upgrade</option>
+                      <option value="downgrade">Downgrade</option>
+                      <option value="price_change">Price change</option>
+                      <option value="suspension">Suspension</option>
+                      <option value="resumption">Resumption</option>
+                      <option value="correction">Correction</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Service status</Label>
+                    <select
+                      value={serviceEdit.status}
+                      onChange={(event) => setServiceEdit({ ...serviceEdit, status: event.target.value })}
+                      className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="active">Active</option>
+                      <option value="suspended">Suspended</option>
+                      <option value="expired">Expired</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>Plan / tier</Label>
+                    <Input
+                      value={serviceEdit.planName}
+                      onChange={(event) => setServiceEdit({ ...serviceEdit, planName: event.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Billing cycle</Label>
+                    <select
+                      value={serviceEdit.billingCycle}
+                      onChange={(event) => setServiceEdit({ ...serviceEdit, billingCycle: event.target.value })}
+                      className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="monthly">Monthly</option>
+                      <option value="quarterly">Quarterly</option>
+                      <option value="semiannual">Semiannual</option>
+                      <option value="annual">Annual</option>
+                      <option value="one_time">One-time</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <Label>Recurring amount ({selectedService.currency})</Label>
+                    <Input
+                      required
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={serviceEdit.recurringAmount}
+                      onChange={(event) => setServiceEdit({ ...serviceEdit, recurringAmount: event.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Expiry date</Label>
+                    <Input
+                      type="date"
+                      value={serviceEdit.expiryDate}
+                      onChange={(event) => setServiceEdit({ ...serviceEdit, expiryDate: event.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Next due date</Label>
+                    <Input
+                      type="date"
+                      value={serviceEdit.nextDueDate}
+                      onChange={(event) => setServiceEdit({ ...serviceEdit, nextDueDate: event.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 rounded-xl border border-border/60 p-4 sm:flex-row sm:items-center">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={serviceEdit.autoRenew}
+                      onChange={(event) => setServiceEdit({ ...serviceEdit, autoRenew: event.target.checked })}
+                    />
+                    Auto-renew flag
+                  </label>
+                  <div className="sm:ml-auto">
+                    <Label>Renewal notice days</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="365"
+                      className="mt-1 w-32"
+                      value={serviceEdit.renewalNoticeDays}
+                      onChange={(event) => setServiceEdit({ ...serviceEdit, renewalNoticeDays: event.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Change / renewal note</Label>
+                  <Textarea
+                    rows={4}
+                    maxLength={8000}
+                    value={serviceEdit.changeNotes}
+                    onChange={(event) => setServiceEdit({ ...serviceEdit, changeNotes: event.target.value })}
+                    placeholder="Reason for upgrade, renewal terms, price change, suspension note…"
+                  />
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setDialog(null);
+                      setSelectedService(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button disabled={saving}>
+                    {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                    Save service change
+                  </Button>
+                </DialogFooter>
+              </form>
+
+              <aside className="min-w-0">
+                <div className="sticky top-0 rounded-2xl border border-border/60 bg-muted/15 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold">Service history</p>
+                    <Badge variant="outline">{selectedService.changes.length}</Badge>
+                  </div>
+                  <div className="mt-4 max-h-[62vh] space-y-3 overflow-y-auto pr-1">
+                    {selectedService.changes.map((change) => (
+                      <div key={change.id} className="rounded-xl border border-border/60 bg-background p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge variant="outline">{pretty(change.changeType)}</Badge>
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(change.effectiveAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs">
+                          {(change.previousPlan || '—') + ' → ' + (change.newPlan || '—')}
+                        </p>
+                        {(change.previousAmount !== null || change.newAmount !== null) && (
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            {change.previousAmount !== null ? money(change.previousAmount, selectedService.currency) : '—'}
+                            {' → '}
+                            {change.newAmount !== null ? money(change.newAmount, selectedService.currency) : '—'}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                    {!selectedService.changes.length && (
+                      <p className="text-xs text-muted-foreground">No service changes recorded yet.</p>
+                    )}
+                  </div>
+                </div>
+              </aside>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
