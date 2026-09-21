@@ -35,6 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
+import AdminMediaField from '@/components/admin/AdminMediaField';
 
 interface Testimonial {
   id: string;
@@ -252,10 +253,11 @@ export default function AdminTestimonials() {
               <Label>Content</Label>
               <Textarea value={form.content} onChange={(e) => setForm(f => ({ ...f, content: e.target.value }))} placeholder="Testimonial text" rows={4} />
             </div>
-            <div className="grid gap-2">
-              <Label>Image URL</Label>
-              <Input value={form.image} onChange={(e) => setForm(f => ({ ...f, image: e.target.value }))} placeholder="https://example.com/photo.jpg" />
-            </div>
+            <AdminMediaField
+              label="Client image"
+              value={form.image}
+              onChange={(image) => setForm((current) => ({ ...current, image }))}
+            />
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Rating (1-5)</Label>
