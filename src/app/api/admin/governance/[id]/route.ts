@@ -24,6 +24,7 @@ const updateSchema = z.object({
   ])).optional(),
   active: z.boolean().optional(),
   newPassword: z.string().min(12).max(200).optional(),
+  revokeSessions: z.boolean().optional(),
 }).refine((value) => Object.keys(value).length > 0, 'At least one change is required');
 
 export async function PATCH(
@@ -111,7 +112,14 @@ export async function PATCH(
     if (parsed.data.newPassword !== undefined) {
       data.password = hashAdminPassword(parsed.data.newPassword);
     }
-    if (parsed.data.newPassword !== undefined || parsed.data.permissions !== undefined) {
+    const invalidatesSessions =
+      parsed.data.newPassword !== undefined ||
+      parsed.data.permissions !== undefined ||
+      parsed.data.role !== undefined ||
+      parsed.data.email !== undefined ||
+      parsed.data.active !== undefined ||
+      parsed.data.revokeSessions === true;
+    if (invalidatesSessions) {
       data.authVersion = { increment: 1 };
     }
 
@@ -132,14 +140,17 @@ export async function PATCH(
       },
     });
 
-    const changedFields = Object.keys(parsed.data).filter((key) => key !== 'newPassword');
+    const changedFields = Object.keys(parsed.data).filter((key) => !['newPassword', 'revokeSessions'].includes(key));
     if (parsed.data.newPassword !== undefined) changedFields.push('password');
+    if (parsed.data.revokeSessions === true) changedFields.push('sessions');
 
     await recordAdminAudit({
       admin: actor,
-      action: parsed.data.newPassword !== undefined && changedFields.length === 1
-        ? 'admin.password_reset'
-        : 'admin.updated',
+      action: parsed.data.revokeSessions === true && changedFields.length === 1
+        ? 'admin.sessions_revoked'
+        : parsed.data.newPassword !== undefined && changedFields.length === 1
+          ? 'admin.password_reset'
+          : 'admin.updated',
       entity: 'Admin',
       entityId: target.id,
       details: {
