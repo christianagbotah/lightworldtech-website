@@ -18,6 +18,10 @@ import {
   ShieldAlert,
   StickyNote,
   UserRound,
+  Paperclip,
+  Download,
+  Upload,
+  Activity,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -87,6 +91,25 @@ type InternalNote = {
   createdAt: string;
 };
 
+type TicketAttachment = {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedByType: string;
+  uploadedByName: string;
+  createdAt: string;
+};
+
+type TicketEvent = {
+  id: string;
+  type: string;
+  actorType: string;
+  actorName: string;
+  details: string;
+  createdAt: string;
+};
+
 type TicketDetail = TicketListItem & {
   message: string;
   organization: {
@@ -100,6 +123,8 @@ type TicketDetail = TicketListItem & {
   createdBy: { id: string; name: string; email: string; role: string };
   messages: TicketMessage[];
   internalNotes: InternalNote[];
+  attachments: TicketAttachment[];
+  events: TicketEvent[];
 };
 
 type Summary = {
@@ -164,6 +189,7 @@ export default function AdminSupportDesk() {
   const [selected, setSelected] = useState<TicketDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [attachmentUploading, setAttachmentUploading] = useState(false);
   const [reply, setReply] = useState('');
   const [note, setNote] = useState('');
 
@@ -275,6 +301,27 @@ export default function AdminSupportDesk() {
       toast.error(error instanceof Error ? error.message : 'Unable to send support reply');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const uploadAttachment = async (file: File | null) => {
+    if (!selected || !file) return;
+    setAttachmentUploading(true);
+    try {
+      const form = new FormData();
+      form.set('file', file);
+      const response = await fetch('/api/admin/support-tickets/' + encodeURIComponent(selected.id) + '/attachments', {
+        method: 'POST',
+        body: form,
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to upload attachment');
+      toast.success('Evidence attached to ticket');
+      await refreshSelected();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to upload attachment');
+    } finally {
+      setAttachmentUploading(false);
     }
   };
 
@@ -497,6 +544,70 @@ export default function AdminSupportDesk() {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  <div className="rounded-2xl border border-border/60 p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="flex items-center gap-2 text-sm font-semibold"><Paperclip className="size-4 text-amber-600" /> Evidence & attachments</h3>
+                        <p className="mt-1 text-xs text-muted-foreground">Private ticket files. JPG, PNG, WebP or PDF, max 10MB.</p>
+                      </div>
+                      <label className="inline-flex cursor-pointer items-center rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold transition hover:bg-muted">
+                        {attachmentUploading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Upload className="mr-2 size-4" />}
+                        Add evidence
+                        <input
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                          className="sr-only"
+                          disabled={attachmentUploading}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0] || null;
+                            void uploadAttachment(file);
+                            event.currentTarget.value = '';
+                          }}
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      {selected.attachments.map((attachment) => (
+                        <a
+                          key={attachment.id}
+                          href={'/api/support-attachments/' + attachment.id}
+                          className="flex min-w-0 items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition hover:border-amber-300"
+                        >
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700"><Paperclip className="size-4" /></span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-xs font-semibold">{attachment.originalName}</span>
+                            <span className="block text-[10px] text-muted-foreground">
+                              {(attachment.sizeBytes / 1024 / 1024).toFixed(2)} MB · {attachment.uploadedByName}
+                            </span>
+                          </span>
+                          <Download className="size-3.5 shrink-0 text-muted-foreground" />
+                        </a>
+                      ))}
+                      {!selected.attachments.length && <p className="text-xs text-muted-foreground">No evidence attached yet.</p>}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-border/60 p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="flex items-center gap-2 text-sm font-semibold"><Activity className="size-4 text-amber-600" /> Activity timeline</h3>
+                      <Badge variant="outline">{selected.events.length}</Badge>
+                    </div>
+                    <div className="mt-4 max-h-72 space-y-2 overflow-y-auto pr-1">
+                      {selected.events.map((event) => (
+                        <div key={event.id} className="flex gap-3 rounded-xl bg-muted/40 p-3">
+                          <span className="mt-1 size-2 shrink-0 rounded-full bg-amber-500" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold">{pretty(event.type)}</p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              {event.actorName} · {event.actorType === 'admin' ? 'Lightworld' : 'Client'} · {new Date(event.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                      {!selected.events.length && <p className="text-xs text-muted-foreground">No activity events recorded yet.</p>}
+                    </div>
                   </div>
 
                   <div className="rounded-2xl border border-border/60 p-5">
