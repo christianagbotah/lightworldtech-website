@@ -134,7 +134,7 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
         <div className="relative container-main py-16 sm:py-20 lg:py-24 z-10">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
                 <Briefcase className="size-3.5" />
                 {contentText(settings, 'portfolio_hero_eyebrow', 'Work & solution patterns')}
               </div>
@@ -170,7 +170,7 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
                   onClick={() => setActive(category)}
                   className={
                     active === category
-                      ? 'shrink-0 rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white dark:bg-emerald-400 dark:text-slate-950'
+                      ? 'shrink-0 rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white dark:bg-amber-400 dark:text-slate-950'
                       : 'shrink-0 rounded-full border border-slate-200/80 bg-white px-4 py-2 text-xs font-medium text-slate-500 transition hover:border-slate-300 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white/35'
                   }
                 >
@@ -203,7 +203,7 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
                   <span className="absolute left-5 top-5 rounded-full border border-white/15 bg-slate-950/35 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 backdrop-blur-lg">{project.category}</span>
                   {project.featured && (
-                    <span className="absolute right-5 top-5 inline-flex items-center gap-1.5 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-semibold text-emerald-100 backdrop-blur-lg">
+                    <span className="absolute right-5 top-5 inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] font-semibold text-amber-100 backdrop-blur-lg">
                       <Sparkles className="size-3" /> Featured
                     </span>
                   )}
@@ -216,7 +216,7 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
                       <p className="mt-2 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/36">{project.description}</p>
                     </div>
                     {project.clientUrl && project.clientUrl !== '#' ? (
-                      <a href={project.clientUrl} target="_blank" rel="noreferrer" className="flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition hover:border-emerald-300 hover:text-emerald-600 dark:border-white/[0.07] dark:text-white/25">
+                      <a href={project.clientUrl} target="_blank" rel="noreferrer" className="flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-400 transition hover:border-amber-300 hover:text-amber-600 dark:border-white/[0.07] dark:text-white/25">
                         <ArrowUpRight className="size-4" />
                         <span className="sr-only">Open project</span>
                       </a>
@@ -236,12 +236,12 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
             ))}
           </div>
 
-          <div className="mt-10 flex flex-col gap-5 rounded-[32px] border border-emerald-500/15 bg-emerald-500/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="mt-10 flex flex-col gap-5 rounded-[32px] border border-amber-500/15 bg-amber-500/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight">{contentText(settings, 'portfolio_cta_title', 'Have a harder problem than these?')}</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/38">{contentText(settings, 'portfolio_cta_description', 'Good. The most useful work usually starts where a template stops being enough.')}</p>
             </div>
-            <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white dark:text-slate-950">
+            <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-amber-500 px-5 text-sm font-semibold text-white dark:text-slate-950">
               Discuss your project <ArrowRight className="size-4" />
             </Link>
           </div>
