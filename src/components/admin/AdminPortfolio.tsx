@@ -205,11 +205,11 @@ export default function AdminPortfolio() {
                 </TableRow>
               ) : (
                 projects.map((p) => (
-                  <TableRow key={p.id}>
+                  <TableRow key={p.id} onClick={(event) => { event.stopPropagation(); openEdit(p); }} className="cursor-pointer hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors">
                     <TableCell className="font-medium text-sm">{p.title}</TableCell>
                     <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">{p.category || '—'}</TableCell>
                     <TableCell className="text-center">
-                      <button onClick={() => toggleFeatured(p)} className="cursor-pointer">
+                      <button onClick={(event) => { event.stopPropagation(); void toggleFeatured(p); }} className="cursor-pointer">
                         {p.featured ? (
                           <Star className="h-4 w-4 text-amber-500 fill-amber-500 mx-auto" />
                         ) : (
@@ -224,13 +224,13 @@ export default function AdminPortfolio() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => toggleActive(p)}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); void toggleActive(p); }}>
                           {p.active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(p)}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); openEdit(p); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => { setDeleting(p); setDeleteOpen(true); }}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); setDeleting(p); setDeleteOpen(true); }}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
