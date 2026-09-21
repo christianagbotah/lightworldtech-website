@@ -47,6 +47,16 @@ export async function POST(
     },
   });
 
+  await db.clientTicketEvent.create({
+    data: {
+      ticketId: ticket.id,
+      type: 'internal_note_added',
+      actorType: 'admin',
+      actorName: actor.name || actor.email,
+      details: JSON.stringify({ noteId: note.id }),
+    },
+  });
+
   await recordAdminAudit({
     admin: actor,
     action: 'admin.support_ticket_internal_note_added',
