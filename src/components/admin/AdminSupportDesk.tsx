@@ -598,7 +598,7 @@ export default function AdminSupportDesk() {
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ticket, client, subject, email or assignee" className="pl-9" />
         </label>
-        <select value={status} onChange={(event) => setStatus(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+        <select value={status} onChange={(event) => setStatus(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           <option value="all">All statuses</option>
           <option value="open">Open</option>
           <option value="in_progress">In progress</option>
@@ -606,20 +606,20 @@ export default function AdminSupportDesk() {
           <option value="resolved">Resolved</option>
           <option value="closed">Closed</option>
         </select>
-        <select value={priority} onChange={(event) => setPriority(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+        <select value={priority} onChange={(event) => setPriority(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           <option value="all">All priorities</option>
           <option value="high">High</option>
           <option value="normal">Normal</option>
           <option value="low">Low</option>
         </select>
-        <select value={category} onChange={(event) => setCategory(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+        <select value={category} onChange={(event) => setCategory(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           {categories.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
-        <select value={sla} onChange={(event) => setSla(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+        <select value={sla} onChange={(event) => setSla(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           <option value="all">All SLA states</option>
           <option value="breached">SLA breached</option>
         </select>
-        <select value={assignedToFilter} onChange={(event) => setAssignedToFilter(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+        <select value={assignedToFilter} onChange={(event) => setAssignedToFilter(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           <option value="all">All agents</option>
           <option value="unassigned">Unassigned</option>
           {agents.map((agent) => <option key={agent.id} value={agent.email}>{agent.name}</option>)}
@@ -636,7 +636,7 @@ export default function AdminSupportDesk() {
             </div>
             <div className="grid gap-2 sm:grid-cols-3 xl:min-w-[760px]">
               <div className="flex gap-2">
-                <select value={bulkAssignee} onChange={(event) => setBulkAssignee(event.target.value)} className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs">
+                <select value={bulkAssignee} onChange={(event) => setBulkAssignee(event.target.value)} className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
                   <option value="">Choose assignee</option>
                   <option value="__unassigned__">Unassigned</option>
                   {agents.map((agent) => <option key={agent.id} value={agent.email}>{agent.name}</option>)}
@@ -644,7 +644,7 @@ export default function AdminSupportDesk() {
                 <Button size="sm" variant="outline" disabled={bulkUpdating || !bulkAssignee} onClick={() => void applyBulk({ assignedTo: bulkAssignee === '__unassigned__' ? '' : bulkAssignee })}>Assign</Button>
               </div>
               <div className="flex gap-2">
-                <select value={bulkPriority} onChange={(event) => setBulkPriority(event.target.value)} className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs">
+                <select value={bulkPriority} onChange={(event) => setBulkPriority(event.target.value)} className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
                   <option value="">Choose priority</option>
                   <option value="high">High</option>
                   <option value="normal">Normal</option>
@@ -653,7 +653,7 @@ export default function AdminSupportDesk() {
                 <Button size="sm" variant="outline" disabled={bulkUpdating || !bulkPriority} onClick={() => void applyBulk({ priority: bulkPriority })}>Apply</Button>
               </div>
               <div className="flex gap-2">
-                <select value={bulkStatus} onChange={(event) => setBulkStatus(event.target.value)} className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-xs">
+                <select value={bulkStatus} onChange={(event) => setBulkStatus(event.target.value)} className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
                   <option value="">Choose status</option>
                   <option value="open">Open</option>
                   <option value="in_progress">In progress</option>
