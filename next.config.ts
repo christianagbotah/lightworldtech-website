@@ -7,6 +7,7 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'self'",
+  "frame-src 'self' https://www.google.com https://maps.google.com",
   "form-action 'self'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
