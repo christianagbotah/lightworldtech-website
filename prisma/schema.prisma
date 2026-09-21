@@ -431,6 +431,9 @@ model ClientOrganization {
   projects           ClientProject[]
   tickets            ClientSupportTicket[]
   announcements      ClientAnnouncement[]
+  services           ClientServiceAccount[]
+  invoices           ClientInvoice[]
+  payments           ClientPayment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -493,6 +496,8 @@ model ClientProject {
   documents      ClientDocument[]
   announcements  ClientAnnouncement[]
   tickets        ClientSupportTicket[]
+  services       ClientServiceAccount[]
+  invoices       ClientInvoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -636,6 +641,239 @@ model ClientTicketEvent {
 
   @@index([ticketId, createdAt])
   @@index([type, createdAt])
+}
+
+model ClientServiceAccount {
+  id                 String             @id @default(cuid())
+  organizationId     String
+  organization       ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId          String?
+  project            ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  name               String
+  serviceType        String             @default("managed_service")
+  planName           String             @default("")
+  status             String             @default("active")
+  billingCycle       String             @default("annual")
+  currency           String             @default("GHS")
+  recurringAmount    Decimal            @default(0) @db.Decimal(18, 2)
+  startDate          DateTime
+  expiryDate         DateTime?
+  nextDueDate        DateTime?
+  autoRenew          Boolean            @default(false)
+  renewalNoticeDays  Int                @default(30)
+  notes              String             @default("")
+  changes            ClientServiceChange[]
+  invoices           ClientInvoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@index([projectId])
+  @@index([expiryDate])
+  @@index([nextDueDate])
+}
+
+model ClientServiceChange {
+  id             String               @id @default(cuid())
+  serviceId      String
+  service        ClientServiceAccount @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  changeType     String
+  previousPlan   String               @default("")
+  newPlan        String               @default("")
+  previousAmount Decimal?             @db.Decimal(18, 2)
+  newAmount      Decimal?             @db.Decimal(18, 2)
+  effectiveAt    DateTime
+  notes          String               @default("")
+  changedBy      String               @default("Admin")
+
+  createdAt DateTime @default(now())
+
+  @@index([serviceId, effectiveAt])
+  @@index([changeType, effectiveAt])
+}
+
+model ClientInvoice {
+  id             String             @id @default(cuid())
+  invoiceNumber  String             @unique
+  organizationId String
+  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  serviceId      String?
+  service        ClientServiceAccount? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  projectId      String?
+  project        ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  status         String             @default("draft")
+  currency       String             @default("GHS")
+  issueDate      DateTime
+  dueDate        DateTime
+  subtotal       Decimal            @db.Decimal(18, 2)
+  discount       Decimal            @default(0) @db.Decimal(18, 2)
+  tax            Decimal            @default(0) @db.Decimal(18, 2)
+  total          Decimal            @db.Decimal(18, 2)
+  notes          String             @default("")
+  createdBy      String             @default("Admin")
+  lines          ClientInvoiceLine[]
+  allocations    ClientPaymentAllocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@index([serviceId, dueDate])
+  @@index([projectId])
+  @@index([dueDate, status])
+  @@index([issueDate])
+}
+
+model ClientInvoiceLine {
+  id          String        @id @default(cuid())
+  invoiceId   String
+  invoice     ClientInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal       @default(1) @db.Decimal(12, 2)
+  unitPrice   Decimal       @db.Decimal(18, 2)
+  amount      Decimal       @db.Decimal(18, 2)
+  order       Int           @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId, order])
+}
+
+model ClientPayment {
+  id             String             @id @default(cuid())
+  paymentNumber  String             @unique
+  organizationId String
+  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  currency       String             @default("GHS")
+  amount         Decimal            @db.Decimal(18, 2)
+  paidAt         DateTime
+  method         String             @default("bank_transfer")
+  reference      String             @default("")
+  notes          String             @default("")
+  receivedBy     String             @default("Admin")
+  allocations    ClientPaymentAllocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, paidAt])
+  @@index([paidAt])
+}
+
+model ClientPaymentAllocation {
+  id        String        @id @default(cuid())
+  paymentId String
+  payment   ClientPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceId String
+  invoice   ClientInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Decimal       @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+
+  @@unique([paymentId, invoiceId])
+  @@index([invoiceId])
+}
+
+model FinanceVendor {
+  id        String              @id @default(cuid())
+  name      String
+  email     String              @default("")
+  phone     String              @default("")
+  taxId     String              @default("")
+  active    Boolean             @default(true)
+  notes     String              @default("")
+  bills     FinanceVendorBill[]
+  payments  FinanceVendorPayment[]
+  expenses  FinanceExpense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([active])
+}
+
+model FinanceVendorBill {
+  id             String              @id @default(cuid())
+  payableNumber  String              @unique
+  vendorId       String
+  vendor         FinanceVendor       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  vendorReference String             @default("")
+  category       String              @default("operating_expense")
+  status         String              @default("unpaid")
+  currency       String              @default("GHS")
+  issueDate      DateTime
+  dueDate        DateTime
+  total          Decimal             @db.Decimal(18, 2)
+  notes          String              @default("")
+  allocations    FinanceVendorPaymentAllocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vendorId, status])
+  @@index([dueDate, status])
+  @@index([issueDate])
+}
+
+model FinanceVendorPayment {
+  id            String              @id @default(cuid())
+  paymentNumber String              @unique
+  vendorId      String
+  vendor        FinanceVendor       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  currency      String              @default("GHS")
+  amount        Decimal             @db.Decimal(18, 2)
+  paidAt        DateTime
+  method        String              @default("bank_transfer")
+  reference     String              @default("")
+  notes         String              @default("")
+  paidBy        String              @default("Admin")
+  allocations   FinanceVendorPaymentAllocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vendorId, paidAt])
+  @@index([paidAt])
+}
+
+model FinanceVendorPaymentAllocation {
+  id        String               @id @default(cuid())
+  paymentId String
+  payment   FinanceVendorPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  billId    String
+  bill      FinanceVendorBill    @relation(fields: [billId], references: [id], onDelete: Cascade)
+  amount    Decimal              @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+
+  @@unique([paymentId, billId])
+  @@index([billId])
+}
+
+model FinanceExpense {
+  id            String         @id @default(cuid())
+  expenseNumber String         @unique
+  vendorId      String?
+  vendor        FinanceVendor? @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  category      String         @default("operating_expense")
+  description   String
+  currency      String         @default("GHS")
+  amount        Decimal        @db.Decimal(18, 2)
+  incurredAt    DateTime
+  paidAt        DateTime?
+  method        String         @default("")
+  reference     String         @default("")
+  notes         String         @default("")
+  recordedBy    String         @default("Admin")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vendorId, incurredAt])
+  @@index([category, incurredAt])
+  @@index([paidAt])
 }
 
 model ClientAnnouncement {
