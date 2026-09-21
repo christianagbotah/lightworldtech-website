@@ -172,9 +172,9 @@ export default function StatsCounterSection() {
           transition={{ duration: 0.6 }}
         >
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-px w-8 bg-gradient-to-r from-transparent to-emerald-400 dark:to-amber-400" />
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-amber-400 uppercase tracking-widest bg-emerald-50 dark:bg-amber-900/20 rounded-full px-4 py-1.5 border border-emerald-200/60 dark:border-amber-700/30">
-              <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-amber-400 animate-pulse" />
+            <div className="h-px w-8 bg-gradient-to-r from-transparent to-amber-400 dark:to-amber-300" />
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-300 uppercase tracking-widest bg-amber-50 dark:bg-amber-900/20 rounded-full px-4 py-1.5 border border-amber-200/60 dark:border-amber-700/30">
+              <span className="size-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse" />
               Our Impact in Numbers
             </span>
             <div className="h-px w-8 bg-gradient-to-l from-transparent to-emerald-400 dark:to-amber-400" />
