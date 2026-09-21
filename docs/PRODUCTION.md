@@ -353,9 +353,10 @@ Administrator access is now split into explicit capability areas rather than tre
 - `crm.manage` — enquiries, CRM pipeline, follow-ups, messages and lead notes;
 - `proposals.manage` — proposal creation, review and editing;
 - `clients.manage` — client organizations, users, projects, documents, milestones, announcements and support;
-- `communications.manage` — newsletter subscribers, diagnostics and campaign management.
+- `communications.manage` — newsletter subscribers, email campaigns, Hubtel SMS templates/campaigns/scheduling and OTP diagnostics;
+- `finance.manage` — customer services, invoicing, receipts, Hubtel payment records, suppliers, expenses, debtors, creditors, cashflow and management P&L.
 
-Super-admins always have all capabilities. Existing ordinary administrators are backfilled with all five permissions by the PostgreSQL migration so Phase 23 is non-breaking; a super-admin can then reduce access deliberately in Admin Governance.
+Super-admins always have all capabilities. Existing ordinary administrators are backfilled with the capability set by the PostgreSQL migration so Phase 23 is non-breaking; a super-admin can then reduce access deliberately in Admin Governance.
 
 Authorization is enforced against the live `Admin.permissions` value on protected API requests, not only by hiding sidebar links. Cross-module actions follow the same rule: CRM users without proposal access do not see proposal actions, and proposal users without Client Portal access do not see client-conversion controls. Dashboard queries and widgets are permission-scoped to avoid exposing data from modules an administrator cannot access.
 
@@ -424,3 +425,74 @@ The underlying consent behavior is unchanged: essential storage remains mandator
 The action row now wraps on narrow screens so Customize, Decline and Accept All remain usable without horizontal overflow.
 
 Phase 27 requires no database migration. New cookie-copy keys use the existing SiteSetting store and retain today's public wording as defaults until explicitly edited in Admin.
+
+
+## Hubtel payments, SMS, OTP and scheduling
+
+The customer account and communications workspaces support Hubtel behind server-only environment configuration. Do not commit Hubtel Client IDs, Client Secrets, merchant identifiers or scheduler secrets.
+
+Minimum programmable SMS configuration:
+
+```bash
+HUBTEL_SMS_CLIENT_ID=<programmable-sms-client-id>
+HUBTEL_SMS_CLIENT_SECRET=<programmable-sms-client-secret>
+HUBTEL_SMS_SENDER_ID=<approved-sender-id>
+# Optional; the application defaults to Hubtel's current programmable SMS endpoint:
+HUBTEL_SMS_URL=https://smsc.hubtel.com/v1/messages/send
+HUBTEL_SMS_BATCH_SIZE=5
+```
+
+OTP configuration uses the credentials and endpoint URLs assigned in the Hubtel developer account:
+
+```bash
+HUBTEL_OTP_CLIENT_ID=<otp-client-id>
+HUBTEL_OTP_CLIENT_SECRET=<otp-client-secret>
+HUBTEL_OTP_SEND_URL=<hubtel-otp-send-endpoint>
+HUBTEL_OTP_VERIFY_URL=<hubtel-otp-verify-endpoint>
+```
+
+Online Checkout/payment configuration:
+
+```bash
+HUBTEL_PAYMENT_CLIENT_ID=<payment-client-id>
+HUBTEL_PAYMENT_CLIENT_SECRET=<payment-client-secret>
+HUBTEL_MERCHANT_ACCOUNT_NUMBER=<merchant-account-number>
+HUBTEL_CHECKOUT_INITIATE_URL=<hubtel-online-checkout-initiation-endpoint>
+HUBTEL_TRANSACTION_STATUS_URL=<hubtel-transaction-status-endpoint>
+PUBLIC_SITE_URL=https://lightworldtech.com
+```
+
+The checkout callback must be reachable publicly at:
+
+```text
+https://lightworldtech.com/api/payments/hubtel/callback
+```
+
+The callback body is never treated as sufficient proof of payment. The application re-checks the transaction through Hubtel's transaction-status API, validates the client reference, currency and expected amount, then records an idempotent `ClientPayment` and invoice allocation. Therefore the same verified receipt feeds the client statement, debtors and cashflow rather than maintaining a second payment ledger.
+
+Scheduled SMS and campaigns use a protected local dispatcher:
+
+```bash
+SMS_CRON_SECRET=<high-entropy-random-secret>
+```
+
+`ops/install-production-ops.sh` installs and enables `lightworld-sms-dispatch.timer`, which invokes the dispatcher approximately once per minute as the dedicated `lightworld` user. The runner sends only bounded batches and silently skips delivery when Hubtel SMS or the scheduler secret is not configured.
+
+Verification commands:
+
+```bash
+systemctl is-enabled lightworld-sms-dispatch.timer
+systemctl is-active lightworld-sms-dispatch.timer
+systemctl list-timers lightworld-sms-dispatch.timer
+journalctl -u lightworld-sms-dispatch.service -n 50 --no-pager
+```
+
+After adding real credentials, smoke-test in this order:
+
+1. **Admin → SMS & OTP** shows Programmable SMS / OTP / Online Payments as ready only for configured products.
+2. Send one SMS to an internal test number and confirm the Hubtel message/provider ID is recorded.
+3. Schedule one SMS a few minutes ahead and confirm the systemd timer delivers it.
+4. Create a small manual campaign, send one bounded batch, then test a scheduled campaign.
+5. Send and verify an OTP to an internal test number.
+6. In a test client account with a GHS invoice, choose **Pay with Hubtel**, complete checkout, return to the portal, and confirm a single receipt/allocation is created and the invoice balance is reduced.
+7. Re-send/replay the same Hubtel callback and confirm no duplicate customer receipt is created.
