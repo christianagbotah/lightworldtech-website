@@ -77,6 +77,33 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(leads).toContain("where.status = status && status !== 'all' ? status : { notIn: ['won', 'lost'] }");
   });
 
+  test('keeps customer email replies inside the Lightworld admin portal', () => {
+    const schema = source('prisma/schema.prisma');
+    const replies = source('src/app/api/admin/messages/[id]/replies/route.ts');
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const proposals = source('src/components/admin/AdminProposals.tsx');
+
+    expect(schema).toContain('model ContactMessageReply');
+    expect(schema).toContain('replies ContactMessageReply[]');
+    expect(replies).toContain('sendTransactionalMail');
+    expect(replies).toContain("'admin.message_replied'");
+    expect(replies).toContain("'admin.message_reply_failed'");
+    expect(replies).toContain('lastContactedAt: sentAt');
+    expect(replies).toContain("status: 'sending'");
+    expect(replies).toContain("status: 'sent'");
+    expect(replies).toContain("status: 'failed'");
+    expect(messages).toContain('Reply internally');
+    expect(messages).toContain('Internal correspondence history');
+    expect(messages).toContain("fetch('/api/admin/messages/'");
+    expect(messages).toContain("sessionStorage.getItem('lw-reply-message-id')");
+    expect(messages).not.toContain("href={'mailto:' + viewing.email}");
+    expect(crm).toContain("sessionStorage.setItem('lw-reply-message-id'");
+    expect(crm).not.toContain("href={'mailto:' + selected.contactMessage.email}");
+    expect(proposals).toContain("sessionStorage.setItem('lw-reply-message-id'");
+    expect(proposals).not.toContain("href={'mailto:' + selected.lead.contactMessage.email}");
+  });
+
   test('supports audited enterprise exports and bounded message bulk actions', () => {
     const crm = source('src/components/admin/AdminCRM.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
