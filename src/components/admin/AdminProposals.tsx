@@ -116,7 +116,7 @@ function statusClass(status: ProposalStatus): string {
 }
 
 export default function AdminProposals() {
-  const { adminRole, adminPermissions } = useAppStore();
+  const { navigate, adminRole, adminPermissions } = useAppStore();
   const canManageClients = hasAdminPermission(adminRole, adminPermissions, 'clients.manage');
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -265,6 +265,12 @@ export default function AdminProposals() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const openProspectReply = (messageId: string) => {
+    sessionStorage.setItem('lw-reply-message-id', messageId);
+    setSelected(null);
+    navigate('admin-messages');
   };
 
   const copyActivationLink = async (proposalId: string) => {
@@ -513,9 +519,15 @@ export default function AdminProposals() {
                   <div className="border-t border-border/60 pt-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Prospect</p>
                     <p className="mt-2 text-sm font-semibold">{selected.lead.contactMessage.name}</p>
-                    <a className="mt-2 flex items-center gap-2 text-xs text-amber-700 hover:underline dark:text-amber-300" href={'mailto:' + selected.lead.contactMessage.email}>
-                      <Mail className="size-3.5" /> {selected.lead.contactMessage.email}
-                    </a>
+                    <button
+                      type="button"
+                      className="mt-2 flex w-full items-center gap-2 text-left text-xs text-amber-700 hover:underline dark:text-amber-300"
+                      onClick={() => openProspectReply(selected.lead.contactMessage.id)}
+                    >
+                      <Mail className="size-3.5 shrink-0" />
+                      <span className="truncate">{selected.lead.contactMessage.email}</span>
+                      <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em]">Reply internally</span>
+                    </button>
                     <p className="mt-3 text-xs leading-5 text-muted-foreground">{selected.lead.summary}</p>
                   </div>
 
