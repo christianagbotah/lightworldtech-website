@@ -11,6 +11,7 @@ import {
   FileText,
   FolderKanban,
   LifeBuoy,
+  KeyRound,
   Loader2,
   LogOut,
   Megaphone,
@@ -107,8 +108,8 @@ function statusLabel(value: string): string {
 
 function healthClass(value: string): string {
   if (value === 'at_risk') return 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300';
-  if (value === 'attention') return 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300';
-  return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300';
+  if (value === 'attention') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300';
+  return 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300';
 }
 
 export default function ClientPortalPage() {
@@ -117,6 +118,9 @@ export default function ClientPortalPage() {
   const [data, setData] = useState<PortalData | null>(null);
   const [loading, setLoading] = useState(false);
   const [login, setLogin] = useState({ email: '', password: '' });
+  const [resetMode, setResetMode] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
   const [ticket, setTicket] = useState({ subject: '', message: '', priority: 'normal', projectId: '' });
   const [ticketSending, setTicketSending] = useState(false);
   const [replies, setReplies] = useState<Record<string, string>>({});
@@ -158,6 +162,30 @@ export default function ClientPortalPage() {
       toast.error(error instanceof Error ? error.message : 'Unable to sign in');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const requestPasswordReset = async (event: FormEvent) => {
+    event.preventDefault();
+    setResetLoading(true);
+    setResetMessage('');
+
+    try {
+      const response = await fetch('/api/client/password-reset/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: login.email }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to request a password reset');
+      setResetMessage(
+        payload?.message ||
+          'If an active client portal account uses that email, a secure password reset link has been sent.',
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to request a password reset');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -234,7 +262,7 @@ export default function ClientPortalPage() {
       <div className="min-h-screen bg-[#050b10] px-4 py-12 text-white">
         <div className="mx-auto grid min-h-[80vh] max-w-5xl items-center gap-10 lg:grid-cols-[1fr_.8fr]">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/15 bg-amber-400/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">
               <ShieldCheck className="size-3.5" /> Secure Client Portal
             </div>
             <h1 className="mt-6 max-w-2xl text-5xl font-semibold tracking-[-0.055em] sm:text-6xl">
@@ -243,7 +271,7 @@ export default function ClientPortalPage() {
             <p className="mt-5 max-w-xl text-base leading-8 text-white/45">
               View project progress, milestones, published documents, announcements and support conversations for your organization.
             </p>
-            <a href="/" className="mt-7 inline-flex text-sm font-semibold text-emerald-300">← Back to lightworldtech.com</a>
+            <a href="/" className="mt-7 inline-flex text-sm font-semibold text-amber-300">← Back to lightworldtech.com</a>
           </div>
 
           <Card className="border-white/[0.08] bg-white/[0.035] text-white">
@@ -261,10 +289,61 @@ export default function ClientPortalPage() {
                   <Label htmlFor="client-password">Password</Label>
                   <Input id="client-password" type="password" required autoComplete="current-password" value={login.password} onChange={(event) => setLogin({ ...login, password: event.target.value })} className="border-white/10 bg-black/20 text-white" />
                 </div>
-                <Button type="submit" disabled={loading} className="w-full bg-emerald-400 text-slate-950 hover:bg-emerald-300">
+                <Button type="submit" disabled={loading} className="w-full bg-amber-400 text-slate-950 hover:bg-amber-300">
                   {loading && <Loader2 className="mr-2 size-4 animate-spin" />} Sign in
                 </Button>
               </form>
+
+              <div className="mt-5 border-t border-white/[0.08] pt-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetMode((value) => !value);
+                    setResetMessage('');
+                  }}
+                  className="mx-auto flex items-center gap-2 text-sm font-semibold text-amber-300 transition hover:text-amber-200"
+                >
+                  <KeyRound className="size-4" />
+                  {resetMode ? 'Back to sign in' : 'Forgot password?'}
+                </button>
+
+                {resetMode && (
+                  <form onSubmit={requestPasswordReset} className="mt-4 space-y-3">
+                    <p className="text-xs leading-5 text-white/45">
+                      Enter your client portal email. If the account is active, we will send a secure one-time reset link.
+                    </p>
+                    <Input
+                      type="email"
+                      value={login.email}
+                      onChange={(event) => setLogin({ ...login, email: event.target.value })}
+                      placeholder="you@company.com"
+                      required
+                      autoComplete="email"
+                      className="border-white/10 bg-black/20 text-white"
+                    />
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      disabled={resetLoading}
+                      className="w-full border-amber-400/25 bg-amber-400/[0.06] text-amber-200 hover:bg-amber-400/10 hover:text-amber-100"
+                    >
+                      {resetLoading ? (
+                        <>
+                          <Loader2 className="mr-2 size-4 animate-spin" />
+                          Sending reset link...
+                        </>
+                      ) : (
+                        'Send reset link'
+                      )}
+                    </Button>
+                    {resetMessage && (
+                      <p className="rounded-xl border border-amber-400/15 bg-amber-400/[0.07] p-3 text-xs leading-5 text-amber-100">
+                        {resetMessage}
+                      </p>
+                    )}
+                  </form>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -277,7 +356,7 @@ export default function ClientPortalPage() {
       <header className="border-b border-slate-200/70 bg-white/85 backdrop-blur dark:border-white/[0.07] dark:bg-[#071018]/90">
         <div className="container-main flex min-h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600"><Building2 className="size-4" /></span>
+            <span className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><Building2 className="size-4" /></span>
             <div>
               <p className="text-sm font-semibold">{data?.organization.name || 'Client Portal'}</p>
               <p className="text-[10px] text-slate-400 dark:text-white/30">Lightworld client workspace</p>
@@ -290,7 +369,7 @@ export default function ClientPortalPage() {
       <main className="container-main py-8 sm:py-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">Client portal</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Client portal</p>
             <h1 className="mt-1 text-3xl font-semibold tracking-[-0.04em]">Welcome, {data?.user.name}</h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-white/38">Project visibility and support for {data?.organization.name}.</p>
           </div>
@@ -307,7 +386,7 @@ export default function ClientPortalPage() {
             return (
               <Card key={item.label} className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
                 <CardContent className="p-5">
-                  <Icon className="size-4 text-emerald-600" />
+                  <Icon className="size-4 text-amber-600" />
                   <p className="mt-5 text-2xl font-bold">{item.value}</p>
                   <p className="text-xs text-slate-500 dark:text-white/35">{item.label}</p>
                 </CardContent>
@@ -318,10 +397,10 @@ export default function ClientPortalPage() {
 
         {Boolean(data?.announcements.length) && (
           <section className="mt-8">
-            <div className="flex items-center gap-2"><Megaphone className="size-4 text-emerald-600" /><h2 className="text-xl font-semibold">Updates from Lightworld</h2></div>
+            <div className="flex items-center gap-2"><Megaphone className="size-4 text-amber-600" /><h2 className="text-xl font-semibold">Updates from Lightworld</h2></div>
             <div className="mt-4 grid gap-3 lg:grid-cols-2">
               {data?.announcements.map((item) => (
-                <Card key={item.id} className="border-emerald-500/15 bg-emerald-500/[0.04] dark:border-emerald-400/10">
+                <Card key={item.id} className="border-amber-500/15 bg-amber-500/[0.04] dark:border-amber-400/10">
                   <CardContent className="p-5">
                     <p className="text-sm font-semibold">{item.title}</p>
                     <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-500 dark:text-white/40">{item.body}</p>
@@ -357,7 +436,7 @@ export default function ClientPortalPage() {
                             <span>Progress</span><span className="font-semibold">{project.progress}%</span>
                           </div>
                           <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
-                            <div className="h-full rounded-full bg-emerald-500" style={{ width: project.progress + '%' }} />
+                            <div className="h-full rounded-full bg-amber-500" style={{ width: project.progress + '%' }} />
                           </div>
                         </div>
 
@@ -367,7 +446,7 @@ export default function ClientPortalPage() {
                         </div>
 
                         <div className="mt-6 border-t border-slate-200/70 pt-5 dark:border-white/[0.07]">
-                          <div className="flex items-center gap-2"><FileText className="size-4 text-emerald-600" /><p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">Documents</p></div>
+                          <div className="flex items-center gap-2"><FileText className="size-4 text-amber-600" /><p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">Documents</p></div>
                           {project.documents.length ? (
                             <div className="mt-3 space-y-2">
                               {project.documents.map((document) => (
@@ -376,7 +455,7 @@ export default function ClientPortalPage() {
                                   href={document.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/70 p-3 transition hover:border-emerald-300 dark:border-white/[0.07]"
+                                  className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/70 p-3 transition hover:border-amber-300 dark:border-white/[0.07]"
                                 >
                                   <div>
                                     <p className="text-sm font-medium">{document.title}</p>
@@ -397,7 +476,7 @@ export default function ClientPortalPage() {
                           <div className="mt-3 space-y-2">
                             {project.milestones.map((milestone) => (
                               <div key={milestone.id} className="flex gap-3 rounded-2xl border border-slate-200/70 p-4 dark:border-white/[0.07]">
-                                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+                                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
                                   {milestone.status === 'completed' ? <CheckCircle2 className="size-4" /> : milestone.status === 'in_progress' ? <CircleDot className="size-4" /> : <Clock3 className="size-4" />}
                                 </span>
                                 <div className="min-w-0">
@@ -450,7 +529,7 @@ export default function ClientPortalPage() {
                   <Label>Details</Label>
                   <Textarea required minLength={3} rows={5} value={ticket.message} onChange={(event) => setTicket({ ...ticket, message: event.target.value })} />
                 </div>
-                <Button disabled={ticketSending} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button disabled={ticketSending} className="bg-amber-600 hover:bg-amber-700">
                   {ticketSending && <Loader2 className="mr-2 size-4 animate-spin" />} Submit support request
                 </Button>
               </form>
@@ -475,7 +554,7 @@ export default function ClientPortalPage() {
                       {item.messages.length > 0 && (
                         <div className="mt-3 space-y-2">
                           {item.messages.map((message) => (
-                            <div key={message.id} className={message.authorType === 'client' ? 'ml-6 rounded-xl bg-emerald-500/[0.07] p-3' : 'mr-6 rounded-xl bg-slate-100 p-3 dark:bg-white/[0.05]'}>
+                            <div key={message.id} className={message.authorType === 'client' ? 'ml-6 rounded-xl bg-amber-500/[0.07] p-3' : 'mr-6 rounded-xl bg-slate-100 p-3 dark:bg-white/[0.05]'}>
                               <div className="flex items-center justify-between gap-2 text-[10px] text-slate-400">
                                 <span>{message.authorName} · {message.authorType === 'client' ? 'Client' : 'Lightworld'}</span>
                                 <span>{new Date(message.createdAt).toLocaleString()}</span>

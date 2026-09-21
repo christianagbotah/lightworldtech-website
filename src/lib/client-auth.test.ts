@@ -23,12 +23,14 @@ describe('client portal session security', () => {
       email: 'client@example.com',
       name: 'Client User',
       role: 'client_admin',
+      authVersion: 0,
     });
 
     const session = verifyClientSessionToken(token);
     expect(session?.sub).toBe('client-user-1');
     expect(session?.organizationId).toBe('org-1');
     expect(session?.email).toBe('client@example.com');
+    expect(session?.authVersion).toBe(0);
   });
 
   test('rejects a tampered client session token', () => {
@@ -38,6 +40,7 @@ describe('client portal session security', () => {
       email: 'client@example.com',
       name: 'Client User',
       role: 'client_admin',
+      authVersion: 0,
     });
     const [payload, signature] = token.split('.');
     const tamperedPayload = Buffer.from(
@@ -60,6 +63,23 @@ describe('client portal session security', () => {
     });
 
     expect(verifyClientSessionToken(adminToken)).toBeNull();
+  });
+
+  test('rejects a legacy client token without an auth version', () => {
+    const token = createClientSessionToken({
+      sub: 'client-user-legacy',
+      organizationId: 'org-1',
+      email: 'legacy@example.com',
+      name: 'Legacy Client',
+      role: 'client_admin',
+      authVersion: 0,
+    });
+    const [payload, signature] = token.split('.');
+    const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    delete parsed.authVersion;
+    const legacyPayload = Buffer.from(JSON.stringify(parsed)).toString('base64url');
+
+    expect(verifyClientSessionToken(legacyPayload + '.' + signature)).toBeNull();
   });
 
   test('rejects malformed tokens', () => {

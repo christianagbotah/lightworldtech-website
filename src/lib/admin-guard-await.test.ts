@@ -11,6 +11,8 @@ const PUBLIC_ADMIN_MUTATION_ROUTES = new Set([
 const PUBLIC_CLIENT_MUTATION_ROUTES = new Set([
   'activate/route.ts',
   'auth/route.ts',
+  'password-reset/request/route.ts',
+  'password-reset/confirm/route.ts',
 ]);
 
 function routeFiles(directory: string): string[] {
