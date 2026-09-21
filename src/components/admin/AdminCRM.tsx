@@ -295,7 +295,7 @@ export default function AdminCRM() {
         ))}
       </div>
 
-      <div className="grid gap-3 rounded-2xl border border-border/60 bg-card p-4 lg:grid-cols-[1fr_180px_180px]">
+      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
         <label className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -327,7 +327,7 @@ export default function AdminCRM() {
         </select>
       </div>
 
-      <div className="overflow-x-auto pb-3">
+      <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-3">
         <div className="grid min-w-[1960px] grid-cols-7 gap-3">
           {stageColumns.map((column) => (
             <section key={column.id} className="rounded-2xl border border-border/60 bg-muted/20 p-3">
@@ -397,7 +397,7 @@ export default function AdminCRM() {
       </div>
 
       <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto">
+        <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] max-w-4xl overflow-x-hidden overflow-y-auto">
           {selected && (
             <>
               <DialogHeader>
@@ -410,7 +410,7 @@ export default function AdminCRM() {
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="grid gap-6 lg:grid-cols-[1.15fr_.85fr]">
+              <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
                 <div className="space-y-5">
                   <div className="grid gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2">
                     <a href={'mailto:' + selected.contactMessage.email} className="flex items-center gap-2 text-sm font-medium hover:text-amber-600">
