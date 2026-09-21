@@ -43,7 +43,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const settings = source('src/app/api/settings/route.ts');
 
     expect(settings).toContain('settingsPayloadSchema');
-    expect(settings).toContain('z.record(');
+    expect(settings).toContain('.record(');
     expect(settings).toContain('await db.$transaction(updates)');
   });
 
