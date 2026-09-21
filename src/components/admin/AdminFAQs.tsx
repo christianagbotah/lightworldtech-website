@@ -52,9 +52,10 @@ export default function AdminFAQs() {
 
   const fetchFAQs = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/faqs');
+      const res = await fetch('/api/faqs');
       if (!res.ok) throw new Error('Failed to fetch');
-      setFaqs(await res.json());
+      const payload = await res.json();
+      setFaqs(payload.data || []);
     } catch {
       toast.error('Failed to load FAQs');
     } finally {
@@ -83,7 +84,7 @@ export default function AdminFAQs() {
     }
     setSaving(true);
     try {
-      const url = editing ? `/api/admin/faqs/${editing.id}` : '/api/admin/faqs';
+      const url = editing ? `/api/faqs/${editing.id}` : '/api/faqs';
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       if (!res.ok) {
@@ -103,7 +104,7 @@ export default function AdminFAQs() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/faqs/${deleting.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/faqs/${deleting.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
       toast.success('FAQ deleted');
       setDeleteOpen(false);
@@ -132,7 +133,7 @@ export default function AdminFAQs() {
     try {
       await Promise.all(
         newFaqs.map((faq, i) =>
-          fetch(`/api/admin/faqs/${faq.id}`, {
+          fetch(`/api/faqs/${faq.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ order: i }),
@@ -147,7 +148,7 @@ export default function AdminFAQs() {
 
   const toggleActive = async (faq: FAQ) => {
     try {
-      const res = await fetch(`/api/admin/faqs/${faq.id}`, {
+      const res = await fetch(`/api/faqs/${faq.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !faq.active }),
       });
@@ -177,7 +178,7 @@ export default function AdminFAQs() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">FAQs</h1>
