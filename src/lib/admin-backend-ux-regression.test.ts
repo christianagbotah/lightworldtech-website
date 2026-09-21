@@ -164,6 +164,30 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientPortal).toContain("'/api/support-attachments/' + attachment.id");
   });
 
+  test('supports real Support Desk agents, bounded bulk actions, exports and SLA escalation', () => {
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const agents = source('src/app/api/admin/support-agents/route.ts');
+    const bulk = source('src/app/api/admin/support-tickets/bulk/route.ts');
+    const exportRoute = source('src/app/api/admin/support-tickets/export/route.ts');
+    const ticketUpdate = source('src/app/api/admin/client-tickets/[id]/route.ts');
+    const supportLib = source('src/lib/support-ticket.ts');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(agents).toContain("normalizeAdminPermissions(admin.permissions).includes('clients.manage')");
+    expect(support).toContain("fetch('/api/admin/support-agents'");
+    expect(support).toContain("fetch('/api/admin/support-tickets/bulk'");
+    expect(support).toContain("fetch('/api/admin/support-tickets/export?'");
+    expect(support).toContain('Select all visible support tickets');
+    expect(bulk).toContain('.max(100)');
+    expect(bulk).toContain('Bulk status changes are limited to 25 tickets at a time');
+    expect(bulk).toContain("'admin.support_tickets_bulk_updated'");
+    expect(exportRoute).toContain("'admin.support_tickets_exported'");
+    expect(ticketUpdate).toContain('Selected assignee is not an active Support Desk agent');
+    expect(supportLib).toContain('reconcileSupportEscalations');
+    expect(supportLib).toContain("type: 'sla_escalated'");
+    expect(notifications).toContain('await reconcileSupportEscalations()');
+  });
+
   test('supports audited enterprise exports and bounded message bulk actions', () => {
     const crm = source('src/components/admin/AdminCRM.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
