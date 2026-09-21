@@ -98,7 +98,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
             className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end"
           >
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
                 <Sparkles className="size-3.5" />
                 {heroEyebrow}
               </div>
@@ -123,7 +123,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
                   onClick={() => setCategory(item)}
                   className={
                     category === item
-                      ? 'shrink-0 rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white dark:bg-emerald-400 dark:text-slate-950'
+                      ? 'shrink-0 rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold text-white dark:bg-amber-400 dark:text-slate-950'
                       : 'shrink-0 rounded-full border border-slate-200/80 bg-white px-4 py-2 text-xs font-medium text-slate-500 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white/35'
                   }
                 >
@@ -139,7 +139,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={searchPlaceholder}
-                className="h-11 w-full rounded-full border border-slate-200/80 bg-white pl-11 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-400 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white dark:placeholder:text-white/20"
+                className="h-11 w-full rounded-full border border-slate-200/80 bg-white pl-11 pr-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-amber-400 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white dark:placeholder:text-white/20"
               />
             </label>
           </div>
@@ -155,7 +155,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
             </div>
           ) : filtered.length === 0 ? (
             <div className="mt-8 rounded-[30px] border border-slate-200/70 bg-white p-10 text-center dark:border-white/[0.07] dark:bg-white/[0.025]">
-              <FileText className="mx-auto size-7 text-emerald-500" />
+              <FileText className="mx-auto size-7 text-amber-500" />
               <h2 className="mt-4 text-xl font-semibold">{emptyTitle}</h2>
               <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500 dark:text-white/35">
                 {emptyDescription}
@@ -183,7 +183,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
 
                   <div className="flex flex-col p-7 sm:p-9 lg:p-10">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
+                      <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">
                         {featured.category?.name || 'Technology'}
                       </span>
                       {featured.featured && (
@@ -198,7 +198,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
                       <span className="flex items-center gap-1.5"><Clock className="size-3.5" />{featured.readTime} min read</span>
                     </div>
                     <div className="mt-auto pt-8">
-                      <Link href={'/blog/' + featured.slug} className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                      <Link href={'/blog/' + featured.slug} className="inline-flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
                         Read article <ArrowRight className="size-4" />
                       </Link>
                     </div>
@@ -231,7 +231,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
                           />
                         </div>
                         <div className="flex flex-1 flex-col p-5">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-emerald-600 dark:text-emerald-400">{post.category?.name || 'Technology'}</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.17em] text-amber-600 dark:text-amber-400">{post.category?.name || 'Technology'}</p>
                           <h2 className="mt-3 text-xl font-semibold leading-snug tracking-[-0.025em]">{post.title}</h2>
                           <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500 dark:text-white/35">{post.excerpt}</p>
                           <div className="mt-auto flex items-center justify-between gap-3 pt-6 text-[11px] text-slate-400 dark:text-white/22">
