@@ -49,6 +49,46 @@ describe('admin backend and responsive UX regression coverage', () => {
     }
   });
 
+  test('provides a permission-aware command palette and notification centre', () => {
+    const layout = source('src/components/admin/AdminLayout.tsx');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(layout).toContain("event.key.toLowerCase() === 'k'");
+    expect(layout).toContain('CommandDialog');
+    expect(layout).toContain("fetch('/api/admin/notifications'");
+    expect(layout).toContain('Notification centre');
+    expect(layout).toContain("sessionStorage.setItem('lw-crm-overdue-filter', '1')");
+    expect(notifications).toContain('getActiveAdminContext(request)');
+    expect(notifications).toContain("'overdue-followups'");
+    expect(notifications).toContain("'open-client-tickets'");
+    expect(notifications).toContain("'newsletter-failures'");
+  });
+
+  test('supports saved CRM views and overdue deep links', () => {
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const leads = source('src/app/api/admin/leads/route.ts');
+
+    expect(crm).toContain("localStorage.getItem('lw-crm-saved-views')");
+    expect(crm).toContain("localStorage.setItem('lw-crm-saved-views'");
+    expect(crm).toContain("sessionStorage.getItem('lw-crm-overdue-filter')");
+    expect(crm).toContain("params.set('overdue', 'true')");
+    expect(crm).toContain('Save current view');
+    expect(leads).toContain("searchParams.get('overdue') === 'true'");
+    expect(leads).toContain("status: { notIn: ['won', 'lost'] }");
+  });
+
+  test('invalidates administrator sessions on sensitive governance changes', () => {
+    const route = source('src/app/api/admin/governance/[id]/route.ts');
+    const governance = source('src/components/admin/AdminGovernance.tsx');
+
+    expect(route).toContain('revokeSessions: z.boolean().optional()');
+    expect(route).toContain("parsed.data.revokeSessions === true");
+    expect(route).toContain("'admin.sessions_revoked'");
+    expect(route).toContain('parsed.data.active !== undefined');
+    expect(governance).toContain('Revoke sessions');
+    expect(governance).toContain('Force this administrator to sign in again');
+  });
+
   test('supports dashboard drill-downs and a real authenticated health signal', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
