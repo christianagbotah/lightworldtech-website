@@ -1,5 +1,15 @@
 import { describe, expect, test } from 'bun:test';
-import { isLeadershipIntent, isNewsroomIntent, isTrustIntent } from './assistant-intents';
+import {
+  isCompletedProjectChangeIntent,
+  isCompletedProjectContactIntent,
+  isCompletedProjectContextIntent,
+  isCompletedProjectNextStepsIntent,
+  isCompletedProjectPricingIntent,
+  isCompletedProjectRestartIntent,
+  isLeadershipIntent,
+  isNewsroomIntent,
+  isTrustIntent,
+} from './assistant-intents';
 
 describe('assistant leadership intent', () => {
   test('matches the production quick-reply wording', () => {
@@ -42,5 +52,23 @@ describe('assistant newsroom intent', () => {
 
   test('does not capture leadership questions', () => {
     expect(isNewsroomIntent('Who leads Lightworld?')).toBe(false);
+  });
+});
+
+
+describe('assistant completed-project follow-up intent', () => {
+  test('keeps post-submission questions in the project journey', () => {
+    expect(isCompletedProjectNextStepsIntent('What happens after I submit?')).toBe(true);
+    expect(isCompletedProjectNextStepsIntent('What are the next steps?')).toBe(true);
+    expect(isCompletedProjectContactIntent('How long before I hear back?')).toBe(true);
+    expect(isCompletedProjectPricingIntent('How is the estimate calculated?')).toBe(true);
+    expect(isCompletedProjectChangeIntent('Can I change the brief later?')).toBe(true);
+    expect(isCompletedProjectContextIntent('What about my project?')).toBe(true);
+  });
+
+  test('recognizes a deliberate new-project restart without hijacking normal service questions', () => {
+    expect(isCompletedProjectRestartIntent('I want to start another project')).toBe(true);
+    expect(isCompletedProjectRestartIntent('What services do you offer?')).toBe(false);
+    expect(isCompletedProjectNextStepsIntent('What services do you offer?')).toBe(false);
   });
 });
