@@ -474,18 +474,18 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
 
   return (
     <div className="fixed bottom-24 right-4 z-[70] flex flex-col items-end gap-2 sm:right-6 lg:bottom-6">
-      {/* ─── Popup Area (above button row) ────────────────────── */}
-      <div className="flex items-end gap-2 justify-end">
+      {/* ─── Popup Area: left of launcher on larger screens ───── */}
+      <div className="fixed bottom-40 left-3 right-3 flex items-end justify-end gap-2 sm:absolute sm:bottom-0 sm:left-auto sm:right-full sm:mr-3 sm:w-max">
         {/* LiveChat Popup */}
         <AnimatePresence>
           {liveChatOpen && !liveChatMinimized && (
             <motion.div
               key="livechat-popup"
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              initial={{ opacity: 0, x: 18, scale: 0.94 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 18, scale: 0.94 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="w-[340px] sm:w-[380px] h-[480px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-700/80 flex flex-col overflow-hidden"
+              className="h-[480px] max-h-[calc(100dvh-11rem)] w-full bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-700/80 flex flex-col overflow-hidden sm:w-[380px]"
             >
               {/* Chat Header */}
               <div className="bg-gradient-to-r from-amber-600 via-amber-600 to-yellow-600 dark:from-amber-500 dark:via-amber-500 dark:to-yellow-800 px-5 py-4 flex items-center justify-between shrink-0 relative overflow-hidden">
@@ -640,7 +640,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 w-72"
+              className="w-full bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 sm:w-72"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="size-10 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
