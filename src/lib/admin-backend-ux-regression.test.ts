@@ -77,6 +77,26 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(leads).toContain("where.status = status && status !== 'all' ? status : { notIn: ['won', 'lost'] }");
   });
 
+  test('implements administrator TOTP MFA end to end', () => {
+    const schema = source('prisma/schema.prisma');
+    const auth = source('src/app/api/admin/auth/route.ts');
+    const security = source('src/app/api/admin/security/totp/route.ts');
+    const login = source('src/components/admin/AdminLogin.tsx');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(schema).toContain('totpEnabled');
+    expect(schema).toContain('totpRecoveryCodes');
+    expect(auth).toContain('requiresTotp: true');
+    expect(auth).toContain('verifyTotpCode');
+    expect(auth).toContain('verifyRecoveryCode');
+    expect(security).toContain("action: z.literal('confirm')");
+    expect(security).toContain("action: z.literal('disable')");
+    expect(security).toContain('authVersion: { increment: 1 }');
+    expect(login).toContain('Two-factor authentication');
+    expect(login).toContain('Verify & Sign In');
+    expect(layout).toContain('AdminSecurityDialog');
+  });
+
   test('invalidates administrator sessions on sensitive governance changes', () => {
     const route = source('src/app/api/admin/governance/[id]/route.ts');
     const governance = source('src/components/admin/AdminGovernance.tsx');
