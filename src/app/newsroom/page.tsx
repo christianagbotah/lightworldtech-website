@@ -58,7 +58,7 @@ export default async function NewsroomPage() {
   const tagline = contentText(settings, 'company_tagline', companyProfile.tagline);
   const email = contentText(settings, 'newsroom_media_email', companyProfile.email);
   const phone = contentText(settings, 'company_phone1', companyProfile.phoneDisplay);
-  const location = contentText(settings, 'company_address', 'Accra, Ghana');
+  const location = contentText(settings, 'company_address', 'Tema, Ghana');
   const leadership = team.length
     ? team.slice(0, 4).map((person) => ({ name: person.name, role: person.role }))
     : companyProfile.leadership.map((person) => ({ name: person.name, role: person.role }));
