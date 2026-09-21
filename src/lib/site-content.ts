@@ -169,7 +169,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'company_phone1', label: 'Primary phone', type: 'text', defaultValue: '+233 (024) 361 8186' },
       { key: 'company_phone2', label: 'Secondary phone', type: 'text', defaultValue: '' },
       { key: 'company_whatsapp', label: 'WhatsApp number', type: 'text', defaultValue: '+233 24 361 8186', help: 'Use the direct WhatsApp-enabled business number. Ghana local or +233 format is accepted.' },
-      { key: 'company_address', label: 'Address / location', type: 'text', defaultValue: 'Accra, Ghana' },
+      { key: 'company_address', label: 'Address / location', type: 'text', defaultValue: 'Tema, Ghana' },
       {
         key: 'header_primary_links',
         label: 'Header primary links',
@@ -336,7 +336,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'about_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'About Lightworld' },
       { key: 'about_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'We build technology as infrastructure for growth.' },
       { key: 'about_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'Lightworld Technologies Ltd is a Ghanaian technology company focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.' },
-      { key: 'about_location_line', label: 'Location line', type: 'text', defaultValue: 'Accra, Ghana · built with a global outlook' },
+      { key: 'about_location_line', label: 'Location line', type: 'text', defaultValue: 'Tema, Ghana · built with a global outlook' },
       { key: 'about_pov_eyebrow', label: 'Point-of-view eyebrow', type: 'text', defaultValue: 'Our point of view' },
       { key: 'about_pov_title', label: 'Point-of-view title', type: 'text', defaultValue: 'Digital transformation should feel practical.' },
       { key: 'about_pov_paragraphs', label: 'Point-of-view paragraphs', type: 'stringList', defaultValue: [
@@ -460,7 +460,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'careers_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Careers & talent network' },
       { key: 'careers_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Come build technology that has to work in the real world.' },
       { key: 'careers_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'We are building a multidisciplinary technology company in Ghana. Open roles change with project needs, so we do not publish stale vacancies or salary promises as if they were current.' },
-      { key: 'careers_location', label: 'Location / work style', type: 'text', defaultValue: 'Accra, Ghana · role-dependent remote collaboration' },
+      { key: 'careers_location', label: 'Location / work style', type: 'text', defaultValue: 'Tema, Ghana · role-dependent remote collaboration' },
       {
         key: 'careers_disciplines',
         label: 'Talent disciplines',
