@@ -29,6 +29,30 @@ export async function GET(
         createdBy: { select: { id: true, name: true, email: true, role: true } },
         messages: { orderBy: { createdAt: 'asc' } },
         internalNotes: { orderBy: { createdAt: 'desc' } },
+        attachments: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            originalName: true,
+            mimeType: true,
+            sizeBytes: true,
+            uploadedByType: true,
+            uploadedByName: true,
+            createdAt: true,
+          },
+        },
+        events: {
+          orderBy: { createdAt: 'desc' },
+          take: 100,
+          select: {
+            id: true,
+            type: true,
+            actorType: true,
+            actorName: true,
+            details: true,
+            createdAt: true,
+          },
+        },
       },
     });
 
