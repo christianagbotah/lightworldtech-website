@@ -68,7 +68,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
   );
   const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
   const phone = contentText(settings, 'company_phone1', '+233 (024) 361 8186');
-  const address = contentText(settings, 'company_address', 'Accra, Ghana');
+  const address = contentText(settings, 'company_address', 'Tema, Ghana');
   const buildLinks = normalizeNavigationLinks(
     contentJson<unknown>(settings, 'footer_build_links', defaultBuildLinks),
     defaultBuildLinks,
