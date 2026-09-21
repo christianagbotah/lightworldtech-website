@@ -9,6 +9,7 @@ import {
   isCompletedProjectContextIntent,
   isCompletedProjectNextStepsIntent,
   isCompletedProjectPricingIntent,
+  isCompletedProjectPreparationIntent,
   isCompletedProjectRestartIntent,
   isLeadershipIntent,
   isNewsroomIntent,
@@ -212,6 +213,15 @@ function answerCompletedProjectFollowUp(
         companyPhone +
         '.',
       suggestions: ['What happens after I submit?', 'How is pricing estimated?', 'Can I change the brief later?'],
+    };
+  }
+
+  if (isCompletedProjectPreparationIntent(message)) {
+    return {
+      ...common,
+      reply:
+        'For the first project discussion, it helps to have any existing documents, screenshots, workflows, brand materials, integrations, examples you like, known constraints and decision-makers available. You do not need everything perfectly prepared — the brief you already created gives the team a structured starting point, and missing details can be clarified during discovery.',
+      suggestions: ['What happens after I submit?', 'How is pricing estimated?', 'Can I change the brief later?', 'Who will contact me?'],
     };
   }
 
