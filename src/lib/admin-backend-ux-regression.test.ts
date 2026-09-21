@@ -77,6 +77,38 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(leads).toContain("where.status = status && status !== 'all' ? status : { notIn: ['won', 'lost'] }");
   });
 
+  test('supports audited enterprise exports and bounded message bulk actions', () => {
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    const crmExport = source('src/app/api/admin/leads/export/route.ts');
+    const messageExport = source('src/app/api/admin/messages/export/route.ts');
+    const messageBulk = source('src/app/api/admin/messages/bulk/route.ts');
+    const permissions = source('src/lib/admin-permissions.ts');
+
+    expect(crm).toContain("fetch('/api/admin/leads/export?'");
+    expect(messages).toContain("fetch('/api/admin/messages/export'");
+    expect(messages).toContain("fetch('/api/admin/messages/bulk'");
+    expect(messages).toContain('Select all loaded messages');
+    expect(crmExport).toContain("'admin.crm_exported'");
+    expect(messageExport).toContain("'admin.messages_exported'");
+    expect(messageBulk).toContain('.max(100)');
+    expect(messageBulk).toContain("'admin.messages_bulk_updated'");
+    expect(permissions).toContain("pathname.startsWith('/api/admin/messages')");
+  });
+
+  test('shows read-only super-admin backup readiness without claiming restore success', () => {
+    const route = source('src/app/api/admin/operations/backup-status/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(route).toContain('getSuperAdminContext(request)');
+    expect(route).toContain("LIGHTWORLD_BACKUP_DIR");
+    expect(route).toContain("restoreVerification");
+    expect(route).toContain("status: 'not_verified'");
+    expect(dashboard).toContain('Recovery readiness');
+    expect(dashboard).toContain("adminRole === 'super_admin'");
+    expect(dashboard).toContain('successful restore rehearsal has not been verified');
+  });
+
   test('implements administrator TOTP MFA end to end', () => {
     const schema = source('prisma/schema.prisma');
     const auth = source('src/app/api/admin/auth/route.ts');
