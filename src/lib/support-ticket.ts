@@ -81,6 +81,73 @@ function portalUrl(): string {
   return origin + '/client';
 }
 
+export async function notifyClientTicketCreated(input: {
+  to: string;
+  customerName: string;
+  ticketNumber: string;
+  subject: string;
+  firstResponseDueAt: Date;
+}) {
+  try {
+    await sendTransactionalMail({
+      to: input.to,
+      subject: '[' + input.ticketNumber + '] Support request received: ' + input.subject,
+      text:
+        'Hello ' + input.customerName + ',\n\n' +
+        'We received your support request ' + input.ticketNumber + '.\n' +
+        'Subject: ' + input.subject + '\n' +
+        'First-response target: ' + input.firstResponseDueAt.toUTCString() + '\n\n' +
+        'Track and reply securely in your Lightworld Client Portal:\n' + portalUrl() + '\n\n' +
+        'Lightworld Technologies Ltd',
+      html:
+        '<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#0f172a;line-height:1.65">' +
+        '<p>Hello ' + escapeHtml(input.customerName) + ',</p>' +
+        '<h2 style="margin:0 0 8px">' + escapeHtml(input.ticketNumber) + '</h2>' +
+        '<p>We received your support request: <strong>' + escapeHtml(input.subject) + '</strong>.</p>' +
+        '<p><strong>First-response target:</strong> ' + escapeHtml(input.firstResponseDueAt.toUTCString()) + '</p>' +
+        '<p><a href="' + portalUrl() + '">Track and reply in your secure Lightworld Client Portal</a></p>' +
+        '<p>Lightworld Technologies Ltd</p>' +
+        '</div>',
+    });
+  } catch (error) {
+    console.error('Support ticket confirmation email failed:', sanitizeMailError(error));
+  }
+}
+
+export async function notifyClientOfSupportStatus(input: {
+  to: string;
+  customerName: string;
+  ticketNumber: string;
+  subject: string;
+  status: string;
+}) {
+  const statusLabel = input.status.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+  try {
+    await sendTransactionalMail({
+      to: input.to,
+      subject: '[' + input.ticketNumber + '] Ticket status: ' + statusLabel,
+      text:
+        'Hello ' + input.customerName + ',\n\n' +
+        'Your support ticket ' + input.ticketNumber + ' has been updated.\n' +
+        'Subject: ' + input.subject + '\n' +
+        'Status: ' + statusLabel + '\n\n' +
+        'View the ticket in your secure Lightworld Client Portal:\n' + portalUrl() + '\n\n' +
+        'Lightworld Technologies Ltd',
+      html:
+        '<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#0f172a;line-height:1.65">' +
+        '<p>Hello ' + escapeHtml(input.customerName) + ',</p>' +
+        '<p>Your support ticket <strong>' + escapeHtml(input.ticketNumber) + '</strong> has been updated.</p>' +
+        '<p><strong>Subject:</strong> ' + escapeHtml(input.subject) + '<br>' +
+        '<strong>Status:</strong> ' + escapeHtml(statusLabel) + '</p>' +
+        '<p><a href="' + portalUrl() + '">View the ticket in your secure Lightworld Client Portal</a></p>' +
+        '<p>Lightworld Technologies Ltd</p>' +
+        '</div>',
+    });
+  } catch (error) {
+    console.error('Support ticket status email failed:', sanitizeMailError(error));
+  }
+}
+
 export async function notifySupportDesk(input: {
   ticketNumber: string;
   organizationName: string;
