@@ -180,7 +180,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     className={
                       'flex size-24 items-center justify-center rounded-full border shadow-sm ' +
                       (submissionStatus === 'success'
-                        ? 'border-emerald-200/70 bg-emerald-50 text-emerald-600 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300'
+                        ? 'border-green-200 bg-green-50 text-green-600 shadow-green-600/10 dark:border-green-400/25 dark:bg-green-400/10 dark:text-green-300'
                         : submissionStatus === 'warning'
                           ? 'border-amber-200/80 bg-amber-50 text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300'
                           : 'border-rose-200/80 bg-rose-50 text-rose-600 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300')
@@ -199,7 +199,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     className={
                       'mt-7 text-[11px] font-semibold uppercase tracking-[0.2em] ' +
                       (submissionStatus === 'success'
-                        ? 'text-emerald-600 dark:text-emerald-300'
+                        ? 'text-green-600 dark:text-green-300'
                         : submissionStatus === 'warning'
                           ? 'text-amber-600 dark:text-amber-300'
                           : 'text-rose-600 dark:text-rose-300')
@@ -231,7 +231,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                             resetResponse();
                             setForm({ name: '', email: '', phone: '', service: services[0], subject: '', message: '' });
                           }}
-                          className="inline-flex h-11 items-center justify-center rounded-full bg-amber-500 px-6 text-sm font-semibold text-slate-950 transition hover:bg-amber-400"
+                          className="inline-flex h-11 items-center justify-center rounded-full bg-green-600 px-6 text-sm font-semibold text-white transition hover:bg-green-500 dark:bg-green-500 dark:text-slate-950 dark:hover:bg-green-400"
                         >
                           Send another message
                         </button>
