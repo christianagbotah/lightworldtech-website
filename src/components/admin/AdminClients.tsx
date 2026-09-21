@@ -413,7 +413,7 @@ export default function AdminClients() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
         <Card className="border-border/60">
           <CardHeader><CardTitle className="text-base">Organizations</CardTitle></CardHeader>
           <CardContent className="space-y-2">
@@ -442,7 +442,7 @@ export default function AdminClients() {
                   </select>
                 </div>
               </CardHeader>
-              <CardContent className="grid gap-5 xl:grid-cols-2">
+              <CardContent className="grid min-w-0 gap-5 xl:grid-cols-2">
                 <div className="rounded-2xl border border-border/60 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Portal users</p>
                   <div className="mt-3 space-y-2">
@@ -526,7 +526,7 @@ export default function AdminClients() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base"><Megaphone className="size-4 text-amber-600" /> Client announcements</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-5 xl:grid-cols-[.85fr_1.15fr]">
+              <CardContent className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)]">
                 <form onSubmit={createAnnouncement} className="space-y-3">
                   <Input required placeholder="Announcement title" value={announcementForm.title} onChange={(event) => setAnnouncementForm({ ...announcementForm, title: event.target.value })} />
                   <Textarea required rows={4} placeholder="Client-visible update…" value={announcementForm.body} onChange={(event) => setAnnouncementForm({ ...announcementForm, body: event.target.value })} />
