@@ -34,6 +34,14 @@ export type GroundedConciergeContext = {
     title: string;
     excerpt?: string | null;
   }>;
+  faqs: Array<{
+    question: string;
+    answer: string;
+  }>;
+  processSteps: Array<{
+    title: string;
+    description: string;
+  }>;
   recognition: Array<{
     year?: string | number | null;
     title?: string | null;
@@ -78,6 +86,8 @@ function systemPrompt(context: GroundedConciergeContext): string {
     leadership: context.leadership.slice(0, 8),
     portfolio: context.portfolio.slice(0, 8),
     insights: context.insights.slice(0, 6),
+    faqs: context.faqs.slice(0, 12),
+    processSteps: context.processSteps.slice(0, 12),
     recognition: context.recognition.slice(0, 8),
     activeProjectBrief: context.activeProjectBrief || null,
   };
