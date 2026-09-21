@@ -156,11 +156,15 @@ export default function NewsletterPopup() {
                         Get the latest tech insights, industry trends, and exclusive offers delivered straight to your inbox. Join 500+ subscribers!
                       </p>
 
-                      <form onSubmit={handleSubscribe} className="space-y-3">
+                      <form onSubmit={handleSubscribe} className="space-y-3" aria-busy={loading}>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
                           <Input
                             type="email"
+                            name="email"
+                            autoComplete="email"
+                            inputMode="email"
+                            aria-label="Email address"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Enter your email address"
