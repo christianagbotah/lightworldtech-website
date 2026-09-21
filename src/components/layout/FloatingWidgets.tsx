@@ -203,7 +203,7 @@ function BackToTopButton() {
                 x2="100%"
                 y2="0%"
               >
-                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="0%" stopColor="#d97706" />
                 <stop offset="100%" stopColor="#f59e0b" />
               </linearGradient>
             </defs>
@@ -495,7 +495,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 18, scale: 0.94 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="h-[480px] max-h-[calc(100dvh-11rem)] w-full bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-700/80 flex flex-col overflow-hidden sm:w-[380px]"
+              className="flex h-[min(560px,calc(100dvh-11rem))] max-h-[calc(100dvh-11rem)] w-full flex-col overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-2xl shadow-slate-950/20 dark:border-slate-700/80 dark:bg-slate-800 dark:shadow-black/40 sm:w-[400px]"
             >
               {/* Chat Header */}
               <div className="bg-gradient-to-r from-amber-600 via-amber-600 to-yellow-600 dark:from-amber-500 dark:via-amber-500 dark:to-yellow-800 px-5 py-4 flex items-center justify-between shrink-0 relative overflow-hidden">
@@ -555,7 +555,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                       <div
                         className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                           msg.sender === 'user'
-                            ? 'bg-gradient-to-br from-amber-600 to-amber-500 text-white rounded-tr-sm shadow-md shadow-emerald-500/20'
+                            ? 'bg-gradient-to-br from-amber-600 to-amber-500 text-white rounded-tr-sm shadow-md shadow-amber-900/15'
                             : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-sm rounded-tl-sm border border-slate-100 dark:border-slate-600'
                         }`}
                       >
@@ -623,13 +623,13 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Type your message..."
-                    className="flex-1 h-10 px-4 rounded-full bg-slate-100 dark:bg-slate-700/50 text-sm text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 border border-slate-200 dark:border-slate-600 focus:border-amber-400 dark:focus:border-emerald-500 transition-all duration-200"
+                    className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-100/80 px-3.5 text-sm text-foreground outline-none transition placeholder:text-slate-400 hover:border-amber-300/70 focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-500/15 dark:border-slate-600 dark:bg-slate-700/50 dark:placeholder:text-slate-500 dark:focus:border-amber-400 dark:focus:bg-slate-700"
                     aria-label="Chat message input"
                   />
                   <Button
                     type="submit"
                     size="icon"
-                    className="size-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white shrink-0 shadow-md shadow-emerald-500/20 hover:shadow-lg disabled:opacity-50 transition-all duration-200"
+                    className="size-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white shrink-0 shadow-md shadow-amber-900/15 hover:shadow-lg disabled:opacity-50 transition-all duration-200"
                     disabled={!inputValue.trim()}
                   >
                     <Send className="size-4" />

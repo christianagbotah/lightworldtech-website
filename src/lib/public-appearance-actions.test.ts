@@ -28,7 +28,7 @@ describe('public appearance and quick actions', () => {
     expect(widgets).toContain('flex flex-col items-end gap-2 sm:right-6 lg:bottom-6');
     expect(widgets).toContain('sm:absolute sm:bottom-0 sm:left-auto sm:right-full sm:mr-3 sm:w-max');
     expect(widgets).toContain('max-h-[calc(100dvh-11rem)]');
-    expect(widgets).toContain('sm:w-[380px]');
+    expect(widgets).toContain('sm:w-[400px]');
   });
 
   test('reopens cookie preferences from the shared quick-action tray without a separate fixed icon', () => {

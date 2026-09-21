@@ -31,6 +31,8 @@ import {
   Landmark,
   Keyboard,
   Images,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -50,27 +52,35 @@ import { cn } from '@/lib/utils';
 import { hasAdminPermission, type AdminPermission } from '@/lib/admin-permissions';
 import AdminSecurityDialog from '@/components/admin/AdminSecurityDialog';
 
+const navGroups = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'website', label: 'Website & content' },
+  { id: 'sales', label: 'Sales & clients' },
+  { id: 'communications', label: 'Communications' },
+  { id: 'administration', label: 'Administration' },
+] as const;
+
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'admin-dashboard' as const },
-  { id: 'pages', label: 'Page Content', icon: PanelsTopLeft, page: 'admin-pages' as const, permission: 'site.manage' as AdminPermission },
-  { id: 'media', label: 'Media Library', icon: Images, page: 'admin-media' as const, permission: 'site.manage' as AdminPermission },
-  { id: 'services', label: 'Services', icon: Briefcase, page: 'admin-services' as const, permission: 'site.manage' as AdminPermission },
-  { id: 'blog', label: 'Blog Posts', icon: FileText, page: 'admin-blog' as const, permission: 'site.manage' as AdminPermission },
-  { id: 'team', label: 'Team Members', icon: Users, page: 'admin-team' as const, permission: 'site.manage' as AdminPermission },
-  { id: 'testimonials', label: 'Testimonials', icon: MessageSquare, page: 'admin-testimonials' as const, permission: 'site.manage' as AdminPermission },
-  { id: 'portfolio', label: 'Portfolio', icon: FolderOpen, page: 'admin-portfolio' as const, permission: 'site.manage' as AdminPermission },
-  { id: 'crm', label: 'CRM Pipeline', icon: GitBranch, page: 'admin-crm' as const, permission: 'crm.manage' as AdminPermission },
-  { id: 'proposals', label: 'Proposals', icon: FileSignature, page: 'admin-proposals' as const, permission: 'proposals.manage' as AdminPermission },
-  { id: 'clients', label: 'Client Portal', icon: Building2, page: 'admin-clients' as const, permission: 'clients.manage' as AdminPermission },
-  { id: 'support', label: 'Support Desk', icon: LifeBuoy, page: 'admin-support' as const, permission: 'clients.manage' as AdminPermission },
-  { id: 'finance', label: 'Finance & Accounts', icon: Landmark, page: 'admin-finance' as const, permission: 'finance.manage' as AdminPermission },
-  { id: 'newsletter', label: 'Newsletter & Mail', icon: MailCheck, page: 'admin-newsletter' as const, permission: 'communications.manage' as AdminPermission },
-  { id: 'campaigns', label: 'Campaign Studio', icon: Megaphone, page: 'admin-campaigns' as const, permission: 'communications.manage' as AdminPermission },
-  { id: 'sms', label: 'SMS & OTP', icon: MessageSquare, page: 'admin-sms' as const, permission: 'communications.manage' as AdminPermission },
-  { id: 'governance', label: 'Admin Governance', icon: ShieldCheck, page: 'admin-governance' as const, superAdminOnly: true },
-  { id: 'messages', label: 'Messages', icon: Mail, page: 'admin-messages' as const, permission: 'crm.manage' as AdminPermission },
-  { id: 'faqs', label: 'FAQs', icon: HelpCircle, page: 'admin-faqs' as const, permission: 'site.manage' as AdminPermission },
-  { id: 'settings', label: 'Settings', icon: Settings, page: 'admin-settings' as const, permission: 'site.manage' as AdminPermission },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'admin-dashboard' as const, group: 'overview' },
+  { id: 'pages', label: 'Page Content', icon: PanelsTopLeft, page: 'admin-pages' as const, permission: 'site.manage' as AdminPermission, group: 'website' },
+  { id: 'media', label: 'Media Library', icon: Images, page: 'admin-media' as const, permission: 'site.manage' as AdminPermission, group: 'website' },
+  { id: 'services', label: 'Services', icon: Briefcase, page: 'admin-services' as const, permission: 'site.manage' as AdminPermission, group: 'website' },
+  { id: 'blog', label: 'Blog Posts', icon: FileText, page: 'admin-blog' as const, permission: 'site.manage' as AdminPermission, group: 'website' },
+  { id: 'team', label: 'Team Members', icon: Users, page: 'admin-team' as const, permission: 'site.manage' as AdminPermission, group: 'website' },
+  { id: 'testimonials', label: 'Testimonials', icon: MessageSquare, page: 'admin-testimonials' as const, permission: 'site.manage' as AdminPermission, group: 'website' },
+  { id: 'portfolio', label: 'Portfolio', icon: FolderOpen, page: 'admin-portfolio' as const, permission: 'site.manage' as AdminPermission, group: 'website' },
+  { id: 'faqs', label: 'FAQs', icon: HelpCircle, page: 'admin-faqs' as const, permission: 'site.manage' as AdminPermission, group: 'website' },
+  { id: 'crm', label: 'CRM Pipeline', icon: GitBranch, page: 'admin-crm' as const, permission: 'crm.manage' as AdminPermission, group: 'sales' },
+  { id: 'proposals', label: 'Proposals', icon: FileSignature, page: 'admin-proposals' as const, permission: 'proposals.manage' as AdminPermission, group: 'sales' },
+  { id: 'clients', label: 'Client Portal', icon: Building2, page: 'admin-clients' as const, permission: 'clients.manage' as AdminPermission, group: 'sales' },
+  { id: 'support', label: 'Support Desk', icon: LifeBuoy, page: 'admin-support' as const, permission: 'clients.manage' as AdminPermission, group: 'sales' },
+  { id: 'finance', label: 'Finance & Accounts', icon: Landmark, page: 'admin-finance' as const, permission: 'finance.manage' as AdminPermission, group: 'sales' },
+  { id: 'messages', label: 'Messages', icon: Mail, page: 'admin-messages' as const, permission: 'crm.manage' as AdminPermission, group: 'communications' },
+  { id: 'newsletter', label: 'Newsletter & Mail', icon: MailCheck, page: 'admin-newsletter' as const, permission: 'communications.manage' as AdminPermission, group: 'communications' },
+  { id: 'campaigns', label: 'Campaign Studio', icon: Megaphone, page: 'admin-campaigns' as const, permission: 'communications.manage' as AdminPermission, group: 'communications' },
+  { id: 'sms', label: 'SMS & OTP', icon: MessageSquare, page: 'admin-sms' as const, permission: 'communications.manage' as AdminPermission, group: 'communications' },
+  { id: 'governance', label: 'Admin Governance', icon: ShieldCheck, page: 'admin-governance' as const, superAdminOnly: true, group: 'administration' },
+  { id: 'settings', label: 'Settings', icon: Settings, page: 'admin-settings' as const, permission: 'site.manage' as AdminPermission, group: 'administration' },
 ];
 
 type AdminNotice = {
@@ -85,6 +95,7 @@ type AdminNotice = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { currentPage, adminTab, setAdminTab, navigate, adminName, adminRole, adminPermissions, logoutAdmin } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [notices, setNotices] = useState<AdminNotice[]>([]);
@@ -119,6 +130,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     void loadNotifications();
   }, [adminTab]);
+
+  useEffect(() => {
+    setSidebarCollapsed(window.localStorage.getItem('lw-admin-sidebar-collapsed') === '1');
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed((collapsed) => {
+      const next = !collapsed;
+      window.localStorage.setItem('lw-admin-sidebar-collapsed', next ? '1' : '0');
+      return next;
+    });
+  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -156,76 +179,136 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setSidebarOpen(false);
   };
 
-  const sidebarContent = (
+  const sidebarContent = (collapsed = false) => (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-600 to-amber-700 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">LW</span>
+      <div className={cn(
+        'flex min-h-16 items-center border-b border-border/70 px-3',
+        collapsed ? 'justify-center' : 'justify-between gap-3',
+      )}>
+        <div className={cn('flex min-w-0 items-center', collapsed ? 'justify-center' : 'gap-3')}>
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 shadow-sm shadow-amber-600/20">
+            <span className="text-sm font-bold text-white">LW</span>
+          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-bold text-foreground">Lightworld</h2>
+              <p className="text-[11px] text-muted-foreground">Admin Console</p>
+            </div>
+          )}
         </div>
-        <div>
-          <h2 className="font-bold text-sm text-foreground">Lightworld</h2>
-          <p className="text-xs text-muted-foreground">Admin Panel</p>
-        </div>
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="hidden size-9 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground lg:flex"
+            aria-label="Collapse admin sidebar"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose className="size-4" />
+          </button>
+        )}
       </div>
 
       <ScrollArea className="min-h-0 flex-1 py-3">
-        <nav className="space-y-1 px-3">
-          {visibleNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = adminTab === item.id;
+        <nav className={cn('space-y-5', collapsed ? 'px-2' : 'px-3')} aria-label="Admin workspaces">
+          {navGroups.map((group) => {
+            const items = visibleNavItems.filter((item) => item.group === group.id);
+            if (!items.length) return null;
             return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id, item.page)}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              <div key={group.id} className="space-y-1">
+                {!collapsed && (
+                  <p className="px-3 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground/65">
+                    {group.label}
+                  </p>
                 )}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span>{item.label}</span>
-              </button>
+                {items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = adminTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleNavClick(item.id, item.page)}
+                      title={collapsed ? item.label : undefined}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'group flex w-full items-center rounded-xl text-sm font-semibold transition-all duration-150',
+                        collapsed ? 'h-10 justify-center px-0' : 'gap-3 px-3 py-2.5',
+                        isActive
+                          ? 'bg-amber-600 text-white shadow-sm shadow-amber-600/20'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      )}
+                    >
+                      <Icon className="size-4 shrink-0" />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
 
-        <div className="mt-4 px-3">
-          <div className="border-t border-border pt-3">
+        <div className={cn('mt-5', collapsed ? 'px-2' : 'px-3')}>
+          <div className="border-t border-border/70 pt-3">
             <button
+              type="button"
               onClick={() => navigate('home')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+              title={collapsed ? 'Back to site' : undefined}
+              className={cn(
+                'flex w-full items-center rounded-xl text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground',
+                collapsed ? 'h-10 justify-center px-0' : 'gap-3 px-3 py-2.5',
+              )}
             >
-              <ArrowLeft className="h-4 w-4 shrink-0" />
-              <span>Back to Site</span>
+              <ArrowLeft className="size-4 shrink-0" />
+              {!collapsed && <span>Back to site</span>}
             </button>
           </div>
         </div>
       </ScrollArea>
+
+      {collapsed && (
+        <div className="border-t border-border/70 p-2">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="flex h-10 w-full items-center justify-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            aria-label="Expand admin sidebar"
+            title="Expand sidebar"
+          >
+            <PanelLeftOpen className="size-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-muted/30">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden h-dvh min-h-0 w-64 flex-col overflow-hidden border-r border-border bg-card lg:flex">
-        {sidebarContent}
+      <aside className={cn(
+        'fixed inset-y-0 left-0 z-30 hidden h-dvh min-h-0 flex-col overflow-hidden border-r border-border/70 bg-card/95 backdrop-blur transition-[width] duration-200 lg:flex',
+        sidebarCollapsed ? 'w-20' : 'w-64',
+      )}>
+        {sidebarContent(sidebarCollapsed)}
       </aside>
 
       {/* Mobile sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="w-64 p-0">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-          {sidebarContent}
+          {sidebarContent(false)}
         </SheetContent>
       </Sheet>
 
       {/* Main content */}
-      <div className="flex min-h-screen min-w-0 w-full flex-col lg:ml-64 lg:w-[calc(100%-16rem)]">
+      <div className={cn(
+        'flex min-h-screen min-w-0 w-full flex-col transition-[margin,width] duration-200',
+        sidebarCollapsed ? 'lg:ml-20 lg:w-[calc(100%-5rem)]' : 'lg:ml-64 lg:w-[calc(100%-16rem)]',
+      )}>
         {/* Top bar */}
-        <header className="sticky top-0 z-20 min-w-0 border-b border-border bg-card/80 backdrop-blur-md">
-          <div className="flex h-14 min-w-0 items-center justify-between gap-3 px-4 md:px-6">
+        <header className="sticky top-0 z-20 min-w-0 border-b border-border/70 bg-card/88 shadow-sm shadow-slate-950/[0.025] backdrop-blur-xl">
+          <div className="flex h-16 min-w-0 items-center justify-between gap-3 px-3 sm:px-4 md:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                 <SheetTrigger asChild>
@@ -383,8 +466,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Page content */}
-        <main className="min-w-0 max-w-full flex-1 overflow-x-hidden p-4 md:p-6">
-          <div className="min-w-0 max-w-full">{children}</div>
+        <main className="min-w-0 max-w-full flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6 lg:p-7">
+          <div className="mx-auto min-w-0 w-full max-w-[1800px]">{children}</div>
         </main>
       </div>
 

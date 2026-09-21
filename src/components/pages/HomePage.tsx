@@ -351,9 +351,9 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
       .catch(() => {});
   }, []);
 
-  const heroEyebrow = contentText(settings, 'home_eyebrow', '{heroEyebrow}');
+  const heroEyebrow = contentText(settings, 'home_eyebrow', 'Ghana-built. Global-ready.');
   const heroTitle = contentText(settings, 'home_title', 'Technology people want to use.');
-  const heroDescription = contentText(settings, 'home_description', '{heroDescription}');
+  const heroDescription = contentText(settings, 'home_description', 'We design and engineer websites, mobile apps, enterprise software, AI-enabled workflows and cloud systems that make real work simpler.');
   const primaryCtaText = contentText(settings, 'home_primary_cta_text', 'Start a project');
   const primaryCtaLink = contentText(settings, 'home_primary_cta_link', '/contact');
   const secondaryCtaText = contentText(settings, 'home_secondary_cta_text', 'Explore our work');
@@ -384,7 +384,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                 className="inline-flex items-center gap-2 rounded-full border border-emerald-600/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-300/15 dark:text-emerald-300"
               >
                 <Sparkles className="size-3.5" />
-                Ghana-built · global-ready digital engineering
+                {heroEyebrow}
               </motion.div>
 
               <motion.h1
@@ -402,7 +402,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                 transition={{ duration: 0.65, delay: 0.14 }}
                 className="mt-7 max-w-2xl text-base leading-7 text-slate-600 dark:text-white/50 sm:text-lg sm:leading-8"
               >
-                Lightworld Technologies designs and builds apps, websites, enterprise platforms, AI-enabled workflows and digital infrastructure—then helps teams adopt, operate and grow them.
+                {heroDescription}
               </motion.p>
 
               <motion.div
@@ -413,7 +413,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               >
                 <Link
                   href={primaryCtaLink}
-                  className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-6 text-sm font-semibold text-white shadow-xl shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-emerald-600 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300"
+                  className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-amber-600 px-6 text-sm font-semibold text-white shadow-lg shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-amber-700 hover:shadow-xl dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
                 >
                   {primaryCtaText}
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />

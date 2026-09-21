@@ -43,9 +43,9 @@ function Table({ className, exportFileName = "lightworld-table", hideExport = fa
   const tableRef = React.useRef<HTMLTableElement>(null)
 
   return (
-    <div data-slot="table-block" className="min-w-0 max-w-full">
+    <div data-slot="table-block" className="min-w-0 max-w-full overflow-hidden rounded-xl bg-card">
       {!hideExport && (
-        <div className="flex justify-end border-b border-border/50 bg-muted/15 px-2 py-2">
+        <div className="flex items-center justify-end border-b border-border/50 bg-muted/20 px-3 py-2">
           <button
             type="button"
             onClick={() => {
@@ -56,7 +56,7 @@ function Table({ className, exportFileName = "lightworld-table", hideExport = fa
                 )
               }
             }}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-xs font-medium text-muted-foreground transition hover:border-amber-300 hover:text-foreground"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-semibold text-muted-foreground transition hover:border-amber-300 hover:text-foreground hover:shadow-sm"
             aria-label="Export table to CSV"
           >
             <Download className="size-3.5" />
@@ -83,7 +83,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn("bg-muted/35 [&_tr]:border-b", className)}
       {...props}
     />
   )
@@ -117,7 +117,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        "hover:bg-amber-50/45 dark:hover:bg-amber-950/10 data-[state=selected]:bg-muted border-b border-border/50 transition-colors",
         className
       )}
       {...props}
@@ -130,7 +130,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "text-muted-foreground h-11 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-[0.08em] whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
@@ -143,7 +143,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "px-4 py-3 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
