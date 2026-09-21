@@ -65,9 +65,10 @@ export default function AdminTestimonials() {
 
   const fetchTestimonials = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/testimonials');
+      const res = await fetch('/api/testimonials');
       if (!res.ok) throw new Error('Failed to fetch');
-      setTestimonials(await res.json());
+      const payload = await res.json();
+      setTestimonials(payload.data || []);
     } catch {
       toast.error('Failed to load testimonials');
     } finally {
@@ -99,7 +100,7 @@ export default function AdminTestimonials() {
     }
     setSaving(true);
     try {
-      const url = editing ? `/api/admin/testimonials/${editing.id}` : '/api/admin/testimonials';
+      const url = editing ? `/api/testimonials/${editing.id}` : '/api/testimonials';
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       if (!res.ok) {
@@ -119,7 +120,7 @@ export default function AdminTestimonials() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/testimonials/${deleting.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/testimonials/${deleting.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
       toast.success('Testimonial deleted');
       setDeleteOpen(false);
@@ -132,7 +133,7 @@ export default function AdminTestimonials() {
 
   const toggleActive = async (t: Testimonial) => {
     try {
-      const res = await fetch(`/api/admin/testimonials/${t.id}`, {
+      const res = await fetch(`/api/testimonials/${t.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !t.active }),
       });
