@@ -68,7 +68,7 @@ export default function FAQSection() {
             transition={{ duration: 0.7, ease: 'easeOut' }}
           >
             {/* Gradient border wrapper */}
-            <div className="rounded-2xl p-[3px] bg-gradient-to-br from-emerald-500 via-amber-400 to-emerald-600 shadow-2xl shadow-emerald-500/10 dark:shadow-amber-500/5">
+            <div className="rounded-2xl p-[3px] bg-gradient-to-br from-amber-500 via-amber-400 to-amber-600 shadow-2xl shadow-amber-500/10 dark:shadow-amber-500/5">
               <div className="rounded-2xl overflow-hidden bg-white dark:bg-slate-800">
                 <Image
                   src="/images/hero-slide-1.png"
@@ -83,7 +83,7 @@ export default function FAQSection() {
 
             {/* Floating decorative orbs */}
             <motion.div
-              className="absolute -top-4 -left-4 size-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-500 shadow-lg shadow-emerald-400/30 dark:shadow-emerald-400/20 z-10"
+              className="absolute -top-4 -left-4 size-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 shadow-lg shadow-amber-400/30 dark:shadow-amber-400/20 z-10"
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             />
@@ -93,7 +93,7 @@ export default function FAQSection() {
               transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
             />
             <motion.div
-              className="absolute -bottom-3 right-8 size-5 rounded-full bg-gradient-to-br from-emerald-300 to-amber-400 shadow-md shadow-emerald-300/30 dark:shadow-emerald-300/20 z-10"
+              className="absolute -bottom-3 right-8 size-5 rounded-full bg-gradient-to-br from-amber-300 to-amber-400 shadow-md shadow-amber-300/30 dark:shadow-amber-300/20 z-10"
               animate={{ y: [0, 6, 0] }}
               transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
             />
@@ -105,7 +105,7 @@ export default function FAQSection() {
 
             {/* Decorative accent bar below the image */}
             <motion.div
-              className="mt-5 h-1.5 rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500 mx-4"
+              className="mt-5 h-1.5 rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 mx-4"
               initial={{ scaleX: 0, opacity: 0 }}
               whileInView={{ scaleX: 1, opacity: 1 }}
               viewport={{ once: true }}
@@ -120,7 +120,7 @@ export default function FAQSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.7 }}
             >
-              <div className="size-2 rounded-full bg-emerald-500" />
+              <div className="size-2 rounded-full bg-amber-500" />
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Trusted by 100+ clients across Africa
               </span>
@@ -137,7 +137,7 @@ export default function FAQSection() {
               viewport={{ once: true, margin: '-100px' }}
               transition={{ duration: 0.6 }}
             >
-              <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">FAQ</span>
+              <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">FAQ</span>
               <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">Frequently Asked Questions</h2>
               <p className="text-slate-600 dark:text-slate-300">
                 Find answers to common questions about our services and processes.
@@ -157,7 +157,7 @@ export default function FAQSection() {
                 placeholder="Search questions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-11 pr-4 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-400 dark:focus-visible:border-emerald-500 h-11 shadow-sm focus-visible:shadow-lg focus-visible:shadow-emerald-500/10 dark:focus-visible:shadow-emerald-500/5 transition-all duration-300"
+                className="pl-11 pr-4 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-visible:ring-amber-500/30 focus-visible:border-amber-400 dark:focus-visible:border-amber-500 h-11 shadow-sm focus-visible:shadow-lg focus-visible:shadow-amber-500/10 dark:focus-visible:shadow-amber-500/5 transition-all duration-300"
               />
             </motion.div>
 
@@ -186,11 +186,11 @@ export default function FAQSection() {
                         <AccordionItem
                           key={faq.id}
                           value={faq.id}
-                          className="border rounded-xl bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/50 px-6 data-[state=open]:shadow-lg data-[state=open]:shadow-emerald-500/5 data-[state=open]:border-amber-300 dark:data-[state=open]:border-amber-600/50 data-[state=open]:bg-gradient-to-r data-[state=open]:from-amber-50/60 data-[state=open]:to-white dark:data-[state=open]:from-amber-900/10 dark:data-[state=open]:to-slate-800/80 transition-all duration-300 overflow-hidden hover:border-slate-300 dark:hover:border-slate-600"
+                          className="border rounded-xl bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/50 px-6 data-[state=open]:shadow-lg data-[state=open]:shadow-amber-500/5 data-[state=open]:border-amber-300 dark:data-[state=open]:border-amber-600/50 data-[state=open]:bg-gradient-to-r data-[state=open]:from-amber-50/60 data-[state=open]:to-white dark:data-[state=open]:from-amber-900/10 dark:data-[state=open]:to-slate-800/80 transition-all duration-300 overflow-hidden hover:border-slate-300 dark:hover:border-slate-600"
                         >
-                          <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline py-4 text-slate-900 dark:text-white data-[state=open]:text-amber-500 dark:data-[state=open]:text-amber-400 transition-colors [&>svg]:text-slate-400 [&>svg]:data-[state=open]:text-emerald-600 dark:[&>svg]:data-[state=open]:text-amber-400">
+                          <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline py-4 text-slate-900 dark:text-white data-[state=open]:text-amber-500 dark:data-[state=open]:text-amber-400 transition-colors [&>svg]:text-slate-400 [&>svg]:data-[state=open]:text-amber-600 dark:[&>svg]:data-[state=open]:text-amber-400">
                             <span className="flex items-center gap-3">
-                              <span className="relative size-7 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center text-xs font-bold text-emerald-600 dark:text-amber-400 shrink-0 shadow-sm border border-amber-200/50 dark:border-amber-700/30">
+                              <span className="relative size-7 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/60 flex items-center justify-center text-xs font-bold text-amber-600 dark:text-amber-400 shrink-0 shadow-sm border border-amber-200/50 dark:border-amber-700/30">
                                 {String(index + 1).padStart(2, '0')}
                                 {index < filteredFaqs.length - 1 && (
                                   <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-px h-3 bg-gradient-to-b from-amber-300/40 to-transparent dark:from-amber-600/30" aria-hidden="true" />
@@ -235,7 +235,7 @@ export default function FAQSection() {
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-200/30 dark:bg-amber-500/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
 
                 <div className="relative text-center">
-                  <div className="size-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/25">
+                  <div className="size-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/25">
                     <MessageCircle className="size-7 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Still Have Questions?</h3>
