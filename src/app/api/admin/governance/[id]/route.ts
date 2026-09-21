@@ -21,6 +21,7 @@ const updateSchema = z.object({
     'proposals.manage',
     'clients.manage',
     'communications.manage',
+  'finance.manage',
   ])).optional(),
   active: z.boolean().optional(),
   newPassword: z.string().min(12).max(200).optional(),
