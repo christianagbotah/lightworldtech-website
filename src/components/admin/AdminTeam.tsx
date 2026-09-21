@@ -69,9 +69,10 @@ export default function AdminTeam() {
 
   const fetchMembers = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/team');
+      const res = await fetch('/api/team');
       if (!res.ok) throw new Error('Failed to fetch');
-      setMembers(await res.json());
+      const payload = await res.json();
+      setMembers(payload.data || []);
     } catch {
       toast.error('Failed to load team members');
     } finally {
@@ -104,7 +105,7 @@ export default function AdminTeam() {
     }
     setSaving(true);
     try {
-      const url = editing ? `/api/admin/team/${editing.id}` : '/api/admin/team';
+      const url = editing ? `/api/team/${editing.id}` : '/api/team';
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       if (!res.ok) {
@@ -124,7 +125,7 @@ export default function AdminTeam() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/team/${deleting.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/team/${deleting.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
       toast.success('Member deleted');
       setDeleteOpen(false);
