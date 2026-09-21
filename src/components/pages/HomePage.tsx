@@ -295,7 +295,25 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
       .then((payload) => {
         const managed = Array.isArray(payload?.data) ? payload.data : [];
         if (!managed.length) return;
-        const next = managed.slice(0, 8).map((item: Record<string, unknown>, index: number) => {
+
+        // Keep the CMS service order as the source of truth, but pair Hosting & Domain
+        // with Mobile App Development on desktop. Preserve which CMS cards were
+        // originally featured so the 4-column grid stays balanced.
+        const selected = managed.slice(0, 8).map((item: Record<string, unknown>, originalIndex: number) => ({
+          item,
+          originalIndex,
+        }));
+        const titleOf = ({ item }: { item: Record<string, unknown> }) => String(item.title || '').toLowerCase();
+        const mobileIndex = selected.findIndex((entry) => titleOf(entry).includes('mobile') && titleOf(entry).includes('app'));
+        const hostingIndex = selected.findIndex((entry) => titleOf(entry).includes('hosting') && titleOf(entry).includes('domain'));
+
+        if (mobileIndex >= 0 && hostingIndex >= 0 && hostingIndex !== mobileIndex + 1) {
+          const [hosting] = selected.splice(hostingIndex, 1);
+          const updatedMobileIndex = selected.findIndex((entry) => titleOf(entry).includes('mobile') && titleOf(entry).includes('app'));
+          selected.splice(updatedMobileIndex + 1, 0, hosting);
+        }
+
+        const next = selected.map(({ item, originalIndex }, index) => {
           let tags: string[] = [];
           if (typeof item.features === 'string' && item.features.trim()) {
             try {
@@ -310,7 +328,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
             title: String(item.title || capabilities[index]?.title || 'Technology service'),
             description: String(item.description || ''),
             tags: tags.length ? tags : (capabilities[index]?.tags || ['Custom delivery']),
-            feature: index === 0 || index === 2,
+            feature: originalIndex === 0 || originalIndex === 2,
           };
         });
         setHomeCapabilities(next);
