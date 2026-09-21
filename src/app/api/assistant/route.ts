@@ -16,9 +16,15 @@ const scopeStateSchema = z.object({
   }),
 });
 
+const historyTurnSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().trim().min(1).max(1000),
+});
+
 const schema = z.object({
   message: z.string().trim().min(1).max(1000),
   state: scopeStateSchema.nullable().optional(),
+  history: z.array(historyTurnSchema).max(10).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -43,7 +49,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const answer = await answerConcierge(parsed.data.message, parsed.data.state ?? null);
+    const answer = await answerConcierge(
+      parsed.data.message,
+      parsed.data.state ?? null,
+      parsed.data.history ?? [],
+    );
 
     return NextResponse.json({
       success: true,

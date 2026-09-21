@@ -4,6 +4,10 @@ import { db } from '@/lib/db';
 import { companyProfile } from '@/lib/company-profile';
 import { contentJson, contentText, defaultRecognition } from '@/lib/site-content';
 import {
+  generateGroundedConciergeReply,
+  type AssistantHistoryTurn,
+} from '@/lib/assistant-generative';
+import {
   isCompletedProjectChangeIntent,
   isCompletedProjectContactIntent,
   isCompletedProjectContextIntent,
@@ -32,7 +36,7 @@ export type ConciergeResponse = {
   reply: string;
   suggestions?: string[];
   state?: ProjectScopeState | null;
-  intent?: 'company' | 'services' | 'leadership' | 'portfolio' | 'insights' | 'recognition' | 'contact' | 'trust' | 'newsroom' | 'project-scope';
+  intent?: 'company' | 'services' | 'leadership' | 'portfolio' | 'insights' | 'recognition' | 'contact' | 'trust' | 'newsroom' | 'project-scope' | 'grounded-ai';
   cta?: { label: string; href: string };
   projectBrief?: string;
 };
@@ -266,6 +270,7 @@ function answerCompletedProjectFollowUp(
 export async function answerConcierge(
   message: string,
   state?: ProjectScopeState | null,
+  history: AssistantHistoryTurn[] = [],
 ): Promise<ConciergeResponse> {
   const knowledge = await loadKnowledge();
   const q = message.trim().toLowerCase();
@@ -275,6 +280,11 @@ export async function answerConcierge(
   }
 
   const companyName = contentText(knowledge.settings, 'company_name', companyProfile.name);
+  const companyDescription = contentText(
+    knowledge.settings,
+    'company_description',
+    'A Ghanaian technology company building software, digital products, enterprise systems, AI-enabled workflows, cloud solutions, training and advisory services.',
+  );
   const companyEmail = contentText(knowledge.settings, 'company_email', companyProfile.email);
   const companyPhone = contentText(knowledge.settings, 'company_phone1', companyProfile.phoneDisplay);
   const companyAddress = contentText(knowledge.settings, 'company_address', 'Accra, Ghana');
@@ -415,6 +425,57 @@ export async function answerConcierge(
         ? 'For education-related work, relevant current capabilities include ' + list(educationServices.map((item) => item.title)) + '.'
         : 'Lightworld works on education technology, school systems, assessment, billing, communication and digital learning experiences.',
       cta: { label: 'Discuss an education project', href: '/contact' },
+    };
+  }
+
+  const generatedReply = await generateGroundedConciergeReply({
+    message,
+    history,
+    context: {
+      company: {
+        name: companyName,
+        description: companyDescription,
+        email: companyEmail,
+        phone: companyPhone,
+        address: companyAddress,
+      },
+      services: knowledge.services.map((service) => ({
+        title: service.title,
+        description: service.description,
+        features: service.features,
+      })),
+      leadership: knowledge.team.map((person) => ({
+        name: person.name,
+        role: person.role,
+        bio: person.bio,
+      })),
+      portfolio: knowledge.portfolio.map((item) => ({
+        title: item.title,
+        description: item.description,
+        category: item.category,
+      })),
+      insights: knowledge.posts.map((post) => ({
+        title: post.title,
+        excerpt: post.excerpt,
+      })),
+      recognition: knowledge.recognition.map((item) => ({
+        year: item.year,
+        title: item.title,
+        publisher: item.publisher,
+      })),
+      activeProjectBrief:
+        state?.mode === 'project-scope' ? projectSummary(state) : undefined,
+    },
+  });
+
+  if (generatedReply) {
+    return {
+      intent: 'grounded-ai',
+      reply: generatedReply,
+      suggestions:
+        state?.mode === 'project-scope' && state.step === 'done'
+          ? ['What happens after I submit?', 'How is pricing estimated?', 'Open my project brief']
+          : ['Start a project', 'What services do you offer?', 'Show me your work'],
     };
   }
 
