@@ -123,20 +123,20 @@ interface AnalyticsData {
 const statCards = [
   { key: 'totalPosts' as const, label: 'Blog Posts', icon: FileText, action: 'admin-blog' as const, color: 'text-amber-700 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
   { key: 'activeServices' as const, label: 'Services', icon: Briefcase, action: 'admin-services' as const, color: 'text-amber-700 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
-  { key: 'activeTeam' as const, label: 'Team Members', icon: Users, action: 'admin-team' as const, color: 'text-yellow-700 bg-yellow-100 dark:bg-yellow-900/30', borderAccent: 'border-l-[3px] border-l-yellow-500 dark:border-l-yellow-400' },
+  { key: 'activeTeam' as const, label: 'Team Members', icon: Users, action: 'admin-team' as const, color: 'text-amber-700 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
   { key: 'unreadMessages' as const, label: 'Unread Messages', icon: Mail, action: 'admin-messages' as const, color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', borderAccent: 'border-l-[3px] border-l-rose-500 dark:border-l-rose-400' },
-  { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, action: 'admin-portfolio' as const, color: 'text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30', borderAccent: 'border-l-[3px] border-l-cyan-500 dark:border-l-cyan-400' },
-  { key: 'activeTestimonials' as const, label: 'Testimonials', icon: MessageSquare, action: 'admin-testimonials' as const, color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30', borderAccent: 'border-l-[3px] border-l-orange-500 dark:border-l-orange-400' },
+  { key: 'activePortfolio' as const, label: 'Portfolio', icon: FolderOpen, action: 'admin-portfolio' as const, color: 'text-amber-700 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
+  { key: 'activeTestimonials' as const, label: 'Testimonials', icon: MessageSquare, action: 'admin-testimonials' as const, color: 'text-amber-700 bg-amber-100 dark:bg-amber-900/30', borderAccent: 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400' },
 ];
 
 const quickActions = [
   { label: 'Open CRM Pipeline', icon: GitBranch, action: 'admin-crm', color: 'text-amber-600 dark:text-amber-400' },
-  { label: 'New Blog Post', icon: Pencil, action: 'admin-blog-editor', color: 'text-emerald-600 dark:text-amber-400' },
+  { label: 'New Blog Post', icon: Pencil, action: 'admin-blog-editor', color: 'text-amber-600 dark:text-amber-400' },
   { label: 'View Messages', icon: Inbox, action: 'admin-messages', color: 'text-rose-600 dark:text-rose-400' },
 ];
 
 export default function AdminDashboard() {
-  const { navigate, adminRole, adminPermissions } = useAppStore();
+  const { navigate, adminRole, adminPermissions, adminName } = useAppStore();
   const canSite = hasAdminPermission(adminRole, adminPermissions, 'site.manage');
   const canCrm = hasAdminPermission(adminRole, adminPermissions, 'crm.manage');
   const [stats, setStats] = useState<Stats | null>(null);
@@ -285,14 +285,15 @@ export default function AdminDashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-700" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-amber-900 to-amber-600" />
         <div className="absolute inset-0 grid-pattern opacity-10" />
         <div className="absolute -top-8 -right-8 w-40 h-40 bg-amber-400/15 rounded-full blur-2xl" />
         <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
         <div className="relative z-10 px-6 py-6 md:px-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Welcome back, Admin!</h1>
-            <p className="text-amber-100 mt-1 text-sm md:text-base">Here&apos;s what&apos;s happening today.</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200/80">Operations overview</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-[-0.03em] text-white">Welcome back, {adminName || 'Admin'}</h1>
+            <p className="mt-1 text-sm text-amber-50/75 md:text-base">Your website, client, communication and operational signals in one place.</p>
           </div>
           <button
             type="button"
@@ -326,10 +327,10 @@ export default function AdminDashboard() {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Unique Sessions', value: analytics?.uniqueSessions || 0, icon: Users, color: 'text-emerald-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-          { label: 'Page Views', value: analytics?.pageViews || 0, icon: Eye, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30' },
-          { label: 'Assistant Messages', value: analytics?.assistantMessages || 0, icon: MessageSquare, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-100 dark:bg-violet-900/30' },
-          { label: 'Contact Submissions', value: analytics?.contactSubmits || 0, icon: Mail, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/30' },
+          { label: 'Unique Sessions', value: analytics?.uniqueSessions || 0, icon: Users, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          { label: 'Page Views', value: analytics?.pageViews || 0, icon: Eye, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          { label: 'Assistant Messages', value: analytics?.assistantMessages || 0, icon: MessageSquare, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          { label: 'Contact Submissions', value: analytics?.contactSubmits || 0, icon: Mail, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
         ].map((item, i) => {
           const Icon = item.icon;
           return (
@@ -507,7 +508,7 @@ export default function AdminDashboard() {
                           style={{ minHeight: '4px' }}
                         />
                       </div>
-                      <span className={`text-xs ${isCurrentDay ? 'font-semibold text-emerald-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+                      <span className={`text-xs ${isCurrentDay ? 'font-semibold text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
                         {new Date(item.date + 'T00:00:00Z').toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
                       </span>
                     </div>
@@ -537,7 +538,7 @@ export default function AdminDashboard() {
                 return (
                   <motion.button
                     key={action.label}
-                    className="w-full flex items-center justify-start gap-3 h-14 px-4 rounded-xl border border-border/50 bg-gradient-to-r from-white to-slate-50/50 dark:from-slate-800/80 dark:to-slate-800/40 hover:from-amber-50 hover:to-amber-50/30 dark:hover:from-amber-900/20 dark:hover:to-amber-900/10 hover:border-amber-300 dark:hover:border-emerald-500 hover:shadow-md transition-all duration-300 text-left"
+                    className="w-full flex items-center justify-start gap-3 h-14 px-4 rounded-xl border border-border/50 bg-gradient-to-r from-white to-slate-50/50 dark:from-slate-800/80 dark:to-slate-800/40 hover:from-amber-50 hover:to-amber-50/30 dark:hover:from-amber-900/20 dark:hover:to-amber-900/10 hover:border-amber-300 dark:hover:border-amber-500 hover:shadow-md transition-all duration-300 text-left"
                     onClick={() => navigate(action.action as Parameters<typeof navigate>[0])}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
