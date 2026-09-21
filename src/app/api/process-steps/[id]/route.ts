@@ -11,9 +11,10 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const step = await db.processStep.findUnique({
-      where: { id },
-    });
+    const adminRequest = await isAdminRequest(request);
+    const step = adminRequest
+      ? await db.processStep.findUnique({ where: { id } })
+      : await db.processStep.findFirst({ where: { id, active: true } });
 
     if (!step) {
       return NextResponse.json(
