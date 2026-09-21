@@ -116,7 +116,7 @@ export default function AdminPages() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Full-site CMS</p>
         <h1 className="mt-1 text-2xl font-bold text-foreground">Page Content</h1>
@@ -159,7 +159,7 @@ export default function AdminPages() {
                   </div>
                   <div className="space-y-2">
                     {items.map((item, index) => (
-                      <div key={index} className="flex gap-2">
+                      <div key={index} className="flex min-w-0 flex-col gap-2 sm:flex-row">
                         <Input
                           value={item}
                           onChange={(event) => {
