@@ -123,7 +123,7 @@ export default function TechStackSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">
+          <span className="text-sm font-semibold text-amber-600 dark:text-amber-300 uppercase tracking-wider">
             Our Technology Arsenal
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-4 text-slate-900 dark:text-white">
