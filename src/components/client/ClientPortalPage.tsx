@@ -35,6 +35,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 type Milestone = {
   id: string;
@@ -679,7 +685,7 @@ export default function ClientPortalPage() {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
-      <header className="border-b border-slate-200/70 bg-white/85 backdrop-blur dark:border-white/[0.07] dark:bg-[#071018]/90">
+      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/90 shadow-sm shadow-slate-950/[0.025] backdrop-blur-xl dark:border-white/[0.07] dark:bg-[#071018]/92">
         <div className="container-main flex min-h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><Building2 className="size-4" /></span>
@@ -699,121 +705,135 @@ export default function ClientPortalPage() {
         </div>
       </header>
 
-      {profileOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Profile and security"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setProfileOpen(false);
-          }}
-        >
-          <Card className="max-h-[90vh] w-full max-w-2xl overflow-y-auto border-slate-200/80 bg-white shadow-2xl dark:border-white/[0.08] dark:bg-[#09131b]">
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
-              <div>
-                <CardTitle>Profile & security</CardTitle>
-                <p className="mt-1 text-sm text-slate-500 dark:text-white/38">
-                  Manage your client portal identity and password.
-                </p>
-              </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => setProfileOpen(false)}>
-                Close
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <form onSubmit={saveProfile} className="rounded-2xl border border-slate-200/70 p-4 dark:border-white/[0.07]">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="size-4 text-amber-600" />
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent className="max-w-3xl p-0">
+          <DialogHeader className="border-b border-border/70 px-5 py-5 sm:px-6">
+            <DialogTitle>Profile & security</DialogTitle>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Manage your client portal identity and password from one secure workspace.
+            </p>
+          </DialogHeader>
+          <div className="grid gap-5 p-5 sm:p-6">
+            <form onSubmit={saveProfile} className="rounded-2xl border border-slate-200/70 bg-slate-50/60 p-4 dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-5">
+              <div className="flex items-center gap-2">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                  <ShieldCheck className="size-4" />
+                </span>
+                <div>
                   <h2 className="font-semibold">Profile</h2>
+                  <p className="text-xs text-muted-foreground">Your client-facing identity.</p>
                 </div>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="client-profile-name">Name</Label>
-                    <Input
-                      id="client-profile-name"
-                      value={profileName}
-                      onChange={(event) => setProfileName(event.target.value)}
-                      minLength={2}
-                      maxLength={120}
-                      autoComplete="name"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="client-profile-email">Email</Label>
-                    <Input id="client-profile-email" value={data?.user.email || ''} readOnly disabled />
-                    <p className="text-[11px] leading-4 text-slate-400">
-                      Email is managed by Lightworld so account ownership cannot be changed without verification.
-                    </p>
-                  </div>
+              </div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="client-profile-name">Name</Label>
+                  <Input
+                    id="client-profile-name"
+                    value={profileName}
+                    onChange={(event) => setProfileName(event.target.value)}
+                    minLength={2}
+                    maxLength={120}
+                    autoComplete="name"
+                    required
+                  />
                 </div>
-                <div className="mt-4 flex justify-end">
-                  <Button type="submit" disabled={profileSaving} className="bg-amber-600 text-white hover:bg-amber-700">
-                    {profileSaving && <Loader2 className="mr-2 size-4 animate-spin" />}
-                    Save profile
-                  </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="client-profile-email">Email</Label>
+                  <Input id="client-profile-email" value={data?.user.email || ''} readOnly disabled />
+                  <p className="text-[11px] leading-4 text-slate-400">
+                    Email changes require Lightworld verification to protect account ownership.
+                  </p>
                 </div>
-              </form>
+              </div>
+              <div className="mt-5 flex justify-end">
+                <Button type="submit" disabled={profileSaving} className="bg-amber-600 text-white hover:bg-amber-700">
+                  {profileSaving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                  Save profile
+                </Button>
+              </div>
+            </form>
 
-              <form onSubmit={changePassword} className="rounded-2xl border border-slate-200/70 p-4 dark:border-white/[0.07]">
-                <div className="flex items-center gap-2">
-                  <KeyRound className="size-4 text-amber-600" />
+            <form onSubmit={changePassword} className="rounded-2xl border border-slate-200/70 p-4 dark:border-white/[0.07] sm:p-5">
+              <div className="flex items-center gap-2">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                  <KeyRound className="size-4" />
+                </span>
+                <div>
                   <h2 className="font-semibold">Password</h2>
+                  <p className="text-xs text-muted-foreground">Secure this account and sign out other client sessions.</p>
                 </div>
-                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/38">
-                  Changing your password signs out other client portal sessions and invalidates unused password-reset links.
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="client-current-password">Current password</Label>
-                    <Input
-                      id="client-current-password"
-                      type="password"
-                      value={passwordForm.currentPassword}
-                      onChange={(event) => setPasswordForm({ ...passwordForm, currentPassword: event.target.value })}
-                      autoComplete="current-password"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="client-new-password">New password</Label>
-                    <Input
-                      id="client-new-password"
-                      type="password"
-                      value={passwordForm.newPassword}
-                      onChange={(event) => setPasswordForm({ ...passwordForm, newPassword: event.target.value })}
-                      autoComplete="new-password"
-                      minLength={12}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="client-confirm-password">Confirm new password</Label>
-                    <Input
-                      id="client-confirm-password"
-                      type="password"
-                      value={passwordForm.confirmPassword}
-                      onChange={(event) => setPasswordForm({ ...passwordForm, confirmPassword: event.target.value })}
-                      autoComplete="new-password"
-                      minLength={12}
-                      required
-                    />
-                  </div>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-white/38">
+                Changing your password also invalidates unused password-reset links.
+              </p>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="client-current-password">Current password</Label>
+                  <Input
+                    id="client-current-password"
+                    type="password"
+                    value={passwordForm.currentPassword}
+                    onChange={(event) => setPasswordForm({ ...passwordForm, currentPassword: event.target.value })}
+                    autoComplete="current-password"
+                    required
+                  />
                 </div>
-                <div className="mt-4 flex justify-end">
-                  <Button type="submit" disabled={passwordSaving} className="bg-amber-600 text-white hover:bg-amber-700">
-                    {passwordSaving && <Loader2 className="mr-2 size-4 animate-spin" />}
-                    Change password
-                  </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="client-new-password">New password</Label>
+                  <Input
+                    id="client-new-password"
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={(event) => setPasswordForm({ ...passwordForm, newPassword: event.target.value })}
+                    autoComplete="new-password"
+                    minLength={12}
+                    required
+                  />
                 </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                <div className="space-y-2">
+                  <Label htmlFor="client-confirm-password">Confirm new password</Label>
+                  <Input
+                    id="client-confirm-password"
+                    type="password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(event) => setPasswordForm({ ...passwordForm, confirmPassword: event.target.value })}
+                    autoComplete="new-password"
+                    minLength={12}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="mt-5 flex justify-end">
+                <Button type="submit" disabled={passwordSaving} className="bg-amber-600 text-white hover:bg-amber-700">
+                  {passwordSaving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                  Change password
+                </Button>
+              </div>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <main className="container-main min-w-0 max-w-full py-8 sm:py-10">
+      <nav className="sticky top-16 z-30 border-b border-slate-200/70 bg-[#f7f9f8]/92 backdrop-blur-xl dark:border-white/[0.07] dark:bg-[#050b10]/92" aria-label="Client workspace sections">
+        <div className="container-main flex max-w-full gap-1 overflow-x-auto py-2">
+          {[
+            ['Overview', '#overview'],
+            ['Billing', '#billing'],
+            ['Projects', '#projects'],
+            ['Support', '#support'],
+          ].map(([label, href]) => (
+            <a
+              key={href}
+              href={href}
+              className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-white hover:text-slate-950 hover:shadow-sm dark:text-white/40 dark:hover:bg-white/[0.05] dark:hover:text-white"
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+      </nav>
+
+      <main id="overview" className="container-main min-w-0 max-w-full scroll-mt-32 py-8 sm:py-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Client portal</p>
@@ -832,10 +852,14 @@ export default function ClientPortalPage() {
             const Icon = item.icon;
             return (
               <Card key={item.label} className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
-                <CardContent className="p-5">
-                  <Icon className="size-4 text-amber-600" />
-                  <p className="mt-5 text-2xl font-bold">{item.value}</p>
-                  <p className="text-xs text-slate-500 dark:text-white/35">{item.label}</p>
+                <CardContent className="flex items-center justify-between gap-4 p-5">
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 dark:text-white/35">{item.label}</p>
+                    <p className="mt-1 text-2xl font-bold tracking-[-0.03em]">{item.value}</p>
+                  </div>
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
+                    <Icon className="size-5" />
+                  </span>
                 </CardContent>
               </Card>
             );
@@ -859,7 +883,7 @@ export default function ClientPortalPage() {
           </section>
         )}
 
-        <section className="mt-8">
+        <section id="billing" className="mt-8 scroll-mt-32">
           <div className="flex items-center gap-2">
             <Landmark className="size-5 text-amber-600" />
             <div>
@@ -1017,9 +1041,9 @@ export default function ClientPortalPage() {
           </Card>
         </section>
 
-        <section className="mt-8">
+        <section id="projects" className="mt-8 scroll-mt-32">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Projects</h2>
+            <h2 className="text-xl font-semibold tracking-[-0.02em]">Projects</h2>
             <span className="text-xs text-slate-400">{data?.projects.length || 0} total</span>
           </div>
           {data?.projects.length ? (
@@ -1108,14 +1132,14 @@ export default function ClientPortalPage() {
           )}
         </section>
 
-        <section className="mt-9 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]">
+        <section id="support" className="mt-9 grid min-w-0 scroll-mt-32 gap-6 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]">
           <Card className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
             <CardHeader><CardTitle>Request support</CardTitle></CardHeader>
             <CardContent>
               <form onSubmit={submitTicket} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Project</Label>
-                  <select value={ticket.projectId} onChange={(event) => setTicket({ ...ticket, projectId: event.target.value })} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                  <select value={ticket.projectId} onChange={(event) => setTicket({ ...ticket, projectId: event.target.value })} className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
                     <option value="">General / no project</option>
                     {data?.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                   </select>
@@ -1126,13 +1150,13 @@ export default function ClientPortalPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Priority</Label>
-                  <select value={ticket.priority} onChange={(event) => setTicket({ ...ticket, priority: event.target.value })} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                  <select value={ticket.priority} onChange={(event) => setTicket({ ...ticket, priority: event.target.value })} className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
                     <option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <Label>Category</Label>
-                  <select value={ticket.category} onChange={(event) => setTicket({ ...ticket, category: event.target.value })} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                  <select value={ticket.category} onChange={(event) => setTicket({ ...ticket, category: event.target.value })} className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
                     <option value="technical">Technical support</option>
                     <option value="billing">Billing</option>
                     <option value="hosting">Hosting</option>
@@ -1169,7 +1193,7 @@ export default function ClientPortalPage() {
                 <select
                   value={ticketStatus}
                   onChange={(event) => setTicketStatus(event.target.value)}
-                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
                 >
                   <option value="all">All statuses</option>
                   <option value="open">Open</option>
