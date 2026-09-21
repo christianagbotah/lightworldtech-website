@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
-import { supportSlaState } from '@/lib/support-ticket';
+import { reconcileSupportEscalations, supportSlaState } from '@/lib/support-ticket';
 
 export async function GET(request: NextRequest) {
   if (!(await isAdminRequest(request))) {
@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    await reconcileSupportEscalations();
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q')?.trim();
     const status = searchParams.get('status')?.trim();
