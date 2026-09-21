@@ -17,11 +17,16 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')?.trim();
     const priority = searchParams.get('priority')?.trim();
     const q = searchParams.get('q')?.trim();
+    const overdue = searchParams.get('overdue') === 'true';
     const limit = Math.min(200, Math.max(1, Number(searchParams.get('limit') || 100)));
 
     const where: Record<string, unknown> = {};
     if (status && status !== 'all') where.status = status;
     if (priority && priority !== 'all') where.priority = priority;
+    if (overdue) {
+      where.nextFollowUp = { lt: new Date() };
+      where.status = status && status !== 'all' ? status : { notIn: ['won', 'lost'] };
+    }
     if (q) {
       where.OR = [
         { summary: { contains: q } },
