@@ -24,6 +24,7 @@ import AdminGovernance from '@/components/admin/AdminGovernance';
 import AdminFAQs from '@/components/admin/AdminFAQs';
 import AdminSettings from '@/components/admin/AdminSettings';
 import AdminPages from '@/components/admin/AdminPages';
+import AdminMedia from '@/components/admin/AdminMedia';
 import { hasAdminPermission, type AdminPermission } from '@/lib/admin-permissions';
 
 function AdminRouter() {
@@ -34,6 +35,8 @@ function AdminRouter() {
   switch (adminTab) {
     case 'pages':
       return can('site.manage') ? <AdminPages /> : <AdminDashboard />;
+    case 'media':
+      return can('site.manage') ? <AdminMedia /> : <AdminDashboard />;
     case 'services':
       return can('site.manage') ? <AdminServices /> : <AdminDashboard />;
     case 'blog':
