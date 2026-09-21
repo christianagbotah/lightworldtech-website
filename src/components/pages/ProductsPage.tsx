@@ -145,10 +145,10 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.04 }}
-                className="group flex min-h-[320px] flex-col rounded-[28px] border border-slate-200/70 bg-white p-6 transition hover:-translate-y-0.5 hover:border-emerald-300/50 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]"
+                className="group flex min-h-[320px] flex-col rounded-[28px] border border-slate-200/70 bg-white p-6 transition hover:-translate-y-0.5 hover:border-amber-300/50 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]"
               >
                 <div className="flex items-start justify-between">
-                  <span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                  <span className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
                     <product.icon className="size-5" />
                   </span>
                   <span className="rounded-full border border-slate-200/80 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:border-white/[0.07] dark:text-white/25">{product.stage}</span>
@@ -168,19 +168,19 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
 
           <div className="mt-10 grid overflow-hidden rounded-[34px] bg-slate-950 text-white dark:bg-[#081119] lg:grid-cols-[1fr_.8fr]">
             <div className="relative p-7 sm:p-9 lg:p-11">
-              <div className="absolute -left-16 -top-16 size-64 rounded-full bg-emerald-400/10 blur-3xl" />
+              <div className="absolute -left-16 -top-16 size-64 rounded-full bg-amber-400/10 blur-3xl" />
               <div className="relative">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-400/10 text-amber-300">
                   <Bell className="size-5" />
                 </div>
-                <p className="mt-7 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">Product updates</p>
+                <p className="mt-7 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">Product updates</p>
                 <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{contentText(settings, 'products_updates_title', 'Follow what graduates from the lab.')}</h2>
                 <p className="mt-4 max-w-xl text-sm leading-7 text-white/40">{contentText(settings, 'products_updates_description', 'We will share public launches, early-access opportunities and useful product notes when they are ready.')}</p>
               </div>
             </div>
             <div className="border-t border-white/[0.07] bg-white/[0.03] p-7 sm:p-9 lg:flex lg:items-center lg:border-l lg:border-t-0">
               {subscribed ? (
-                <div className="flex items-center gap-3 text-emerald-300">
+                <div className="flex items-center gap-3 text-amber-300">
                   <CheckCircle2 className="size-5" />
                   <div>
                     <p className="text-sm font-semibold">You are on the product list.</p>
@@ -200,10 +200,10 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
                         placeholder="you@company.com"
-                        className="h-11 w-full rounded-full border border-white/[0.09] bg-black/20 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-emerald-300/35"
+                        className="h-11 w-full rounded-full border border-white/[0.09] bg-black/20 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-amber-300/35"
                       />
                     </div>
-                    <button disabled={sending} className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-emerald-400 px-5 text-sm font-semibold text-slate-950 disabled:opacity-50">
+                    <button disabled={sending} className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-amber-400 px-5 text-sm font-semibold text-slate-950 disabled:opacity-50">
                       Subscribe <ArrowRight className="size-4" />
                     </button>
                   </div>
@@ -217,7 +217,7 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
               <p className="text-sm font-semibold">Need a tailored system instead?</p>
               <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/30">Our product lab does not replace custom engineering. It makes it stronger.</p>
             </div>
-            <Link href="/contact" className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+            <Link href="/contact" className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
               Talk to us <ArrowRight className="size-4" />
             </Link>
           </div>
