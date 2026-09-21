@@ -18,6 +18,7 @@ import {
   Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -370,16 +371,16 @@ export default function AdminClients() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Client Portal</p>
-          <h1 className="mt-1 text-2xl font-bold">Client organizations & delivery visibility</h1>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Provision only real client organizations. Portal users see projects, milestones and support requests scoped to their organization.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => void fetchOrganizations()}><RefreshCw className="mr-2 size-4" /> Refresh</Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Client Portal"
+        title="Client organizations & delivery visibility"
+        description="Provision only real client organizations. Portal users see projects, milestones and support requests scoped to their organization."
+        actions={
+          <Button variant="outline" onClick={() => void fetchOrganizations()}>
+            <RefreshCw className="mr-2 size-4" /> Refresh
+          </Button>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
