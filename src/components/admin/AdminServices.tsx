@@ -35,6 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
+import AdminMediaField from '@/components/admin/AdminMediaField';
 
 interface Service {
   id: string;
@@ -42,6 +43,7 @@ interface Service {
   slug: string;
   description: string;
   icon: string;
+  image: string;
   features: string;
   order: number;
   active: boolean;
@@ -53,7 +55,7 @@ function slugify(text: string): string {
 }
 
 const emptyService = {
-  title: '', slug: '', description: '', icon: '', features: '', order: 0, active: true,
+  title: '', slug: '', description: '', icon: '', image: '', features: '', order: 0, active: true,
 };
 
 export default function AdminServices() {
@@ -104,6 +106,7 @@ export default function AdminServices() {
       slug: service.slug,
       description: service.description,
       icon: service.icon,
+      image: service.image || '',
       features: Array.isArray(JSON.parse(service.features || '[]')) ? (JSON.parse(service.features) as string[]).join('\n') : service.features,
       order: service.order,
       active: service.active,
@@ -188,7 +191,7 @@ export default function AdminServices() {
           <h1 className="text-2xl font-bold text-foreground">Services</h1>
           <p className="text-muted-foreground text-sm mt-1">{services.length} services total</p>
         </div>
-        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={openCreate} className="bg-amber-600 text-white hover:bg-amber-700">
           <Plus className="h-4 w-4 mr-2" /> Add Service
         </Button>
       </div>
@@ -278,6 +281,12 @@ export default function AdminServices() {
               <Label htmlFor="svc-icon">Icon (Lucide name)</Label>
               <Input id="svc-icon" value={form.icon} onChange={(e) => setForm(f => ({ ...f, icon: e.target.value }))} placeholder="e.g., Code, Globe, Shield" />
             </div>
+            <AdminMediaField
+              label="Service image"
+              value={form.image}
+              onChange={(image) => setForm((current) => ({ ...current, image }))}
+              help="Optional visual used by service cards and detail sections when the public layout supports imagery."
+            />
             <div className="grid gap-2">
               <Label htmlFor="svc-features">Features (one per line)</Label>
               <Textarea id="svc-features" value={form.features} onChange={(e) => setForm(f => ({ ...f, features: e.target.value }))} placeholder="Feature 1&#10;Feature 2&#10;Feature 3" rows={4} />
