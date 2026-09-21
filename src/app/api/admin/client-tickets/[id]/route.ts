@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
+import { normalizeAdminPermissions } from '@/lib/admin-permissions';
 import {
   SUPPORT_TICKET_CATEGORIES,
   notifyClientOfSupportStatus,
@@ -13,7 +14,7 @@ const schema = z.object({
   status: z.enum(['open', 'in_progress', 'awaiting_client', 'resolved', 'closed']).optional(),
   priority: z.enum(['low', 'normal', 'high']).optional(),
   category: z.enum(SUPPORT_TICKET_CATEGORIES).optional(),
-  assignedTo: z.string().trim().max(160).optional(),
+  assignedTo: z.string().trim().email().or(z.literal('')).optional(),
 });
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -32,6 +33,24 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   const actor = await getActiveAdminContext(request);
   if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (parsed.data.assignedTo) {
+    const assignee = await db.admin.findUnique({
+      where: { email: parsed.data.assignedTo },
+      select: { active: true, role: true, permissions: true },
+    });
+    if (
+      !assignee ||
+      !assignee.active ||
+      (assignee.role !== 'super_admin' &&
+        !normalizeAdminPermissions(assignee.permissions).includes('clients.manage'))
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Selected assignee is not an active Support Desk agent' },
+        { status: 400 },
+      );
+    }
+  }
 
   const data: Record<string, unknown> = { ...parsed.data };
   const now = new Date();
