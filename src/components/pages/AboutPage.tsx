@@ -120,7 +120,7 @@ export default function AboutPage({
             className="grid gap-12 lg:grid-cols-[1.05fr_.95fr] lg:items-end"
           >
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
                 <Sparkles className="size-3.5" />
                 {contentText(settings, 'about_hero_eyebrow', 'About Lightworld')}
               </div>
@@ -133,7 +133,7 @@ export default function AboutPage({
                 {contentText(settings, 'about_hero_description', 'Lightworld Technologies Ltd is a Ghanaian technology company focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.')}
               </p>
               <div className="mt-6 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-white/35">
-                <MapPin className="size-4 text-emerald-500" />
+                <MapPin className="size-4 text-amber-500" />
                 {contentText(settings, 'about_location_line', 'Tema, Ghana · built with a global outlook')}
               </div>
             </div>
@@ -149,7 +149,7 @@ export default function AboutPage({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">{contentText(settings, 'about_pov_eyebrow', 'Our point of view')}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-400">{contentText(settings, 'about_pov_eyebrow', 'Our point of view')}</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">{contentText(settings, 'about_pov_title', 'Digital transformation should feel practical.')}</h2>
             </motion.div>
 
@@ -177,7 +177,7 @@ export default function AboutPage({
                 transition={{ delay: index * 0.045 }}
                 className="rounded-[28px] border border-slate-200/70 bg-white p-6 dark:border-white/[0.07] dark:bg-white/[0.025]"
               >
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
                   <principle.icon className="size-5" />
                 </div>
                 <h3 className="mt-7 text-xl font-semibold tracking-tight">{principle.title}</h3>
@@ -192,7 +192,7 @@ export default function AboutPage({
         <div className="container-main">
           <div className="grid gap-12 lg:grid-cols-[.75fr_1.25fr] lg:items-start">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">How we are built</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-300">How we are built</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Multi-disciplinary by design.</h2>
               <p className="mt-5 max-w-md text-sm leading-7 text-white/42 sm:text-base">
                 Modern digital work crosses disciplines. Our delivery model brings those disciplines together around the same outcome instead of handing the project from silo to silo.
@@ -200,7 +200,7 @@ export default function AboutPage({
               <div className="mt-8 grid grid-cols-2 gap-2">
                 {disciplines.map((item) => (
                   <div key={item.label} className="flex items-center gap-2.5 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3 text-xs font-medium text-white/50">
-                    <item.icon className="size-4 text-emerald-300" />
+                    <item.icon className="size-4 text-amber-300" />
                     {item.label}
                   </div>
                 ))}
@@ -217,7 +217,7 @@ export default function AboutPage({
                   transition={{ delay: index * 0.05 }}
                   className="grid gap-3 rounded-[24px] border border-white/[0.07] bg-white/[0.03] p-5 sm:grid-cols-[auto_1fr]"
                 >
-                  <span className="font-mono text-xs text-emerald-300/70">0{index + 1}</span>
+                  <span className="font-mono text-xs text-amber-300/70">0{index + 1}</span>
                   <div>
                     <h3 className="font-semibold text-white/88">{title}</h3>
                     <p className="mt-2 text-sm leading-6 text-white/38">{text}</p>
@@ -233,10 +233,10 @@ export default function AboutPage({
         <div className="container-main">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Leadership</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-400">Leadership</p>
               <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Accountability has names.</h2>
             </div>
-            <Link href="/team" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+            <Link href="/team" className="inline-flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
               Meet the leadership team <ArrowRight className="size-4" />
             </Link>
           </div>
@@ -251,13 +251,13 @@ export default function AboutPage({
                 transition={{ delay: index * 0.07 }}
                 className="relative overflow-hidden rounded-[30px] border border-slate-200/70 bg-white p-6 dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-7"
               >
-                <div className="absolute -right-16 -top-16 size-48 rounded-full bg-emerald-400/10 blur-3xl" />
+                <div className="absolute -right-16 -top-16 size-48 rounded-full bg-amber-400/10 blur-3xl" />
                 <div className="relative flex items-start gap-5">
-                  <div className="flex size-16 shrink-0 items-center justify-center rounded-[22px] border border-emerald-500/15 bg-gradient-to-br from-emerald-500/15 to-amber-400/10 text-lg font-semibold text-emerald-700 dark:text-emerald-300">
+                  <div className="flex size-16 shrink-0 items-center justify-center rounded-[22px] border border-amber-500/15 bg-gradient-to-br from-amber-500/15 to-amber-400/10 text-lg font-semibold text-amber-700 dark:text-amber-300">
                     {person.initials}
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">{person.role}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">{person.role}</p>
                     <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">{person.name}</h3>
                     <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-white/36">{person.description}</p>
                   </div>
@@ -307,13 +307,13 @@ export default function AboutPage({
                   href={item.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="group rounded-[26px] border border-emerald-500/15 bg-emerald-500/[0.07] p-5 transition hover:-translate-y-0.5"
+                  className="group rounded-[26px] border border-amber-500/15 bg-amber-500/[0.07] p-5 transition hover:-translate-y-0.5"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <Newspaper className="size-5 text-emerald-600 dark:text-emerald-300" />
-                    <ArrowUpRight className="size-4 text-emerald-600/40 transition group-hover:text-emerald-600 dark:text-emerald-300/40" />
+                    <Newspaper className="size-5 text-amber-600 dark:text-amber-300" />
+                    <ArrowUpRight className="size-4 text-amber-600/40 transition group-hover:text-amber-600 dark:text-amber-300/40" />
                   </div>
-                  <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700/70 dark:text-emerald-300/60">{item.publisher} coverage</p>
+                  <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700/70 dark:text-amber-300/60">{item.publisher} coverage</p>
                   <h3 className="mt-2 text-lg font-semibold leading-snug">{item.title}</h3>
                 </a>
               ))}
@@ -331,7 +331,7 @@ export default function AboutPage({
               viewport={{ once: true }}
               className="rounded-[32px] border border-slate-200/70 bg-white p-7 dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-8"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Our direction</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">Our direction</p>
               <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em]">Build a technology company with African context and global capability.</h2>
               <p className="mt-4 text-sm leading-7 text-slate-500 dark:text-white/38">
                 We are growing beyond project delivery into reusable platforms, products, training and long-term technology partnerships—without losing the close understanding of client operations that makes custom work valuable.
@@ -342,9 +342,9 @@ export default function AboutPage({
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="rounded-[32px] border border-emerald-500/15 bg-emerald-500/[0.07] p-7 sm:p-8"
+              className="rounded-[32px] border border-amber-500/15 bg-amber-500/[0.07] p-7 sm:p-8"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">What clients should expect</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">What clients should expect</p>
               <div className="mt-4 space-y-3">
                 {[
                   'Clear communication around scope, risk and trade-offs',
@@ -354,7 +354,7 @@ export default function AboutPage({
                   'A partner willing to understand the operational detail',
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-300" />
+                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-300" />
                     <span className="text-sm leading-6 text-slate-600 dark:text-white/48">{item}</span>
                   </div>
                 ))}
@@ -366,15 +366,15 @@ export default function AboutPage({
 
       <section className="section-padding pt-2">
         <div className="container-main">
-          <div className="relative overflow-hidden rounded-[36px] bg-gradient-to-br from-emerald-500 to-emerald-700 p-7 text-white sm:p-10 lg:p-12">
+          <div className="relative overflow-hidden rounded-[36px] bg-gradient-to-br from-amber-500 to-amber-700 p-7 text-white sm:p-10 lg:p-12">
             <div className="lw-dot-grid absolute inset-0 opacity-20" />
             <div className="relative grid gap-7 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-50/70">Build with us</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-50/70">Build with us</p>
                 <h2 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">If the problem matters, we are interested in understanding it.</h2>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link href="/contact" className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-emerald-800">
+                <Link href="/contact" className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-amber-800">
                   Start a conversation <ArrowRight className="size-4" />
                 </Link>
                 <Link href="/careers" className="inline-flex h-11 items-center gap-2 rounded-full border border-white/25 px-5 text-sm font-semibold text-white">
