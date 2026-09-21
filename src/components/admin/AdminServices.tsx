@@ -215,7 +215,7 @@ export default function AdminServices() {
                 </TableRow>
               ) : (
                 services.map((service) => (
-                  <TableRow key={service.id} className="hover:bg-emerald-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
+                  <TableRow key={service.id} onClick={(event) => { event.stopPropagation(); openEdit(service); }} className="cursor-pointer hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
                     <TableCell className="font-medium text-sm">
                       <div className="flex items-center gap-2.5">
                         <div className="size-8 rounded-lg bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/40 dark:to-amber-900/20 flex items-center justify-center shrink-0">
@@ -236,13 +236,13 @@ export default function AdminServices() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => toggleActive(service)} title={service.active ? 'Deactivate' : 'Activate'}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); void toggleActive(service); }} title={service.active ? 'Deactivate' : 'Activate'}>
                           {service.active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(service)}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); openEdit(service); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => { setDeleting(service); setDeleteOpen(true); }}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); setDeleting(service); setDeleteOpen(true); }}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
