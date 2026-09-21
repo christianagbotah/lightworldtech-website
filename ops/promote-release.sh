@@ -53,6 +53,23 @@ pm2_as_app() {
   sudo -u "$APP_USER" -H sh -lc "cd /; $*"
 }
 
+wait_for_ready() {
+  local port="$1"
+  local attempts="${2:-30}"
+  local code=""
+  local attempt
+
+  for ((attempt = 1; attempt <= attempts; attempt++)); do
+    code="$(curl -sS --max-time 2 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/" 2>/dev/null || true)"
+    if [ "$code" = "200" ]; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  fail "Server on port $port did not become ready after ${attempts}s"
+}
+
 smoke_routes() {
   local port="$1"
   local route code
@@ -106,7 +123,7 @@ trap rollback ERR INT TERM
 pm2_as_app "pm2 delete '$CANDIDATE_NAME' >/dev/null 2>&1 || true"
 sudo -u "$APP_USER" -H sh -lc "cd '$NEW_RELEASE/.next/standalone' && PORT=$CANDIDATE_PORT HOSTNAME=127.0.0.1 NODE_ENV=production pm2 start server.js --name '$CANDIDATE_NAME' >/dev/null"
 candidate_started=1
-sleep 2
+wait_for_ready "$CANDIDATE_PORT" 30
 smoke_routes "$CANDIDATE_PORT"
 cleanup_candidate
 
@@ -121,7 +138,7 @@ sudo -u "$APP_USER" -H sh -lc "cd '$NEW_RELEASE/.next/standalone' && PORT=$PORT 
 ln -sfn "$NEW_RELEASE" "$CURRENT_LINK"
 pm2_as_app "pm2 save >/dev/null"
 
-sleep 2
+wait_for_ready "$PORT" 30
 smoke_routes "$PORT"
 
 trap - ERR INT TERM
