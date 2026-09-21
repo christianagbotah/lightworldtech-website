@@ -196,11 +196,11 @@ function CapabilityConsole() {
 
   return (
     <div className="relative mx-auto w-full max-w-[620px]">
-      <div className="absolute -inset-10 rounded-[48px] bg-emerald-400/10 blur-3xl" />
+      <div className="absolute -inset-10 rounded-[48px] bg-amber-400/10 blur-3xl" />
       <div className="lw-console relative overflow-hidden rounded-[30px] border border-white/10 bg-[#081119]/90 p-3 shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-4">
         <div className="flex items-center justify-between border-b border-white/[0.07] px-2 pb-3">
           <div className="flex items-center gap-2">
-            <div className="size-2.5 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,.8)]" />
+            <div className="size-2.5 rounded-full bg-amber-400 shadow-[0_0_16px_rgba(52,211,153,.8)]" />
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Lightworld / Build system</span>
           </div>
           <div className="flex items-center gap-1.5 text-[10px] text-white/30">
@@ -216,7 +216,7 @@ function CapabilityConsole() {
               onClick={() => setActiveMode(index)}
               className={
                 index === activeMode
-                  ? 'flex items-center justify-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2.5 text-xs font-semibold text-emerald-300'
+                  ? 'flex items-center justify-center gap-2 rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2.5 text-xs font-semibold text-amber-300'
                   : 'flex items-center justify-center gap-2 rounded-xl border border-white/[0.05] bg-white/[0.025] px-3 py-2.5 text-xs font-medium text-white/35 transition hover:bg-white/[0.05] hover:text-white/60'
               }
               aria-pressed={index === activeMode}
@@ -236,10 +236,10 @@ function CapabilityConsole() {
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-400/65">Active workspace</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-400/65">Active workspace</p>
               <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">{mode.title}</h3>
             </div>
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-2.5 py-1 text-[10px] font-medium text-emerald-300/80">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-amber-300/15 bg-amber-300/[0.06] px-2.5 py-1 text-[10px] font-medium text-amber-300/80">
               <CheckCircle2 className="size-3" />
               {mode.status}
             </span>
@@ -267,7 +267,7 @@ function CapabilityConsole() {
                       initial={{ scaleX: 0 }}
                       animate={{ scaleX: 1 }}
                       transition={{ duration: 0.65, delay: 0.12 * index }}
-                      className="h-full origin-left rounded-full bg-gradient-to-r from-emerald-400 to-amber-300"
+                      className="h-full origin-left rounded-full bg-gradient-to-r from-amber-400 to-amber-300"
                     />
                   </div>
                   <p className="mt-2 truncate text-[9px] text-white/25">{item}</p>
@@ -370,7 +370,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
       <section className="lw-hero-grid relative min-h-[92svh] border-b border-slate-200/70 dark:border-white/[0.06] overflow-hidden">
         <CmsHeroMedia settings={settings} settingKey="home_hero_image" />
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-[8%] top-24 size-72 rounded-full bg-emerald-300/20 blur-[120px] dark:bg-emerald-500/10" />
+          <div className="absolute left-[8%] top-24 size-72 rounded-full bg-amber-300/20 blur-[120px] dark:bg-amber-500/10" />
           <div className="absolute right-[8%] top-32 size-72 rounded-full bg-amber-300/20 blur-[120px] dark:bg-amber-400/[0.07]" />
         </div>
 
@@ -381,7 +381,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55 }}
-                className="inline-flex items-center gap-2 rounded-full border border-emerald-600/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-300/15 dark:text-emerald-300"
+                className="inline-flex items-center gap-2 rounded-full border border-amber-600/15 bg-amber-500/[0.07] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:border-amber-300/15 dark:text-amber-300"
               >
                 <Sparkles className="size-3.5" />
                 {heroEyebrow}
@@ -435,7 +435,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               >
                 {cmsSignals.map((signal) => (
                   <div key={signal} className="flex items-start gap-2 text-xs leading-5 text-slate-500 dark:text-white/35">
-                    <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
+                    <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
                     <span>{signal}</span>
                   </div>
                 ))}
@@ -474,7 +474,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
         <div className="container-main">
           <Reveal className="grid gap-8 lg:grid-cols-[.72fr_1.28fr] lg:items-end">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">What we build</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-400">What we build</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl lg:text-6xl">{contentText(settings, 'home_capabilities_title', 'More than a website agency.')}</h2>
             </div>
             <p className="max-w-2xl text-base leading-7 text-slate-600 dark:text-white/45 lg:justify-self-end lg:text-lg">
@@ -499,7 +499,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                 >
                   <Link
                     href="/services"
-                    className="group flex h-full min-h-[245px] flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-sm shadow-slate-950/[0.02] transition duration-300 hover:-translate-y-1 hover:border-emerald-300/60 hover:shadow-xl hover:shadow-emerald-950/[0.05] dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-emerald-300/20 dark:hover:bg-white/[0.04]"
+                    className="group flex h-full min-h-[245px] flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-sm shadow-slate-950/[0.02] transition duration-300 hover:-translate-y-1 hover:border-amber-300/60 hover:shadow-xl hover:shadow-amber-950/[0.05] dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-amber-300/20 dark:hover:bg-white/[0.04]"
                   >
                     {featuredImage && (
                       <div className="relative h-28 overflow-hidden border-b border-slate-200/60 dark:border-white/[0.06]">
@@ -511,7 +511,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                           className="object-cover transition duration-500 group-hover:scale-[1.025]"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-slate-950/5 to-transparent" />
-                        <div className="absolute bottom-3 left-4 flex size-10 items-center justify-center rounded-2xl border border-white/35 bg-white/90 text-emerald-700 shadow-lg backdrop-blur-md dark:bg-slate-950/80 dark:text-emerald-300">
+                        <div className="absolute bottom-3 left-4 flex size-10 items-center justify-center rounded-2xl border border-white/35 bg-white/90 text-amber-700 shadow-lg backdrop-blur-md dark:bg-slate-950/80 dark:text-amber-300">
                           <item.icon className="size-5" />
                         </div>
                         <div className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full border border-white/35 bg-white/85 text-slate-700 shadow-sm backdrop-blur-md transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 dark:bg-slate-950/75 dark:text-white/75">
@@ -523,10 +523,10 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                     <div className="flex flex-1 flex-col p-6">
                       {!featuredImage && (
                         <div className="flex items-start justify-between">
-                          <div className="flex size-11 items-center justify-center rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300">
+                          <div className="flex size-11 items-center justify-center rounded-2xl border border-amber-500/10 bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
                             <item.icon className="size-5" />
                           </div>
-                          <ArrowUpRight className="size-4 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-500 dark:text-white/15" />
+                          <ArrowUpRight className="size-4 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-amber-500 dark:text-white/15" />
                         </div>
                       )}
 
@@ -552,7 +552,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
         <div className="container-main">
           <Reveal className="grid gap-10 lg:grid-cols-[.9fr_1.1fr] lg:gap-16">
             <div className="lg:sticky lg:top-28 lg:self-start">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300">
                 <Workflow className="size-3.5" />
                 Systems thinking
               </div>
@@ -560,7 +560,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               <p className="mt-5 max-w-xl text-base leading-7 text-white/45">
                 A modern company needs more than attractive screens. We design the customer experience, operational workflows, data connections and infrastructure as one system.
               </p>
-              <Link href="/services" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-emerald-300 transition hover:text-emerald-200">
+              <Link href="/services" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-amber-300 transition hover:text-amber-200">
                 See how we work <ArrowRight className="size-4" />
               </Link>
             </div>
@@ -583,7 +583,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                     transition={{ delay: index * 0.06, duration: 0.5 }}
                     className="group grid gap-4 rounded-[26px] border border-white/[0.07] bg-white/[0.03] p-5 sm:grid-cols-[auto_1fr] sm:items-start"
                   >
-                    <div className="flex size-11 items-center justify-center rounded-2xl bg-white/[0.05] text-emerald-300">
+                    <div className="flex size-11 items-center justify-center rounded-2xl bg-white/[0.05] text-amber-300">
                       <LayerIcon className="size-5" />
                     </div>
                     <div>
@@ -605,7 +605,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
         <div className="container-main">
           <Reveal className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">Selected capabilities</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-400">Selected capabilities</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Built to solve, not to decorate.</h2>
             </div>
             <Link href="/portfolio" className="group inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-white/50">
@@ -633,7 +633,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                       <h3 className="text-lg font-semibold">{project.title}</h3>
                       <p className="mt-1.5 text-sm leading-6 text-slate-500 dark:text-white/35">{project.description}</p>
                     </div>
-                    <ArrowUpRight className="mt-1 size-4 shrink-0 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-500 dark:text-white/15" />
+                    <ArrowUpRight className="mt-1 size-4 shrink-0 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-amber-500 dark:text-white/15" />
                   </div>
                 </Link>
               </Reveal>
@@ -652,7 +652,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
               {cmsIndustries.map((industry) => (
                 <div key={industry.label} className="flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white px-3 py-3 text-xs font-medium text-slate-600 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-white/40">
-                  <industry.icon className="size-4 text-emerald-500" />
+                  <industry.icon className="size-4 text-amber-500" />
                   {industry.label}
                 </div>
               ))}
@@ -664,7 +664,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
       <section className="section-padding">
         <div className="container-main">
           <Reveal className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">How we deliver</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-400">How we deliver</p>
             <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">{contentText(settings, 'home_process_title', 'Clear enough for the board. Detailed enough for engineering.')}</h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 dark:text-white/38">{contentText(settings, 'home_process_description', 'Discovery, design, engineering, launch and continuous improvement stay connected from the first conversation.')}</p>
           </Reveal>
@@ -674,7 +674,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               <Reveal key={number} delay={index * 0.045}>
                 <div className="h-full rounded-[26px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs text-emerald-600 dark:text-emerald-400">{number}</span>
+                    <span className="font-mono text-xs text-amber-600 dark:text-amber-400">{number}</span>
                     {index < process.length - 1 && <ArrowRight className="hidden size-3.5 text-slate-300 lg:block dark:text-white/15" />}
                   </div>
                   <h3 className="mt-8 text-lg font-semibold">{title}</h3>
@@ -690,12 +690,12 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
         <div className="container-main">
           <div className="grid overflow-hidden rounded-[36px] border border-slate-200/70 bg-slate-950 text-white shadow-2xl shadow-slate-950/10 dark:border-white/[0.07] lg:grid-cols-2">
             <Reveal className="relative p-7 sm:p-10 lg:p-12">
-              <div className="absolute -left-20 -top-20 size-64 rounded-full bg-emerald-400/10 blur-3xl" />
+              <div className="absolute -left-20 -top-20 size-64 rounded-full bg-amber-400/10 blur-3xl" />
               <div className="relative">
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-amber-400/10 text-amber-300">
                   <GraduationCap className="size-6" />
                 </div>
-                <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">Lightworld Academy</p>
+                <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">Lightworld Academy</p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">Build capability inside your team.</h2>
                 <p className="mt-4 max-w-lg text-sm leading-7 text-white/45 sm:text-base">
                   Practical technology training for individuals, teams and organizations—from modern software development to digital operations and cloud skills.
@@ -725,22 +725,22 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
 
       <section className="section-padding">
         <div className="container-main">
-          <Reveal className="relative overflow-hidden rounded-[38px] border border-emerald-400/15 bg-gradient-to-br from-emerald-500 to-emerald-700 p-7 text-white shadow-2xl shadow-emerald-900/10 sm:p-10 lg:p-14">
+          <Reveal className="relative overflow-hidden rounded-[38px] border border-amber-400/15 bg-gradient-to-br from-amber-500 to-amber-700 p-7 text-white shadow-2xl shadow-amber-900/10 sm:p-10 lg:p-14">
             <div className="lw-dot-grid absolute inset-0 opacity-25" />
             <div className="absolute -right-20 -top-24 size-80 rounded-full bg-amber-300/20 blur-[80px]" />
             <div className="relative grid gap-8 lg:grid-cols-[1.2fr_.8fr] lg:items-end">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-100/80">The next build starts here</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-100/80">The next build starts here</p>
                 <h2 className="mt-4 max-w-3xl text-4xl font-semibold tracking-[-0.05em] sm:text-5xl lg:text-6xl">Bring the business problem. We’ll help shape the technology.</h2>
-                <p className="mt-5 max-w-2xl text-sm leading-7 text-emerald-50/75 sm:text-base">
+                <p className="mt-5 max-w-2xl text-sm leading-7 text-amber-50/75 sm:text-base">
                   Tell us what you are trying to launch, improve or automate. We will help turn it into a clear, buildable next step.
                 </p>
               </div>
               <div className="flex flex-col gap-3 lg:items-end">
-                <Link href="/contact" className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-emerald-800 transition hover:-translate-y-0.5 sm:w-auto">
+                <Link href="/contact" className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-amber-800 transition hover:-translate-y-0.5 sm:w-auto">
                   Start a conversation <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </Link>
-                <a href="mailto:mail@lightworldtech.com" className="text-sm text-emerald-50/70 transition hover:text-white">mail@lightworldtech.com</a>
+                <a href="mailto:mail@lightworldtech.com" className="text-sm text-amber-50/70 transition hover:text-white">mail@lightworldtech.com</a>
               </div>
             </div>
           </Reveal>
