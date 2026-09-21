@@ -188,6 +188,44 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain('await reconcileSupportEscalations()');
   });
 
+  test('implements customer accounts billing debtors creditors cashflow and management P&L', () => {
+    const schema = source('prisma/schema.prisma');
+    const permissions = source('src/lib/admin-permissions.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+    const dashboard = source('src/app/api/admin/finance/dashboard/route.ts');
+    const invoices = source('src/app/api/admin/finance/invoices/route.ts');
+    const receipts = source('src/app/api/admin/finance/payments/route.ts');
+    const vendorPayments = source('src/app/api/admin/finance/vendor-payments/route.ts');
+    const portalApi = source('src/app/api/client/portal/route.ts');
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(schema).toContain('model ClientServiceAccount');
+    expect(schema).toContain('model ClientInvoice');
+    expect(schema).toContain('model ClientPaymentAllocation');
+    expect(schema).toContain('model FinanceVendorBill');
+    expect(schema).toContain('model FinanceExpense');
+    expect(permissions).toContain("key: 'finance.manage'");
+    expect(permissions).toContain("pathname.startsWith('/api/admin/finance')");
+    expect(finance).toContain('Finance & Accounts');
+    expect(finance).toContain('Customer accounts');
+    expect(finance).toContain('Suppliers & expenses');
+    expect(finance).toContain('Debtors');
+    expect(finance).toContain('Creditors');
+    expect(dashboard).toContain('netCashflow');
+    expect(dashboard).toContain('netProfit');
+    expect(dashboard).toContain('agedDebtors');
+    expect(dashboard).toContain('agedCreditors');
+    expect(invoices).toContain('const subtotal = lines.reduce');
+    expect(invoices).toContain('Discount cannot exceed invoice subtotal');
+    expect(receipts).toContain('invoiceBalance(invoice.total, invoice.allocations)');
+    expect(vendorPayments).toContain('invoiceBalance(bill.total, bill.allocations)');
+    expect(portalApi).toContain('accountSummary');
+    expect(portalApi).toContain('organization.invoices.map');
+    expect(portal).toContain('Account & billing');
+    expect(portal).toContain('Invoice history');
+    expect(portal).toContain('Payment / receipt history');
+  });
+
   test('supports audited enterprise exports and bounded message bulk actions', () => {
     const crm = source('src/components/admin/AdminCRM.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
