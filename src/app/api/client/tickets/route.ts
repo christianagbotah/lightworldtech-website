@@ -5,6 +5,7 @@ import { getActiveClientContext } from '@/lib/client-access';
 import {
   SUPPORT_TICKET_CATEGORIES,
   nextSupportTicketNumber,
+  notifyClientTicketCreated,
   notifySupportDesk,
   supportSla,
 } from '@/lib/support-ticket';
@@ -69,6 +70,14 @@ export async function POST(request: NextRequest) {
           projectId: ticket.projectId,
         }),
       },
+    });
+
+    await notifyClientTicketCreated({
+      to: context.user.email,
+      customerName: context.user.name,
+      ticketNumber,
+      subject: ticket.subject,
+      firstResponseDueAt: sla.firstResponseDueAt,
     });
 
     await notifySupportDesk({
