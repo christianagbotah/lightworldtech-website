@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -237,6 +238,7 @@ export default function AdminSupportDesk() {
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<TicketDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -257,6 +259,7 @@ export default function AdminSupportDesk() {
 
   const loadTickets = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const response = await fetch('/api/admin/support-tickets?' + params.toString(), {
         cache: 'no-store',
@@ -292,7 +295,9 @@ export default function AdminSupportDesk() {
         }
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to load Support Desk');
+      const message = error instanceof Error ? error.message : 'Unable to load Support Desk';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -536,6 +541,15 @@ export default function AdminSupportDesk() {
         }
       />
 
+      {loadError && (
+        <OperationalLoadError
+          title={tickets.length ? 'Support queue refresh failed' : 'Support queue unavailable'}
+          message={tickets.length ? loadError + '. Showing the last successfully loaded queue.' : loadError}
+          retrying={loading}
+          onRetry={() => void loadTickets()}
+        />
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {kpis.map((item) => {
           const Icon = item.icon;
@@ -597,7 +611,7 @@ export default function AdminSupportDesk() {
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ticket, client, subject, email or assignee" className="pl-9" />
         </label>
-        <select value={status} onChange={(event) => setStatus(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
+        <select aria-label="Filter support tickets by status" value={status} onChange={(event) => setStatus(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           <option value="all">All statuses</option>
           <option value="open">Open</option>
           <option value="in_progress">In progress</option>
@@ -605,20 +619,20 @@ export default function AdminSupportDesk() {
           <option value="resolved">Resolved</option>
           <option value="closed">Closed</option>
         </select>
-        <select value={priority} onChange={(event) => setPriority(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
+        <select aria-label="Filter support tickets by priority" value={priority} onChange={(event) => setPriority(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           <option value="all">All priorities</option>
           <option value="high">High</option>
           <option value="normal">Normal</option>
           <option value="low">Low</option>
         </select>
-        <select value={category} onChange={(event) => setCategory(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
+        <select aria-label="Filter support tickets by category" value={category} onChange={(event) => setCategory(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           {categories.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
-        <select value={sla} onChange={(event) => setSla(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
+        <select aria-label="Filter support tickets by SLA state" value={sla} onChange={(event) => setSla(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           <option value="all">All SLA states</option>
           <option value="breached">SLA breached</option>
         </select>
-        <select value={assignedToFilter} onChange={(event) => setAssignedToFilter(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
+        <select aria-label="Filter support tickets by assignee" value={assignedToFilter} onChange={(event) => setAssignedToFilter(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           <option value="all">All agents</option>
           <option value="unassigned">Unassigned</option>
           {agents.map((agent) => <option key={agent.id} value={agent.email}>{agent.name}</option>)}
@@ -701,8 +715,17 @@ export default function AdminSupportDesk() {
               ) : tickets.map((ticket) => (
                 <TableRow
                   key={ticket.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={'Open support ticket ' + ticket.ticketNumber + ': ' + ticket.subject}
                   onClick={() => void openTicket(ticket.id)}
-                  className={'cursor-pointer transition hover:bg-amber-50/50 dark:hover:bg-amber-950/10 ' + (ticket.unreadByAdmin ? 'border-l-[3px] border-l-amber-500' : '')}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      void openTicket(ticket.id);
+                    }
+                  }}
+                  className={'cursor-pointer transition hover:bg-amber-50/50 focus-visible:bg-amber-50/70 dark:hover:bg-amber-950/10 dark:focus-visible:bg-amber-950/15 ' + (ticket.unreadByAdmin ? 'border-l-[3px] border-l-amber-500' : '')}
                 >
                   <TableCell onClick={(event) => event.stopPropagation()}>
                     <input
