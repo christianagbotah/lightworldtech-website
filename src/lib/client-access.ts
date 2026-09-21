@@ -22,6 +22,7 @@ export async function getActiveClientContext(request: NextRequest): Promise<{
       role: true,
       active: true,
       mustSetPassword: true,
+      authVersion: true,
       organization: { select: { id: true, name: true, status: true } },
     },
   });
@@ -32,6 +33,7 @@ export async function getActiveClientContext(request: NextRequest): Promise<{
     user.mustSetPassword ||
     user.organizationId !== session.organizationId ||
     user.email !== session.email ||
+    user.authVersion !== session.authVersion ||
     user.organization.status !== 'active'
   ) {
     return null;
