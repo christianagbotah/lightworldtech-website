@@ -69,9 +69,10 @@ export default function AdminServices() {
 
   const fetchServices = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/services');
+      const res = await fetch('/api/services');
       if (!res.ok) throw new Error('Failed to fetch');
-      setServices(await res.json());
+      const payload = await res.json();
+      setServices(payload.data || []);
     } catch {
       toast.error('Failed to load services');
     } finally {
@@ -125,8 +126,8 @@ export default function AdminServices() {
       };
 
       const res = editing
-        ? await fetch(`/api/admin/services/${editing.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-        : await fetch('/api/admin/services', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        ? await fetch(`/api/services/${editing.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        : await fetch('/api/services', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
 
       if (!res.ok) {
         const data = await res.json();
@@ -146,7 +147,7 @@ export default function AdminServices() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/services/${deleting.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/services/${deleting.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
       toast.success('Service deleted');
       setDeleteOpen(false);
@@ -159,7 +160,7 @@ export default function AdminServices() {
 
   const toggleActive = async (service: Service) => {
     try {
-      const res = await fetch(`/api/admin/services/${service.id}`, {
+      const res = await fetch(`/api/services/${service.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !service.active }),
