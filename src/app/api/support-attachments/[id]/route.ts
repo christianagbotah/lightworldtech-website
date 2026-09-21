@@ -16,6 +16,19 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const admin = await getActiveAdminContext(request);
+  const client = admin ? null : await getActiveClientContext(request);
+  if (!admin && !client) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const adminAuthorized = Boolean(
+    admin && hasAdminPermission(admin.role, admin.permissions, 'clients.manage'),
+  );
+  if (admin && !adminAuthorized) {
+    return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+  }
+
   const { id } = await params;
   const attachment = await db.clientTicketAttachment.findUnique({
     where: { id },
@@ -23,20 +36,12 @@ export async function GET(
       ticket: { select: { organizationId: true } },
     },
   });
-  if (!attachment) return NextResponse.json({ success: false, error: 'Attachment not found' }, { status: 404 });
-
-  const admin = await getActiveAdminContext(request);
-  let authorized = Boolean(
-    admin && hasAdminPermission(admin.role, admin.permissions, 'clients.manage'),
-  );
-
-  if (!authorized) {
-    const client = await getActiveClientContext(request);
-    authorized = Boolean(client && client.user.organizationId === attachment.ticket.organizationId);
+  if (!attachment) {
+    return NextResponse.json({ success: false, error: 'Attachment not found' }, { status: 404 });
   }
 
-  if (!authorized) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  if (client && client.user.organizationId !== attachment.ticket.organizationId) {
+    return NextResponse.json({ success: false, error: 'Attachment not found' }, { status: 404 });
   }
 
   if (!isSafeSupportAttachmentStorageName(attachment.storageName)) {
