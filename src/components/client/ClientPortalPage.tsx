@@ -34,6 +34,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Table } from '@/components/ui/table';
 
 type Milestone = {
   id: string;
@@ -263,6 +264,7 @@ export default function ClientPortalPage() {
   const [uploadingTicketId, setUploadingTicketId] = useState('');
   const [ratingDrafts, setRatingDrafts] = useState<Record<string, { rating: number; feedback: string }>>({});
   const [ratingTicketId, setRatingTicketId] = useState('');
+  const [paymentStartingId, setPaymentStartingId] = useState('');
 
   const loadPortal = async () => {
     const response = await fetch('/api/client/portal', { cache: 'no-store' });
@@ -280,10 +282,61 @@ export default function ClientPortalPage() {
         if (!response.ok) throw new Error('No session');
         setSignedIn(true);
         await loadPortal();
+        await reconcileReturnedPayment();
       })
       .catch(() => setSignedIn(false))
       .finally(() => setSessionChecked(true));
   }, []);
+
+  const reconcileReturnedPayment = async () => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const paymentState = params.get('payment');
+    const reference = params.get('reference') || '';
+
+    if (paymentState === 'cancelled') {
+      toast.error('Hubtel payment was cancelled');
+    } else if (paymentState === 'success' && reference) {
+      try {
+        const response = await fetch('/api/client/payments/hubtel/status?reference=' + encodeURIComponent(reference), { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || 'Unable to verify payment');
+        if (payload?.data?.paid) {
+          toast.success('Payment verified and your account has been updated');
+          await loadPortal();
+        } else {
+          toast.message('Payment is still being verified. Refresh your account shortly.');
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Unable to verify Hubtel payment');
+      }
+    }
+
+    if (paymentState) {
+      params.delete('payment');
+      params.delete('reference');
+      const next = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      window.history.replaceState({}, '', next);
+    }
+  };
+
+  const payInvoice = async (invoiceId: string) => {
+    setPaymentStartingId(invoiceId);
+    try {
+      const response = await fetch('/api/client/payments/hubtel/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoiceId }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to start Hubtel payment');
+      if (!payload?.data?.checkoutUrl) throw new Error('Hubtel did not return a checkout URL');
+      window.location.assign(String(payload.data.checkoutUrl));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to start Hubtel payment');
+      setPaymentStartingId('');
+    }
+  };
 
   const signIn = async (event: FormEvent) => {
     event.preventDefault();
@@ -701,9 +754,9 @@ export default function ClientPortalPage() {
               <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ReceiptText className="size-4 text-amber-600" /> Invoice history</CardTitle></CardHeader>
               <CardContent className="p-0">
                 <div className="max-w-full overflow-x-auto">
-                  <table className="w-full min-w-[720px] text-left text-sm">
+                  <Table className="min-w-[820px]" exportFileName="lightworld-client-invoices">
                     <thead className="border-y border-slate-200/70 bg-slate-50 text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:border-white/[0.07] dark:bg-white/[0.025]">
-                      <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Service</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Due</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Paid</th><th className="px-4 py-3 text-right">Balance</th></tr>
+                      <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Service</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Due</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Paid</th><th className="px-4 py-3 text-right">Balance</th><th data-export-ignore className="px-4 py-3 text-right">Payment</th></tr>
                     </thead>
                     <tbody>
                       {data?.account.invoices.map((invoice) => (
@@ -715,11 +768,29 @@ export default function ClientPortalPage() {
                           <td className="px-4 py-3 text-right">{accountMoney(invoice.total, invoice.currency)}</td>
                           <td className="px-4 py-3 text-right">{accountMoney(invoice.amountPaid, invoice.currency)}</td>
                           <td className="px-4 py-3 text-right font-semibold">{accountMoney(invoice.balance, invoice.currency)}</td>
+                          <td data-export-ignore className="px-4 py-3 text-right">
+                            {Number(invoice.balance) > 0 && invoice.currency === 'GHS' ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="bg-amber-600 text-white hover:bg-amber-700"
+                                disabled={paymentStartingId === invoice.id}
+                                onClick={() => void payInvoice(invoice.id)}
+                              >
+                                {paymentStartingId === invoice.id ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <WalletCards className="mr-2 size-3.5" />}
+                                Pay with Hubtel
+                              </Button>
+                            ) : invoice.derivedStatus === 'paid' ? (
+                              <Badge className={accountStatusClass('paid')}>Paid</Badge>
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
-                      {!data?.account.invoices.length && <tr><td colSpan={7} className="px-4 py-8 text-center text-xs text-slate-400">No invoices published yet.</td></tr>}
+                      {!data?.account.invoices.length && <tr><td colSpan={8} className="px-4 py-8 text-center text-xs text-slate-400">No invoices published yet.</td></tr>}
                     </tbody>
-                  </table>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
@@ -729,7 +800,7 @@ export default function ClientPortalPage() {
             <CardHeader><CardTitle className="text-base">Payment / receipt history</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="max-w-full overflow-x-auto">
-                <table className="w-full min-w-[640px] text-left text-sm">
+                <Table className="min-w-[640px]" exportFileName="lightworld-client-receipts">
                   <thead className="border-y border-slate-200/70 bg-slate-50 text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:border-white/[0.07] dark:bg-white/[0.025]">
                     <tr><th className="px-4 py-3">Receipt</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Method</th><th className="px-4 py-3">Reference</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-right">Unapplied credit</th></tr>
                   </thead>
@@ -746,7 +817,7 @@ export default function ClientPortalPage() {
                     ))}
                     {!data?.account.payments.length && <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-slate-400">No payments recorded yet.</td></tr>}
                   </tbody>
-                </table>
+                </Table>
               </div>
             </CardContent>
           </Card>
