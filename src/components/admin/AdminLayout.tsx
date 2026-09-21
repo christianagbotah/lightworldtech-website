@@ -123,7 +123,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <div className="min-h-screen bg-muted/30 flex">
+    <div className="min-h-screen w-full overflow-x-hidden bg-muted/30">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-64 border-r border-border bg-card flex-col fixed inset-y-0 left-0 z-30">
         {sidebarContent}
@@ -138,11 +138,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </Sheet>
 
       {/* Main content */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <div className="flex min-h-screen min-w-0 w-full flex-col lg:ml-64 lg:w-[calc(100%-16rem)]">
         {/* Top bar */}
-        <header className="sticky top-0 z-20 bg-card/80 backdrop-blur-md border-b border-border">
-          <div className="flex items-center justify-between px-4 md:px-6 h-14">
-            <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-20 min-w-0 border-b border-border bg-card/80 backdrop-blur-md">
+          <div className="flex h-14 min-w-0 items-center justify-between gap-3 px-4 md:px-6">
+            <div className="flex min-w-0 items-center gap-3">
               <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="lg:hidden">
@@ -150,7 +150,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </Button>
                 </SheetTrigger>
               </Sheet>
-              <h1 className="text-sm font-semibold text-foreground capitalize">
+              <h1 className="truncate text-sm font-semibold capitalize text-foreground">
                 {adminTab === 'dashboard' ? 'Dashboard' :
                  adminTab === 'pages' ? 'Page Content' :
                  adminTab === 'blog' ? 'Blog Posts' :
@@ -193,8 +193,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 md:p-6">
-          {children}
+        <main className="min-w-0 max-w-full flex-1 overflow-x-hidden p-4 md:p-6">
+          <div className="min-w-0 max-w-full">{children}</div>
         </main>
       </div>
     </div>
