@@ -158,12 +158,36 @@ export default function AdminCRM() {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const requestedStatus = sessionStorage.getItem('lw-crm-status-filter');
+      const requestedPriority = sessionStorage.getItem('lw-crm-priority-filter');
+      if (requestedStatus) {
+        setStatusFilter(requestedStatus);
+        sessionStorage.removeItem('lw-crm-status-filter');
+      }
+      if (requestedPriority) {
+        setPriorityFilter(requestedPriority);
+        sessionStorage.removeItem('lw-crm-priority-filter');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       void fetchLeads();
     }, query ? 250 : 0);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, priorityFilter, query]);
+
+  useEffect(() => {
+    if (!leads.length || typeof window === 'undefined') return;
+    const requestedId = sessionStorage.getItem('lw-open-lead-id');
+    if (!requestedId) return;
+    const match = leads.find((lead) => lead.id === requestedId || lead.contactMessageId === requestedId);
+    sessionStorage.removeItem('lw-open-lead-id');
+    if (match) setSelected(match);
+  }, [leads]);
 
   const refreshSelected = async (leadId: string) => {
     const response = await fetch('/api/admin/leads/' + leadId, { cache: 'no-store' });
@@ -397,11 +421,11 @@ export default function AdminCRM() {
       </div>
 
       <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] max-w-4xl overflow-x-hidden overflow-y-auto">
+        <DialogContent className="max-h-[94vh] w-[calc(100vw-1.5rem)] max-w-[min(96vw,1440px)] overflow-x-hidden overflow-y-auto p-0">
           {selected && (
             <>
-              <DialogHeader>
-                <DialogTitle className="flex flex-wrap items-center gap-2">
+              <DialogHeader className="border-b border-border px-6 py-5">
+                <DialogTitle className="flex flex-wrap items-center gap-2 text-xl">
                   {selected.contactMessage.name}
                   <Badge variant="secondary">{selected.source}</Badge>
                   <span className={'rounded-full border px-2 py-0.5 text-[10px] uppercase ' + priorityClass(selected.priority)}>
@@ -410,8 +434,8 @@ export default function AdminCRM() {
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
-                <div className="space-y-5">
+              <div className="grid min-w-0 gap-0 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,.7fr)]">
+                <div className="min-w-0 space-y-6 p-6">
                   <div className="grid gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2">
                     <a href={'mailto:' + selected.contactMessage.email} className="flex items-center gap-2 text-sm font-medium hover:text-amber-600">
                       <Mail className="size-4 text-muted-foreground" /> {selected.contactMessage.email}
@@ -448,13 +472,17 @@ export default function AdminCRM() {
                     </Button>
                   </div>
 
-                  <div className="rounded-2xl border border-border/60 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Original enquiry</p>
-                    <p className="mt-2 text-sm font-semibold">{selected.contactMessage.subject || 'No subject'}</p>
-                    <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{selected.contactMessage.message}</p>
-                    <p className="mt-4 text-[11px] text-muted-foreground">
-                      Received {new Date(selected.contactMessage.createdAt).toLocaleString()}
-                    </p>
+                  <div className="rounded-2xl border border-amber-200/70 bg-amber-50/40 p-5 dark:border-amber-900/40 dark:bg-amber-950/10">
+                    <div className="flex flex-col gap-2 border-b border-amber-200/70 pb-4 dark:border-amber-900/40 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-300">Original customer enquiry</p>
+                        <p className="mt-1 break-words text-base font-semibold">{selected.contactMessage.subject || 'No subject'}</p>
+                      </div>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">{new Date(selected.contactMessage.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div className="mt-5 max-h-[48vh] overflow-y-auto pr-2">
+                      <p className="whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground">{selected.contactMessage.message}</p>
+                    </div>
                   </div>
 
                   <div>
@@ -488,7 +516,7 @@ export default function AdminCRM() {
                   </div>
                 </div>
 
-                <div className="space-y-4 rounded-2xl border border-border/60 bg-muted/15 p-4">
+                <aside className="space-y-4 border-t border-border bg-muted/15 p-6 xl:border-l xl:border-t-0">
                   {canManageProposals && (
                     <Button
                       className="w-full"
@@ -584,7 +612,7 @@ export default function AdminCRM() {
                   <div className="border-t border-border/60 pt-4 text-xs text-muted-foreground">
                     <p className="flex items-center gap-2"><Clock3 className="size-3.5" /> Lead updated {new Date(selected.updatedAt).toLocaleString()}</p>
                   </div>
-                </div>
+                </aside>
               </div>
             </>
           )}
