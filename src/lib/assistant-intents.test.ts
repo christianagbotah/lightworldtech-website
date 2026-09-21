@@ -5,6 +5,7 @@ import {
   isCompletedProjectContextIntent,
   isCompletedProjectNextStepsIntent,
   isCompletedProjectPricingIntent,
+  isCompletedProjectPreparationIntent,
   isCompletedProjectRestartIntent,
   isLeadershipIntent,
   isNewsroomIntent,
@@ -62,6 +63,7 @@ describe('assistant completed-project follow-up intent', () => {
     expect(isCompletedProjectNextStepsIntent('What are the next steps?')).toBe(true);
     expect(isCompletedProjectContactIntent('How long before I hear back?')).toBe(true);
     expect(isCompletedProjectPricingIntent('How is the estimate calculated?')).toBe(true);
+    expect(isCompletedProjectPreparationIntent('What should I prepare for the first discussion?')).toBe(true);
     expect(isCompletedProjectChangeIntent('Can I change the brief later?')).toBe(true);
     expect(isCompletedProjectContextIntent('What about my project?')).toBe(true);
   });
