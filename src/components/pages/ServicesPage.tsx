@@ -315,7 +315,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {selected.deliverables.map((deliverable) => (
                   <div key={deliverable} className="flex items-start gap-3 rounded-2xl border border-slate-200/65 bg-slate-50/70 p-4 dark:border-white/[0.055] dark:bg-white/[0.02]">
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-amber-600 dark:text-amber-300">
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-300">
                       <Check className="size-3" />
                     </span>
                     <span className="text-sm font-medium text-slate-700 dark:text-white/55">{deliverable}</span>
