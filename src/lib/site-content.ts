@@ -516,6 +516,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'trust_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Trust Center' },
       { key: 'trust_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Trust is part of the product, not a badge added later.' },
       { key: 'trust_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'A practical view of how Lightworld approaches access control, privacy, reliable delivery and responsible AI across this website and our engineering process.' },
+      { key: 'trust_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       {
         key: 'trust_practices',
         label: 'Trust practices',
@@ -549,6 +550,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'newsroom_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Newsroom & Media' },
       { key: 'newsroom_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'Verified company facts, recognition and public updates.' },
       { key: 'newsroom_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'A single source for Lightworld Technologies Ltd company information, verified award links, public coverage, leadership facts and recent published insights.' },
+      { key: 'newsroom_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'newsroom_fact_title', label: 'Fact-sheet heading', type: 'text', defaultValue: 'Company fact sheet' },
       { key: 'newsroom_recognition_title', label: 'Recognition heading', type: 'text', defaultValue: 'Verified recognition' },
       { key: 'newsroom_coverage_title', label: 'Coverage heading', type: 'text', defaultValue: 'Public coverage' },
@@ -580,6 +582,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'privacy_eyebrow', label: 'Privacy eyebrow', type: 'text', defaultValue: 'Privacy & cookies' },
       { key: 'privacy_title', label: 'Privacy title', type: 'textarea', defaultValue: 'Clear choices. Minimal data. Useful technology.' },
       { key: 'privacy_intro', label: 'Privacy introduction', type: 'textarea', defaultValue: 'This notice explains how Lightworld Technologies Ltd handles information through lightworldtech.com.' },
+      { key: 'privacy_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'privacy_last_updated', label: 'Privacy last-updated line', type: 'text', defaultValue: '18 September 2026' },
       { key: 'privacy_regulator_note', label: 'Privacy regulatory note', type: 'textarea', defaultValue: 'Ghana’s Data Protection Act, 2012 (Act 843) establishes the national framework for the protection and processing of personal data. This page is a practical website notice and is not a substitute for legal advice.' },
       { key: 'privacy_regulator_label', label: 'Regulator link label', type: 'text', defaultValue: 'Data Protection Commission' },
@@ -616,6 +619,7 @@ export const cmsGroups: CmsGroup[] = [
       { key: 'cookie_preferences_description', label: 'Preferences category description', type: 'textarea', defaultValue: 'Allow the website to remember choices you make, such as theme or language.' },
       { key: 'terms_eyebrow', label: 'Terms eyebrow', type: 'text', defaultValue: 'Website terms' },
       { key: 'terms_title', label: 'Terms title', type: 'textarea', defaultValue: 'Terms for using the Lightworld website.' },
+      { key: 'terms_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
       { key: 'terms_last_updated', label: 'Terms last-updated line', type: 'text', defaultValue: '18 September 2026' },
       {
         key: 'terms_sections',
