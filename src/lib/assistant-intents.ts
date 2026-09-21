@@ -46,3 +46,9 @@ export function isCompletedProjectContextIntent(message: string): boolean {
   const q = message.trim().toLowerCase();
   return /my\s+(project|brief|submission)|this\s+(project|brief)|that\s+(project|brief)|the\s+(project|brief|submission)|submit|submitted/.test(q);
 }
+
+
+export function isCompletedProjectPreparationIntent(message: string): boolean {
+  const q = message.trim().toLowerCase();
+  return /what.*prepare|prepare.*(meeting|discussion|call)|first\s+(meeting|discussion|call)|what.*bring|information.*need/.test(q);
+}
