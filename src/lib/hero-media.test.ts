@@ -28,6 +28,10 @@ describe('CMS hero media', () => {
       'careers_hero_image',
       'contact_hero_image',
       'blog_hero_image',
+      'newsroom_hero_image',
+      'trust_hero_image',
+      'privacy_hero_image',
+      'terms_hero_image',
     ]) {
       expect(schema).toContain(key);
     }
@@ -54,6 +58,10 @@ describe('CMS hero media', () => {
       ['src/components/pages/CareersPage.tsx', 'careers_hero_image'],
       ['src/components/pages/ContactPage.tsx', 'contact_hero_image'],
       ['src/components/pages/BlogPage.tsx', 'blog_hero_image'],
+      ['src/app/newsroom/page.tsx', 'newsroom_hero_image'],
+      ['src/app/trust/page.tsx', 'trust_hero_image'],
+      ['src/app/privacy/page.tsx', 'privacy_hero_image'],
+      ['src/app/terms/page.tsx', 'terms_hero_image'],
     ] as const;
 
     for (const [path, key] of pages) {
