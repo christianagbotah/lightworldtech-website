@@ -11,9 +11,10 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const testimonial = await db.testimonial.findUnique({
-      where: { id },
-    });
+    const adminRequest = await isAdminRequest(request);
+    const testimonial = adminRequest
+      ? await db.testimonial.findUnique({ where: { id } })
+      : await db.testimonial.findFirst({ where: { id, active: true } });
 
     if (!testimonial) {
       return NextResponse.json(
