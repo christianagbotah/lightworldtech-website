@@ -24,6 +24,11 @@ export const ADMIN_PERMISSION_DEFINITIONS = [
     label: 'Newsletter & Campaigns',
     description: 'Manage newsletter subscribers, delivery diagnostics and outbound campaign content.',
   },
+  {
+    key: 'finance.manage',
+    label: 'Finance & Accounts',
+    description: 'Manage customer services, invoices, receipts, supplier bills, expenses, debtors, creditors and management financial reports.',
+  },
 ] as const;
 
 export type AdminPermission = (typeof ADMIN_PERMISSION_DEFINITIONS)[number]['key'];
@@ -99,6 +104,10 @@ export function requiredAdminPermissionForPath(
 
   if (pathname.startsWith('/api/admin/newsletter')) {
     return 'communications.manage';
+  }
+
+  if (pathname.startsWith('/api/admin/finance')) {
+    return 'finance.manage';
   }
 
   if (pathname.startsWith('/api/admin/analytics')) {
