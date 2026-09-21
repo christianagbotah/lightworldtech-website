@@ -150,8 +150,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientUpload).toContain('detectSupportAttachment');
     expect(clientUpload).toContain("uploadedByType: 'client'");
     expect(adminUpload).toContain("uploadedByType: 'admin'");
+    expect(download).toContain("if (!admin && !client)");
+    expect(download.indexOf("if (!admin && !client)")).toBeLessThan(
+      download.indexOf('db.clientTicketAttachment.findUnique'),
+    );
     expect(download).toContain("hasAdminPermission(admin.role, admin.permissions, 'clients.manage')");
-    expect(download).toContain('client.user.organizationId === attachment.ticket.organizationId');
+    expect(download).toContain('client.user.organizationId !== attachment.ticket.organizationId');
     expect(download).toContain("'Cache-Control': 'private, no-store, max-age=0'");
     expect(download).toContain("'X-Content-Type-Options': 'nosniff'");
     expect(support).toContain('Evidence & attachments');
