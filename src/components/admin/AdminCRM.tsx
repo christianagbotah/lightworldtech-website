@@ -18,6 +18,7 @@ import {
   BookmarkPlus,
   Trash2,
   X,
+  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -153,6 +154,7 @@ export default function AdminCRM() {
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [viewName, setViewName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [note, setNote] = useState('');
 
   const fetchLeads = async () => {
@@ -276,6 +278,40 @@ export default function AdminCRM() {
     persistSavedViews(savedViews.filter((view) => view.id !== id));
   };
 
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (priorityFilter !== 'all') params.set('priority', priorityFilter);
+      if (query.trim()) params.set('q', query.trim());
+      if (overdueOnly) params.set('overdue', 'true');
+
+      const response = await fetch('/api/admin/leads/export?' + params.toString(), {
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error || 'Unable to export CRM');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'lightworld-crm-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success('CRM export downloaded');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to export CRM');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const refreshSelected = async (leadId: string) => {
     const response = await fetch('/api/admin/leads/' + leadId, { cache: 'no-store' });
     if (!response.ok) throw new Error('Could not refresh lead');
@@ -380,9 +416,15 @@ export default function AdminCRM() {
             Website and assistant enquiries become trackable opportunities without changing the original inbox message.
           </p>
         </div>
-        <Button variant="outline" onClick={() => void fetchLeads()}>
-          <RefreshCw className="mr-2 size-4" /> Refresh
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => void exportCsv()} disabled={exporting}>
+            {exporting ? <RefreshCw className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+            Export CSV
+          </Button>
+          <Button variant="outline" onClick={() => void fetchLeads()}>
+            <RefreshCw className="mr-2 size-4" /> Refresh
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
