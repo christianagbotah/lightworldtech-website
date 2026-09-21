@@ -266,12 +266,22 @@ export default function ClientPortalPage() {
   const [ratingDrafts, setRatingDrafts] = useState<Record<string, { rating: number; feedback: string }>>({});
   const [ratingTicketId, setRatingTicketId] = useState('');
   const [paymentStartingId, setPaymentStartingId] = useState('');
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   const loadPortal = async () => {
     const response = await fetch('/api/client/portal', { cache: 'no-store' });
     if (!response.ok) throw new Error('Unable to load the client portal');
     const payload = await response.json();
     setData(payload.data);
+    setProfileName(String(payload?.data?.user?.name || ''));
     if (Array.isArray(payload?.data?.tickets) && payload.data.tickets.some((item: Ticket) => item.unreadByClient)) {
       void fetch('/api/client/tickets/read', { method: 'POST' }).catch(() => undefined);
     }
@@ -384,11 +394,71 @@ export default function ClientPortalPage() {
     }
   };
 
+  const saveProfile = async (event: FormEvent) => {
+    event.preventDefault();
+    const name = profileName.trim();
+    if (name.length < 2) {
+      toast.error('Enter your full name');
+      return;
+    }
+
+    setProfileSaving(true);
+    try {
+      const response = await fetch('/api/client/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to update profile');
+      await loadPortal();
+      toast.success('Profile updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update profile');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const changePassword = async (event: FormEvent) => {
+    event.preventDefault();
+    if (passwordForm.newPassword.length < 12) {
+      toast.error('New password must be at least 12 characters');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('New password confirmation does not match');
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      const response = await fetch('/api/client/security/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to change password');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      toast.success(payload?.message || 'Password changed');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to change password');
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
   const signOut = async () => {
     await fetch('/api/client/auth', { method: 'DELETE' }).catch(() => undefined);
     setSignedIn(false);
     setData(null);
     setLogin({ email: '', password: '' });
+    setProfileOpen(false);
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
   const submitTicket = async (event: FormEvent) => {
@@ -618,9 +688,130 @@ export default function ClientPortalPage() {
               <p className="text-[10px] text-slate-400 dark:text-white/30">Lightworld client workspace</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={signOut}><LogOut className="mr-2 size-4" /> Sign out</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setProfileOpen(true)}>
+              <ShieldCheck className="mr-2 size-4" />
+              <span className="hidden sm:inline">Profile & security</span>
+              <span className="sm:hidden">Profile</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={signOut}><LogOut className="mr-2 size-4" /> Sign out</Button>
+          </div>
         </div>
       </header>
+
+      {profileOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Profile and security"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setProfileOpen(false);
+          }}
+        >
+          <Card className="max-h-[90vh] w-full max-w-2xl overflow-y-auto border-slate-200/80 bg-white shadow-2xl dark:border-white/[0.08] dark:bg-[#09131b]">
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle>Profile & security</CardTitle>
+                <p className="mt-1 text-sm text-slate-500 dark:text-white/38">
+                  Manage your client portal identity and password.
+                </p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={() => setProfileOpen(false)}>
+                Close
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <form onSubmit={saveProfile} className="rounded-2xl border border-slate-200/70 p-4 dark:border-white/[0.07]">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-amber-600" />
+                  <h2 className="font-semibold">Profile</h2>
+                </div>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="client-profile-name">Name</Label>
+                    <Input
+                      id="client-profile-name"
+                      value={profileName}
+                      onChange={(event) => setProfileName(event.target.value)}
+                      minLength={2}
+                      maxLength={120}
+                      autoComplete="name"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="client-profile-email">Email</Label>
+                    <Input id="client-profile-email" value={data?.user.email || ''} readOnly disabled />
+                    <p className="text-[11px] leading-4 text-slate-400">
+                      Email is managed by Lightworld so account ownership cannot be changed without verification.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <Button type="submit" disabled={profileSaving} className="bg-amber-600 text-white hover:bg-amber-700">
+                    {profileSaving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                    Save profile
+                  </Button>
+                </div>
+              </form>
+
+              <form onSubmit={changePassword} className="rounded-2xl border border-slate-200/70 p-4 dark:border-white/[0.07]">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="size-4 text-amber-600" />
+                  <h2 className="font-semibold">Password</h2>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/38">
+                  Changing your password signs out other client portal sessions and invalidates unused password-reset links.
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="client-current-password">Current password</Label>
+                    <Input
+                      id="client-current-password"
+                      type="password"
+                      value={passwordForm.currentPassword}
+                      onChange={(event) => setPasswordForm({ ...passwordForm, currentPassword: event.target.value })}
+                      autoComplete="current-password"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="client-new-password">New password</Label>
+                    <Input
+                      id="client-new-password"
+                      type="password"
+                      value={passwordForm.newPassword}
+                      onChange={(event) => setPasswordForm({ ...passwordForm, newPassword: event.target.value })}
+                      autoComplete="new-password"
+                      minLength={12}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="client-confirm-password">Confirm new password</Label>
+                    <Input
+                      id="client-confirm-password"
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(event) => setPasswordForm({ ...passwordForm, confirmPassword: event.target.value })}
+                      autoComplete="new-password"
+                      minLength={12}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <Button type="submit" disabled={passwordSaving} className="bg-amber-600 text-white hover:bg-amber-700">
+                    {passwordSaving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                    Change password
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <main className="container-main min-w-0 max-w-full py-8 sm:py-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
