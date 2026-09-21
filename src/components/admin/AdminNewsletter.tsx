@@ -25,6 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 interface Subscriber {
   id: string;
@@ -191,18 +192,17 @@ export default function AdminNewsletter() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Newsletter & Mail</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage subscribers, inspect delivery health and verify the website outbound mail transport.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => void load(true)} disabled={refreshing}>
-          <RefreshCw className={refreshing ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />
-          Refresh
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Communications"
+        title="Newsletter & Mail"
+        description="Manage subscribers, inspect delivery health and verify the website outbound mail transport."
+        actions={
+          <Button variant="outline" onClick={() => void load(true)} disabled={refreshing}>
+            <RefreshCw className={refreshing ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />
+            Refresh
+          </Button>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-border/50">
