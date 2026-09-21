@@ -392,10 +392,14 @@ export default function AdminClients() {
           const Icon = item.icon;
           return (
             <Card key={item.label} className="border-border/60">
-              <CardContent className="p-5">
-                <Icon className="size-4 text-amber-600" />
-                <p className="mt-4 text-2xl font-bold">{item.value}</p>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
+              <CardContent className="flex items-center justify-between gap-4 p-5">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
+                  <p className="mt-1 text-2xl font-bold tracking-[-0.03em]">{item.value}</p>
+                </div>
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
+                  <Icon className="size-5" />
+                </span>
               </CardContent>
             </Card>
           );
@@ -435,7 +439,7 @@ export default function AdminClients() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <CardTitle>{selected.name}</CardTitle>
                   <select
-                    className="h-9 rounded-md border border-input bg-background px-3 text-xs"
+                    className="h-9 rounded-lg border border-input bg-background px-3 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
                     value={selected.status}
                     onChange={(event) => void patchOrganization(selected.id, { status: event.target.value })}
                   >
@@ -463,7 +467,7 @@ export default function AdminClients() {
                         </div>
                         <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
                           <select
-                            className="h-9 rounded-md border border-input bg-background px-2 text-xs"
+                            className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
                             value={user.role}
                             onChange={(event) => void patchUser(user.id, { role: event.target.value }, 'Portal role updated')}
                           >
@@ -497,7 +501,7 @@ export default function AdminClients() {
                   <form onSubmit={createUser} className="mt-4 space-y-3 border-t border-border/60 pt-4">
                     <p className="text-sm font-semibold">Provision user</p>
                     <div className="grid gap-3 sm:grid-cols-2"><Input required placeholder="Name" value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} /><Input required type="email" placeholder="Email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} /></div>
-                    <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="client_admin">Client admin</option><option value="client_member">Client member</option></select>
+                    <select className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="client_admin">Client admin</option><option value="client_member">Client member</option></select>
                     <Button disabled={saving} variant="outline"><KeyRound className="mr-2 size-4" /> Provision & generate activation link</Button>
                     <p className="text-[10px] text-muted-foreground">Lightworld never sets the client’s password. The API returns a one-time activation URL that expires after 7 days.</p>
                   </form>
@@ -514,7 +518,7 @@ export default function AdminClients() {
 
                   <form onSubmit={createMilestone} className="mt-5 space-y-3 border-t border-border/60 pt-4">
                     <p className="text-sm font-semibold">Publish milestone</p>
-                    <select required className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={milestoneForm.projectId} onChange={(e) => setMilestoneForm({ ...milestoneForm, projectId: e.target.value })}>
+                    <select required className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15" value={milestoneForm.projectId} onChange={(e) => setMilestoneForm({ ...milestoneForm, projectId: e.target.value })}>
                       <option value="">Select project</option>{selected.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                     </select>
                     <div className="grid gap-3 sm:grid-cols-2"><Input required placeholder="Milestone title" value={milestoneForm.title} onChange={(e) => setMilestoneForm({ ...milestoneForm, title: e.target.value })} /><Input type="date" value={milestoneForm.dueDate} onChange={(e) => setMilestoneForm({ ...milestoneForm, dueDate: e.target.value })} /></div>
@@ -532,7 +536,7 @@ export default function AdminClients() {
                 <form onSubmit={createAnnouncement} className="space-y-3">
                   <Input required placeholder="Announcement title" value={announcementForm.title} onChange={(event) => setAnnouncementForm({ ...announcementForm, title: event.target.value })} />
                   <Textarea required rows={4} placeholder="Client-visible update…" value={announcementForm.body} onChange={(event) => setAnnouncementForm({ ...announcementForm, body: event.target.value })} />
-                  <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={announcementForm.projectId} onChange={(event) => setAnnouncementForm({ ...announcementForm, projectId: event.target.value })}>
+                  <select className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15" value={announcementForm.projectId} onChange={(event) => setAnnouncementForm({ ...announcementForm, projectId: event.target.value })}>
                     <option value="">Organization-wide announcement</option>
                     {selected.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                   </select>
@@ -571,8 +575,8 @@ export default function AdminClients() {
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div className="max-w-2xl"><p className="text-lg font-semibold">{project.name}</p><p className="mt-1 text-sm text-muted-foreground">{project.summary || 'No client-visible summary yet.'}</p></div>
                       <div className="grid grid-cols-3 gap-2">
-                        <select className="h-9 rounded-md border border-input bg-background px-2 text-xs" value={project.status} onChange={(e) => void patchProject(project.id, { status: e.target.value })}><option value="planned">Planned</option><option value="active">Active</option><option value="on_hold">On hold</option><option value="completed">Completed</option></select>
-                        <select className="h-9 rounded-md border border-input bg-background px-2 text-xs" value={project.health} onChange={(e) => void patchProject(project.id, { health: e.target.value })}><option value="on_track">On track</option><option value="attention">Attention</option><option value="at_risk">At risk</option></select>
+                        <select className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15" value={project.status} onChange={(e) => void patchProject(project.id, { status: e.target.value })}><option value="planned">Planned</option><option value="active">Active</option><option value="on_hold">On hold</option><option value="completed">Completed</option></select>
+                        <select className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15" value={project.health} onChange={(e) => void patchProject(project.id, { health: e.target.value })}><option value="on_track">On track</option><option value="attention">Attention</option><option value="at_risk">At risk</option></select>
                         <Input type="number" min={0} max={100} value={project.progress} onChange={(e) => {
                           const value = Math.max(0, Math.min(100, Number(e.target.value) || 0));
                           setOrganizations((current) => current.map((org) => org.id !== selected.id ? org : ({ ...org, projects: org.projects.map((p) => p.id === project.id ? { ...p, progress: value } : p) })));
@@ -583,7 +587,7 @@ export default function AdminClients() {
                       {project.milestones.map((milestone) => (
                         <div key={milestone.id} className="flex flex-col gap-2 rounded-xl border border-border/60 p-3 sm:flex-row sm:items-center sm:justify-between">
                           <div><p className="text-sm font-medium">{milestone.title}</p><p className="text-[10px] text-muted-foreground">{milestone.dueDate ? 'Due ' + new Date(milestone.dueDate).toLocaleDateString() : 'No due date'}</p></div>
-                          <select className="h-8 rounded-md border border-input bg-background px-2 text-xs" value={milestone.status} onChange={(e) => void patchMilestone(milestone.id, e.target.value)}><option value="planned">Planned</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="completed">Completed</option></select>
+                          <select className="h-8 rounded-lg border border-input bg-background px-2.5 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15" value={milestone.status} onChange={(e) => void patchMilestone(milestone.id, e.target.value)}><option value="planned">Planned</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="completed">Completed</option></select>
                         </div>
                       ))}
                       {!project.milestones.length && <p className="text-xs text-muted-foreground">No milestones published.</p>}
@@ -658,7 +662,7 @@ export default function AdminClients() {
                           {' · opened ' + new Date(ticket.createdAt).toLocaleString()}
                         </p>
                       </div>
-                      <select className="h-9 rounded-md border border-input bg-background px-2 text-xs" value={ticket.status} onChange={(e) => void patchTicket(ticket.id, e.target.value)}><option value="open">Open</option><option value="in_progress">In progress</option><option value="awaiting_client">Awaiting client</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select>
+                      <select className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15" value={ticket.status} onChange={(e) => void patchTicket(ticket.id, e.target.value)}><option value="open">Open</option><option value="in_progress">In progress</option><option value="awaiting_client">Awaiting client</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select>
                     </div>
                     {ticket.messages.length > 0 && (
                       <div className="mt-3 space-y-2 border-t border-border/60 pt-3">
