@@ -57,6 +57,20 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    await db.clientTicketEvent.create({
+      data: {
+        ticketId: ticket.id,
+        type: 'ticket_created',
+        actorType: 'client',
+        actorName: context.user.name,
+        details: JSON.stringify({
+          priority: ticket.priority,
+          category: ticket.category,
+          projectId: ticket.projectId,
+        }),
+      },
+    });
+
     await notifySupportDesk({
       ticketNumber,
       organizationName: context.organization.name,
