@@ -58,7 +58,9 @@ export async function GET(request: NextRequest) {
       ],
     };
 
-    const [tickets, total, open, unread, highPriority, breached, awaitingClient] = await Promise.all([
+    const performanceSince = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+    const [tickets, total, open, unread, highPriority, breached, awaitingClient, performanceTickets] = await Promise.all([
       db.clientSupportTicket.findMany({
         where,
         take: limit,
@@ -78,7 +80,72 @@ export async function GET(request: NextRequest) {
       }),
       db.clientSupportTicket.count({ where: breachWhere }),
       db.clientSupportTicket.count({ where: { status: 'awaiting_client' } }),
+      db.clientSupportTicket.findMany({
+        where: { createdAt: { gte: performanceSince } },
+        take: 5000,
+        select: {
+          createdAt: true,
+          firstResponseDueAt: true,
+          resolutionDueAt: true,
+          firstRespondedAt: true,
+          resolvedAt: true,
+          clientRating: true,
+        },
+      }),
     ]);
+
+    const firstResponseSamples = performanceTickets.filter(
+      (ticket) => ticket.firstRespondedAt,
+    );
+    const resolutionSamples = performanceTickets.filter(
+      (ticket) => ticket.resolvedAt,
+    );
+    const ratedSamples = performanceTickets.filter(
+      (ticket) => ticket.clientRating !== null,
+    );
+    const fullyMeasuredResolved = performanceTickets.filter(
+      (ticket) =>
+        ticket.firstRespondedAt &&
+        ticket.firstResponseDueAt &&
+        ticket.resolvedAt &&
+        ticket.resolutionDueAt,
+    );
+
+    const averageMinutes = (
+      items: typeof performanceTickets,
+      pick: (ticket: (typeof performanceTickets)[number]) => Date | null,
+    ) => {
+      if (!items.length) return null;
+      const totalMinutes = items.reduce((sum, ticket) => {
+        const end = pick(ticket);
+        return sum + (end ? Math.max(0, end.getTime() - ticket.createdAt.getTime()) / 60000 : 0);
+      }, 0);
+      return Math.round(totalMinutes / items.length);
+    };
+
+    const avgFirstResponseMinutes = averageMinutes(
+      firstResponseSamples,
+      (ticket) => ticket.firstRespondedAt,
+    );
+    const avgResolutionMinutes = averageMinutes(
+      resolutionSamples,
+      (ticket) => ticket.resolvedAt,
+    );
+    const slaCompliant = fullyMeasuredResolved.filter(
+      (ticket) =>
+        ticket.firstRespondedAt!.getTime() <= ticket.firstResponseDueAt!.getTime() &&
+        ticket.resolvedAt!.getTime() <= ticket.resolutionDueAt!.getTime(),
+    ).length;
+    const slaCompliancePct = fullyMeasuredResolved.length
+      ? Math.round((slaCompliant / fullyMeasuredResolved.length) * 1000) / 10
+      : null;
+    const csatAverage = ratedSamples.length
+      ? Math.round(
+          (ratedSamples.reduce((sum, ticket) => sum + Number(ticket.clientRating || 0), 0) /
+            ratedSamples.length) *
+            100,
+        ) / 100
+      : null;
 
     return NextResponse.json({
       success: true,
@@ -93,6 +160,15 @@ export async function GET(request: NextRequest) {
         highPriority,
         breached,
         awaitingClient,
+        performance: {
+          windowDays: 90,
+          avgFirstResponseMinutes,
+          avgResolutionMinutes,
+          slaCompliancePct,
+          csatAverage,
+          csatResponses: ratedSamples.length,
+          resolvedSamples: resolutionSamples.length,
+        },
       },
       filters: {
         limit,
