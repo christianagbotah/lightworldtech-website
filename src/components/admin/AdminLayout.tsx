@@ -30,6 +30,7 @@ import {
   LifeBuoy,
   Landmark,
   Keyboard,
+  Images,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ import AdminSecurityDialog from '@/components/admin/AdminSecurityDialog';
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'admin-dashboard' as const },
   { id: 'pages', label: 'Page Content', icon: PanelsTopLeft, page: 'admin-pages' as const, permission: 'site.manage' as AdminPermission },
+  { id: 'media', label: 'Media Library', icon: Images, page: 'admin-media' as const, permission: 'site.manage' as AdminPermission },
   { id: 'services', label: 'Services', icon: Briefcase, page: 'admin-services' as const, permission: 'site.manage' as AdminPermission },
   { id: 'blog', label: 'Blog Posts', icon: FileText, page: 'admin-blog' as const, permission: 'site.manage' as AdminPermission },
   { id: 'team', label: 'Team Members', icon: Users, page: 'admin-team' as const, permission: 'site.manage' as AdminPermission },
@@ -148,7 +150,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-support' | 'admin-finance' | 'admin-newsletter' | 'admin-campaigns' | 'admin-sms' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
+  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-media' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-support' | 'admin-finance' | 'admin-newsletter' | 'admin-campaigns' | 'admin-sms' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
     setAdminTab(id);
     navigate(page);
     setSidebarOpen(false);
@@ -235,6 +237,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <h1 className="truncate text-sm font-semibold capitalize text-foreground">
                 {adminTab === 'dashboard' ? 'Dashboard' :
                  adminTab === 'pages' ? 'Page Content' :
+                 adminTab === 'media' ? 'Media Library' :
                  adminTab === 'blog' ? 'Blog Posts' :
                  adminTab === 'services' ? 'Services' :
                  adminTab === 'team' ? 'Team Members' :
