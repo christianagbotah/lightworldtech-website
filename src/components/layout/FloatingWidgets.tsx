@@ -404,7 +404,14 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
         const response = await fetch('/api/assistant', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userMsg.text, state: assistantState }),
+          body: JSON.stringify({
+            message: userMsg.text,
+            state: assistantState,
+            history: messages.slice(-10).map((msg) => ({
+              role: msg.sender === 'bot' ? 'assistant' : 'user',
+              content: msg.text.slice(0, 1000),
+            })),
+          }),
         });
         const payload = await response.json();
         if (payload?.reply) replyText = String(payload.reply);
