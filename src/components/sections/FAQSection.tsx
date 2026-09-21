@@ -154,6 +154,8 @@ export default function FAQSection() {
             >
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
               <Input
+                type="search"
+                aria-label="Search frequently asked questions"
                 placeholder="Search questions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -207,6 +209,8 @@ export default function FAQSection() {
                     </Accordion>
                   ) : (
                     <motion.div
+                      role="status"
+                      aria-live="polite"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}

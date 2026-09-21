@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import MotionPreferenceProvider from '@/components/providers/MotionPreferenceProvider';
 import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/ui/json-ld';
 import { getSeoConfig } from '@/lib/seo-config';
 
@@ -120,8 +121,10 @@ export default async function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased bg-background text-foreground`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          {children}
-          <Toaster position="top-right" richColors closeButton />
+          <MotionPreferenceProvider>
+            {children}
+            <Toaster position="top-right" richColors closeButton />
+          </MotionPreferenceProvider>
         </ThemeProvider>
       </body>
     </html>

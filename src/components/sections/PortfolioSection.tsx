@@ -284,8 +284,17 @@ export default function PortfolioSection() {
                     className={isFirst ? 'sm:col-span-2 lg:col-span-2' : ''}
                   >
                     <Card
-                      className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-2xl dark:hover:shadow-amber-900/20 transition-all duration-500 cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`View ${project.title} details`}
+                      className="group overflow-hidden border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-2xl dark:hover:shadow-amber-900/20 transition-all duration-500 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500/60 focus-visible:ring-offset-2"
                       onClick={() => setSelectedProject(project)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setSelectedProject(project);
+                        }
+                      }}
                     >
                       {/* ── Tech-themed visual card ── */}
                       <div
@@ -418,8 +427,10 @@ export default function PortfolioSection() {
                       </span>
                     </div>
                     <button
+                      type="button"
                       onClick={() => setSelectedProject(null)}
-                      className="absolute top-3 right-3 size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10 cursor-pointer"
+                      aria-label="Close project details"
+                      className="absolute top-3 right-3 size-10 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors z-10 cursor-pointer"
                     >
                       <X className="size-4" />
                     </button>
