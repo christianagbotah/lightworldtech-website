@@ -16,6 +16,19 @@ describe('corporate gold and client recovery surface', () => {
     expect(css).toContain('--color-emerald-500: var(--color-amber-500)');
     expect(css).toContain('--primary: oklch(0.666 0.179 58.318)');
     expect(css).toContain('from-amber-700 to-amber-400');
+
+    for (const legacyGreen of [
+      '0.765 0.177 163.223',
+      '0.596 0.145 163.225',
+      '0.696 0.17 162.48',
+      '0.979 0.021 166.113',
+      '0.508 0.118 165.612',
+    ]) {
+      expect(css).not.toContain(legacyGreen);
+    }
+
+    expect(css).toContain('background-color: oklch(0.828 0.189 84.429 / 30%)');
+    expect(css).toContain('scrollbar-color: oklch(0.666 0.179 58.318 / 25%) transparent');
   });
 
   test('client sign-in exposes a real password reset request flow', () => {
