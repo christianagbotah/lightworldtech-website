@@ -208,7 +208,7 @@ function BackToTopButton() {
               </linearGradient>
             </defs>
           </svg>
-          <div className="size-10 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-colors">
+          <div className="size-10 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg hover:shadow-xl flex items-center justify-center transition-colors">
             <ArrowUp className="size-4" />
           </div>
         </motion.button>
@@ -586,7 +586,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                             }
                             trackEvent('cta_click', { metadata: { source: 'assistant', label: msg.cta?.label || '' } });
                           }}
-                          className="mt-2 inline-flex rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-emerald-700"
+                          className="mt-2 inline-flex rounded-full bg-amber-500 px-3 py-1.5 text-[11px] font-semibold text-slate-950 transition hover:bg-amber-400"
                         >
                           {msg.cta.label}
                         </a>
@@ -601,7 +601,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                       <button
                         key={reply.label}
                         onClick={() => handleQuickReply(reply.text)}
-                        className="px-3 py-1.5 rounded-full text-xs font-medium border border-amber-300 dark:border-emerald-500 text-amber-500 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shadow-sm hover:shadow-md"
+                        className="px-3 py-1.5 rounded-full text-xs font-medium border border-amber-300 dark:border-amber-500 text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shadow-sm hover:shadow-md"
                       >
                         {reply.label}
                       </button>
@@ -758,7 +758,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                       className={cn(
                         'size-10 rounded-full transition-all duration-300 shrink-0',
                         whatsappOpen
-                          ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-md'
+                          ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md'
                           : 'bg-[#25D366] hover:bg-[#20BD5A] text-white shadow-md hover:shadow-lg'
                       )}
                       aria-label={whatsappOpen ? 'Close WhatsApp chat' : 'Open WhatsApp chat'}
@@ -826,8 +826,8 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
             onClick={() => setActionsOpen((open) => !open)}
             className={cn(
               'flex size-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-colors',
-              'bg-slate-950 text-white border-slate-800 hover:bg-emerald-600 hover:border-emerald-500',
-              'dark:bg-white dark:text-slate-950 dark:border-white/80 dark:hover:bg-emerald-300 dark:hover:border-emerald-300'
+              'bg-slate-950 text-white border-slate-800 hover:bg-amber-600 hover:border-amber-500',
+              'dark:bg-white dark:text-slate-950 dark:border-white/80 dark:hover:bg-amber-300 dark:hover:border-amber-300'
             )}
             aria-label={actionsOpen ? 'Close quick actions' : 'Open quick actions'}
             aria-expanded={actionsOpen}
