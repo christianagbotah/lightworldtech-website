@@ -67,6 +67,13 @@ interface CrmSummary {
   overdueFollowUps: number;
 }
 
+interface HealthData {
+  status: 'healthy' | 'attention';
+  checkedAt: string;
+  database: { status: 'healthy' | 'unhealthy'; latencyMs: number; message?: string };
+  mail: { status: 'healthy' | 'attention'; mode: string; configured: boolean; warning: string };
+}
+
 interface AnalyticsData {
   days: number;
   uniqueSessions: number;
@@ -108,6 +115,7 @@ export default function AdminDashboard() {
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [health, setHealth] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
@@ -115,18 +123,20 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsRes, postsRes, messagesRes, analyticsRes] = await Promise.all([
+        const [statsRes, postsRes, messagesRes, analyticsRes, healthRes] = await Promise.all([
           fetch('/api/admin/stats', { cache: 'no-store' }),
           canSite ? fetch('/api/blog?limit=5', { cache: 'no-store' }) : Promise.resolve(null),
           canCrm ? fetch('/api/contact?limit=20', { cache: 'no-store' }) : Promise.resolve(null),
           canSite ? fetch('/api/admin/analytics?days=30', { cache: 'no-store' }) : Promise.resolve(null),
+          fetch('/api/admin/health', { cache: 'no-store' }),
         ]);
 
         if (
           !statsRes.ok ||
           (postsRes && !postsRes.ok) ||
           (messagesRes && !messagesRes.ok) ||
-          (analyticsRes && !analyticsRes.ok)
+          (analyticsRes && !analyticsRes.ok) ||
+          !healthRes.ok
         ) {
           throw new Error('Failed to fetch authorized dashboard data');
         }
@@ -135,6 +145,7 @@ export default function AdminDashboard() {
         const postsData = postsRes ? await postsRes.json() : { data: [] };
         const messagesData = messagesRes ? await messagesRes.json() : { data: [] };
         const analyticsData = analyticsRes ? await analyticsRes.json() : { data: null };
+        const healthData = await healthRes.json();
 
         const rawStats = statsData.data || statsData;
 
@@ -160,6 +171,7 @@ export default function AdminDashboard() {
         setRecentPosts(posts.slice(0, 5));
         setRecentMessages(messages.slice(0, 5));
         setAnalytics(analyticsData.data || null);
+        setHealth(healthData.data || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -247,13 +259,26 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold text-white">Welcome back, Admin!</h1>
             <p className="text-amber-100 mt-1 text-sm md:text-base">Here&apos;s what&apos;s happening today.</p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+          <button
+            type="button"
+            onClick={() => navigate('admin-settings')}
+            className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-left backdrop-blur-sm transition hover:bg-white/15"
+            title={health?.mail.warning || 'Open system settings'}
+          >
             <div className="relative">
-              <div className="size-2 rounded-full bg-amber-300" />
-              <div className="size-2 rounded-full bg-amber-300 absolute inset-0 animate-ping opacity-75" />
+              <div className={`size-2 rounded-full ${health?.status === 'healthy' ? 'bg-emerald-300' : 'bg-amber-200'}`} />
+              <div className={`absolute inset-0 size-2 animate-ping rounded-full opacity-75 ${health?.status === 'healthy' ? 'bg-emerald-300' : 'bg-amber-200'}`} />
             </div>
-            <span className="text-sm font-medium text-white">All Systems Operational</span>
-          </div>
+            <div>
+              <span className="block text-sm font-medium text-white">
+                {health?.status === 'healthy' ? 'Systems operational' : 'System attention needed'}
+              </span>
+              <span className="block text-[10px] text-amber-50/80">
+                DB {health?.database.latencyMs ?? '—'}ms · Mail {health?.mail.configured ? 'ready' : 'check config'}
+              </span>
+            </div>
+            <ArrowUpRight className="size-3.5 text-white/70" />
+          </button>
         </div>
       </motion.div>
 
