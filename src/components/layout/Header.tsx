@@ -152,7 +152,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
             </span>
             <span className="hidden min-w-0 leading-none sm:block">
               <span className="block max-w-44 truncate text-sm font-bold tracking-[-0.02em] text-slate-900 dark:text-white">{companyName}</span>
-              <span className="mt-1 block max-w-44 truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">{companyTagline}</span>
+              <span className="mt-1 block max-w-44 truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">{companyTagline}</span>
             </span>
           </Link>
 
@@ -163,7 +163,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                 className={cn(
                   'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition',
                   active(servicesLink)
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
                 )}
                 aria-current={active('/services') ? 'page' : undefined}
@@ -183,7 +183,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                         href={item.href}
                         className="group/item flex items-start gap-3 rounded-2xl p-3 transition hover:bg-slate-100 dark:hover:bg-white/[0.045]"
                       >
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-emerald-500/10 bg-emerald-500/[0.07] text-emerald-600 dark:text-emerald-300">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-amber-500/15 bg-amber-500/[0.08] text-amber-700 dark:text-amber-300">
                           <Icon className="size-4" />
                         </span>
                         <span>
@@ -194,7 +194,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                       );
                     })}
                   </div>
-                  <Link href={servicesLink} className="mt-2 flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600 transition hover:text-emerald-700 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-white/38 dark:hover:text-emerald-300">
+                  <Link href={servicesLink} className="mt-2 flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600 transition hover:text-amber-700 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-white/38 dark:hover:text-amber-300">
                     {servicesFooterText}
                     <ArrowUpRight className="size-3.5" />
                   </Link>
@@ -209,7 +209,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                 className={cn(
                   'rounded-full px-4 py-2 text-sm font-medium transition',
                   active(item.href)
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
                 )}
                 aria-current={active(item.href) ? 'page' : undefined}
@@ -224,7 +224,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                 className={cn(
                   'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium transition',
                   companyActive
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-white/48 dark:hover:bg-white/[0.05] dark:hover:text-white/80',
                 )}
                 aria-current={active(companyLink) ? 'page' : undefined}
@@ -243,7 +243,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                       href={item.href}
                       className="group/item flex items-start gap-3 rounded-2xl p-3 transition hover:bg-slate-100 dark:hover:bg-white/[0.045]"
                     >
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-emerald-500/10 bg-emerald-500/[0.07] text-emerald-600 dark:text-emerald-300">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-amber-500/15 bg-amber-500/[0.08] text-amber-700 dark:text-amber-300">
                         <Icon className="size-4" />
                       </span>
                       <span>
@@ -262,7 +262,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
             <ThemeToggle />
             <Link
               href={headerCtaLink}
-              className="hidden h-10 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-600 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300 sm:inline-flex"
+              className="hidden h-10 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-amber-600 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300 sm:inline-flex"
             >
               {headerCtaText}
               <ArrowUpRight className="size-3.5" />
@@ -283,7 +283,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                     </span>
                     <div>
                       <p className="text-sm font-semibold">{companyName}</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-emerald-300/70">{companyTagline}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-amber-300/75">{companyTagline}</p>
                     </div>
                   </div>
 
@@ -298,7 +298,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                           className={cn(
                             'flex items-center justify-between rounded-2xl px-3 py-3 text-sm font-medium transition',
                             active(href)
-                              ? 'bg-emerald-400/10 text-emerald-300'
+                              ? 'bg-amber-400/10 text-amber-300'
                               : 'text-white/55 hover:bg-white/[0.04] hover:text-white/85',
                           )}
                         >
@@ -319,7 +319,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                           onClick={() => setMobileOpen(false)}
                           className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3"
                         >
-                          <Icon className="size-4 text-emerald-300" />
+                          <Icon className="size-4 text-amber-300" />
                           <span className="mt-3 block text-xs font-medium text-white/65">{item.title}</span>
                         </Link>
                         );
@@ -331,7 +331,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
                     <Link
                       href={headerCtaLink}
                       onClick={() => setMobileOpen(false)}
-                      className="flex h-12 items-center justify-center gap-2 rounded-full bg-emerald-400 text-sm font-semibold text-slate-950"
+                      className="flex h-12 items-center justify-center gap-2 rounded-full bg-amber-400 text-sm font-semibold text-slate-950 transition hover:bg-amber-300"
                     >
                       {headerCtaText}
                       <ArrowUpRight className="size-4" />
@@ -359,7 +359,7 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
             href={item.href}
             className={cn(
               'flex min-w-0 flex-col items-center justify-center gap-1 rounded-[17px] px-2 py-2 text-[9px] font-medium transition',
-              active(item.href) ? 'bg-emerald-400/12 text-emerald-300' : 'text-white/34',
+              active(item.href) ? 'bg-amber-400/12 text-amber-300' : 'text-white/34',
             )}
             aria-current={active(item.href) ? 'page' : undefined}
           >
