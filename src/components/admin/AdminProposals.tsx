@@ -15,6 +15,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -294,18 +295,16 @@ export default function AdminProposals() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Proposal & discovery workspace</p>
-          <h1 className="mt-1 text-2xl font-bold">Human-reviewed proposal drafts</h1>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Turn qualified CRM enquiries into structured discovery and solution proposals. Assisted content never creates pricing or binding delivery commitments.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => void fetchData()}>
-          <RefreshCw className="mr-2 size-4" /> Refresh
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Proposal & discovery workspace"
+        title="Human-reviewed proposal drafts"
+        description="Turn qualified CRM enquiries into structured discovery and solution proposals. Assisted content never creates pricing or binding delivery commitments."
+        actions={
+          <Button variant="outline" onClick={() => void fetchData()}>
+            <RefreshCw className="mr-2 size-4" /> Refresh
+          </Button>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -330,7 +329,7 @@ export default function AdminProposals() {
             id="proposal-lead"
             value={leadId}
             onChange={(event) => setLeadId(event.target.value)}
-            className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="mt-2 h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
           >
             <option value="">Select a lead without a proposal</option>
             {availableLeads.map((lead) => (
@@ -358,7 +357,7 @@ export default function AdminProposals() {
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
         >
           <option value="all">All statuses</option>
           {statuses.map((status) => <option key={status.id} value={status.id}>{status.label}</option>)}
@@ -472,7 +471,7 @@ export default function AdminProposals() {
                   <div>
                     <Label>Status</Label>
                     <select
-                      className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      className="mt-2 h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
                       value={selected.status}
                       onChange={(event) => void patchProposal({ status: event.target.value }, 'Proposal status updated')}
                     >
@@ -495,7 +494,7 @@ export default function AdminProposals() {
                       <p className="mt-2">{selected.clientProject.organization.name} · {selected.clientProject.name}</p>
                     </div>
                   ) : canManageClients && selected.status === 'accepted' ? (
-                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={saving} onClick={() => void convertAcceptedProposal()}>
+                    <Button className="w-full" disabled={saving} onClick={() => void convertAcceptedProposal()}>
                       <Building2 className="mr-2 size-4" /> Create client workspace
                     </Button>
                   ) : canManageClients ? (
