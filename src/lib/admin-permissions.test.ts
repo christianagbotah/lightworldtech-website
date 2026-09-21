@@ -45,6 +45,8 @@ describe('admin permissions', () => {
     expect(requiredAdminPermissionForPath('/api/admin/proposals/abc/convert-client')).toBe('clients.manage');
     expect(requiredAdminPermissionForPath('/api/admin/clients')).toBe('clients.manage');
     expect(requiredAdminPermissionForPath('/api/admin/client-tickets/abc')).toBe('clients.manage');
+    expect(requiredAdminPermissionForPath('/api/admin/support-tickets')).toBe('clients.manage');
+    expect(requiredAdminPermissionForPath('/api/admin/support-tickets/abc/notes')).toBe('clients.manage');
     expect(requiredAdminPermissionForPath('/api/admin/newsletter/campaigns')).toBe('communications.manage');
     expect(requiredAdminPermissionForPath('/api/admin/analytics')).toBe('site.manage');
     expect(requiredAdminPermissionForPath('/api/blog/categories')).toBe('site.manage');
