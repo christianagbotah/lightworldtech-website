@@ -159,11 +159,33 @@ model ContactMessage {
   phone   String   @default("")
   subject String   @default("")
   message String
-  read    Boolean  @default(false)
+  read    Boolean               @default(false)
   lead    Lead?
+  replies ContactMessageReply[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ContactMessageReply {
+  id               String         @id @default(cuid())
+  contactMessageId String
+  contactMessage   ContactMessage @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
+  authorAdminId    String         @default("")
+  authorName       String         @default("")
+  authorEmail      String         @default("")
+  recipient        String
+  subject          String
+  body             String
+  status           String         @default("sent")
+  transport        String         @default("")
+  error            String         @default("")
+  sentAt           DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([contactMessageId, createdAt])
+  @@index([status, createdAt])
 }
 
 // Newsletter subscribers
