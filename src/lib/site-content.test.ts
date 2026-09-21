@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   cmsGroups,
   contentJson,
@@ -56,5 +58,13 @@ describe('full-site CMS registry', () => {
     expect(contentText({}, 'missing', 'Fallback')).toBe('Fallback');
     expect(contentText({ key: '  ' }, 'key', 'Fallback')).toBe('Fallback');
     expect(contentJson({ key: 'not-json' }, 'key', ['fallback'])).toEqual(['fallback']);
+  });
+
+  test('wires the Services closing CTA description to its declared CMS field', () => {
+    const page = readFileSync(
+      join(process.cwd(), 'src/components/pages/ServicesPage.tsx'),
+      'utf8',
+    );
+    expect(page).toContain("contentText(settings, 'services_cta_description'");
   });
 });
