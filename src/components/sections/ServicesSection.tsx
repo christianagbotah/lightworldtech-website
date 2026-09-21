@@ -66,11 +66,11 @@ export default function ServicesSection() {
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-semibold text-emerald-600 dark:text-amber-400 uppercase tracking-wider">Our Expertise</span>
+          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Our Expertise</span>
           <div className="flex items-center justify-center gap-3 mt-3 mb-1">
-            <span className="block w-8 h-[2px] bg-gradient-to-r from-transparent to-emerald-500 dark:to-amber-400 rounded-full" />
-            <span className="block w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-amber-400 shadow-sm shadow-emerald-500/50 dark:shadow-amber-400/50" />
-            <span className="block w-8 h-[2px] bg-gradient-to-l from-transparent to-emerald-500 dark:to-amber-400 rounded-full" />
+            <span className="block w-8 h-[2px] bg-gradient-to-r from-transparent to-amber-500 dark:to-amber-400 rounded-full" />
+            <span className="block w-2.5 h-2.5 rounded-full bg-amber-500 dark:bg-amber-400 shadow-sm shadow-amber-500/50 dark:shadow-amber-400/50" />
+            <span className="block w-8 h-[2px] bg-gradient-to-l from-transparent to-amber-500 dark:to-amber-400 rounded-full" />
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-slate-900 dark:text-white">What We Do</h2>
           <p className="text-slate-600 dark:text-slate-300">
@@ -87,7 +87,7 @@ export default function ServicesSection() {
           transition={{ duration: 0.7, delay: 0.1 }}
         >
           <div className="relative rounded-2xl overflow-hidden shadow-xl group">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-700/90 via-emerald-600/80 to-amber-600/70 dark:from-emerald-900/95 dark:via-emerald-800/90 dark:to-amber-900/85 z-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-700/90 via-amber-600/80 to-amber-600/70 dark:from-amber-900/95 dark:via-amber-800/90 dark:to-amber-900/85 z-10" />
             <Image
               src="/images/services-showcase.png"
               alt="Full-Stack IT Solutions showcase"
@@ -135,7 +135,7 @@ export default function ServicesSection() {
               const IconComp = iconMap[service.icon] || Globe;
               return (
                 <motion.div key={service.id} variants={itemVariants}>
-                  <div className="group rounded-xl p-[1.5px] bg-gradient-to-br from-slate-200/80 via-slate-200/80 to-slate-200/80 dark:from-slate-700/60 dark:via-slate-700/60 dark:to-slate-700/60 hover:from-emerald-400 hover:via-amber-300 hover:to-amber-400 dark:hover:from-emerald-500 dark:hover:via-amber-400 dark:hover:to-amber-500 transition-all duration-500 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-amber-400/10 cursor-pointer">
+                  <div className="group rounded-xl p-[1.5px] bg-gradient-to-br from-slate-200/80 via-slate-200/80 to-slate-200/80 dark:from-slate-700/60 dark:via-slate-700/60 dark:to-slate-700/60 hover:from-amber-400 hover:via-amber-300 hover:to-amber-400 dark:hover:from-amber-500 dark:hover:via-amber-400 dark:hover:to-amber-500 transition-all duration-500 hover:shadow-xl hover:shadow-amber-500/10 dark:hover:shadow-amber-400/10 cursor-pointer">
                     <Card
                       className="h-full border-0 bg-white dark:bg-slate-800/80 backdrop-blur-sm transition-all duration-500 overflow-hidden relative rounded-[10px]"
                       onClick={() => navigate('services')}
@@ -156,17 +156,17 @@ export default function ServicesSection() {
                       <div className="mb-5 relative inline-block">
                         <div className="absolute inset-0 size-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-400 opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500" />
                         <div className="size-14 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-900/60 group-hover:from-amber-100 group-hover:to-amber-100 dark:group-hover:from-amber-800/60 dark:group-hover:to-amber-900/40 flex items-center justify-center transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-amber-200/50 dark:group-hover:shadow-amber-900/30">
-                          <IconComp className="size-6 text-emerald-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                          <IconComp className="size-6 text-amber-600 dark:text-amber-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
                         </div>
                       </div>
 
-                      <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+                      <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
                         {service.title}
                       </h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-5">
                         {service.description}
                       </p>
-                      <span className="text-sm font-medium text-emerald-600 dark:text-amber-400 inline-flex items-center gap-2 group-hover:gap-3 transition-all duration-300">
+                      <span className="text-sm font-medium text-amber-600 dark:text-amber-400 inline-flex items-center gap-2 group-hover:gap-3 transition-all duration-300">
                         Learn More <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform duration-300" />
                       </span>
                     </CardContent>
@@ -188,7 +188,7 @@ export default function ServicesSection() {
             <Button
               size="lg"
               onClick={() => navigate('services')}
-              className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-lg shadow-emerald-600/25 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-300 hover:scale-105 rounded-full px-8 group/btn"
+              className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg shadow-amber-600/25 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105 rounded-full px-8 group/btn"
             >
               Explore All Services
               <ArrowRight className="ml-2 size-4 group-hover/btn:translate-x-1 transition-transform duration-300" />
