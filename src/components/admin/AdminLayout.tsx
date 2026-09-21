@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   CircleAlert,
   Info,
+  LifeBuoy,
   Keyboard,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
@@ -58,6 +59,7 @@ const navItems = [
   { id: 'crm', label: 'CRM Pipeline', icon: GitBranch, page: 'admin-crm' as const, permission: 'crm.manage' as AdminPermission },
   { id: 'proposals', label: 'Proposals', icon: FileSignature, page: 'admin-proposals' as const, permission: 'proposals.manage' as AdminPermission },
   { id: 'clients', label: 'Client Portal', icon: Building2, page: 'admin-clients' as const, permission: 'clients.manage' as AdminPermission },
+  { id: 'support', label: 'Support Desk', icon: LifeBuoy, page: 'admin-support' as const, permission: 'clients.manage' as AdminPermission },
   { id: 'newsletter', label: 'Newsletter & Mail', icon: MailCheck, page: 'admin-newsletter' as const, permission: 'communications.manage' as AdminPermission },
   { id: 'campaigns', label: 'Campaign Studio', icon: Megaphone, page: 'admin-campaigns' as const, permission: 'communications.manage' as AdminPermission },
   { id: 'governance', label: 'Admin Governance', icon: ShieldCheck, page: 'admin-governance' as const, superAdminOnly: true },
@@ -143,7 +145,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-newsletter' | 'admin-campaigns' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
+  const handleNavClick = (id: string, page: 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-support' | 'admin-newsletter' | 'admin-campaigns' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio') => {
     setAdminTab(id);
     navigate(page);
     setSidebarOpen(false);
@@ -238,6 +240,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                  adminTab === 'crm' ? 'CRM Pipeline' :
                  adminTab === 'proposals' ? 'Proposals' :
                  adminTab === 'clients' ? 'Client Portal' :
+                 adminTab === 'support' ? 'Support Desk' :
                  adminTab === 'newsletter' ? 'Newsletter & Mail' :
                  adminTab === 'campaigns' ? 'Campaign Studio' :
                  adminTab === 'governance' ? 'Admin Governance' :
