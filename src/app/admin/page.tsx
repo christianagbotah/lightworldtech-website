@@ -16,6 +16,7 @@ import AdminCRM from '@/components/admin/AdminCRM';
 import AdminProposals from '@/components/admin/AdminProposals';
 import AdminClients from '@/components/admin/AdminClients';
 import AdminSupportDesk from '@/components/admin/AdminSupportDesk';
+import AdminFinance from '@/components/admin/AdminFinance';
 import AdminNewsletter from '@/components/admin/AdminNewsletter';
 import AdminCampaigns from '@/components/admin/AdminCampaigns';
 import AdminGovernance from '@/components/admin/AdminGovernance';
@@ -52,6 +53,8 @@ function AdminRouter() {
       return can('clients.manage') ? <AdminClients /> : <AdminDashboard />;
     case 'support':
       return can('clients.manage') ? <AdminSupportDesk /> : <AdminDashboard />;
+    case 'finance':
+      return can('finance.manage') ? <AdminFinance /> : <AdminDashboard />;
     case 'newsletter':
       return can('communications.manage') ? <AdminNewsletter /> : <AdminDashboard />;
     case 'campaigns':
