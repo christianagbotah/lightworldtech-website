@@ -23,6 +23,9 @@ import {
   Upload,
   Download,
   Star,
+  Landmark,
+  ReceiptText,
+  WalletCards,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -108,6 +111,82 @@ type Ticket = {
   attachments: TicketAttachment[];
 };
 
+
+type AccountService = {
+  id: string;
+  name: string;
+  serviceType: string;
+  planName: string;
+  status: string;
+  billingCycle: string;
+  currency: string;
+  recurringAmount: string;
+  startDate: string;
+  expiryDate: string | null;
+  nextDueDate: string | null;
+  autoRenew: boolean;
+  renewalNoticeDays: number;
+  project: { id: string; name: string } | null;
+  changes: Array<{
+    id: string;
+    changeType: string;
+    previousPlan: string;
+    newPlan: string;
+    previousAmount: string | null;
+    newAmount: string | null;
+    effectiveAt: string;
+  }>;
+};
+
+type AccountInvoice = {
+  id: string;
+  invoiceNumber: string;
+  status: string;
+  derivedStatus: string;
+  currency: string;
+  issueDate: string;
+  dueDate: string;
+  subtotal: string;
+  discount: string;
+  tax: string;
+  total: string;
+  amountPaid: string;
+  balance: string;
+  notes: string;
+  service: { id: string; name: string; planName: string } | null;
+  project: { id: string; name: string } | null;
+  lines: Array<{
+    id: string;
+    description: string;
+    quantity: string;
+    unitPrice: string;
+    amount: string;
+  }>;
+};
+
+type AccountPayment = {
+  id: string;
+  paymentNumber: string;
+  currency: string;
+  amount: string;
+  allocatedAmount: string;
+  unallocatedAmount: string;
+  paidAt: string;
+  method: string;
+  reference: string;
+};
+
+type AccountData = {
+  summary: Record<string, {
+    outstanding: string;
+    unappliedCredit: string;
+    netDue: string;
+  }>;
+  services: AccountService[];
+  invoices: AccountInvoice[];
+  payments: AccountPayment[];
+};
+
 type Announcement = {
   id: string;
   projectId: string | null;
@@ -129,10 +208,35 @@ type PortalData = {
   projects: Project[];
   tickets: Ticket[];
   announcements: Announcement[];
+  account: AccountData;
 };
 
 function statusLabel(value: string): string {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function accountMoney(value: string | number, currency: string): string {
+  const amount = Number(value || 0);
+  try {
+    return new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return currency + ' ' + amount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
+}
+
+function accountStatusClass(value: string): string {
+  if (['paid', 'active'].includes(value)) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300';
+  if (['overdue', 'expired', 'cancelled'].includes(value)) return 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300';
+  if (['partially_paid', 'suspended'].includes(value)) return 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300';
+  return 'bg-slate-100 text-slate-700 dark:bg-white/[0.07] dark:text-white/55';
 }
 
 function healthClass(value: string): string {
@@ -367,7 +471,7 @@ export default function ClientPortalPage() {
               Your Lightworld project workspace.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-8 text-white/45">
-              View project progress, milestones, published documents, announcements and support conversations for your organization.
+              View project progress, services, billing, invoices, payments, announcements and support conversations for your organization.
             </p>
             <a href="/" className="mt-7 inline-flex text-sm font-semibold text-amber-300">← Back to lightworldtech.com</a>
           </div>
@@ -469,7 +573,7 @@ export default function ClientPortalPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Client portal</p>
             <h1 className="mt-1 text-3xl font-semibold tracking-[-0.04em]">Welcome, {data?.user.name}</h1>
-            <p className="mt-2 text-sm text-slate-500 dark:text-white/38">Project visibility and support for {data?.organization.name}.</p>
+            <p className="mt-2 text-sm text-slate-500 dark:text-white/38">Projects, account visibility and support for {data?.organization.name}.</p>
           </div>
           <div className="min-w-0 break-all text-right text-xs text-slate-400 dark:text-white/28">{data?.user.email}</div>
         </div>
@@ -509,6 +613,144 @@ export default function ClientPortalPage() {
             </div>
           </section>
         )}
+
+        <section className="mt-8">
+          <div className="flex items-center gap-2">
+            <Landmark className="size-5 text-amber-600" />
+            <div>
+              <h2 className="text-xl font-semibold">Account & billing</h2>
+              <p className="mt-1 text-xs text-slate-500 dark:text-white/35">Your Lightworld services, renewals, invoices, receipts and current account position.</p>
+            </div>
+          </div>
+
+          {Object.keys(data?.account.summary || {}).length ? (
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              {Object.entries(data?.account.summary || {}).map(([currency, summary]) => (
+                <Card key={currency} className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">{currency} account</p>
+                        <p className="mt-2 text-2xl font-bold">{accountMoney(summary.netDue, currency)}</p>
+                        <p className="text-xs text-slate-500 dark:text-white/35">Net amount due</p>
+                      </div>
+                      <span className="flex size-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><WalletCards className="size-5" /></span>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]"><p className="text-slate-400">Invoices outstanding</p><p className="mt-1 font-semibold">{accountMoney(summary.outstanding, currency)}</p></div>
+                      <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]"><p className="text-slate-400">Unapplied credit</p><p className="mt-1 font-semibold">{accountMoney(summary.unappliedCredit, currency)}</p></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="mt-4 border-dashed border-slate-300 dark:border-white/10"><CardContent className="p-5 text-sm text-slate-500 dark:text-white/35">No account transactions have been published yet.</CardContent></Card>
+          )}
+
+          <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]">
+            <Card className="min-w-0 border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
+              <CardHeader><CardTitle className="text-base">Services & renewals</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                {data?.account.services.length ? data.account.services.map((service) => (
+                  <div key={service.id} className="rounded-2xl border border-slate-200/70 p-4 dark:border-white/[0.07]">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold">{service.name}</p>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-white/35">
+                          {service.planName || 'No plan'} · {statusLabel(service.billingCycle)}
+                          {service.project ? ' · ' + service.project.name : ''}
+                        </p>
+                      </div>
+                      <Badge className={accountStatusClass(service.status)}>{statusLabel(service.status)}</Badge>
+                    </div>
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]">
+                        <p className="text-[10px] uppercase tracking-[0.12em] text-slate-400">Service fee</p>
+                        <p className="mt-1 text-sm font-semibold">{accountMoney(service.recurringAmount, service.currency)}</p>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]">
+                        <p className="text-[10px] uppercase tracking-[0.12em] text-slate-400">Next payment due</p>
+                        <p className="mt-1 text-sm font-semibold">{service.nextDueDate ? new Date(service.nextDueDate).toLocaleDateString() : 'Not scheduled'}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[10px] text-slate-400">
+                      <span>Started {new Date(service.startDate).toLocaleDateString()}</span>
+                      <span>{service.expiryDate ? 'Expires ' + new Date(service.expiryDate).toLocaleDateString() : 'No fixed expiry'}</span>
+                      {service.autoRenew && <span>Auto-renew flag enabled</span>}
+                    </div>
+                    {service.changes.length > 1 && (
+                      <details className="mt-3 rounded-xl border border-slate-200/70 p-3 text-xs dark:border-white/[0.07]">
+                        <summary className="cursor-pointer font-semibold">Service history ({service.changes.length})</summary>
+                        <div className="mt-3 space-y-2">
+                          {service.changes.map((change) => (
+                            <div key={change.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/60 pt-2 first:border-t-0 first:pt-0 dark:border-white/[0.06]">
+                              <div><p className="font-medium">{statusLabel(change.changeType)}</p><p className="text-[10px] text-slate-400">{change.previousPlan || '—'} → {change.newPlan || '—'}</p></div>
+                              <p className="text-[10px] text-slate-400">{new Date(change.effectiveAt).toLocaleDateString()}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                )) : <p className="rounded-2xl border border-dashed border-slate-300 p-5 text-xs text-slate-400 dark:border-white/10">No services have been added to your account yet.</p>}
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
+              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ReceiptText className="size-4 text-amber-600" /> Invoice history</CardTitle></CardHeader>
+              <CardContent className="p-0">
+                <div className="max-w-full overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-left text-sm">
+                    <thead className="border-y border-slate-200/70 bg-slate-50 text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                      <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Service</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Due</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Paid</th><th className="px-4 py-3 text-right">Balance</th></tr>
+                    </thead>
+                    <tbody>
+                      {data?.account.invoices.map((invoice) => (
+                        <tr key={invoice.id} className="border-b border-slate-200/60 dark:border-white/[0.06]">
+                          <td className="px-4 py-3"><p className="font-mono text-xs font-semibold">{invoice.invoiceNumber}</p><p className="text-[10px] text-slate-400">{new Date(invoice.issueDate).toLocaleDateString()}</p></td>
+                          <td className="px-4 py-3 text-xs">{invoice.service?.name || 'General account'}</td>
+                          <td className="px-4 py-3"><Badge className={accountStatusClass(invoice.derivedStatus)}>{statusLabel(invoice.derivedStatus)}</Badge></td>
+                          <td className="px-4 py-3 text-xs">{new Date(invoice.dueDate).toLocaleDateString()}</td>
+                          <td className="px-4 py-3 text-right">{accountMoney(invoice.total, invoice.currency)}</td>
+                          <td className="px-4 py-3 text-right">{accountMoney(invoice.amountPaid, invoice.currency)}</td>
+                          <td className="px-4 py-3 text-right font-semibold">{accountMoney(invoice.balance, invoice.currency)}</td>
+                        </tr>
+                      ))}
+                      {!data?.account.invoices.length && <tr><td colSpan={7} className="px-4 py-8 text-center text-xs text-slate-400">No invoices published yet.</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="mt-5 border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
+            <CardHeader><CardTitle className="text-base">Payment / receipt history</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <div className="max-w-full overflow-x-auto">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead className="border-y border-slate-200/70 bg-slate-50 text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                    <tr><th className="px-4 py-3">Receipt</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Method</th><th className="px-4 py-3">Reference</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-right">Unapplied credit</th></tr>
+                  </thead>
+                  <tbody>
+                    {data?.account.payments.map((payment) => (
+                      <tr key={payment.id} className="border-b border-slate-200/60 dark:border-white/[0.06]">
+                        <td className="px-4 py-3 font-mono text-xs font-semibold">{payment.paymentNumber}</td>
+                        <td className="px-4 py-3 text-xs">{new Date(payment.paidAt).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-xs">{statusLabel(payment.method)}</td>
+                        <td className="px-4 py-3 text-xs text-slate-500 dark:text-white/35">{payment.reference || '—'}</td>
+                        <td className="px-4 py-3 text-right font-semibold">{accountMoney(payment.amount, payment.currency)}</td>
+                        <td className="px-4 py-3 text-right">{accountMoney(payment.unallocatedAmount, payment.currency)}</td>
+                      </tr>
+                    ))}
+                    {!data?.account.payments.length && <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-slate-400">No payments recorded yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
 
         <section className="mt-8">
           <div className="flex items-center justify-between">
