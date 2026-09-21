@@ -427,12 +427,27 @@ model ClientPortalUser {
   inviteTokenHash String              @default("")
   inviteExpiresAt DateTime?
   mustSetPassword Boolean             @default(true)
+  authVersion     Int                 @default(0)
+  resetTokens     ClientPasswordResetToken[]
   tickets         ClientSupportTicket[] @relation("ClientTicketCreator")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([organizationId, active])
+}
+
+model ClientPasswordResetToken {
+  id        String           @id @default(cuid())
+  userId    String
+  user      ClientPortalUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String           @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
 }
 
 model ClientProject {
