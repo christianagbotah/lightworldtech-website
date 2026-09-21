@@ -304,7 +304,7 @@ export async function answerConcierge(
   );
   const companyEmail = contentText(knowledge.settings, 'company_email', companyProfile.email);
   const companyPhone = contentText(knowledge.settings, 'company_phone1', companyProfile.phoneDisplay);
-  const companyAddress = contentText(knowledge.settings, 'company_address', 'Accra, Ghana');
+  const companyAddress = contentText(knowledge.settings, 'company_address', 'Tema, Ghana');
 
   if (state?.mode === 'project-scope' && state.step === 'done') {
     if (isCompletedProjectRestartIntent(message)) {
