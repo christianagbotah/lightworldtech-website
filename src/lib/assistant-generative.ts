@@ -37,7 +37,7 @@ export type GroundedConciergeContext = {
   recognition: Array<{
     year?: string | number | null;
     title?: string | null;
-    organization?: string | null;
+    publisher?: string | null;
   }>;
   activeProjectBrief?: string;
 };
