@@ -720,7 +720,7 @@ export default function AdminSupportDesk() {
                   aria-label={'Open support ticket ' + ticket.ticketNumber + ': ' + ticket.subject}
                   onClick={() => void openTicket(ticket.id)}
                   onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
+                    if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
                       void openTicket(ticket.id);
                     }
