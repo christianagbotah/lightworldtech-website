@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'careers' | 'products' | 'admin' | 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-support' | 'admin-newsletter' | 'admin-campaigns' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
+export type Page = 'home' | 'about' | 'services' | 'blog' | 'blog-detail' | 'contact' | 'portfolio' | 'careers' | 'products' | 'admin' | 'admin-dashboard' | 'admin-pages' | 'admin-services' | 'admin-blog' | 'admin-blog-editor' | 'admin-team' | 'admin-testimonials' | 'admin-crm' | 'admin-proposals' | 'admin-clients' | 'admin-support' | 'admin-finance' | 'admin-newsletter' | 'admin-campaigns' | 'admin-governance' | 'admin-messages' | 'admin-settings' | 'admin-faqs' | 'admin-portfolio';
 
 interface AppState {
   currentPage: Page;
@@ -47,6 +47,7 @@ const adminTabs: Partial<Record<Page, string>> = {
   'admin-crm': 'crm',
   'admin-proposals': 'proposals',
   'admin-clients': 'clients',
+  'admin-finance': 'finance',
   'admin-newsletter': 'newsletter',
   'admin-campaigns': 'campaigns',
   'admin-governance': 'governance',
