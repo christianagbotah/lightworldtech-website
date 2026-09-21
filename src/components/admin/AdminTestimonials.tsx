@@ -164,7 +164,7 @@ export default function AdminTestimonials() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Testimonials</h1>
@@ -176,7 +176,7 @@ export default function AdminTestimonials() {
       </div>
 
       <div className="border border-border rounded-xl bg-card overflow-hidden">
-        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+        <div className="max-w-full overflow-x-auto max-h-[600px] overflow-y-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
