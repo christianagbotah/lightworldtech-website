@@ -132,7 +132,7 @@ export default function AboutPage({
               </p>
               <div className="mt-6 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-white/35">
                 <MapPin className="size-4 text-emerald-500" />
-                {contentText(settings, 'about_location_line', 'Accra, Ghana · built with a global outlook')}
+                {contentText(settings, 'about_location_line', 'Tema, Ghana · built with a global outlook')}
               </div>
             </div>
           </motion.div>
