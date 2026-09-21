@@ -257,6 +257,8 @@ export default function ClientPortalPage() {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [data, setData] = useState<PortalData | null>(null);
+  const [portalError, setPortalError] = useState('');
+  const [portalRefreshing, setPortalRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [login, setLogin] = useState({ email: '', password: '' });
   const [resetMode, setResetMode] = useState(false);
@@ -282,24 +284,34 @@ export default function ClientPortalPage() {
   });
   const [passwordSaving, setPasswordSaving] = useState(false);
 
-  const loadPortal = async () => {
-    const response = await fetch('/api/client/portal', { cache: 'no-store' });
-    if (!response.ok) throw new Error('Unable to load the client portal');
-    const payload = await response.json();
-    setData(payload.data);
-    setProfileName(String(payload?.data?.user?.name || ''));
-    if (Array.isArray(payload?.data?.tickets) && payload.data.tickets.some((item: Ticket) => item.unreadByClient)) {
-      void fetch('/api/client/tickets/read', { method: 'POST' }).catch(() => undefined);
+  const loadPortal = async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/client/portal', { cache: 'no-store' });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to load the client portal');
+      setData(payload.data);
+      setPortalError('');
+      setProfileName(String(payload?.data?.user?.name || ''));
+      if (Array.isArray(payload?.data?.tickets) && payload.data.tickets.some((item: Ticket) => item.unreadByClient)) {
+        void fetch('/api/client/tickets/read', { method: 'POST' }).catch(() => undefined);
+      }
+      return true;
+    } catch (error) {
+      setPortalError(error instanceof Error ? error.message : 'Unable to load the client portal');
+      return false;
     }
   };
 
   useEffect(() => {
     fetch('/api/client/auth', { cache: 'no-store' })
       .then(async (response) => {
-        if (!response.ok) throw new Error('No session');
+        if (!response.ok) {
+          setSignedIn(false);
+          return;
+        }
         setSignedIn(true);
-        await loadPortal();
-        await reconcileReturnedPayment();
+        const loaded = await loadPortal();
+        if (loaded) await reconcileReturnedPayment();
       })
       .catch(() => setSignedIn(false))
       .finally(() => setSessionChecked(true));
@@ -367,8 +379,11 @@ export default function ClientPortalPage() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Unable to sign in');
       setSignedIn(true);
-      await loadPortal();
+      const loaded = await loadPortal();
       setLogin((current) => ({ ...current, password: '' }));
+      if (!loaded) {
+        toast.message('Signed in successfully, but the client workspace could not be loaded yet. Use Try again to refresh it.');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to sign in');
     } finally {
@@ -462,6 +477,7 @@ export default function ClientPortalPage() {
     await fetch('/api/client/auth', { method: 'DELETE' }).catch(() => undefined);
     setSignedIn(false);
     setData(null);
+    setPortalError('');
     setLogin({ email: '', password: '' });
     setProfileOpen(false);
     setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -558,6 +574,19 @@ export default function ClientPortalPage() {
       toast.error(error instanceof Error ? error.message : 'Unable to send reply');
     } finally {
       setReplyingTicketId('');
+    }
+  };
+
+  const retryPortal = async () => {
+    setPortalRefreshing(true);
+    try {
+      const loaded = await loadPortal();
+      if (loaded) {
+        toast.success('Client workspace refreshed');
+        await reconcileReturnedPayment();
+      }
+    } finally {
+      setPortalRefreshing(false);
     }
   };
 
@@ -679,6 +708,37 @@ export default function ClientPortalPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050b10] px-4 text-white">
+        <Card role="alert" className="w-full max-w-xl border-amber-400/15 bg-white/[0.04] text-white">
+          <CardContent className="p-6 sm:p-7">
+            <div className="flex gap-3">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-400/10 text-amber-300">
+                <AlertTriangle className="size-5" />
+              </span>
+              <div>
+                <h1 className="text-xl font-semibold">Your session is active, but the workspace did not load.</h1>
+                <p className="mt-2 text-sm leading-6 text-white/45">
+                  {portalError || 'Lightworld could not load your projects, billing and support data.'}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+              <Button type="button" onClick={() => void retryPortal()} disabled={portalRefreshing} className="bg-amber-400 text-slate-950 hover:bg-amber-300">
+                {portalRefreshing && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Try again
+              </Button>
+              <Button type="button" variant="outline" onClick={() => void signOut()} className="border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.07]">
+                <LogOut className="mr-2 size-4" /> Sign out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -832,6 +892,21 @@ export default function ClientPortalPage() {
           ))}
         </div>
       </nav>
+
+      {portalError && (
+        <div className="container-main pt-4">
+          <div role="status" className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+              <p className="text-xs leading-5">{portalError}. Showing the last successfully loaded workspace data.</p>
+            </div>
+            <Button type="button" size="sm" variant="outline" onClick={() => void retryPortal()} disabled={portalRefreshing} className="shrink-0">
+              {portalRefreshing && <Loader2 className="mr-2 size-3.5 animate-spin" />}
+              Retry refresh
+            </Button>
+          </div>
+        </div>
+      )}
 
       <main id="overview" className="container-main min-w-0 max-w-full scroll-mt-32 py-8 sm:py-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
