@@ -34,6 +34,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { useAppStore } from '@/lib/store';
 
 interface ContactMessage {
@@ -330,28 +331,22 @@ export default function AdminMessages() {
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Messages</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {totalMessages} total messages
-            {unreadCount > 0 && (
-              <Badge className="ml-2 bg-gradient-to-r from-amber-500 to-amber-400 text-white border-0 shadow-sm">
-                {unreadCount} unread
-              </Badge>
-            )}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => void exportMessages()} disabled={exporting}>
-            {exporting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
-            Export CSV
-          </Button>
-          <Button variant="outline" onClick={() => navigate('admin-crm')}>
-            <GitBranch className="mr-2 size-4" /> Open CRM Pipeline
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        eyebrow="Communications"
+        title="Messages"
+        description={totalMessages + ' total messages' + (unreadCount > 0 ? ' · ' + unreadCount + ' unread' : '')}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => void exportMessages()} disabled={exporting}>
+              {exporting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+              Export CSV
+            </Button>
+            <Button variant="outline" onClick={() => navigate('admin-crm')}>
+              <GitBranch className="mr-2 size-4" /> Open CRM Pipeline
+            </Button>
+          </>
+        }
+      />
 
       {selectedIds.size > 0 && (
         <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/40 dark:bg-amber-950/20 sm:flex-row sm:items-center sm:justify-between">
