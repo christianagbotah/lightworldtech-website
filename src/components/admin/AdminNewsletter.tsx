@@ -253,7 +253,7 @@ export default function AdminNewsletter() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_.85fr]">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
         <Card className="border-border/50">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
@@ -362,7 +362,7 @@ export default function AdminNewsletter() {
           <CardTitle className="text-base">Subscribers</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="max-h-[460px] overflow-auto">
+          <div className="max-h-[460px] max-w-full overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -416,7 +416,7 @@ export default function AdminNewsletter() {
           <CardTitle className="text-base">Recent delivery activity</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="max-h-[520px] overflow-auto">
+          <div className="max-h-[520px] max-w-full overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
