@@ -35,6 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
+import AdminMediaField from '@/components/admin/AdminMediaField';
 
 interface PortfolioProject {
   id: string;
@@ -259,10 +260,11 @@ export default function AdminPortfolio() {
               <Textarea value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Project description" rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Image URL</Label>
-                <Input value={form.image} onChange={(e) => setForm(f => ({ ...f, image: e.target.value }))} placeholder="https://..." />
-              </div>
+              <AdminMediaField
+                label="Project image"
+                value={form.image}
+                onChange={(image) => setForm((current) => ({ ...current, image }))}
+              />
               <div className="grid gap-2">
                 <Label>Project URL</Label>
                 <Input value={form.url} onChange={(e) => setForm(f => ({ ...f, url: e.target.value }))} placeholder="https://..." />
