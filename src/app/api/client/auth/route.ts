@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       name: user.name,
       role: user.role,
+      authVersion: user.authVersion,
     });
 
     const response = NextResponse.json({
@@ -83,7 +84,15 @@ export async function GET(request: NextRequest) {
     where: { id: session.sub },
     include: { organization: true },
   });
-  if (!user || !user.active || user.mustSetPassword || user.organization.status !== 'active' || user.organizationId !== session.organizationId) {
+  if (
+    !user ||
+    !user.active ||
+    user.mustSetPassword ||
+    user.organization.status !== 'active' ||
+    user.organizationId !== session.organizationId ||
+    user.email !== session.email ||
+    user.authVersion !== session.authVersion
+  ) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
