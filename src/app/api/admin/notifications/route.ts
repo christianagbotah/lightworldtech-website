@@ -60,17 +60,40 @@ export async function GET(request: NextRequest) {
   }
 
   if (canClients) {
-    const openTickets = await db.clientSupportTicket.count({
-      where: { status: { not: 'closed' } },
-    });
-    if (openTickets > 0) {
+    const now = new Date();
+    const [unreadTickets, slaBreached] = await Promise.all([
+      db.clientSupportTicket.count({
+        where: { unreadByAdmin: true },
+      }),
+      db.clientSupportTicket.count({
+        where: {
+          OR: [
+            { firstRespondedAt: null, firstResponseDueAt: { lt: now } },
+            { status: { notIn: ['resolved', 'closed'] }, resolutionDueAt: { lt: now } },
+          ],
+        },
+      }),
+    ]);
+
+    if (slaBreached > 0) {
       notices.push({
-        id: 'open-client-tickets',
+        id: 'support-sla-breached',
+        severity: 'critical',
+        title: 'Support SLA breached',
+        message: slaBreached + ' support ticket' + (slaBreached === 1 ? ' needs' : 's need') + ' immediate attention.',
+        count: slaBreached,
+        action: 'admin-support',
+      });
+    }
+
+    if (unreadTickets > 0) {
+      notices.push({
+        id: 'unread-client-tickets',
         severity: 'warning',
-        title: 'Client support tickets',
-        message: openTickets + ' client ticket' + (openTickets === 1 ? ' is' : 's are') + ' still open.',
-        count: openTickets,
-        action: 'admin-clients',
+        title: 'New client support activity',
+        message: unreadTickets + ' ticket' + (unreadTickets === 1 ? ' has' : 's have') + ' unread client activity.',
+        count: unreadTickets,
+        action: 'admin-support',
       });
     }
   }
