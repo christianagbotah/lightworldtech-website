@@ -39,6 +39,10 @@ describe('shared CMS media picker', () => {
     expect(page).toContain('label="Service image"');
     expect(collectionApi).toContain("image: z.string().optional().default('')");
     expect(itemApi).toContain('image: z.string().optional()');
+
+    const publicServices = source('src/components/pages/ServicesPage.tsx');
+    expect(publicServices).toContain("image: String(item.image");
+    expect(publicServices).toContain('selected.image &&');
   });
 
   test('team no longer maintains a separate duplicate image uploader', () => {
