@@ -186,6 +186,7 @@ type AccountData = {
   services: AccountService[];
   invoices: AccountInvoice[];
   payments: AccountPayment[];
+  onlinePaymentsAvailable: boolean;
 };
 
 type Announcement = {
@@ -769,7 +770,7 @@ export default function ClientPortalPage() {
                           <td className="px-4 py-3 text-right">{accountMoney(invoice.amountPaid, invoice.currency)}</td>
                           <td className="px-4 py-3 text-right font-semibold">{accountMoney(invoice.balance, invoice.currency)}</td>
                           <td data-export-ignore className="px-4 py-3 text-right">
-                            {Number(invoice.balance) > 0 && invoice.currency === 'GHS' ? (
+                            {Number(invoice.balance) > 0 && invoice.currency === 'GHS' && data.account.onlinePaymentsAvailable ? (
                               <Button
                                 type="button"
                                 size="sm"
@@ -782,6 +783,8 @@ export default function ClientPortalPage() {
                               </Button>
                             ) : invoice.derivedStatus === 'paid' ? (
                               <Badge className={accountStatusClass('paid')}>Paid</Badge>
+                            ) : Number(invoice.balance) > 0 && invoice.currency === 'GHS' ? (
+                              <span className="text-[10px] text-slate-400">Online payment setup pending</span>
                             ) : (
                               <span className="text-xs text-slate-400">—</span>
                             )}
