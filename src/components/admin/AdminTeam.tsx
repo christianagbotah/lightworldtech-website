@@ -242,7 +242,7 @@ export default function AdminTeam() {
                 </TableRow>
               ) : (
                 members.map((member) => (
-                  <TableRow key={member.id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
+                  <TableRow key={member.id} onClick={(event) => { event.stopPropagation(); openEdit(member); }} className="cursor-pointer hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200">
                     <TableCell className="font-medium text-sm">
                       <div className="flex items-center gap-2.5">
                         {member.image ? (
@@ -267,13 +267,13 @@ export default function AdminTeam() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => toggleActive(member)}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); void toggleActive(member); }}>
                           {member.active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(member)}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); openEdit(member); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => { setDeleting(member); setDeleteOpen(true); }}>
+                        <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); setDeleting(member); setDeleteOpen(true); }}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
