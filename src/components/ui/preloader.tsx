@@ -254,7 +254,7 @@ export default function Preloader() {
 
               {/* Logo in center */}
               <motion.div
-                className="relative flex items-center justify-center rounded-full bg-white dark:bg-slate-900 shadow-lg shadow-emerald-500/10 dark:shadow-emerald-400/5"
+                className="relative flex items-center justify-center rounded-full bg-white dark:bg-slate-900 shadow-lg shadow-amber-500/10 dark:shadow-amber-400/5"
                 style={{ width: 96, height: 96 }}
                 animate={exiting ? { scale: 1.12 } : {}}
                 transition={
@@ -265,7 +265,7 @@ export default function Preloader() {
               >
                 {/* Subtle pulse behind logo */}
                 <motion.span
-                  className="absolute inset-0 rounded-full bg-emerald-500/10 dark:bg-emerald-400/5"
+                  className="absolute inset-0 rounded-full bg-amber-500/10 dark:bg-amber-400/5"
                   animate={!exiting ? { scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] } : {}}
                   transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                 />
@@ -307,7 +307,7 @@ export default function Preloader() {
               }
             >
               Lightworld{' '}
-              <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-amber-500 bg-clip-text text-transparent dark:from-emerald-400 dark:via-emerald-300 dark:to-amber-400">
+              <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-500 bg-clip-text text-transparent dark:from-amber-400 dark:via-amber-300 dark:to-amber-400">
                 Technologies
               </span>
             </motion.h2>

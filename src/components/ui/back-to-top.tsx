@@ -78,7 +78,7 @@ export default function BackToTop() {
             className={`absolute inset-[-3px] rounded-full blur-md opacity-0 transition-opacity duration-300 group-hover:opacity-60 ${
               isDark
                 ? 'bg-amber-400/40'
-                : 'bg-emerald-400/40'
+                : 'bg-amber-400/40'
             }`}
           />
 
@@ -87,7 +87,7 @@ export default function BackToTop() {
             className={`relative flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-shadow duration-300 group-hover:shadow-xl ${
               isDark
                 ? 'bg-gradient-to-br from-amber-500 to-amber-700'
-                : 'bg-gradient-to-br from-emerald-500 to-emerald-700'
+                : 'bg-gradient-to-br from-amber-500 to-amber-700'
             }`}
           >
             {/* Progress circle background track */}
@@ -103,7 +103,7 @@ export default function BackToTop() {
                 r="18"
                 fill="none"
                 strokeWidth="2.5"
-                className={isDark ? 'stroke-amber-800/50' : 'stroke-emerald-800/30'}
+                className={isDark ? 'stroke-amber-800/50' : 'stroke-amber-800/30'}
               />
               <circle
                 cx="22"
@@ -115,7 +115,7 @@ export default function BackToTop() {
                 className={
                   isDark
                     ? 'stroke-amber-200/80'
-                    : 'stroke-emerald-100/80'
+                    : 'stroke-amber-100/80'
                 }
                 style={{
                   strokeDasharray: circumference,
