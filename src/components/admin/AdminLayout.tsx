@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { hasAdminPermission, type AdminPermission } from '@/lib/admin-permissions';
+import AdminSecurityDialog from '@/components/admin/AdminSecurityDialog';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'admin-dashboard' as const },
@@ -78,6 +79,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { currentPage, adminTab, setAdminTab, navigate, adminName, adminRole, adminPermissions, logoutAdmin } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [securityOpen, setSecurityOpen] = useState(false);
   const [notices, setNotices] = useState<AdminNotice[]>([]);
   const [noticeTotal, setNoticeTotal] = useState(0);
   const [noticeLoading, setNoticeLoading] = useState(true);
@@ -268,6 +270,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Search className="h-4 w-4" />
               </Button>
 
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSecurityOpen(true)}
+                aria-label="Administrator security"
+                title="Administrator security"
+              >
+                <ShieldCheck className="h-4 w-4" />
+              </Button>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -364,6 +376,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="min-w-0 max-w-full">{children}</div>
         </main>
       </div>
+
+      <AdminSecurityDialog open={securityOpen} onOpenChange={setSecurityOpen} />
 
       <CommandDialog
         open={commandOpen}
