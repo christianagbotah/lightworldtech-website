@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 
 interface FAQ {
   id: string;
@@ -179,15 +180,16 @@ export default function AdminFAQs() {
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">FAQs</h1>
-          <p className="text-muted-foreground text-sm mt-1">{faqs.length} questions</p>
-        </div>
-        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
-          <Plus className="h-4 w-4 mr-2" /> Add FAQ
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Website & content"
+        title="FAQs"
+        description={faqs.length + ' question' + (faqs.length === 1 ? '' : 's') + ' in the public knowledge set.'}
+        actions={
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 size-4" /> Add FAQ
+          </Button>
+        }
+      />
 
       {/* Accordion Preview */}
       <div className="space-y-2">
