@@ -16,8 +16,8 @@ export const ADMIN_PERMISSION_DEFINITIONS = [
   },
   {
     key: 'clients.manage',
-    label: 'Client Portal',
-    description: 'Manage client organizations, users, projects, milestones, documents, announcements and support.',
+    label: 'Clients & Support',
+    description: 'Manage client organizations, users, projects, milestones, documents, announcements and the enterprise Support Desk.',
   },
   {
     key: 'communications.manage',
@@ -90,7 +90,8 @@ export function requiredAdminPermissionForPath(
 
   if (
     pathname.startsWith('/api/admin/clients') ||
-    pathname.startsWith('/api/admin/client-')
+    pathname.startsWith('/api/admin/client-') ||
+    pathname.startsWith('/api/admin/support-tickets')
   ) {
     return 'clients.manage';
   }
