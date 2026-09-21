@@ -68,11 +68,14 @@ export default function AdminBlog() {
   const fetchPosts = useCallback(async (f: string = filter) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (f !== 'all') params.set('filter', f);
-      const res = await fetch(`/api/blog?${params.toString()}`);
+      const params = new URLSearchParams({ limit: '100' });
+      if (f === 'published') params.set('published', 'true');
+      if (f === 'draft') params.set('published', 'false');
+      if (f === 'featured') params.set('featured', 'true');
+      const res = await fetch(`/api/blog?${params.toString()}`, { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to fetch');
-      setPosts(await res.json());
+      const payload = await res.json();
+      setPosts(Array.isArray(payload) ? payload : (payload.data || []));
     } catch {
       toast.error('Failed to load posts');
     } finally {
@@ -197,13 +200,13 @@ export default function AdminBlog() {
                   </TableRow>
                 ) : (
                   filteredPosts.map((post) => (
-                    <TableRow key={post.id} className={`hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200 border-l-[3px] ${categoryColors[post.category?.name || ''] || defaultCategoryBorder}`}>
+                    <TableRow key={post.id} onClick={() => handleEdit(post)} className={`cursor-pointer hover:bg-amber-50/50 dark:hover:bg-amber-900/5 transition-colors duration-200 border-l-[3px] ${categoryColors[post.category?.name || ''] || defaultCategoryBorder}`}>
                       <TableCell className="font-medium text-sm max-w-[250px] truncate">{post.title}</TableCell>
                       <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">
                         {post.category?.name || '—'}
                       </TableCell>
                       <TableCell className="text-center">
-                        <button onClick={() => togglePublished(post)} className="cursor-pointer">
+                        <button onClick={(event) => { event.stopPropagation(); void togglePublished(post); }} className="cursor-pointer">
                           <Badge className={
                             post.published
                               ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-white border-0 shadow-sm'
@@ -214,7 +217,7 @@ export default function AdminBlog() {
                         </button>
                       </TableCell>
                       <TableCell className="text-center hidden md:table-cell">
-                        <button onClick={() => toggleFeatured(post)} className="cursor-pointer">
+                        <button onClick={(event) => { event.stopPropagation(); void toggleFeatured(post); }} className="cursor-pointer">
                           {post.featured ? (
                             <Star className="h-4 w-4 text-amber-500 fill-amber-500 mx-auto" />
                           ) : (
@@ -227,10 +230,10 @@ export default function AdminBlog() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(post)}>
+                          <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); handleEdit(post); }}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => { setDeleting(post); setDeleteOpen(true); }}>
+                          <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); setDeleting(post); setDeleteOpen(true); }}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
