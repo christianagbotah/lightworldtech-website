@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,6 +73,7 @@ export default function AdminClients() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
 
@@ -86,6 +88,8 @@ export default function AdminClients() {
   const selected = organizations.find((item) => item.id === selectedId) || organizations[0] || null;
 
   const fetchOrganizations = async () => {
+    setLoading(true);
+    setLoadError('');
     try {
       const response = await fetch('/api/admin/clients', { cache: 'no-store' });
       if (!response.ok) throw new Error('Could not load client portal organizations');
@@ -94,7 +98,9 @@ export default function AdminClients() {
       setOrganizations(items);
       if (!selectedId && items.length) setSelectedId(items[0].id);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not load clients');
+      const message = error instanceof Error ? error.message : 'Could not load clients';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -365,8 +371,26 @@ export default function AdminClients() {
     } finally { setSaving(false); }
   };
 
-  if (loading) {
+  if (loading && !organizations.length) {
     return <div className="space-y-5"><Skeleton className="h-10 w-64" /><Skeleton className="h-96 rounded-2xl" /></div>;
+  }
+
+  if (loadError && !organizations.length) {
+    return (
+      <div className="space-y-6">
+        <AdminPageHeader
+          eyebrow="Client Portal"
+          title="Client organizations & delivery visibility"
+          description="Provision only real client organizations. Portal users see projects, milestones and support requests scoped to their organization."
+        />
+        <OperationalLoadError
+          title="Client organizations could not be loaded"
+          message={loadError}
+          retrying={loading}
+          onRetry={() => void fetchOrganizations()}
+        />
+      </div>
+    );
   }
 
   return (
@@ -376,11 +400,20 @@ export default function AdminClients() {
         title="Client organizations & delivery visibility"
         description="Provision only real client organizations. Portal users see projects, milestones and support requests scoped to their organization."
         actions={
-          <Button variant="outline" onClick={() => void fetchOrganizations()}>
-            <RefreshCw className="mr-2 size-4" /> Refresh
+          <Button variant="outline" onClick={() => void fetchOrganizations()} disabled={loading}>
+            <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} /> Refresh
           </Button>
         }
       />
+
+      {loadError && (
+        <OperationalLoadError
+          title="Client workspace refresh failed"
+          message={loadError + '. Showing the last successfully loaded client records.'}
+          retrying={loading}
+          onRetry={() => void fetchOrganizations()}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -412,8 +445,8 @@ export default function AdminClients() {
           <form onSubmit={createOrganization} className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
             <Input required placeholder="Organization name" value={orgForm.name} onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })} />
             <Input placeholder="Primary contact" value={orgForm.primaryContactName} onChange={(e) => setOrgForm({ ...orgForm, primaryContactName: e.target.value })} />
-            <Input type="email" placeholder="Primary email" value={orgForm.primaryEmail} onChange={(e) => setOrgForm({ ...orgForm, primaryEmail: e.target.value })} />
-            <Input placeholder="Primary phone" value={orgForm.primaryPhone} onChange={(e) => setOrgForm({ ...orgForm, primaryPhone: e.target.value })} />
+            <Input type="email" autoComplete="email" placeholder="Primary email" value={orgForm.primaryEmail} onChange={(e) => setOrgForm({ ...orgForm, primaryEmail: e.target.value })} />
+            <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="Primary phone" value={orgForm.primaryPhone} onChange={(e) => setOrgForm({ ...orgForm, primaryPhone: e.target.value })} />
             <Button disabled={saving}><Plus className="mr-2 size-4" /> Add</Button>
           </form>
         </CardContent>
@@ -424,7 +457,7 @@ export default function AdminClients() {
           <CardHeader><CardTitle className="text-base">Organizations</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {organizations.length ? organizations.map((item) => (
-              <button key={item.id} onClick={() => setSelectedId(item.id)} className={(selected?.id === item.id ? 'border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/[0.08] ' : 'border-border/60 ') + 'w-full rounded-xl border p-3 text-left transition'}>
+              <button key={item.id} type="button" aria-pressed={selected?.id === item.id} onClick={() => setSelectedId(item.id)} className={(selected?.id === item.id ? 'border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/[0.08] ' : 'border-border/60 ') + 'w-full rounded-xl border p-3 text-left transition'}>
                 <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{item.name}</span><Badge variant="outline">{item.status}</Badge></div>
                 <p className="mt-1 text-[10px] text-muted-foreground">{item._count.users} users · {item._count.projects} projects</p>
               </button>
@@ -500,7 +533,7 @@ export default function AdminClients() {
                   </div>
                   <form onSubmit={createUser} className="mt-4 space-y-3 border-t border-border/60 pt-4">
                     <p className="text-sm font-semibold">Provision user</p>
-                    <div className="grid gap-3 sm:grid-cols-2"><Input required placeholder="Name" value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} /><Input required type="email" placeholder="Email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} /></div>
+                    <div className="grid gap-3 sm:grid-cols-2"><Input required autoComplete="name" placeholder="Name" value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} /><Input required type="email" autoComplete="email" placeholder="Email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} /></div>
                     <select className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15" value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="client_admin">Client admin</option><option value="client_member">Client member</option></select>
                     <Button disabled={saving} variant="outline"><KeyRound className="mr-2 size-4" /> Provision & generate activation link</Button>
                     <p className="text-[10px] text-muted-foreground">Lightworld never sets the client’s password. The API returns a one-time activation URL that expires after 7 days.</p>
