@@ -42,7 +42,7 @@ export default function PageLoader() {
   return (
     <div className="fixed top-0 left-0 right-0 z-[100] h-[2px]">
       <motion.div
-        className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500"
+        className="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500"
         style={{ width }}
       />
     </div>
