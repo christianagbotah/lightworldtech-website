@@ -21,6 +21,7 @@ import {
   Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -414,24 +415,22 @@ export default function AdminCRM() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Corporate CRM</p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground">Lead Pipeline</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Website and assistant enquiries become trackable opportunities without changing the original inbox message.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => void exportCsv()} disabled={exporting}>
-            {exporting ? <RefreshCw className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
-            Export CSV
-          </Button>
-          <Button variant="outline" onClick={() => void fetchLeads()}>
-            <RefreshCw className="mr-2 size-4" /> Refresh
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        eyebrow="Corporate CRM"
+        title="Lead Pipeline"
+        description="Website and assistant enquiries become trackable opportunities without changing the original inbox message."
+        actions={
+          <>
+            <Button variant="outline" onClick={() => void exportCsv()} disabled={exporting}>
+              {exporting ? <RefreshCw className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+              Export CSV
+            </Button>
+            <Button variant="outline" onClick={() => void fetchLeads()}>
+              <RefreshCw className="mr-2 size-4" /> Refresh
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
