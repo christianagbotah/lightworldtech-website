@@ -1,5 +1,17 @@
 import { describe, expect, test } from 'bun:test';
-import { isLeadershipIntent, isNewsroomIntent, isTrustIntent } from './assistant-intents';
+import {
+  isCompletedProjectChangeIntent,
+  isCompletedProjectContactIntent,
+  isCompletedProjectContextIntent,
+  isCompletedProjectNextStepsIntent,
+  isCompletedProjectPricingIntent,
+  isCompletedProjectPreparationIntent,
+  isCompletedProjectRestartIntent,
+  isCompletedProjectStatusIntent,
+  isLeadershipIntent,
+  isNewsroomIntent,
+  isTrustIntent,
+} from './assistant-intents';
 
 describe('assistant leadership intent', () => {
   test('matches the production quick-reply wording', () => {
@@ -42,5 +54,29 @@ describe('assistant newsroom intent', () => {
 
   test('does not capture leadership questions', () => {
     expect(isNewsroomIntent('Who leads Lightworld?')).toBe(false);
+  });
+});
+
+
+describe('assistant completed-project follow-up intent', () => {
+  test('keeps post-submission questions in the project journey', () => {
+    expect(isCompletedProjectNextStepsIntent('What happens after I submit?')).toBe(true);
+    expect(isCompletedProjectNextStepsIntent('What are the next steps?')).toBe(true);
+    expect(isCompletedProjectContactIntent('How long before I hear back?')).toBe(true);
+    expect(isCompletedProjectPricingIntent('How is the estimate calculated?')).toBe(true);
+    expect(isCompletedProjectPreparationIntent('What should I prepare for the first discussion?')).toBe(true);
+    expect(isCompletedProjectChangeIntent('Can I change the brief later?')).toBe(true);
+    expect(isCompletedProjectContextIntent('What about my project?')).toBe(true);
+    expect(isCompletedProjectNextStepsIntent('What happens after submission?')).toBe(true);
+    expect(isCompletedProjectChangeIntent('Open my project brief')).toBe(false);
+    expect(isCompletedProjectContextIntent('Open my project brief')).toBe(true);
+    expect(isCompletedProjectStatusIntent('Any update on my project?')).toBe(true);
+    expect(isCompletedProjectChangeIntent('Any update on my project?')).toBe(false);
+  });
+
+  test('recognizes a deliberate new-project restart without hijacking normal service questions', () => {
+    expect(isCompletedProjectRestartIntent('I want to start another project')).toBe(true);
+    expect(isCompletedProjectRestartIntent('What services do you offer?')).toBe(false);
+    expect(isCompletedProjectNextStepsIntent('What services do you offer?')).toBe(false);
   });
 });

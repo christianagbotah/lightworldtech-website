@@ -3,7 +3,19 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { companyProfile } from '@/lib/company-profile';
 import { contentJson, contentText, defaultRecognition } from '@/lib/site-content';
-import { isLeadershipIntent, isNewsroomIntent, isTrustIntent } from '@/lib/assistant-intents';
+import {
+  isCompletedProjectChangeIntent,
+  isCompletedProjectContactIntent,
+  isCompletedProjectContextIntent,
+  isCompletedProjectNextStepsIntent,
+  isCompletedProjectPricingIntent,
+  isCompletedProjectPreparationIntent,
+  isCompletedProjectRestartIntent,
+  isCompletedProjectStatusIntent,
+  isLeadershipIntent,
+  isNewsroomIntent,
+  isTrustIntent,
+} from '@/lib/assistant-intents';
 
 export type ProjectScopeState = {
   mode: 'project-scope';
@@ -137,7 +149,12 @@ function continueProjectScope(message: string, state: ProjectScopeState, knowled
       state: completed,
       projectBrief: brief,
       cta: { label: 'Open prefilled project brief', href: '/contact' },
-      suggestions: ['What happens after I submit?', 'What services does Lightworld offer?'],
+      suggestions: [
+        'What happens after I submit?',
+        'How is pricing estimated?',
+        'Can I change the brief later?',
+        'Who will contact me?',
+      ],
     };
   }
 
@@ -148,6 +165,102 @@ function continueProjectScope(message: string, state: ProjectScopeState, knowled
     projectBrief: projectSummary(state),
     cta: { label: 'Open project brief', href: '/contact' },
   };
+}
+
+function answerCompletedProjectFollowUp(
+  message: string,
+  state: ProjectScopeState,
+  companyName: string,
+  companyEmail: string,
+  companyPhone: string,
+): ConciergeResponse | null {
+  const brief = projectSummary(state);
+  const common = {
+    intent: 'project-scope' as const,
+    state,
+    projectBrief: brief,
+    cta: { label: 'Open project brief', href: '/contact' },
+  };
+
+  if (isCompletedProjectNextStepsIntent(message)) {
+    return {
+      ...common,
+      reply:
+        'After you submit the project brief, it moves into human review by the ' +
+        companyName +
+        ' team. They will review the project type, goals, users and timeline you provided, then contact you if anything needs clarification. The next conversation is used to confirm scope, delivery approach and the estimate or proposal before implementation begins.',
+      suggestions: ['How is pricing estimated?', 'Who will contact me?', 'Can I change the brief later?', 'What should I prepare for the first discussion?'],
+    };
+  }
+
+  if (isCompletedProjectPricingIntent(message)) {
+    return {
+      ...common,
+      reply:
+        'Pricing is not guessed from the chat alone. The team reviews the scope you submitted — including the solution type, required features or integrations, complexity, target users, delivery timeline and ongoing support needs — and then prepares the appropriate estimate or proposal. Your current brief gives them the starting context.',
+      suggestions: ['What happens after I submit?', 'Can I add a budget?', 'Can I change the brief later?'],
+    };
+  }
+
+  if (isCompletedProjectContactIntent(message)) {
+    return {
+      ...common,
+      reply:
+        'A member of the ' +
+        companyName +
+        ' team will follow up using the contact details you submit with the brief. Response time can vary with the request and workload, so if the matter is urgent you can also reach the team directly at ' +
+        companyEmail +
+        ' or ' +
+        companyPhone +
+        '.',
+      suggestions: ['What happens after I submit?', 'How is pricing estimated?', 'Can I change the brief later?'],
+    };
+  }
+
+  if (isCompletedProjectPreparationIntent(message)) {
+    return {
+      ...common,
+      reply:
+        'For the first project discussion, it helps to have any existing documents, screenshots, workflows, brand materials, integrations, examples you like, known constraints and decision-makers available. You do not need everything perfectly prepared — the brief you already created gives the team a structured starting point, and missing details can be clarified during discovery.',
+      suggestions: ['What happens after I submit?', 'How is pricing estimated?', 'Can I change the brief later?', 'Who will contact me?'],
+    };
+  }
+
+  if (isCompletedProjectStatusIntent(message)) {
+    return {
+      ...common,
+      reply:
+        'I can keep the brief context in this chat, but this public assistant cannot see a live project or proposal status. If you have already submitted the brief, use the Client Portal when you have access to it, or contact the ' +
+        companyName +
+        ' team at ' +
+        companyEmail +
+        ' or ' +
+        companyPhone +
+        ' for a verified update.',
+      suggestions: ['Open the Client Portal', 'What happens after I submit?', 'Who will contact me?'],
+      cta: { label: 'Open Client Portal', href: '/client' },
+    };
+  }
+
+  if (isCompletedProjectChangeIntent(message)) {
+    return {
+      ...common,
+      reply:
+        'Yes. Before submitting, you can edit the prefilled Contact form and add any missing detail. If you have already submitted it, send the correction or additional requirement to the team and reference the same project so it can be reviewed together with your original brief.',
+      suggestions: ['Open my project brief', 'What happens after I submit?', 'How is pricing estimated?'],
+    };
+  }
+
+  if (isCompletedProjectContextIntent(message)) {
+    return {
+      ...common,
+      reply:
+        'I still have the context of this project brief in this chat. I can explain the next steps, pricing approach, how to change the brief, or how the team will follow up — without making you restart the project journey.',
+      suggestions: ['What happens after I submit?', 'How is pricing estimated?', 'Can I change the brief later?', 'Who will contact me?'],
+    };
+  }
+
+  return null;
 }
 
 export async function answerConcierge(
@@ -165,6 +278,21 @@ export async function answerConcierge(
   const companyEmail = contentText(knowledge.settings, 'company_email', companyProfile.email);
   const companyPhone = contentText(knowledge.settings, 'company_phone1', companyProfile.phoneDisplay);
   const companyAddress = contentText(knowledge.settings, 'company_address', 'Accra, Ghana');
+
+  if (state?.mode === 'project-scope' && state.step === 'done') {
+    if (isCompletedProjectRestartIntent(message)) {
+      const serviceTitles = knowledge.services.map((service) => service.title);
+      return {
+        intent: 'project-scope',
+        reply: 'Absolutely. Let’s create a fresh brief for the new project. What kind of project are you considering?',
+        suggestions: serviceTitles.slice(0, 6),
+        state: { mode: 'project-scope', step: 'service', answers: {} },
+      };
+    }
+
+    const followUp = answerCompletedProjectFollowUp(message, state, companyName, companyEmail, companyPhone);
+    if (followUp) return followUp;
+  }
 
   if (/start.*project|project.*start|quote|estimate|hire|build.*for (me|us)|need.*(website|app|software|system|platform)/.test(q)) {
     const serviceTitles = knowledge.services.map((service) => service.title);
