@@ -51,8 +51,9 @@ type TicketMessage = {
   id: string; authorType: string; authorName: string; message: string; createdAt: string;
 };
 type Ticket = {
-  id: string; projectId: string | null; subject: string; message: string;
-  status: string; priority: string; createdAt: string; updatedAt: string;
+  id: string; ticketNumber: string; projectId: string | null; subject: string; message: string;
+  category: string; status: string; priority: string; assignedTo: string;
+  createdAt: string; updatedAt: string; lastActivityAt: string;
   messages: TicketMessage[];
 };
 type Organization = {
@@ -645,11 +646,18 @@ export default function AdminClients() {
                   <div key={ticket.id} className="rounded-xl border border-border/60 p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-sm font-semibold">{ticket.subject}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-[10px] font-bold text-amber-700 dark:text-amber-300">{ticket.ticketNumber}</span>
+                          <p className="text-sm font-semibold">{ticket.subject}</p>
+                        </div>
                         <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{ticket.message}</p>
-                        <p className="mt-2 text-[10px] text-muted-foreground">{pretty(ticket.priority)} priority · opened {new Date(ticket.createdAt).toLocaleString()}</p>
+                        <p className="mt-2 text-[10px] text-muted-foreground">
+                          {pretty(ticket.category)} · {pretty(ticket.priority)} priority
+                          {ticket.assignedTo ? ' · ' + ticket.assignedTo : ' · Unassigned'}
+                          {' · opened ' + new Date(ticket.createdAt).toLocaleString()}
+                        </p>
                       </div>
-                      <select className="h-9 rounded-md border border-input bg-background px-2 text-xs" value={ticket.status} onChange={(e) => void patchTicket(ticket.id, e.target.value)}><option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select>
+                      <select className="h-9 rounded-md border border-input bg-background px-2 text-xs" value={ticket.status} onChange={(e) => void patchTicket(ticket.id, e.target.value)}><option value="open">Open</option><option value="in_progress">In progress</option><option value="awaiting_client">Awaiting client</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select>
                     </div>
                     {ticket.messages.length > 0 && (
                       <div className="mt-3 space-y-2 border-t border-border/60 pt-3">
