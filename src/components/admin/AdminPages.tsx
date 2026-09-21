@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import AdminMediaField from '@/components/admin/AdminMediaField';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { cmsGroups, type CmsField } from '@/lib/site-content';
 
 type Values = Record<string, string>;
@@ -118,14 +119,11 @@ export default function AdminPages() {
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Full-site CMS</p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">Page Content</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          Edit the flagship website without touching code. Dedicated modules still manage services,
-          portfolio projects, team members, blog posts, testimonials and FAQs.
-        </p>
-      </div>
+      <AdminPageHeader
+        eyebrow="Full-site CMS"
+        title="Page Content"
+        description="Edit the flagship website without touching code. Dedicated modules still manage services, portfolio projects, team members, blog posts, testimonials and FAQs."
+      />
 
       <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
         {cmsGroups.map((item) => (
