@@ -29,7 +29,7 @@ export function isCompletedProjectPricingIntent(message: string): boolean {
 
 export function isCompletedProjectChangeIntent(message: string): boolean {
   const q = message.trim().toLowerCase();
-  return /change|edit|update|correct|modify|add\s+something|forgot\s+to\s+mention/.test(q);
+  return /change|edit|correct|modify|add\s+something|forgot\s+to\s+mention|update.*(brief|requirement|detail|scope)/.test(q);
 }
 
 export function isCompletedProjectContactIntent(message: string): boolean {
@@ -51,4 +51,10 @@ export function isCompletedProjectContextIntent(message: string): boolean {
 export function isCompletedProjectPreparationIntent(message: string): boolean {
   const q = message.trim().toLowerCase();
   return /what.*prepare|prepare.*(meeting|discussion|call)|first\s+(meeting|discussion|call)|what.*bring|information.*need/.test(q);
+}
+
+
+export function isCompletedProjectStatusIntent(message: string): boolean {
+  const q = message.trim().toLowerCase();
+  return /project\s+status|status\s+of|progress|update\s+on|where.*(project|submission)|has.*(started|reviewed)|is.*(started|reviewed)/.test(q);
 }
