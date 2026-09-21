@@ -218,7 +218,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
             <p className="text-sm font-semibold text-white/85">{footerNewsletterTitle}</p>
             <p className="mt-1 text-xs leading-5 text-white/32">{footerNewsletterDescription}</p>
           </div>
-          <form onSubmit={subscribe} className="flex w-full gap-2 sm:w-auto">
+          <form onSubmit={subscribe} className="flex w-full gap-2 sm:w-auto" aria-busy={submitting}>
             <label htmlFor="footer-email" className="sr-only">Email address</label>
             <div className="relative min-w-0 flex-1 sm:w-72">
               <Mail className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-white/25" />
@@ -230,7 +230,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
                 placeholder="you@company.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="h-11 w-full rounded-full border border-white/[0.09] bg-black/20 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-amber-300/45"
+                className="h-11 w-full rounded-full border border-white/[0.09] bg-black/20 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-amber-300/45 focus:ring-2 focus:ring-amber-300/15"
               />
             </div>
             <button

@@ -188,6 +188,8 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
                     variant="outline"
                     size="sm"
                     onClick={() => setShowCustomize(!showCustomize)}
+                    aria-expanded={showCustomize}
+                    aria-controls="cookie-preferences-panel"
                     className="text-xs border-slate-300 dark:border-slate-600 h-8 gap-1"
                   >
                     <Settings className="size-3" />
@@ -231,7 +233,7 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-4">
+                    <div id="cookie-preferences-panel" className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-4">
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         {contentText(settings, 'cookie_categories_title', 'Cookie Categories')}
                       </p>
@@ -255,6 +257,7 @@ export default function CookieConsent({ settings = {} }: { settings?: SiteSettin
                             checked={prefs[cat.key]}
                             disabled={cat.locked}
                             onCheckedChange={() => togglePref(cat.key)}
+                            aria-label={cat.name}
                             className="data-[state=checked]:bg-amber-600"
                           />
                         </div>
