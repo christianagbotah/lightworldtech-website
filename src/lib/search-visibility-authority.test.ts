@@ -22,6 +22,7 @@ describe('search visibility and entity authority', () => {
     const schema = source('src/components/ui/json-ld.tsx');
 
     expect(schema).toContain("config.siteUrl + '/#organization'");
+    expect(schema).toContain('name: config.legalName');
     expect(schema).toContain('legalName: config.legalName');
     expect(schema).toContain("'Lightworld Technologies Limited'");
     expect(schema).toContain('hasOfferCatalog');
@@ -37,7 +38,7 @@ describe('search visibility and entity authority', () => {
     expect(page).toContain('Lightworld Technologies Limited | Software Company in Ghana');
     expect(page).toContain('absoluteTitle: true');
     expect(home).toContain('home_entity_summary');
-    expect(home).toContain('Ghanaian software and IT company based in Tema, Greater Accra');
+    expect(home).toContain('Ghanaian software company and IT training institute based in Tema, Greater Accra');
     expect(home).toContain('Tema · Greater Accra · Ghana');
   });
 
@@ -50,6 +51,8 @@ describe('search visibility and entity authority', () => {
     expect(migration).toContain("'Greater Accra'");
     expect(migration).toContain("'en_GH'");
     expect(migration).toContain("'Robert Yaw Essuon'");
+    expect(migration).toContain("'0243618186'");
+    expect(migration).toContain("'Lightworld Technologies Limited'");
     expect(migration).not.toContain('seo_google_verification');
     expect(migration).not.toContain('seo_bing_verification');
     expect(migration).not.toContain('social_linkedin');
@@ -83,6 +86,8 @@ describe('search visibility and entity authority', () => {
     const contact = source('src/components/pages/ContactPage.tsx');
 
     expect(profile).toContain('ChIJl7EfYil_3w8R126pXLqlMgw');
+    expect(profile).toContain("phoneDisplay: '0243618186'");
+    expect(schema).toContain("'Software training institute'");
     expect(schema).toContain('companyProfile.googleMapsUrl');
     expect(contact).toContain('Mon–Fri · 08:30–17:30 GMT');
     expect(contact).toContain('Sat · 14:00–16:00 GMT');
