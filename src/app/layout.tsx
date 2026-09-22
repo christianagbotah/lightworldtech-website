@@ -7,6 +7,10 @@ import MotionPreferenceProvider from '@/components/providers/MotionPreferencePro
 import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/ui/json-ld';
 import { getSeoConfig } from '@/lib/seo-config';
 
+function seoAbsoluteFeedUrl(siteUrl: string): string {
+  return new URL('/feed.xml', siteUrl + '/').toString();
+}
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -30,6 +34,11 @@ export async function generateMetadata(): Promise<Metadata> {
       template: '%s | ' + seo.siteName,
     },
     description: seo.description,
+    alternates: {
+      types: {
+        'application/rss+xml': seoAbsoluteFeedUrl(seo.siteUrl),
+      },
+    },
     keywords: seo.keywords,
     authors: [{ name: seo.legalName, url: seo.siteUrl }],
     creator: seo.legalName,
