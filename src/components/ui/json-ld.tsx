@@ -142,6 +142,44 @@ export function WebSiteJsonLd({ config }: { config: SeoConfig }) {
   return <JsonLd data={data} />;
 }
 
+export function ServiceJsonLd({
+  config,
+  name,
+  description,
+  path,
+  serviceType,
+}: {
+  config: SeoConfig;
+  name: string;
+  description: string;
+  path: string;
+  serviceType: string;
+}) {
+  const url = new URL(path, config.siteUrl + '/').toString();
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': url + '#service',
+    name,
+    description,
+    serviceType,
+    url,
+    provider: {
+      '@id': config.siteUrl + '/#organization',
+    },
+    areaServed: [
+      { '@type': 'Country', name: 'Ghana' },
+      { '@type': 'AdministrativeArea', name: 'Greater Accra Region' },
+    ],
+    availableChannel: {
+      '@type': 'ServiceChannel',
+      serviceUrl: url,
+    },
+  };
+
+  return <JsonLd data={data} />;
+}
+
 export function BreadcrumbJsonLd({
   config,
   items,

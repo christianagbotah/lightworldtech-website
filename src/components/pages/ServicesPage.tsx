@@ -30,11 +30,13 @@ interface ServiceView {
   deliverables: string[];
   outcomes: string[];
   image?: string;
+  searchSlug?: string;
 }
 
 const defaultServices: ServiceView[] = [
   {
     id: 'web',
+    searchSlug: 'web-development',
     icon: Code2,
     eyebrow: 'Digital products',
     title: 'Web & product engineering',
@@ -44,6 +46,7 @@ const defaultServices: ServiceView[] = [
   },
   {
     id: 'mobile',
+    searchSlug: 'mobile-app-development',
     icon: Smartphone,
     eyebrow: 'Mobile',
     title: 'Mobile app development',
@@ -53,6 +56,7 @@ const defaultServices: ServiceView[] = [
   },
   {
     id: 'enterprise',
+    searchSlug: 'software-development',
     icon: Workflow,
     eyebrow: 'Operations',
     title: 'Enterprise software & automation',
@@ -62,6 +66,7 @@ const defaultServices: ServiceView[] = [
   },
   {
     id: 'ai',
+    searchSlug: 'ai-automation',
     icon: BrainCircuit,
     eyebrow: 'Intelligence',
     title: 'AI-enabled workflows',
@@ -71,6 +76,7 @@ const defaultServices: ServiceView[] = [
   },
   {
     id: 'cloud',
+    searchSlug: 'cloud-devops',
     icon: Cloud,
     eyebrow: 'Infrastructure',
     title: 'Cloud, DevOps & reliability',
@@ -80,6 +86,7 @@ const defaultServices: ServiceView[] = [
   },
   {
     id: 'security',
+    searchSlug: 'security-engineering',
     icon: ShieldCheck,
     eyebrow: 'Trust',
     title: 'Security engineering',
@@ -89,6 +96,7 @@ const defaultServices: ServiceView[] = [
   },
   {
     id: 'growth',
+    searchSlug: 'seo-digital-performance',
     icon: Search,
     eyebrow: 'Growth',
     title: 'SEO & digital performance',
@@ -98,6 +106,7 @@ const defaultServices: ServiceView[] = [
   },
   {
     id: 'training',
+    searchSlug: 'it-training',
     icon: GraduationCap,
     eyebrow: 'Capability',
     title: 'IT training & consultancy',
@@ -150,9 +159,8 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
           'web-development': 'web',
           'mobile-app-development': 'mobile',
           'software-development': 'enterprise',
-          'seo-marketing': 'growth',
-          'skills-training': 'training',
-          'web-hosting': 'cloud',
+          'seo-social-media-marketing': 'growth',
+          'skills-development': 'training',
         };
 
         const next = [...defaultServices];
@@ -245,29 +253,43 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
         <div className="container-main">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {serviceItems.map((service, index) => (
-              <motion.button
+              <motion.div
                 key={service.id}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.45, delay: index * 0.035 }}
-                onClick={() => selectService(service.id)}
                 className={
                   active === service.id
                     ? 'group rounded-[26px] border border-amber-400/40 bg-amber-500/[0.08] p-5 text-left shadow-lg shadow-amber-950/[0.05] dark:bg-amber-300/[0.055]'
                     : 'group rounded-[26px] border border-slate-200/75 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-amber-300/60 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]'
                 }
-                aria-pressed={active === service.id}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="flex size-10 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
-                    <service.icon className="size-5" />
-                  </span>
-                  <span className="font-mono text-[9px] text-slate-300 dark:text-white/15">{String(index + 1).padStart(2, '0')}</span>
-                </div>
-                <p className="mt-6 text-[9px] font-semibold uppercase tracking-[0.18em] text-amber-600/75 dark:text-amber-300/60">{service.eyebrow}</p>
-                <h2 className="mt-1.5 text-base font-semibold tracking-tight">{service.title}</h2>
-              </motion.button>
+                <button
+                  type="button"
+                  onClick={() => selectService(service.id)}
+                  className="w-full text-left"
+                  aria-pressed={active === service.id}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="flex size-10 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
+                      <service.icon className="size-5" />
+                    </span>
+                    <span className="font-mono text-[9px] text-slate-300 dark:text-white/15">{String(index + 1).padStart(2, '0')}</span>
+                  </div>
+                  <p className="mt-6 text-[9px] font-semibold uppercase tracking-[0.18em] text-amber-600/75 dark:text-amber-300/60">{service.eyebrow}</p>
+                  <h2 className="mt-1.5 text-base font-semibold tracking-tight">{service.title}</h2>
+                </button>
+                {service.searchSlug && (
+                  <Link
+                    href={'/services/' + service.searchSlug}
+                    className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 transition hover:text-amber-800 dark:text-amber-300"
+                    aria-label={'Read more about ' + service.title}
+                  >
+                    Service details <ArrowRight className="size-3" />
+                  </Link>
+                )}
+              </motion.div>
             ))}
           </div>
 
@@ -322,9 +344,16 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
                   </div>
                 ))}
               </div>
-              <Link href="/contact" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
-                Talk to us about this capability <ArrowRight className="size-4" />
-              </Link>
+              <div className="mt-7 flex flex-wrap items-center gap-4">
+                <Link href="/contact" className="inline-flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
+                  Talk to us about this capability <ArrowRight className="size-4" />
+                </Link>
+                {selected.searchSlug && (
+                  <Link href={'/services/' + selected.searchSlug} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-amber-700 dark:text-white/45 dark:hover:text-amber-300">
+                    Open detailed service page <ArrowUpRight className="size-4" />
+                  </Link>
+                )}
+              </div>
             </div>
           </motion.div>
         </div>
