@@ -123,6 +123,17 @@ const situations = [
   'You want to introduce AI without turning the product into a gimmick.',
 ];
 
+const serviceGuides = [
+  ['Web development', '/services/web-development'],
+  ['Mobile app development', '/services/mobile-app-development'],
+  ['Software development', '/services/software-development'],
+  ['AI automation', '/services/ai-automation'],
+  ['Cloud & DevOps', '/services/cloud-devops'],
+  ['Cybersecurity', '/services/cybersecurity'],
+  ['SEO & digital growth', '/services/seo-digital-growth'],
+  ['IT training & consultancy', '/services/it-training-consultancy'],
+] as const;
+
 export default function ServicesPage({ settings = {} }: { settings?: SiteSettings }) {
   const [serviceItems, setServiceItems] = useState<ServiceView[]>(defaultServices);
   const [active, setActive] = useState(defaultServices[0].id);
@@ -269,6 +280,23 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
                 <h2 className="mt-1.5 text-base font-semibold tracking-tight">{service.title}</h2>
               </motion.button>
             ))}
+          </div>
+
+          <div className="mt-5 rounded-[26px] border border-slate-200/70 bg-white p-4 dark:border-white/[0.07] dark:bg-white/[0.025] sm:p-5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-white/25">
+              Explore detailed service guides
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {serviceGuides.map(([label, href]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-slate-200/80 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-600 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60 dark:border-white/[0.07] dark:bg-white/[0.025] dark:text-white/45 dark:hover:text-amber-300"
+                >
+                  {label} <ArrowRight className="size-3.5" />
+                </Link>
+              ))}
+            </div>
           </div>
 
           <motion.div
