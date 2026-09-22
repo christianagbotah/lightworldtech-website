@@ -100,9 +100,7 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
       },
     ],
     keywords: [
-      'Software company',
-      'Computer support and services',
-      'Software training institute',
+      ...companyProfile.businessCategories,
       'IT training institute',
       'Software development company in Ghana',
     ],
