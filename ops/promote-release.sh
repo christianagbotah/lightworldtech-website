@@ -7,8 +7,10 @@ CURRENT_LINK="/home/lightworld/webapps/lightworldtech"
 PREVIOUS_LINK="/home/lightworld/webapps/lightworldtech-previous"
 OPS="/home/lightworld/shared/lightworldtech/ops"
 APP_USER="lightworld"
-PM2_NAME="lightworldtech"
-CANDIDATE_NAME="lightworldtech-candidate"
+APP_GROUP="lightworld"
+LIVE_UNIT="lightworldtech-app.service"
+CANDIDATE_UNIT="lightworldtech-candidate.service"
+LEGACY_PM2_UNIT="pm2-lightworld.service"
 PORT=3007
 CANDIDATE_PORT=3017
 LOCK_FILE="$OPS/promote-release.lock"
@@ -34,6 +36,11 @@ NEW_RELEASE="$(readlink -f "$NEW_RELEASE")"
 [ -f "$NEW_RELEASE/.next/standalone/RELEASE_SHA" ] || fail "RELEASE_SHA is missing"
 
 "$OPS/prepare-release-runtime.sh" "$NEW_RELEASE" >/dev/null
+systemctl cat "$LIVE_UNIT" >/dev/null 2>&1 || fail "$LIVE_UNIT is not installed"
+
+if systemctl is-active --quiet "$LEGACY_PM2_UNIT"; then
+  fail "Legacy supervisor $LEGACY_PM2_UNIT is active. Stop/disable it before promotion to prevent a port 3007 conflict."
+fi
 
 CURRENT=""
 if [ -L "$CURRENT_LINK" ]; then
@@ -49,8 +56,22 @@ if [ -n "$CURRENT" ]; then
   [ -f "$CURRENT/.next/standalone/server.js" ] || fail "Current rollback release is invalid: $CURRENT"
 fi
 
-pm2_as_app() {
-  sudo -u "$APP_USER" -H sh -lc "cd /; $*"
+listener_pid() {
+  local port="$1"
+  ss -ltnpH "sport = :$port" 2>/dev/null     | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p'     | head -n 1
+}
+
+verify_live_listener() {
+  local listener service_pid
+  listener="$(listener_pid "$PORT")"
+  service_pid="$(systemctl show -p MainPID --value "$LIVE_UNIT" 2>/dev/null || true)"
+
+  if systemctl is-active --quiet "$LIVE_UNIT"; then
+    [ -n "$listener" ] || fail "$LIVE_UNIT is active but nothing is listening on port $PORT"
+    [ "$listener" = "$service_pid" ] || fail "Port $PORT is owned by PID $listener, not $LIVE_UNIT PID $service_pid"
+  elif [ -n "$listener" ]; then
+    fail "Port $PORT is occupied by PID $listener while $LIVE_UNIT is inactive"
+  fi
 }
 
 wait_for_ready() {
@@ -74,7 +95,7 @@ smoke_routes() {
   local port="$1"
   local route code
 
-  for route in / /admin /client /services /portfolio /blog /contact /sitemap.xml; do
+  for route in / /admin /client /services /services/software-development /services/it-training /portfolio /blog /newsroom /contact /sitemap.xml /robots.txt; do
     code="$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port$route")"
     [ "$code" = "200" ] || fail "Smoke check failed for $route on port $port: HTTP $code"
   done
@@ -89,29 +110,48 @@ smoke_routes() {
   [ "$code" = "401" ] || fail "Unauthenticated upload check on port $port returned HTTP $code"
 }
 
-candidate_started=0
-live_touched=0
-
 cleanup_candidate() {
-  if [ "$candidate_started" -eq 1 ]; then
-    pm2_as_app "pm2 delete '$CANDIDATE_NAME' >/dev/null 2>&1 || true"
-    candidate_started=0
-  fi
+  systemctl stop "$CANDIDATE_UNIT" >/dev/null 2>&1 || true
+  systemctl reset-failed "$CANDIDATE_UNIT" >/dev/null 2>&1 || true
 }
+
+start_candidate() {
+  local existing
+  cleanup_candidate
+  existing="$(listener_pid "$CANDIDATE_PORT")"
+  [ -z "$existing" ] || fail "Candidate port $CANDIDATE_PORT is already occupied by PID $existing"
+
+  systemd-run     --quiet     --unit="${CANDIDATE_UNIT%.service}"     --collect     --property=Type=simple     --property="User=$APP_USER"     --property="Group=$APP_GROUP"     --property="WorkingDirectory=$NEW_RELEASE/.next/standalone"     --property=NoNewPrivileges=yes     --setenv="PORT=$CANDIDATE_PORT"     --setenv=HOSTNAME=127.0.0.1     --setenv=NODE_ENV=production     /usr/bin/node server.js
+}
+
+verify_live_release() {
+  local pid uid cwd listener
+  pid="$(systemctl show -p MainPID --value "$LIVE_UNIT")"
+  [ -n "$pid" ] && [ "$pid" != "0" ] || fail "$LIVE_UNIT has no MainPID"
+
+  uid="$(ps -o uid= -p "$pid" | tr -d ' ')"
+  [ "$uid" = "$(id -u "$APP_USER")" ] || fail "$LIVE_UNIT PID $pid is not running as $APP_USER"
+
+  cwd="$(readlink -f "/proc/$pid/cwd")"
+  [ "$cwd" = "$NEW_RELEASE/.next/standalone" ] || fail "$LIVE_UNIT is running from unexpected cwd: $cwd"
+
+  listener="$(listener_pid "$PORT")"
+  [ "$listener" = "$pid" ] || fail "Live port $PORT is not owned by $LIVE_UNIT MainPID $pid"
+}
+
+live_touched=0
 
 rollback() {
   local rc=$?
+  trap - ERR INT TERM
   echo "PROMOTION_FAILED: preserving/restoring verified live release" >&2
   cleanup_candidate
 
-  if [ "$live_touched" -eq 1 ]; then
-    pm2_as_app "pm2 delete '$PM2_NAME' >/dev/null 2>&1 || true"
-
-    if [ -n "$CURRENT" ] && [ -f "$CURRENT/.next/standalone/server.js" ]; then
-      sudo -u "$APP_USER" -H sh -lc "cd '$CURRENT/.next/standalone' && PORT=$PORT HOSTNAME=127.0.0.1 NODE_ENV=production pm2 start server.js --name '$PM2_NAME' >/dev/null" || true
-      ln -sfn "$CURRENT" "$CURRENT_LINK" || true
-      pm2_as_app "pm2 save >/dev/null" || true
-    fi
+  if [ "$live_touched" -eq 1 ] && [ -n "$CURRENT" ] && [ -f "$CURRENT/.next/standalone/server.js" ]; then
+    ln -sfn "$CURRENT" "$CURRENT_LINK" || true
+    systemctl restart "$LIVE_UNIT" || true
+    wait_for_ready "$PORT" 30 || true
+    smoke_routes "$PORT" || true
   fi
 
   exit "$rc"
@@ -119,27 +159,26 @@ rollback() {
 
 trap rollback ERR INT TERM
 
-# Prove the release on an isolated local port before touching live traffic.
-pm2_as_app "pm2 delete '$CANDIDATE_NAME' >/dev/null 2>&1 || true"
-sudo -u "$APP_USER" -H sh -lc "cd '$NEW_RELEASE/.next/standalone' && PORT=$CANDIDATE_PORT HOSTNAME=127.0.0.1 NODE_ENV=production pm2 start server.js --name '$CANDIDATE_NAME' >/dev/null"
-candidate_started=1
+# Reject a split-brain supervisor before candidate validation or live changes.
+verify_live_listener
+
+# Prove the exact release on an isolated transient systemd unit before touching live traffic.
+start_candidate
 wait_for_ready "$CANDIDATE_PORT" 30
 smoke_routes "$CANDIDATE_PORT"
 cleanup_candidate
 
-# Protect the currently verified live release from pruning before switching.
+# Protect the verified current release as rollback target before switching the symlink.
 if [ -n "$CURRENT" ]; then
   ln -sfn "$CURRENT" "$PREVIOUS_LINK"
 fi
 
 live_touched=1
-pm2_as_app "pm2 delete '$PM2_NAME' >/dev/null 2>&1 || true"
-sudo -u "$APP_USER" -H sh -lc "cd '$NEW_RELEASE/.next/standalone' && PORT=$PORT HOSTNAME=127.0.0.1 NODE_ENV=production pm2 start server.js --name '$PM2_NAME' >/dev/null"
 ln -sfn "$NEW_RELEASE" "$CURRENT_LINK"
-pm2_as_app "pm2 save >/dev/null"
-
+systemctl restart "$LIVE_UNIT"
 wait_for_ready "$PORT" 30
 smoke_routes "$PORT"
+verify_live_release
 
 trap - ERR INT TERM
 

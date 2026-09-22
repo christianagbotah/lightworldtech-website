@@ -17,12 +17,22 @@ for script in prepare-release-runtime.sh promote-release.sh prune-releases.sh ru
   install -o root -g "$APP_GROUP" -m 0700 "$SOURCE_DIR/$script" "$TARGET_DIR/$script"
 done
 
-for unit in lightworld-sms-dispatch.service lightworld-sms-dispatch.timer; do
+for unit in lightworldtech-app.service lightworld-sms-dispatch.service lightworld-sms-dispatch.timer; do
   install -o root -g root -m 0644 "$SOURCE_DIR/$unit" "/etc/systemd/system/$unit"
 done
 
 systemctl daemon-reload
+systemctl enable lightworldtech-app.service
 systemctl enable --now lightworld-sms-dispatch.timer
 
+# The website has one production supervisor: systemd. A legacy PM2 unit may still
+# exist on older hosts; disable it at boot, and stop it when the systemd app is
+# already serving traffic so both managers can never compete for port 3007.
+systemctl disable pm2-lightworld.service >/dev/null 2>&1 || true
+if systemctl is-active --quiet lightworldtech-app.service; then
+  systemctl stop pm2-lightworld.service >/dev/null 2>&1 || true
+fi
+
 echo "Installed production operations scripts into $TARGET_DIR"
-echo "Enabled lightworld-sms-dispatch.timer"
+echo "Enabled lightworldtech-app.service and lightworld-sms-dispatch.timer"
+echo "Legacy pm2-lightworld.service is disabled"
