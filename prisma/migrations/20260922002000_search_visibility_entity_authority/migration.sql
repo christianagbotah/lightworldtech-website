@@ -3,7 +3,11 @@
 
 UPDATE "SiteSetting"
 SET "value" = 'https://lightworldtech.com', "updatedAt" = CURRENT_TIMESTAMP
-WHERE "key" = 'seo_site_url' AND BTRIM("value") = '';
+WHERE "key" = 'seo_site_url'
+  AND (
+    BTRIM("value") = ''
+    OR LOWER(BTRIM("value")) IN ('https://www.lightworldtech.com', 'http://www.lightworldtech.com')
+  );
 
 UPDATE "SiteSetting"
 SET "value" = 'Lightworld Technologies', "updatedAt" = CURRENT_TIMESTAMP
@@ -57,3 +61,15 @@ WHERE "key" = 'company_description'
 UPDATE "TeamMember"
 SET "name" = 'Robert Yaw Essuon', "updatedAt" = CURRENT_TIMESTAMP
 WHERE "id" = 'leadership-rober-yaw-essuon' AND "name" = 'Rober Yaw Essuon';
+
+
+UPDATE "SiteSetting"
+SET "value" = 'Lightworld Technologies Limited', "updatedAt" = CURRENT_TIMESTAMP
+WHERE "key" = 'company_name'
+  AND LOWER(BTRIM("value")) IN ('lightworld technologies ltd', 'lightworld technologies ltd.');
+
+UPDATE "SiteSetting"
+SET "value" = '0243618186', "updatedAt" = CURRENT_TIMESTAMP
+WHERE "key" = 'company_phone1'
+  AND REPLACE(REPLACE(REPLACE(REPLACE(REPLACE("value", ' ', ''), '(', ''), ')', ''), '-', ''), '+', '')
+      IN ('2330243618186', '0243618186', '233243618186');
