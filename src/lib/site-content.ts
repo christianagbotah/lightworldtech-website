@@ -337,9 +337,9 @@ export const cmsGroups: CmsGroup[] = [
     fields: [
       { key: 'about_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'About Lightworld' },
       { key: 'about_hero_title', label: 'Hero title', type: 'textarea', defaultValue: 'We build technology as infrastructure for growth.' },
-      { key: 'about_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'Lightworld Technologies Ltd is a Ghanaian technology company focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.' },
+      { key: 'about_hero_description', label: 'Hero description', type: 'textarea', defaultValue: 'Lightworld Technologies Limited is a Ghanaian software and IT company based in Tema, Greater Accra, focused on useful digital products: software, apps, websites, intelligent workflows, infrastructure, training and advisory.' },
       { key: 'about_hero_image', label: 'Hero image', type: 'image', defaultValue: '' },
-      { key: 'about_location_line', label: 'Location line', type: 'text', defaultValue: 'Tema, Ghana · built with a global outlook' },
+      { key: 'about_location_line', label: 'Location line', type: 'text', defaultValue: 'Tema, Greater Accra, Ghana · built with a global outlook' },
       { key: 'about_pov_eyebrow', label: 'Point-of-view eyebrow', type: 'text', defaultValue: 'Our point of view' },
       { key: 'about_pov_title', label: 'Point-of-view title', type: 'text', defaultValue: 'Digital transformation should feel practical.' },
       { key: 'about_pov_paragraphs', label: 'Point-of-view paragraphs', type: 'stringList', defaultValue: [
