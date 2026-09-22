@@ -48,7 +48,8 @@ describe('search prominence and client advocacy', () => {
     const portal = source('src/components/client/ClientPortalPage.tsx');
 
     expect(profile).toContain('https://search.google.com/local/writereview?placeid=ChIJl7EfYil_3w8R126pXLqlMgw');
-    expect(portal).toContain('href={companyProfile.googleReviewUrl}');
+    expect(profile).toContain("googleReviewPath: '/review'");
+    expect(portal).toContain('href={companyProfile.googleReviewPath}');
     expect(portal).toContain('leave an honest Google review');
     expect(portal).toContain('never exchanged for discounts or incentives');
     expect(portal).not.toContain('clientRating >= 4');
