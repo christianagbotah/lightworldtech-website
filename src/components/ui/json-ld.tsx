@@ -271,3 +271,136 @@ export function BreadcrumbJsonLd({
 
   return <JsonLd data={data} />;
 }
+
+
+export function EntityWebPageJsonLd({
+  config,
+  path,
+  name,
+  description,
+  pageType = 'WebPage',
+}: {
+  config: SeoConfig;
+  path: string;
+  name: string;
+  description: string;
+  pageType?: 'WebPage' | 'AboutPage' | 'ContactPage' | 'CollectionPage';
+}) {
+  const url = new URL(path, config.siteUrl + '/').toString();
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': pageType,
+    '@id': url + '#webpage',
+    url,
+    name,
+    description,
+    isPartOf: {
+      '@id': config.siteUrl + '/#website',
+    },
+    about: {
+      '@id': config.siteUrl + '/#organization',
+    },
+    mainEntity: {
+      '@id': config.siteUrl + '/#organization',
+    },
+    inLanguage: 'en-GH',
+  };
+
+  return <JsonLd data={data} />;
+}
+
+export function ServicesCollectionJsonLd({
+  config,
+  services,
+}: {
+  config: SeoConfig;
+  services: Array<{ name: string; path: string; description: string }>;
+}) {
+  const url = new URL('/services', config.siteUrl + '/').toString();
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': url + '#webpage',
+    url,
+    name: 'Technology services from ' + config.legalName,
+    description: 'Software, web, mobile, AI, cloud, security, SEO and IT training services from ' + config.legalName + ' in Ghana.',
+    isPartOf: {
+      '@id': config.siteUrl + '/#website',
+    },
+    about: {
+      '@id': config.siteUrl + '/#organization',
+    },
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: services.map((service, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'Service',
+          '@id': new URL(service.path, config.siteUrl + '/').toString() + '#service',
+          name: service.name,
+          description: service.description,
+          url: new URL(service.path, config.siteUrl + '/').toString(),
+          provider: {
+            '@id': config.siteUrl + '/#organization',
+          },
+        },
+      })),
+    },
+    inLanguage: 'en-GH',
+  };
+
+  return <JsonLd data={data} />;
+}
+
+export function BlogPostingJsonLd({
+  config,
+  post,
+}: {
+  config: SeoConfig;
+  post: {
+    slug: string;
+    title: string;
+    description: string;
+    author: string;
+    createdAt: string;
+    updatedAt: string;
+    image?: string;
+  };
+}) {
+  const url = new URL('/blog/' + post.slug, config.siteUrl + '/').toString();
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    '@id': url + '#article',
+    headline: post.title,
+    description: post.description,
+    datePublished: post.createdAt,
+    dateModified: post.updatedAt,
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': url + '#webpage',
+    },
+    isPartOf: {
+      '@id': config.siteUrl + '/#website',
+    },
+    author: {
+      '@type': 'Organization',
+      '@id': config.siteUrl + '/#organization',
+      name: post.author || config.legalName,
+    },
+    publisher: {
+      '@id': config.siteUrl + '/#organization',
+    },
+    inLanguage: 'en-GH',
+  };
+
+  if (post.image) {
+    data.image = {
+      '@type': 'ImageObject',
+      url: post.image,
+    };
+  }
+
+  return <JsonLd data={data} />;
+}

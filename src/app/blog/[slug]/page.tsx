@@ -3,7 +3,7 @@ import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import PublicShell from '@/components/layout/PublicShell';
 import BlogDetailPage from '@/components/pages/BlogDetailPage';
-import { JsonLd } from '@/components/ui/json-ld';
+import { BlogPostingJsonLd, BreadcrumbJsonLd } from '@/components/ui/json-ld';
 import { db } from '@/lib/db';
 import { getSeoConfig, seoAbsoluteUrl } from '@/lib/seo-config';
 
@@ -76,35 +76,28 @@ export default async function BlogArticle({
     updatedAt: post.updatedAt.toISOString(),
   };
 
-  const articleSchema: Record<string, unknown> = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: post.title,
-    description: post.excerpt,
-    datePublished: post.createdAt.toISOString(),
-    dateModified: post.updatedAt.toISOString(),
-    mainEntityOfPage: seoAbsoluteUrl(seo, '/blog/' + post.slug),
-    author: {
-      '@type': 'Organization',
-      name: post.author || 'Lightworld Technologies',
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: seo.legalName,
-      logo: {
-        '@type': 'ImageObject',
-        url: seo.logoUrl,
-      },
-    },
-  };
-
-  if (post.coverImage) {
-    articleSchema.image = seoAbsoluteUrl(seo, post.coverImage);
-  }
-
   return (
     <PublicShell>
-      <JsonLd data={articleSchema} />
+      <BlogPostingJsonLd
+        config={seo}
+        post={{
+          slug: post.slug,
+          title: post.title,
+          description: post.excerpt,
+          author: post.author || seo.legalName,
+          createdAt: post.createdAt.toISOString(),
+          updatedAt: post.updatedAt.toISOString(),
+          image: post.coverImage ? seoAbsoluteUrl(seo, post.coverImage) : seo.ogImage,
+        }}
+      />
+      <BreadcrumbJsonLd
+        config={seo}
+        items={[
+          { name: 'Home', path: '/' },
+          { name: 'Insights', path: '/blog' },
+          { name: post.title, path: '/blog/' + post.slug },
+        ]}
+      />
       <BlogDetailPage initialPost={initialPost} />
     </PublicShell>
   );
