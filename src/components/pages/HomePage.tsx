@@ -514,7 +514,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                 A Ghanaian software company with a public track record.
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/38">
-                Lightworld Technologies Limited operates from Tema, Greater Accra across software development, computer support and software training. Independent award publishers and GhanaWeb provide additional public references to the company.
+                Lightworld Technologies Limited operates from Tema, Greater Accra across software development, computer support and IT training. Independent award publishers and GhanaWeb provide additional public references to the company.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {companyProfile.businessCategories.map((category) => (
