@@ -161,8 +161,11 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
           'web-development': 'web',
           'mobile-app-development': 'mobile',
           'software-development': 'enterprise',
+          'seo-social-media-marketing': 'growth',
           'seo-marketing': 'growth',
+          'skills-development': 'training',
           'skills-training': 'training',
+          'hosting-domain': 'cloud',
           'web-hosting': 'cloud',
         };
 
