@@ -281,6 +281,9 @@ export const cmsGroups: CmsGroup[] = [
           { label: 'Enterprise systems', href: '/services/software-development' },
           { label: 'AI & automation', href: '/services/ai-automation' },
           { label: 'Cloud & DevOps', href: '/services/cloud-devops' },
+          { label: 'Security engineering', href: '/services/security-engineering' },
+          { label: 'SEO & digital growth', href: '/services/seo-digital-performance' },
+          { label: 'Training & advisory', href: '/services/it-training' },
         ],
         fields: [
           { key: 'label', label: 'Label' },
