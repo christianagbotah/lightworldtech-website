@@ -127,7 +127,7 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
       'Information technology training',
       'Technology consulting',
       'Software company',
-      'Software training institute',
+      'IT training institute',
       'Computer support and services',
     ],
     areaServed: [
