@@ -9,6 +9,10 @@ export const companyProfile = {
   googleMapsPlaceId: 'ChIJl7EfYil_3w8R126pXLqlMgw',
   googleMapsUrl:
     'https://www.google.com/maps/search/?api=1&query=Lightworld%20Technologies%20Limited%2C%20Tema%2C%20Ghana&query_place_id=ChIJl7EfYil_3w8R126pXLqlMgw',
+  businessHours: {
+    weekdays: { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '17:30' },
+    saturday: { days: ['Saturday'], opens: '14:00', closes: '16:00' },
+  },
   tagline: 'The world of possibilities',
   summary:
     'Lightworld Technologies Limited is a Ghanaian technology company building software, web and mobile products, enterprise systems, AI-enabled workflows, cloud and infrastructure solutions, training, and technology advisory services.',
