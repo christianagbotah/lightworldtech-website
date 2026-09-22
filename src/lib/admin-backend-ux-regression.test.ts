@@ -22,9 +22,11 @@ describe('admin backend and responsive UX regression coverage', () => {
 
     expect(crm).toContain('max-w-full overflow-x-auto');
     expect(crm).toContain('min-w-[1960px]');
-    expect(crm).toContain('max-w-[min(96vw,1440px)]');
+    expect(crm).toContain('md:grid-cols-12');
+    expect(crm).toContain('max-w-5xl');
+    expect(crm).toContain('DialogDescription');
     expect(crm).toContain('Original customer enquiry');
-    expect(crm).toContain('max-h-[48vh] overflow-y-auto');
+    expect(crm).toContain('max-h-[36vh] overflow-y-auto');
   });
 
   test('keeps the client portal workspace inside the viewport', () => {
