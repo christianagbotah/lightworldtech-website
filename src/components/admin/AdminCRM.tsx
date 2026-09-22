@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -146,6 +147,7 @@ export default function AdminCRM() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [summary, setSummary] = useState<LeadSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<Lead | null>(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -159,6 +161,7 @@ export default function AdminCRM() {
   const [note, setNote] = useState('');
 
   const fetchLeads = async () => {
+    setLoadError('');
     try {
       const params = new URLSearchParams({ limit: '200' });
       if (statusFilter !== 'all') params.set('status', statusFilter);
@@ -172,7 +175,9 @@ export default function AdminCRM() {
       setLeads(payload.data || []);
       setSummary(payload.summary || null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not load CRM');
+      const message = error instanceof Error ? error.message : 'Could not load CRM';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -413,6 +418,23 @@ export default function AdminCRM() {
     );
   }
 
+  if (loadError && !summary) {
+    return (
+      <div className="space-y-6">
+        <AdminPageHeader
+          eyebrow="Corporate CRM"
+          title="Lead Pipeline"
+          description="Website and assistant enquiries become trackable opportunities without changing the original inbox message."
+        />
+        <OperationalLoadError
+          title="CRM pipeline could not be loaded"
+          message={loadError}
+          onRetry={() => void fetchLeads()}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -431,6 +453,14 @@ export default function AdminCRM() {
           </>
         }
       />
+
+      {loadError && (
+        <OperationalLoadError
+          title="CRM refresh failed"
+          message={loadError + '. Showing the last successfully loaded pipeline.'}
+          onRetry={() => void fetchLeads()}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[

@@ -41,6 +41,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import OperationalLoadError from '@/components/admin/OperationalLoadError';
 
 type SmsTemplate = {
   id: string;
@@ -105,7 +106,7 @@ type SmsOverview = {
 type WorkspaceTab = 'single' | 'campaigns' | 'scheduled' | 'templates' | 'otp';
 
 function pretty(value: string) {
-  return value.replaceAll('_', ' ').replace(/w/g, (letter) => letter.toUpperCase());
+  return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function statusClass(status: string) {
@@ -122,7 +123,7 @@ function statusClass(status: string) {
 }
 
 function renderTemplate(body: string, variables: Record<string, string>) {
-  return body.replace(/{{([a-zA-Z0-9_]+)}}/g, (_match, key: string) => variables[key] || '').replace(/s+/g, ' ').trim();
+  return body.replace(/{{([a-zA-Z0-9_]+)}}/g, (_match, key: string) => variables[key] || '').replace(/\s+/g, ' ').trim();
 }
 
 function segmentEstimate(content: string) {
@@ -141,6 +142,7 @@ export default function AdminSms() {
   const [tab, setTab] = useState<WorkspaceTab>('single');
   const [data, setData] = useState<SmsOverview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [busy, setBusy] = useState('');
   const [templateDialog, setTemplateDialog] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<SmsTemplate | null>(null);
@@ -179,10 +181,13 @@ export default function AdminSms() {
 
   const load = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       setData(await request<SmsOverview>('/api/admin/sms/overview'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to load SMS workspace');
+      const message = error instanceof Error ? error.message : 'Unable to load SMS workspace';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -418,7 +423,16 @@ export default function AdminSms() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <OperationalLoadError
+        title="SMS workspace is unavailable"
+        message={loadError || 'Messaging configuration and delivery history could not be loaded.'}
+        retrying={loading}
+        onRetry={() => void load()}
+      />
+    );
+  }
 
   const tabs: Array<[WorkspaceTab, string]> = [
     ['single', 'Single SMS'],
@@ -441,6 +455,15 @@ export default function AdminSms() {
           </Button>
         }
       />
+
+      {loadError && (
+        <OperationalLoadError
+          title="SMS workspace refresh failed"
+          message={loadError + '. Showing the last successfully loaded messaging data.'}
+          retrying={loading}
+          onRetry={() => void load()}
+        />
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[

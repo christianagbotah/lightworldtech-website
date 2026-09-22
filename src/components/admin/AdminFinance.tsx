@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -289,6 +290,7 @@ export default function AdminFinance() {
   const [section, setSection] = useState<'overview' | 'customers' | 'suppliers'>('overview');
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [dialog, setDialog] = useState<DialogName>(null);
   const [saving, setSaving] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -339,6 +341,7 @@ export default function AdminFinance() {
 
   const load = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const [dashboard, meta, services, invoices, receipts, bills, supplierPayments, expenses] =
         await Promise.all([
@@ -363,7 +366,9 @@ export default function AdminFinance() {
         expenses,
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to load Finance & Accounts');
+      const message = error instanceof Error ? error.message : 'Unable to load Finance & Accounts';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -581,7 +586,16 @@ export default function AdminFinance() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <OperationalLoadError
+        title="Finance & Accounts is unavailable"
+        message={loadError || 'The finance workspace could not be loaded.'}
+        retrying={loading}
+        onRetry={() => void load()}
+      />
+    );
+  }
 
   const currencies = Object.entries(data.dashboard.byCurrency);
 
@@ -598,6 +612,15 @@ export default function AdminFinance() {
         }
       />
 
+      {loadError && (
+        <OperationalLoadError
+          title="Finance refresh failed"
+          message={loadError + '. Showing the last successfully loaded finance data.'}
+          retrying={loading}
+          onRetry={() => void load()}
+        />
+      )}
+
       <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
         {[
           ['overview', 'Overview'],
@@ -607,6 +630,7 @@ export default function AdminFinance() {
           <Button
             key={value}
             variant={section === value ? 'default' : 'outline'}
+            aria-pressed={section === value}
             onClick={() => setSection(value as typeof section)}
             className="shrink-0"
           >
@@ -732,14 +756,23 @@ export default function AdminFinance() {
           <Card className="min-w-0 border-border/60">
             <CardHeader><CardTitle className="text-base">Client services & subscriptions</CardTitle></CardHeader>
             <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
-              <Table>
+              <Table className="min-w-[720px]">
                 <TableHeader><TableRow><TableHead>Customer / service</TableHead><TableHead>Plan</TableHead><TableHead>Cycle</TableHead><TableHead>Expiry</TableHead><TableHead>Next due</TableHead><TableHead className="text-right">Recurring</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.services.map((item) => (
                     <TableRow
                       key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={'Open service account for ' + item.organization.name + ': ' + item.name}
                       onClick={() => openServiceManager(item)}
-                      className="cursor-pointer transition hover:bg-amber-50/50 dark:hover:bg-amber-950/10"
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openServiceManager(item);
+                        }
+                      }}
+                      className="cursor-pointer transition hover:bg-amber-50/50 focus-visible:bg-amber-50/70 dark:hover:bg-amber-950/10 dark:focus-visible:bg-amber-950/15"
                       title="Open service account"
                     >
                       <TableCell><p className="font-medium">{item.organization.name}</p><p className="text-xs text-muted-foreground">{item.name}</p></TableCell>
@@ -759,7 +792,7 @@ export default function AdminFinance() {
           <Card className="min-w-0 border-border/60">
             <CardHeader><CardTitle className="text-base">Invoice history</CardTitle></CardHeader>
             <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
-              <Table>
+              <Table className="min-w-[720px]">
                 <TableHeader><TableRow><TableHead>Invoice</TableHead><TableHead>Customer</TableHead><TableHead>Status</TableHead><TableHead>Issued / due</TableHead><TableHead className="text-right">Total</TableHead><TableHead className="text-right">Paid</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.invoices.map((item) => (
@@ -782,7 +815,7 @@ export default function AdminFinance() {
           <Card className="min-w-0 border-border/60">
             <CardHeader><CardTitle className="text-base">Customer receipts</CardTitle></CardHeader>
             <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
-              <Table>
+              <Table className="min-w-[720px]">
                 <TableHeader><TableRow><TableHead>Receipt</TableHead><TableHead>Customer</TableHead><TableHead>Date</TableHead><TableHead>Method</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Unapplied</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.receipts.map((item) => (
