@@ -9,6 +9,7 @@ import {
   getServiceSearchPage,
   serviceSearchPageMap,
   serviceSearchPages,
+  type ServiceSearchPage,
 } from '@/lib/service-search-pages';
 
 export const dynamic = 'force-dynamic';
@@ -54,14 +55,14 @@ export default async function ServiceSearchPage({
   const canonical = seoAbsoluteUrl(seo, '/services/' + service.slug);
   const related = service.related
     .map((relatedSlug) => serviceSearchPageMap.get(relatedSlug))
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+    .filter((item): item is ServiceSearchPage => Boolean(item));
 
   const serviceSchema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Service',
     '@id': canonical + '#service',
-    name: service.eyebrow,
-    serviceType: service.title,
+    name: service.title,
+    serviceType: service.eyebrow,
     description: service.metaDescription,
     url: canonical,
     provider: {
