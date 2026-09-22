@@ -42,6 +42,9 @@ describe('organic authority acceleration', () => {
     expect(layout).toContain("'application/rss+xml'");
     expect(layout).toContain("new URL('/feed.xml'");
     expect(settings).toContain("['Insights RSS', canonicalSiteUrl + '/feed.xml']");
+
+    const promotion = source('ops/promote-release.sh');
+    expect(promotion).toContain('/robots.txt /feed.xml');
   });
 
   test('authority content does not invent review counts or ratings', () => {
