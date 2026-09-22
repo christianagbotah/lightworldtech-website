@@ -956,7 +956,7 @@ export default function ClientPortalPage() {
               </div>
             </div>
             <a
-              href={companyProfile.googleReviewUrl}
+              href={companyProfile.googleReviewPath}
               target="_blank"
               rel="noreferrer"
               className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-amber-600 px-5 text-sm font-semibold text-white transition hover:bg-amber-700 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
