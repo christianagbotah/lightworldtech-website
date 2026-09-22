@@ -54,21 +54,21 @@ export const defaultRecognition = [
     year: '2026',
     publisher: 'MEA Markets',
     title: 'African Excellence Awards',
-    description: 'Lightworld Technologies Ltd — 2026 Winner: African Excellence Awards.',
+    description: 'Lightworld Technologies Limited — 2026 Winner: African Excellence Awards.',
     href: 'https://meamarkets.digital/winners/lightworld-technologies-limited-2/',
   },
   {
     year: '2024',
     publisher: 'Acquisition International',
     title: 'Business Excellence Awards',
-    description: 'Lightworld Technologies Ltd — 2024 Winner: Business Excellence Awards.',
+    description: 'Lightworld Technologies Limited — 2024 Winner: Business Excellence Awards.',
     href: 'https://www.acquisition-international.com/winners/lightworld-technologies-limited/',
   },
   {
     year: '2021',
     publisher: 'MEA Markets',
     title: 'MEA Business Awards',
-    description: 'Lightworld Technologies Ltd — 2021 Winner: MEA Business Awards.',
+    description: 'Lightworld Technologies Limited — 2021 Winner: MEA Business Awards.',
     href: 'https://meamarkets.digital/winners/lightworld-technologies-limited/',
   },
 ];
@@ -78,6 +78,16 @@ export const defaultCoverage = [
     publisher: 'GhanaWeb',
     title: 'Lightworld Technologies Limited introduces school management application',
     href: 'https://www.ghanaweb.com/GhanaHomePage/NewsArchive/Lightworld-Technologies-Limited-introduces-school-management-application-734612',
+  },
+  {
+    publisher: 'GhanaWeb',
+    title: 'Lightworld Technologies Limited hosts stakeholder symposium to drive tech-enabled business growth',
+    href: 'https://www.ghanaweb.com/GhanaHomePage/NewsArchive/Lightworld-Technologies-Limited-hosts-stakeholder-symposium-to-drive-tech-enabled-business-growth-1001818',
+  },
+  {
+    publisher: 'MyJoyOnline',
+    title: 'Innovation & Future Trends: How Technology is Shaping Ghana’s Tomorrow',
+    href: 'https://www.myjoyonline.com/innovation-future-trends-how-technology-is-shaping-ghanas-tomorrow/',
   },
 ];
 
