@@ -47,6 +47,6 @@ describe('modern browser feedback dialogs', () => {
     expect(confirm).toContain('AlertDialogCancel');
     expect(confirm).toContain('AlertDialogAction');
     expect(confirm).toContain('working');
-    expect(confirm).toContain('tone="');
+    expect(confirm).toContain("tone === 'destructive'");
   });
 });
