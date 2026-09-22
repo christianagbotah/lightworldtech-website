@@ -53,14 +53,6 @@ SET "value" = 'Lightworld Technologies Limited is a Ghanaian software and IT com
 WHERE "key" = 'company_description'
   AND "value" = 'We are a leading IT solutions company providing cutting-edge software development, web development, mobile app development, and digital marketing services to businesses across Africa and beyond.';
 
-UPDATE "SiteSetting"
-SET "value" = '+233 (055) 538 4113', "updatedAt" = CURRENT_TIMESTAMP
-WHERE "key" = 'company_phone2'
-  AND (
-    BTRIM("value") = ''
-    OR "value" = '+233 (055) 467 2081'
-    OR "value" = '+233 55 467 2081'
-  );
 
 UPDATE "TeamMember"
 SET "name" = 'Robert Yaw Essuon', "updatedAt" = CURRENT_TIMESTAMP
