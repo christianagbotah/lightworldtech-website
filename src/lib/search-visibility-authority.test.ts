@@ -90,7 +90,7 @@ describe('search visibility and entity authority', () => {
 
     expect(profile).toContain('ChIJl7EfYil_3w8R126pXLqlMgw');
     expect(profile).toContain("phoneDisplay: '0243618186'");
-    expect(schema).toContain("'Software training institute'");
+    expect(schema).toContain("'IT training institute'");
     expect(schema).toContain('companyProfile.googleMapsUrl');
     expect(contact).toContain('companyProfile.businessHours.weekdays.opens');
     expect(contact).toContain('companyProfile.businessHours.weekdays.closes');
