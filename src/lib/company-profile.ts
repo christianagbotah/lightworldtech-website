@@ -6,6 +6,11 @@ export const companyProfile = {
   email: 'mail@lightworldtech.com',
   phoneDisplay: '+233 (024) 361 8186',
   phone: '+233243618186',
+  phoneSecondaryDisplay: '+233 (055) 538 4113',
+  phoneSecondary: '+233555384113',
+  googleMapsPlaceId: 'ChIJl7EfYil_3w8R126pXLqlMgw',
+  googleMapsUrl:
+    'https://www.google.com/maps/search/?api=1&query=Lightworld%20Technologies%20Limited%2C%20Tema%2C%20Ghana&query_place_id=ChIJl7EfYil_3w8R126pXLqlMgw',
   tagline: 'The world of possibilities',
   summary:
     'Lightworld Technologies Ltd is a Ghanaian technology company building software, web and mobile products, enterprise systems, AI-enabled workflows, cloud and infrastructure solutions, training, and technology advisory services.',
