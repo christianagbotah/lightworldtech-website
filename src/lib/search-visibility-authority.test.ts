@@ -50,6 +50,7 @@ describe('search visibility and entity authority', () => {
     expect(migration).toContain("'Greater Accra'");
     expect(migration).toContain("'en_GH'");
     expect(migration).toContain("'Robert Yaw Essuon'");
+    expect(migration).toContain("'+233 (055) 538 4113'");
     expect(migration).not.toContain('seo_google_verification');
     expect(migration).not.toContain('seo_bing_verification');
     expect(migration).not.toContain('social_linkedin');
@@ -67,6 +68,27 @@ describe('search visibility and entity authority', () => {
     expect(newsroom).toContain('Lightworld Technologies Awards, News & Company Facts');
     expect(cms).toContain("{ title: 'Careers', desc: 'Talent network and opportunities'");
     expect(cms).toContain("{ label: 'About', href: '/about' }");
+  });
+
+  test('sitemap uses real CMS freshness instead of inventing now on every request', () => {
+    const sitemap = source('src/app/sitemap.ts');
+
+    expect(sitemap).toContain('db.siteSetting.aggregate');
+    expect(sitemap).toContain('_max: { updatedAt: true }');
+    expect(sitemap).not.toContain('const now = new Date()');
+  });
+
+  test('verified Maps identity is connected to schema and public contact details', () => {
+    const profile = source('src/lib/company-profile.ts');
+    const schema = source('src/components/ui/json-ld.tsx');
+    const contact = source('src/components/pages/ContactPage.tsx');
+
+    expect(profile).toContain('ChIJl7EfYil_3w8R126pXLqlMgw');
+    expect(profile).toContain('+233555384113');
+    expect(schema).toContain('companyProfile.googleMapsUrl');
+    expect(schema).toContain('config.secondaryPhone');
+    expect(contact).toContain('Mon–Fri · 08:30–17:30 GMT');
+    expect(contact).toContain('Sat · 14:00–16:00 GMT');
   });
 
   test('leadership identity uses the corrected managing director name', () => {
