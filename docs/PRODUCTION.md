@@ -42,7 +42,7 @@ The production Next.js configuration does not ignore TypeScript build failures.
 
 ## Production release and promotion sequence
 
-Production runs the website as the dedicated Linux user `lightworld` under `pm2-lightworld.service`. Do not deploy it through root's PM2 home.
+Production runs the website as the dedicated Linux user `lightworld` under the hardened `lightworldtech-app.service` systemd unit. PM2 is not used for the production website; the legacy `pm2-lightworld.service` must remain disabled to prevent two supervisors competing for port 3007.
 
 Build each GitHub SHA into an immutable release directory:
 
@@ -78,7 +78,7 @@ Promote only through the shared promotion script:
 sudo /home/lightworld/shared/lightworldtech/ops/promote-release.sh "$REL"
 ```
 
-Promotion is serialized with an exclusive lock. Before port 3007 is touched, the release is started as `lightworld` on port 3017 and must pass route, unauthenticated admin/client-auth, and upload-boundary smoke checks. The verified previous live release is then protected by `/home/lightworld/webapps/lightworldtech-previous`. If the live switch or post-switch smoke checks fail, the script restores the previous release.
+Promotion is serialized with an exclusive lock. Before port 3007 is touched, the release is started as `lightworld` in a transient systemd candidate unit on port 3017 and must pass route, unauthenticated admin/client-auth, and upload-boundary smoke checks. The script refuses to promote if legacy PM2 is active or if port 3007 is owned by anything other than `lightworldtech-app.service`. The verified previous live release is then protected by `/home/lightworld/webapps/lightworldtech-previous`, the live symlink is switched, and systemd restarts the single managed web service. If the live switch or post-switch smoke checks fail, the script restores the previous release and restarts that verified rollback target.
 
 The release-pruning job uses the same lock, so pruning cannot race a promotion. It preserves the current symlink target, rollback symlink target, any release whose working directory is still in use, and releases younger than the configured minimum age.
 
@@ -262,7 +262,7 @@ Manage these values from **Admin → Settings → SEO & Brand Discovery / Page S
 - page-level metadata for Home, Services, About, Portfolio, Products, Contact, Team, Careers, Trust Center, Newsroom and Blog;
 - article metadata and publisher JSON-LD for published blog posts, including fallback social imagery.
 
-Keep `seo_site_url` as the production canonical origin including `https://`, for example `https://www.lightworldtech.com`. Invalid or missing values fall back safely to the verified production origin. If the CMS database is temporarily unavailable, public metadata also falls back to built-in verified values rather than failing the site.
+Keep `seo_site_url` as the production canonical origin including `https://`, for example `https://lightworldtech.com`. Invalid or missing values fall back safely to the verified production origin. If the CMS database is temporarily unavailable, public metadata also falls back to built-in verified values rather than failing the site.
 
 After deployment, save one harmless SEO-field change in a non-production/UAT environment and verify the rendered `<head>`, `/sitemap.xml`, `/robots.txt`, a social-preview debugger, and one published blog article before changing production search-verification tokens.
 
@@ -309,10 +309,10 @@ Production deployment operations are version-controlled under `ops/` and install
 
 Operational invariants:
 
-- the web process runs as the dedicated `lightworld` Linux user under `pm2-lightworld.service`;
-- root's PM2 home must not be used for the website;
+- the web process runs as the dedicated `lightworld` Linux user under `lightworldtech-app.service`;
+- PM2 is not used for the production website, and `pm2-lightworld.service` remains disabled;
 - `prepare-release-runtime.sh` verifies that `lightworld` can read the protected shared environment and write both the Next.js image cache and persistent upload directory;
-- `promote-release.sh` uses an exclusive deployment lock and proves a candidate on port 3017 before stopping the verified live server on port 3007;
+- `promote-release.sh` uses an exclusive deployment lock and proves a transient systemd candidate on port 3017 before restarting the verified systemd live server on port 3007;
 - the current release is captured as the rollback target before the live switch;
 - failed live promotion restores the verified previous release;
 - `prune-releases.sh` uses the same lock and cannot delete releases while a promotion is in progress;
