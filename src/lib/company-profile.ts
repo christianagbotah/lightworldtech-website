@@ -54,22 +54,22 @@ export const companyProfile = {
     {
       year: '2026',
       publisher: 'MEA Markets',
-      title: 'African Excellence Awards',
-      description: 'Lightworld Technologies Limited — 2026 Winner: African Excellence Awards.',
+      title: 'Web Development Agency of the Year 2026 - Accra',
+      description: 'MEA Markets named Lightworld Technologies Limited Web Development Agency of the Year 2026 - Accra in the African Excellence Awards.',
       href: 'https://meamarkets.digital/winners/lightworld-technologies-limited-2/',
     },
     {
       year: '2024',
       publisher: 'Acquisition International',
-      title: 'Business Excellence Awards',
-      description: 'Lightworld Technologies Limited — 2024 Winner: Business Excellence Awards.',
+      title: 'Best Full-Service Web & App Design Company 2024 - Accra',
+      description: 'Acquisition International named Lightworld Technologies Limited Best Full-Service Web & App Design Company 2024 - Accra in the Business Excellence Awards.',
       href: 'https://www.acquisition-international.com/winners/lightworld-technologies-limited/',
     },
     {
       year: '2021',
       publisher: 'MEA Markets',
-      title: 'MEA Business Awards',
-      description: 'Lightworld Technologies Limited — 2021 Winner: MEA Business Awards.',
+      title: 'Best SEO & Social Media Marketing Agency - Ghana',
+      description: 'MEA Markets named Lightworld Technologies Limited Best SEO & Social Media Marketing Agency - Ghana in the 2021 MEA Business Awards.',
       href: 'https://meamarkets.digital/winners/lightworld-technologies-limited/',
     },
   ],
@@ -104,7 +104,7 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/award|recognition|honou?r|winner/.test(q)) {
-    return 'Public award directories list Lightworld Technologies Limited among winners of the 2026 African Excellence Awards, the 2024 Business Excellence Awards, and the 2021 MEA Business Awards. The About page links to the official winner pages.';
+    return 'Verified publisher pages recognize Lightworld Technologies Limited as Web Development Agency of the Year 2026 - Accra (MEA Markets), Best Full-Service Web & App Design Company 2024 - Accra (Acquisition International), and Best SEO & Social Media Marketing Agency - Ghana in the 2021 MEA Business Awards. The Newsroom and About pages link directly to the publisher sources.';
   }
 
   if (/ghanaweb|news|press|media|coverage/.test(q)) {
