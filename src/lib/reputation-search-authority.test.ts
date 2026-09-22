@@ -38,7 +38,7 @@ describe('reputation and search authority workflow', () => {
     expect(migration).toContain('true,true');
     expect(migration.toLowerCase()).not.toContain('5-star');
     expect(migration.toLowerCase()).not.toContain('discount');
-    expect(migration.toLowerCase()).not.toContain('incentive');
+    expect(migration.toLowerCase()).not.toContain('reward');
   });
 
   test('admin SMS workflow warns staff not to gate or incentivize reviews', () => {
