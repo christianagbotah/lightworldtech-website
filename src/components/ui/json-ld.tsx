@@ -58,6 +58,32 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
     email: config.contactEmail,
     telephone: config.phone,
     address: organizationAddress(config),
+    location: {
+      '@type': 'Place',
+      '@id': config.siteUrl + '/#location',
+      name: config.legalName + ' — Tema',
+      address: organizationAddress(config),
+      hasMap: companyProfile.googleMapsUrl,
+      identifier: {
+        '@type': 'PropertyValue',
+        propertyID: 'Google Maps Place ID',
+        value: companyProfile.googleMapsPlaceId,
+      },
+      openingHoursSpecification: [
+        {
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: companyProfile.businessHours.weekdays.days,
+          opens: companyProfile.businessHours.weekdays.opens,
+          closes: companyProfile.businessHours.weekdays.closes,
+        },
+        {
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: companyProfile.businessHours.saturday.days,
+          opens: companyProfile.businessHours.saturday.opens,
+          closes: companyProfile.businessHours.saturday.closes,
+        },
+      ],
+    },
     contactPoint: [
       {
         '@type': 'ContactPoint',
