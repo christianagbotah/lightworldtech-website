@@ -220,7 +220,7 @@ export const cmsGroups: CmsGroup[] = [
           { title: 'Leadership', desc: 'Meet the people leading Lightworld', href: '/team', icon: 'users' },
           { title: 'Trust Center', desc: 'Security, privacy and responsible AI', href: '/trust', icon: 'shield' },
           { title: 'Newsroom & media', desc: 'Verified facts, awards and public coverage', href: '/newsroom', icon: 'newspaper' },
-          { title: 'Technology Careers in Ghana', desc: 'Talent network and opportunities', href: '/careers', icon: 'briefcase' },
+          { title: 'Careers', desc: 'Talent network and opportunities', href: '/careers', icon: 'briefcase' },
           { title: 'Contact', desc: 'Start a project or conversation', href: '/contact', icon: 'message' },
           { title: 'Client Portal', desc: 'Secure project and support workspace', href: '/client', icon: 'key' },
         ],
@@ -295,11 +295,11 @@ export const cmsGroups: CmsGroup[] = [
           { label: 'Portfolio', href: '/portfolio' },
           { label: 'Products', href: '/products' },
           { label: 'Insights', href: '/blog' },
-          { label: 'About Lightworld Technologies Limited', href: '/about' },
+          { label: 'About', href: '/about' },
           { label: 'Leadership', href: '/team' },
           { label: 'Newsroom & Media', href: '/newsroom' },
           { label: 'Trust Center', href: '/trust' },
-          { label: 'Technology Careers in Ghana', href: '/careers' },
+          { label: 'Careers', href: '/careers' },
         ],
         fields: [
           { key: 'label', label: 'Label' },
@@ -461,7 +461,7 @@ export const cmsGroups: CmsGroup[] = [
   },
   {
     id: 'careers',
-    title: 'Technology Careers in Ghana',
+    title: 'Careers',
     description: 'Talent network, disciplines and expectations.',
     fields: [
       { key: 'careers_hero_eyebrow', label: 'Hero eyebrow', type: 'text', defaultValue: 'Careers & talent network' },
