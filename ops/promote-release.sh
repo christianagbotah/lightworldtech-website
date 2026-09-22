@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
 NEW_RELEASE="${1:-}"
 RELEASE_ROOT="/home/lightworld/releases"
@@ -158,6 +158,7 @@ rollback() {
 }
 
 trap rollback ERR INT TERM
+trap cleanup_candidate EXIT
 
 # Reject a split-brain supervisor before candidate validation or live changes.
 verify_live_listener
@@ -181,6 +182,7 @@ smoke_routes "$PORT"
 verify_live_release
 
 trap - ERR INT TERM
+trap - EXIT
 
 echo "promoted_release=$NEW_RELEASE"
 echo "previous_release=${CURRENT:-none}"
