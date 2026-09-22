@@ -28,6 +28,7 @@ describe('CI-built release artifacts', () => {
     expect(deploy).toContain('Artifact commit does not match requested commit');
     expect(deploy).toContain('prisma/migrations');
     expect(deploy).toContain('bunx "prisma@$PRISMA_VERSION" migrate deploy');
+    expect(deploy).toContain('bash "$REL/ops/install-production-ops.sh"');
     expect(deploy).toContain('promote-release.sh');
   });
 
