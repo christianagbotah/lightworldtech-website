@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        reply: 'I could not answer that right now. Please contact Lightworld at mail@lightworldtech.com or +233 (024) 361 8186.',
+        reply: 'I could not answer that right now. Please contact Lightworld at mail@lightworldtech.com or 0243618186.',
       },
       { status: 500 },
     );
