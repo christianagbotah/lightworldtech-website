@@ -202,6 +202,11 @@ export default function AdminSms() {
     [data?.templates, single.templateId],
   );
 
+  const selectedCampaignTemplate = useMemo(
+    () => data?.templates.find((item) => item.id === campaign.templateId) || null,
+    [data?.templates, campaign.templateId],
+  );
+
   const singlePreview = selectedSingleTemplate
     ? renderTemplate(selectedSingleTemplate.body, single.variables)
     : single.content.trim();
@@ -622,6 +627,11 @@ export default function AdminSms() {
                       <option value="">Custom campaign message</option>
                       {data.templates.map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}
                     </select>
+                    {selectedCampaignTemplate?.key === 'google_review_request' && (
+                      <p className="text-xs leading-5 text-amber-700 dark:text-amber-300">
+                        Send this only to genuine clients. Ask for an honest review; never offer incentives or filter recipients by satisfaction rating.
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Audience</Label>
