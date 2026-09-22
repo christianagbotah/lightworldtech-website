@@ -33,16 +33,17 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const title = contentText(settings, 'seo_newsroom_title', 'Newsroom & Media Center');
+  const title = contentText(settings, 'seo_newsroom_title', 'Lightworld Technologies Awards, News & Company Facts');
   const description = contentText(
     settings,
     'seo_newsroom_description',
-    'Verified company facts, recognition, press coverage, leadership information and public updates from Lightworld Technologies Ltd.',
+    'Verified company facts, award recognition, press coverage, leadership information and public updates about Lightworld Technologies Limited in Ghana.',
   );
   return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,
     path: '/newsroom',
+    absoluteTitle: true,
   });
 }
 

@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const title = contentText(settings, 'seo_careers_title', 'Careers');
-  const description = contentText(settings, 'seo_careers_description', 'Explore career opportunities and ways to build ambitious technology products with Lightworld Technologies in Ghana.');
+  const title = contentText(settings, 'seo_careers_title', 'Technology Careers in Ghana');
+  const description = contentText(settings, 'seo_careers_description', 'Explore technology career opportunities in Ghana and ways to build ambitious software, web, mobile, AI and enterprise products with Lightworld Technologies.');
   return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,

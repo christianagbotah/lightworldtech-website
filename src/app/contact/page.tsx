@@ -9,12 +9,13 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const title = contentText(settings, 'seo_contact_title', 'Contact & Start a Project');
-  const description = contentText(settings, 'seo_contact_description', 'Talk to Lightworld Technologies about a website, mobile app, enterprise system, AI workflow, IT training, cloud project or technology consultancy.');
+  const title = contentText(settings, 'seo_contact_title', 'Contact Lightworld Technologies | Tema, Ghana');
+  const description = contentText(settings, 'seo_contact_description', 'Contact Lightworld Technologies in Tema, Greater Accra, Ghana for website development, mobile apps, enterprise software, AI automation, cloud projects, IT training and technology consulting.');
   return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,
     path: '/contact',
+    absoluteTitle: true,
   });
 }
 

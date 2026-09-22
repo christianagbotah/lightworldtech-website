@@ -46,6 +46,16 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.lightworldtech.com' }],
+        destination: 'https://lightworldtech.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

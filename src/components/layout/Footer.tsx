@@ -64,10 +64,10 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
   const description = contentText(
     settings,
     'company_description',
-    'Apps, websites, enterprise systems, AI-enabled workflows, cloud infrastructure, training and technology advisory—from Accra to wherever the work needs to go.',
+    'Lightworld Technologies Limited is a Ghanaian software and IT company building websites, apps, enterprise systems, AI-enabled workflows and cloud solutions from Tema, Greater Accra.',
   );
   const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
-  const phone = contentText(settings, 'company_phone1', '+233 (024) 361 8186');
+  const phone = contentText(settings, 'company_phone1', '0243618186');
   const address = contentText(settings, 'company_address', 'Tema, Ghana');
   const buildLinks = normalizeNavigationLinks(
     contentJson<unknown>(settings, 'footer_build_links', defaultBuildLinks),

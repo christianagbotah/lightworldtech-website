@@ -129,7 +129,7 @@ export default function LiveChatWidget() {
     setIsTyping(true);
 
     let replyText =
-      'I could not reach the company knowledge service just now. You can contact Lightworld at mail@lightworldtech.com or +233 (024) 361 8186.';
+      'I could not reach the company knowledge service just now. You can contact Lightworld at mail@lightworldtech.com or 0243618186.';
 
     try {
       const response = await fetch('/api/assistant', {

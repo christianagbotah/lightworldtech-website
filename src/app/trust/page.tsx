@@ -41,16 +41,17 @@ const practiceIcons = [LockKeyhole, Database, RotateCcw, Bot];
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const title = contentText(settings, 'seo_trust_title', 'Trust Center | Security, Privacy & Responsible AI');
+  const title = contentText(settings, 'seo_trust_title', 'Security, Privacy & Responsible AI | Lightworld Technologies');
   const description = contentText(
     settings,
     'seo_trust_description',
-    'Review Lightworld Technologies Ltd security, privacy, reliable-delivery and responsible-AI practices.',
+    'Review Lightworld Technologies Limited security, privacy, reliable-delivery and responsible-AI practices for its website and software engineering work.',
   );
   return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,
     path: '/trust',
+    absoluteTitle: true,
   });
 }
 

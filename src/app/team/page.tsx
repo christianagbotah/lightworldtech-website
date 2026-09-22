@@ -9,13 +9,14 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const title = contentText(settings, 'seo_team_title', 'Leadership Team');
-  const description = contentText(settings, 'seo_team_description', 'Meet the executive leadership of Lightworld Technologies Ltd.');
+  const title = contentText(settings, 'seo_team_title', 'Lightworld Technologies Leadership Team');
+  const description = contentText(settings, 'seo_team_description', 'Meet the executive leadership of Lightworld Technologies Limited, the Ghanaian software and IT company.');
   return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,
     path: '/team',
-    openGraphTitle: title + ' | Lightworld Technologies',
+    openGraphTitle: title,
+    absoluteTitle: true,
   });
 }
 

@@ -4,36 +4,44 @@ import { getSeoConfig } from '@/lib/seo-config';
 
 export const dynamic = 'force-dynamic';
 
+function coreSitemap(base: string, lastModified?: Date): MetadataRoute.Sitemap {
+  const freshness = lastModified ? { lastModified } : {};
+
+  return [
+    { url: base, ...freshness, changeFrequency: 'weekly', priority: 1 },
+    { url: base + '/services', ...freshness, changeFrequency: 'monthly', priority: 0.9 },
+    { url: base + '/portfolio', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
+    { url: base + '/products', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
+    { url: base + '/about', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
+    { url: base + '/team', ...freshness, changeFrequency: 'monthly', priority: 0.7 },
+    { url: base + '/blog', ...freshness, changeFrequency: 'weekly', priority: 0.8 },
+    { url: base + '/careers', ...freshness, changeFrequency: 'weekly', priority: 0.6 },
+    { url: base + '/contact', ...freshness, changeFrequency: 'yearly', priority: 0.8 },
+    { url: base + '/newsroom', ...freshness, changeFrequency: 'weekly', priority: 0.8 },
+    { url: base + '/trust', ...freshness, changeFrequency: 'monthly', priority: 0.6 },
+    { url: base + '/privacy', ...freshness, changeFrequency: 'yearly', priority: 0.3 },
+    { url: base + '/terms', ...freshness, changeFrequency: 'yearly', priority: 0.3 },
+  ];
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const seo = await getSeoConfig();
   const base = seo.siteUrl;
-  const now = new Date();
-
-  const core: MetadataRoute.Sitemap = [
-    { url: base, lastModified: now, changeFrequency: 'weekly', priority: 1 },
-    { url: base + '/services', lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
-    { url: base + '/portfolio', lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: base + '/products', lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: base + '/about', lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: base + '/team', lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: base + '/blog', lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: base + '/careers', lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: base + '/contact', lastModified: now, changeFrequency: 'yearly', priority: 0.7 },
-    { url: base + '/newsroom', lastModified: now, changeFrequency: 'weekly', priority: 0.65 },
-    { url: base + '/trust', lastModified: now, changeFrequency: 'monthly', priority: 0.55 },
-    { url: base + '/privacy', lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: base + '/terms', lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-  ];
 
   try {
-    const posts = await db.blogPost.findMany({
-      where: { published: true },
-      select: { slug: true, updatedAt: true },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const [posts, settingsFreshness] = await Promise.all([
+      db.blogPost.findMany({
+        where: { published: true },
+        select: { slug: true, updatedAt: true },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      db.siteSetting.aggregate({
+        _max: { updatedAt: true },
+      }),
+    ]);
 
     return [
-      ...core,
+      ...coreSitemap(base, settingsFreshness._max.updatedAt || undefined),
       ...posts.map((post) => ({
         url: base + '/blog/' + post.slug,
         lastModified: post.updatedAt,
@@ -43,6 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
   } catch {
     // Core marketing URLs remain discoverable even if the CMS database is temporarily unavailable.
-    return core;
+    // Omitting lastModified is more trustworthy than inventing a fresh timestamp.
+    return coreSitemap(base);
   }
 }
