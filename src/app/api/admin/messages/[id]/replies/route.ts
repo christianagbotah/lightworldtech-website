@@ -239,8 +239,12 @@ export async function POST(
       {
         success: false,
         error: 'Reply could not be delivered. The failed attempt was saved in the message history.',
+        details: safeError,
       },
-      { status: 502 },
+      {
+        status: 503,
+        headers: { 'Retry-After': '30' },
+      },
     );
   }
 }
