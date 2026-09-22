@@ -33,7 +33,9 @@ describe('CMS media library', () => {
     expect(page).toContain("fetch('/api/admin/media'");
     expect(page).toContain("fetch('/api/upload'");
     expect(page).toContain('navigator.clipboard.writeText(item.url)');
-    expect(page).toContain('Delete this image permanently?');
+    expect(page).toContain('ConfirmActionDialog');
+    expect(page).toContain('Delete this image?');
+    expect(page).not.toContain('window.confirm(');
     expect(page).toContain('Media storage used');
   });
 
