@@ -66,14 +66,6 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
         availableLanguage: ['English'],
         areaServed: 'GH',
       },
-      {
-        '@type': 'ContactPoint',
-        telephone: config.secondaryPhone,
-        contactType: 'sales and customer service',
-        email: config.contactEmail,
-        availableLanguage: ['English'],
-        areaServed: 'GH',
-      },
     ],
     knowsAbout: [
       'Software development',
