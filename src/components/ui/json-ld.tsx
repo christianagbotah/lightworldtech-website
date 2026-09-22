@@ -57,14 +57,24 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
     email: config.contactEmail,
     telephone: config.phone,
     address: organizationAddress(config),
-    contactPoint: {
-      '@type': 'ContactPoint',
-      telephone: config.phone,
-      contactType: 'sales and customer service',
-      email: config.contactEmail,
-      availableLanguage: ['English'],
-      areaServed: 'GH',
-    },
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        telephone: config.phone,
+        contactType: 'sales and customer service',
+        email: config.contactEmail,
+        availableLanguage: ['English'],
+        areaServed: 'GH',
+      },
+      {
+        '@type': 'ContactPoint',
+        telephone: config.secondaryPhone,
+        contactType: 'sales and customer service',
+        email: config.contactEmail,
+        availableLanguage: ['English'],
+        areaServed: 'GH',
+      },
+    ],
     knowsAbout: [
       'Software development',
       'Web development',
@@ -112,7 +122,7 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
         publisher: { '@type': 'Organization', name: item.publisher },
       })),
     ],
-    ...(config.socialUrls.length ? { sameAs: config.socialUrls } : {}),
+    sameAs: [companyProfile.googleMapsUrl, ...config.socialUrls],
   };
 
   return <JsonLd data={data} />;
