@@ -18,7 +18,7 @@ export const companyProfile = {
         'Leads the company and its technology direction, product vision, engineering standards and long-term growth.',
     },
     {
-      name: 'Rober Yaw Essuon',
+      name: 'Robert Yaw Essuon',
       initials: 'RE',
       role: 'Managing Director',
       description:
@@ -81,11 +81,11 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/managing director|\bmd\b|rober yaw essuon|who.*director/.test(q)) {
-    return 'Rober Yaw Essuon is the Managing Director of Lightworld Technologies Ltd. Christian Agbotah is the CEO & Director.';
+    return 'Robert Yaw Essuon is the Managing Director of Lightworld Technologies Ltd. Christian Agbotah is the CEO & Director.';
   }
 
   if (/leadership|leaders|management|team|executive/.test(q)) {
-    return 'Lightworld Technologies is led by Christian Agbotah, CEO & Director, and Rober Yaw Essuon, Managing Director. You can view the leadership profile on our Team page.';
+    return 'Lightworld Technologies is led by Christian Agbotah, CEO & Director, and Robert Yaw Essuon, Managing Director. You can view the leadership profile on our Team page.';
   }
 
   if (/award|recognition|honou?r|winner/.test(q)) {
