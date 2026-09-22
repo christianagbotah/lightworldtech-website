@@ -266,6 +266,21 @@ Keep `seo_site_url` as the production canonical origin including `https://`, for
 
 After deployment, save one harmless SEO-field change in a non-production/UAT environment and verify the rendered `<head>`, `/sitemap.xml`, `/robots.txt`, a social-preview debugger, and one published blog article before changing production search-verification tokens.
 
+### Search Console and indexing operations
+
+Production search operations use the apex property `https://lightworldtech.com`. The `www` host permanently redirects to the apex host and must not be configured as a competing canonical property.
+
+From **Admin → Settings → SEO & Brand Discovery → Search visibility readiness**:
+
+1. Open Google Search Console and add `https://lightworldtech.com` as a URL-prefix property, or verify the whole `lightworldtech.com` domain through DNS.
+2. When using Google's HTML-tag method, copy only the verification token from the tag's `content` attribute into `seo_google_verification`. Never invent a token.
+3. Save the SEO group and verify the token appears in rendered page metadata.
+4. Submit `https://lightworldtech.com/sitemap.xml` in Search Console.
+5. Inspect and request indexing for the homepage, `/about`, `/services`, `/services/software-development`, and `/services/it-training`.
+6. Review Search Console Performance and Pages reports regularly. Treat those reports—not a manual incognito ranking check—as the source of truth for queries, impressions, clicks, indexed URLs and crawl problems.
+
+Business Profile changes and website entity signals can take time to be recrawled. Do not repeatedly change titles or structured data solely because a same-day search result has not moved.
+
 
 ## Phase 14 PostgreSQL production baseline
 
