@@ -25,7 +25,7 @@ export interface SeoConfig {
   socialUrls: string[];
 }
 
-const DEFAULT_SITE_URL = 'https://www.lightworldtech.com';
+const DEFAULT_SITE_URL = 'https://lightworldtech.com';
 
 function text(settings: SiteSettings, key: string, fallback: string): string {
   const value = settings[key];
@@ -63,16 +63,16 @@ function validWebUrl(value: string): string | null {
 export function buildSeoConfig(settings: SiteSettings): SeoConfig {
   const siteUrl = normalizeSiteUrl(text(settings, 'seo_site_url', DEFAULT_SITE_URL));
   const siteName = text(settings, 'seo_site_name', 'Lightworld Technologies');
-  const legalName = text(settings, 'seo_legal_name', 'Lightworld Technologies Ltd');
+  const legalName = text(settings, 'seo_legal_name', 'Lightworld Technologies Limited');
   const description = text(
     settings,
     'seo_description',
-    'Lightworld Technologies Ltd builds modern websites, mobile apps, enterprise software, AI-enabled workflows and cloud solutions, with IT training and technology consultancy from Ghana.',
+    'Lightworld Technologies Limited is a Ghanaian software and IT company in Tema, Greater Accra, building websites, mobile apps, enterprise software, AI automation and cloud solutions, with IT training and technology consulting.',
   );
   const keywords = text(
     settings,
     'seo_keywords',
-    'Lightworld Technologies, software development Ghana, web development Ghana, mobile app development Ghana, enterprise software Ghana, AI automation Ghana, IT consulting Ghana, IT training Ghana, cloud solutions Ghana',
+    'Lightworld Technologies Limited, Lightworld Technologies Ghana, software company Ghana, software development Ghana, web development Ghana, website development Ghana, mobile app development Ghana, enterprise software Ghana, AI automation Ghana, IT company Tema, IT company Ghana, IT consulting Ghana, IT training Ghana, cloud solutions Ghana',
   )
     .split(',')
     .map((item) => item.trim())
@@ -98,7 +98,7 @@ export function buildSeoConfig(settings: SiteSettings): SeoConfig {
     defaultTitle: text(
       settings,
       'seo_title',
-      'Lightworld Technologies | Software, Apps, AI & Digital Solutions',
+      'Lightworld Technologies Limited | Software Company in Ghana',
     ),
     description,
     keywords,
@@ -134,15 +134,16 @@ export function buildPageMetadata(
     path: string;
     openGraphTitle?: string;
     image?: string;
+    absoluteTitle?: boolean;
   },
 ): Metadata {
   const image = input.image || config.ogImage;
   const url = seoAbsoluteUrl(config, input.path);
 
   return {
-    title: input.title,
+    title: input.absoluteTitle ? { absolute: input.title } : input.title,
     description: input.description,
-    alternates: { canonical: input.path },
+    alternates: { canonical: url },
     openGraph: {
       type: 'website',
       locale: config.locale,
