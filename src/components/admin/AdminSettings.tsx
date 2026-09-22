@@ -333,6 +333,7 @@ export default function AdminSettings() {
                         {[
                           ['Sitemap', canonicalSiteUrl + '/sitemap.xml'],
                           ['Robots', canonicalSiteUrl + '/robots.txt'],
+                          ['Insights RSS', canonicalSiteUrl + '/feed.xml'],
                           ['Software development', canonicalSiteUrl + '/services/software-development'],
                           ['IT training', canonicalSiteUrl + '/services/it-training'],
                         ].map(([label, href]) => (
