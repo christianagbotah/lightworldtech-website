@@ -9,16 +9,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
 import Image from 'next/image';
 import Link from 'next/link';
+import { serviceSearchHref } from '@/lib/service-search-content';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 const defaultServices = [
-  { id: '1', title: 'Web Development', description: 'Custom, responsive websites and web applications built with modern technologies for optimal user experience.', icon: 'Globe' },
-  { id: '2', title: 'Mobile App Development', description: 'Native and cross-platform mobile applications for iOS and Android that engage your users on the go.', icon: 'Smartphone' },
-  { id: '3', title: 'Skills Training', description: 'Comprehensive IT skills development programs designed to empower individuals and teams with cutting-edge knowledge.', icon: 'GraduationCap' },
-  { id: '4', title: 'SEO & Marketing', description: 'Data-driven digital marketing strategies and SEO optimization to boost your online visibility and growth.', icon: 'TrendingUp' },
-  { id: '5', title: 'Software Development', description: 'Bespoke software solutions tailored to your business needs, from automation tools to enterprise systems.', icon: 'Code' },
-  { id: '6', title: 'Web Hosting', description: 'Reliable, secure, and high-performance hosting solutions with 99.9% uptime guarantee and 24/7 support.', icon: 'Server' },
+  { id: '1', slug: 'web-development', title: 'Web Development', description: 'Custom, responsive websites and web applications built with modern technologies for optimal user experience.', icon: 'Globe' },
+  { id: '2', slug: 'mobile-app-development', title: 'Mobile App Development', description: 'Native and cross-platform mobile applications for iOS and Android that engage your users on the go.', icon: 'Smartphone' },
+  { id: '3', slug: 'skills-development', title: 'Skills Training', description: 'Comprehensive IT skills development programs designed to empower individuals and teams with cutting-edge knowledge.', icon: 'GraduationCap' },
+  { id: '4', slug: 'seo-social-media-marketing', title: 'SEO & Marketing', description: 'Data-driven digital marketing strategies and SEO optimization to boost your online visibility and growth.', icon: 'TrendingUp' },
+  { id: '5', slug: 'software-development', title: 'Software Development', description: 'Bespoke software solutions tailored to your business needs, from automation tools to enterprise systems.', icon: 'Code' },
+  { id: '6', slug: 'hosting-domain', title: 'Web Hosting', description: 'Reliable, secure, and high-performance hosting solutions with 99.9% uptime guarantee and 24/7 support.', icon: 'Server' },
 ];
 
 const iconMap: Record<string, React.ElementType> = {
@@ -137,7 +138,7 @@ export default function ServicesSection() {
               return (
                 <motion.div key={service.id} variants={itemVariants}>
                   <Link
-                    href="/services"
+                    href={serviceSearchHref({ slug: service.slug, title: service.title })}
                     aria-label={`Explore ${service.title}`}
                     className="group block rounded-xl p-[1.5px] bg-gradient-to-br from-slate-200/80 via-slate-200/80 to-slate-200/80 dark:from-slate-700/60 dark:via-slate-700/60 dark:to-slate-700/60 hover:from-emerald-400 hover:via-amber-300 hover:to-amber-400 dark:hover:from-emerald-500 dark:hover:via-amber-400 dark:hover:to-amber-500 transition-all duration-500 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:shadow-amber-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60 focus-visible:ring-offset-2"
                   >

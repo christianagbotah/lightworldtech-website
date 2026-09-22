@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
+import { serviceSearchHref } from '@/lib/service-search-content';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -38,6 +39,7 @@ const capabilities = [
   {
     icon: Code2,
     title: 'Web & product engineering',
+    href: '/services/web-development',
     description: 'High-performance websites, customer portals, SaaS products and internal platforms designed around real business workflows.',
     tags: ['Next.js', 'APIs', 'Commerce', 'Portals'],
     feature: true,
@@ -45,12 +47,14 @@ const capabilities = [
   {
     icon: Smartphone,
     title: 'Mobile experiences',
+    href: '/services/mobile-app-development',
     description: 'Native-feeling iOS and Android experiences with thoughtful offline, notification and field-work patterns.',
     tags: ['iOS', 'Android', 'React Native'],
   },
   {
     icon: Boxes,
     title: 'Enterprise systems',
+    href: '/services/software-development',
     description: 'ERP, EAM, school, inventory, HR, logistics and operational systems that connect people, processes and data.',
     tags: ['ERP', 'EAM', 'Workflow'],
     feature: true,
@@ -58,30 +62,35 @@ const capabilities = [
   {
     icon: BrainCircuit,
     title: 'AI & automation',
+    href: '/services/ai-automation',
     description: 'Practical AI assistants, document workflows, knowledge tools and task automation embedded into useful products.',
     tags: ['AI UX', 'Automation', 'Knowledge'],
   },
   {
     icon: Cloud,
     title: 'Cloud & DevOps',
+    href: '/services/cloud-devops',
     description: 'Production architecture, deployment pipelines, observability, backups, migrations and resilient infrastructure.',
     tags: ['Cloud', 'CI/CD', 'Reliability'],
   },
   {
     icon: ShieldCheck,
     title: 'Security engineering',
+    href: '/services/security-engineering',
     description: 'Secure-by-design architecture, application hardening, access controls, audits and operational security reviews.',
     tags: ['AppSec', 'RBAC', 'Audit'],
   },
   {
     icon: Search,
     title: 'SEO & digital growth',
+    href: '/services/seo-digital-performance',
     description: 'Search-ready web architecture, technical SEO, conversion journeys, analytics and content foundations.',
     tags: ['SEO', 'Analytics', 'Growth'],
   },
   {
     icon: GraduationCap,
     title: 'Training & advisory',
+    href: '/services/it-training',
     description: 'Practical IT training, corporate enablement, architecture consulting and digital transformation support.',
     tags: ['Training', 'Consulting', 'Strategy'],
   },
@@ -327,6 +336,10 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
           return {
             icon: capabilities[index]?.icon || Code2,
             title: String(item.title || capabilities[index]?.title || 'Technology service'),
+            href: serviceSearchHref({
+              slug: typeof item.slug === 'string' ? item.slug : '',
+              title: String(item.title || capabilities[index]?.title || ''),
+            }),
             description: String(item.description || ''),
             tags: tags.length ? tags : (capabilities[index]?.tags || ['Custom delivery']),
             feature: originalIndex === 0 || originalIndex === 2,
@@ -512,7 +525,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                   className={item.feature ? 'lg:col-span-2' : ''}
                 >
                   <Link
-                    href="/services"
+                    href={item.href}
                     className="group flex h-full min-h-[245px] flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-sm shadow-slate-950/[0.02] transition duration-300 hover:-translate-y-1 hover:border-amber-300/60 hover:shadow-xl hover:shadow-emerald-950/[0.05] dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:border-amber-300/20 dark:hover:bg-white/[0.04]"
                   >
                     {featuredImage && (
@@ -714,7 +727,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                 <p className="mt-4 max-w-lg text-sm leading-7 text-white/45 sm:text-base">
                   Practical technology training for individuals, teams and organizations—from modern software development to digital operations and cloud skills.
                 </p>
-                <Link href="/services" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-white">
+                <Link href="/services/it-training" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-white">
                   Explore training <ArrowRight className="size-4" />
                 </Link>
               </div>

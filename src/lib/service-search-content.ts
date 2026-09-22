@@ -110,6 +110,37 @@ export const serviceSearchLandings: ServiceSearchLanding[] = [
   },
 ];
 
+const cmsServiceLandingBySlug: Record<string, string> = {
+  'web-development': 'web-development',
+  'mobile-app-development': 'mobile-app-development',
+  'software-development': 'software-development',
+  'skills-development': 'it-training',
+  'seo-social-media-marketing': 'seo-digital-performance',
+  'hosting-domain': 'cloud-devops',
+};
+
+export function serviceSearchHref(input: { slug?: string | null; title?: string | null }): string {
+  const slug = String(input.slug || '').trim().toLowerCase();
+  if (slug && cmsServiceLandingBySlug[slug]) {
+    return '/services/' + cmsServiceLandingBySlug[slug];
+  }
+  if (slug && serviceSearchLandings.some((service) => service.slug === slug)) {
+    return '/services/' + slug;
+  }
+
+  const title = String(input.title || '').trim().toLowerCase();
+  if (!title) return '/services';
+  if (title.includes('mobile') && title.includes('app')) return '/services/mobile-app-development';
+  if (title.includes('web') && !title.includes('hosting')) return '/services/web-development';
+  if (title.includes('enterprise') || title.includes('software')) return '/services/software-development';
+  if (/\bai\b/.test(title) || title.includes('artificial intelligence')) return '/services/ai-automation';
+  if (title.includes('cloud') || title.includes('devops') || title.includes('hosting')) return '/services/cloud-devops';
+  if (title.includes('security') || title.includes('cyber')) return '/services/security-engineering';
+  if (title.includes('seo') || title.includes('search')) return '/services/seo-digital-performance';
+  if (title.includes('training') || title.includes('skills') || title.includes('advisory')) return '/services/it-training';
+  return '/services';
+}
+
 export function getServiceSearchLanding(slug: string): ServiceSearchLanding | null {
   return serviceSearchLandings.find((service) => service.slug === slug) || null;
 }

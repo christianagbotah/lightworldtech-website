@@ -20,11 +20,14 @@ import { trackEvent } from '@/lib/analytics-client';
 import { normalizeNavigationLinks, safeNavigationHref } from '@/lib/navigation-content';
 
 const defaultBuildLinks = [
-  { label: 'Web & product engineering', href: '/services' },
-  { label: 'Mobile applications', href: '/services' },
-  { label: 'Enterprise systems', href: '/services' },
-  { label: 'AI & automation', href: '/services' },
-  { label: 'Cloud & DevOps', href: '/services' },
+  { label: 'Web & product engineering', href: '/services/web-development' },
+  { label: 'Mobile applications', href: '/services/mobile-app-development' },
+  { label: 'Enterprise systems', href: '/services/software-development' },
+  { label: 'AI & automation', href: '/services/ai-automation' },
+  { label: 'Cloud & DevOps', href: '/services/cloud-devops' },
+  { label: 'Security engineering', href: '/services/security-engineering' },
+  { label: 'SEO & digital growth', href: '/services/seo-digital-performance' },
+  { label: 'Training & advisory', href: '/services/it-training' },
 ];
 
 const defaultExploreLinks = [

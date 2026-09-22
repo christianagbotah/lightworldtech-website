@@ -49,14 +49,14 @@ const defaultCompanyMenu = [
 ];
 
 const defaultServiceMenu = [
-  { icon: 'code', title: 'Web & product engineering', desc: 'Websites, portals, SaaS and platforms', href: '/services' },
-  { icon: 'smartphone', title: 'Mobile apps', desc: 'Native-feeling iOS and Android experiences', href: '/services' },
-  { icon: 'workflow', title: 'Enterprise systems', desc: 'ERP, EAM, workflow and operational software', href: '/services' },
-  { icon: 'brain', title: 'AI & automation', desc: 'Assistive AI and intelligent workflows', href: '/services' },
-  { icon: 'cloud', title: 'Cloud & DevOps', desc: 'Deployment, reliability and infrastructure', href: '/services' },
-  { icon: 'shield', title: 'Security engineering', desc: 'Secure architecture and application hardening', href: '/services' },
-  { icon: 'search', title: 'SEO & digital growth', desc: 'Search-ready architecture and analytics', href: '/services' },
-  { icon: 'graduation', title: 'Training & advisory', desc: 'IT skills, consulting and transformation', href: '/services' },
+  { icon: 'code', title: 'Web & product engineering', desc: 'Websites, portals, SaaS and platforms', href: '/services/web-development' },
+  { icon: 'smartphone', title: 'Mobile apps', desc: 'Native-feeling iOS and Android experiences', href: '/services/mobile-app-development' },
+  { icon: 'workflow', title: 'Enterprise systems', desc: 'ERP, EAM, workflow and operational software', href: '/services/software-development' },
+  { icon: 'brain', title: 'AI & automation', desc: 'Assistive AI and intelligent workflows', href: '/services/ai-automation' },
+  { icon: 'cloud', title: 'Cloud & DevOps', desc: 'Deployment, reliability and infrastructure', href: '/services/cloud-devops' },
+  { icon: 'shield', title: 'Security engineering', desc: 'Secure architecture and application hardening', href: '/services/security-engineering' },
+  { icon: 'search', title: 'SEO & digital growth', desc: 'Search-ready architecture and analytics', href: '/services/seo-digital-performance' },
+  { icon: 'graduation', title: 'Training & advisory', desc: 'IT skills, consulting and transformation', href: '/services/it-training' },
 ];
 
 const defaultMobileDock = [

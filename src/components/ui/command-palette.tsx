@@ -36,6 +36,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
+import { serviceSearchHref } from '@/lib/service-search-content';
 import {
   normalizeNavigationLinks,
   normalizeNavigationMenu,
@@ -218,7 +219,7 @@ export default function CommandPalette({ settings = {} }: { settings?: SiteSetti
           description: cleanDescription(service.description, 'Lightworld service'),
           group: 'Services',
           icon: iconForKey(managedServiceMenu[index]?.icon || 'grid'),
-          href: '/services',
+          href: serviceSearchHref({ slug: service.slug, title: service.title }),
         }));
     }
 
