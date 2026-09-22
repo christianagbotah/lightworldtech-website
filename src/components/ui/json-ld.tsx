@@ -42,7 +42,7 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
 
   const data: Record<string, unknown> = {
     '@context': 'https://schema.org',
-    '@type': 'Organization',
+    '@type': ['Organization', 'LocalBusiness'],
     '@id': organizationId,
     name: config.legalName,
     legalName: config.legalName,
@@ -84,6 +84,29 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
         },
       ],
     },
+    hasMap: companyProfile.googleMapsUrl,
+    openingHoursSpecification: [
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: companyProfile.businessHours.weekdays.days,
+        opens: companyProfile.businessHours.weekdays.opens,
+        closes: companyProfile.businessHours.weekdays.closes,
+      },
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: companyProfile.businessHours.saturday.days,
+        opens: companyProfile.businessHours.saturday.opens,
+        closes: companyProfile.businessHours.saturday.closes,
+      },
+    ],
+    keywords: [
+      'Software company',
+      'Computer support and services',
+      'Software training institute',
+      'IT training institute',
+      'Software development company in Ghana',
+    ],
+
     contactPoint: [
       {
         '@type': 'ContactPoint',
