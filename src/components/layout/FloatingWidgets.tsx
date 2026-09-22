@@ -224,7 +224,7 @@ function BackToTopButton() {
 export default function FloatingWidgets({ settings = {} }: { settings?: SiteSettings }) {
   const companyName = contentText(settings, 'company_name', 'Lightworld Technologies Ltd');
   const companyEmail = contentText(settings, 'company_email', 'mail@lightworldtech.com');
-  const companyPhone = contentText(settings, 'company_phone1', '+233 (024) 361 8186');
+  const companyPhone = contentText(settings, 'company_phone1', '0243618186');
   const companyWhatsapp = contentText(settings, 'company_whatsapp', companyPhone);
   const whatsappNumber = normalizeWhatsappNumber(companyWhatsapp);
   const whatsappMessage = encodeURIComponent(
