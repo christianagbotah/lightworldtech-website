@@ -71,8 +71,10 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
   const officeOpen = useMemo(() => {
     const now = new Date();
     const day = now.getUTCDay();
-    const hour = now.getUTCHours();
-    return day >= 1 && day <= 5 && hour >= 8 && hour < 17;
+    const minutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+    if (day >= 1 && day <= 5) return minutes >= 8 * 60 + 30 && minutes < 17 * 60 + 30;
+    if (day === 6) return minutes >= 14 * 60 && minutes < 16 * 60;
+    return false;
   }, []);
 
   useEffect(() => {
@@ -398,6 +400,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                   <Phone className="size-4 text-amber-500" />
                   <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Phone</p>
                   <p className="mt-1 text-sm font-semibold">{contentText(settings, 'company_phone1', '+233 (024) 361 8186')}</p>
+                  <p className="mt-1 text-xs text-slate-400 dark:text-white/30">{contentText(settings, 'company_phone2', '+233 (055) 538 4113')}</p>
                 </a>
                 <a href={'mailto:' + contentText(settings, 'company_email', 'mail@lightworldtech.com')} className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-amber-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <Mail className="size-4 text-amber-500" />
@@ -412,7 +415,8 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                 <div className="rounded-[24px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <Clock className="size-4 text-amber-500" />
                   <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Business hours</p>
-                  <p className="mt-1 text-sm font-semibold">Mon–Fri · 8:00–17:00 GMT</p>
+                  <p className="mt-1 text-sm font-semibold">Mon–Fri · 08:30–17:30 GMT</p>
+                  <p className="mt-1 text-xs text-slate-400 dark:text-white/30">Sat · 14:00–16:00 GMT</p>
                 </div>
               </div>
 
