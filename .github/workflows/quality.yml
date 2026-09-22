@@ -60,7 +60,7 @@ jobs:
         run: bunx tsc --noEmit
 
       - name: Test security and deterministic intelligence
-        run: bun test src/lib/admin-auth.test.ts src/lib/admin-totp.test.ts src/lib/support-ticket.test.ts src/lib/support-attachment.test.ts src/lib/finance.test.ts src/lib/hubtel-utils.test.ts src/lib/csv.test.ts src/lib/assistant-intents.test.ts src/lib/assistant-conversation-regression.test.ts src/lib/assistant-generative-policy.test.ts src/lib/assistant-retrieval.test.ts src/lib/lead-intelligence.test.ts src/lib/proposal-draft.test.ts src/lib/client-auth.test.ts src/lib/client-password-reset.test.ts src/lib/client-self-service.test.ts src/lib/corporate-brand-client-reset.test.ts src/lib/mail.test.ts src/lib/newsletter-campaign.test.ts src/lib/admin-governance-policy.test.ts src/lib/admin-permissions.test.ts src/lib/navigation-content.test.ts src/lib/site-content.test.ts src/lib/contact-content.test.ts src/lib/public-widget-consistency.test.ts src/lib/cookie-consent-content.test.ts src/lib/public-appearance-actions.test.ts src/lib/upload-storage.test.ts src/lib/media-library.test.ts src/lib/media-picker.test.ts src/lib/hero-media.test.ts src/lib/professional-ux.test.ts src/lib/enterprise-admin-visual.test.ts src/lib/admin-workspace-consistency.test.ts src/lib/public-brand-consistency.test.ts src/lib/public-accessibility-ux.test.ts src/lib/public-experience-quality.test.ts src/lib/operational-ux-quality.test.ts src/lib/search-visibility-authority.test.ts src/lib/local-search-crawl-hygiene.test.ts src/lib/single-supervisor-deployment.test.ts src/lib/service-search-landing.test.ts src/lib/search-internal-linking.test.ts src/lib/local-entity-authority.test.ts src/lib/search-prominence-client-advocacy.test.ts src/lib/reputation-search-authority.test.ts src/lib/content-authority-schema.test.ts src/lib/search-console-readiness.test.ts src/lib/organic-authority-acceleration.test.ts src/lib/verified-award-authority.test.ts src/lib/careers-application.test.ts src/lib/public-rate-limit.test.ts src/lib/login-input.test.ts src/lib/next-config-security.test.ts src/lib/admin-guard-await.test.ts src/lib/admin-backend-ux-regression.test.ts
+        run: bun test src/lib/admin-auth.test.ts src/lib/admin-totp.test.ts src/lib/support-ticket.test.ts src/lib/support-attachment.test.ts src/lib/finance.test.ts src/lib/hubtel-utils.test.ts src/lib/csv.test.ts src/lib/assistant-intents.test.ts src/lib/assistant-conversation-regression.test.ts src/lib/assistant-generative-policy.test.ts src/lib/assistant-retrieval.test.ts src/lib/lead-intelligence.test.ts src/lib/proposal-draft.test.ts src/lib/client-auth.test.ts src/lib/client-password-reset.test.ts src/lib/client-self-service.test.ts src/lib/corporate-brand-client-reset.test.ts src/lib/mail.test.ts src/lib/newsletter-campaign.test.ts src/lib/admin-governance-policy.test.ts src/lib/admin-permissions.test.ts src/lib/navigation-content.test.ts src/lib/site-content.test.ts src/lib/contact-content.test.ts src/lib/public-widget-consistency.test.ts src/lib/cookie-consent-content.test.ts src/lib/public-appearance-actions.test.ts src/lib/upload-storage.test.ts src/lib/media-library.test.ts src/lib/media-picker.test.ts src/lib/hero-media.test.ts src/lib/professional-ux.test.ts src/lib/enterprise-admin-visual.test.ts src/lib/admin-workspace-consistency.test.ts src/lib/public-brand-consistency.test.ts src/lib/public-accessibility-ux.test.ts src/lib/public-experience-quality.test.ts src/lib/operational-ux-quality.test.ts src/lib/search-visibility-authority.test.ts src/lib/local-search-crawl-hygiene.test.ts src/lib/single-supervisor-deployment.test.ts src/lib/service-search-landing.test.ts src/lib/search-internal-linking.test.ts src/lib/local-entity-authority.test.ts src/lib/search-prominence-client-advocacy.test.ts src/lib/reputation-search-authority.test.ts src/lib/content-authority-schema.test.ts src/lib/search-console-readiness.test.ts src/lib/organic-authority-acceleration.test.ts src/lib/verified-award-authority.test.ts src/lib/ci-release-artifact.test.ts src/lib/careers-application.test.ts src/lib/public-rate-limit.test.ts src/lib/login-input.test.ts src/lib/next-config-security.test.ts src/lib/admin-guard-await.test.ts src/lib/admin-backend-ux-regression.test.ts
         env:
           ADMIN_SESSION_SECRET: "ci-only-admin-session-secret-at-least-32-bytes"
           CLIENT_SESSION_SECRET: "ci-only-client-session-secret-at-least-32-bytes"
@@ -69,3 +69,56 @@ jobs:
         run: bun run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+
+      - name: Smoke standalone release runtime
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          ADMIN_SESSION_SECRET: "ci-only-admin-session-secret-at-least-32-bytes"
+          CLIENT_SESSION_SECRET: "ci-only-client-session-secret-at-least-32-bytes"
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$GITHUB_SHA" > .next/standalone/RELEASE_SHA
+          PORT=3017 HOSTNAME=127.0.0.1 NODE_ENV=production node .next/standalone/server.js >/tmp/lightworld-runtime-smoke.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" >/dev/null 2>&1 || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            code=$(curl -sS --max-time 2 -o /dev/null -w '%{http_code}' http://127.0.0.1:3017/ || true)
+            [ "$code" = "200" ] && break
+            sleep 1
+          done
+          [ "${code:-}" = "200" ] || { cat /tmp/lightworld-runtime-smoke.log; exit 1; }
+
+          for route in / /services /services/software-development /services/it-training /newsroom /sitemap.xml /robots.txt /feed.xml; do
+            code=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "http://127.0.0.1:3017$route")
+            [ "$code" = "200" ] || { echo "$route returned HTTP $code"; exit 1; }
+          done
+
+          for route in /api/admin/auth /api/client/auth; do
+            code=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "http://127.0.0.1:3017$route")
+            [ "$code" = "401" ] || { echo "$route returned HTTP $code"; exit 1; }
+          done
+
+          code=$(curl -sS --max-time 15 -X POST -o /dev/null -w '%{http_code}' http://127.0.0.1:3017/api/upload)
+          [ "$code" = "401" ] || { echo "/api/upload returned HTTP $code"; exit 1; }
+
+      - name: Package verified release artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          prisma_version=$(node -p "require('./node_modules/prisma/package.json').version")
+          printf '%s\n' "$prisma_version" > DEPLOY_PRISMA_VERSION
+          archive="lightworldtech-runtime-$GITHUB_SHA.tar.gz"
+          tar -czf "$archive" .next/standalone prisma ops DEPLOY_PRISMA_VERSION
+          sha256sum "$archive" > "$archive.sha256"
+
+      - name: Upload verified release artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lightworldtech-runtime-${{ github.sha }}
+          path: |
+            lightworldtech-runtime-${{ github.sha }}.tar.gz
+            lightworldtech-runtime-${{ github.sha }}.tar.gz.sha256
+          retention-days: 14
+          if-no-files-found: error

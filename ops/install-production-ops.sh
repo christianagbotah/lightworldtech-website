@@ -12,7 +12,7 @@ APP_GROUP="lightworld"
 
 install -d -o root -g "$APP_GROUP" -m 0750 "$TARGET_DIR"
 
-for script in prepare-release-runtime.sh promote-release.sh prune-releases.sh run-sms-dispatch.sh; do
+for script in prepare-release-runtime.sh promote-release.sh deploy-release-artifact.sh prune-releases.sh run-sms-dispatch.sh; do
   bash -n "$SOURCE_DIR/$script"
   install -o root -g "$APP_GROUP" -m 0700 "$SOURCE_DIR/$script" "$TARGET_DIR/$script"
 done
