@@ -21,7 +21,7 @@ describe('public experience quality', () => {
   test('service cards are semantic links rather than mouse-only click targets', () => {
     const services = source('src/components/sections/ServicesSection.tsx');
 
-    expect(services).toContain('href="/services"');
+    expect(services).toContain('href={serviceSearchHref({ slug: service.slug, title: service.title })}');
     expect(services).toContain('aria-label={`Explore ${service.title}`}');
     expect(services).not.toContain('onClick={() => navigate(\'services\')}\n                    >');
   });
