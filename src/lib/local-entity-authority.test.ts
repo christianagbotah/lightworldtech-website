@@ -18,6 +18,15 @@ describe('local entity and crawl authority', () => {
     expect(profile).toContain("closes: '16:00'");
   });
 
+  test('forward migration aligns legacy phone formats with the Google Business number', () => {
+    const migration = source('prisma/migrations/20260922174000_google_business_nap_alignment/migration.sql');
+
+    expect(migration).toContain("'0243618186'");
+    expect(migration).toContain("'2330243618186'");
+    expect(migration).toContain("'233243618186'");
+    expect(migration).toContain('REPLACE(');
+  });
+
   test('organization schema links the company to its verified Tema place', () => {
     const schema = source('src/components/ui/json-ld.tsx');
 
