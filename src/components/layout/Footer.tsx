@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 import { trackEvent } from '@/lib/analytics-client';
 import { normalizeNavigationLinks, safeNavigationHref } from '@/lib/navigation-content';
+import { companyProfile } from '@/lib/company-profile';
 
 const defaultBuildLinks = [
   { label: 'Web & product engineering', href: '/services/web-development' },
@@ -175,10 +176,16 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
                 <Phone className="size-3.5" />
                 {phone}
               </a>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-xs text-white/55">
+              <a
+                href={companyProfile.googleMapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={'Open ' + companyName + ' on Google Maps'}
+                className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.035] px-4 py-2 text-xs text-white/55 transition hover:border-amber-300/25 hover:text-amber-300"
+              >
                 <MapPin className="size-3.5" />
                 {address}
-              </span>
+              </a>
             </div>
           </div>
 
