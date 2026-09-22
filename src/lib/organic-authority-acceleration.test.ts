@@ -14,7 +14,7 @@ describe('organic authority acceleration', () => {
     expect(profile).toContain("phoneDisplay: '0243618186'");
     expect(profile).toContain("'Software company'");
     expect(profile).toContain("'Computer support and services'");
-    expect(profile).toContain("'Software training institute'");
+    expect(profile).toContain("'IT training institute'");
     expect(schema).toContain('...companyProfile.businessCategories');
     expect(schema).toContain('companyProfile.googleMapsUrl');
   });

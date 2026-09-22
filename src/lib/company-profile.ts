@@ -19,11 +19,11 @@ export const companyProfile = {
   businessCategories: [
     'Software company',
     'Computer support and services',
-    'Software training institute',
+    'IT training institute',
   ],
   tagline: 'The world of possibilities',
   summary:
-    'Lightworld Technologies Limited is a Ghanaian software company, computer support and services provider, and software training institute in Tema, Greater Accra, building web and mobile products, enterprise systems, AI-enabled workflows, cloud solutions, training, and technology advisory services.',
+    'Lightworld Technologies Limited is a Ghanaian software company, computer support and services provider, and IT training institute in Tema, Greater Accra, building web and mobile products, enterprise systems, AI-enabled workflows, cloud solutions, training, and technology advisory services.',
   leadership: [
     {
       name: 'Christian Agbotah',
