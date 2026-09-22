@@ -20,11 +20,12 @@ describe('search visibility and entity authority', () => {
 
   test('organization schema presents one strong Lightworld entity', () => {
     const schema = source('src/components/ui/json-ld.tsx');
+    const seo = source('src/lib/seo-config.ts');
 
     expect(schema).toContain("config.siteUrl + '/#organization'");
     expect(schema).toContain('name: config.legalName');
     expect(schema).toContain('legalName: config.legalName');
-    expect(schema).toContain("'Lightworld Technologies Limited'");
+    expect(seo).toContain("'Lightworld Technologies Limited'");
     expect(schema).toContain('hasOfferCatalog');
     expect(schema).toContain('award: companyProfile.recognition');
     expect(schema).toContain('subjectOf');
