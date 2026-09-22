@@ -6,12 +6,12 @@ RELEASE_ROOT="/home/lightworld/releases"
 CURRENT_LINK="/home/lightworld/webapps/lightworldtech"
 PREVIOUS_LINK="/home/lightworld/webapps/lightworldtech-previous"
 OPS="/home/lightworld/shared/lightworldtech/ops"
-APP_USER="lightworld"
-PM2_NAME="lightworldtech"
-CANDIDATE_NAME="lightworldtech-candidate"
+APP_USER="lightworldtechapp"
+SERVICE_NAME="lightworldtech-app.service"
 PORT=3007
 CANDIDATE_PORT=3017
 LOCK_FILE="$OPS/promote-release.lock"
+CANDIDATE_LOG="/tmp/lightworldtech-candidate-$$.log"
 
 fail() {
   echo "ERROR: $*" >&2
@@ -49,10 +49,6 @@ if [ -n "$CURRENT" ]; then
   [ -f "$CURRENT/.next/standalone/server.js" ] || fail "Current rollback release is invalid: $CURRENT"
 fi
 
-pm2_as_app() {
-  sudo -u "$APP_USER" -H sh -lc "cd /; $*"
-}
-
 wait_for_ready() {
   local port="$1"
   local attempts="${2:-30}"
@@ -74,9 +70,26 @@ smoke_routes() {
   local port="$1"
   local route code
 
-  for route in / /admin /client /services /portfolio /blog /contact /sitemap.xml; do
+  for route in \
+    / \
+    /admin \
+    /client \
+    /services \
+    /services/web-development \
+    /services/software-development \
+    /services/it-training \
+    /portfolio \
+    /blog \
+    /contact \
+    /sitemap.xml
+  do
     code="$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port$route")"
     [ "$code" = "200" ] || fail "Smoke check failed for $route on port $port: HTTP $code"
+  done
+
+  for route in /api/services /api/portfolio; do
+    code="$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port$route")"
+    [ "$code" = "200" ] || fail "Database-backed smoke check failed for $route on port $port: HTTP $code"
   done
 
   code="$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/api/admin/auth")"
@@ -89,14 +102,20 @@ smoke_routes() {
   [ "$code" = "401" ] || fail "Unauthenticated upload check on port $port returned HTTP $code"
 }
 
-candidate_started=0
+candidate_pid=""
 live_touched=0
 
 cleanup_candidate() {
-  if [ "$candidate_started" -eq 1 ]; then
-    pm2_as_app "pm2 delete '$CANDIDATE_NAME' >/dev/null 2>&1 || true"
-    candidate_started=0
+  if [ -n "$candidate_pid" ]; then
+    kill "$candidate_pid" >/dev/null 2>&1 || true
+    for _ in $(seq 1 10); do
+      kill -0 "$candidate_pid" >/dev/null 2>&1 || break
+      sleep 0.2
+    done
+    kill -9 "$candidate_pid" >/dev/null 2>&1 || true
+    candidate_pid=""
   fi
+  rm -f "$CANDIDATE_LOG"
 }
 
 rollback() {
@@ -104,14 +123,10 @@ rollback() {
   echo "PROMOTION_FAILED: preserving/restoring verified live release" >&2
   cleanup_candidate
 
-  if [ "$live_touched" -eq 1 ]; then
-    pm2_as_app "pm2 delete '$PM2_NAME' >/dev/null 2>&1 || true"
-
-    if [ -n "$CURRENT" ] && [ -f "$CURRENT/.next/standalone/server.js" ]; then
-      sudo -u "$APP_USER" -H sh -lc "cd '$CURRENT/.next/standalone' && PORT=$PORT HOSTNAME=127.0.0.1 NODE_ENV=production pm2 start server.js --name '$PM2_NAME' >/dev/null" || true
-      ln -sfn "$CURRENT" "$CURRENT_LINK" || true
-      pm2_as_app "pm2 save >/dev/null" || true
-    fi
+  if [ "$live_touched" -eq 1 ] && [ -n "$CURRENT" ] && [ -f "$CURRENT/.next/standalone/server.js" ]; then
+    ln -sfn "$CURRENT" "$CURRENT_LINK" || true
+    systemctl restart "$SERVICE_NAME" || true
+    wait_for_ready "$PORT" 30 || true
   fi
 
   exit "$rc"
@@ -119,25 +134,29 @@ rollback() {
 
 trap rollback ERR INT TERM
 
-# Prove the release on an isolated local port before touching live traffic.
-pm2_as_app "pm2 delete '$CANDIDATE_NAME' >/dev/null 2>&1 || true"
-sudo -u "$APP_USER" -H sh -lc "cd '$NEW_RELEASE/.next/standalone' && PORT=$CANDIDATE_PORT HOSTNAME=127.0.0.1 NODE_ENV=production pm2 start server.js --name '$CANDIDATE_NAME' >/dev/null"
-candidate_started=1
+# Prove the release under the same Linux identity as production before touching port 3007.
+install -o "$APP_USER" -g "$APP_USER" -m 0600 /dev/null "$CANDIDATE_LOG"
+candidate_pid="$(
+  runuser -u "$APP_USER" -- sh -c "
+    cd '$NEW_RELEASE/.next/standalone'
+    PORT=$CANDIDATE_PORT HOSTNAME=127.0.0.1 NODE_ENV=production \
+      nohup /usr/bin/node server.js >>'$CANDIDATE_LOG' 2>&1 &
+    echo \$!
+  "
+)"
+[ -n "$candidate_pid" ] || fail "Candidate process did not start"
 wait_for_ready "$CANDIDATE_PORT" 30
 smoke_routes "$CANDIDATE_PORT"
 cleanup_candidate
 
-# Protect the currently verified live release from pruning before switching.
+# Protect the verified current release before moving the live symlink.
 if [ -n "$CURRENT" ]; then
   ln -sfn "$CURRENT" "$PREVIOUS_LINK"
 fi
 
 live_touched=1
-pm2_as_app "pm2 delete '$PM2_NAME' >/dev/null 2>&1 || true"
-sudo -u "$APP_USER" -H sh -lc "cd '$NEW_RELEASE/.next/standalone' && PORT=$PORT HOSTNAME=127.0.0.1 NODE_ENV=production pm2 start server.js --name '$PM2_NAME' >/dev/null"
 ln -sfn "$NEW_RELEASE" "$CURRENT_LINK"
-pm2_as_app "pm2 save >/dev/null"
-
+systemctl restart "$SERVICE_NAME"
 wait_for_ready "$PORT" 30
 smoke_routes "$PORT"
 
