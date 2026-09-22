@@ -732,6 +732,7 @@ export default function AdminSupportDesk() {
                       type="checkbox"
                       checked={selectedIds.has(ticket.id)}
                       onChange={() => toggleSelected(ticket.id)}
+                      onKeyDown={(event) => event.stopPropagation()}
                       aria-label={'Select ' + ticket.ticketNumber}
                       className="size-4 rounded border-border accent-amber-600"
                     />
