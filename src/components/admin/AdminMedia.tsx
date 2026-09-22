@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 
 type MediaItem = {
   filename: string;
@@ -54,6 +55,7 @@ export default function AdminMedia() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState('');
+  const [pendingDelete, setPendingDelete] = useState<MediaItem | null>(null);
   const [search, setSearch] = useState('');
 
   const loadMedia = async () => {
@@ -115,14 +117,6 @@ export default function AdminMedia() {
   };
 
   const deleteMedia = async (item: MediaItem) => {
-    if (
-      !window.confirm(
-        'Delete this image permanently? This is allowed only when the image is not used by website or client content.',
-      )
-    ) {
-      return;
-    }
-
     setDeleting(item.filename);
     try {
       const response = await fetch('/api/admin/media', {
@@ -286,7 +280,7 @@ export default function AdminMedia() {
                         variant="outline"
                         size="sm"
                         disabled={deleting === item.filename}
-                        onClick={() => void deleteMedia(item)}
+                        onClick={() => setPendingDelete(item)}
                         className="text-rose-600 hover:text-rose-700"
                       >
                         {deleting === item.filename ? (
@@ -304,6 +298,24 @@ export default function AdminMedia() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmActionDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        tone="destructive"
+        title="Delete this image?"
+        description={
+          pendingDelete
+            ? 'Permanently delete “' + pendingDelete.filename + '” from the media library. The server will block deletion if the image is still referenced by website or client content.'
+            : 'Permanently delete this image from the media library.'
+        }
+        confirmLabel="Delete image"
+        onConfirm={async () => {
+          if (pendingDelete) await deleteMedia(pendingDelete);
+        }}
+      />
     </div>
   );
 }
