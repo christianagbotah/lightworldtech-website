@@ -9,12 +9,13 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const title = contentText(settings, 'seo_home_title', 'Lightworld Technologies | Software, Apps, AI & Digital Solutions');
-  const description = contentText(settings, 'seo_home_description', 'Lightworld Technologies Ltd builds modern websites, mobile apps, enterprise software, AI-enabled workflows and cloud solutions, with IT training and technology consultancy from Ghana.');
+  const title = contentText(settings, 'seo_home_title', 'Lightworld Technologies Limited | Software Company in Ghana');
+  const description = contentText(settings, 'seo_home_description', 'Lightworld Technologies Limited is a Ghanaian software and IT company in Tema, Greater Accra, building websites, mobile apps, enterprise software, AI automation and cloud solutions, with IT training and technology consulting.');
   return buildPageMetadata(buildSeoConfig(settings), {
     title,
     description,
     path: '/',
+    absoluteTitle: true,
   });
 }
 
