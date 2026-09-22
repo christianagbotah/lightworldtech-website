@@ -396,10 +396,10 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                <a href={'tel:' + contentText(settings, 'company_phone1', '+233 (024) 361 8186').replace(/[^+\d]/g, '')} className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-amber-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                <a href={'tel:' + contentText(settings, 'company_phone1', '0243618186').replace(/[^+\d]/g, '')} className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-amber-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <Phone className="size-4 text-amber-500" />
                   <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Phone</p>
-                  <p className="mt-1 text-sm font-semibold">{contentText(settings, 'company_phone1', '+233 (024) 361 8186')}</p>
+                  <p className="mt-1 text-sm font-semibold">{contentText(settings, 'company_phone1', '0243618186')}</p>
                   <p className="mt-1 text-xs text-slate-400 dark:text-white/30">{contentText(settings, 'company_phone2', '+233 (055) 538 4113')}</p>
                 </a>
                 <a href={'mailto:' + contentText(settings, 'company_email', 'mail@lightworldtech.com')} className="rounded-[24px] border border-slate-200/70 bg-white p-5 transition hover:border-amber-300 dark:border-white/[0.07] dark:bg-white/[0.025]">
