@@ -76,6 +76,36 @@ function label(value: string) {
   return value.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+type NewsletterApiPayload<T = unknown> = {
+  success?: boolean;
+  data?: T;
+  error?: string;
+  details?: string;
+  message?: string;
+};
+
+async function readNewsletterApiPayload<T = unknown>(response: Response): Promise<NewsletterApiPayload<T>> {
+  const raw = await response.text();
+  if (!raw.trim()) return {};
+
+  try {
+    return JSON.parse(raw) as NewsletterApiPayload<T>;
+  } catch {
+    const status = response.status ? 'HTTP ' + response.status : 'an unknown status';
+    if (!response.ok) {
+      return {
+        success: false,
+        error:
+          'The website gateway returned ' +
+          status +
+          ' without a JSON response. The mail request may have been interrupted before the application could report the transport error.',
+      };
+    }
+
+    throw new Error('The newsletter API returned an unexpected non-JSON response (' + status + ').');
+  }
+}
+
 export default function AdminNewsletter() {
   const [data, setData] = useState<NewsletterData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,8 +120,9 @@ export default function AdminNewsletter() {
 
     try {
       const response = await fetch('/api/admin/newsletter?limit=100', { cache: 'no-store' });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Failed to load newsletter operations');
+      const payload = await readNewsletterApiPayload<NewsletterData>(response);
+      if (!response.ok) throw new Error(payload?.details || payload?.error || 'Failed to load newsletter operations');
+      if (!payload.data) throw new Error('Newsletter operations returned no workspace data');
       setData(payload.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load newsletter operations');
@@ -117,7 +148,7 @@ export default function AdminNewsletter() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'test', email }),
       });
-      const payload = await response.json();
+      const payload = await readNewsletterApiPayload(response);
       if (!response.ok) {
         throw new Error(payload?.details || payload?.error || 'Mail transport test failed');
       }
@@ -140,8 +171,8 @@ export default function AdminNewsletter() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !subscriber.active }),
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Failed to update subscriber');
+      const payload = await readNewsletterApiPayload(response);
+      if (!response.ok) throw new Error(payload?.details || payload?.error || 'Failed to update subscriber');
 
       setData((current) => {
         if (!current) return current;

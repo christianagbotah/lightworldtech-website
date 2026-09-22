@@ -12,7 +12,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
+  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com${isProduction ? '' : " 'unsafe-eval'"}`,
   "connect-src 'self' https:",
   "media-src 'self' https:",
   "worker-src 'self' blob:",

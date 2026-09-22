@@ -154,7 +154,12 @@ export async function POST(request: NextRequest) {
         details,
         transport,
       },
-      { status: 502 },
+      {
+        status: 503,
+        headers: {
+          'Retry-After': '30',
+        },
+      },
     );
   }
 }
