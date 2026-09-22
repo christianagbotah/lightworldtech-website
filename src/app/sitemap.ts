@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { db } from '@/lib/db';
 import { getSeoConfig } from '@/lib/seo-config';
+import { serviceSearchPages } from '@/lib/service-search-pages';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,12 @@ function coreSitemap(base: string, lastModified?: Date): MetadataRoute.Sitemap {
   return [
     { url: base, ...freshness, changeFrequency: 'weekly', priority: 1 },
     { url: base + '/services', ...freshness, changeFrequency: 'monthly', priority: 0.9 },
+    ...serviceSearchPages.map((service) => ({
+      url: base + '/services/' + service.slug,
+      ...freshness,
+      changeFrequency: 'monthly' as const,
+      priority: 0.85,
+    })),
     { url: base + '/portfolio', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
     { url: base + '/products', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
     { url: base + '/about', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
