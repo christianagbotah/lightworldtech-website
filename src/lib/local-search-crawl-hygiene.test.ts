@@ -15,7 +15,7 @@ describe('local search and crawl hygiene', () => {
     expect(schema).toContain('openingHoursSpecification');
     expect(schema).toContain("'Software company'");
     expect(schema).toContain("'Computer support and services'");
-    expect(schema).toContain("'Software training institute'");
+    expect(schema).toContain("'IT training institute'");
   });
 
   test('admin routes explicitly opt out of indexing', () => {
