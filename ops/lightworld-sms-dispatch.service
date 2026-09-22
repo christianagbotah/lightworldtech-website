@@ -1,7 +1,7 @@
 [Unit]
 Description=Lightworld scheduled SMS dispatcher
-After=network-online.target pm2-lightworld.service
-Wants=network-online.target
+After=network-online.target lightworldtech-app.service
+Wants=network-online.target lightworldtech-app.service
 
 [Service]
 Type=oneshot
