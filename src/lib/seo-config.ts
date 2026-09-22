@@ -60,6 +60,14 @@ function validWebUrl(value: string): string | null {
   }
 }
 
+function normalizePhone(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (/^0\d{9}$/.test(digits)) return '+233' + digits.slice(1);
+  if (/^2330\d{9}$/.test(digits)) return '+233' + digits.slice(4);
+  if (/^233\d{9}$/.test(digits)) return '+' + digits;
+  return value.trim();
+}
+
 export function buildSeoConfig(settings: SiteSettings): SeoConfig {
   const siteUrl = normalizeSiteUrl(text(settings, 'seo_site_url', DEFAULT_SITE_URL));
   const siteName = text(settings, 'seo_site_name', 'Lightworld Technologies');
@@ -108,7 +116,7 @@ export function buildSeoConfig(settings: SiteSettings): SeoConfig {
     googleVerification: text(settings, 'seo_google_verification', ''),
     bingVerification: text(settings, 'seo_bing_verification', ''),
     contactEmail: text(settings, 'company_email', 'mail@lightworldtech.com'),
-    phone: text(settings, 'company_phone1', '+233243618186'),
+    phone: normalizePhone(text(settings, 'company_phone1', '0243618186')),
     address: text(settings, 'company_address', 'Tema, Ghana'),
     city: text(settings, 'seo_address_city', 'Tema'),
     region: text(settings, 'seo_address_region', 'Greater Accra'),
