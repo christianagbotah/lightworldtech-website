@@ -28,6 +28,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { companyProfile } from '@/lib/company-profile';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -940,6 +941,30 @@ export default function ClientPortalPage() {
             );
           })}
         </div>
+
+        <Card className="mt-5 border-amber-200/70 bg-amber-50/60 dark:border-amber-900/35 dark:bg-amber-950/15">
+          <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-600">
+                <Star className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold">Share your experience with Lightworld</p>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-white/38">
+                  If you have worked with us, you can leave an honest Google review. Reviews are optional, should reflect your genuine experience, and are never exchanged for discounts or incentives.
+                </p>
+              </div>
+            </div>
+            <a
+              href={companyProfile.googleReviewUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-amber-600 px-5 text-sm font-semibold text-white transition hover:bg-amber-700 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
+            >
+              Review on Google <ExternalLink className="size-4" />
+            </a>
+          </CardContent>
+        </Card>
 
         {Boolean(data?.announcements.length) && (
           <section className="mt-8">
