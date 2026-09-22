@@ -19,15 +19,13 @@ import {
 import { contentText, type SiteSettings } from '@/lib/site-content';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import { trackEvent } from '@/lib/analytics-client';
+import { companyProfile } from '@/lib/company-profile';
 
 type SubmissionStatus = 'idle' | 'success' | 'warning' | 'error';
 
-const GOOGLE_MAPS_PLACE_ID = 'ChIJl7EfYil_3w8R126pXLqlMgw';
-const GOOGLE_MAPS_OPEN_URL =
-  'https://www.google.com/maps/search/?api=1&query=Lightworld%20Technologies%20Limited%2C%20Tema%2C%20Ghana&query_place_id=' +
-  GOOGLE_MAPS_PLACE_ID;
+const GOOGLE_MAPS_OPEN_URL = companyProfile.googleMapsUrl;
 const GOOGLE_MAPS_EMBED_URL =
-  'https://maps.google.com/maps?q=place_id%3A' + GOOGLE_MAPS_PLACE_ID + '&z=16&output=embed';
+  'https://maps.google.com/maps?q=place_id%3A' + companyProfile.googleMapsPlaceId + '&z=16&output=embed';
 
 const services = [
   'Website / digital experience',
@@ -72,8 +70,16 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
     const now = new Date();
     const day = now.getUTCDay();
     const minutes = now.getUTCHours() * 60 + now.getUTCMinutes();
-    if (day >= 1 && day <= 5) return minutes >= 8 * 60 + 30 && minutes < 17 * 60 + 30;
-    if (day === 6) return minutes >= 14 * 60 && minutes < 16 * 60;
+    if (day >= 1 && day <= 5) {
+      const [openHour, openMinute] = companyProfile.businessHours.weekdays.opens.split(':').map(Number);
+      const [closeHour, closeMinute] = companyProfile.businessHours.weekdays.closes.split(':').map(Number);
+      return minutes >= openHour * 60 + openMinute && minutes < closeHour * 60 + closeMinute;
+    }
+    if (day === 6) {
+      const [openHour, openMinute] = companyProfile.businessHours.saturday.opens.split(':').map(Number);
+      const [closeHour, closeMinute] = companyProfile.businessHours.saturday.closes.split(':').map(Number);
+      return minutes >= openHour * 60 + openMinute && minutes < closeHour * 60 + closeMinute;
+    }
     return false;
   }, []);
 
@@ -386,7 +392,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                 <h2 className="mt-7 text-3xl font-semibold tracking-[-0.04em]">Prefer a direct conversation?</h2>
                 <p className="mt-3 text-sm leading-7 text-white/40">Use the channel that works best for you. Project details can still be formalized after the first conversation.</p>
                 <a
-                  href="https://wa.me/233243618186?text=Hello%20Lightworld%20Technologies%2C%20I%20would%20like%20to%20discuss%20a%20project."
+                  href={'https://wa.me/' + companyProfile.phone.replace(/^\+/, '') + '?text=Hello%20Lightworld%20Technologies%2C%20I%20would%20like%20to%20discuss%20a%20project.'}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-emerald-400 px-5 text-sm font-semibold text-slate-950"
@@ -415,8 +421,12 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                 <div className="rounded-[24px] border border-slate-200/70 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <Clock className="size-4 text-amber-500" />
                   <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.17em] text-slate-400 dark:text-white/20">Business hours</p>
-                  <p className="mt-1 text-sm font-semibold">Mon–Fri · 08:30–17:30 GMT</p>
-                  <p className="mt-1 text-xs text-slate-400 dark:text-white/30">Sat · 14:00–16:00 GMT</p>
+                  <p className="mt-1 text-sm font-semibold">
+                    Mon–Fri · {companyProfile.businessHours.weekdays.opens}–{companyProfile.businessHours.weekdays.closes} GMT
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400 dark:text-white/30">
+                    Sat · {companyProfile.businessHours.saturday.opens}–{companyProfile.businessHours.saturday.closes} GMT
+                  </p>
                 </div>
               </div>
 
