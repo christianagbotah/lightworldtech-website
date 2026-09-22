@@ -68,6 +68,37 @@ function replySubject(subject: string): string {
   return /^re:/i.test(value) ? value : 'Re: ' + value;
 }
 
+type MessageReplyApiPayload<T = unknown> = {
+  success?: boolean;
+  data?: T;
+  error?: string;
+  details?: string;
+};
+
+async function readMessageReplyApiPayload<T = unknown>(
+  response: Response,
+): Promise<MessageReplyApiPayload<T>> {
+  const raw = await response.text();
+  if (!raw.trim()) return {};
+
+  try {
+    return JSON.parse(raw) as MessageReplyApiPayload<T>;
+  } catch {
+    const status = response.status ? 'HTTP ' + response.status : 'an unknown status';
+    if (!response.ok) {
+      return {
+        success: false,
+        error:
+          'The website gateway returned ' +
+          status +
+          ' without a JSON response. The reply was not confirmed as delivered; please retry after checking mail transport status.',
+      };
+    }
+
+    throw new Error('The message reply API returned an unexpected non-JSON response (' + status + ').');
+  }
+}
+
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -164,8 +195,8 @@ export default function AdminMessages() {
       const response = await fetch('/api/admin/messages/' + encodeURIComponent(messageId) + '/replies', {
         cache: 'no-store',
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Could not load reply history');
+      const payload = await readMessageReplyApiPayload<ContactReply[]>(response);
+      if (!response.ok) throw new Error(payload?.details || payload?.error || 'Could not load reply history');
       setReplyHistory(Array.isArray(payload.data) ? payload.data : []);
     } catch (error) {
       setReplyHistory([]);
@@ -210,8 +241,8 @@ export default function AdminMessages() {
           }),
         },
       );
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Reply could not be sent');
+      const payload = await readMessageReplyApiPayload<ContactReply>(response);
+      if (!response.ok) throw new Error(payload?.details || payload?.error || 'Reply could not be sent');
 
       toast.success('Reply sent', {
         description: 'Delivered to ' + replyingTo.email + ' from the Lightworld admin portal.',
