@@ -29,6 +29,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -486,8 +487,8 @@ export default function AdminCRM() {
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-card p-4">
-        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_170px_auto]">
-          <label className="relative">
+        <div className="grid min-w-0 gap-3 md:grid-cols-12 md:items-center">
+          <label className="relative md:col-span-5 xl:col-span-6">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
@@ -499,7 +500,7 @@ export default function AdminCRM() {
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
+            className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15 md:col-span-2"
             aria-label="Filter by status"
           >
             <option value="all">All stages</option>
@@ -508,7 +509,7 @@ export default function AdminCRM() {
           <select
             value={priorityFilter}
             onChange={(event) => setPriorityFilter(event.target.value)}
-            className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
+            className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15 md:col-span-2"
             aria-label="Filter by priority"
           >
             <option value="all">All priorities</option>
@@ -520,7 +521,11 @@ export default function AdminCRM() {
             type="button"
             variant={overdueOnly ? 'default' : 'outline'}
             onClick={() => setOverdueOnly((value) => !value)}
-            className={overdueOnly ? 'bg-rose-600 hover:bg-rose-700' : ''}
+            className={
+              overdueOnly
+                ? 'md:col-span-3 xl:col-span-2 bg-rose-600 hover:bg-rose-700'
+                : 'md:col-span-3 xl:col-span-2'
+            }
           >
             <CalendarClock className="mr-2 size-4" /> Overdue only
           </Button>
@@ -622,6 +627,9 @@ export default function AdminCRM() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Save CRM view</DialogTitle>
+            <DialogDescription>
+              Save the current search, stage, priority and overdue filters for quick reuse on this browser.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor="crm-view-name">View name</Label>
@@ -633,7 +641,6 @@ export default function AdminCRM() {
               maxLength={80}
               autoFocus
             />
-            <p className="text-xs text-muted-foreground">Saves the current search, stage, priority and overdue filters on this browser.</p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setSaveViewOpen(false)}>Cancel</Button>
@@ -643,10 +650,10 @@ export default function AdminCRM() {
       </Dialog>
 
       <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent className="max-h-[94vh] w-[calc(100vw-1.5rem)] max-w-[min(96vw,1440px)] overflow-x-hidden overflow-y-auto p-0">
+        <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-5xl overflow-x-hidden overflow-y-auto p-0">
           {selected && (
             <>
-              <DialogHeader className="border-b border-border px-6 py-5">
+              <DialogHeader className="border-b border-border px-5 py-4 sm:px-6">
                 <DialogTitle className="flex flex-wrap items-center gap-2 text-xl">
                   {selected.contactMessage.name}
                   <Badge variant="secondary">{selected.source}</Badge>
@@ -654,10 +661,13 @@ export default function AdminCRM() {
                     {selected.priority}
                   </span>
                 </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Review the customer enquiry, CRM intelligence, notes, assignment and follow-up details.
+                </DialogDescription>
               </DialogHeader>
 
-              <div className="grid min-w-0 gap-0 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,.7fr)]">
-                <div className="min-w-0 space-y-6 p-6">
+              <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,.75fr)]">
+                <div className="min-w-0 space-y-5 p-5 sm:p-6">
                   <div className="grid gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2">
                     <button
                       type="button"
@@ -709,7 +719,7 @@ export default function AdminCRM() {
                       </div>
                       <span className="shrink-0 text-[11px] text-muted-foreground">{new Date(selected.contactMessage.createdAt).toLocaleString()}</span>
                     </div>
-                    <div className="mt-5 max-h-[48vh] overflow-y-auto pr-2">
+                    <div className="mt-5 max-h-[36vh] overflow-y-auto pr-2">
                       <p className="whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground">{selected.contactMessage.message}</p>
                     </div>
                   </div>
@@ -745,7 +755,7 @@ export default function AdminCRM() {
                   </div>
                 </div>
 
-                <aside className="space-y-4 border-t border-border bg-muted/15 p-6 xl:border-l xl:border-t-0">
+                <aside className="space-y-4 border-t border-border bg-muted/15 p-5 sm:p-6 lg:border-l lg:border-t-0">
                   {canManageProposals && (
                     <Button
                       className="w-full"
