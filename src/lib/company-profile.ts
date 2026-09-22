@@ -1,17 +1,17 @@
 export const companyProfile = {
-  name: 'Lightworld Technologies Ltd',
+  name: 'Lightworld Technologies Limited',
   shortName: 'Lightworld Technologies',
   country: 'Ghana',
   website: 'https://lightworldtech.com',
   email: 'mail@lightworldtech.com',
-  phoneDisplay: '+233 (024) 361 8186',
+  phoneDisplay: '0243618186',
   phone: '+233243618186',
   googleMapsPlaceId: 'ChIJl7EfYil_3w8R126pXLqlMgw',
   googleMapsUrl:
     'https://www.google.com/maps/search/?api=1&query=Lightworld%20Technologies%20Limited%2C%20Tema%2C%20Ghana&query_place_id=ChIJl7EfYil_3w8R126pXLqlMgw',
   tagline: 'The world of possibilities',
   summary:
-    'Lightworld Technologies Ltd is a Ghanaian technology company building software, web and mobile products, enterprise systems, AI-enabled workflows, cloud and infrastructure solutions, training, and technology advisory services.',
+    'Lightworld Technologies Limited is a Ghanaian technology company building software, web and mobile products, enterprise systems, AI-enabled workflows, cloud and infrastructure solutions, training, and technology advisory services.',
   leadership: [
     {
       name: 'Christian Agbotah',
@@ -43,21 +43,21 @@ export const companyProfile = {
       year: '2026',
       publisher: 'MEA Markets',
       title: 'African Excellence Awards',
-      description: 'Lightworld Technologies Ltd — 2026 Winner: African Excellence Awards.',
+      description: 'Lightworld Technologies Limited — 2026 Winner: African Excellence Awards.',
       href: 'https://meamarkets.digital/winners/lightworld-technologies-limited-2/',
     },
     {
       year: '2024',
       publisher: 'Acquisition International',
       title: 'Business Excellence Awards',
-      description: 'Lightworld Technologies Ltd — 2024 Winner: Business Excellence Awards.',
+      description: 'Lightworld Technologies Limited — 2024 Winner: Business Excellence Awards.',
       href: 'https://www.acquisition-international.com/winners/lightworld-technologies-limited/',
     },
     {
       year: '2021',
       publisher: 'MEA Markets',
       title: 'MEA Business Awards',
-      description: 'Lightworld Technologies Ltd — 2021 Winner: MEA Business Awards.',
+      description: 'Lightworld Technologies Limited — 2021 Winner: MEA Business Awards.',
       href: 'https://meamarkets.digital/winners/lightworld-technologies-limited/',
     },
   ],
@@ -80,11 +80,11 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/(who|what).*(ceo|chief executive)|\bceo\b|christian agbotah|founder/.test(q)) {
-    return 'Christian Agbotah is the CEO and a Director of Lightworld Technologies Ltd. He leads the company and its technology direction, product vision, engineering standards and long-term growth.';
+    return 'Christian Agbotah is the CEO and a Director of Lightworld Technologies Limited. He leads the company and its technology direction, product vision, engineering standards and long-term growth.';
   }
 
   if (/managing director|\bmd\b|rober yaw essuon|who.*director/.test(q)) {
-    return 'Robert Yaw Essuon is the Managing Director of Lightworld Technologies Ltd. Christian Agbotah is the CEO & Director.';
+    return 'Robert Yaw Essuon is the Managing Director of Lightworld Technologies Limited. Christian Agbotah is the CEO & Director.';
   }
 
   if (/leadership|leaders|management|team|executive/.test(q)) {
@@ -92,11 +92,11 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/award|recognition|honou?r|winner/.test(q)) {
-    return 'Public award directories list Lightworld Technologies Ltd among winners of the 2026 African Excellence Awards, the 2024 Business Excellence Awards, and the 2021 MEA Business Awards. The About page links to the official winner pages.';
+    return 'Public award directories list Lightworld Technologies Limited among winners of the 2026 African Excellence Awards, the 2024 Business Excellence Awards, and the 2021 MEA Business Awards. The About page links to the official winner pages.';
   }
 
   if (/ghanaweb|news|press|media|coverage/.test(q)) {
-    return 'GhanaWeb published coverage titled “Lightworld Technologies Ltd introduces school management application.” You can find the verified coverage link on our About page.';
+    return 'GhanaWeb published coverage titled “Lightworld Technologies Limited introduces school management application.” You can find the verified coverage link on our About page.';
   }
 
   if (/service|what.*do|offer|solution|build/.test(q)) {
@@ -112,7 +112,7 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/email|phone|contact|reach|whatsapp/.test(q)) {
-    return 'You can reach Lightworld Technologies at mail@lightworldtech.com or +233 (024) 361 8186. You can also use the Contact page to send a project brief.';
+    return 'You can reach Lightworld Technologies at mail@lightworldtech.com or 0243618186. You can also use the Contact page to send a project brief.';
   }
 
   if (/quote|price|cost|project|hire|consult/.test(q)) {
@@ -120,8 +120,8 @@ export function answerCompanyQuestion(message: string): string {
   }
 
   if (/where|location|based|country|ghana/.test(q)) {
-    return 'Lightworld Technologies Ltd is a Ghanaian technology company serving organizations with software, digital products, infrastructure, training and advisory services.';
+    return 'Lightworld Technologies Limited is a Ghanaian technology company serving organizations with software, digital products, infrastructure, training and advisory services.';
   }
 
-  return 'Lightworld Technologies Ltd is a Ghanaian technology company building software, apps, websites, enterprise systems, AI-enabled workflows, cloud infrastructure, training and advisory services. You can ask me about our leadership, services, awards, press coverage, training, or starting a project.';
+  return 'Lightworld Technologies Limited is a Ghanaian technology company building software, apps, websites, enterprise systems, AI-enabled workflows, cloud infrastructure, training and advisory services. You can ask me about our leadership, services, awards, press coverage, training, or starting a project.';
 }
