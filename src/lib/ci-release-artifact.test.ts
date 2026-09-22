@@ -17,6 +17,9 @@ describe('CI-built release artifacts', () => {
     expect(workflow).toContain('.next/standalone/RELEASE_SHA');
     expect(workflow).toContain('DEPLOY_PRISMA_VERSION');
     expect(workflow).toContain('sha256sum');
+    expect(workflow).toContain('Include production Prisma engines');
+    expect(workflow).toContain('rhel-openssl-1.0.x');
+    expect(workflow).toContain('rhel-openssl-3.0.x');
   });
 
   test('artifact deployer verifies transfer and commit identity before promotion', () => {
@@ -46,5 +49,18 @@ describe('CI-built release artifacts', () => {
     expect(workflow).toContain('/api/admin/auth');
     expect(workflow).toContain('/api/client/auth');
     expect(workflow).toContain('/api/upload');
+    expect(workflow).toContain('/blog');
+  });
+
+  test('production Prisma targets and candidate cleanup match the deployment host', () => {
+    const schema = source('prisma/schema.prisma');
+    const promote = source('ops/promote-release.sh');
+
+    expect(schema).toContain('"rhel-openssl-1.0.x"');
+    expect(schema).toContain('"rhel-openssl-1.1.x"');
+    expect(schema).toContain('"rhel-openssl-3.0.x"');
+    expect(promote).toContain('set -Eeuo pipefail');
+    expect(promote).toContain('trap cleanup_candidate EXIT');
+    expect(promote).toContain('trap - EXIT');
   });
 });
