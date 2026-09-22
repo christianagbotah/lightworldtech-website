@@ -31,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import { hasAdminPermission } from '@/lib/admin-permissions';
+import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 
 type ProposalStatus = 'draft' | 'review' | 'ready' | 'sent' | 'accepted' | 'declined';
 
@@ -128,6 +129,7 @@ export default function AdminProposals() {
   const [leadId, setLeadId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [regenerateConfirmOpen, setRegenerateConfirmOpen] = useState(false);
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
 
   const fetchData = async () => {
@@ -224,10 +226,6 @@ export default function AdminProposals() {
 
   const regenerate = async () => {
     if (!selected) return;
-    const ok = window.confirm(
-      'Regenerate assisted sections from the current CRM lead? This replaces the title, summary, solution, scope, deliverables, assumptions, timeline, commercial notes and next steps, and returns the proposal to Draft.',
-    );
-    if (!ok) return;
     await patchProposal({ regenerateDraft: true }, 'Proposal regenerated as a new draft version');
   };
 
@@ -482,7 +480,7 @@ export default function AdminProposals() {
                     </p>
                   </div>
 
-                  <Button variant="outline" className="w-full" disabled={saving} onClick={() => void regenerate()}>
+                  <Button variant="outline" className="w-full" disabled={saving} onClick={() => setRegenerateConfirmOpen(true)}>
                     <Sparkles className="mr-2 size-4" /> Regenerate assisted draft
                   </Button>
 
@@ -560,6 +558,15 @@ export default function AdminProposals() {
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmActionDialog
+        open={regenerateConfirmOpen}
+        onOpenChange={setRegenerateConfirmOpen}
+        tone="warning"
+        title="Regenerate assisted proposal?"
+        description="This replaces the title, executive summary, solution, scope, deliverables, assumptions, timeline, commercial notes and next steps from the current CRM lead. The proposal will return to Draft as a new version."
+        confirmLabel="Regenerate draft"
+        onConfirm={regenerate}
+      />
     </div>
   );
 }
