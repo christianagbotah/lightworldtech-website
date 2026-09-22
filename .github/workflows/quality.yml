@@ -70,6 +70,18 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
+      - name: Include production Prisma engines
+        run: |
+          set -euo pipefail
+          prisma_runtime=".next/standalone/node_modules/.prisma/client"
+          mkdir -p "$prisma_runtime"
+          for target in rhel-openssl-1.0.x rhel-openssl-1.1.x rhel-openssl-3.0.x; do
+            engine="libquery_engine-$target.so.node"
+            test -f "node_modules/.prisma/client/$engine"
+            cp "node_modules/.prisma/client/$engine" "$prisma_runtime/$engine"
+            test -f "$prisma_runtime/$engine"
+          done
+
       - name: Smoke standalone release runtime
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
@@ -89,7 +101,7 @@ jobs:
           done
           [ "${code:-}" = "200" ] || { cat /tmp/lightworld-runtime-smoke.log; exit 1; }
 
-          for route in / /services /services/software-development /services/it-training /newsroom /sitemap.xml /robots.txt /feed.xml; do
+          for route in / /admin /client /services /services/software-development /services/it-training /portfolio /blog /newsroom /contact /sitemap.xml /robots.txt /feed.xml; do
             code=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "http://127.0.0.1:3017$route")
             [ "$code" = "200" ] || { echo "$route returned HTTP $code"; exit 1; }
           done
