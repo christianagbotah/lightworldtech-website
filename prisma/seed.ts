@@ -17,7 +17,7 @@ async function seed() {
     // General
     { key: 'company_name', value: 'Lightworld Technologies Ltd', type: 'text', group: 'general' },
     { key: 'company_tagline', value: 'The World of Possibilities', type: 'text', group: 'general' },
-    { key: 'company_description', value: 'We are a leading IT solutions company providing cutting-edge software development, web development, mobile app development, and digital marketing services to businesses across Africa and beyond.', type: 'richText', group: 'general' },
+    { key: 'company_description', value: 'Lightworld Technologies Limited is a Ghanaian software and IT company based in Tema, Greater Accra, building websites, mobile apps, enterprise systems, AI-enabled workflows and cloud solutions for businesses and institutions in Ghana and beyond.', type: 'richText', group: 'general' },
     { key: 'company_address', value: 'Tema, Ghana', type: 'text', group: 'contact' },
     { key: 'company_phone1', value: '+233 (024) 361 8186', type: 'text', group: 'contact' },
     { key: 'company_phone2', value: '+233 (055) 467 2081', type: 'text', group: 'contact' },
@@ -52,9 +52,9 @@ async function seed() {
     { key: 'about_values', value: '["Innovation","Excellence","Integrity","Client Satisfaction","Continuous Learning","Teamwork"]', type: 'json', group: 'about' },
 
     // SEO
-    { key: 'seo_title', value: 'Lightworld Technologies Ltd – The World of Possibilities', type: 'text', group: 'seo' },
-    { key: 'seo_description', value: 'We develop and design websites, Mobile Apps, School Management Software and other CRMs, Computer Science Training, Beads and Crafts Design Training, etc', type: 'text', group: 'seo' },
-    { key: 'seo_keywords', value: 'web development, mobile app development, IT training, SEO, digital marketing, Ghana, Lightworld Technologies', type: 'text', group: 'seo' },
+    { key: 'seo_title', value: 'Lightworld Technologies Limited | Software Company in Ghana', type: 'text', group: 'seo' },
+    { key: 'seo_description', value: 'Lightworld Technologies Limited is a Ghanaian software and IT company in Tema, Greater Accra, building websites, mobile apps, enterprise software, AI automation and cloud solutions, with IT training and technology consulting.', type: 'text', group: 'seo' },
+    { key: 'seo_keywords', value: 'Lightworld Technologies Limited, Lightworld Technologies Ghana, software company Ghana, software development Ghana, web development Ghana, website development Ghana, mobile app development Ghana, enterprise software Ghana, AI automation Ghana, IT company Tema, IT company Ghana, IT consulting Ghana, IT training Ghana, cloud solutions Ghana', type: 'text', group: 'seo' },
   ];
 
   for (const s of settings) {
@@ -240,7 +240,7 @@ async function seed() {
     },
     {
       id: 'leadership-rober-yaw-essuon',
-      name: 'Rober Yaw Essuon',
+      name: 'Robert Yaw Essuon',
       role: 'Managing Director',
       bio: 'Leads management and business execution, helping translate company strategy into coordinated delivery and operations.',
       image: '',
