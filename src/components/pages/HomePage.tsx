@@ -357,7 +357,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
   const entitySummary = contentText(
     settings,
     'home_entity_summary',
-    'Lightworld Technologies Limited is a Ghanaian software and IT company based in Tema, Greater Accra, serving businesses and institutions in Ghana and beyond.',
+    'Lightworld Technologies Limited is a Ghanaian software company and IT training institute based in Tema, Greater Accra, serving businesses and institutions in Ghana and beyond.',
   );
   const primaryCtaText = contentText(settings, 'home_primary_cta_text', 'Start a project');
   const primaryCtaLink = contentText(settings, 'home_primary_cta_link', '/contact');
