@@ -6,8 +6,8 @@ if [ "$#" -ne 1 ]; then
   exit 64
 fi
 
-APP_USER="lightworld"
-APP_GROUP="lightworld"
+APP_USER="lightworldtechapp"
+APP_GROUP="lightworldtechapp"
 SHARED="/home/lightworld/shared/lightworldtech"
 RELEASE="$(readlink -f "$1")"
 
