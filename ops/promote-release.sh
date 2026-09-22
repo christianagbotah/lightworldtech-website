@@ -95,7 +95,7 @@ smoke_routes() {
   local port="$1"
   local route code
 
-  for route in / /admin /client /services /services/software-development /services/it-training /portfolio /blog /newsroom /contact /sitemap.xml /robots.txt; do
+  for route in / /admin /client /services /services/software-development /services/it-training /portfolio /blog /newsroom /contact /sitemap.xml /robots.txt /feed.xml; do
     code="$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port$route")"
     [ "$code" = "200" ] || fail "Smoke check failed for $route on port $port: HTTP $code"
   done

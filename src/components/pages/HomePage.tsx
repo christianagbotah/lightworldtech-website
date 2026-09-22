@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 import { serviceSearchHref } from '@/lib/service-search-content';
+import { companyProfile } from '@/lib/company-profile';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Activity,
+  Award,
   ArrowRight,
   ArrowUpRight,
   BarChart3,
@@ -21,8 +23,10 @@ import {
   Factory,
   Globe2,
   GraduationCap,
+  MapPin,
   MessageSquare,
   Network,
+  Newspaper,
   Rocket,
   School,
   Search,
@@ -377,6 +381,8 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
   const secondaryCtaText = contentText(settings, 'home_secondary_cta_text', 'Explore our work');
   const secondaryCtaLink = contentText(settings, 'home_secondary_cta_link', '/portfolio');
   const cmsSignals = contentJson<string[]>(settings, 'home_signals', signals);
+  const homeRecognition = contentJson(settings, 'about_recognition', companyProfile.recognition);
+  const homeCoverage = contentJson(settings, 'about_coverage', companyProfile.coverage);
   const industryLabels = contentJson<string[]>(settings, 'home_industries', industries.map((item) => item.label));
   const cmsIndustries = industryLabels.map((label, index) => ({
     label,
@@ -494,6 +500,101 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               <span>Training</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-slate-200/70 bg-white py-10 dark:border-white/[0.06] dark:bg-[#081119] sm:py-12">
+        <div className="container-main">
+          <Reveal className="grid gap-7 lg:grid-cols-[.72fr_1.28fr] lg:items-start">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">
+                Independent signals
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+                A Ghanaian software company with a public track record.
+              </h2>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-500 dark:text-white/38">
+                Lightworld Technologies Limited operates from Tema, Greater Accra across software development, computer support and software training. Independent award publishers and GhanaWeb provide additional public references to the company.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {companyProfile.businessCategories.map((category) => (
+                  <span key={category} className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+                    {category}
+                  </span>
+                ))}
+              </div>
+              <a
+                href={companyProfile.googleMapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-300 px-4 text-xs font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-700 dark:border-white/10 dark:text-white/55 dark:hover:text-amber-300"
+              >
+                <MapPin className="size-4 text-amber-600" />
+                View Lightworld on Google Maps
+                <ArrowUpRight className="size-3.5" />
+              </a>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {homeRecognition.map((item) => (
+                <a
+                  key={item.year + item.title}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group rounded-[24px] border border-slate-200/70 bg-[#f7f9f8] p-5 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md dark:border-white/[0.07] dark:bg-white/[0.025]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-300">
+                      <Award className="size-4" />
+                    </span>
+                    <ArrowUpRight className="size-4 text-slate-300 transition group-hover:text-amber-600 dark:text-white/20" />
+                  </div>
+                  <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-600 dark:text-amber-300">
+                    {item.year} · {item.publisher}
+                  </p>
+                  <h3 className="mt-2 text-base font-semibold leading-6">{item.title}</h3>
+                </a>
+              ))}
+
+              {homeCoverage.map((item) => (
+                <a
+                  key={item.publisher + item.title}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group rounded-[24px] border border-slate-200/70 bg-[#f7f9f8] p-5 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md dark:border-white/[0.07] dark:bg-white/[0.025]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="flex size-9 items-center justify-center rounded-xl bg-slate-950/5 text-slate-600 dark:bg-white/[0.05] dark:text-white/55">
+                      <Newspaper className="size-4" />
+                    </span>
+                    <ArrowUpRight className="size-4 text-slate-300 transition group-hover:text-amber-600 dark:text-white/20" />
+                  </div>
+                  <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-white/35">
+                    Public coverage · {item.publisher}
+                  </p>
+                  <h3 className="mt-2 text-base font-semibold leading-6">{item.title}</h3>
+                </a>
+              ))}
+
+              <Link
+                href="/newsroom"
+                className="group flex min-h-[170px] flex-col justify-between rounded-[24px] border border-amber-200 bg-amber-50/70 p-5 transition hover:-translate-y-0.5 hover:border-amber-400 dark:border-amber-900/40 dark:bg-amber-950/15"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                    <Building2 className="size-4" />
+                  </span>
+                  <ArrowRight className="size-4 text-amber-600 transition-transform group-hover:translate-x-1" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">First-party source</p>
+                  <h3 className="mt-2 text-base font-semibold">Company facts, recognition and media resources</h3>
+                </div>
+              </Link>
+            </div>
+          </Reveal>
         </div>
       </section>
 
