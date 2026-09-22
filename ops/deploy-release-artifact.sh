@@ -50,7 +50,7 @@ ln -sfn "$SHARED/.env" "$REL/.env"
 ln -sfn "$SHARED/.env" "$REL/.next/standalone/.env"
 
 # Keep production operation scripts synchronized with the exact promoted commit.
-"$REL/ops/install-production-ops.sh"
+bash "$REL/ops/install-production-ops.sh"
 
 # Production migrations remain a separate, explicit step. The application runtime
 # itself is never rebuilt on the VPS.
