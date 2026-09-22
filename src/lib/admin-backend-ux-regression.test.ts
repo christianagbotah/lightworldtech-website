@@ -98,6 +98,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(replies).toContain("status: 'sending'");
     expect(replies).toContain("status: 'sent'");
     expect(replies).toContain("status: 'failed'");
+    expect(replies).toContain('status: 503');
+    expect(replies).toContain("'Retry-After': '30'");
+    expect(replies).toContain('details: safeError');
+    expect(messages).toContain('readMessageReplyApiPayload');
+    expect(messages).toContain('response.text()');
     expect(messages).toContain('Reply internally');
     expect(messages).toContain('Internal correspondence history');
     expect(messages).toContain("fetch('/api/admin/messages/'");
