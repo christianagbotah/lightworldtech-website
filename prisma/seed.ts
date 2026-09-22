@@ -20,7 +20,7 @@ async function seed() {
     { key: 'company_description', value: 'Lightworld Technologies Limited is a Ghanaian software and IT company based in Tema, Greater Accra, building websites, mobile apps, enterprise systems, AI-enabled workflows and cloud solutions for businesses and institutions in Ghana and beyond.', type: 'richText', group: 'general' },
     { key: 'company_address', value: 'Tema, Ghana', type: 'text', group: 'contact' },
     { key: 'company_phone1', value: '+233 (024) 361 8186', type: 'text', group: 'contact' },
-    { key: 'company_phone2', value: '+233 (055) 467 2081', type: 'text', group: 'contact' },
+    { key: 'company_phone2', value: '+233 (055) 538 4113', type: 'text', group: 'contact' },
     { key: 'company_email', value: 'mail@lightworldtech.com', type: 'text', group: 'contact' },
     { key: 'social_facebook', value: '', type: 'text', group: 'social' },
     { key: 'social_twitter', value: '', type: 'text', group: 'social' },
