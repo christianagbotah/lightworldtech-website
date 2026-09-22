@@ -44,12 +44,41 @@ The production Next.js configuration does not ignore TypeScript build failures.
 
 Production runs the website as the dedicated Linux user `lightworld` under the hardened `lightworldtech-app.service` systemd unit. PM2 is not used for the production website; the legacy `pm2-lightworld.service` must remain disabled to prevent two supervisors competing for port 3007.
 
-Build each GitHub SHA into an immutable release directory:
+### Preferred path: deploy the CI-built runtime artifact
+
+Every successful **push to `main`** now does more than prove that the application builds. After migrations, TypeScript, regression tests and the Next.js production build succeed, CI:
+
+1. writes the exact GitHub commit into `.next/standalone/RELEASE_SHA`;
+2. starts that standalone runtime on port 3017 against the CI database;
+3. smoke-checks public routes plus the unauthenticated admin/client/upload boundaries;
+4. packages `.next/standalone`, the Prisma schema/migrations and exact production ops scripts;
+5. records the exact Prisma CLI version used by the locked build;
+6. creates a SHA-256 checksum; and
+7. uploads the bundle as `lightworldtech-runtime-<40-char-main-sha>`.
+
+This means the production VPS does **not** need to run `bun install` or `next build` for normal releases.
+
+Download the GitHub Actions artifact ZIP for the exact green `main` SHA, then deploy it with:
+
+```bash
+SHA=<verified-main-sha>
+sudo /home/lightworld/shared/lightworldtech/ops/deploy-release-artifact.sh \
+  /path/to/lightworldtech-runtime-$SHA.zip \
+  "$SHA"
+```
+
+The artifact deployer refuses malformed SHAs, verifies the transferred archive checksum, verifies the embedded `RELEASE_SHA`, synchronizes the exact version-controlled production ops scripts, applies only the repository's Prisma migrations using the CI-recorded Prisma version, and finally calls the normal candidate-first promotion script.
+
+Promotion remains serialized with an exclusive lock. Before port 3007 is touched, the extracted release is started as `lightworld` in a transient systemd candidate unit on port 3017 and must pass route and authorization-boundary smoke checks. The verified previous live release is protected by `/home/lightworld/webapps/lightworldtech-previous`. If the live switch or post-switch smoke checks fail, promotion restores that rollback target.
+
+### Break-glass fallback: rebuild a verified SHA on the VPS
+
+Use the source-build path only when a CI artifact is unavailable and an urgent release is required:
 
 ```bash
 SHA=<verified-main-sha>
 STAMP=$(date -u +%Y%m%d-%H%M%S)
-REL=/home/lightworld/releases/lightworldtech-${SHA:0:12}-${STAMP}
+REL=/home/lightworld/releases/lightworldtech-${SHA:0:12}-$STAMP
 
 git clone https://github.com/christianagbotah/lightworldtech-website.git "$REL"
 cd "$REL"
@@ -63,24 +92,13 @@ bun run build
 
 ln -sfn /home/lightworld/shared/lightworldtech/.env .next/standalone/.env
 printf '%s\n' "$SHA" > .next/standalone/RELEASE_SHA
-```
-
-Install/update the version-controlled production operations scripts when they change:
-
-```bash
-cd "$REL"
 sudo ./ops/install-production-ops.sh
-```
-
-Promote only through the shared promotion script:
-
-```bash
 sudo /home/lightworld/shared/lightworldtech/ops/promote-release.sh "$REL"
 ```
 
-Promotion is serialized with an exclusive lock. Before port 3007 is touched, the release is started as `lightworld` in a transient systemd candidate unit on port 3017 and must pass route, unauthenticated admin/client-auth, and upload-boundary smoke checks. The script refuses to promote if legacy PM2 is active or if port 3007 is owned by anything other than `lightworldtech-app.service`. The verified previous live release is then protected by `/home/lightworld/webapps/lightworldtech-previous`, the live symlink is switched, and systemd restarts the single managed web service. If the live switch or post-switch smoke checks fail, the script restores the previous release and restarts that verified rollback target.
+This fallback is intentionally not the default because compiling Next.js on the production VPS competes with live applications for CPU, RAM and swap.
 
-The release-pruning job uses the same lock, so pruning cannot race a promotion. It preserves the current symlink target, rollback symlink target, any release whose working directory is still in use, and releases younger than the configured minimum age.
+The release-pruning job uses the same promotion lock, so pruning cannot race a promotion. It preserves the current symlink target, rollback symlink target, any release whose working directory is still in use, and releases younger than the configured minimum age.
 
 If production seeding is explicitly required:
 
