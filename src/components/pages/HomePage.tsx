@@ -279,7 +279,7 @@ function CapabilityConsole() {
 
         <div className="mt-3 flex items-center justify-between px-2 pb-1 text-[10px] text-white/20">
           <span className="flex items-center gap-1.5"><Network className="size-3" /> systems connected</span>
-          <span>Accra · Ghana</span>
+          <span>Tema · Greater Accra · Ghana</span>
         </div>
       </div>
     </div>
@@ -354,6 +354,11 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
   const heroEyebrow = contentText(settings, 'home_eyebrow', 'Ghana-built. Global-ready.');
   const heroTitle = contentText(settings, 'home_title', 'Technology people want to use.');
   const heroDescription = contentText(settings, 'home_description', 'We design and engineer websites, mobile apps, enterprise software, AI-enabled workflows and cloud systems that make real work simpler.');
+  const entitySummary = contentText(
+    settings,
+    'home_entity_summary',
+    'Lightworld Technologies Limited is a Ghanaian software and IT company based in Tema, Greater Accra, serving businesses and institutions in Ghana and beyond.',
+  );
   const primaryCtaText = contentText(settings, 'home_primary_cta_text', 'Start a project');
   const primaryCtaLink = contentText(settings, 'home_primary_cta_link', '/contact');
   const secondaryCtaText = contentText(settings, 'home_secondary_cta_text', 'Explore our work');
@@ -403,6 +408,15 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                 className="mt-7 max-w-2xl text-base leading-7 text-slate-600 dark:text-white/50 sm:text-lg sm:leading-8"
               >
                 {heroDescription}
+              </motion.p>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.19 }}
+                className="mt-4 max-w-2xl text-xs leading-6 text-slate-500 dark:text-white/35 sm:text-sm"
+              >
+                {entitySummary}
               </motion.p>
 
               <motion.div
