@@ -35,6 +35,11 @@ const privateNoStoreHeaders = [
   { key: 'Expires', value: '0' },
 ];
 
+const privateNoIndexHeaders = [
+  ...privateNoStoreHeaders,
+  { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive, nosnippet' },
+];
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
@@ -62,7 +67,14 @@ const nextConfig: NextConfig = {
         source: '/admin/:path*',
         headers: [
           ...securityHeaders,
-          ...privateNoStoreHeaders,
+          ...privateNoIndexHeaders,
+        ],
+      },
+      {
+        source: '/client/:path*',
+        headers: [
+          ...securityHeaders,
+          ...privateNoIndexHeaders,
         ],
       },
       {
