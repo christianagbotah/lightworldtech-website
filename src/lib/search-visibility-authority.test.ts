@@ -39,7 +39,9 @@ describe('search visibility and entity authority', () => {
     expect(page).toContain('Lightworld Technologies Limited | Software Company in Ghana');
     expect(page).toContain('absoluteTitle: true');
     expect(home).toContain('home_entity_summary');
-    expect(home).toContain('Ghanaian software company and IT training institute based in Tema, Greater Accra');
+    expect(home).toContain('Lightworld Technologies Limited · Tema, Ghana');
+    expect(home).toContain('Ghanaian software company and IT training institute');
+    expect(home).toContain('Based in Tema, Greater Accra, Lightworld Technologies Limited');
     expect(home).toContain('Tema · Greater Accra · Ghana');
   });
 

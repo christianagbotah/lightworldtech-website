@@ -9,6 +9,8 @@ export const companyProfile = {
   googleMapsPlaceId: 'ChIJl7EfYil_3w8R126pXLqlMgw',
   googleMapsUrl:
     'https://www.google.com/maps/search/?api=1&query=Lightworld%20Technologies%20Limited%2C%20Tema%2C%20Ghana&query_place_id=ChIJl7EfYil_3w8R126pXLqlMgw',
+  googleReviewUrl:
+    'https://search.google.com/local/writereview?placeid=ChIJl7EfYil_3w8R126pXLqlMgw',
   businessHours: {
     weekdays: { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '17:30' },
     saturday: { days: ['Saturday'], opens: '14:00', closes: '16:00' },

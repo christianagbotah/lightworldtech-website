@@ -4,6 +4,7 @@ import TeamPage from '@/components/pages/TeamPage';
 import { contentText } from '@/lib/site-content';
 import { getActiveTeamMembers, getSiteSettings } from '@/lib/site-content-server';
 import { buildPageMetadata, buildSeoConfig } from '@/lib/seo-config';
+import { BreadcrumbJsonLd, LeadershipJsonLd } from '@/components/ui/json-ld';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,8 +23,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Team() {
   const [settings, team] = await Promise.all([getSiteSettings(), getActiveTeamMembers()]);
+  const seo = buildSeoConfig(settings);
   return (
     <PublicShell>
+      <LeadershipJsonLd config={seo} />
+      <BreadcrumbJsonLd
+        config={seo}
+        items={[
+          { name: 'Home', path: '/' },
+          { name: 'Leadership', path: '/team' },
+        ]}
+      />
       <TeamPage settings={settings} team={team} />
     </PublicShell>
   );

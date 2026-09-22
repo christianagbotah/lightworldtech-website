@@ -153,6 +153,9 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
     award: companyProfile.recognition.map(
       (item) => `${item.year} ${item.title} — ${item.publisher}`,
     ),
+    employee: companyProfile.leadership.map((person) => ({
+      '@id': config.siteUrl + '/team#' + person.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+    })),
     subjectOf: [
       ...companyProfile.recognition.map((item) => ({
         '@type': 'CreativeWork',
@@ -168,6 +171,25 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
       })),
     ],
     sameAs: [companyProfile.googleMapsUrl, ...config.socialUrls],
+  };
+
+  return <JsonLd data={data} />;
+}
+
+export function LeadershipJsonLd({ config }: { config: SeoConfig }) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@graph': companyProfile.leadership.map((person) => ({
+      '@type': 'Person',
+      '@id': config.siteUrl + '/team#' + person.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      name: person.name,
+      jobTitle: person.role,
+      description: person.description,
+      url: config.siteUrl + '/team',
+      worksFor: {
+        '@id': config.siteUrl + '/#organization',
+      },
+    })),
   };
 
   return <JsonLd data={data} />;
