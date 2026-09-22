@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 
 type PortalUser = {
   id: string; name: string; email: string; role: string; active: boolean;
@@ -75,6 +76,7 @@ export default function AdminClients() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<{ kind: 'document' | 'announcement'; id: string; label: string } | null>(null);
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
 
   const [orgForm, setOrgForm] = useState({ name: '', primaryContactName: '', primaryEmail: '', primaryPhone: '' });
@@ -300,7 +302,6 @@ export default function AdminClients() {
   };
 
   const deleteDocument = async (id: string) => {
-    if (!window.confirm('Remove this document from the client portal?')) return;
     try {
       const response = await fetch('/api/admin/client-documents/' + id, { method: 'DELETE' });
       if (!response.ok) throw new Error('Could not remove document');
@@ -344,7 +345,6 @@ export default function AdminClients() {
   };
 
   const deleteAnnouncement = async (id: string) => {
-    if (!window.confirm('Delete this client announcement?')) return;
     try {
       const response = await fetch('/api/admin/client-announcements/' + id, { method: 'DELETE' });
       if (!response.ok) throw new Error('Could not delete announcement');
@@ -590,7 +590,7 @@ export default function AdminClients() {
                         <Button type="button" size="sm" variant="outline" onClick={() => void toggleAnnouncement(announcement.id, !announcement.active)}>
                           {announcement.active ? 'Hide' : 'Publish'}
                         </Button>
-                        <Button type="button" size="sm" variant="ghost" onClick={() => void deleteAnnouncement(announcement.id)}>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setPendingDelete({ kind: 'announcement', id: announcement.id, label: announcement.title })}>
                           <Trash2 className="mr-1 size-3.5 text-destructive" /> Delete
                         </Button>
                       </div>
@@ -639,7 +639,7 @@ export default function AdminClients() {
                               {document.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{document.description}</p>}
                               <p className="mt-1 text-[10px] text-muted-foreground">{pretty(document.category)} · {document.visibleToClient ? 'Visible to client' : 'Internal'}</p>
                             </div>
-                            <Button type="button" size="icon" variant="ghost" onClick={() => void deleteDocument(document.id)} aria-label="Remove document">
+                            <Button type="button" size="icon" variant="ghost" onClick={() => setPendingDelete({ kind: 'document', id: document.id, label: document.title })} aria-label="Remove document">
                               <Trash2 className="size-3.5 text-destructive" />
                             </Button>
                           </div>
@@ -728,6 +728,27 @@ export default function AdminClients() {
           <Card className="border-dashed"><CardContent className="p-8 text-sm text-muted-foreground">Create the first client organization to start provisioning the portal.</CardContent></Card>
         )}
       </div>
+      <ConfirmActionDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        tone="destructive"
+        title={pendingDelete?.kind === 'document' ? 'Remove client document?' : 'Delete client announcement?'}
+        description={
+          pendingDelete?.kind === 'document'
+            ? 'Remove “' + pendingDelete.label + '” from the client portal. The linked source file is not deleted by this action.'
+            : pendingDelete
+              ? 'Permanently delete the announcement “' + pendingDelete.label + '”. Clients will no longer be able to view it.'
+              : 'Confirm this destructive action.'
+        }
+        confirmLabel={pendingDelete?.kind === 'document' ? 'Remove document' : 'Delete announcement'}
+        onConfirm={async () => {
+          if (!pendingDelete) return;
+          if (pendingDelete.kind === 'document') await deleteDocument(pendingDelete.id);
+          else await deleteAnnouncement(pendingDelete.id);
+        }}
+      />
     </div>
   );
 }
