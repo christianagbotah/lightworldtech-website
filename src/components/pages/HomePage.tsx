@@ -364,13 +364,13 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
       .catch(() => {});
   }, []);
 
-  const heroEyebrow = contentText(settings, 'home_eyebrow', 'Ghana-built. Global-ready.');
-  const heroTitle = contentText(settings, 'home_title', 'Technology people want to use.');
-  const heroDescription = contentText(settings, 'home_description', 'We design and engineer websites, mobile apps, enterprise software, AI-enabled workflows and cloud systems that make real work simpler.');
+  const heroEyebrow = contentText(settings, 'home_eyebrow', 'Lightworld Technologies Limited · Tema, Ghana');
+  const heroTitle = contentText(settings, 'home_title', 'Software, AI and digital systems built for real business.');
+  const heroDescription = contentText(settings, 'home_description', 'A Ghanaian software company and IT training institute designing websites, mobile apps, enterprise software, AI automation and cloud systems, with practical technology consulting and training.');
   const entitySummary = contentText(
     settings,
     'home_entity_summary',
-    'Lightworld Technologies Limited is a Ghanaian software company and IT training institute based in Tema, Greater Accra, serving businesses and institutions in Ghana and beyond.',
+    'Based in Tema, Greater Accra, Lightworld Technologies Limited serves businesses and institutions across Ghana and beyond.',
   );
   const primaryCtaText = contentText(settings, 'home_primary_cta_text', 'Start a project');
   const primaryCtaLink = contentText(settings, 'home_primary_cta_link', '/contact');
