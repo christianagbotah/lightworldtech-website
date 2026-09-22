@@ -71,6 +71,16 @@ export const companyProfile = {
       title: 'Lightworld Technologies Limited introduces school management application',
       href: 'https://www.ghanaweb.com/GhanaHomePage/NewsArchive/Lightworld-Technologies-Limited-introduces-school-management-application-734612',
     },
+    {
+      publisher: 'GhanaWeb',
+      title: 'Lightworld Technologies Limited hosts stakeholder symposium to drive tech-enabled business growth',
+      href: 'https://www.ghanaweb.com/GhanaHomePage/NewsArchive/Lightworld-Technologies-Limited-hosts-stakeholder-symposium-to-drive-tech-enabled-business-growth-1001818',
+    },
+    {
+      publisher: 'MyJoyOnline',
+      title: 'Innovation & Future Trends: How Technology is Shaping Ghana’s Tomorrow',
+      href: 'https://www.myjoyonline.com/innovation-future-trends-how-technology-is-shaping-ghanas-tomorrow/',
+    },
   ],
 } as const;
 
@@ -99,8 +109,8 @@ export function answerCompanyQuestion(message: string): string {
     return 'Public award directories list Lightworld Technologies Limited among winners of the 2026 African Excellence Awards, the 2024 Business Excellence Awards, and the 2021 MEA Business Awards. The About page links to the official winner pages.';
   }
 
-  if (/ghanaweb|news|press|media|coverage/.test(q)) {
-    return 'GhanaWeb published coverage titled “Lightworld Technologies Limited introduces school management application.” You can find the verified coverage link on our About page.';
+  if (/ghanaweb|myjoy|news|press|media|coverage/.test(q)) {
+    return 'Independent Ghanaian publishers have covered Lightworld Technologies Limited, including GhanaWeb reports on its school management application and stakeholder symposium, plus a MyJoyOnline technology article that references Lightworld and links to lightworldtech.com. Verified source links are available in the Newsroom and About pages.';
   }
 
   if (/service|what.*do|offer|solution|build/.test(q)) {
