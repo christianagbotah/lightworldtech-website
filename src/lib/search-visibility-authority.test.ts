@@ -90,8 +90,10 @@ describe('search visibility and entity authority', () => {
     expect(profile).toContain("phoneDisplay: '0243618186'");
     expect(schema).toContain("'Software training institute'");
     expect(schema).toContain('companyProfile.googleMapsUrl');
-    expect(contact).toContain('Mon–Fri · 08:30–17:30 GMT');
-    expect(contact).toContain('Sat · 14:00–16:00 GMT');
+    expect(contact).toContain('companyProfile.businessHours.weekdays.opens');
+    expect(contact).toContain('companyProfile.businessHours.weekdays.closes');
+    expect(contact).toContain('companyProfile.businessHours.saturday.opens');
+    expect(contact).toContain('companyProfile.businessHours.saturday.closes');
   });
 
   test('leadership identity uses the corrected managing director name', () => {
