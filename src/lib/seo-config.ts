@@ -18,7 +18,6 @@ export interface SeoConfig {
   bingVerification: string;
   contactEmail: string;
   phone: string;
-  secondaryPhone: string;
   address: string;
   city: string;
   region: string;
@@ -110,7 +109,6 @@ export function buildSeoConfig(settings: SiteSettings): SeoConfig {
     bingVerification: text(settings, 'seo_bing_verification', ''),
     contactEmail: text(settings, 'company_email', 'mail@lightworldtech.com'),
     phone: text(settings, 'company_phone1', '+233243618186'),
-    secondaryPhone: text(settings, 'company_phone2', '+233555384113'),
     address: text(settings, 'company_address', 'Tema, Ghana'),
     city: text(settings, 'seo_address_city', 'Tema'),
     region: text(settings, 'seo_address_region', 'Greater Accra'),
