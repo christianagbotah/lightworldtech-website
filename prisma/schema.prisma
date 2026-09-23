@@ -1093,6 +1093,52 @@ model FinanceAccountingPeriod {
   @@index([status, startDate, endDate])
 }
 
+model FinanceApprovalPolicy {
+  id                    String   @id
+  enabled               Boolean  @default(false)
+  requireSecondApprover Boolean  @default(true)
+  updatedBy             String   @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FinanceOutflowApproval {
+  id                 String   @id @default(cuid())
+  requestNumber      String   @unique
+  outflowType        String
+  status             String   @default("pending")
+  counterpartyId     String   @default("")
+  counterpartyName   String   @default("")
+  sourceReference    String   @default("")
+  currency           String   @default("GHS")
+  amount             Decimal  @db.Decimal(18, 2)
+  effectiveDate      DateTime
+  method             String   @default("bank_transfer")
+  reference          String   @default("")
+  reason             String   @default("")
+  allocationsJson    String   @default("[]")
+  requestedByAdminId String
+  requestedByName    String   @default("")
+  requestedByEmail   String   @default("")
+  requestedAt        DateTime @default(now())
+  decidedByAdminId   String   @default("")
+  decidedByName      String   @default("")
+  decidedByEmail     String   @default("")
+  decidedAt          DateTime?
+  decisionNotes      String   @default("")
+  resultId           String   @default("")
+  resultNumber       String   @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, requestedAt])
+  @@index([outflowType, status])
+  @@index([counterpartyId, status])
+  @@index([requestedByAdminId, status])
+}
+
 model FinanceMonthClose {
   id        String   @id @default(cuid())
   monthStart DateTime @unique
