@@ -950,6 +950,14 @@ model FinanceVendorBill {
   currency       String              @default("GHS")
   issueDate      DateTime
   dueDate        DateTime
+  taxTreatment   String              @default("legacy")
+  taxableAmount  Decimal             @default(0) @db.Decimal(18, 2)
+  vatRate        Decimal             @default(0) @db.Decimal(5, 2)
+  vatAmount      Decimal             @default(0) @db.Decimal(18, 2)
+  nhilRate       Decimal             @default(0) @db.Decimal(5, 2)
+  nhilAmount     Decimal             @default(0) @db.Decimal(18, 2)
+  getfundRate    Decimal             @default(0) @db.Decimal(5, 2)
+  getfundAmount  Decimal             @default(0) @db.Decimal(18, 2)
   total          Decimal             @db.Decimal(18, 2)
   notes          String              @default("")
   allocations    FinanceVendorPaymentAllocation[]
