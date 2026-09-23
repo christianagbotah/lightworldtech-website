@@ -443,9 +443,10 @@ export default function FinanceRecordDetailsDialog({
 
           {!loading && data?.type === 'invoice' && data.invoice && (
             <div className="space-y-5 p-5 sm:p-6">
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Invoice total</p><p className="mt-1 text-xl font-bold">{money(data.invoice.total, data.invoice.currency)}</p></CardContent></Card>
                 <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Paid / allocated</p><p className="mt-1 text-xl font-bold text-emerald-700">{money(data.invoice.amountPaid, data.invoice.currency)}</p></CardContent></Card>
+                <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Credit notes applied</p><p className="mt-1 text-xl font-bold text-sky-700">{money((data.invoice.creditNotes || []).reduce((sum: number, note: any) => sum + Number(note.appliedAmount || 0), 0), data.invoice.currency)}</p></CardContent></Card>
                 <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Balance due</p><p className="mt-1 text-xl font-bold text-amber-700">{money(data.invoice.balance, data.invoice.currency)}</p></CardContent></Card>
               </div>
 
@@ -511,6 +512,63 @@ export default function FinanceRecordDetailsDialog({
                   </Table>
                 </CardContent>
               </Card>
+
+              {Boolean(data.invoice.creditNotes?.length) && (
+                <Card className="min-w-0 border-border/60">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Credit notes & customer refunds</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {data.invoice.creditNotes.map((note: any) => (
+                      <div key={note.id} className="rounded-xl border border-border/60 p-3">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-mono text-xs font-semibold">{note.creditNoteNumber}</p>
+                              <Badge variant="outline">{pretty(note.status)}</Badge>
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">{date(note.issueDate)} · {note.reason}</p>
+                          </div>
+                          <p className="font-semibold text-sky-700">{money(note.total, data.invoice.currency)}</p>
+                        </div>
+
+                        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                          <div className="rounded-lg bg-muted/35 p-2.5 text-xs">
+                            <p className="text-muted-foreground">Applied to receivable</p>
+                            <p className="mt-1 font-semibold">{money(note.appliedAmount, data.invoice.currency)}</p>
+                          </div>
+                          <div className="rounded-lg bg-muted/35 p-2.5 text-xs">
+                            <p className="text-muted-foreground">Refunded</p>
+                            <p className="mt-1 font-semibold">{money(note.refundedAmount || 0, data.invoice.currency)}</p>
+                          </div>
+                          <div className="rounded-lg bg-muted/35 p-2.5 text-xs">
+                            <p className="text-muted-foreground">Available customer credit</p>
+                            <p className="mt-1 font-semibold">{money(note.refundableBalance || 0, data.invoice.currency)}</p>
+                          </div>
+                        </div>
+
+                        {Boolean(note.refunds?.length) && (
+                          <div className="mt-3 space-y-2 border-t border-border/60 pt-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Refund history</p>
+                            {note.refunds.map((refund: any) => (
+                              <div key={refund.id} className="flex flex-col gap-1 rounded-lg bg-muted/20 p-2.5 text-xs sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                  <p className="font-mono font-semibold">{refund.refundNumber}</p>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {date(refund.refundedAt)} · {pretty(refund.method)}
+                                    {refund.reference ? ' · ' + refund.reference : ''}
+                                  </p>
+                                </div>
+                                <p className="font-semibold">{money(refund.amount, data.invoice.currency)}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
 
               <Card className="min-w-0 border-border/60">
                 <CardHeader className="pb-3"><CardTitle className="text-base">Payment allocations</CardTitle></CardHeader>
