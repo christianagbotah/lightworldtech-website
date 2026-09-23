@@ -379,6 +379,7 @@ export async function postVendorBillJournal(tx: Tx, input: {
   vatAmount?: Prisma.Decimal;
   nhilAmount?: Prisma.Decimal;
   getfundAmount?: Prisma.Decimal;
+  taxRecoverable?: boolean;
   category: string;
   postedBy: string;
 }) {
@@ -386,9 +387,12 @@ export async function postVendorBillJournal(tx: Tx, input: {
   const nhil = input.nhilAmount || new Prisma.Decimal(0);
   const getfund = input.getfundAmount || new Prisma.Decimal(0);
   const inputTax = vat.plus(nhil).plus(getfund);
-  const expenseAmount = input.taxableAmount && input.taxableAmount.gt(0)
-    ? input.taxableAmount
-    : Prisma.Decimal.max(new Prisma.Decimal(0), input.total.minus(inputTax));
+  const recoverable = input.taxRecoverable !== false;
+  const expenseAmount = recoverable
+    ? (input.taxableAmount && input.taxableAmount.gt(0)
+      ? input.taxableAmount
+      : Prisma.Decimal.max(new Prisma.Decimal(0), input.total.minus(inputTax)))
+    : input.total;
 
   return postSourceJournal(tx, {
     sourceType: 'vendor_bill',
@@ -407,17 +411,17 @@ export async function postVendorBillJournal(tx: Tx, input: {
       {
         systemKey: 'vat_input',
         description: 'Recoverable VAT input tax',
-        debit: vat,
+        debit: recoverable ? vat : new Prisma.Decimal(0),
       },
       {
         systemKey: 'nhil_input',
         description: 'Recoverable NHIL input tax',
-        debit: nhil,
+        debit: recoverable ? nhil : new Prisma.Decimal(0),
       },
       {
         systemKey: 'getfund_input',
         description: 'Recoverable GETFund input levy',
-        debit: getfund,
+        debit: recoverable ? getfund : new Prisma.Decimal(0),
       },
       {
         systemKey: 'accounts_payable',
