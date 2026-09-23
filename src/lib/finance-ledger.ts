@@ -444,3 +444,85 @@ export async function postExpenseJournal(tx: Tx, input: {
 
   return { recognition, settlement: null };
 }
+
+export async function postCreditNoteJournal(tx: Tx, input: {
+  creditNoteId: string;
+  creditNoteNumber: string;
+  issueDate: Date;
+  currency: string;
+  subtotal: Prisma.Decimal;
+  tax: Prisma.Decimal;
+  total: Prisma.Decimal;
+  appliedAmount: Prisma.Decimal;
+  postedBy: string;
+}) {
+  const customerCredit = Prisma.Decimal.max(
+    new Prisma.Decimal(0),
+    input.total.minus(input.appliedAmount),
+  );
+
+  return postSourceJournal(tx, {
+    sourceType: 'credit_note',
+    sourceId: input.creditNoteId,
+    entryDate: input.issueDate,
+    currency: input.currency,
+    description: 'Customer credit note ' + input.creditNoteNumber,
+    reference: input.creditNoteNumber,
+    postedBy: input.postedBy,
+    lines: [
+      {
+        systemKey: 'service_revenue',
+        description: 'Reverse service revenue',
+        debit: input.subtotal,
+      },
+      {
+        systemKey: 'tax_payable',
+        description: 'Reverse tax payable',
+        debit: input.tax,
+      },
+      {
+        systemKey: 'accounts_receivable',
+        description: 'Reduce customer receivable',
+        credit: input.appliedAmount,
+      },
+      {
+        systemKey: 'customer_deposits',
+        description: 'Customer credit available for refund or future allocation',
+        credit: customerCredit,
+      },
+    ],
+  });
+}
+
+export async function postCustomerRefundJournal(tx: Tx, input: {
+  refundId: string;
+  refundNumber: string;
+  refundedAt: Date;
+  currency: string;
+  amount: Prisma.Decimal;
+  method: string;
+  postedBy: string;
+}) {
+  return postSourceJournal(tx, {
+    sourceType: 'customer_refund',
+    sourceId: input.refundId,
+    entryDate: input.refundedAt,
+    currency: input.currency,
+    description: 'Customer refund ' + input.refundNumber,
+    reference: input.refundNumber,
+    postedBy: input.postedBy,
+    lines: [
+      {
+        systemKey: 'customer_deposits',
+        description: 'Release customer credit',
+        debit: input.amount,
+      },
+      {
+        systemKey: cashSystemKey(input.method),
+        description: 'Refund from ' + input.method.replaceAll('_', ' '),
+        credit: input.amount,
+      },
+    ],
+  });
+}
+
