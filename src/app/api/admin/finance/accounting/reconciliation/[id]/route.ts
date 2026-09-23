@@ -53,8 +53,6 @@ export async function GET(
     return NextResponse.json({ success: false, error: 'Reconciliation batch not found' }, { status: 404 });
   }
 
-  const windowStart = new Date(batch.statementFrom.getTime() - 7 * 86400000);
-  const windowEnd = new Date(batch.statementTo.getTime() + 7 * 86400000);
   const candidates = await db.financeJournalLine.findMany({
     where: {
       reconciliationLine: null,
