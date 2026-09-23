@@ -1476,7 +1476,70 @@ export default function AdminFinance() {
       </Dialog>
 
       <Dialog open={dialog === 'bill'} onOpenChange={(open) => !open && setDialog(null)}>
-        <DialogContent className="max-w-xl"><DialogHeader><DialogTitle>Record supplier bill</DialogTitle></DialogHeader><form onSubmit={submitBill} className="space-y-3"><select required value={billForm.vendorId} onChange={(e) => setBillForm({ ...billForm, vendorId: e.target.value })} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select supplier</option>{data.vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select><div className="grid gap-3 sm:grid-cols-2"><Input placeholder="Supplier invoice/reference" value={billForm.vendorReference} onChange={(e) => setBillForm({ ...billForm, vendorReference: e.target.value })} /><Input value={billForm.category} onChange={(e) => setBillForm({ ...billForm, category: e.target.value })} placeholder="Expense category" /></div><div className="grid gap-3 sm:grid-cols-3"><Input required type="date" value={billForm.issueDate} onChange={(e) => setBillForm({ ...billForm, issueDate: e.target.value })} /><Input required type="date" value={billForm.dueDate} onChange={(e) => setBillForm({ ...billForm, dueDate: e.target.value })} /><Input required type="number" min="0.01" step="0.01" placeholder="Total" value={billForm.total} onChange={(e) => setBillForm({ ...billForm, total: e.target.value })} /></div><Textarea placeholder="Bill notes" value={billForm.notes} onChange={(e) => setBillForm({ ...billForm, notes: e.target.value })} /><DialogFooter><Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button><Button disabled={saving}>Record bill</Button></DialogFooter></form></DialogContent>
+        <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Record supplier bill</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={submitBill} className="space-y-4">
+            <div>
+              <Label>Supplier</Label>
+              <select required value={billForm.vendorId} onChange={(e) => setBillForm({ ...billForm, vendorId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                <option value="">Select supplier</option>
+                {data.vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
+              </select>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>Supplier invoice / reference</Label><Input value={billForm.vendorReference} onChange={(e) => setBillForm({ ...billForm, vendorReference: e.target.value })} /></div>
+              <div><Label>Expense category</Label><Input required value={billForm.category} onChange={(e) => setBillForm({ ...billForm, category: e.target.value })} /></div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div><Label>Issue date</Label><Input required type="date" value={billForm.issueDate} onChange={(e) => setBillForm({ ...billForm, issueDate: e.target.value })} /></div>
+              <div><Label>Due date</Label><Input required type="date" value={billForm.dueDate} onChange={(e) => setBillForm({ ...billForm, dueDate: e.target.value })} /></div>
+              <div><Label>Net / taxable amount</Label><Input required type="number" min="0.01" step="0.01" value={billForm.taxableAmount} onChange={(e) => setBillForm({ ...billForm, taxableAmount: e.target.value })} /></div>
+              <div>
+                <Label>Tax treatment</Label>
+                <select value={billForm.taxTreatment} onChange={(e) => setBillForm({ ...billForm, taxTreatment: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                  <option value="none">No tax / non-VAT bill</option>
+                  <option value="standard" disabled={!data.taxProfile?.enabled}>
+                    Ghana standard VAT{data.taxProfile ? ' · ' + data.taxProfile.effectiveRate + '%' : ''}
+                  </option>
+                  <option value="zero">Zero-rated</option>
+                  <option value="exempt">VAT exempt</option>
+                </select>
+              </div>
+            </div>
+
+            {billForm.taxTreatment === 'standard' && !data.taxProfile?.enabled && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+                Standard Ghana VAT is disabled in the company tax profile. Enable it before recording a standard-rated supplier bill.
+              </div>
+            )}
+
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Net cost</p><p className="mt-1 font-semibold">{money(billTaxablePreview, billForm.currency)}</p></div>
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">NHIL input</p><p className="mt-1 font-semibold">{money(billNhilPreview, billForm.currency)}</p></div>
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">GETFund input</p><p className="mt-1 font-semibold">{money(billGetfundPreview, billForm.currency)}</p></div>
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">VAT input</p><p className="mt-1 font-semibold">{money(billVatPreview, billForm.currency)}</p></div>
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Input tax</p><p className="mt-1 font-semibold">{money(billTaxPreview, billForm.currency)}</p></div>
+              <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-950/15"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Amount payable</p><p className="mt-1 font-bold">{money(billTotalPreview, billForm.currency)}</p></div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>Currency</Label><Input required maxLength={3} value={billForm.currency} onChange={(e) => setBillForm({ ...billForm, currency: e.target.value.toUpperCase() })} /></div>
+              <div><Label>Notes</Label><Input value={billForm.notes} onChange={(e) => setBillForm({ ...billForm, notes: e.target.value })} /></div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button>
+              <Button disabled={saving || !billForm.taxableAmount || (billForm.taxTreatment === 'standard' && !data.taxProfile?.enabled)}>
+                {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Record bill
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
       </Dialog>
 
       <Dialog open={dialog === 'supplier-payment'} onOpenChange={(open) => !open && setDialog(null)}>
