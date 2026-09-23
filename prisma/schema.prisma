@@ -436,6 +436,7 @@ model ClientOrganization {
   payments           ClientPayment[]
   paymentIntents     HubtelPaymentIntent[]
   creditNotes        FinanceCreditNote[]
+  refunds            FinanceCustomerRefund[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -717,6 +718,7 @@ model ClientInvoice {
   lines          ClientInvoiceLine[]
   allocations    ClientPaymentAllocation[]
   paymentIntents  HubtelPaymentIntent[]
+  creditNotes     FinanceCreditNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
