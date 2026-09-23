@@ -1051,6 +1051,23 @@ model FinanceAccountingPeriod {
   @@index([status, startDate, endDate])
 }
 
+model FinanceMonthClose {
+  id        String   @id @default(cuid())
+  monthStart DateTime @unique
+  monthEnd   DateTime
+  status     String   @default("open")
+  closedAt   DateTime?
+  closedBy   String   @default("")
+  reopenedAt DateTime?
+  reopenedBy String   @default("")
+  notes      String   @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, monthStart])
+}
+
 model FinanceJournalEntry {
   id            String               @id @default(cuid())
   journalNumber String               @unique
