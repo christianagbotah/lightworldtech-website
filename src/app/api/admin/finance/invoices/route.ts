@@ -28,6 +28,7 @@ const schema = z.object({
   issueDate: z.coerce.date(),
   dueDate: z.coerce.date(),
   discount: z.coerce.number().min(0).max(999999999999).default(0),
+  taxTreatment: z.enum(['none', 'standard', 'zero', 'exempt']).default('none'),
   tax: z.coerce.number().min(0).max(999999999999).default(0),
   notes: z.string().trim().max(8000).default(''),
   lines: z.array(lineSchema).min(1).max(100),
@@ -44,6 +45,13 @@ function serializeInvoice(invoice: any) {
     subtotal: invoice.subtotal.toFixed(2),
     discount: invoice.discount.toFixed(2),
     tax: invoice.tax.toFixed(2),
+    taxableAmount: invoice.taxableAmount.toFixed(2),
+    vatRate: invoice.vatRate.toFixed(2),
+    vatAmount: invoice.vatAmount.toFixed(2),
+    nhilRate: invoice.nhilRate.toFixed(2),
+    nhilAmount: invoice.nhilAmount.toFixed(2),
+    getfundRate: invoice.getfundRate.toFixed(2),
+    getfundAmount: invoice.getfundAmount.toFixed(2),
     total: invoice.total.toFixed(2),
     amountPaid: amountPaid.toFixed(2),
     balance: balance.toFixed(2),
@@ -175,11 +183,47 @@ export async function POST(request: NextRequest) {
   });
   const subtotal = lines.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
   const discount = new Prisma.Decimal(parsed.data.discount).toDecimalPlaces(2);
-  const tax = new Prisma.Decimal(parsed.data.tax).toDecimalPlaces(2);
   if (discount.gt(subtotal)) {
     return NextResponse.json({ success: false, error: 'Discount cannot exceed invoice subtotal' }, { status: 400 });
   }
-  const total = subtotal.minus(discount).plus(tax).toDecimalPlaces(2);
+
+  const taxableAmount = subtotal.minus(discount).toDecimalPlaces(2);
+  let vatRate = new Prisma.Decimal(0);
+  let nhilRate = new Prisma.Decimal(0);
+  let getfundRate = new Prisma.Decimal(0);
+  let vatAmount = new Prisma.Decimal(0);
+  let nhilAmount = new Prisma.Decimal(0);
+  let getfundAmount = new Prisma.Decimal(0);
+
+  if (parsed.data.taxTreatment === 'standard') {
+    const profile = await db.financeTaxProfile.findUnique({ where: { id: 'ghana-default' } });
+    if (!profile || !profile.enabled) {
+      return NextResponse.json(
+        { success: false, error: 'Standard Ghana VAT is disabled. Enable the statutory tax profile first.' },
+        { status: 409 },
+      );
+    }
+    if (parsed.data.issueDate.getTime() < profile.effectiveFrom.getTime()) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'The configured Ghana VAT profile is not effective on this invoice date',
+          effectiveFrom: profile.effectiveFrom,
+        },
+        { status: 409 },
+      );
+    }
+
+    vatRate = profile.vatRate;
+    nhilRate = profile.nhilRate;
+    getfundRate = profile.getfundRate;
+    vatAmount = taxableAmount.mul(vatRate).div(100).toDecimalPlaces(2);
+    nhilAmount = taxableAmount.mul(nhilRate).div(100).toDecimalPlaces(2);
+    getfundAmount = taxableAmount.mul(getfundRate).div(100).toDecimalPlaces(2);
+  }
+
+  const tax = vatAmount.plus(nhilAmount).plus(getfundAmount).toDecimalPlaces(2);
+  const total = taxableAmount.plus(tax).toDecimalPlaces(2);
   const invoiceNumber = await nextInvoiceNumber(parsed.data.issueDate);
 
   const currency = normalizeCurrency(parsed.data.currency);
@@ -196,6 +240,14 @@ export async function POST(request: NextRequest) {
         dueDate: parsed.data.dueDate,
         subtotal,
         discount,
+        taxTreatment: parsed.data.taxTreatment,
+        taxableAmount,
+        vatRate,
+        vatAmount,
+        nhilRate,
+        nhilAmount,
+        getfundRate,
+        getfundAmount,
         tax,
         total,
         notes: parsed.data.notes,
@@ -221,6 +273,9 @@ export async function POST(request: NextRequest) {
         subtotal: created.subtotal,
         discount: created.discount,
         tax: created.tax,
+        vatAmount: created.vatAmount,
+        nhilAmount: created.nhilAmount,
+        getfundAmount: created.getfundAmount,
         total: created.total,
         postedBy: actor.name || actor.email,
       });
@@ -234,7 +289,17 @@ export async function POST(request: NextRequest) {
     action: 'admin.finance_invoice_created',
     entity: 'ClientInvoice',
     entityId: invoice.id,
-    details: { invoiceNumber, organizationId: invoice.organizationId, total: total.toFixed(2), currency: invoice.currency },
+    details: {
+      invoiceNumber,
+      organizationId: invoice.organizationId,
+      total: total.toFixed(2),
+      currency: invoice.currency,
+      taxTreatment: invoice.taxTreatment,
+      taxableAmount: invoice.taxableAmount.toFixed(2),
+      vatAmount: invoice.vatAmount.toFixed(2),
+      nhilAmount: invoice.nhilAmount.toFixed(2),
+      getfundAmount: invoice.getfundAmount.toFixed(2),
+    },
   });
 
   return NextResponse.json({ success: true, data: serializeInvoice(invoice) }, { status: 201 });
