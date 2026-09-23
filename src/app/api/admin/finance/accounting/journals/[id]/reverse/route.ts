@@ -121,6 +121,21 @@ export async function POST(
     );
   }
 
+  const monthLock = await db.financeMonthClose.findFirst({
+    where: {
+      status: 'closed',
+      monthStart: { lte: parsed.data.entryDate },
+      monthEnd: { gte: parsed.data.entryDate },
+    },
+    select: { id: true, monthStart: true, monthEnd: true },
+  });
+  if (monthLock) {
+    return NextResponse.json(
+      { success: false, error: 'The month for this reversal date is closed' },
+      { status: 409 },
+    );
+  }
+
   const journalNumber = await nextJournalNumber(parsed.data.entryDate);
   const reversal = await db.$transaction(async (tx) => {
     const created = await tx.financeJournalEntry.create({
