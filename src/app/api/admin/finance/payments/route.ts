@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
   const invoices = parsed.data.allocations.length
     ? await db.clientInvoice.findMany({
         where: { id: { in: parsed.data.allocations.map((item) => item.invoiceId) }, organizationId: parsed.data.organizationId },
-        include: { allocations: true },
+        include: { allocations: true, creditNotes: { where: { status: 'posted' } } },
       })
     : [];
 
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
     if (invoice.status === 'draft' || invoice.status === 'void') {
       return NextResponse.json({ success: false, error: 'Payments cannot be allocated to draft or void invoices' }, { status: 409 });
     }
-    const available = invoiceBalance(invoice.total, invoice.allocations);
+    const available = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
     if (new Prisma.Decimal(allocation.amount).gt(available)) {
       return NextResponse.json({
         success: false,
@@ -176,6 +176,7 @@ export async function POST(request: NextRequest) {
         storedStatus: invoice.status,
         total: invoice.total,
         allocations: combined,
+        credits: invoice.creditNotes,
         dueDate: invoice.dueDate,
         now,
       });
