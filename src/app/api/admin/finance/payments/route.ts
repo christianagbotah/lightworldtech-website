@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
+import { postCustomerPaymentJournal } from '@/lib/finance-ledger';
 import {
   invoiceBalance,
   invoiceStatusFromBalance,
@@ -180,6 +181,22 @@ export async function POST(request: NextRequest) {
       });
       await tx.clientInvoice.update({ where: { id: invoice.id }, data: { status: nextStatus } });
     }
+
+    const allocatedAmount = parsed.data.allocations.reduce(
+      (sum, item) => sum.plus(new Prisma.Decimal(item.amount)),
+      new Prisma.Decimal(0),
+    );
+    await postCustomerPaymentJournal(tx, {
+      paymentId: created.id,
+      paymentNumber: created.paymentNumber,
+      paidAt: created.paidAt,
+      currency: created.currency,
+      amount: created.amount,
+      allocatedAmount,
+      method: created.method,
+      postedBy: actor.name || actor.email,
+    });
+
     return created;
   });
 
