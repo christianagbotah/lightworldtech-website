@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +33,18 @@ type CloseReadiness = {
   blockingCount: number;
   warningCount: number;
   ready: boolean;
+  monthEnded: boolean;
+  canClose: boolean;
+  canReopen: boolean;
+  closeState: {
+    id: string | null;
+    status: 'open' | 'closed';
+    closedAt: string | null;
+    closedBy: string;
+    reopenedAt: string | null;
+    reopenedBy: string;
+    notes: string;
+  };
   details: {
     missingSourceJournals: Record<string, number>;
     openReconciliationBatches: Array<{
@@ -113,6 +126,7 @@ export default function FinanceCloseWorkspace() {
   const [data, setData] = useState<CloseReadiness | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [monthAction, setMonthAction] = useState<'close' | 'reopen' | null>(null);
 
   const run = async () => {
     setLoading(true);
@@ -133,6 +147,32 @@ export default function FinanceCloseWorkspace() {
     // Initial check uses current month.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const applyMonthAction = async () => {
+    if (!monthAction) return;
+    const response = await fetch('/api/admin/finance/accounting/month-close', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        month,
+        action: monthAction,
+        notes: '',
+      }),
+    });
+    const raw = await response.text();
+    let payload: any = null;
+    try {
+      payload = raw ? JSON.parse(raw) : null;
+    } catch {
+      // Keep proxy HTML responses outside the state path.
+    }
+    if (!response.ok) {
+      throw new Error(payload?.error || 'Unable to update month close status');
+    }
+    toast.success(monthAction === 'close' ? 'Accounting month closed' : 'Accounting month reopened');
+    setMonthAction(null);
+    await run();
+  };
 
   const missingEntries = Object.entries(data?.details.missingSourceJournals || {})
     .filter(([, count]) => count > 0);
@@ -180,10 +220,12 @@ export default function FinanceCloseWorkspace() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Close status</p>
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-2xl font-bold">{data.ready ? 'Ready' : 'Blocked'}</p>
+                    <p className="text-2xl font-bold">
+                      {data.closeState.status === 'closed' ? 'Closed' : data.ready ? 'Ready' : 'Blocked'}
+                    </p>
                     <p className="text-xs text-muted-foreground">{date(data.from)} – {date(data.to)}</p>
                   </div>
-                  {data.ready
+                  {data.closeState.status === 'closed' || data.ready
                     ? <CheckCircle2 className="size-7 text-emerald-600" />
                     : <CircleAlert className="size-7 text-rose-600" />}
                 </div>
@@ -287,15 +329,61 @@ export default function FinanceCloseWorkspace() {
 
           <Card className="border-border/60">
             <CardContent className="p-4">
-              <p className="font-semibold">Close policy</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Blocking controls prevent an accounting period from closing. Warnings do not automatically block the period,
-                but should be reviewed and documented before management sign-off. Reopening a closed accounting period remains restricted to super-admin authority.
-              </p>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="font-semibold">Close policy</p>
+                  <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground">
+                    Blocking controls prevent the month from closing. Warnings do not automatically block close,
+                    but should be reviewed before management sign-off. Once closed, operational journals, manual journals
+                    and reversals cannot post into the month. Reopening requires super-admin authority.
+                  </p>
+                  {!data.monthEnded && data.closeState.status !== 'closed' && (
+                    <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+                      This month is still in progress and cannot be closed before its calendar end.
+                    </p>
+                  )}
+                  {data.closeState.status === 'closed' && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Closed {data.closeState.closedAt ? date(data.closeState.closedAt) : '—'}
+                      {data.closeState.closedBy ? ' by ' + data.closeState.closedBy : ''}.
+                    </p>
+                  )}
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  {data.canClose && (
+                    <Button type="button" onClick={() => setMonthAction('close')}>
+                      <ShieldCheck className="mr-2 size-4" />
+                      Close month
+                    </Button>
+                  )}
+                  {data.canReopen && (
+                    <Button type="button" variant="outline" onClick={() => setMonthAction('reopen')}>
+                      Reopen month
+                    </Button>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </>
       )}
+
+      <ConfirmActionDialog
+        open={Boolean(monthAction)}
+        onOpenChange={(open) => {
+          if (!open) setMonthAction(null);
+        }}
+        title={monthAction === 'close' ? 'Close this accounting month?' : 'Reopen this accounting month?'}
+        description={
+          monthAction === 'close'
+            ? 'Closing locks the selected month against new operational journals, manual journals and reversals. Existing posted entries remain unchanged.'
+            : 'Reopening permits new postings into a previously closed month and requires super-admin authority.'
+        }
+        confirmLabel={monthAction === 'close' ? 'Close month' : 'Reopen month'}
+        cancelLabel="Cancel"
+        tone={monthAction === 'close' ? 'warning' : 'default'}
+        onConfirm={applyMonthAction}
+      />
     </div>
   );
 }
