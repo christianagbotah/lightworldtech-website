@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { Prisma } from '@prisma/client';
 import {
+  accountNormalSide,
   invoiceBalance,
+  isBalancedJournal,
+  journalTotals,
   invoiceStatusFromBalance,
   normalizeCurrency,
   paymentUnallocated,
@@ -68,5 +71,32 @@ describe('finance balance and status derivation', () => {
     expect(normalizeCurrency('ghs')).toBe('GHS');
     expect(normalizeCurrency('USD')).toBe('USD');
     expect(normalizeCurrency('not-money')).toBe('GHS');
+  });
+
+  test('uses debit normal balances for assets and expenses and credit for the rest', () => {
+    expect(accountNormalSide('asset')).toBe('debit');
+    expect(accountNormalSide('expense')).toBe('debit');
+    expect(accountNormalSide('liability')).toBe('credit');
+    expect(accountNormalSide('equity')).toBe('credit');
+    expect(accountNormalSide('revenue')).toBe('credit');
+  });
+
+  test('accepts only positive balanced journal totals', () => {
+    const balanced = [
+      { debit: '1250.00', credit: '0.00' },
+      { debit: '0.00', credit: '1000.00' },
+      { debit: '0.00', credit: '250.00' },
+    ];
+    expect(journalTotals(balanced).debit.toFixed(2)).toBe('1250.00');
+    expect(journalTotals(balanced).credit.toFixed(2)).toBe('1250.00');
+    expect(isBalancedJournal(balanced)).toBe(true);
+    expect(isBalancedJournal([
+      { debit: '500.00', credit: '0.00' },
+      { debit: '0.00', credit: '499.99' },
+    ])).toBe(false);
+    expect(isBalancedJournal([
+      { debit: '0.00', credit: '0.00' },
+      { debit: '0.00', credit: '0.00' },
+    ])).toBe(false);
   });
 });
