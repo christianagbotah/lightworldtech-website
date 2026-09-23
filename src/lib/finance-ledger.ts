@@ -53,6 +53,21 @@ async function ensureOpenPeriod(tx: Tx, date: Date) {
   if (period.status !== 'open') {
     throw new Error('The accounting period for ' + date.toISOString().slice(0, 10) + ' is closed');
   }
+
+  const monthLock = await tx.financeMonthClose.findFirst({
+    where: {
+      status: 'closed',
+      monthStart: { lte: date },
+      monthEnd: { gte: date },
+    },
+    select: { id: true, monthStart: true, monthEnd: true },
+  });
+  if (monthLock) {
+    throw new Error(
+      'The month containing ' + date.toISOString().slice(0, 10) + ' is closed for accounting postings',
+    );
+  }
+
   return period;
 }
 
