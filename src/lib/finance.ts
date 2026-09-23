@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 
 type AllocationLike = { amount: Prisma.Decimal | number | string };
+type CreditLike = { appliedAmount: Prisma.Decimal | number | string };
 
 const ZERO = new Prisma.Decimal(0);
 
@@ -14,11 +15,19 @@ export function sumAmounts(items: AllocationLike[]): Prisma.Decimal {
   return items.reduce((sum, item) => sum.plus(money(item.amount)), ZERO);
 }
 
+export function sumCredits(items: CreditLike[]): Prisma.Decimal {
+  return items.reduce((sum, item) => sum.plus(money(item.appliedAmount)), ZERO);
+}
+
 export function invoiceBalance(
   total: Prisma.Decimal | number | string,
   allocations: AllocationLike[],
+  credits: CreditLike[] = [],
 ): Prisma.Decimal {
-  return Prisma.Decimal.max(ZERO, money(total).minus(sumAmounts(allocations)));
+  return Prisma.Decimal.max(
+    ZERO,
+    money(total).minus(sumAmounts(allocations)).minus(sumCredits(credits)),
+  );
 }
 
 export function paymentUnallocated(
@@ -32,13 +41,14 @@ export function invoiceStatusFromBalance(input: {
   storedStatus: string;
   total: Prisma.Decimal | number | string;
   allocations: AllocationLike[];
+  credits?: CreditLike[];
   dueDate: Date;
   now?: Date;
 }): string {
   if (input.storedStatus === 'void' || input.storedStatus === 'draft') {
     return input.storedStatus;
   }
-  const balance = invoiceBalance(input.total, input.allocations);
+  const balance = invoiceBalance(input.total, input.allocations, input.credits || []);
   if (balance.lte(0)) return 'paid';
   if (sumAmounts(input.allocations).gt(0)) {
     return input.dueDate.getTime() < (input.now || new Date()).getTime()
@@ -78,6 +88,9 @@ async function nextSequence(sequence: string): Promise<number> {
     'finance_vendor_payment_number_seq',
     'finance_expense_number_seq',
     'finance_journal_number_seq',
+    'finance_credit_note_number_seq',
+    'finance_customer_refund_number_seq',
+    'finance_reconciliation_batch_seq',
   ]);
   if (!safe.has(sequence)) throw new Error('Unsupported finance number sequence');
 
@@ -115,6 +128,18 @@ export async function nextExpenseNumber(now = new Date()): Promise<string> {
 
 export async function nextJournalNumber(now = new Date()): Promise<string> {
   return formatNumber('JRN', await nextSequence('finance_journal_number_seq'), now);
+}
+
+export async function nextCreditNoteNumber(now = new Date()): Promise<string> {
+  return formatNumber('CRN', await nextSequence('finance_credit_note_number_seq'), now);
+}
+
+export async function nextCustomerRefundNumber(now = new Date()): Promise<string> {
+  return formatNumber('RFD', await nextSequence('finance_customer_refund_number_seq'), now);
+}
+
+export async function nextReconciliationBatchNumber(now = new Date()): Promise<string> {
+  return formatNumber('REC', await nextSequence('finance_reconciliation_batch_seq'), now);
 }
 
 export function accountNormalSide(type: string): 'debit' | 'credit' {
