@@ -204,6 +204,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     const dashboard = source('src/app/api/admin/finance/dashboard/route.ts');
     const invoices = source('src/app/api/admin/finance/invoices/route.ts');
     const receipts = source('src/app/api/admin/finance/payments/route.ts');
+    const bills = source('src/app/api/admin/finance/bills/route.ts');
+    const expenses = source('src/app/api/admin/finance/expenses/route.ts');
     const vendorPayments = source('src/app/api/admin/finance/vendor-payments/route.ts');
     const renewalReminder = source('src/app/api/admin/finance/services/[id]/renewal-reminder/route.ts');
     const recordDetails = source('src/app/api/admin/finance/records/[type]/[id]/route.ts');
@@ -274,6 +276,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(invoices).toContain('Discount cannot exceed invoice subtotal');
     expect(receipts).toContain('invoiceBalance(invoice.total, invoice.allocations)');
     expect(receipts).toContain('postCustomerPaymentJournal');
+    expect(bills).toContain('postVendorBillJournal');
+    expect(expenses).toContain('postExpenseJournal');
     expect(vendorPayments).toContain('invoiceBalance(bill.total, bill.allocations)');
     expect(vendorPayments).toContain('postVendorPaymentJournal');
     expect(invoices).toContain('postInvoiceJournal');
