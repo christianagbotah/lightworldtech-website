@@ -594,10 +594,44 @@ export default function AdminClients() {
 
                 <div className="rounded-2xl border border-border/60 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">New project</p>
-                  <form onSubmit={createProject} className="mt-3 space-y-3">
+                  <form onSubmit={createProject} className="mt-3 space-y-4">
                     <Input required placeholder="Project name" value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} />
                     <Textarea rows={3} placeholder="Client-visible project summary" value={projectForm.summary} onChange={(e) => setProjectForm({ ...projectForm, summary: e.target.value })} />
-                    <div className="grid gap-3 sm:grid-cols-2"><Input placeholder="Lightworld project lead" value={projectForm.manager} onChange={(e) => setProjectForm({ ...projectForm, manager: e.target.value })} /><Input type="date" value={projectForm.targetDate} onChange={(e) => setProjectForm({ ...projectForm, targetDate: e.target.value })} /></div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div><Label>Lightworld project lead</Label><Input placeholder="Project lead" value={projectForm.manager} onChange={(e) => setProjectForm({ ...projectForm, manager: e.target.value })} /></div>
+                      <div><Label>Delivery target date</Label><Input type="date" value={projectForm.targetDate} onChange={(e) => setProjectForm({ ...projectForm, targetDate: e.target.value })} /></div>
+                    </div>
+
+                    <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-3 dark:border-amber-900/30 dark:bg-amber-950/10">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-800 dark:text-amber-200">Commercial lifecycle</p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <div><Label>Expiry date</Label><Input type="date" value={projectForm.expiryDate} onChange={(e) => setProjectForm({ ...projectForm, expiryDate: e.target.value })} /></div>
+                        <div><Label>Next renewal date</Label><Input type="date" value={projectForm.nextRenewalDate} onChange={(e) => setProjectForm({ ...projectForm, nextRenewalDate: e.target.value })} /></div>
+                        <div>
+                          <Label>Renewal cycle</Label>
+                          <select value={projectForm.renewalCycle} onChange={(e) => setProjectForm({ ...projectForm, renewalCycle: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="semiannual">Semiannual</option>
+                            <option value="annual">Annual</option>
+                            <option value="one_time">One time</option>
+                            <option value="custom">Custom</option>
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-[1fr_92px] gap-2">
+                          <div><Label>Renewal amount</Label><Input type="number" min="0" step="0.01" value={projectForm.renewalAmount} onChange={(e) => setProjectForm({ ...projectForm, renewalAmount: e.target.value })} /></div>
+                          <div><Label>Currency</Label><Input maxLength={3} value={projectForm.renewalCurrency} onChange={(e) => setProjectForm({ ...projectForm, renewalCurrency: e.target.value.toUpperCase() })} /></div>
+                        </div>
+                        <div><Label>Renewal notice days</Label><Input type="number" min="0" max="365" value={projectForm.renewalNoticeDays} onChange={(e) => setProjectForm({ ...projectForm, renewalNoticeDays: e.target.value })} /></div>
+                        <label className="flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm">
+                          <input type="checkbox" checked={projectForm.autoRenew} onChange={(e) => setProjectForm({ ...projectForm, autoRenew: e.target.checked })} />
+                          Auto-renew
+                        </label>
+                      </div>
+                      <div className="mt-3"><Label>Renewal notes</Label><Textarea rows={2} value={projectForm.renewalNotes} onChange={(e) => setProjectForm({ ...projectForm, renewalNotes: e.target.value })} placeholder="Renewal terms, notice requirements, special pricing…" /></div>
+                    </div>
+
                     <Button disabled={saving}><Plus className="mr-2 size-4" /> Create project</Button>
                   </form>
 
@@ -673,6 +707,115 @@ export default function AdminClients() {
                         }} onBlur={(e) => void patchProject(project.id, { progress: Number(e.target.value) || 0 })} className="h-9 text-xs" />
                       </div>
                     </div>
+
+                    <div className="mt-4 rounded-xl border border-amber-200/70 bg-amber-50/50 p-4 dark:border-amber-900/30 dark:bg-amber-950/10">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-800 dark:text-amber-200">Commercial lifecycle</p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">Project expiry, renewal value and next renewal control.</p>
+                        </div>
+                        <Badge variant="outline">{project.autoRenew ? 'Auto-renew' : 'Manual renewal'}</Badge>
+                      </div>
+
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-[0.08em]">Expiry date</Label>
+                          <Input
+                            type="date"
+                            value={project.expiryDate?.slice(0, 10) || ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              updateProjectLocal(project.id, { expiryDate: value ? value + 'T00:00:00.000Z' : null });
+                              void patchProject(project.id, { expiryDate: value ? new Date(value).toISOString() : null });
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-[0.08em]">Next renewal</Label>
+                          <Input
+                            type="date"
+                            value={project.nextRenewalDate?.slice(0, 10) || ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              updateProjectLocal(project.id, { nextRenewalDate: value ? value + 'T00:00:00.000Z' : null });
+                              void patchProject(project.id, { nextRenewalDate: value ? new Date(value).toISOString() : null });
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-[0.08em]">Renewal cycle</Label>
+                          <select
+                            value={project.renewalCycle}
+                            onChange={(e) => {
+                              updateProjectLocal(project.id, { renewalCycle: e.target.value });
+                              void patchProject(project.id, { renewalCycle: e.target.value });
+                            }}
+                            className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                          >
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="semiannual">Semiannual</option>
+                            <option value="annual">Annual</option>
+                            <option value="one_time">One time</option>
+                            <option value="custom">Custom</option>
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-[1fr_84px] gap-2">
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-[0.08em]">Renewal amount</Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={project.renewalAmount}
+                              onChange={(e) => updateProjectLocal(project.id, { renewalAmount: e.target.value })}
+                              onBlur={(e) => void patchProject(project.id, { renewalAmount: Number(e.target.value || 0) })}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-[0.08em]">Currency</Label>
+                            <Input
+                              maxLength={3}
+                              value={project.renewalCurrency}
+                              onChange={(e) => updateProjectLocal(project.id, { renewalCurrency: e.target.value.toUpperCase() })}
+                              onBlur={(e) => void patchProject(project.id, { renewalCurrency: e.target.value.toUpperCase() })}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-[0.08em]">Notice days</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="365"
+                            value={project.renewalNoticeDays}
+                            onChange={(e) => updateProjectLocal(project.id, { renewalNoticeDays: Math.max(0, Math.min(365, Number(e.target.value) || 0)) })}
+                            onBlur={(e) => void patchProject(project.id, { renewalNoticeDays: Math.max(0, Math.min(365, Number(e.target.value) || 0)) })}
+                          />
+                        </div>
+                        <label className="flex items-center gap-2 self-end rounded-lg border border-border/60 bg-background px-3 py-2.5 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={project.autoRenew}
+                            onChange={(e) => {
+                              updateProjectLocal(project.id, { autoRenew: e.target.checked });
+                              void patchProject(project.id, { autoRenew: e.target.checked });
+                            }}
+                          />
+                          Auto-renew
+                        </label>
+                        <div className="sm:col-span-2">
+                          <Label className="text-[10px] uppercase tracking-[0.08em]">Renewal notes</Label>
+                          <Input
+                            value={project.renewalNotes}
+                            placeholder="Renewal terms or special pricing"
+                            onChange={(e) => updateProjectLocal(project.id, { renewalNotes: e.target.value })}
+                            onBlur={(e) => void patchProject(project.id, { renewalNotes: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="mt-4 space-y-2">
                       {project.milestones.map((milestone) => (
                         <div key={milestone.id} className="flex flex-col gap-2 rounded-xl border border-border/60 p-3 sm:flex-row sm:items-center sm:justify-between">
