@@ -44,6 +44,20 @@ export async function GET(request: NextRequest) {
         orderBy: [{ paidAt: 'asc' }, { createdAt: 'asc' }],
         include: { allocations: true },
       },
+      creditNotes: {
+        where: { status: 'posted' },
+        orderBy: [{ issueDate: 'asc' }, { createdAt: 'asc' }],
+        include: {
+          invoice: { select: { invoiceNumber: true } },
+          refunds: true,
+        },
+      },
+      refunds: {
+        orderBy: [{ refundedAt: 'asc' }, { createdAt: 'asc' }],
+        include: {
+          creditNote: { select: { creditNoteNumber: true } },
+        },
+      },
     },
   });
 
@@ -54,7 +68,7 @@ export async function GET(request: NextRequest) {
   type Entry = {
     date: Date;
     order: number;
-    type: 'Invoice' | 'Payment';
+    type: 'Invoice' | 'Payment' | 'Credit Note' | 'Refund';
     reference: string;
     description: string;
     debit: Prisma.Decimal;
@@ -79,6 +93,7 @@ export async function GET(request: NextRequest) {
         storedStatus: invoice.status,
         total: invoice.total,
         allocations: invoice.allocations,
+        credits: organization.creditNotes.filter((note) => note.invoiceId === invoice.id),
         dueDate: invoice.dueDate,
       }),
     })),
@@ -95,6 +110,37 @@ export async function GET(request: NextRequest) {
       credit: payment.amount,
       currency: payment.currency,
       status: 'received',
+    })),
+    ...organization.creditNotes.map((note): Entry => ({
+      date: note.issueDate,
+      order: 2,
+      type: 'Credit Note',
+      reference: note.creditNoteNumber,
+      description:
+        'Credit against invoice ' +
+        note.invoice.invoiceNumber +
+        ' · ' +
+        note.reason,
+      debit: new Prisma.Decimal(0),
+      credit: note.total,
+      currency: note.currency,
+      status: 'posted',
+    })),
+    ...organization.refunds.map((refund): Entry => ({
+      date: refund.refundedAt,
+      order: 3,
+      type: 'Refund',
+      reference: refund.refundNumber,
+      description:
+        'Refund of ' +
+        refund.creditNote.creditNoteNumber +
+        ' · ' +
+        refund.method.replaceAll('_', ' ') +
+        (refund.reference ? ' · Ref ' + refund.reference : ''),
+      debit: refund.amount,
+      credit: new Prisma.Decimal(0),
+      currency: refund.currency,
+      status: 'refunded',
     })),
   ].sort((a, b) => a.date.getTime() - b.date.getTime() || a.order - b.order || a.reference.localeCompare(b.reference));
 
