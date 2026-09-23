@@ -49,13 +49,13 @@ export async function countEligibleFinanceApprovers(): Promise<number> {
     select: { role: true, permissions: true },
   });
 
-  return admins.filter((admin) =>
-    hasAdminPermission(
-      admin.role,
-      normalizeAdminPermissions(admin.permissions),
-      'finance.approve',
-    ),
-  ).length;
+  return admins.filter((admin) => {
+    const permissions = normalizeAdminPermissions(admin.permissions);
+    return (
+      hasAdminPermission(admin.role, permissions, 'finance.manage') &&
+      hasAdminPermission(admin.role, permissions, 'finance.approve')
+    );
+  }).length;
 }
 
 export function canApproveFinanceOutflow(actor: ActiveAdminContext): boolean {
