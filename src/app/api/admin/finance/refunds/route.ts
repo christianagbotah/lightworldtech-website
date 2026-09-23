@@ -6,6 +6,11 @@ import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance'
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { nextCustomerRefundNumber } from '@/lib/finance';
 import { postCustomerRefundJournal } from '@/lib/finance-ledger';
+import {
+  createOutflowApproval,
+  getFinanceApprovalPolicy,
+  serializeOutflowApproval,
+} from '@/lib/finance-approvals';
 
 const schema = z.object({
   creditNoteId: z.string().min(1),
@@ -95,9 +100,22 @@ export async function POST(request: NextRequest) {
     (sum, item) => sum.plus(item.amount),
     new Prisma.Decimal(0),
   );
+  const pendingRefundApprovals = await db.financeOutflowApproval.findMany({
+    where: {
+      outflowType: 'customer_refund',
+      status: 'pending',
+      sourceId: note.id,
+      currency: note.currency,
+    },
+    select: { amount: true },
+  });
+  const pendingRefundAmount = pendingRefundApprovals.reduce(
+    (sum, item) => sum.plus(item.amount),
+    new Prisma.Decimal(0),
+  );
   const refundableBalance = Prisma.Decimal.max(
     new Prisma.Decimal(0),
-    note.total.minus(note.appliedAmount).minus(alreadyRefunded),
+    note.total.minus(note.appliedAmount).minus(alreadyRefunded).minus(pendingRefundAmount),
   );
   const amount = new Prisma.Decimal(parsed.data.amount).toDecimalPlaces(2);
 
@@ -109,6 +127,47 @@ export async function POST(request: NextRequest) {
         refundableBalance: refundableBalance.toFixed(2),
       },
       { status: 409 },
+    );
+  }
+
+  const policy = await getFinanceApprovalPolicy();
+  if (policy?.enabled) {
+    const approval = await createOutflowApproval(actor, {
+      outflowType: 'customer_refund',
+      counterpartyId: note.organizationId,
+      counterpartyName: note.organization.name,
+      sourceId: note.id,
+      sourceReference: note.creditNoteNumber,
+      currency: note.currency,
+      amount,
+      effectiveDate: parsed.data.refundedAt,
+      method: parsed.data.method,
+      reference: parsed.data.reference,
+      reason: parsed.data.reason,
+    });
+
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_customer_refund_requested',
+      entity: 'FinanceOutflowApproval',
+      entityId: approval.id,
+      details: {
+        requestNumber: approval.requestNumber,
+        creditNoteId: note.id,
+        creditNoteNumber: note.creditNoteNumber,
+        invoiceNumber: note.invoice.invoiceNumber,
+        amount: amount.toFixed(2),
+        currency: note.currency,
+      },
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        pendingApproval: true,
+        data: serializeOutflowApproval(approval),
+      },
+      { status: 202 },
     );
   }
 
