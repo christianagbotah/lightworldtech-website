@@ -118,7 +118,7 @@ VALUES
   ('coa_1200_prepaid', '1200', 'Prepaid Expenses', 'asset', 'prepaid', 'prepaid_expenses', 'Expenses paid before the related service period.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('coa_2000_payable', '2000', 'Accounts Payable', 'liability', 'payable', 'accounts_payable', 'Amounts owed to suppliers.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('coa_2050_customer_deposits', '2050', 'Customer Deposits', 'liability', 'customer_deposits', 'customer_deposits', 'Customer receipts not yet applied to invoices.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-  ('coa_2100_accrued', '2100', 'Accrued Expenses', 'liability', 'accrued_expenses', 'Expenses recognized before payment.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('coa_2100_accrued', '2100', 'Accrued Expenses', 'liability', 'accrued_expenses', 'accrued_expenses', 'Expenses recognized before payment.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('coa_2200_tax_payable', '2200', 'Tax Payable', 'liability', 'tax_payable', 'tax_payable', 'Tax collected or accrued and payable to the relevant authority.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('coa_3000_equity', '3000', 'Owner Equity', 'equity', 'owner_equity', 'owner_equity', 'Owner or shareholder capital.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('coa_3100_retained', '3100', 'Retained Earnings', 'equity', 'retained_earnings', 'retained_earnings', 'Accumulated retained earnings.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
