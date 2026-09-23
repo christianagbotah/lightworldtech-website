@@ -141,6 +141,7 @@ type Bill = {
   issueDate: string;
   dueDate: string;
   taxTreatment: string;
+  taxRecoverable: boolean;
   taxableAmount: string;
   vatRate: string;
   vatAmount: string;
@@ -355,7 +356,7 @@ export default function AdminFinance() {
   const [vendorForm, setVendorForm] = useState({ name: '', email: '', phone: '', taxId: '', notes: '' });
   const [billForm, setBillForm] = useState({
     vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
-    issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', notes: '',
+    issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
   });
   const [supplierPaymentForm, setSupplierPaymentForm] = useState({
     vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
@@ -662,7 +663,7 @@ export default function AdminFinance() {
     }, 'Supplier bill recorded');
     if (ok) setBillForm({
       vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
-      issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', notes: '',
+      issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
     });
   };
 
@@ -1515,6 +1516,23 @@ export default function AdminFinance() {
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
                 Standard Ghana VAT is disabled in the company tax profile. Enable it before recording a standard-rated supplier bill.
               </div>
+            )}
+
+            {billForm.taxTreatment === 'standard' && data.taxProfile?.enabled && (
+              <label className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={billForm.taxRecoverable}
+                  onChange={(e) => setBillForm({ ...billForm, taxRecoverable: e.target.checked })}
+                />
+                <span>
+                  <span className="font-medium">Recoverable input tax</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Keep enabled only when this supplier tax is eligible to be claimed as input tax. Otherwise the tax remains part of the expense cost.
+                  </span>
+                </span>
+              </label>
             )}
 
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
