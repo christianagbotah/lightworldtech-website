@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import FinanceRecordDetailsDialog, { type FinanceRecordSelection } from '@/components/admin/FinanceRecordDetailsDialog';
+import FinanceAccountingWorkspace from '@/components/admin/FinanceAccountingWorkspace';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -289,7 +290,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export default function AdminFinance() {
-  const [section, setSection] = useState<'overview' | 'customers' | 'suppliers'>('overview');
+  const [section, setSection] = useState<'overview' | 'customers' | 'suppliers' | 'accounting'>('overview');
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -719,6 +720,7 @@ export default function AdminFinance() {
           ['overview', 'Overview'],
           ['customers', 'Customer accounts'],
           ['suppliers', 'Suppliers & expenses'],
+          ['accounting', 'Accounting'],
         ].map(([value, label]) => (
           <Button
             key={value}
@@ -1074,6 +1076,8 @@ export default function AdminFinance() {
           </div>
         </div>
       )}
+
+      {section === 'accounting' && <FinanceAccountingWorkspace />}
 
       <FinanceRecordDetailsDialog
         selection={financeRecord}
