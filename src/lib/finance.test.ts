@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { Prisma } from '@prisma/client';
 import {
   accountNormalSide,
+  computeTaxComponents,
   invoiceBalance,
   isBalancedJournal,
   journalTotals,
@@ -82,6 +83,69 @@ describe('finance balance and status derivation', () => {
       dueDate: new Date('2026-10-01T00:00:00Z'),
       now: new Date('2026-09-21T00:00:00Z'),
     })).toBe('partially_paid');
+  });
+
+  test('calculates governed Ghana standard VAT components from one taxable base', () => {
+    const result = computeTaxComponents({
+      taxableAmount: '1000.00',
+      treatment: 'standard',
+      vatRate: '15.00',
+      nhilRate: '2.50',
+      getfundRate: '2.50',
+    });
+
+    expect(result.vatAmount.toFixed(2)).toBe('150.00');
+    expect(result.nhilAmount.toFixed(2)).toBe('25.00');
+    expect(result.getfundAmount.toFixed(2)).toBe('25.00');
+    expect(result.tax.toFixed(2)).toBe('200.00');
+    expect(result.total.toFixed(2)).toBe('1200.00');
+  });
+
+  test('keeps zero-rated exempt and no-tax transactions at zero tax', () => {
+    for (const treatment of ['zero', 'exempt', 'none'] as const) {
+      const result = computeTaxComponents({
+        taxableAmount: '850.75',
+        treatment,
+        vatRate: '15',
+        nhilRate: '2.5',
+        getfundRate: '2.5',
+      });
+      expect(result.tax.toFixed(2)).toBe('0.00');
+      expect(result.total.toFixed(2)).toBe('850.75');
+    }
+  });
+
+  test('preserves explicit legacy tax without inventing statutory components', () => {
+    const result = computeTaxComponents({
+      taxableAmount: '1000.00',
+      treatment: 'legacy',
+      legacyTax: '175.25',
+      vatRate: '15',
+      nhilRate: '2.5',
+      getfundRate: '2.5',
+    });
+
+    expect(result.vatAmount.toFixed(2)).toBe('0.00');
+    expect(result.nhilAmount.toFixed(2)).toBe('0.00');
+    expect(result.getfundAmount.toFixed(2)).toBe('0.00');
+    expect(result.tax.toFixed(2)).toBe('175.25');
+    expect(result.total.toFixed(2)).toBe('1175.25');
+  });
+
+  test('rounds each statutory component to two decimal places deterministically', () => {
+    const result = computeTaxComponents({
+      taxableAmount: '99.99',
+      treatment: 'standard',
+      vatRate: '15',
+      nhilRate: '2.5',
+      getfundRate: '2.5',
+    });
+
+    expect(result.vatAmount.toFixed(2)).toBe('15.00');
+    expect(result.nhilAmount.toFixed(2)).toBe('2.50');
+    expect(result.getfundAmount.toFixed(2)).toBe('2.50');
+    expect(result.tax.toFixed(2)).toBe('20.00');
+    expect(result.total.toFixed(2)).toBe('119.99');
   });
 
   test('normalizes ISO currency codes without silently accepting malformed values', () => {
