@@ -159,43 +159,29 @@ export async function postSourceJournal(
   const accounts = await resolveAccounts(tx, prepared.map((line) => line.systemKey));
   const journalNumber = await nextJournalNumber(tx, input.entryDate);
 
-  try {
-    return await tx.financeJournalEntry.create({
-      data: {
-        journalNumber,
-        entryDate: input.entryDate,
-        currency: normalizeCurrency(input.currency),
-        description: input.description,
-        reference: input.reference || '',
-        sourceType: input.sourceType,
-        sourceId: input.sourceId,
-        status: 'posted',
-        postedAt: new Date(),
-        postedBy: input.postedBy,
-        lines: {
-          create: prepared.map((line) => ({
-            accountId: accounts.get(line.systemKey)!.id,
-            description: line.description || input.description,
-            debit: line.debit,
-            credit: line.credit,
-          })),
-        },
+  return tx.financeJournalEntry.create({
+    data: {
+      journalNumber,
+      entryDate: input.entryDate,
+      currency: normalizeCurrency(input.currency),
+      description: input.description,
+      reference: input.reference || '',
+      sourceType: input.sourceType,
+      sourceId: input.sourceId,
+      status: 'posted',
+      postedAt: new Date(),
+      postedBy: input.postedBy,
+      lines: {
+        create: prepared.map((line) => ({
+          accountId: accounts.get(line.systemKey)!.id,
+          description: line.description || input.description,
+          debit: line.debit,
+          credit: line.credit,
+        })),
       },
-      include: { lines: true },
-    });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      const duplicate = await tx.financeJournalEntry.findFirst({
-        where: {
-          sourceType: input.sourceType,
-          sourceId: input.sourceId,
-        },
-        include: { lines: true },
-      });
-      if (duplicate) return duplicate;
-    }
-    throw error;
-  }
+    },
+    include: { lines: true },
+  });
 }
 
 export async function postInvoiceJournal(tx: Tx, input: {
