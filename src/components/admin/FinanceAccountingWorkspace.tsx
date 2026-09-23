@@ -16,6 +16,7 @@ import {
   UnlockKeyhole,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import FinanceFinancialStatements from '@/components/admin/FinanceFinancialStatements';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -142,7 +143,7 @@ type JournalFormLine = {
   credit: string;
 };
 
-type View = 'accounts' | 'journals' | 'trial-balance' | 'general-ledger' | 'periods';
+type View = 'statements' | 'accounts' | 'journals' | 'trial-balance' | 'general-ledger' | 'periods';
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -553,6 +554,7 @@ export default function FinanceAccountingWorkspace() {
 
       <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
         {([
+          ['statements', 'Financial statements'],
           ['trial-balance', 'Trial balance'],
           ['general-ledger', 'General ledger'],
           ['journals', 'Journal entries'],
@@ -575,6 +577,8 @@ export default function FinanceAccountingWorkspace() {
           <RefreshCw className={loading ? 'mr-1.5 size-3.5 animate-spin' : 'mr-1.5 size-3.5'} /> Refresh
         </Button>
       </div>
+
+      {view === 'statements' && <FinanceFinancialStatements />}
 
       {view === 'trial-balance' && (
         <div className="space-y-4">
