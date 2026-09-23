@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
   const lines = await db.financeJournalLine.findMany({
     where: {
       entry: {
-        status: 'posted',
+        status: { in: ['posted', 'reversed'] },
         entryDate: { lte: asOf },
         ...(currency ? { currency } : {}),
       },
