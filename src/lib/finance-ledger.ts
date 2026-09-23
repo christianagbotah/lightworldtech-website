@@ -515,6 +515,9 @@ export async function postCreditNoteJournal(tx: Tx, input: {
   currency: string;
   subtotal: Prisma.Decimal;
   tax: Prisma.Decimal;
+  vatAmount?: Prisma.Decimal;
+  nhilAmount?: Prisma.Decimal;
+  getfundAmount?: Prisma.Decimal;
   total: Prisma.Decimal;
   appliedAmount: Prisma.Decimal;
   postedBy: string;
@@ -523,6 +526,11 @@ export async function postCreditNoteJournal(tx: Tx, input: {
     new Prisma.Decimal(0),
     input.total.minus(input.appliedAmount),
   );
+  const vat = input.vatAmount || new Prisma.Decimal(0);
+  const nhil = input.nhilAmount || new Prisma.Decimal(0);
+  const getfund = input.getfundAmount || new Prisma.Decimal(0);
+  const componentTax = vat.plus(nhil).plus(getfund);
+  const legacyTax = Prisma.Decimal.max(new Prisma.Decimal(0), input.tax.minus(componentTax));
 
   return postSourceJournal(tx, {
     sourceType: 'credit_note',
@@ -539,9 +547,24 @@ export async function postCreditNoteJournal(tx: Tx, input: {
         debit: input.subtotal,
       },
       {
+        systemKey: 'vat_payable',
+        description: 'Reverse VAT output tax',
+        debit: vat,
+      },
+      {
+        systemKey: 'nhil_payable',
+        description: 'Reverse NHIL output levy',
+        debit: nhil,
+      },
+      {
+        systemKey: 'getfund_payable',
+        description: 'Reverse GETFund output levy',
+        debit: getfund,
+      },
+      {
         systemKey: 'tax_payable',
-        description: 'Reverse tax payable',
-        debit: input.tax,
+        description: 'Reverse legacy tax payable',
+        debit: legacyTax,
       },
       {
         systemKey: 'accounts_receivable',
