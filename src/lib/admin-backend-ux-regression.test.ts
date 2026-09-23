@@ -224,7 +224,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     const trialBalanceApi = source('src/app/api/admin/finance/accounting/reports/trial-balance/route.ts');
     const generalLedgerApi = source('src/app/api/admin/finance/accounting/reports/general-ledger/route.ts');
     const financialStatementsApi = source('src/app/api/admin/finance/accounting/reports/financial-statements/route.ts');
+    const cashbookApi = source('src/app/api/admin/finance/accounting/reports/cashbook/route.ts');
     const financialStatements = source('src/components/admin/FinanceFinancialStatements.tsx');
+    const cashbookWorkspace = source('src/components/admin/FinanceCashbookWorkspace.tsx');
     const ledgerInitialization = source('src/components/admin/FinanceLedgerInitialization.tsx');
     const ledgerBackfillApi = source('src/app/api/admin/finance/accounting/backfill/route.ts');
     const financeLedger = source('src/lib/finance-ledger.ts');
@@ -397,6 +399,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(accounting).toContain('Post reversal');
     expect(accounting).toContain('Financial statements');
     expect(accounting).toContain('FinanceFinancialStatements');
+    expect(accounting).toContain('Cashbook & treasury');
+    expect(accounting).toContain('FinanceCashbookWorkspace');
     expect(accounting).toContain('FinanceLedgerInitialization');
     expect(accounting).toContain('FinanceReconciliationWorkspace');
     expect(accounting).toContain('FinanceCloseWorkspace');
@@ -429,6 +433,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(financialStatementsApi).toContain('cashFlow');
     expect(financialStatementsApi).toContain('currentEarnings');
     expect(financialStatementsApi).toContain('classifyCashFlow');
+    expect(cashbookApi).toContain("systemKey: { in: systemKeys }");
+    expect(cashbookApi).toContain("status: { in: ['posted', 'reversed'] }");
+    expect(cashbookApi).toContain('internalTransfer: cashLegs > 1');
+    expect(cashbookApi).toContain('runningBalance');
+    expect(cashbookWorkspace).toContain('Cashbook & treasury');
+    expect(cashbookWorkspace).toContain('Internal transfer');
+    expect(cashbookWorkspace).toContain('exportFileName="lightworld-cashbook"');
     expect(financialStatements).toContain('Profit & Loss');
     expect(financialStatements).toContain('Balance Sheet');
     expect(financialStatements).toContain('Cash Flow Statement');

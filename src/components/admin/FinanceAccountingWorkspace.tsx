@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import FinanceFinancialStatements from '@/components/admin/FinanceFinancialStatements';
+import FinanceCashbookWorkspace from '@/components/admin/FinanceCashbookWorkspace';
 import FinanceLedgerInitialization from '@/components/admin/FinanceLedgerInitialization';
 import FinanceReconciliationWorkspace from '@/components/admin/FinanceReconciliationWorkspace';
 import FinanceCloseWorkspace from '@/components/admin/FinanceCloseWorkspace';
@@ -148,7 +149,7 @@ type JournalFormLine = {
   credit: string;
 };
 
-type View = 'statements' | 'approvals' | 'tax' | 'reconciliation' | 'close' | 'accounts' | 'journals' | 'trial-balance' | 'general-ledger' | 'periods';
+type View = 'statements' | 'cashbook' | 'approvals' | 'tax' | 'reconciliation' | 'close' | 'accounts' | 'journals' | 'trial-balance' | 'general-ledger' | 'periods';
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -562,6 +563,7 @@ export default function FinanceAccountingWorkspace() {
       <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
         {([
           ['statements', 'Financial statements'],
+          ['cashbook', 'Cashbook & treasury'],
           ['approvals', 'Approvals'],
           ['tax', 'Tax control'],
           ['reconciliation', 'Reconciliation'],
@@ -590,6 +592,8 @@ export default function FinanceAccountingWorkspace() {
       </div>
 
       {view === 'statements' && <FinanceFinancialStatements />}
+
+      {view === 'cashbook' && <FinanceCashbookWorkspace />}
 
       {view === 'approvals' && <FinanceOutflowApprovals />}
 
