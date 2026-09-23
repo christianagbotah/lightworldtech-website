@@ -509,6 +509,15 @@ Scheduled SMS and campaigns use a protected local dispatcher:
 SMS_CRON_SECRET=<high-entropy-random-secret>
 ```
 
+Automatic client service renewal/expiry reminders are deliberately opt-in. To let the protected SMS timer queue reminders when a service enters its configured `renewalNoticeDays` window, set:
+
+```bash
+AUTO_SERVICE_RENEWAL_SMS=true
+SERVICE_RENEWAL_SMS_BATCH_SIZE=10
+```
+
+The renewal scheduler is bounded to at most 50 new reminders per run, uses the existing `service_renewal` / `service_expired` templates, and will not automatically resend an identical reminder that was already queued, sent or delivered. It does not create invoices, charge customers, or renew services by itself.
+
 `ops/install-production-ops.sh` installs and enables `lightworld-sms-dispatch.timer`, which invokes the dispatcher approximately once per minute as the dedicated `lightworld` user. The runner sends only bounded batches and silently skips delivery when Hubtel SMS or the scheduler secret is not configured.
 
 Verification commands:

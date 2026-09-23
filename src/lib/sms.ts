@@ -290,9 +290,149 @@ export async function dispatchSmsCampaign(campaignId: string, requestedBatchSize
   };
 }
 
+export async function queueDueServiceRenewalReminders() {
+  const enabled = process.env.AUTO_SERVICE_RENEWAL_SMS === 'true';
+  const config = hubtelConfiguration();
+  if (!enabled || !config.sms || !config.senderId) {
+    return {
+      enabled,
+      configured: Boolean(config.sms && config.senderId),
+      considered: 0,
+      queued: 0,
+      skipped: 0,
+      invalidPhone: 0,
+    };
+  }
+
+  const now = new Date();
+  const horizon = new Date(now.getTime() + 365 * 86400000);
+  const configuredBatch = Number(process.env.SERVICE_RENEWAL_SMS_BATCH_SIZE || 10);
+  const batchSize = Math.max(
+    1,
+    Math.min(50, Number.isFinite(configuredBatch) ? configuredBatch : 10),
+  );
+
+  const [services, templates] = await Promise.all([
+    db.clientServiceAccount.findMany({
+      where: {
+        status: { in: ['active', 'pending', 'suspended'] },
+        expiryDate: { not: null, lte: horizon },
+        organization: { primaryPhone: { not: '' } },
+      },
+      include: {
+        organization: {
+          select: {
+            name: true,
+            primaryContactName: true,
+            primaryPhone: true,
+          },
+        },
+      },
+      orderBy: { expiryDate: 'asc' },
+      take: 500,
+    }),
+    db.smsTemplate.findMany({
+      where: {
+        key: { in: ['service_renewal', 'service_expired'] },
+        active: true,
+      },
+    }),
+  ]);
+
+  const templateByKey = new Map(templates.map((template) => [template.key, template]));
+  let considered = 0;
+  let queued = 0;
+  let skipped = 0;
+  let invalidPhone = 0;
+
+  for (const service of services) {
+    if (queued >= batchSize || !service.expiryDate) break;
+
+    const expired = service.expiryDate.getTime() < now.getTime();
+    const daysUntilExpiry = Math.ceil(
+      (service.expiryDate.getTime() - now.getTime()) / 86400000,
+    );
+    if (!expired && daysUntilExpiry > service.renewalNoticeDays) continue;
+
+    considered += 1;
+    const template = templateByKey.get(expired ? 'service_expired' : 'service_renewal');
+    if (!template) {
+      skipped += 1;
+      continue;
+    }
+
+    let recipient = '';
+    try {
+      recipient = normalizePhone(service.organization.primaryPhone);
+    } catch {
+      invalidPhone += 1;
+      continue;
+    }
+
+    const expiryDate = new Intl.DateTimeFormat('en-GH', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Africa/Accra',
+    }).format(service.expiryDate);
+    const amount = new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: service.currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(service.recurringAmount));
+    const content = renderSmsTemplate(template.body, {
+      name: service.organization.primaryContactName || service.organization.name,
+      service: service.name,
+      expiryDate,
+      amount,
+    });
+
+    const duplicate = await db.smsMessage.findFirst({
+      where: {
+        recipient,
+        templateId: template.id,
+        content,
+        status: { in: ['queued', 'scheduled', 'sent', 'delivered'] },
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      skipped += 1;
+      continue;
+    }
+
+    await queueSingleSms({
+      recipient,
+      senderId: config.senderId,
+      content,
+      templateId: template.id,
+      scheduledAt: new Date(now.getTime() + 30 * 1000),
+      createdBy: 'System renewal scheduler',
+    });
+    queued += 1;
+  }
+
+  return {
+    enabled: true,
+    configured: true,
+    considered,
+    queued,
+    skipped,
+    invalidPhone,
+  };
+}
+
 export async function dispatchDueSms() {
+  const renewalQueue = await queueDueServiceRenewalReminders();
   if (!hubtelConfiguration().sms) {
-    return { configured: false, singleSent: 0, singleFailed: 0, campaignsProcessed: 0 };
+    return {
+      configured: false,
+      singleSent: 0,
+      singleFailed: 0,
+      campaignsProcessed: 0,
+      renewalQueue,
+    };
   }
 
   const now = new Date();
@@ -341,5 +481,5 @@ export async function dispatchDueSms() {
     }
   }
 
-  return { configured: true, singleSent, singleFailed, campaignsProcessed };
+  return { configured: true, singleSent, singleFailed, campaignsProcessed, renewalQueue };
 }

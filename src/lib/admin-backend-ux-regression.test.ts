@@ -612,6 +612,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(payment).toContain("status: 'recording'");
     expect(callback).toContain('finalizeHubtelPayment');
     expect(sms).toContain('dispatchDueSms');
+    expect(sms).toContain('queueDueServiceRenewalReminders');
+    expect(sms).toContain('AUTO_SERVICE_RENEWAL_SMS');
+    expect(sms).toContain('SERVICE_RENEWAL_SMS_BATCH_SIZE');
+    expect(sms).toContain('service.renewalNoticeDays');
+    expect(sms).toContain("createdBy: 'System renewal scheduler'");
     expect(sms).toContain('HUBTEL_SMS_BATCH_SIZE');
     expect(smsAdmin).toContain('SMS, campaigns, scheduling & OTP');
     expect(smsAdmin).toContain('Reusable SMS templates');
