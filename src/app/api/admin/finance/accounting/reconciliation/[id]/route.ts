@@ -60,7 +60,7 @@ export async function GET(
       entry: {
         currency: batch.currency,
         status: { in: ['posted', 'reversed'] },
-        entryDate: { gte: windowStart, lte: windowEnd },
+        entryDate: { gte: batch.statementFrom, lte: batch.statementTo },
       },
     },
     orderBy: [{ entry: { entryDate: 'asc' } }, { createdAt: 'asc' }],
