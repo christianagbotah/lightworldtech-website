@@ -33,6 +33,10 @@ type InvoiceOption = {
   currency: string;
   total: string;
   balance: string;
+  taxTreatment: string;
+  vatRate: string;
+  nhilRate: string;
+  getfundRate: string;
   derivedStatus: string;
   issueDate: string;
   organization: { id: string; name: string };
@@ -47,6 +51,9 @@ type CreditNote = {
   reason: string;
   subtotal: string;
   tax: string;
+  vatAmount: string;
+  nhilAmount: string;
+  getfundAmount: string;
   total: string;
   appliedAmount: string;
   refundedAmount: string;
@@ -142,6 +149,20 @@ export default function FinanceCustomerCredits({ invoices, onFinanceChanged }: P
   );
 
   const selectedInvoice = eligibleInvoices.find((item) => item.id === creditForm.invoiceId) || null;
+  const creditNetPreview = Number(creditForm.subtotal || 0);
+  const creditVatPreview = selectedInvoice?.taxTreatment === 'standard'
+    ? creditNetPreview * Number(selectedInvoice.vatRate || 0) / 100
+    : 0;
+  const creditNhilPreview = selectedInvoice?.taxTreatment === 'standard'
+    ? creditNetPreview * Number(selectedInvoice.nhilRate || 0) / 100
+    : 0;
+  const creditGetfundPreview = selectedInvoice?.taxTreatment === 'standard'
+    ? creditNetPreview * Number(selectedInvoice.getfundRate || 0) / 100
+    : 0;
+  const creditTaxPreview = selectedInvoice?.taxTreatment === 'legacy'
+    ? Number(creditForm.tax || 0)
+    : creditVatPreview + creditNhilPreview + creditGetfundPreview;
+  const creditTotalPreview = creditNetPreview + creditTaxPreview;
 
   const load = async () => {
     setLoading(true);
@@ -381,14 +402,32 @@ export default function FinanceCustomerCredits({ invoices, onFinanceChanged }: P
                 <div><span className="text-muted-foreground">Invoice total</span><p className="mt-1 font-semibold">{money(selectedInvoice.total, selectedInvoice.currency)}</p></div>
                 <div><span className="text-muted-foreground">Current balance</span><p className="mt-1 font-semibold">{money(selectedInvoice.balance, selectedInvoice.currency)}</p></div>
                 <div><span className="text-muted-foreground">Status</span><p className="mt-1 font-semibold">{pretty(selectedInvoice.derivedStatus)}</p></div>
+                <div className="sm:col-span-3"><span className="text-muted-foreground">Tax treatment</span><p className="mt-1 font-semibold">{pretty(selectedInvoice.taxTreatment)}</p></div>
               </div>
             )}
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div><Label>Credit date</Label><Input required type="date" value={creditForm.issueDate} onChange={(event) => setCreditForm({ ...creditForm, issueDate: event.target.value })} /></div>
               <div><Label>Net amount</Label><Input required type="number" min="0.01" step="0.01" value={creditForm.subtotal} onChange={(event) => setCreditForm({ ...creditForm, subtotal: event.target.value })} /></div>
-              <div><Label>Tax reversal</Label><Input type="number" min="0" step="0.01" value={creditForm.tax} onChange={(event) => setCreditForm({ ...creditForm, tax: event.target.value })} /></div>
             </div>
+
+            {selectedInvoice?.taxTreatment === 'legacy' && (
+              <div>
+                <Label>Legacy tax reversal</Label>
+                <Input type="number" min="0" step="0.01" value={creditForm.tax} onChange={(event) => setCreditForm({ ...creditForm, tax: event.target.value })} />
+                <p className="mt-1 text-[11px] text-muted-foreground">Legacy invoices do not contain component tax snapshots, so the reversal remains manually controlled.</p>
+              </div>
+            )}
+
+            {selectedInvoice && (
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">VAT reversal</p><p className="mt-1 font-semibold">{money(creditVatPreview, selectedInvoice.currency)}</p></div>
+                <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">NHIL reversal</p><p className="mt-1 font-semibold">{money(creditNhilPreview, selectedInvoice.currency)}</p></div>
+                <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">GETFund reversal</p><p className="mt-1 font-semibold">{money(creditGetfundPreview, selectedInvoice.currency)}</p></div>
+                <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Tax reversal</p><p className="mt-1 font-semibold">{money(creditTaxPreview, selectedInvoice.currency)}</p></div>
+                <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-950/15"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Credit total</p><p className="mt-1 font-bold">{money(creditTotalPreview, selectedInvoice.currency)}</p></div>
+              </div>
+            )}
             <div><Label>Reason</Label><Textarea required rows={3} value={creditForm.reason} onChange={(event) => setCreditForm({ ...creditForm, reason: event.target.value })} placeholder="Cancellation, service adjustment, billing correction…" /></div>
 
             <DialogFooter>
