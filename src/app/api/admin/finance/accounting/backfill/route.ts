@@ -169,6 +169,7 @@ export async function GET(request: NextRequest) {
         endDate: period.endDate,
         status: period.status,
       })),
+      canBackfill: actor.role === 'super_admin',
     },
   });
 }
