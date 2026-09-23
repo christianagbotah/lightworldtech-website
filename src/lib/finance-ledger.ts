@@ -405,7 +405,11 @@ export async function postExpenseJournal(tx: Tx, input: {
   method: string;
   postedBy: string;
 }) {
-  return postSourceJournal(tx, {
+  const paidSameDay =
+    input.paidAt &&
+    input.paidAt.toISOString().slice(0, 10) === input.incurredAt.toISOString().slice(0, 10);
+
+  const recognition = await postSourceJournal(tx, {
     sourceType: 'finance_expense',
     sourceId: input.expenseId,
     entryDate: input.incurredAt,
@@ -420,10 +424,37 @@ export async function postExpenseJournal(tx: Tx, input: {
         debit: input.amount,
       },
       {
-        systemKey: input.paidAt ? cashSystemKey(input.method) : 'accrued_expenses',
-        description: input.paidAt ? 'Paid expense' : 'Accrued expense',
+        systemKey: paidSameDay ? cashSystemKey(input.method) : 'accrued_expenses',
+        description: paidSameDay ? 'Paid expense' : 'Accrued expense',
         credit: input.amount,
       },
     ],
   });
+
+  if (input.paidAt && !paidSameDay) {
+    const settlement = await postSourceJournal(tx, {
+      sourceType: 'finance_expense_payment',
+      sourceId: input.expenseId,
+      entryDate: input.paidAt,
+      currency: input.currency,
+      description: 'Settle direct expense ' + input.expenseNumber,
+      reference: input.expenseNumber,
+      postedBy: input.postedBy,
+      lines: [
+        {
+          systemKey: 'accrued_expenses',
+          description: 'Settle accrued expense',
+          debit: input.amount,
+        },
+        {
+          systemKey: cashSystemKey(input.method),
+          description: 'Expense payment from ' + input.method.replaceAll('_', ' '),
+          credit: input.amount,
+        },
+      ],
+    });
+    return { recognition, settlement };
+  }
+
+  return { recognition, settlement: null };
 }
