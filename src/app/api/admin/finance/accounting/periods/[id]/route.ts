@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
+import { assessFinanceClose } from '@/lib/finance-close';
 
 const schema = z.object({
   action: z.enum(['close', 'reopen']),
@@ -38,6 +39,23 @@ export async function PATCH(
   if (parsed.data.action === 'close') {
     if (period.status === 'closed') {
       return NextResponse.json({ success: true, data: period });
+    }
+
+    const readiness = await assessFinanceClose({
+      from: period.startDate,
+      to: period.endDate,
+    });
+    if (!readiness.ready) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Accounting period cannot be closed until finance close blockers are resolved',
+          controls: readiness.controls,
+          blockingCount: readiness.blockingCount,
+          warningCount: readiness.warningCount,
+        },
+        { status: 409 },
+      );
     }
 
     const unbalanced = await db.$queryRawUnsafe<Array<{ journalNumber: string }>>(
@@ -82,6 +100,11 @@ export async function PATCH(
         name: period.name,
         startDate: period.startDate.toISOString(),
         endDate: period.endDate.toISOString(),
+        closeControls: readiness.controls.map((item) => ({
+          key: item.key,
+          status: item.status,
+          count: item.count,
+        })),
       },
     });
 
