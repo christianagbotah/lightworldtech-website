@@ -984,12 +984,20 @@ export default function ClientPortalPage() {
         )}
 
         <section id="billing" className="mt-8 scroll-mt-32">
-          <div className="flex items-center gap-2">
-            <Landmark className="size-5 text-amber-600" />
-            <div>
-              <h2 className="text-xl font-semibold">Account & billing</h2>
-              <p className="mt-1 text-xs text-slate-500 dark:text-white/35">Your Lightworld services, renewals, invoices, receipts and current account position.</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Landmark className="size-5 text-amber-600" />
+              <div>
+                <h2 className="text-xl font-semibold">Account & billing</h2>
+                <p className="mt-1 text-xs text-slate-500 dark:text-white/35">Your Lightworld services, renewals, invoices, receipts and current account position.</p>
+              </div>
             </div>
+            <Button asChild type="button" size="sm" variant="outline" className="w-full shrink-0 sm:w-auto">
+              <a href="/api/client/account/statement">
+                <Download className="mr-2 size-4" />
+                Download statement
+              </a>
+            </Button>
           </div>
 
           {Object.keys(data?.account.summary || {}).length ? (
