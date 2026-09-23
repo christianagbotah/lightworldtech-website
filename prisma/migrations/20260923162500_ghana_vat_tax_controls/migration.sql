@@ -46,6 +46,29 @@ ALTER TABLE "ClientInvoice"
     "getfundRate" >= 0 AND "getfundAmount" >= 0
   );
 
+ALTER TABLE "FinanceVendorBill"
+  ADD COLUMN "taxTreatment" TEXT NOT NULL DEFAULT 'legacy',
+  ADD COLUMN "taxableAmount" DECIMAL(18,2) NOT NULL DEFAULT 0,
+  ADD COLUMN "vatRate" DECIMAL(5,2) NOT NULL DEFAULT 0,
+  ADD COLUMN "vatAmount" DECIMAL(18,2) NOT NULL DEFAULT 0,
+  ADD COLUMN "nhilRate" DECIMAL(5,2) NOT NULL DEFAULT 0,
+  ADD COLUMN "nhilAmount" DECIMAL(18,2) NOT NULL DEFAULT 0,
+  ADD COLUMN "getfundRate" DECIMAL(5,2) NOT NULL DEFAULT 0,
+  ADD COLUMN "getfundAmount" DECIMAL(18,2) NOT NULL DEFAULT 0;
+
+ALTER TABLE "FinanceVendorBill"
+  ADD CONSTRAINT "FinanceVendorBill_valid_tax_treatment"
+  CHECK ("taxTreatment" IN ('legacy', 'none', 'standard', 'zero', 'exempt'));
+
+ALTER TABLE "FinanceVendorBill"
+  ADD CONSTRAINT "FinanceVendorBill_nonnegative_tax_components"
+  CHECK (
+    "taxableAmount" >= 0 AND
+    "vatRate" >= 0 AND "vatAmount" >= 0 AND
+    "nhilRate" >= 0 AND "nhilAmount" >= 0 AND
+    "getfundRate" >= 0 AND "getfundAmount" >= 0
+  );
+
 ALTER TABLE "FinanceCreditNote"
   ADD COLUMN "vatAmount" DECIMAL(18,2) NOT NULL DEFAULT 0,
   ADD COLUMN "nhilAmount" DECIMAL(18,2) NOT NULL DEFAULT 0,
@@ -58,6 +81,9 @@ ALTER TABLE "FinanceCreditNote"
 INSERT INTO "FinanceAccount"
   ("id", "code", "name", "type", "subtype", "systemKey", "description", "active", "allowPosting", "createdAt", "updatedAt")
 VALUES
+  ('coa_1300_vat_input', '1300', 'VAT Input Tax', 'asset', 'vat_input', 'vat_input', 'Recoverable Ghana VAT incurred on taxable business purchases.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('coa_1310_nhil_input', '1310', 'NHIL Input Tax', 'asset', 'nhil_input', 'nhil_input', 'Recoverable National Health Insurance Levy on eligible purchases.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('coa_1320_getfund_input', '1320', 'GETFund Input Levy', 'asset', 'getfund_input', 'getfund_input', 'Recoverable GETFund levy on eligible purchases.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('coa_2210_vat_payable', '2210', 'VAT Payable', 'liability', 'vat_payable', 'vat_payable', 'Ghana Value Added Tax output less allowed tax adjustments.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('coa_2220_nhil_payable', '2220', 'NHIL Payable', 'liability', 'nhil_payable', 'nhil_payable', 'National Health Insurance Levy control account.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('coa_2230_getfund_payable', '2230', 'GETFund Levy Payable', 'liability', 'getfund_payable', 'getfund_payable', 'Ghana Education Trust Fund Levy control account.', true, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
