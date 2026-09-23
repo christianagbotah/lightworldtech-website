@@ -256,6 +256,10 @@ export async function POST(request: NextRequest) {
             issueDate: record.issueDate,
             currency: record.currency,
             total: record.total,
+            taxableAmount: record.taxableAmount,
+            vatAmount: record.vatAmount,
+            nhilAmount: record.nhilAmount,
+            getfundAmount: record.getfundAmount,
             category: record.category,
             postedBy: actor.name || actor.email,
           });
