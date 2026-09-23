@@ -677,18 +677,45 @@ export default function AdminFinance() {
 
   const submitSupplierPayment = async (event: FormEvent) => {
     event.preventDefault();
-    const ok = await post('/api/admin/finance/vendor-payments', {
-      ...supplierPaymentForm,
-      amount: Number(supplierPaymentForm.amount || 0),
-      allocations: supplierPaymentForm.allocations
-        .filter((item) => item.billId && Number(item.amount) > 0)
-        .map((item) => ({ billId: item.billId, amount: Number(item.amount) })),
-    }, 'Supplier payment recorded');
-    if (ok) setSupplierPaymentForm({
-      vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
-      method: 'bank_transfer', reference: '', notes: '',
-      allocations: [{ billId: '', amount: '' }],
-    });
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/finance/vendor-payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...supplierPaymentForm,
+          amount: Number(supplierPaymentForm.amount || 0),
+          allocations: supplierPaymentForm.allocations
+            .filter((item) => item.billId && Number(item.amount) > 0)
+            .map((item) => ({ billId: item.billId, amount: Number(item.amount) })),
+        }),
+      });
+      const raw = await response.text();
+      let payload: any = null;
+      try { payload = raw ? JSON.parse(raw) : null; } catch {}
+      if (!response.ok) throw new Error(payload?.error || 'Unable to save supplier payment');
+
+      if (payload?.pendingApproval) {
+        toast.success(
+          'Supplier payment submitted for approval' +
+          (payload?.data?.requestNumber ? ' · ' + payload.data.requestNumber : ''),
+        );
+      } else {
+        toast.success('Supplier payment recorded');
+      }
+
+      setDialog(null);
+      setSupplierPaymentForm({
+        vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
+        method: 'bank_transfer', reference: '', notes: '',
+        allocations: [{ billId: '', amount: '' }],
+      });
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to save supplier payment');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const submitExpense = async (event: FormEvent) => {
