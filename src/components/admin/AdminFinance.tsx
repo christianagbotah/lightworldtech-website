@@ -107,6 +107,14 @@ type Invoice = {
   subtotal: string;
   discount: string;
   tax: string;
+  taxTreatment: string;
+  taxableAmount: string;
+  vatRate: string;
+  vatAmount: string;
+  nhilRate: string;
+  nhilAmount: string;
+  getfundRate: string;
+  getfundAmount: string;
   total: string;
   amountPaid: string;
   balance: string;
