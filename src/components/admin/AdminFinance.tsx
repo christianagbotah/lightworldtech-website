@@ -232,6 +232,20 @@ type Dashboard = {
   };
 };
 
+type TaxProfile = {
+  id: string;
+  countryCode: string;
+  enabled: boolean;
+  vatRegistrationNumber: string;
+  vatRate: string;
+  nhilRate: string;
+  getfundRate: string;
+  effectiveFrom: string;
+  updatedBy: string;
+  canManage: boolean;
+  effectiveRate: string;
+};
+
 type FinanceData = {
   dashboard: Dashboard;
   organizations: Organization[];
@@ -242,6 +256,7 @@ type FinanceData = {
   bills: Bill[];
   supplierPayments: SupplierPayment[];
   expenses: Expense[];
+  taxProfile: TaxProfile | null;
 };
 
 type DialogName =
@@ -321,7 +336,7 @@ export default function AdminFinance() {
   });
   const [invoiceForm, setInvoiceForm] = useState({
     organizationId: '', serviceId: '', projectId: '', status: 'issued', currency: 'GHS',
-    issueDate: today(), dueDate: inDays(14), discount: '0', tax: '0', notes: '',
+    issueDate: today(), dueDate: inDays(14), discount: '0', taxTreatment: 'none', notes: '',
     lines: [{ description: '', quantity: '1', unitPrice: '' }],
   });
   const [receiptForm, setReceiptForm] = useState({
@@ -352,7 +367,7 @@ export default function AdminFinance() {
       const [dashboard, meta, services, invoices, receipts, bills, supplierPayments, expenses] =
         await Promise.all([
           api<Dashboard>('/api/admin/finance/dashboard'),
-          api<{ organizations: Organization[]; vendors: Vendor[] }>('/api/admin/finance/meta'),
+          api<{ organizations: Organization[]; vendors: Vendor[]; taxProfile: TaxProfile | null }>('/api/admin/finance/meta'),
           api<Service[]>('/api/admin/finance/services'),
           api<Invoice[]>('/api/admin/finance/invoices'),
           api<Receipt[]>('/api/admin/finance/payments'),
@@ -370,6 +385,7 @@ export default function AdminFinance() {
         bills,
         supplierPayments,
         expenses,
+        taxProfile: meta.taxProfile,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to load Finance & Accounts';
@@ -454,7 +470,7 @@ export default function AdminFinance() {
       issueDate: todayValue,
       dueDate,
       discount: '0',
-      tax: '0',
+      taxTreatment: 'none',
       notes: 'Prepared from the service renewal workflow. Review all amounts and terms before issuing.',
       lines: [{
         description:
@@ -593,7 +609,7 @@ export default function AdminFinance() {
       serviceId: invoiceForm.serviceId || null,
       projectId: invoiceForm.projectId || null,
       discount: Number(invoiceForm.discount || 0),
-      tax: Number(invoiceForm.tax || 0),
+      taxTreatment: invoiceForm.taxTreatment,
       lines: invoiceForm.lines.map((line) => ({
         ...line,
         quantity: Number(line.quantity || 0),
@@ -602,7 +618,7 @@ export default function AdminFinance() {
     }, 'Invoice issued');
     if (ok) setInvoiceForm({
       organizationId: '', serviceId: '', projectId: '', status: 'issued', currency: 'GHS',
-      issueDate: today(), dueDate: inDays(14), discount: '0', tax: '0', notes: '',
+      issueDate: today(), dueDate: inDays(14), discount: '0', taxTreatment: 'none', notes: '',
       lines: [{ description: '', quantity: '1', unitPrice: '' }],
     });
   };
@@ -693,6 +709,23 @@ export default function AdminFinance() {
   }
 
   const currencies = Object.entries(data.dashboard.byCurrency);
+  const invoiceSubtotalPreview = invoiceForm.lines.reduce(
+    (sum, line) => sum + Number(line.quantity || 0) * Number(line.unitPrice || 0),
+    0,
+  );
+  const invoiceTaxablePreview = Math.max(0, invoiceSubtotalPreview - Number(invoiceForm.discount || 0));
+  const standardTaxPreview = invoiceForm.taxTreatment === 'standard' && Boolean(data.taxProfile?.enabled);
+  const invoiceVatPreview = standardTaxPreview
+    ? invoiceTaxablePreview * Number(data.taxProfile?.vatRate || 0) / 100
+    : 0;
+  const invoiceNhilPreview = standardTaxPreview
+    ? invoiceTaxablePreview * Number(data.taxProfile?.nhilRate || 0) / 100
+    : 0;
+  const invoiceGetfundPreview = standardTaxPreview
+    ? invoiceTaxablePreview * Number(data.taxProfile?.getfundRate || 0) / 100
+    : 0;
+  const invoiceTaxPreview = invoiceVatPreview + invoiceNhilPreview + invoiceGetfundPreview;
+  const invoiceTotalPreview = invoiceTaxablePreview + invoiceTaxPreview;
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
@@ -1349,7 +1382,39 @@ export default function AdminFinance() {
           <DialogHeader><DialogTitle>Issue customer invoice</DialogTitle></DialogHeader>
           <form onSubmit={submitInvoice} className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2"><div><Label>Client</Label><select required value={invoiceForm.organizationId} onChange={(e) => setInvoiceForm({ ...invoiceForm, organizationId: e.target.value, serviceId: '', projectId: '' })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => setInvoiceForm({ ...invoiceForm, serviceId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
-            <div className="grid gap-3 sm:grid-cols-4"><div><Label>Issue date</Label><Input type="date" required value={invoiceForm.issueDate} onChange={(e) => setInvoiceForm({ ...invoiceForm, issueDate: e.target.value })} /></div><div><Label>Due date</Label><Input type="date" required value={invoiceForm.dueDate} onChange={(e) => setInvoiceForm({ ...invoiceForm, dueDate: e.target.value })} /></div><div><Label>Discount</Label><Input type="number" min="0" step="0.01" value={invoiceForm.discount} onChange={(e) => setInvoiceForm({ ...invoiceForm, discount: e.target.value })} /></div><div><Label>Tax amount</Label><Input type="number" min="0" step="0.01" value={invoiceForm.tax} onChange={(e) => setInvoiceForm({ ...invoiceForm, tax: e.target.value })} /></div></div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div><Label>Issue date</Label><Input type="date" required value={invoiceForm.issueDate} onChange={(e) => setInvoiceForm({ ...invoiceForm, issueDate: e.target.value })} /></div>
+              <div><Label>Due date</Label><Input type="date" required value={invoiceForm.dueDate} onChange={(e) => setInvoiceForm({ ...invoiceForm, dueDate: e.target.value })} /></div>
+              <div><Label>Discount</Label><Input type="number" min="0" step="0.01" value={invoiceForm.discount} onChange={(e) => setInvoiceForm({ ...invoiceForm, discount: e.target.value })} /></div>
+              <div>
+                <Label>Tax treatment</Label>
+                <select
+                  value={invoiceForm.taxTreatment}
+                  onChange={(e) => setInvoiceForm({ ...invoiceForm, taxTreatment: e.target.value })}
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="none">No tax / not VAT invoice</option>
+                  <option value="standard" disabled={!data.taxProfile?.enabled}>
+                    Ghana standard VAT{data.taxProfile ? ' · ' + data.taxProfile.effectiveRate + '%' : ''}
+                  </option>
+                  <option value="zero">Zero-rated</option>
+                  <option value="exempt">VAT exempt</option>
+                </select>
+              </div>
+            </div>
+            {invoiceForm.taxTreatment === 'standard' && !data.taxProfile?.enabled && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+                Standard Ghana VAT is currently disabled in the company tax profile. A super admin must enable it before a standard-rated invoice can be issued.
+              </div>
+            )}
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Taxable value</p><p className="mt-1 font-semibold">{money(invoiceTaxablePreview, invoiceForm.currency)}</p></div>
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">NHIL {standardTaxPreview ? data.taxProfile?.nhilRate + '%' : ''}</p><p className="mt-1 font-semibold">{money(invoiceNhilPreview, invoiceForm.currency)}</p></div>
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">GETFund {standardTaxPreview ? data.taxProfile?.getfundRate + '%' : ''}</p><p className="mt-1 font-semibold">{money(invoiceGetfundPreview, invoiceForm.currency)}</p></div>
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">VAT {standardTaxPreview ? data.taxProfile?.vatRate + '%' : ''}</p><p className="mt-1 font-semibold">{money(invoiceVatPreview, invoiceForm.currency)}</p></div>
+              <div className="rounded-xl bg-muted/35 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Total tax</p><p className="mt-1 font-semibold">{money(invoiceTaxPreview, invoiceForm.currency)}</p></div>
+              <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-950/15"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Invoice total</p><p className="mt-1 font-bold">{money(invoiceTotalPreview, invoiceForm.currency)}</p></div>
+            </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between"><Label>Line items</Label><Button type="button" size="sm" variant="outline" onClick={() => setInvoiceForm({ ...invoiceForm, lines: [...invoiceForm.lines, { description: '', quantity: '1', unitPrice: '' }] })}><Plus className="mr-1 size-3.5" /> Line</Button></div>
               {invoiceForm.lines.map((line, index) => (
