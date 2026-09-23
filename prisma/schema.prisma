@@ -493,9 +493,17 @@ model ClientProject {
   health         String             @default("on_track")
   progress       Int                @default(0)
   manager        String             @default("")
-  startDate      DateTime?
-  targetDate     DateTime?
-  milestones     ClientMilestone[]
+  startDate         DateTime?
+  targetDate        DateTime?
+  expiryDate        DateTime?
+  nextRenewalDate   DateTime?
+  renewalCycle      String             @default("annual")
+  renewalCurrency   String             @default("GHS")
+  renewalAmount     Decimal            @default(0) @db.Decimal(18, 2)
+  autoRenew         Boolean            @default(false)
+  renewalNoticeDays Int                @default(30)
+  renewalNotes      String             @default("")
+  milestones        ClientMilestone[]
   documents      ClientDocument[]
   announcements  ClientAnnouncement[]
   tickets        ClientSupportTicket[]
@@ -507,6 +515,8 @@ model ClientProject {
 
   @@index([organizationId, status])
   @@index([targetDate])
+  @@index([expiryDate])
+  @@index([nextRenewalDate])
 }
 
 model ClientMilestone {
