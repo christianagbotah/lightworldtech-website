@@ -132,7 +132,7 @@ type Ledger = {
     runningBalance: string;
     normalSide: 'debit' | 'credit';
   }>;
-  totals: Record<string, { debit: string; credit: string; closingBalance: string }>;
+  totals: Record<string, { openingBalance: string; debit: string; credit: string; closingBalance: string }>;
 };
 
 type JournalFormLine = {
@@ -214,6 +214,8 @@ export default function FinanceAccountingWorkspace() {
   const [accountDialog, setAccountDialog] = useState(false);
   const [periodDialog, setPeriodDialog] = useState(false);
   const [journalDialog, setJournalDialog] = useState(false);
+  const [reversalJournal, setReversalJournal] = useState<Journal | null>(null);
+  const [reversalForm, setReversalForm] = useState({ entryDate: today(), reason: '' });
   const [periodAction, setPeriodAction] = useState<{ period: Period; action: 'close' | 'reopen' } | null>(null);
 
   const now = new Date();
@@ -441,6 +443,31 @@ export default function FinanceAccountingWorkspace() {
     }
   };
 
+  const reverseJournal = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!reversalJournal) return;
+    setSaving(true);
+    try {
+      await api<Journal>(
+        '/api/admin/finance/accounting/journals/' + encodeURIComponent(reversalJournal.id) + '/reverse',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reversalForm),
+        },
+      );
+      toast.success('Journal reversed with a new balancing entry');
+      setReversalJournal(null);
+      setReversalForm({ entryDate: today(), reason: '' });
+      setLedger(null);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to reverse journal');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const updateJournalLine = (index: number, patch: Partial<JournalFormLine>) => {
     setJournalForm((current) => ({
       ...current,
@@ -646,7 +673,18 @@ export default function FinanceAccountingWorkspace() {
           {ledgerLoading && <Skeleton className="h-72 rounded-2xl" />}
 
           {!ledgerLoading && ledger && (
-            <Card className="min-w-0 border-border/60">
+            <div className="space-y-4">
+              {Object.entries(ledger.totals).map(([currency, totals]) => (
+                <Card key={currency} className="border-border/60">
+                  <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-xl bg-muted/30 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Opening balance</p><p className="mt-1 font-semibold">{money(totals.openingBalance, currency)}</p></div>
+                    <div className="rounded-xl bg-muted/30 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Period debits</p><p className="mt-1 font-semibold">{money(totals.debit, currency)}</p></div>
+                    <div className="rounded-xl bg-muted/30 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Period credits</p><p className="mt-1 font-semibold">{money(totals.credit, currency)}</p></div>
+                    <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-950/20"><p className="text-[10px] uppercase tracking-[0.1em] text-amber-700 dark:text-amber-300">Closing balance</p><p className="mt-1 font-bold">{money(totals.closingBalance, currency)}</p></div>
+                  </CardContent>
+                </Card>
+              ))}
+              <Card className="min-w-0 border-border/60">
               <CardHeader className="pb-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div><CardTitle className="text-base">{ledger.account.code} · {ledger.account.name}</CardTitle><p className="mt-1 text-xs text-muted-foreground">Normal balance: {pretty(ledger.normalSide)} · {ledger.rows.length} posted movements</p></div>
@@ -673,7 +711,8 @@ export default function FinanceAccountingWorkspace() {
                   </TableBody>
                 </Table>
               </CardContent>
-            </Card>
+              </Card>
+            </div>
           )}
         </div>
       )}
@@ -688,7 +727,7 @@ export default function FinanceAccountingWorkspace() {
           </CardHeader>
           <CardContent className="p-0">
             <Table exportFileName="lightworld-journal-register" className="min-w-[800px]">
-              <TableHeader><TableRow><TableHead>Journal</TableHead><TableHead>Date</TableHead><TableHead>Description</TableHead><TableHead>Reference</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Debit</TableHead><TableHead className="text-right">Credit</TableHead><TableHead>Posted by</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Journal</TableHead><TableHead>Date</TableHead><TableHead>Description</TableHead><TableHead>Reference</TableHead><TableHead>Status</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Debit</TableHead><TableHead className="text-right">Credit</TableHead><TableHead>Posted by</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
               <TableBody>
                 {journals.map((journal) => (
                   <TableRow key={journal.id}>
@@ -696,13 +735,22 @@ export default function FinanceAccountingWorkspace() {
                     <TableCell className="text-xs">{date(journal.entryDate)}</TableCell>
                     <TableCell className="max-w-[300px] whitespace-normal">{journal.description}</TableCell>
                     <TableCell className="font-mono text-xs">{journal.reference || '—'}</TableCell>
+                    <TableCell><Badge className={journal.status === 'reversed' ? 'border-0 bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200' : 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'}>{pretty(journal.status)}</Badge></TableCell>
                     <TableCell>{journal.currency}</TableCell>
                     <TableCell className="text-right">{money(journal.totalDebit, journal.currency)}</TableCell>
                     <TableCell className="text-right">{money(journal.totalCredit, journal.currency)}</TableCell>
                     <TableCell><p className="text-xs">{journal.postedBy}</p><p className="text-[10px] text-muted-foreground">{date(journal.postedAt, true)}</p></TableCell>
+                    <TableCell className="text-right">
+                      {journal.status === 'posted' && journal.sourceType !== 'reversal' ? (
+                        <Button type="button" size="sm" variant="outline" onClick={() => {
+                          setReversalJournal(journal);
+                          setReversalForm({ entryDate: today(), reason: '' });
+                        }}>Reverse</Button>
+                      ) : <span className="text-xs text-muted-foreground">—</span>}
+                    </TableCell>
                   </TableRow>
                 ))}
-                {!journals.length && <TableRow><TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No journals have been posted yet.</TableCell></TableRow>}
+                {!journals.length && <TableRow><TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">No journals have been posted yet.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>
@@ -848,6 +896,29 @@ export default function FinanceAccountingWorkspace() {
 
             <DialogFooter><Button type="button" variant="outline" onClick={() => setJournalDialog(false)}>Cancel</Button><Button disabled={saving || !openPeriods.length || journalTotals.debit <= 0 || Math.abs(journalTotals.debit - journalTotals.credit) >= 0.005}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Post journal</Button></DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(reversalJournal)} onOpenChange={(open) => { if (!open) setReversalJournal(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Reverse posted journal?</DialogTitle>
+            <DialogDescription>
+              The original journal will remain in history and a new journal with equal opposite entries will be posted. No ledger lines are edited or deleted.
+            </DialogDescription>
+          </DialogHeader>
+          {reversalJournal && (
+            <form onSubmit={reverseJournal} className="space-y-4">
+              <div className="rounded-xl bg-muted/35 p-3">
+                <p className="font-mono text-xs font-semibold">{reversalJournal.journalNumber}</p>
+                <p className="mt-1 text-sm">{reversalJournal.description}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{money(reversalJournal.totalDebit, reversalJournal.currency)} · {date(reversalJournal.entryDate)}</p>
+              </div>
+              <div><Label>Reversal date</Label><Input required type="date" value={reversalForm.entryDate} min={reversalJournal.entryDate.slice(0, 10)} onChange={(event) => setReversalForm({ ...reversalForm, entryDate: event.target.value })} /></div>
+              <div><Label>Reason</Label><Textarea required rows={3} value={reversalForm.reason} onChange={(event) => setReversalForm({ ...reversalForm, reason: event.target.value })} placeholder="Explain why this posted journal must be reversed." /></div>
+              <DialogFooter><Button type="button" variant="outline" onClick={() => setReversalJournal(null)}>Cancel</Button><Button type="submit" variant="destructive" disabled={saving}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Post reversal</Button></DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 
