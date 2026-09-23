@@ -205,6 +205,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const invoices = source('src/app/api/admin/finance/invoices/route.ts');
     const receipts = source('src/app/api/admin/finance/payments/route.ts');
     const vendorPayments = source('src/app/api/admin/finance/vendor-payments/route.ts');
+    const renewalReminder = source('src/app/api/admin/finance/services/[id]/renewal-reminder/route.ts');
     const portalApi = source('src/app/api/client/portal/route.ts');
     const statement = source('src/app/api/client/account/statement/route.ts');
     const portal = source('src/components/client/ClientPortalPage.tsx');
@@ -223,6 +224,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('Save service change');
     expect(finance).toContain('Service history');
     expect(finance).toContain("changeType: 'renewal'");
+    expect(finance).toContain('Prepare renewal invoice');
+    expect(finance).toContain('Send renewal SMS');
+    expect(finance).toContain('/renewal-reminder');
     expect(finance).toContain('Debtors');
     expect(finance).toContain('Creditors');
     expect(finance).toContain('exportFileName="lightworld-finance-debtors"');
@@ -240,6 +244,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(invoices).toContain('Discount cannot exceed invoice subtotal');
     expect(receipts).toContain('invoiceBalance(invoice.total, invoice.allocations)');
     expect(vendorPayments).toContain('invoiceBalance(bill.total, bill.allocations)');
+    expect(renewalReminder).toContain("'finance.manage'");
+    expect(renewalReminder).toContain("'communications.manage'");
+    expect(renewalReminder).toContain("'service_renewal'");
+    expect(renewalReminder).toContain("'service_expired'");
+    expect(renewalReminder).toContain('12 * 60 * 60 * 1000');
+    expect(renewalReminder).toContain('queueSingleSms');
+    expect(renewalReminder).toContain("'admin.finance_service_renewal_reminder_sent'");
     expect(portalApi).toContain('accountSummary');
     expect(portalApi).toContain('organization.invoices.map');
     expect(statement).toContain('Client Account Statement');
