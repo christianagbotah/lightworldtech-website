@@ -42,43 +42,75 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Ledger account not found' }, { status: 404 });
   }
 
-  const lines = await db.financeJournalLine.findMany({
-    where: {
-      accountId,
-      entry: {
-        status: 'posted',
-        entryDate: {
-          ...(from ? { gte: from } : {}),
-          lte: to,
-        },
-        ...(currency ? { currency } : {}),
-      },
-    },
-    orderBy: [
-      { entry: { entryDate: 'asc' } },
-      { createdAt: 'asc' },
-    ],
-    include: {
-      entry: {
-        select: {
-          id: true,
-          journalNumber: true,
-          entryDate: true,
-          currency: true,
-          description: true,
-          reference: true,
-          sourceType: true,
-          sourceId: true,
-          postedBy: true,
-          postedAt: true,
+  const [lines, openingLines] = await Promise.all([
+    db.financeJournalLine.findMany({
+      where: {
+        accountId,
+        entry: {
+          status: { in: ['posted', 'reversed'] },
+          entryDate: {
+            ...(from ? { gte: from } : {}),
+            lte: to,
+          },
+          ...(currency ? { currency } : {}),
         },
       },
-    },
-  });
+      orderBy: [
+        { entry: { entryDate: 'asc' } },
+        { createdAt: 'asc' },
+      ],
+      include: {
+        entry: {
+          select: {
+            id: true,
+            journalNumber: true,
+            entryDate: true,
+            currency: true,
+            description: true,
+            reference: true,
+            sourceType: true,
+            sourceId: true,
+            status: true,
+            postedBy: true,
+            postedAt: true,
+          },
+        },
+      },
+    }),
+    from
+      ? db.financeJournalLine.findMany({
+          where: {
+            accountId,
+            entry: {
+              status: { in: ['posted', 'reversed'] },
+              entryDate: { lt: from },
+              ...(currency ? { currency } : {}),
+            },
+          },
+          include: {
+            entry: { select: { currency: true } },
+          },
+        })
+      : Promise.resolve([]),
+  ]);
 
   const normalSide = accountNormalSide(account.type);
   const running = new Map<string, Prisma.Decimal>();
+  const opening = new Map<string, Prisma.Decimal>();
   const totals = new Map<string, { debit: Prisma.Decimal; credit: Prisma.Decimal }>();
+
+  for (const line of openingLines) {
+    const code = line.entry.currency;
+    const current = opening.get(code) || new Prisma.Decimal(0);
+    const movement = normalSide === 'debit'
+      ? line.debit.minus(line.credit)
+      : line.credit.minus(line.debit);
+    opening.set(code, current.plus(movement));
+  }
+
+  for (const [code, balance] of opening.entries()) {
+    running.set(code, balance);
+  }
 
   const rows = lines.map((line) => {
     const code = line.entry.currency;
@@ -127,14 +159,18 @@ export async function GET(request: NextRequest) {
       currency: currency || null,
       rows,
       totals: Object.fromEntries(
-        [...totals.entries()].map(([code, value]) => [
-          code,
-          {
-            debit: value.debit.toFixed(2),
-            credit: value.credit.toFixed(2),
-            closingBalance: (running.get(code) || new Prisma.Decimal(0)).toFixed(2),
-          },
-        ]),
+        [...new Set([...totals.keys(), ...opening.keys()])].sort().map((code) => {
+          const value = totals.get(code) || { debit: new Prisma.Decimal(0), credit: new Prisma.Decimal(0) };
+          return [
+            code,
+            {
+              openingBalance: (opening.get(code) || new Prisma.Decimal(0)).toFixed(2),
+              debit: value.debit.toFixed(2),
+              credit: value.credit.toFixed(2),
+              closingBalance: (running.get(code) || new Prisma.Decimal(0)).toFixed(2),
+            },
+          ];
+        }),
       ),
     },
   });
