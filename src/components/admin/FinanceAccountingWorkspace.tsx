@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import FinanceFinancialStatements from '@/components/admin/FinanceFinancialStatements';
+import FinanceLedgerInitialization from '@/components/admin/FinanceLedgerInitialization';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -495,6 +496,8 @@ export default function FinanceAccountingWorkspace() {
 
   return (
     <div className="min-w-0 space-y-5">
+      <FinanceLedgerInitialization />
+
       {loadError && (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-200">
           <div className="flex flex-wrap items-center justify-between gap-3">
