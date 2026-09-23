@@ -77,6 +77,7 @@ async function nextSequence(sequence: string): Promise<number> {
     'finance_payable_number_seq',
     'finance_vendor_payment_number_seq',
     'finance_expense_number_seq',
+    'finance_journal_number_seq',
   ]);
   if (!safe.has(sequence)) throw new Error('Unsupported finance number sequence');
 
@@ -110,6 +111,14 @@ export async function nextSupplierPaymentNumber(now = new Date()): Promise<strin
 
 export async function nextExpenseNumber(now = new Date()): Promise<string> {
   return formatNumber('EXP', await nextSequence('finance_expense_number_seq'), now);
+}
+
+export async function nextJournalNumber(now = new Date()): Promise<string> {
+  return formatNumber('JRN', await nextSequence('finance_journal_number_seq'), now);
+}
+
+export function accountNormalSide(type: string): 'debit' | 'credit' {
+  return ['asset', 'expense'].includes(type) ? 'debit' : 'credit';
 }
 
 export function decimalJson(value: Prisma.Decimal | null | undefined): string | null {
