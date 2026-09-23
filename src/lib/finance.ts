@@ -127,7 +127,7 @@ export function journalTotals(
     credit: Prisma.Decimal | number | string;
   }>,
 ): { debit: Prisma.Decimal; credit: Prisma.Decimal } {
-  return lines.reduce(
+  return lines.reduce<{ debit: Prisma.Decimal; credit: Prisma.Decimal }>(
     (totals, line) => ({
       debit: totals.debit.plus(money(line.debit)),
       credit: totals.credit.plus(money(line.credit)),
