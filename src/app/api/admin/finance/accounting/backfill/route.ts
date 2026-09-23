@@ -260,6 +260,7 @@ export async function POST(request: NextRequest) {
             vatAmount: record.vatAmount,
             nhilAmount: record.nhilAmount,
             getfundAmount: record.getfundAmount,
+            taxRecoverable: record.taxRecoverable,
             category: record.category,
             postedBy: actor.name || actor.email,
           });
