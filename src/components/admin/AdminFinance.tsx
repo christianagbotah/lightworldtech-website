@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import FinanceRecordDetailsDialog, { type FinanceRecordSelection } from '@/components/admin/FinanceRecordDetailsDialog';
+import FinanceCustomerCredits from '@/components/admin/FinanceCustomerCredits';
 import FinanceAccountingWorkspace from '@/components/admin/FinanceAccountingWorkspace';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
@@ -994,6 +995,11 @@ export default function AdminFinance() {
               </Table>
             </div></CardContent>
           </Card>
+
+          <FinanceCustomerCredits
+            invoices={data.invoices}
+            onFinanceChanged={load}
+          />
         </div>
       )}
 
