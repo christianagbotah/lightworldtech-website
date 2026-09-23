@@ -33,6 +33,9 @@ function serialize(note: any) {
     ...note,
     subtotal: note.subtotal.toFixed(2),
     tax: note.tax.toFixed(2),
+    vatAmount: note.vatAmount.toFixed(2),
+    nhilAmount: note.nhilAmount.toFixed(2),
+    getfundAmount: note.getfundAmount.toFixed(2),
     total: note.total.toFixed(2),
     appliedAmount: note.appliedAmount.toFixed(2),
     refundedAmount: refunded.toFixed(2),
@@ -105,7 +108,19 @@ export async function POST(request: NextRequest) {
   }
 
   const subtotal = new Prisma.Decimal(parsed.data.subtotal).toDecimalPlaces(2);
-  const tax = new Prisma.Decimal(parsed.data.tax).toDecimalPlaces(2);
+  let vatAmount = new Prisma.Decimal(0);
+  let nhilAmount = new Prisma.Decimal(0);
+  let getfundAmount = new Prisma.Decimal(0);
+
+  if (invoice.taxTreatment === 'standard') {
+    vatAmount = subtotal.mul(invoice.vatRate).div(100).toDecimalPlaces(2);
+    nhilAmount = subtotal.mul(invoice.nhilRate).div(100).toDecimalPlaces(2);
+    getfundAmount = subtotal.mul(invoice.getfundRate).div(100).toDecimalPlaces(2);
+  }
+
+  const tax = invoice.taxTreatment === 'legacy'
+    ? new Prisma.Decimal(parsed.data.tax).toDecimalPlaces(2)
+    : vatAmount.plus(nhilAmount).plus(getfundAmount).toDecimalPlaces(2);
   const total = subtotal.plus(tax).toDecimalPlaces(2);
   const previouslyCredited = invoice.creditNotes.reduce(
     (sum, item) => sum.plus(item.total),
@@ -185,6 +200,9 @@ export async function POST(request: NextRequest) {
         reason: parsed.data.reason,
         subtotal,
         tax,
+        vatAmount,
+        nhilAmount,
+        getfundAmount,
         total,
         appliedAmount,
         status: 'posted',
@@ -204,6 +222,9 @@ export async function POST(request: NextRequest) {
       currency: note.currency,
       subtotal: note.subtotal,
       tax: note.tax,
+      vatAmount: note.vatAmount,
+      nhilAmount: note.nhilAmount,
+      getfundAmount: note.getfundAmount,
       total: note.total,
       appliedAmount: note.appliedAmount,
       postedBy: actor.name || actor.email,
@@ -236,6 +257,9 @@ export async function POST(request: NextRequest) {
       invoiceNumber: invoice.invoiceNumber,
       currency: invoice.currency,
       total: total.toFixed(2),
+      vatAmount: vatAmount.toFixed(2),
+      nhilAmount: nhilAmount.toFixed(2),
+      getfundAmount: getfundAmount.toFixed(2),
       appliedAmount: appliedAmount.toFixed(2),
       customerCredit: total.minus(appliedAmount).toFixed(2),
       previouslyCredited: previouslyCredited.toFixed(2),
