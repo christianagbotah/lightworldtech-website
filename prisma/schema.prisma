@@ -1110,6 +1110,7 @@ model FinanceOutflowApproval {
   status             String   @default("pending")
   counterpartyId     String   @default("")
   counterpartyName   String   @default("")
+  sourceId           String   @default("")
   sourceReference    String   @default("")
   currency           String   @default("GHS")
   amount             Decimal  @db.Decimal(18, 2)
@@ -1136,6 +1137,7 @@ model FinanceOutflowApproval {
   @@index([status, requestedAt])
   @@index([outflowType, status])
   @@index([counterpartyId, status])
+  @@index([sourceId, status])
   @@index([requestedByAdminId, status])
 }
 
