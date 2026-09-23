@@ -118,12 +118,26 @@ async function inventory() {
 
   candidates.sort((a, b) => a.date.getTime() - b.date.getTime() || a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id));
 
-  const blocked = candidates.filter((candidate) => {
+  const hasOpenPeriod = (value: Date) => {
     const period = periods.find((item) =>
-      item.startDate.getTime() <= candidate.date.getTime() &&
-      item.endDate.getTime() >= candidate.date.getTime(),
+      item.startDate.getTime() <= value.getTime() &&
+      item.endDate.getTime() >= value.getTime(),
     );
-    return !period || period.status !== 'open';
+    return Boolean(period && period.status === 'open');
+  };
+
+  const blocked = candidates.filter((candidate) => {
+    if (!hasOpenPeriod(candidate.date)) return true;
+
+    if (
+      candidate.kind === 'expense' &&
+      candidate.record.paidAt &&
+      !sameUtcDay(candidate.record.incurredAt, candidate.record.paidAt)
+    ) {
+      return !hasOpenPeriod(candidate.record.paidAt);
+    }
+
+    return false;
   });
 
   const blockedKeys = new Set(blocked.map((candidate) => key(candidate.kind, candidate.id)));
