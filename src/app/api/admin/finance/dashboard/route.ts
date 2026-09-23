@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
         organization: { select: { id: true, name: true } },
         service: { select: { id: true, name: true } },
         allocations: true,
+        creditNotes: { where: { status: 'posted' }, include: { refunds: true } },
       },
       orderBy: { dueDate: 'asc' },
       take: 5000,
@@ -114,11 +115,12 @@ export async function GET(request: NextRequest) {
 
   const debtors = invoices
     .map((invoice) => {
-      const balance = invoiceBalance(invoice.total, invoice.allocations);
+      const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
       const status = invoiceStatusFromBalance({
         storedStatus: invoice.status,
         total: invoice.total,
         allocations: invoice.allocations,
+        credits: invoice.creditNotes,
         dueDate: invoice.dueDate,
         now,
       });
