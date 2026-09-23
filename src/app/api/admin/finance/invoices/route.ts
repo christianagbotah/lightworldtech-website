@@ -28,7 +28,7 @@ const schema = z.object({
   issueDate: z.coerce.date(),
   dueDate: z.coerce.date(),
   discount: z.coerce.number().min(0).max(999999999999).default(0),
-  taxTreatment: z.enum(['none', 'standard', 'zero', 'exempt']).default('none'),
+  taxTreatment: z.enum(['legacy', 'none', 'standard', 'zero', 'exempt']).optional(),
   tax: z.coerce.number().min(0).max(999999999999).default(0),
   notes: z.string().trim().max(8000).default(''),
   lines: z.array(lineSchema).min(1).max(100),
@@ -188,6 +188,7 @@ export async function POST(request: NextRequest) {
   }
 
   const taxableAmount = subtotal.minus(discount).toDecimalPlaces(2);
+  const taxTreatment = parsed.data.taxTreatment || (Number(parsed.data.tax || 0) > 0 ? 'legacy' : 'none');
   let vatRate = new Prisma.Decimal(0);
   let nhilRate = new Prisma.Decimal(0);
   let getfundRate = new Prisma.Decimal(0);
@@ -195,7 +196,7 @@ export async function POST(request: NextRequest) {
   let nhilAmount = new Prisma.Decimal(0);
   let getfundAmount = new Prisma.Decimal(0);
 
-  if (parsed.data.taxTreatment === 'standard') {
+  if (taxTreatment === 'standard') {
     const profile = await db.financeTaxProfile.findUnique({ where: { id: 'ghana-default' } });
     if (!profile || !profile.enabled) {
       return NextResponse.json(
@@ -222,7 +223,9 @@ export async function POST(request: NextRequest) {
     getfundAmount = taxableAmount.mul(getfundRate).div(100).toDecimalPlaces(2);
   }
 
-  const tax = vatAmount.plus(nhilAmount).plus(getfundAmount).toDecimalPlaces(2);
+  const tax = taxTreatment === 'legacy'
+    ? new Prisma.Decimal(parsed.data.tax || 0).toDecimalPlaces(2)
+    : vatAmount.plus(nhilAmount).plus(getfundAmount).toDecimalPlaces(2);
   const total = taxableAmount.plus(tax).toDecimalPlaces(2);
   const invoiceNumber = await nextInvoiceNumber(parsed.data.issueDate);
 
@@ -240,7 +243,7 @@ export async function POST(request: NextRequest) {
         dueDate: parsed.data.dueDate,
         subtotal,
         discount,
-        taxTreatment: parsed.data.taxTreatment,
+        taxTreatment,
         taxableAmount,
         vatRate,
         vatAmount,
