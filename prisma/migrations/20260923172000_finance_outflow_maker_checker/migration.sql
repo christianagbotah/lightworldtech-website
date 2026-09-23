@@ -23,6 +23,7 @@ CREATE TABLE "FinanceOutflowApproval" (
   "status" TEXT NOT NULL DEFAULT 'pending',
   "counterpartyId" TEXT NOT NULL DEFAULT '',
   "counterpartyName" TEXT NOT NULL DEFAULT '',
+  "sourceId" TEXT NOT NULL DEFAULT '',
   "sourceReference" TEXT NOT NULL DEFAULT '',
   "currency" TEXT NOT NULL DEFAULT 'GHS',
   "amount" DECIMAL(18,2) NOT NULL,
@@ -63,3 +64,6 @@ CREATE INDEX "FinanceOutflowApproval_counterpartyId_status_idx"
 
 CREATE INDEX "FinanceOutflowApproval_requestedByAdminId_status_idx"
   ON "FinanceOutflowApproval"("requestedByAdminId", "status");
+
+CREATE INDEX "FinanceOutflowApproval_sourceId_status_idx"
+  ON "FinanceOutflowApproval"("sourceId", "status");
