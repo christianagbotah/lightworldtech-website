@@ -51,7 +51,13 @@ async function clientPosition(organizationId: string) {
         organizationId,
         status: { notIn: ['draft', 'void'] },
       },
-      include: { allocations: true },
+      include: {
+        allocations: true,
+        creditNotes: {
+          where: { status: 'posted' },
+          include: { refunds: true },
+        },
+      },
       orderBy: { issueDate: 'desc' },
       take: 3000,
     }),
@@ -76,7 +82,22 @@ async function clientPosition(organizationId: string) {
 
   for (const invoice of invoices) {
     const bucket = ensure(invoice.currency);
-    bucket.outstanding = bucket.outstanding.plus(invoiceBalance(invoice.total, invoice.allocations));
+    bucket.outstanding = bucket.outstanding.plus(
+      invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes),
+    );
+    const refundable = invoice.creditNotes.reduce((sum, note) => {
+      const refunded = note.refunds.reduce(
+        (refundTotal, refund) => refundTotal.plus(refund.amount),
+        new Prisma.Decimal(0),
+      );
+      return sum.plus(
+        Prisma.Decimal.max(
+          new Prisma.Decimal(0),
+          note.total.minus(note.appliedAmount).minus(refunded),
+        ),
+      );
+    }, new Prisma.Decimal(0));
+    bucket.credit = bucket.credit.plus(refundable);
   }
   for (const payment of payments) {
     const bucket = ensure(payment.currency);
@@ -185,6 +206,11 @@ export async function GET(
         },
         project: { select: { id: true, name: true, status: true, manager: true } },
         lines: { orderBy: { order: 'asc' } },
+        creditNotes: {
+          where: { status: 'posted' },
+          orderBy: { issueDate: 'asc' },
+          include: { refunds: { orderBy: { refundedAt: 'asc' } } },
+        },
         allocations: {
           orderBy: { createdAt: 'asc' },
           include: {
@@ -224,7 +250,7 @@ export async function GET(
     if (!invoice) return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
 
     const amountPaid = sumAmounts(invoice.allocations);
-    const balance = invoiceBalance(invoice.total, invoice.allocations);
+    const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
     const [position, audit, related] = await Promise.all([
       clientPosition(invoice.organizationId),
       auditTrail('ClientInvoice', invoice.id),
@@ -236,7 +262,10 @@ export async function GET(
         },
         orderBy: [{ issueDate: 'desc' }, { createdAt: 'desc' }],
         take: 8,
-        include: { allocations: true },
+        include: {
+          allocations: true,
+          creditNotes: { where: { status: 'posted' } },
+        },
       }),
     ]);
 
@@ -256,6 +285,7 @@ export async function GET(
             storedStatus: invoice.status,
             total: invoice.total,
             allocations: invoice.allocations,
+            credits: invoice.creditNotes,
             dueDate: invoice.dueDate,
           }),
           service: invoice.service ? {
@@ -268,6 +298,28 @@ export async function GET(
             unitPrice: line.unitPrice.toFixed(2),
             amount: line.amount.toFixed(2),
           })),
+          creditNotes: invoice.creditNotes.map((note) => {
+            const refunded = note.refunds.reduce(
+              (sum, refund) => sum.plus(refund.amount),
+              new Prisma.Decimal(0),
+            );
+            return {
+              ...note,
+              subtotal: note.subtotal.toFixed(2),
+              tax: note.tax.toFixed(2),
+              total: note.total.toFixed(2),
+              appliedAmount: note.appliedAmount.toFixed(2),
+              refundedAmount: refunded.toFixed(2),
+              refundableBalance: Prisma.Decimal.max(
+                new Prisma.Decimal(0),
+                note.total.minus(note.appliedAmount).minus(refunded),
+              ).toFixed(2),
+              refunds: note.refunds.map((refund) => ({
+                ...refund,
+                amount: refund.amount.toFixed(2),
+              })),
+            };
+          }),
           allocations: invoice.allocations.map((allocation) => ({
             ...allocation,
             amount: allocation.amount.toFixed(2),
@@ -292,11 +344,12 @@ export async function GET(
             storedStatus: item.status,
             total: item.total,
             allocations: item.allocations,
+            credits: item.creditNotes,
             dueDate: item.dueDate,
           }),
           currency: item.currency,
           amount: item.total.toFixed(2),
-          balance: invoiceBalance(item.total, item.allocations).toFixed(2),
+          balance: invoiceBalance(item.total, item.allocations, item.creditNotes).toFixed(2),
         })),
         audit,
       },
@@ -323,6 +376,7 @@ export async function GET(
             invoice: {
               include: {
                 allocations: true,
+                creditNotes: { where: { status: 'posted' } },
                 service: { select: { id: true, name: true, planName: true } },
               },
             },
@@ -368,11 +422,16 @@ export async function GET(
               discount: allocation.invoice.discount.toFixed(2),
               tax: allocation.invoice.tax.toFixed(2),
               total: allocation.invoice.total.toFixed(2),
-              balance: invoiceBalance(allocation.invoice.total, allocation.invoice.allocations).toFixed(2),
+              balance: invoiceBalance(
+                allocation.invoice.total,
+                allocation.invoice.allocations,
+                allocation.invoice.creditNotes,
+              ).toFixed(2),
               derivedStatus: invoiceStatusFromBalance({
                 storedStatus: allocation.invoice.status,
                 total: allocation.invoice.total,
                 allocations: allocation.invoice.allocations,
+                credits: allocation.invoice.creditNotes,
                 dueDate: allocation.invoice.dueDate,
               }),
               allocations: undefined,
