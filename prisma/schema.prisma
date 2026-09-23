@@ -435,6 +435,7 @@ model ClientOrganization {
   invoices           ClientInvoice[]
   payments           ClientPayment[]
   paymentIntents     HubtelPaymentIntent[]
+  creditNotes        FinanceCreditNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1080,10 +1081,108 @@ model FinanceJournalLine {
   debit       Decimal             @default(0) @db.Decimal(18, 2)
   credit      Decimal             @default(0) @db.Decimal(18, 2)
 
+  reconciliationLine FinanceReconciliationLine?
+
   createdAt DateTime @default(now())
 
   @@index([entryId])
   @@index([accountId, createdAt])
+}
+
+model FinanceCreditNote {
+  id               String             @id @default(cuid())
+  creditNoteNumber String             @unique
+  organizationId   String
+  organization     ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  invoiceId        String
+  invoice          ClientInvoice      @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  currency         String             @default("GHS")
+  issueDate        DateTime
+  reason           String
+  subtotal         Decimal            @db.Decimal(18, 2)
+  tax              Decimal            @default(0) @db.Decimal(18, 2)
+  total            Decimal            @db.Decimal(18, 2)
+  appliedAmount    Decimal            @default(0) @db.Decimal(18, 2)
+  status           String             @default("posted")
+  createdBy        String             @default("Admin")
+  refunds          FinanceCustomerRefund[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, issueDate])
+  @@index([invoiceId, status])
+}
+
+model FinanceCustomerRefund {
+  id             String             @id @default(cuid())
+  refundNumber   String             @unique
+  organizationId String
+  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  creditNoteId   String
+  creditNote     FinanceCreditNote  @relation(fields: [creditNoteId], references: [id], onDelete: Restrict)
+  currency       String             @default("GHS")
+  amount         Decimal            @db.Decimal(18, 2)
+  refundedAt     DateTime
+  method         String             @default("bank_transfer")
+  reference      String             @default("")
+  reason         String             @default("")
+  refundedBy     String             @default("Admin")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, refundedAt])
+  @@index([creditNoteId, refundedAt])
+}
+
+model FinanceReconciliationBatch {
+  id               String                      @id @default(cuid())
+  batchNumber      String                      @unique
+  channel          String
+  accountSystemKey String
+  accountLabel     String
+  accountReference String                      @default("")
+  currency         String                      @default("GHS")
+  statementFrom    DateTime
+  statementTo      DateTime
+  openingBalance   Decimal                     @db.Decimal(18, 2)
+  closingBalance   Decimal                     @db.Decimal(18, 2)
+  status           String                      @default("open")
+  importedBy       String                      @default("Admin")
+  reconciledAt     DateTime?
+  reconciledBy     String                      @default("")
+  notes            String                      @default("")
+  lines            FinanceReconciliationLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountSystemKey, currency, statementTo])
+  @@index([status, statementTo])
+}
+
+model FinanceReconciliationLine {
+  id                   String                     @id @default(cuid())
+  batchId              String
+  batch                FinanceReconciliationBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  transactionDate      DateTime
+  description          String
+  reference            String                     @default("")
+  direction            String
+  amount               Decimal                    @db.Decimal(18, 2)
+  status               String                     @default("unmatched")
+  matchedJournalLineId String?                    @unique
+  matchedJournalLine   FinanceJournalLine?        @relation(fields: [matchedJournalLineId], references: [id], onDelete: SetNull)
+  matchedAt            DateTime?
+  matchedBy            String                     @default("")
+  notes                String                     @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([batchId, status])
+  @@index([transactionDate, amount])
 }
 
 model ClientAnnouncement {
