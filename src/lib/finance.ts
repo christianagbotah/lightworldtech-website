@@ -121,6 +121,31 @@ export function accountNormalSide(type: string): 'debit' | 'credit' {
   return ['asset', 'expense'].includes(type) ? 'debit' : 'credit';
 }
 
+export function journalTotals(
+  lines: Array<{
+    debit: Prisma.Decimal | number | string;
+    credit: Prisma.Decimal | number | string;
+  }>,
+): { debit: Prisma.Decimal; credit: Prisma.Decimal } {
+  return lines.reduce(
+    (totals, line) => ({
+      debit: totals.debit.plus(money(line.debit)),
+      credit: totals.credit.plus(money(line.credit)),
+    }),
+    { debit: new Prisma.Decimal(0), credit: new Prisma.Decimal(0) },
+  );
+}
+
+export function isBalancedJournal(
+  lines: Array<{
+    debit: Prisma.Decimal | number | string;
+    credit: Prisma.Decimal | number | string;
+  }>,
+): boolean {
+  const totals = journalTotals(lines);
+  return totals.debit.gt(0) && totals.debit.eq(totals.credit);
+}
+
 export function decimalJson(value: Prisma.Decimal | null | undefined): string | null {
   return value === null || value === undefined ? null : value.toFixed(2);
 }
