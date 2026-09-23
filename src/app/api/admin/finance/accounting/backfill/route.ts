@@ -220,6 +220,9 @@ export async function POST(request: NextRequest) {
             subtotal: record.subtotal,
             discount: record.discount,
             tax: record.tax,
+            vatAmount: record.vatAmount,
+            nhilAmount: record.nhilAmount,
+            getfundAmount: record.getfundAmount,
             total: record.total,
             postedBy: actor.name || actor.email,
           });
