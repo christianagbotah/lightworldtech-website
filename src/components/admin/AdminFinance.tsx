@@ -682,7 +682,7 @@ export default function AdminFinance() {
               <CardHeader><CardTitle className="text-base">Debtors</CardTitle></CardHeader>
               <CardContent className="p-0">
                 <div className="max-w-full overflow-x-auto">
-                  <Table>
+                  <Table exportFileName="lightworld-finance-debtors">
                     <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Invoice</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {data.dashboard.debtors.slice(0, 12).map((item) => (
@@ -704,7 +704,7 @@ export default function AdminFinance() {
               <CardHeader><CardTitle className="text-base">Creditors</CardTitle></CardHeader>
               <CardContent className="p-0">
                 <div className="max-w-full overflow-x-auto">
-                  <Table>
+                  <Table exportFileName="lightworld-finance-creditors">
                     <TableHeader><TableRow><TableHead>Supplier</TableHead><TableHead>Bill</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {data.dashboard.creditors.slice(0, 12).map((item) => (
@@ -756,7 +756,7 @@ export default function AdminFinance() {
           <Card className="min-w-0 border-border/60">
             <CardHeader><CardTitle className="text-base">Client services & subscriptions</CardTitle></CardHeader>
             <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
-              <Table className="min-w-[720px]">
+              <Table exportFileName="lightworld-client-services" className="min-w-[720px]">
                 <TableHeader><TableRow><TableHead>Customer / service</TableHead><TableHead>Plan</TableHead><TableHead>Cycle</TableHead><TableHead>Expiry</TableHead><TableHead>Next due</TableHead><TableHead className="text-right">Recurring</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.services.map((item) => (
@@ -792,7 +792,7 @@ export default function AdminFinance() {
           <Card className="min-w-0 border-border/60">
             <CardHeader><CardTitle className="text-base">Invoice history</CardTitle></CardHeader>
             <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
-              <Table className="min-w-[720px]">
+              <Table exportFileName="lightworld-client-invoices" className="min-w-[720px]">
                 <TableHeader><TableRow><TableHead>Invoice</TableHead><TableHead>Customer</TableHead><TableHead>Status</TableHead><TableHead>Issued / due</TableHead><TableHead className="text-right">Total</TableHead><TableHead className="text-right">Paid</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.invoices.map((item) => (
@@ -815,7 +815,7 @@ export default function AdminFinance() {
           <Card className="min-w-0 border-border/60">
             <CardHeader><CardTitle className="text-base">Customer receipts</CardTitle></CardHeader>
             <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
-              <Table className="min-w-[720px]">
+              <Table exportFileName="lightworld-client-receipts" className="min-w-[720px]">
                 <TableHeader><TableRow><TableHead>Receipt</TableHead><TableHead>Customer</TableHead><TableHead>Date</TableHead><TableHead>Method</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Unapplied</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.receipts.map((item) => (
@@ -849,7 +849,7 @@ export default function AdminFinance() {
             <Card className="min-w-0 border-border/60">
               <CardHeader><CardTitle className="text-base">Supplier bills / creditors</CardTitle></CardHeader>
               <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
-                <Table>
+                <Table exportFileName="lightworld-supplier-bills">
                   <TableHeader><TableRow><TableHead>Bill</TableHead><TableHead>Supplier</TableHead><TableHead>Status</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {data.bills.map((item) => (
@@ -870,7 +870,7 @@ export default function AdminFinance() {
             <Card className="min-w-0 border-border/60">
               <CardHeader><CardTitle className="text-base">Direct expenses</CardTitle></CardHeader>
               <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
-                <Table>
+                <Table exportFileName="lightworld-direct-expenses">
                   <TableHeader><TableRow><TableHead>Expense</TableHead><TableHead>Description</TableHead><TableHead>Date</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {data.expenses.map((item) => (
