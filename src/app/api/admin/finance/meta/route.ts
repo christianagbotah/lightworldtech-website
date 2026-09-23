@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
 
-  const [organizations, vendors] = await Promise.all([
+  const [organizations, vendors, taxProfile] = await Promise.all([
     db.clientOrganization.findMany({
       where: { status: 'active' },
       orderBy: { name: 'asc' },
@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
       orderBy: { name: 'asc' },
       select: { id: true, name: true, email: true, phone: true },
     }),
+    db.financeTaxProfile.findUnique({ where: { id: 'ghana-default' } }),
   ]);
 
   return NextResponse.json({
@@ -53,6 +54,19 @@ export async function GET(request: NextRequest) {
         })),
       })),
       vendors,
+      taxProfile: taxProfile ? {
+        id: taxProfile.id,
+        countryCode: taxProfile.countryCode,
+        enabled: taxProfile.enabled,
+        vatRegistrationNumber: taxProfile.vatRegistrationNumber,
+        vatRate: taxProfile.vatRate.toFixed(2),
+        nhilRate: taxProfile.nhilRate.toFixed(2),
+        getfundRate: taxProfile.getfundRate.toFixed(2),
+        effectiveFrom: taxProfile.effectiveFrom,
+        updatedBy: taxProfile.updatedBy,
+        canManage: actor.role === 'super_admin',
+        effectiveRate: taxProfile.vatRate.plus(taxProfile.nhilRate).plus(taxProfile.getfundRate).toFixed(2),
+      } : null,
     },
   });
 }
