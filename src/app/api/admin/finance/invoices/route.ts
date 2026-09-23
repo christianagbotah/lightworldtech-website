@@ -37,7 +37,7 @@ const schema = z.object({
 });
 
 function serializeInvoice(invoice: any) {
-  const balance = invoiceBalance(invoice.total, invoice.allocations || []);
+  const balance = invoiceBalance(invoice.total, invoice.allocations || [], invoice.creditNotes || []);
   const amountPaid = sumAmounts(invoice.allocations || []);
   return {
     ...invoice,
@@ -51,6 +51,7 @@ function serializeInvoice(invoice: any) {
       storedStatus: invoice.status,
       total: invoice.total,
       allocations: invoice.allocations || [],
+      credits: invoice.creditNotes || [],
       dueDate: invoice.dueDate,
     }),
     lines: (invoice.lines || []).map((line: any) => ({
@@ -59,6 +60,8 @@ function serializeInvoice(invoice: any) {
       unitPrice: line.unitPrice.toFixed(2),
       amount: line.amount.toFixed(2),
     })),
+    creditedAmount: (invoice.creditNotes || []).reduce((sum: Prisma.Decimal, note: any) => sum.plus(note.appliedAmount), new Prisma.Decimal(0)).toFixed(2),
+    creditNotes: (invoice.creditNotes || []).map((note: any) => ({ ...note, subtotal: note.subtotal.toFixed(2), tax: note.tax.toFixed(2), total: note.total.toFixed(2), appliedAmount: note.appliedAmount.toFixed(2) })),
     allocations: (invoice.allocations || []).map((allocation: any) => ({
       ...allocation,
       amount: allocation.amount.toFixed(2),
@@ -102,6 +105,7 @@ export async function GET(request: NextRequest) {
       service: { select: { id: true, name: true, planName: true } },
       project: { select: { id: true, name: true } },
       lines: { orderBy: { order: 'asc' } },
+      creditNotes: { where: { status: 'posted' }, orderBy: { issueDate: 'asc' } },
       allocations: {
         include: {
           payment: {
@@ -204,6 +208,7 @@ export async function POST(request: NextRequest) {
         project: { select: { id: true, name: true } },
         lines: { orderBy: { order: 'asc' } },
         allocations: true,
+        creditNotes: { where: { status: 'posted' } },
       },
     });
 
