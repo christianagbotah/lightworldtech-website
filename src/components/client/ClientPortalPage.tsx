@@ -159,8 +159,32 @@ type AccountInvoice = {
   tax: string;
   total: string;
   amountPaid: string;
+  creditedAmount: string;
+  refundableCredit: string;
   balance: string;
   notes: string;
+  creditNotes: Array<{
+    id: string;
+    creditNoteNumber: string;
+    issueDate: string;
+    reason: string;
+    subtotal: string;
+    tax: string;
+    total: string;
+    appliedAmount: string;
+    refundedAmount: string;
+    refundableBalance: string;
+    status: string;
+    refunds: Array<{
+      id: string;
+      refundNumber: string;
+      amount: string;
+      refundedAt: string;
+      method: string;
+      reference: string;
+      reason: string;
+    }>;
+  }>;
   service: { id: string; name: string; planName: string } | null;
   project: { id: string; name: string } | null;
   lines: Array<{
@@ -1015,7 +1039,7 @@ export default function ClientPortalPage() {
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                       <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]"><p className="text-slate-400">Invoices outstanding</p><p className="mt-1 font-semibold">{accountMoney(summary.outstanding, currency)}</p></div>
-                      <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]"><p className="text-slate-400">Unapplied credit</p><p className="mt-1 font-semibold">{accountMoney(summary.unappliedCredit, currency)}</p></div>
+                      <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]"><p className="text-slate-400">Available credit</p><p className="mt-1 font-semibold">{accountMoney(summary.unappliedCredit, currency)}</p></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -1078,19 +1102,49 @@ export default function ClientPortalPage() {
               <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ReceiptText className="size-4 text-amber-600" /> Invoice history</CardTitle></CardHeader>
               <CardContent className="p-0">
                 <div className="max-w-full overflow-x-auto">
-                  <Table className="min-w-[820px]" exportFileName="lightworld-client-invoices">
+                  <Table className="min-w-[920px]" exportFileName="lightworld-client-invoices">
                     <thead className="border-y border-slate-200/70 bg-slate-50 text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:border-white/[0.07] dark:bg-white/[0.025]">
-                      <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Service</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Due</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Paid</th><th className="px-4 py-3 text-right">Balance</th><th data-export-ignore className="px-4 py-3 text-right">Payment</th></tr>
+                      <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Service</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Due</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Paid</th><th className="px-4 py-3 text-right">Credits</th><th className="px-4 py-3 text-right">Balance</th><th data-export-ignore className="px-4 py-3 text-right">Payment</th></tr>
                     </thead>
                     <tbody>
                       {data?.account.invoices.map((invoice) => (
                         <tr key={invoice.id} className="border-b border-slate-200/60 dark:border-white/[0.06]">
-                          <td className="px-4 py-3"><p className="font-mono text-xs font-semibold">{invoice.invoiceNumber}</p><p className="text-[10px] text-slate-400">{new Date(invoice.issueDate).toLocaleDateString()}</p></td>
+                          <td className="px-4 py-3">
+                            <p className="font-mono text-xs font-semibold">{invoice.invoiceNumber}</p>
+                            <p className="text-[10px] text-slate-400">{new Date(invoice.issueDate).toLocaleDateString()}</p>
+                            {invoice.creditNotes.length > 0 && (
+                              <details className="mt-2 text-[10px]">
+                                <summary className="cursor-pointer font-medium text-amber-700 dark:text-amber-300">
+                                  {invoice.creditNotes.length} credit note{invoice.creditNotes.length === 1 ? '' : 's'}
+                                </summary>
+                                <div className="mt-2 space-y-2">
+                                  {invoice.creditNotes.map((note) => (
+                                    <div key={note.id} className="rounded-lg border border-slate-200/70 p-2 dark:border-white/[0.07]">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <span className="font-mono font-semibold">{note.creditNoteNumber}</span>
+                                        <span>{accountMoney(note.total, invoice.currency)}</span>
+                                      </div>
+                                      <p className="mt-1 text-slate-400">{note.reason}</p>
+                                      {Number(note.refundedAmount) > 0 && (
+                                        <p className="mt-1 text-slate-400">Refunded: {accountMoney(note.refundedAmount, invoice.currency)}</p>
+                                      )}
+                                      {Number(note.refundableBalance) > 0 && (
+                                        <p className="mt-1 font-medium text-emerald-700 dark:text-emerald-300">
+                                          Available credit: {accountMoney(note.refundableBalance, invoice.currency)}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            )}
+                          </td>
                           <td className="px-4 py-3 text-xs">{invoice.service?.name || 'General account'}</td>
                           <td className="px-4 py-3"><Badge className={accountStatusClass(invoice.derivedStatus)}>{statusLabel(invoice.derivedStatus)}</Badge></td>
                           <td className="px-4 py-3 text-xs">{new Date(invoice.dueDate).toLocaleDateString()}</td>
                           <td className="px-4 py-3 text-right">{accountMoney(invoice.total, invoice.currency)}</td>
                           <td className="px-4 py-3 text-right">{accountMoney(invoice.amountPaid, invoice.currency)}</td>
+                          <td className="px-4 py-3 text-right">{Number(invoice.creditedAmount) ? accountMoney(invoice.creditedAmount, invoice.currency) : '—'}</td>
                           <td className="px-4 py-3 text-right font-semibold">{accountMoney(invoice.balance, invoice.currency)}</td>
                           <td data-export-ignore className="px-4 py-3 text-right">
                             {Number(invoice.balance) > 0 && invoice.currency === 'GHS' && data.account.onlinePaymentsAvailable ? (
@@ -1114,7 +1168,7 @@ export default function ClientPortalPage() {
                           </td>
                         </tr>
                       ))}
-                      {!data?.account.invoices.length && <tr><td colSpan={8} className="px-4 py-8 text-center text-xs text-slate-400">No invoices published yet.</td></tr>}
+                      {!data?.account.invoices.length && <tr><td colSpan={9} className="px-4 py-8 text-center text-xs text-slate-400">No invoices published yet.</td></tr>}
                     </tbody>
                   </Table>
                 </div>
@@ -1128,7 +1182,7 @@ export default function ClientPortalPage() {
               <div className="max-w-full overflow-x-auto">
                 <Table className="min-w-[640px]" exportFileName="lightworld-client-receipts">
                   <thead className="border-y border-slate-200/70 bg-slate-50 text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:border-white/[0.07] dark:bg-white/[0.025]">
-                    <tr><th className="px-4 py-3">Receipt</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Method</th><th className="px-4 py-3">Reference</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-right">Unapplied credit</th></tr>
+                    <tr><th className="px-4 py-3">Receipt</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Method</th><th className="px-4 py-3">Reference</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-right">Unapplied receipt</th></tr>
                   </thead>
                   <tbody>
                     {data?.account.payments.map((payment) => (
