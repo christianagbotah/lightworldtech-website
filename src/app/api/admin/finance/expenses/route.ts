@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
+import { postExpenseJournal } from '@/lib/finance-ledger';
 import { nextExpenseNumber, normalizeCurrency } from '@/lib/finance';
 
 const schema = z.object({
@@ -48,22 +49,39 @@ export async function POST(request: NextRequest) {
   }
 
   const expenseNumber = await nextExpenseNumber(parsed.data.incurredAt);
-  const expense = await db.financeExpense.create({
-    data: {
-      expenseNumber,
-      vendorId: parsed.data.vendorId || null,
-      category: parsed.data.category,
-      description: parsed.data.description,
-      currency: normalizeCurrency(parsed.data.currency),
-      amount: parsed.data.amount,
-      incurredAt: parsed.data.incurredAt,
-      paidAt: parsed.data.paidAt || null,
-      method: parsed.data.method,
-      reference: parsed.data.reference,
-      notes: parsed.data.notes,
-      recordedBy: actor.name || actor.email,
-    },
-    include: { vendor: { select: { id: true, name: true } } },
+  const currency = normalizeCurrency(parsed.data.currency);
+  const expense = await db.$transaction(async (tx) => {
+    const created = await tx.financeExpense.create({
+      data: {
+        expenseNumber,
+        vendorId: parsed.data.vendorId || null,
+        category: parsed.data.category,
+        description: parsed.data.description,
+        currency,
+        amount: parsed.data.amount,
+        incurredAt: parsed.data.incurredAt,
+        paidAt: parsed.data.paidAt || null,
+        method: parsed.data.method,
+        reference: parsed.data.reference,
+        notes: parsed.data.notes,
+        recordedBy: actor.name || actor.email,
+      },
+      include: { vendor: { select: { id: true, name: true } } },
+    });
+
+    await postExpenseJournal(tx, {
+      expenseId: created.id,
+      expenseNumber: created.expenseNumber,
+      incurredAt: created.incurredAt,
+      paidAt: created.paidAt,
+      currency: created.currency,
+      amount: created.amount,
+      category: created.category,
+      method: created.method,
+      postedBy: actor.name || actor.email,
+    });
+
+    return created;
   });
 
   await recordAdminAudit({
