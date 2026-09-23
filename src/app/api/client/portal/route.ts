@@ -77,6 +77,11 @@ export async function GET(request: NextRequest) {
             service: { select: { id: true, name: true, planName: true } },
             project: { select: { id: true, name: true } },
             lines: { orderBy: { order: 'asc' } },
+            creditNotes: {
+              where: { status: 'posted' },
+              orderBy: { issueDate: 'desc' },
+              include: { refunds: { orderBy: { refundedAt: 'asc' } } },
+            },
             allocations: {
               include: {
                 payment: {
@@ -121,10 +126,28 @@ export async function GET(request: NextRequest) {
     };
 
     const invoices = organization.invoices.map((invoice) => {
-      const balance = invoiceBalance(invoice.total, invoice.allocations);
+      const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
       const amountPaid = sumAmounts(invoice.allocations);
+      const creditedAmount = invoice.creditNotes.reduce(
+        (sum, note) => sum.plus(note.appliedAmount),
+        new Prisma.Decimal(0),
+      );
+      const refundableCredit = invoice.creditNotes.reduce((sum, note) => {
+        const refunded = note.refunds.reduce(
+          (refundTotal, refund) => refundTotal.plus(refund.amount),
+          new Prisma.Decimal(0),
+        );
+        return sum.plus(
+          Prisma.Decimal.max(
+            new Prisma.Decimal(0),
+            note.total.minus(note.appliedAmount).minus(refunded),
+          ),
+        );
+      }, new Prisma.Decimal(0));
       ensureCurrency(invoice.currency).outstanding =
         ensureCurrency(invoice.currency).outstanding.plus(balance);
+      ensureCurrency(invoice.currency).credit =
+        ensureCurrency(invoice.currency).credit.plus(refundableCredit);
       return {
         ...invoice,
         subtotal: invoice.subtotal.toFixed(2),
@@ -132,11 +155,14 @@ export async function GET(request: NextRequest) {
         tax: invoice.tax.toFixed(2),
         total: invoice.total.toFixed(2),
         amountPaid: amountPaid.toFixed(2),
+        creditedAmount: creditedAmount.toFixed(2),
+        refundableCredit: refundableCredit.toFixed(2),
         balance: balance.toFixed(2),
         derivedStatus: invoiceStatusFromBalance({
           storedStatus: invoice.status,
           total: invoice.total,
           allocations: invoice.allocations,
+          credits: invoice.creditNotes,
           dueDate: invoice.dueDate,
           now,
         }),
@@ -146,6 +172,28 @@ export async function GET(request: NextRequest) {
           unitPrice: line.unitPrice.toFixed(2),
           amount: line.amount.toFixed(2),
         })),
+        creditNotes: invoice.creditNotes.map((note) => {
+          const refunded = note.refunds.reduce(
+            (sum, refund) => sum.plus(refund.amount),
+            new Prisma.Decimal(0),
+          );
+          return {
+            ...note,
+            subtotal: note.subtotal.toFixed(2),
+            tax: note.tax.toFixed(2),
+            total: note.total.toFixed(2),
+            appliedAmount: note.appliedAmount.toFixed(2),
+            refundedAmount: refunded.toFixed(2),
+            refundableBalance: Prisma.Decimal.max(
+              new Prisma.Decimal(0),
+              note.total.minus(note.appliedAmount).minus(refunded),
+            ).toFixed(2),
+            refunds: note.refunds.map((refund) => ({
+              ...refund,
+              amount: refund.amount.toFixed(2),
+            })),
+          };
+        }),
         allocations: invoice.allocations.map((allocation) => ({
           ...allocation,
           amount: allocation.amount.toFixed(2),
