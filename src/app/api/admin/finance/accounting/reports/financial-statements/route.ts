@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
       where: {
         account: { type: { in: ['revenue', 'expense'] } },
         entry: {
-          status: 'posted',
+          status: { in: ['posted', 'reversed'] },
           entryDate: { gte: from, lte: to },
           ...(currency ? { currency } : {}),
         },
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
     db.financeJournalLine.findMany({
       where: {
         entry: {
-          status: 'posted',
+          status: { in: ['posted', 'reversed'] },
           entryDate: { lte: to },
           ...(currency ? { currency } : {}),
         },
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
     }),
     db.financeJournalEntry.findMany({
       where: {
-        status: 'posted',
+        status: { in: ['posted', 'reversed'] },
         entryDate: { gte: from, lte: to },
         ...(currency ? { currency } : {}),
         lines: {
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
       where: {
         account: { systemKey: { in: ['cash', 'bank', 'mobile_money'] } },
         entry: {
-          status: 'posted',
+          status: { in: ['posted', 'reversed'] },
           entryDate: { lt: from },
           ...(currency ? { currency } : {}),
         },
