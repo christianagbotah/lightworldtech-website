@@ -17,6 +17,7 @@ const schema = z.object({
   taxableAmount: z.coerce.number().positive().max(999999999999).optional(),
   total: z.coerce.number().positive().max(999999999999).optional(),
   taxTreatment: z.enum(['none', 'standard', 'zero', 'exempt']).default('none'),
+  taxRecoverable: z.boolean().default(true),
   notes: z.string().trim().max(8000).default(''),
 }).refine((value) => value.dueDate.getTime() >= value.issueDate.getTime(), {
   message: 'Due date cannot be earlier than issue date',
@@ -138,6 +139,7 @@ export async function POST(request: NextRequest) {
         issueDate: parsed.data.issueDate,
         dueDate: parsed.data.dueDate,
         taxTreatment: parsed.data.taxTreatment,
+        taxRecoverable: parsed.data.taxRecoverable,
         taxableAmount,
         vatRate,
         vatAmount,
@@ -162,6 +164,7 @@ export async function POST(request: NextRequest) {
       vatAmount: created.vatAmount,
       nhilAmount: created.nhilAmount,
       getfundAmount: created.getfundAmount,
+      taxRecoverable: created.taxRecoverable,
       category: created.category,
       postedBy: actor.name || actor.email,
     });
@@ -180,6 +183,7 @@ export async function POST(request: NextRequest) {
       total: bill.total.toFixed(2),
       currency: bill.currency,
       taxTreatment: bill.taxTreatment,
+      taxRecoverable: bill.taxRecoverable,
       taxableAmount: bill.taxableAmount.toFixed(2),
       vatAmount: bill.vatAmount.toFixed(2),
       nhilAmount: bill.nhilAmount.toFixed(2),
