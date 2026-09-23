@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     },
     include: {
       allocations: true,
+      creditNotes: { where: { status: 'posted' } },
       organization: {
         select: {
           name: true,
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Hubtel checkout is currently enabled for GHS invoices only' }, { status: 409 });
   }
 
-  const balance = invoiceBalance(invoice.total, invoice.allocations);
+  const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
   if (balance.lte(0)) return NextResponse.json({ success: false, error: 'This invoice has no outstanding balance' }, { status: 409 });
 
   const clientReference = 'LW-' + Date.now().toString(36).toUpperCase() + '-' + randomUUID().slice(0, 8).toUpperCase();
