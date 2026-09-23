@@ -22,6 +22,23 @@ describe('finance balance and status derivation', () => {
     expect(invoiceBalance('1000.00', allocations).toFixed(2)).toBe('600.00');
   });
 
+  test('reduces invoice balances by applied credit notes without double-counting refundable credit', () => {
+    expect(invoiceBalance(
+      '1000.00',
+      [{ amount: '250.00' }],
+      [{ appliedAmount: '300.00' }],
+    ).toFixed(2)).toBe('450.00');
+
+    expect(invoiceStatusFromBalance({
+      storedStatus: 'issued',
+      total: '1000.00',
+      allocations: [{ amount: '400.00' }],
+      credits: [{ appliedAmount: '600.00' }],
+      dueDate: new Date('2026-10-01T00:00:00Z'),
+      now: new Date('2026-09-23T00:00:00Z'),
+    })).toBe('paid');
+  });
+
   test('derives unapplied customer credit from the receipt', () => {
     expect(paymentUnallocated('1000.00', [{ amount: '700.00' }]).toFixed(2)).toBe('300.00');
     expect(paymentUnallocated('100.00', [{ amount: '100.00' }]).toFixed(2)).toBe('0.00');
