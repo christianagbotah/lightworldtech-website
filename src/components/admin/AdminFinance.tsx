@@ -140,6 +140,14 @@ type Bill = {
   currency: string;
   issueDate: string;
   dueDate: string;
+  taxTreatment: string;
+  taxableAmount: string;
+  vatRate: string;
+  vatAmount: string;
+  nhilRate: string;
+  nhilAmount: string;
+  getfundRate: string;
+  getfundAmount: string;
   total: string;
   amountPaid: string;
   balance: string;
@@ -347,7 +355,7 @@ export default function AdminFinance() {
   const [vendorForm, setVendorForm] = useState({ name: '', email: '', phone: '', taxId: '', notes: '' });
   const [billForm, setBillForm] = useState({
     vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
-    issueDate: today(), dueDate: inDays(14), total: '', notes: '',
+    issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', notes: '',
   });
   const [supplierPaymentForm, setSupplierPaymentForm] = useState({
     vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
@@ -647,10 +655,14 @@ export default function AdminFinance() {
 
   const submitBill = async (event: FormEvent) => {
     event.preventDefault();
-    const ok = await post('/api/admin/finance/bills', { ...billForm, total: Number(billForm.total || 0) }, 'Supplier bill recorded');
+    const ok = await post('/api/admin/finance/bills', {
+      ...billForm,
+      taxableAmount: Number(billForm.taxableAmount || 0),
+      taxTreatment: billForm.taxTreatment,
+    }, 'Supplier bill recorded');
     if (ok) setBillForm({
       vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
-      issueDate: today(), dueDate: inDays(14), total: '', notes: '',
+      issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', notes: '',
     });
   };
 
@@ -726,6 +738,19 @@ export default function AdminFinance() {
     : 0;
   const invoiceTaxPreview = invoiceVatPreview + invoiceNhilPreview + invoiceGetfundPreview;
   const invoiceTotalPreview = invoiceTaxablePreview + invoiceTaxPreview;
+  const billTaxablePreview = Number(billForm.taxableAmount || 0);
+  const standardBillTaxPreview = billForm.taxTreatment === 'standard' && Boolean(data.taxProfile?.enabled);
+  const billVatPreview = standardBillTaxPreview
+    ? billTaxablePreview * Number(data.taxProfile?.vatRate || 0) / 100
+    : 0;
+  const billNhilPreview = standardBillTaxPreview
+    ? billTaxablePreview * Number(data.taxProfile?.nhilRate || 0) / 100
+    : 0;
+  const billGetfundPreview = standardBillTaxPreview
+    ? billTaxablePreview * Number(data.taxProfile?.getfundRate || 0) / 100
+    : 0;
+  const billTaxPreview = billVatPreview + billNhilPreview + billGetfundPreview;
+  const billTotalPreview = billTaxablePreview + billTaxPreview;
 
   return (
     <div className="min-w-0 max-w-full space-y-6">
