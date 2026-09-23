@@ -469,10 +469,11 @@ export async function GET(
     });
   }
 
-  const expense = await db.financeExpense.findUnique({
-    where: { id },
-    include: { vendor: true },
-  });
+  if (type === 'expense') {
+    const expense = await db.financeExpense.findUnique({
+      where: { id },
+      include: { vendor: true },
+    });
   if (!expense) return NextResponse.json({ success: false, error: 'Expense not found' }, { status: 404 });
 
   const [audit, related] = await Promise.all([
@@ -488,23 +489,26 @@ export async function GET(
     }),
   ]);
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      type: 'expense' satisfies RecordType,
-      expense: { ...expense, amount: expense.amount.toFixed(2) },
-      related: related.map((item) => ({
-        id: item.id,
-        type: 'expense',
-        reference: item.expenseNumber,
-        date: item.incurredAt,
-        status: item.paidAt ? 'paid' : 'unpaid',
-        currency: item.currency,
-        amount: item.amount.toFixed(2),
-        vendor: item.vendor?.name || '',
-        description: item.description,
-      })),
-      audit,
-    },
-  });
+    return NextResponse.json({
+      success: true,
+      data: {
+        type: 'expense' satisfies RecordType,
+        expense: { ...expense, amount: expense.amount.toFixed(2) },
+        related: related.map((item) => ({
+          id: item.id,
+          type: 'expense',
+          reference: item.expenseNumber,
+          date: item.incurredAt,
+          status: item.paidAt ? 'paid' : 'unpaid',
+          currency: item.currency,
+          amount: item.amount.toFixed(2),
+          vendor: item.vendor?.name || '',
+          description: item.description,
+        })),
+        audit,
+      },
+    });
+  }
+
+  return NextResponse.json({ success: false, error: 'Unsupported finance record type' }, { status: 400 });
 }
