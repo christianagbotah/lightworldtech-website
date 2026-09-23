@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { getActiveClientContext } from '@/lib/client-access';
 import { toCsv } from '@/lib/csv';
-import { invoiceBalance, invoiceStatusFromBalance } from '@/lib/finance';
+import { invoiceStatusFromBalance } from '@/lib/finance';
 
 export const runtime = 'nodejs';
 
@@ -22,16 +22,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const fromRaw = searchParams.get('from')?.trim() || '';
-  const toRaw = searchParams.get('to')?.trim() || '';
-  const from = fromRaw ? new Date(fromRaw + 'T00:00:00.000Z') : null;
-  const to = toRaw ? new Date(toRaw + 'T23:59:59.999Z') : null;
-
-  if ((from && Number.isNaN(from.getTime())) || (to && Number.isNaN(to.getTime())) || (from && to && from > to)) {
-    return NextResponse.json({ success: false, error: 'Invalid statement period' }, { status: 400 });
-  }
-
   const organization = await db.clientOrganization.findFirst({
     where: {
       id: context.user.organizationId,
@@ -43,15 +33,7 @@ export async function GET(request: NextRequest) {
       primaryContactName: true,
       primaryEmail: true,
       invoices: {
-        where: {
-          status: { notIn: ['draft', 'void'] },
-          ...(from || to ? {
-            issueDate: {
-              ...(from ? { gte: from } : {}),
-              ...(to ? { lte: to } : {}),
-            },
-          } : {}),
-        },
+        where: { status: { notIn: ['draft', 'void'] } },
         orderBy: [{ issueDate: 'asc' }, { createdAt: 'asc' }],
         include: {
           service: { select: { name: true, planName: true } },
@@ -59,12 +41,6 @@ export async function GET(request: NextRequest) {
         },
       },
       payments: {
-        where: from || to ? {
-          paidAt: {
-            ...(from ? { gte: from } : {}),
-            ...(to ? { lte: to } : {}),
-          },
-        } : undefined,
         orderBy: [{ paidAt: 'asc' }, { createdAt: 'asc' }],
         include: { allocations: true },
       },
@@ -147,7 +123,7 @@ export async function GET(request: NextRequest) {
     ['Customer', organization.name],
     ['Primary contact', organization.primaryContactName],
     ['Email', organization.primaryEmail],
-    ['Period', fromRaw || 'Beginning', 'to', toRaw || 'Current'],
+    ['Period', 'Beginning', 'to', 'Current'],
     ['Generated', new Date().toISOString()],
     [],
     ['Date', 'Type', 'Reference', 'Description', 'Debit', 'Credit', 'Currency', 'Running balance', 'Status'],
