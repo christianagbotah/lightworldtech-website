@@ -49,6 +49,8 @@ export async function GET(request: NextRequest) {
     bills,
     vendorPayments,
     expenses,
+    creditNotes,
+    refunds,
     vendors,
   ] = await Promise.all([
     db.clientServiceAccount.findMany({
@@ -99,6 +101,19 @@ export async function GET(request: NextRequest) {
       where: { incurredAt: { gte: from, lte: to } },
       include: { vendor: { select: { id: true, name: true } } },
       orderBy: { incurredAt: 'desc' },
+      take: 5000,
+    }),
+    db.financeCreditNote.findMany({
+      where: {
+        status: 'posted',
+        issueDate: { gte: from, lte: to },
+      },
+      select: { currency: true, total: true },
+      take: 5000,
+    }),
+    db.financeCustomerRefund.findMany({
+      where: { refundedAt: { gte: from, lte: to } },
+      select: { currency: true, amount: true },
       take: 5000,
     }),
     db.financeVendor.findMany({ where: { active: true }, select: { id: true, name: true } }),
@@ -185,7 +200,9 @@ export async function GET(request: NextRequest) {
     .slice(0, 500);
 
   for (const payment of payments) add(cashIn, payment.currency, payment.amount);
+  for (const note of creditNotes) add(accrualRevenue, note.currency, note.total.negated());
   for (const payment of vendorPayments) add(cashOut, payment.currency, payment.amount);
+  for (const refund of refunds) add(cashOut, refund.currency, refund.amount);
   for (const expense of expenses) {
     add(accrualExpenses, expense.currency, expense.amount);
     if (expense.paidAt && expense.paidAt >= from && expense.paidAt <= to) {
