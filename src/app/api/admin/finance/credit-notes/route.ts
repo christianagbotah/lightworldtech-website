@@ -8,7 +8,6 @@ import {
   invoiceBalance,
   invoiceStatusFromBalance,
   nextCreditNoteNumber,
-  sumCredits,
 } from '@/lib/finance';
 import { postCreditNoteJournal } from '@/lib/finance-ledger';
 
@@ -112,10 +111,49 @@ export async function POST(request: NextRequest) {
     (sum, item) => sum.plus(item.total),
     new Prisma.Decimal(0),
   );
+  const previouslyCreditedRevenue = invoice.creditNotes.reduce(
+    (sum, item) => sum.plus(item.subtotal),
+    new Prisma.Decimal(0),
+  );
+  const previouslyCreditedTax = invoice.creditNotes.reduce(
+    (sum, item) => sum.plus(item.tax),
+    new Prisma.Decimal(0),
+  );
+  const originalNetRevenue = invoice.subtotal.minus(invoice.discount).toDecimalPlaces(2);
+  const remainingRevenue = Prisma.Decimal.max(
+    new Prisma.Decimal(0),
+    originalNetRevenue.minus(previouslyCreditedRevenue),
+  );
+  const remainingTax = Prisma.Decimal.max(
+    new Prisma.Decimal(0),
+    invoice.tax.minus(previouslyCreditedTax),
+  );
   const remainingCreditable = Prisma.Decimal.max(
     new Prisma.Decimal(0),
     invoice.total.minus(previouslyCredited),
   );
+
+  if (subtotal.gt(remainingRevenue)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Credit note net amount exceeds the remaining recognized invoice revenue',
+        remainingRevenue: remainingRevenue.toFixed(2),
+      },
+      { status: 409 },
+    );
+  }
+
+  if (tax.gt(remainingTax)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Credit note tax reversal exceeds the remaining invoice tax',
+        remainingTax: remainingTax.toFixed(2),
+      },
+      { status: 409 },
+    );
+  }
 
   if (total.gt(remainingCreditable)) {
     return NextResponse.json(
@@ -200,7 +238,9 @@ export async function POST(request: NextRequest) {
       total: total.toFixed(2),
       appliedAmount: appliedAmount.toFixed(2),
       customerCredit: total.minus(appliedAmount).toFixed(2),
-      previouslyCredited: sumCredits(invoice.creditNotes).toFixed(2),
+      previouslyCredited: previouslyCredited.toFixed(2),
+      remainingRevenueAfterCredit: remainingRevenue.minus(subtotal).toFixed(2),
+      remainingTaxAfterCredit: remainingTax.minus(tax).toFixed(2),
     },
   });
 
