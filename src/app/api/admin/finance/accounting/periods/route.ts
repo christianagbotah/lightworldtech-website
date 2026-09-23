@@ -40,10 +40,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const startDate = new Date(parsed.data.startDate);
+  startDate.setUTCHours(0, 0, 0, 0);
+  const endDate = new Date(parsed.data.endDate);
+  endDate.setUTCHours(23, 59, 59, 999);
+
   const overlap = await db.financeAccountingPeriod.findFirst({
     where: {
-      startDate: { lte: parsed.data.endDate },
-      endDate: { gte: parsed.data.startDate },
+      startDate: { lte: endDate },
+      endDate: { gte: startDate },
     },
     select: { id: true, name: true, startDate: true, endDate: true },
   });
@@ -66,8 +71,8 @@ export async function POST(request: NextRequest) {
   const period = await db.financeAccountingPeriod.create({
     data: {
       name: parsed.data.name,
-      startDate: parsed.data.startDate,
-      endDate: parsed.data.endDate,
+      startDate,
+      endDate,
       status: 'open',
     },
   });
