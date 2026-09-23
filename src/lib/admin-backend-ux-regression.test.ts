@@ -293,7 +293,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain('agedCreditors');
     expect(invoices).toContain('const subtotal = lines.reduce');
     expect(invoices).toContain('Discount cannot exceed invoice subtotal');
-    expect(receipts).toContain('invoiceBalance(invoice.total, invoice.allocations)');
+    expect(receipts).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes)');
     expect(receipts).toContain('postCustomerPaymentJournal');
     expect(bills).toContain('postVendorBillJournal');
     expect(expenses).toContain('postExpenseJournal');
@@ -311,7 +311,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(recordDetails).toContain("type === 'receipt'");
     expect(recordDetails).toContain("type === 'bill'");
     expect(recordDetails).toContain("type === 'expense'");
-    expect(recordDetails).toContain('invoiceBalance(invoice.total, invoice.allocations)');
+    expect(recordDetails).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes)');
     expect(recordDetails).toContain('invoiceBalance(bill.total, bill.allocations)');
     expect(recordDetails).toContain("auditTrail('ClientInvoice'");
     expect(recordDetails).toContain("auditTrail('ClientPayment'");
