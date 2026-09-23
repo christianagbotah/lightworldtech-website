@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import FinanceRecordDetailsDialog, { type FinanceRecordSelection } from '@/components/admin/FinanceRecordDetailsDialog';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -293,6 +294,7 @@ export default function AdminFinance() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [dialog, setDialog] = useState<DialogName>(null);
+  const [financeRecord, setFinanceRecord] = useState<FinanceRecordSelection>(null);
   const [saving, setSaving] = useState(false);
   const [reminderSendingId, setReminderSendingId] = useState('');
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -480,6 +482,48 @@ export default function AdminFinance() {
     } finally {
       setReminderSendingId('');
     }
+  };
+
+  const openFinanceRecord = (type: NonNullable<FinanceRecordSelection>['type'], id: string) => {
+    setFinanceRecord({ type, id });
+  };
+
+  const prepareReceiptFromInvoice = (invoice: any) => {
+    const balance = String(invoice.balance || '0');
+    setFinanceRecord(null);
+    setSection('customers');
+    setReceiptForm({
+      organizationId: String(invoice.organizationId || invoice.organization?.id || ''),
+      currency: String(invoice.currency || 'GHS'),
+      amount: balance,
+      paidAt: today(),
+      method: 'bank_transfer',
+      reference: '',
+      notes: 'Prepared from invoice ' + String(invoice.invoiceNumber || '') + '. Confirm payment details before recording.',
+      allocations: Number(balance) > 0
+        ? [{ invoiceId: String(invoice.id), amount: balance }]
+        : [{ invoiceId: '', amount: '' }],
+    });
+    setDialog('receipt');
+  };
+
+  const prepareSupplierPaymentFromBill = (bill: any) => {
+    const balance = String(bill.balance || '0');
+    setFinanceRecord(null);
+    setSection('suppliers');
+    setSupplierPaymentForm({
+      vendorId: String(bill.vendorId || bill.vendor?.id || ''),
+      currency: String(bill.currency || 'GHS'),
+      amount: balance,
+      paidAt: today(),
+      method: 'bank_transfer',
+      reference: '',
+      notes: 'Prepared from supplier bill ' + String(bill.payableNumber || '') + '. Confirm payment details before recording.',
+      allocations: Number(balance) > 0
+        ? [{ billId: String(bill.id), amount: balance }]
+        : [{ billId: '', amount: '' }],
+    });
+    setDialog('supplier-payment');
   };
 
   const submitServiceUpdate = async (event: FormEvent) => {
@@ -735,7 +779,20 @@ export default function AdminFinance() {
                     <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Invoice</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {data.dashboard.debtors.slice(0, 12).map((item) => (
-                        <TableRow key={item.id}>
+                        <TableRow
+                          key={item.id}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={'Open invoice ' + item.invoiceNumber + ' for ' + item.customer}
+                          onClick={() => openFinanceRecord('invoice', item.id)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              openFinanceRecord('invoice', item.id);
+                            }
+                          }}
+                          className="cursor-pointer"
+                        >
                           <TableCell><p className="font-medium">{item.customer}</p><p className="text-[10px] text-muted-foreground">{item.service || 'General account'}</p></TableCell>
                           <TableCell><span className="font-mono text-xs">{item.invoiceNumber}</span></TableCell>
                           <TableCell><p className="text-xs">{new Date(item.dueDate).toLocaleDateString()}</p><Badge className={statusTone(item.status)}>{pretty(item.status)}</Badge></TableCell>
@@ -757,7 +814,20 @@ export default function AdminFinance() {
                     <TableHeader><TableRow><TableHead>Supplier</TableHead><TableHead>Bill</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {data.dashboard.creditors.slice(0, 12).map((item) => (
-                        <TableRow key={item.id}>
+                        <TableRow
+                          key={item.id}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={'Open supplier bill ' + item.payableNumber + ' for ' + item.vendor}
+                          onClick={() => openFinanceRecord('bill', item.id)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              openFinanceRecord('bill', item.id);
+                            }
+                          }}
+                          className="cursor-pointer"
+                        >
                           <TableCell className="font-medium">{item.vendor}</TableCell>
                           <TableCell><span className="font-mono text-xs">{item.payableNumber}</span></TableCell>
                           <TableCell><p className="text-xs">{new Date(item.dueDate).toLocaleDateString()}</p><Badge className={statusTone(item.status)}>{pretty(item.status)}</Badge></TableCell>
@@ -859,7 +929,20 @@ export default function AdminFinance() {
                 <TableHeader><TableRow><TableHead>Invoice</TableHead><TableHead>Customer</TableHead><TableHead>Status</TableHead><TableHead>Issued / due</TableHead><TableHead className="text-right">Total</TableHead><TableHead className="text-right">Paid</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.invoices.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow
+                      key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={'Open invoice ' + item.invoiceNumber}
+                      onClick={() => openFinanceRecord('invoice', item.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openFinanceRecord('invoice', item.id);
+                        }
+                      }}
+                      className="cursor-pointer"
+                    >
                       <TableCell className="font-mono text-xs">{item.invoiceNumber}</TableCell>
                       <TableCell><p className="font-medium">{item.organization.name}</p><p className="text-[10px] text-muted-foreground">{item.service?.name || 'General invoice'}</p></TableCell>
                       <TableCell><Badge className={statusTone(item.derivedStatus)}>{pretty(item.derivedStatus)}</Badge></TableCell>
@@ -882,7 +965,20 @@ export default function AdminFinance() {
                 <TableHeader><TableRow><TableHead>Receipt</TableHead><TableHead>Customer</TableHead><TableHead>Date</TableHead><TableHead>Method</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Unapplied</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.receipts.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow
+                      key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={'Open customer receipt ' + item.paymentNumber}
+                      onClick={() => openFinanceRecord('receipt', item.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openFinanceRecord('receipt', item.id);
+                        }
+                      }}
+                      className="cursor-pointer"
+                    >
                       <TableCell className="font-mono text-xs">{item.paymentNumber}</TableCell>
                       <TableCell className="font-medium">{item.organization.name}</TableCell>
                       <TableCell className="text-xs">{new Date(item.paidAt).toLocaleDateString()}</TableCell>
@@ -916,7 +1012,20 @@ export default function AdminFinance() {
                   <TableHeader><TableRow><TableHead>Bill</TableHead><TableHead>Supplier</TableHead><TableHead>Status</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {data.bills.map((item) => (
-                      <TableRow key={item.id}>
+                      <TableRow
+                        key={item.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={'Open supplier bill ' + item.payableNumber}
+                        onClick={() => openFinanceRecord('bill', item.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openFinanceRecord('bill', item.id);
+                          }
+                        }}
+                        className="cursor-pointer"
+                      >
                         <TableCell className="font-mono text-xs">{item.payableNumber}</TableCell>
                         <TableCell className="font-medium">{item.vendor.name}</TableCell>
                         <TableCell><Badge className={statusTone(item.derivedStatus)}>{pretty(item.derivedStatus)}</Badge></TableCell>
@@ -937,7 +1046,20 @@ export default function AdminFinance() {
                   <TableHeader><TableRow><TableHead>Expense</TableHead><TableHead>Description</TableHead><TableHead>Date</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {data.expenses.map((item) => (
-                      <TableRow key={item.id}>
+                      <TableRow
+                        key={item.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={'Open expense ' + item.expenseNumber}
+                        onClick={() => openFinanceRecord('expense', item.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openFinanceRecord('expense', item.id);
+                          }
+                        }}
+                        className="cursor-pointer"
+                      >
                         <TableCell><span className="font-mono text-xs">{item.expenseNumber}</span><p className="text-[10px] text-muted-foreground">{pretty(item.category)}</p></TableCell>
                         <TableCell><p className="max-w-[260px] truncate text-sm">{item.description}</p><p className="text-[10px] text-muted-foreground">{item.vendor?.name || 'No supplier'}</p></TableCell>
                         <TableCell className="text-xs">{new Date(item.incurredAt).toLocaleDateString()}</TableCell>
@@ -952,6 +1074,16 @@ export default function AdminFinance() {
           </div>
         </div>
       )}
+
+      <FinanceRecordDetailsDialog
+        selection={financeRecord}
+        onOpenChange={(open) => {
+          if (!open) setFinanceRecord(null);
+        }}
+        onOpenRecord={(selection) => setFinanceRecord(selection)}
+        onRecordReceipt={prepareReceiptFromInvoice}
+        onPaySupplier={prepareSupplierPaymentFromBill}
+      />
 
       <Dialog open={dialog === 'service'} onOpenChange={(open) => !open && setDialog(null)}>
         <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto">
