@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import ClientCommercialAccount from '@/components/admin/ClientCommercialAccount';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,9 @@ type Announcement = {
 type Project = {
   id: string; name: string; summary: string; status: string; health: string;
   progress: number; manager: string; startDate: string | null; targetDate: string | null;
+  expiryDate: string | null; nextRenewalDate: string | null; renewalCycle: string;
+  renewalCurrency: string; renewalAmount: string; autoRenew: boolean;
+  renewalNoticeDays: number; renewalNotes: string;
   milestones: Milestone[]; documents: DocumentItem[]; announcements: Announcement[];
 };
 type TicketMessage = {
@@ -81,7 +85,20 @@ export default function AdminClients() {
 
   const [orgForm, setOrgForm] = useState({ name: '', primaryContactName: '', primaryEmail: '', primaryPhone: '' });
   const [userForm, setUserForm] = useState({ name: '', email: '', role: 'client_admin' });
-  const [projectForm, setProjectForm] = useState({ name: '', summary: '', manager: '', targetDate: '' });
+  const [projectForm, setProjectForm] = useState({
+    name: '',
+    summary: '',
+    manager: '',
+    targetDate: '',
+    expiryDate: '',
+    nextRenewalDate: '',
+    renewalCycle: 'annual',
+    renewalCurrency: 'GHS',
+    renewalAmount: '',
+    autoRenew: false,
+    renewalNoticeDays: '30',
+    renewalNotes: '',
+  });
   const [milestoneForm, setMilestoneForm] = useState({ projectId: '', title: '', dueDate: '' });
   const [documentForms, setDocumentForms] = useState<Record<string, { title: string; url: string; description: string; category: string }>>({});
   const [announcementForm, setAnnouncementForm] = useState({ title: '', body: '', projectId: '' });
@@ -213,11 +230,32 @@ export default function AdminClients() {
           health: 'on_track',
           progress: 0,
           targetDate: projectForm.targetDate ? new Date(projectForm.targetDate).toISOString() : null,
+          expiryDate: projectForm.expiryDate ? new Date(projectForm.expiryDate).toISOString() : null,
+          nextRenewalDate: projectForm.nextRenewalDate ? new Date(projectForm.nextRenewalDate).toISOString() : null,
+          renewalCycle: projectForm.renewalCycle,
+          renewalCurrency: projectForm.renewalCurrency,
+          renewalAmount: Number(projectForm.renewalAmount || 0),
+          autoRenew: projectForm.autoRenew,
+          renewalNoticeDays: Number(projectForm.renewalNoticeDays || 30),
+          renewalNotes: projectForm.renewalNotes,
         }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Could not create client project');
-      setProjectForm({ name: '', summary: '', manager: '', targetDate: '' });
+      setProjectForm({
+        name: '',
+        summary: '',
+        manager: '',
+        targetDate: '',
+        expiryDate: '',
+        nextRenewalDate: '',
+        renewalCycle: 'annual',
+        renewalCurrency: 'GHS',
+        renewalAmount: '',
+        autoRenew: false,
+        renewalNoticeDays: '30',
+        renewalNotes: '',
+      });
       setMilestoneForm((current) => ({ ...current, projectId: payload.data.id }));
       await fetchOrganizations();
       toast.success('Client project created');
@@ -236,6 +274,20 @@ export default function AdminClients() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update project');
     }
+  };
+
+  const updateProjectLocal = (projectId: string, update: Partial<Project>) => {
+    if (!selected) return;
+    setOrganizations((current) => current.map((organization) =>
+      organization.id !== selected.id
+        ? organization
+        : {
+            ...organization,
+            projects: organization.projects.map((project) =>
+              project.id === projectId ? { ...project, ...update } : project,
+            ),
+          },
+    ));
   };
 
   const createMilestone = async (event: FormEvent) => {
@@ -560,6 +612,11 @@ export default function AdminClients() {
                 </div>
               </CardContent>
             </Card>
+
+            <ClientCommercialAccount
+              organizationId={selected.id}
+              organizationName={selected.name}
+            />
 
             <Card className="border-border/60">
               <CardHeader>
