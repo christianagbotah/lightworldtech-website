@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
+import { postVendorBillJournal } from '@/lib/finance-ledger';
 import { invoiceBalance, nextPayableNumber, normalizeCurrency, sumAmounts, vendorBillStatusFromBalance } from '@/lib/finance';
 
 const schema = z.object({
@@ -75,20 +76,35 @@ export async function POST(request: NextRequest) {
   if (!vendor || !vendor.active) return NextResponse.json({ success: false, error: 'Active supplier not found' }, { status: 404 });
 
   const payableNumber = await nextPayableNumber(parsed.data.issueDate);
-  const bill = await db.financeVendorBill.create({
-    data: {
-      payableNumber,
-      vendorId: parsed.data.vendorId,
-      vendorReference: parsed.data.vendorReference,
-      category: parsed.data.category,
-      currency: normalizeCurrency(parsed.data.currency),
-      issueDate: parsed.data.issueDate,
-      dueDate: parsed.data.dueDate,
-      total: parsed.data.total,
-      notes: parsed.data.notes,
-      status: 'unpaid',
-    },
-    include: { vendor: { select: { id: true, name: true } }, allocations: true },
+  const currency = normalizeCurrency(parsed.data.currency);
+  const bill = await db.$transaction(async (tx) => {
+    const created = await tx.financeVendorBill.create({
+      data: {
+        payableNumber,
+        vendorId: parsed.data.vendorId,
+        vendorReference: parsed.data.vendorReference,
+        category: parsed.data.category,
+        currency,
+        issueDate: parsed.data.issueDate,
+        dueDate: parsed.data.dueDate,
+        total: parsed.data.total,
+        notes: parsed.data.notes,
+        status: 'unpaid',
+      },
+      include: { vendor: { select: { id: true, name: true } }, allocations: true },
+    });
+
+    await postVendorBillJournal(tx, {
+      billId: created.id,
+      payableNumber: created.payableNumber,
+      issueDate: created.issueDate,
+      currency: created.currency,
+      total: created.total,
+      category: created.category,
+      postedBy: actor.name || actor.email,
+    });
+
+    return created;
   });
 
   await recordAdminAudit({
