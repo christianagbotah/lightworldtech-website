@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
+import { postInvoiceJournal } from '@/lib/finance-ledger';
 import {
   invoiceBalance,
   invoiceStatusFromBalance,
@@ -177,31 +178,50 @@ export async function POST(request: NextRequest) {
   const total = subtotal.minus(discount).plus(tax).toDecimalPlaces(2);
   const invoiceNumber = await nextInvoiceNumber(parsed.data.issueDate);
 
-  const invoice = await db.clientInvoice.create({
-    data: {
-      invoiceNumber,
-      organizationId: parsed.data.organizationId,
-      serviceId: parsed.data.serviceId || null,
-      projectId: parsed.data.projectId || null,
-      status: parsed.data.status,
-      currency: normalizeCurrency(parsed.data.currency),
-      issueDate: parsed.data.issueDate,
-      dueDate: parsed.data.dueDate,
-      subtotal,
-      discount,
-      tax,
-      total,
-      notes: parsed.data.notes,
-      createdBy: actor.name || actor.email,
-      lines: { create: lines },
-    },
-    include: {
-      organization: { select: { id: true, name: true } },
-      service: { select: { id: true, name: true, planName: true } },
-      project: { select: { id: true, name: true } },
-      lines: { orderBy: { order: 'asc' } },
-      allocations: true,
-    },
+  const currency = normalizeCurrency(parsed.data.currency);
+  const invoice = await db.$transaction(async (tx) => {
+    const created = await tx.clientInvoice.create({
+      data: {
+        invoiceNumber,
+        organizationId: parsed.data.organizationId,
+        serviceId: parsed.data.serviceId || null,
+        projectId: parsed.data.projectId || null,
+        status: parsed.data.status,
+        currency,
+        issueDate: parsed.data.issueDate,
+        dueDate: parsed.data.dueDate,
+        subtotal,
+        discount,
+        tax,
+        total,
+        notes: parsed.data.notes,
+        createdBy: actor.name || actor.email,
+        lines: { create: lines },
+      },
+      include: {
+        organization: { select: { id: true, name: true } },
+        service: { select: { id: true, name: true, planName: true } },
+        project: { select: { id: true, name: true } },
+        lines: { orderBy: { order: 'asc' } },
+        allocations: true,
+      },
+    });
+
+    if (created.status === 'issued') {
+      await postInvoiceJournal(tx, {
+        invoiceId: created.id,
+        invoiceNumber: created.invoiceNumber,
+        issueDate: created.issueDate,
+        currency: created.currency,
+        subtotal: created.subtotal,
+        discount: created.discount,
+        tax: created.tax,
+        total: created.total,
+        postedBy: actor.name || actor.email,
+      });
+    }
+
+    return created;
   });
 
   await recordAdminAudit({
