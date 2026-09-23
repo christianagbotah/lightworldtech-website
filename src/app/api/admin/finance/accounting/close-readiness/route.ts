@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { assessFinanceClose } from '@/lib/finance-close';
+import { db } from '@/lib/db';
 
 function monthRange(value: Date) {
   const start = new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), 1, 0, 0, 0, 0));
@@ -26,13 +27,40 @@ export async function GET(request: NextRequest) {
   }
 
   const range = monthRange(anchor);
-  const result = await assessFinanceClose(range);
+  const [result, monthClose] = await Promise.all([
+    assessFinanceClose(range),
+    db.financeMonthClose.findUnique({
+      where: { monthStart: range.from },
+    }),
+  ]);
+  const monthEnded = range.to.getTime() < Date.now();
+  const closeStatus = monthClose?.status || 'open';
 
   return NextResponse.json({
     success: true,
     data: {
       ...result,
       month: range.from.toISOString().slice(0, 7),
+      monthEnded,
+      closeState: monthClose ? {
+        id: monthClose.id,
+        status: monthClose.status,
+        closedAt: monthClose.closedAt,
+        closedBy: monthClose.closedBy,
+        reopenedAt: monthClose.reopenedAt,
+        reopenedBy: monthClose.reopenedBy,
+        notes: monthClose.notes,
+      } : {
+        id: null,
+        status: 'open',
+        closedAt: null,
+        closedBy: '',
+        reopenedAt: null,
+        reopenedBy: '',
+        notes: '',
+      },
+      canClose: closeStatus !== 'closed' && monthEnded && result.ready,
+      canReopen: closeStatus === 'closed' && actor.role === 'super_admin',
     },
   });
 }
