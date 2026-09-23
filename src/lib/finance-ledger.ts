@@ -375,9 +375,21 @@ export async function postVendorBillJournal(tx: Tx, input: {
   issueDate: Date;
   currency: string;
   total: Prisma.Decimal;
+  taxableAmount?: Prisma.Decimal;
+  vatAmount?: Prisma.Decimal;
+  nhilAmount?: Prisma.Decimal;
+  getfundAmount?: Prisma.Decimal;
   category: string;
   postedBy: string;
 }) {
+  const vat = input.vatAmount || new Prisma.Decimal(0);
+  const nhil = input.nhilAmount || new Prisma.Decimal(0);
+  const getfund = input.getfundAmount || new Prisma.Decimal(0);
+  const inputTax = vat.plus(nhil).plus(getfund);
+  const expenseAmount = input.taxableAmount && input.taxableAmount.gt(0)
+    ? input.taxableAmount
+    : Prisma.Decimal.max(new Prisma.Decimal(0), input.total.minus(inputTax));
+
   return postSourceJournal(tx, {
     sourceType: 'vendor_bill',
     sourceId: input.billId,
@@ -390,7 +402,22 @@ export async function postVendorBillJournal(tx: Tx, input: {
       {
         systemKey: expenseSystemKey(input.category),
         description: 'Supplier cost · ' + input.category.replaceAll('_', ' '),
-        debit: input.total,
+        debit: expenseAmount,
+      },
+      {
+        systemKey: 'vat_input',
+        description: 'Recoverable VAT input tax',
+        debit: vat,
+      },
+      {
+        systemKey: 'nhil_input',
+        description: 'Recoverable NHIL input tax',
+        debit: nhil,
+      },
+      {
+        systemKey: 'getfund_input',
+        description: 'Recoverable GETFund input levy',
+        debit: getfund,
       },
       {
         systemKey: 'accounts_payable',
