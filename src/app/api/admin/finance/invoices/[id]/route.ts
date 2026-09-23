@@ -51,6 +51,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         subtotal: next.subtotal,
         discount: next.discount,
         tax: next.tax,
+        vatAmount: next.vatAmount,
+        nhilAmount: next.nhilAmount,
+        getfundAmount: next.getfundAmount,
         total: next.total,
         postedBy: actor.name || actor.email,
       });
