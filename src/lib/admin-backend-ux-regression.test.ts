@@ -206,6 +206,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const receipts = source('src/app/api/admin/finance/payments/route.ts');
     const vendorPayments = source('src/app/api/admin/finance/vendor-payments/route.ts');
     const portalApi = source('src/app/api/client/portal/route.ts');
+    const statement = source('src/app/api/client/account/statement/route.ts');
     const portal = source('src/components/client/ClientPortalPage.tsx');
 
     expect(schema).toContain('model ClientServiceAccount');
@@ -224,6 +225,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain("changeType: 'renewal'");
     expect(finance).toContain('Debtors');
     expect(finance).toContain('Creditors');
+    expect(finance).toContain('exportFileName="lightworld-finance-debtors"');
+    expect(finance).toContain('exportFileName="lightworld-finance-creditors"');
+    expect(finance).toContain('exportFileName="lightworld-client-services"');
+    expect(finance).toContain('exportFileName="lightworld-client-invoices"');
+    expect(finance).toContain('exportFileName="lightworld-client-receipts"');
+    expect(finance).toContain('exportFileName="lightworld-supplier-bills"');
+    expect(finance).toContain('exportFileName="lightworld-direct-expenses"');
     expect(dashboard).toContain('netCashflow');
     expect(dashboard).toContain('netProfit');
     expect(dashboard).toContain('agedDebtors');
@@ -234,7 +242,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(vendorPayments).toContain('invoiceBalance(bill.total, bill.allocations)');
     expect(portalApi).toContain('accountSummary');
     expect(portalApi).toContain('organization.invoices.map');
+    expect(statement).toContain('Client Account Statement');
+    expect(statement).toContain('Running balance');
+    expect(statement).toContain('Content-Disposition');
+    expect(statement).toContain('getActiveClientContext(request)');
     expect(portal).toContain('Account & billing');
+    expect(portal).toContain('Download statement');
+    expect(portal).toContain('/api/client/account/statement');
     expect(portal).toContain('Invoice history');
     expect(portal).toContain('Payment / receipt history');
   });
