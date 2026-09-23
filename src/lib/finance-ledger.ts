@@ -207,10 +207,19 @@ export async function postInvoiceJournal(tx: Tx, input: {
   subtotal: Prisma.Decimal;
   discount: Prisma.Decimal;
   tax: Prisma.Decimal;
+  vatAmount?: Prisma.Decimal;
+  nhilAmount?: Prisma.Decimal;
+  getfundAmount?: Prisma.Decimal;
   total: Prisma.Decimal;
   postedBy: string;
 }) {
   const revenue = input.subtotal.minus(input.discount).toDecimalPlaces(2);
+  const vat = input.vatAmount || new Prisma.Decimal(0);
+  const nhil = input.nhilAmount || new Prisma.Decimal(0);
+  const getfund = input.getfundAmount || new Prisma.Decimal(0);
+  const componentTax = vat.plus(nhil).plus(getfund);
+  const legacyTax = Prisma.Decimal.max(new Prisma.Decimal(0), input.tax.minus(componentTax));
+
   return postSourceJournal(tx, {
     sourceType: 'client_invoice',
     sourceId: input.invoiceId,
@@ -231,9 +240,24 @@ export async function postInvoiceJournal(tx: Tx, input: {
         credit: revenue,
       },
       {
+        systemKey: 'vat_payable',
+        description: 'VAT output tax',
+        credit: vat,
+      },
+      {
+        systemKey: 'nhil_payable',
+        description: 'NHIL output levy',
+        credit: nhil,
+      },
+      {
+        systemKey: 'getfund_payable',
+        description: 'GETFund output levy',
+        credit: getfund,
+      },
+      {
         systemKey: 'tax_payable',
-        description: 'Tax payable',
-        credit: input.tax,
+        description: 'Legacy tax payable',
+        credit: legacyTax,
       },
     ],
   });
@@ -247,10 +271,19 @@ export async function postInvoiceVoidJournal(tx: Tx, input: {
   subtotal: Prisma.Decimal;
   discount: Prisma.Decimal;
   tax: Prisma.Decimal;
+  vatAmount?: Prisma.Decimal;
+  nhilAmount?: Prisma.Decimal;
+  getfundAmount?: Prisma.Decimal;
   total: Prisma.Decimal;
   postedBy: string;
 }) {
   const revenue = input.subtotal.minus(input.discount).toDecimalPlaces(2);
+  const vat = input.vatAmount || new Prisma.Decimal(0);
+  const nhil = input.nhilAmount || new Prisma.Decimal(0);
+  const getfund = input.getfundAmount || new Prisma.Decimal(0);
+  const componentTax = vat.plus(nhil).plus(getfund);
+  const legacyTax = Prisma.Decimal.max(new Prisma.Decimal(0), input.tax.minus(componentTax));
+
   return postSourceJournal(tx, {
     sourceType: 'client_invoice_void',
     sourceId: input.invoiceId,
@@ -266,9 +299,24 @@ export async function postInvoiceVoidJournal(tx: Tx, input: {
         debit: revenue,
       },
       {
+        systemKey: 'vat_payable',
+        description: 'Reverse VAT output tax',
+        debit: vat,
+      },
+      {
+        systemKey: 'nhil_payable',
+        description: 'Reverse NHIL output levy',
+        debit: nhil,
+      },
+      {
+        systemKey: 'getfund_payable',
+        description: 'Reverse GETFund output levy',
+        debit: getfund,
+      },
+      {
         systemKey: 'tax_payable',
-        description: 'Reverse tax payable',
-        debit: input.tax,
+        description: 'Reverse legacy tax payable',
+        debit: legacyTax,
       },
       {
         systemKey: 'accounts_receivable',
