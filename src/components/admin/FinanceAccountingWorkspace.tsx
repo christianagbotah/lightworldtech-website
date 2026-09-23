@@ -18,6 +18,8 @@ import {
 import { toast } from 'sonner';
 import FinanceFinancialStatements from '@/components/admin/FinanceFinancialStatements';
 import FinanceLedgerInitialization from '@/components/admin/FinanceLedgerInitialization';
+import FinanceReconciliationWorkspace from '@/components/admin/FinanceReconciliationWorkspace';
+import FinanceCloseWorkspace from '@/components/admin/FinanceCloseWorkspace';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -144,7 +146,7 @@ type JournalFormLine = {
   credit: string;
 };
 
-type View = 'statements' | 'accounts' | 'journals' | 'trial-balance' | 'general-ledger' | 'periods';
+type View = 'statements' | 'reconciliation' | 'close' | 'accounts' | 'journals' | 'trial-balance' | 'general-ledger' | 'periods';
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -558,6 +560,8 @@ export default function FinanceAccountingWorkspace() {
       <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
         {([
           ['statements', 'Financial statements'],
+          ['reconciliation', 'Reconciliation'],
+          ['close', 'Month-end close'],
           ['trial-balance', 'Trial balance'],
           ['general-ledger', 'General ledger'],
           ['journals', 'Journal entries'],
@@ -582,6 +586,10 @@ export default function FinanceAccountingWorkspace() {
       </div>
 
       {view === 'statements' && <FinanceFinancialStatements />}
+
+      {view === 'reconciliation' && <FinanceReconciliationWorkspace />}
+
+      {view === 'close' && <FinanceCloseWorkspace />}
 
       {view === 'trial-balance' && (
         <div className="space-y-4">
