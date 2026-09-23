@@ -951,6 +951,7 @@ model FinanceVendorBill {
   issueDate      DateTime
   dueDate        DateTime
   taxTreatment   String              @default("legacy")
+  taxRecoverable Boolean             @default(true)
   taxableAmount  Decimal             @default(0) @db.Decimal(18, 2)
   vatRate        Decimal             @default(0) @db.Decimal(5, 2)
   vatAmount      Decimal             @default(0) @db.Decimal(18, 2)
