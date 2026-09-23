@@ -5,6 +5,12 @@ import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { postVendorPaymentJournal } from '@/lib/finance-ledger';
+import {
+  createOutflowApproval,
+  getFinanceApprovalPolicy,
+  parseApprovalAllocations,
+  serializeOutflowApproval,
+} from '@/lib/finance-approvals';
 import { invoiceBalance, nextSupplierPaymentNumber, normalizeCurrency, paymentUnallocated, vendorBillStatusFromBalance } from '@/lib/finance';
 
 const schema = z.object({
@@ -68,7 +74,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ success: false, error: 'Invalid supplier payment', details: parsed.error.flatten() }, { status: 400 });
 
   const currency = normalizeCurrency(parsed.data.currency);
-  const vendor = await db.financeVendor.findUnique({ where: { id: parsed.data.vendorId }, select: { id: true, active: true } });
+  const vendor = await db.financeVendor.findUnique({ where: { id: parsed.data.vendorId }, select: { id: true, name: true, active: true } });
   if (!vendor || !vendor.active) return NextResponse.json({ success: false, error: 'Active supplier not found' }, { status: 404 });
 
   const bills = parsed.data.allocations.length
@@ -85,9 +91,73 @@ export async function POST(request: NextRequest) {
     const bill = bills.find((item) => item.id === allocation.billId)!;
     if (bill.currency !== currency) return NextResponse.json({ success: false, error: 'Supplier payment and bill currencies must match' }, { status: 400 });
     if (bill.status === 'void') return NextResponse.json({ success: false, error: 'Payments cannot be allocated to void bills' }, { status: 409 });
-    if (new Prisma.Decimal(allocation.amount).gt(invoiceBalance(bill.total, bill.allocations))) {
-      return NextResponse.json({ success: false, error: 'Allocation exceeds outstanding balance on ' + bill.payableNumber }, { status: 409 });
+    const pendingApprovals = await db.financeOutflowApproval.findMany({
+      where: {
+        outflowType: 'vendor_payment',
+        status: 'pending',
+        counterpartyId: vendor.id,
+        currency,
+      },
+      select: { allocationsJson: true },
+    });
+    const reserved = pendingApprovals
+      .flatMap((item) => parseApprovalAllocations(item.allocationsJson))
+      .filter((item) => item.billId === allocation.billId)
+      .reduce((sum, item) => sum.plus(new Prisma.Decimal(item.amount)), new Prisma.Decimal(0));
+    const available = Prisma.Decimal.max(
+      new Prisma.Decimal(0),
+      invoiceBalance(bill.total, bill.allocations).minus(reserved),
+    );
+    if (new Prisma.Decimal(allocation.amount).gt(available)) {
+      return NextResponse.json(
+        { success: false, error: 'Allocation exceeds the unreserved outstanding balance on ' + bill.payableNumber },
+        { status: 409 },
+      );
     }
+  }
+
+  const policy = await getFinanceApprovalPolicy();
+  if (policy?.enabled) {
+    const approval = await createOutflowApproval(actor, {
+      outflowType: 'vendor_payment',
+      counterpartyId: vendor.id,
+      counterpartyName: vendor.name,
+      sourceId: vendor.id,
+      sourceReference: parsed.data.allocations
+        .map((item) => bills.find((bill) => bill.id === item.billId)?.payableNumber)
+        .filter(Boolean)
+        .join(', '),
+      currency,
+      amount: parsed.data.amount,
+      effectiveDate: parsed.data.paidAt,
+      method: parsed.data.method,
+      reference: parsed.data.reference,
+      reason: parsed.data.notes,
+      allocations: parsed.data.allocations,
+    });
+
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_supplier_payment_requested',
+      entity: 'FinanceOutflowApproval',
+      entityId: approval.id,
+      details: {
+        requestNumber: approval.requestNumber,
+        vendorId: vendor.id,
+        amount: approval.amount.toFixed(2),
+        currency,
+        allocationCount: parsed.data.allocations.length,
+      },
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        pendingApproval: true,
+        data: serializeOutflowApproval(approval),
+      },
+      { status: 202 },
+    );
   }
 
   const paymentNumber = await nextSupplierPaymentNumber(parsed.data.paidAt);
