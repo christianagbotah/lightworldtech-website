@@ -37,7 +37,15 @@ export async function POST(
   const { id } = await params;
   const batch = await db.financeReconciliationBatch.findUnique({
     where: { id },
-    select: { id: true, batchNumber: true, status: true, accountSystemKey: true, currency: true },
+    select: {
+      id: true,
+      batchNumber: true,
+      status: true,
+      accountSystemKey: true,
+      currency: true,
+      statementFrom: true,
+      statementTo: true,
+    },
   });
   if (!batch) {
     return NextResponse.json({ success: false, error: 'Reconciliation batch not found' }, { status: 404 });
@@ -128,6 +136,16 @@ export async function POST(
       { status: 409 },
     );
   }
+  if (
+    journalLine.entry.entryDate.getTime() < batch.statementFrom.getTime() ||
+    journalLine.entry.entryDate.getTime() > batch.statementTo.getTime()
+  ) {
+    return NextResponse.json(
+      { success: false, error: 'Ledger posting date falls outside this statement period' },
+      { status: 409 },
+    );
+  }
+
   if (daysApart(journalLine.entry.entryDate, line.transactionDate) > 7) {
     return NextResponse.json(
       { success: false, error: 'Ledger posting date is more than 7 days from the statement transaction date' },
