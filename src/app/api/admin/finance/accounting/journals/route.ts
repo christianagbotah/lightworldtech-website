@@ -148,6 +148,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const monthLock = await db.financeMonthClose.findFirst({
+    where: {
+      status: 'closed',
+      monthStart: { lte: entryDate },
+      monthEnd: { gte: entryDate },
+    },
+    select: { id: true, monthStart: true, monthEnd: true },
+  });
+  if (monthLock) {
+    return NextResponse.json(
+      { success: false, error: 'The month for this posting date is closed' },
+      { status: 409 },
+    );
+  }
+
   const accountIds = [...new Set(parsed.data.lines.map((line) => line.accountId))];
   const accounts = await db.financeAccount.findMany({
     where: { id: { in: accountIds } },
