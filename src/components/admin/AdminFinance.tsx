@@ -13,6 +13,7 @@ import {
   Plus,
   ReceiptText,
   RefreshCw,
+  Send,
   TrendingUp,
   UsersRound,
   WalletCards,
@@ -293,6 +294,7 @@ export default function AdminFinance() {
   const [loadError, setLoadError] = useState('');
   const [dialog, setDialog] = useState<DialogName>(null);
   const [saving, setSaving] = useState(false);
+  const [reminderSendingId, setReminderSendingId] = useState('');
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [serviceEdit, setServiceEdit] = useState({
     planName: '',
@@ -431,6 +433,53 @@ export default function AdminFinance() {
       changeNotes: '',
     });
     setDialog('service-manage');
+  };
+
+  const prepareRenewalInvoice = (service: Service) => {
+    const todayValue = today();
+    const scheduledDue = service.nextDueDate?.slice(0, 10) || '';
+    const dueDate = scheduledDue && scheduledDue >= todayValue ? scheduledDue : inDays(14);
+    const cycle = pretty(service.billingCycle).toLowerCase();
+
+    setInvoiceForm({
+      organizationId: service.organizationId,
+      serviceId: service.id,
+      projectId: service.project?.id || '',
+      status: 'issued',
+      currency: service.currency,
+      issueDate: todayValue,
+      dueDate,
+      discount: '0',
+      tax: '0',
+      notes: 'Prepared from the service renewal workflow. Review all amounts and terms before issuing.',
+      lines: [{
+        description:
+          service.name +
+          (service.planName ? ' · ' + service.planName : '') +
+          ' · ' +
+          cycle +
+          ' renewal',
+        quantity: '1',
+        unitPrice: service.recurringAmount,
+      }],
+    });
+    setSelectedService(null);
+    setSection('customers');
+    setDialog('invoice');
+  };
+
+  const sendRenewalReminder = async (service: Service) => {
+    setReminderSendingId(service.id);
+    try {
+      await api('/api/admin/finance/services/' + encodeURIComponent(service.id) + '/renewal-reminder', {
+        method: 'POST',
+      });
+      toast.success('Renewal reminder sent through Hubtel');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to send renewal reminder');
+    } finally {
+      setReminderSendingId('');
+    }
   };
 
   const submitServiceUpdate = async (event: FormEvent) => {
@@ -726,19 +775,33 @@ export default function AdminFinance() {
           <Card className="border-border/60">
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><CalendarClock className="size-4 text-amber-600" /> Renewals and service due dates</CardTitle></CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {data.dashboard.serviceAlerts.map((service) => (
-                <div key={service.id} className="rounded-xl border border-border/60 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div><p className="font-semibold">{service.name}</p><p className="text-xs text-muted-foreground">{service.customer} · {service.planName || 'No plan'}</p></div>
-                    <Badge className={service.alert.includes('overdue') || service.alert === 'expired' ? statusTone('overdue') : statusTone('partially_paid')}>{pretty(service.alert)}</Badge>
+              {data.dashboard.serviceAlerts.map((service) => {
+                const serviceAccount = data.services.find((item) => item.id === service.id);
+                return (
+                  <div key={service.id} className="rounded-xl border border-border/60 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div><p className="font-semibold">{service.name}</p><p className="text-xs text-muted-foreground">{service.customer} · {service.planName || 'No plan'}</p></div>
+                      <Badge className={service.alert.includes('overdue') || service.alert === 'expired' ? statusTone('overdue') : statusTone('partially_paid')}>{pretty(service.alert)}</Badge>
+                    </div>
+                    <p className="mt-3 text-sm">{money(service.recurringAmount, service.currency)} / {service.currency}</p>
+                    <div className="mt-2 text-[11px] text-muted-foreground">
+                      {service.expiryDate && <p>Expires: {new Date(service.expiryDate).toLocaleDateString()}</p>}
+                      {service.nextDueDate && <p>Next due: {new Date(service.nextDueDate).toLocaleDateString()}</p>}
+                    </div>
+                    {serviceAccount && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <Button type="button" size="sm" variant="outline" onClick={() => openServiceManager(serviceAccount)}>
+                          Review service
+                        </Button>
+                        <Button type="button" size="sm" variant="outline" onClick={() => prepareRenewalInvoice(serviceAccount)}>
+                          <FileText className="mr-1.5 size-3.5" />
+                          Prepare invoice
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  <p className="mt-3 text-sm">{money(service.recurringAmount, service.currency)} / {service.currency}</p>
-                  <div className="mt-2 text-[11px] text-muted-foreground">
-                    {service.expiryDate && <p>Expires: {new Date(service.expiryDate).toLocaleDateString()}</p>}
-                    {service.nextDueDate && <p>Next due: {new Date(service.nextDueDate).toLocaleDateString()}</p>}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {!data.dashboard.serviceAlerts.length && <p className="text-sm text-muted-foreground">No upcoming service or renewal alerts.</p>}
             </CardContent>
           </Card>
@@ -936,6 +999,30 @@ export default function AdminFinance() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     {selectedService.project?.name || 'No linked project'} · {selectedService.currency}
                   </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => prepareRenewalInvoice(selectedService)}
+                    >
+                      <FileText className="mr-1.5 size-3.5" />
+                      Prepare renewal invoice
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!selectedService.expiryDate || reminderSendingId === selectedService.id}
+                      onClick={() => void sendRenewalReminder(selectedService)}
+                      title={!selectedService.expiryDate ? 'Set an expiry date before sending a renewal reminder' : undefined}
+                    >
+                      {reminderSendingId === selectedService.id
+                        ? <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                        : <Send className="mr-1.5 size-3.5" />}
+                      Send renewal SMS
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
