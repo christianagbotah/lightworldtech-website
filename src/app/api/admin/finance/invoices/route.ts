@@ -6,6 +6,7 @@ import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance'
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { postInvoiceJournal } from '@/lib/finance-ledger';
 import {
+  computeTaxComponents,
   invoiceBalance,
   invoiceStatusFromBalance,
   nextInvoiceNumber,
@@ -189,44 +190,46 @@ export async function POST(request: NextRequest) {
 
   const taxableAmount = subtotal.minus(discount).toDecimalPlaces(2);
   const taxTreatment = parsed.data.taxTreatment || (Number(parsed.data.tax || 0) > 0 ? 'legacy' : 'none');
-  let vatRate = new Prisma.Decimal(0);
-  let nhilRate = new Prisma.Decimal(0);
-  let getfundRate = new Prisma.Decimal(0);
-  let vatAmount = new Prisma.Decimal(0);
-  let nhilAmount = new Prisma.Decimal(0);
-  let getfundAmount = new Prisma.Decimal(0);
 
+  let taxProfile: Awaited<ReturnType<typeof db.financeTaxProfile.findUnique>> = null;
   if (taxTreatment === 'standard') {
-    const profile = await db.financeTaxProfile.findUnique({ where: { id: 'ghana-default' } });
-    if (!profile || !profile.enabled) {
+    taxProfile = await db.financeTaxProfile.findUnique({ where: { id: 'ghana-default' } });
+    if (!taxProfile || !taxProfile.enabled) {
       return NextResponse.json(
         { success: false, error: 'Standard Ghana VAT is disabled. Enable the statutory tax profile first.' },
         { status: 409 },
       );
     }
-    if (parsed.data.issueDate.getTime() < profile.effectiveFrom.getTime()) {
+    if (parsed.data.issueDate.getTime() < taxProfile.effectiveFrom.getTime()) {
       return NextResponse.json(
         {
           success: false,
           error: 'The configured Ghana VAT profile is not effective on this invoice date',
-          effectiveFrom: profile.effectiveFrom,
+          effectiveFrom: taxProfile.effectiveFrom,
         },
         { status: 409 },
       );
     }
-
-    vatRate = profile.vatRate;
-    nhilRate = profile.nhilRate;
-    getfundRate = profile.getfundRate;
-    vatAmount = taxableAmount.mul(vatRate).div(100).toDecimalPlaces(2);
-    nhilAmount = taxableAmount.mul(nhilRate).div(100).toDecimalPlaces(2);
-    getfundAmount = taxableAmount.mul(getfundRate).div(100).toDecimalPlaces(2);
   }
 
-  const tax = taxTreatment === 'legacy'
-    ? new Prisma.Decimal(parsed.data.tax || 0).toDecimalPlaces(2)
-    : vatAmount.plus(nhilAmount).plus(getfundAmount).toDecimalPlaces(2);
-  const total = taxableAmount.plus(tax).toDecimalPlaces(2);
+  const taxResult = computeTaxComponents({
+    taxableAmount,
+    treatment: taxTreatment,
+    vatRate: taxProfile?.vatRate,
+    nhilRate: taxProfile?.nhilRate,
+    getfundRate: taxProfile?.getfundRate,
+    legacyTax: parsed.data.tax,
+  });
+  const {
+    vatRate,
+    vatAmount,
+    nhilRate,
+    nhilAmount,
+    getfundRate,
+    getfundAmount,
+    tax,
+    total,
+  } = taxResult;
   const invoiceNumber = await nextInvoiceNumber(parsed.data.issueDate);
 
   const currency = normalizeCurrency(parsed.data.currency);
