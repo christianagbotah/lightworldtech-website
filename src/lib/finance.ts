@@ -179,3 +179,47 @@ export function normalizeCurrency(value: string | null | undefined): string {
   const currency = (value || 'GHS').trim().toUpperCase();
   return /^[A-Z]{3}$/.test(currency) ? currency : 'GHS';
 }
+
+
+export type FinanceTaxTreatment = 'legacy' | 'none' | 'standard' | 'zero' | 'exempt';
+
+export function computeTaxComponents(input: {
+  taxableAmount: Prisma.Decimal | number | string;
+  treatment: FinanceTaxTreatment;
+  vatRate?: Prisma.Decimal | number | string;
+  nhilRate?: Prisma.Decimal | number | string;
+  getfundRate?: Prisma.Decimal | number | string;
+  legacyTax?: Prisma.Decimal | number | string;
+}) {
+  const taxableAmount = money(input.taxableAmount).toDecimalPlaces(2);
+  const vatRate = input.treatment === 'standard' ? money(input.vatRate).toDecimalPlaces(2) : ZERO;
+  const nhilRate = input.treatment === 'standard' ? money(input.nhilRate).toDecimalPlaces(2) : ZERO;
+  const getfundRate = input.treatment === 'standard' ? money(input.getfundRate).toDecimalPlaces(2) : ZERO;
+
+  const vatAmount = input.treatment === 'standard'
+    ? taxableAmount.mul(vatRate).div(100).toDecimalPlaces(2)
+    : ZERO;
+  const nhilAmount = input.treatment === 'standard'
+    ? taxableAmount.mul(nhilRate).div(100).toDecimalPlaces(2)
+    : ZERO;
+  const getfundAmount = input.treatment === 'standard'
+    ? taxableAmount.mul(getfundRate).div(100).toDecimalPlaces(2)
+    : ZERO;
+
+  const tax = input.treatment === 'legacy'
+    ? money(input.legacyTax).toDecimalPlaces(2)
+    : vatAmount.plus(nhilAmount).plus(getfundAmount).toDecimalPlaces(2);
+
+  return {
+    treatment: input.treatment,
+    taxableAmount,
+    vatRate,
+    vatAmount,
+    nhilRate,
+    nhilAmount,
+    getfundRate,
+    getfundAmount,
+    tax,
+    total: taxableAmount.plus(tax).toDecimalPlaces(2),
+  };
+}
