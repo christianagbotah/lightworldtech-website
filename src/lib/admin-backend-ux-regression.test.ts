@@ -213,6 +213,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const periodsApi = source('src/app/api/admin/finance/accounting/periods/route.ts');
     const periodActionApi = source('src/app/api/admin/finance/accounting/periods/[id]/route.ts');
     const journalsApi = source('src/app/api/admin/finance/accounting/journals/route.ts');
+    const journalReversalApi = source('src/app/api/admin/finance/accounting/journals/[id]/reverse/route.ts');
     const trialBalanceApi = source('src/app/api/admin/finance/accounting/reports/trial-balance/route.ts');
     const generalLedgerApi = source('src/app/api/admin/finance/accounting/reports/general-ledger/route.ts');
     const accountingMigration = source('prisma/migrations/20260923132000_double_entry_accounting_core/migration.sql');
@@ -298,6 +299,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(accounting).toContain('Accounting periods');
     expect(accounting).toContain('Post balanced journal');
     expect(accounting).toContain('Control difference');
+    expect(accounting).toContain('Opening balance');
+    expect(accounting).toContain('Closing balance');
+    expect(accounting).toContain('Reverse posted journal?');
+    expect(accounting).toContain('Post reversal');
     expect(accountsApi).toContain("'finance.manage'");
     expect(periodsApi).toContain('Accounting periods cannot overlap');
     expect(periodActionApi).toContain('Only a super admin can reopen a closed accounting period');
@@ -305,10 +310,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(journalsApi).toContain('isBalancedJournal');
     expect(journalsApi).toContain('No accounting period covers this posting date');
     expect(journalsApi).toContain('The accounting period for this posting date is closed');
+    expect(journalReversalApi).toContain("sourceType: 'reversal'");
+    expect(journalReversalApi).toContain("data: { status: 'reversed' }");
+    expect(journalReversalApi).toContain('Reversal date cannot be earlier than the original journal date');
+    expect(journalReversalApi).toContain('The accounting period for the reversal date is closed');
     expect(trialBalanceApi).toContain('closing');
     expect(trialBalanceApi).toContain('balanced: difference.eq(0)');
     expect(generalLedgerApi).toContain('runningBalance');
     expect(generalLedgerApi).toContain('accountNormalSide');
+    expect(generalLedgerApi).toContain('openingBalance');
+    expect(generalLedgerApi).toContain("status: { in: ['posted', 'reversed'] }");
+    expect(trialBalanceApi).toContain("status: { in: ['posted', 'reversed'] }");
+    expect(periodsApi).toContain('endDate.setUTCHours(23, 59, 59, 999)');
     expect(accountingMigration).toContain('FinanceJournalLine_one_sided');
     expect(accountingMigration).toContain('finance_journal_number_seq');
     expect(accountingMigration).toContain("'accounts_receivable'");
