@@ -142,6 +142,32 @@ export async function POST(request: NextRequest) {
   }
 
   const currency = normalizeCurrency(parsed.data.currency);
+  const overlap = await db.financeReconciliationBatch.findFirst({
+    where: {
+      accountSystemKey: parsed.data.channel,
+      currency,
+      statementFrom: { lte: parsed.data.statementTo },
+      statementTo: { gte: parsed.data.statementFrom },
+    },
+    select: {
+      id: true,
+      batchNumber: true,
+      statementFrom: true,
+      statementTo: true,
+      status: true,
+    },
+  });
+  if (overlap) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'A reconciliation batch already covers part of this account and statement period',
+        conflict: overlap,
+      },
+      { status: 409 },
+    );
+  }
+
   const batchNumber = await nextReconciliationBatchNumber(parsed.data.statementTo);
   const batch = await db.financeReconciliationBatch.create({
     data: {
