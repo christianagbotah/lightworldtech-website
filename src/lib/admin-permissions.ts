@@ -29,6 +29,11 @@ export const ADMIN_PERMISSION_DEFINITIONS = [
     label: 'Finance & Accounts',
     description: 'Manage customer services, invoices, receipts, supplier bills, expenses, debtors, creditors and management financial reports.',
   },
+  {
+    key: 'finance.approve',
+    label: 'Finance Approvals',
+    description: 'Approve or reject governed supplier payments and customer refunds under maker-checker controls.',
+  },
 ] as const;
 
 export type AdminPermission = (typeof ADMIN_PERMISSION_DEFINITIONS)[number]['key'];
