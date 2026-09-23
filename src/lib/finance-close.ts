@@ -127,19 +127,21 @@ export async function assessFinanceClose(range: DateRange) {
       },
       select: {
         account: { select: { systemKey: true } },
-        entry: { select: { currency: true } },
+        entry: { select: { currency: true, entryDate: true } },
       },
       take: 100000,
     }),
     db.financeReconciliationBatch.findMany({
       where: {
         status: 'reconciled',
-        statementFrom: { lte: from },
-        statementTo: { gte: to },
+        statementFrom: { lte: to },
+        statementTo: { gte: from },
       },
       select: {
         accountSystemKey: true,
         currency: true,
+        statementFrom: true,
+        statementTo: true,
       },
     }),
     db.hubtelPaymentIntent.count({
@@ -199,13 +201,35 @@ export async function assessFinanceClose(range: DateRange) {
     new Prisma.Decimal(row.debit).minus(row.credit).abs().gt('0.01'),
   );
 
-  const activityKeys = new Set(
-    cashLines.map((line) => (line.account.systemKey || '') + '|' + line.entry.currency),
+  const cashActivityKeys = new Set(
+    cashLines.map((line) =>
+      (line.account.systemKey || '') +
+      '|' +
+      line.entry.currency +
+      '|' +
+      line.entry.entryDate.toISOString().slice(0, 7),
+    ),
   );
-  const coveredKeys = new Set(
-    reconciliationCoverage.map((batch) => batch.accountSystemKey + '|' + batch.currency),
-  );
-  const uncoveredCashAccounts = [...activityKeys].filter((key) => !coveredKeys.has(key));
+
+  const uncoveredCashLines = cashLines.filter((line) => {
+    const systemKey = line.account.systemKey || '';
+    return !reconciliationCoverage.some((batch) =>
+      batch.accountSystemKey === systemKey &&
+      batch.currency === line.entry.currency &&
+      batch.statementFrom.getTime() <= line.entry.entryDate.getTime() &&
+      batch.statementTo.getTime() >= line.entry.entryDate.getTime(),
+    );
+  });
+
+  const uncoveredCashAccounts = [...new Set(
+    uncoveredCashLines.map((line) =>
+      (line.account.systemKey || '') +
+      '|' +
+      line.entry.currency +
+      '|' +
+      line.entry.entryDate.toISOString().slice(0, 7),
+    ),
+  )];
 
   const controls: FinanceCloseControl[] = [
     {
@@ -241,9 +265,9 @@ export async function assessFinanceClose(range: DateRange) {
       status: uncoveredCashAccounts.length ? 'block' : 'pass',
       count: uncoveredCashAccounts.length,
       detail: uncoveredCashAccounts.length
-        ? 'Cash-equivalent ledger activity exists without a reconciled statement covering the full close range.'
-        : activityKeys.size
-          ? 'All bank/mobile-money activity has reconciled statement coverage.'
+        ? 'Bank/mobile-money ledger activity exists in one or more months without a reconciled statement covering the posting date.'
+        : cashActivityKeys.size
+          ? 'Every bank/mobile-money ledger posting date is covered by a finalized reconciliation statement.'
           : 'No bank/mobile-money ledger activity occurred in this period.',
     },
     {
@@ -277,6 +301,13 @@ export async function assessFinanceClose(range: DateRange) {
       },
       openReconciliationBatches: openReconciliations,
       uncoveredCashAccounts,
+      uncoveredCashLineCount: uncoveredCashLines.length,
+      reconciliationCoverage: reconciliationCoverage.map((batch) => ({
+        accountSystemKey: batch.accountSystemKey,
+        currency: batch.currency,
+        statementFrom: batch.statementFrom,
+        statementTo: batch.statementTo,
+      })),
       trialBalance: trialRows.map((row) => ({
         currency: row.currency,
         debit: new Prisma.Decimal(row.debit).toFixed(2),
