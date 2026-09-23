@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
-import { nextJournalNumber, normalizeCurrency } from '@/lib/finance';
+import { isBalancedJournal, journalTotals, nextJournalNumber, normalizeCurrency } from '@/lib/finance';
 
 const lineSchema = z.object({
   accountId: z.string().min(1),
@@ -113,16 +113,11 @@ export async function POST(request: NextRequest) {
 
   const entryDate = parsed.data.entryDate;
   const currency = normalizeCurrency(parsed.data.currency);
-  const totalDebit = parsed.data.lines.reduce(
-    (sum, line) => sum.plus(line.debit),
-    new Prisma.Decimal(0),
-  );
-  const totalCredit = parsed.data.lines.reduce(
-    (sum, line) => sum.plus(line.credit),
-    new Prisma.Decimal(0),
-  );
+  const totals = journalTotals(parsed.data.lines);
+  const totalDebit = totals.debit;
+  const totalCredit = totals.credit;
 
-  if (totalDebit.lte(0) || !totalDebit.eq(totalCredit)) {
+  if (!isBalancedJournal(parsed.data.lines)) {
     return NextResponse.json(
       {
         success: false,
