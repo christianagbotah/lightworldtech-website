@@ -15,7 +15,7 @@ export async function finalizeHubtelPayment(clientReference: string, hubtelTrans
     include: {
       recordedPayment: true,
       invoice: {
-        include: { allocations: true },
+        include: { allocations: true, creditNotes: { where: { status: 'posted' } } },
       },
     },
   });
@@ -129,11 +129,11 @@ export async function finalizeHubtelPayment(clientReference: string, hubtelTrans
 
     const invoice = await tx.clientInvoice.findUnique({
       where: { id: intent.invoiceId },
-      include: { allocations: true },
+      include: { allocations: true, creditNotes: { where: { status: 'posted' } } },
     });
     if (!invoice) throw new Error('Invoice linked to Hubtel payment no longer exists');
 
-    const balance = invoiceBalance(invoice.total, invoice.allocations);
+    const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
     const allocationAmount = Prisma.Decimal.min(intent.amount, balance);
 
     const payment = await tx.clientPayment.create({
@@ -167,6 +167,7 @@ export async function finalizeHubtelPayment(clientReference: string, hubtelTrans
         storedStatus: invoice.status,
         total: invoice.total,
         allocations: [...invoice.allocations, { amount: allocationAmount }],
+        credits: invoice.creditNotes,
         dueDate: invoice.dueDate,
         now: new Date(),
       });
