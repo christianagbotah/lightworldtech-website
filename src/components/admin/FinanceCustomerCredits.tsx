@@ -230,7 +230,7 @@ export default function FinanceCustomerCredits({ invoices, onFinanceChanged }: P
     if (!refundNote) return;
     setSaving(true);
     try {
-      await api<Refund>('/api/admin/finance/refunds', {
+      const response = await fetch('/api/admin/finance/refunds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -238,7 +238,20 @@ export default function FinanceCustomerCredits({ invoices, onFinanceChanged }: P
           ...refundForm,
         }),
       });
-      toast.success('Customer refund posted to the general ledger');
+      const raw = await response.text();
+      let payload: any = null;
+      try { payload = raw ? JSON.parse(raw) : null; } catch {}
+      if (!response.ok) throw new Error(payload?.error || 'Unable to record customer refund');
+
+      if (payload?.pendingApproval) {
+        toast.success(
+          'Customer refund submitted for approval' +
+          (payload?.data?.requestNumber ? ' · ' + payload.data.requestNumber : ''),
+        );
+      } else {
+        toast.success('Customer refund posted to the general ledger');
+      }
+
       setRefundNote(null);
       await Promise.all([load(), Promise.resolve(onFinanceChanged())]);
     } catch (error) {
