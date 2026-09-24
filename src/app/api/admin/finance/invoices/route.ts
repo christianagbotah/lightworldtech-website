@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
         parsed.data.serviceId +
         ':' +
         parsed.data.renewalForDate.toISOString().slice(0, 10);
-      await tx.$executeRawUnsafe(
+      await tx.$queryRawUnsafe(
         'SELECT pg_advisory_xact_lock(hashtext($1))',
         cycleKey,
       );
