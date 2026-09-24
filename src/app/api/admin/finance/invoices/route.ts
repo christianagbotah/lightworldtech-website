@@ -28,6 +28,7 @@ const schema = z.object({
   currency: z.string().trim().max(3).default('GHS'),
   issueDate: z.coerce.date(),
   dueDate: z.coerce.date(),
+  renewalForDate: z.coerce.date().nullable().optional(),
   discount: z.coerce.number().min(0).max(999999999999).default(0),
   taxTreatment: z.enum(['legacy', 'none', 'standard', 'zero', 'exempt']).optional(),
   tax: z.coerce.number().min(0).max(999999999999).default(0),
@@ -152,6 +153,10 @@ export async function POST(request: NextRequest) {
   });
   if (!organization) return NextResponse.json({ success: false, error: 'Client organization not found' }, { status: 404 });
 
+  if (parsed.data.renewalForDate && !parsed.data.serviceId) {
+    return NextResponse.json({ success: false, error: 'Renewal cycle invoices must be linked to a service' }, { status: 400 });
+  }
+
   if (parsed.data.serviceId) {
     const service = await db.clientServiceAccount.findFirst({
       where: { id: parsed.data.serviceId, organizationId: parsed.data.organizationId },
@@ -233,7 +238,31 @@ export async function POST(request: NextRequest) {
   const invoiceNumber = await nextInvoiceNumber(parsed.data.issueDate);
 
   const currency = normalizeCurrency(parsed.data.currency);
-  const invoice = await db.$transaction(async (tx) => {
+  const transactionResult = await db.$transaction(async (tx) => {
+    if (parsed.data.serviceId && parsed.data.renewalForDate) {
+      const cycleKey =
+        'lightworld-renewal-invoice:' +
+        parsed.data.serviceId +
+        ':' +
+        parsed.data.renewalForDate.toISOString().slice(0, 10);
+      await tx.$executeRawUnsafe(
+        'SELECT pg_advisory_xact_lock(hashtext($1))',
+        cycleKey,
+      );
+
+      const duplicate = await tx.clientInvoice.findFirst({
+        where: {
+          serviceId: parsed.data.serviceId,
+          renewalForDate: parsed.data.renewalForDate,
+          status: { not: 'void' },
+        },
+        select: { id: true, invoiceNumber: true, status: true },
+      });
+      if (duplicate) {
+        return { invoice: null, duplicate };
+      }
+    }
+
     const created = await tx.clientInvoice.create({
       data: {
         invoiceNumber,
@@ -244,6 +273,7 @@ export async function POST(request: NextRequest) {
         currency,
         issueDate: parsed.data.issueDate,
         dueDate: parsed.data.dueDate,
+        renewalForDate: parsed.data.renewalForDate || null,
         subtotal,
         discount,
         taxTreatment,
@@ -287,8 +317,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return created;
+    return { invoice: created, duplicate: null };
   });
+
+  if (transactionResult.duplicate) {
+    return NextResponse.json({
+      success: false,
+      error: 'A renewal invoice already exists for this service and renewal date',
+      existingInvoice: transactionResult.duplicate,
+    }, { status: 409 });
+  }
+
+  const invoice = transactionResult.invoice!;
 
   await recordAdminAudit({
     admin: actor,
@@ -305,6 +345,7 @@ export async function POST(request: NextRequest) {
       vatAmount: invoice.vatAmount.toFixed(2),
       nhilAmount: invoice.nhilAmount.toFixed(2),
       getfundAmount: invoice.getfundAmount.toFixed(2),
+      renewalForDate: invoice.renewalForDate?.toISOString() || null,
     },
   });
 

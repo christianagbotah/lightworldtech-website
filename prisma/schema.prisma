@@ -720,6 +720,7 @@ model ClientInvoice {
   currency       String             @default("GHS")
   issueDate      DateTime
   dueDate        DateTime
+  renewalForDate DateTime?
   subtotal       Decimal            @db.Decimal(18, 2)
   discount       Decimal            @default(0) @db.Decimal(18, 2)
   tax            Decimal            @default(0) @db.Decimal(18, 2)
@@ -745,6 +746,7 @@ model ClientInvoice {
 
   @@index([organizationId, status])
   @@index([serviceId, dueDate])
+  @@index([serviceId, renewalForDate])
   @@index([projectId])
   @@index([dueDate, status])
   @@index([issueDate])

@@ -217,9 +217,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     const financeDetails = source('src/components/admin/FinanceRecordDetailsDialog.tsx');
     const accounting = source('src/components/admin/FinanceAccountingWorkspace.tsx');
     const collections = source('src/components/admin/FinanceCollectionsWorkspace.tsx');
+    const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
     const collectionsApi = source('src/app/api/admin/finance/collections/route.ts');
     const collectionCompleteApi = source('src/app/api/admin/finance/collections/[id]/route.ts');
     const collectionsMigration = source('prisma/migrations/20260924003000_finance_collections_workflow/migration.sql');
+    const renewalCycleMigration = source('prisma/migrations/20260924004500_invoice_renewal_cycle_marker/migration.sql');
     const accountsApi = source('src/app/api/admin/finance/accounting/accounts/route.ts');
     const periodsApi = source('src/app/api/admin/finance/accounting/periods/route.ts');
     const periodActionApi = source('src/app/api/admin/finance/accounting/periods/[id]/route.ts');
@@ -292,6 +294,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(schema).toContain('model FinanceApprovalPolicy');
     expect(schema).toContain('model FinanceOutflowApproval');
     expect(schema).toContain('model FinanceCollectionActivity');
+    expect(schema).toContain('renewalForDate');
     expect(permissions).toContain("key: 'finance.manage'");
     expect(permissions).toContain("key: 'finance.approve'");
     expect(permissions).toContain("pathname.startsWith('/api/admin/finance')");
@@ -300,7 +303,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('Suppliers & expenses');
     expect(finance).toContain("['accounting', 'Accounting']");
     expect(finance).toContain("['collections', 'Collections']");
+    expect(finance).toContain("['renewals', 'Renewals']");
     expect(finance).toContain('FinanceAccountingWorkspace');
+    expect(finance).toContain('FinanceRenewalBillingWorkspace');
     expect(finance).toContain('FinanceCollectionsWorkspace');
     expect(finance).toContain('Manage service');
     expect(finance).toContain('Save service change');
@@ -378,6 +383,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(vendorPayments).toContain('pendingApproval: true');
     expect(vendorPayments).toContain('createOutflowApproval');
     expect(invoices).toContain('postInvoiceJournal');
+    expect(invoices).toContain('renewalForDate');
+    expect(invoices).toContain('pg_advisory_xact_lock');
+    expect(invoices).toContain('A renewal invoice already exists for this service and renewal date');
+    expect(renewals).toContain('Renewal billing queue');
+    expect(renewals).toContain('auto-renew never means auto-charge');
+    expect(renewals).toContain('exportFileName="lightworld-renewal-billing-queue"');
+    expect(renewalCycleMigration).toContain('ADD COLUMN "renewalForDate"');
     expect(invoices).toContain('computeTaxComponents');
     expect(invoices).toContain('Standard Ghana VAT is disabled');
     expect(bills).toContain('computeTaxComponents');

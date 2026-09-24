@@ -24,6 +24,7 @@ import FinanceRecordDetailsDialog, { type FinanceRecordSelection } from '@/compo
 import FinanceCustomerCredits from '@/components/admin/FinanceCustomerCredits';
 import FinanceAccountingWorkspace from '@/components/admin/FinanceAccountingWorkspace';
 import FinanceCollectionsWorkspace from '@/components/admin/FinanceCollectionsWorkspace';
+import FinanceRenewalBillingWorkspace from '@/components/admin/FinanceRenewalBillingWorkspace';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -105,6 +106,7 @@ type Invoice = {
   currency: string;
   issueDate: string;
   dueDate: string;
+  renewalForDate: string | null;
   subtotal: string;
   discount: string;
   tax: string;
@@ -324,7 +326,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export default function AdminFinance() {
-  const [section, setSection] = useState<'overview' | 'customers' | 'collections' | 'suppliers' | 'accounting'>('overview');
+  const [section, setSection] = useState<'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'accounting'>('overview');
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -354,7 +356,7 @@ export default function AdminFinance() {
   });
   const [invoiceForm, setInvoiceForm] = useState({
     organizationId: '', serviceId: '', projectId: '', status: 'issued', currency: 'GHS',
-    issueDate: today(), dueDate: inDays(14), discount: '0', taxTreatment: 'none', notes: '',
+    issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
     lines: [{ description: '', quantity: '1', unitPrice: '' }],
   });
   const [receiptForm, setReceiptForm] = useState({
@@ -487,6 +489,7 @@ export default function AdminFinance() {
       currency: service.currency,
       issueDate: todayValue,
       dueDate,
+      renewalForDate: (service.nextDueDate || service.expiryDate)?.slice(0, 10) || '',
       discount: '0',
       taxTreatment: 'none',
       notes: 'Prepared from the service renewal workflow. Review all amounts and terms before issuing.',
@@ -626,6 +629,7 @@ export default function AdminFinance() {
       ...invoiceForm,
       serviceId: invoiceForm.serviceId || null,
       projectId: invoiceForm.projectId || null,
+      renewalForDate: invoiceForm.renewalForDate || null,
       discount: Number(invoiceForm.discount || 0),
       taxTreatment: invoiceForm.taxTreatment,
       lines: invoiceForm.lines.map((line) => ({
@@ -636,7 +640,7 @@ export default function AdminFinance() {
     }, 'Invoice issued');
     if (ok) setInvoiceForm({
       organizationId: '', serviceId: '', projectId: '', status: 'issued', currency: 'GHS',
-      issueDate: today(), dueDate: inDays(14), discount: '0', taxTreatment: 'none', notes: '',
+      issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
       lines: [{ description: '', quantity: '1', unitPrice: '' }],
     });
   };
@@ -815,6 +819,7 @@ export default function AdminFinance() {
         {[
           ['overview', 'Overview'],
           ['customers', 'Customer accounts'],
+          ['renewals', 'Renewals'],
           ['collections', 'Collections'],
           ['suppliers', 'Suppliers & expenses'],
           ['accounting', 'Accounting'],
@@ -1179,6 +1184,23 @@ export default function AdminFinance() {
         </div>
       )}
 
+      {section === 'renewals' && (
+        <FinanceRenewalBillingWorkspace
+          services={data.services}
+          invoices={data.invoices}
+          onPrepareInvoice={(serviceId) => {
+            const service = data.services.find((item) => item.id === serviceId);
+            if (service) prepareRenewalInvoice(service);
+          }}
+          onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)}
+          onManageService={(serviceId) => {
+            const service = data.services.find((item) => item.id === serviceId);
+            if (service) openServiceManager(service);
+          }}
+          onRefresh={() => void load()}
+        />
+      )}
+
       {section === 'collections' && (
         <FinanceCollectionsWorkspace onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)} />
       )}
@@ -1448,7 +1470,7 @@ export default function AdminFinance() {
         <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-y-auto">
           <DialogHeader><DialogTitle>Issue customer invoice</DialogTitle></DialogHeader>
           <form onSubmit={submitInvoice} className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2"><div><Label>Client</Label><select required value={invoiceForm.organizationId} onChange={(e) => setInvoiceForm({ ...invoiceForm, organizationId: e.target.value, serviceId: '', projectId: '' })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => setInvoiceForm({ ...invoiceForm, serviceId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
+            <div className="grid gap-3 sm:grid-cols-2"><div><Label>Client</Label><select required value={invoiceForm.organizationId} onChange={(e) => setInvoiceForm({ ...invoiceForm, organizationId: e.target.value, serviceId: '', projectId: '', renewalForDate: '' })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, renewalForDate: '' })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div><Label>Issue date</Label><Input type="date" required value={invoiceForm.issueDate} onChange={(e) => setInvoiceForm({ ...invoiceForm, issueDate: e.target.value })} /></div>
               <div><Label>Due date</Label><Input type="date" required value={invoiceForm.dueDate} onChange={(e) => setInvoiceForm({ ...invoiceForm, dueDate: e.target.value })} /></div>
@@ -1469,6 +1491,11 @@ export default function AdminFinance() {
                 </select>
               </div>
             </div>
+            {invoiceForm.renewalForDate && (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-200">
+                Renewal cycle: <strong>{new Date(invoiceForm.renewalForDate + 'T00:00:00Z').toLocaleDateString()}</strong>. The server prevents another non-void invoice for this service and renewal date.
+              </div>
+            )}
             {invoiceForm.taxTreatment === 'standard' && !data.taxProfile?.enabled && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
                 Standard Ghana VAT is currently disabled in the company tax profile. A super admin must enable it before a standard-rated invoice can be issued.
