@@ -1,6 +1,8 @@
 'use client';
 
 import { CalendarClock, CheckCircle2, FileText, RefreshCw, Settings2 } from 'lucide-react';
+import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useState } from 'react';
 
 type RenewalService = {
   id: string;
@@ -37,6 +40,8 @@ type RenewalInvoice = {
   currency: string;
   dueDate: string;
   renewalForDate: string | null;
+  renewalCompletedAt: string | null;
+  renewalCompletedBy: string;
   balance: string;
 };
 
@@ -76,6 +81,14 @@ export default function FinanceRenewalBillingWorkspace({
   onManageService: (serviceId: string) => void;
   onRefresh: () => void;
 }) {
+  const [pendingCompletion, setPendingCompletion] = useState<{
+    invoiceId: string;
+    invoiceNumber: string;
+    customer: string;
+    service: string;
+    cycleDate: string;
+  } | null>(null);
+
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
   const horizon = new Date(now.getTime() + 60 * 86400000).toISOString().slice(0, 10);
@@ -106,7 +119,13 @@ export default function FinanceRenewalBillingWorkspace({
         state: !billingDate
           ? 'schedule_missing'
           : invoice
-            ? invoice.derivedStatus === 'paid' ? 'billed_paid' : 'billed'
+            ? invoice.renewalCompletedAt
+              ? 'renewal_completed'
+              : invoice.derivedStatus === 'paid'
+                ? ['custom', 'one_time'].includes(service.billingCycle)
+                  ? 'paid_manual_completion'
+                  : 'paid_ready_to_complete'
+                : 'billed'
             : Number(service.recurringAmount) <= 0
               ? 'amount_missing'
               : days !== null && days < 0
@@ -131,11 +150,13 @@ export default function FinanceRenewalBillingWorkspace({
     ? Object.entries(unbilledTotals).map(([currency, value]) => money(value, currency)).join(' · ')
     : '—';
   const dueCount = rows.filter((row) => ['ready', 'overdue_unbilled'].includes(row.state)).length;
-  const billedCount = rows.filter((row) => ['billed', 'billed_paid'].includes(row.state)).length;
+  const readyToCompleteCount = rows.filter((row) => row.state === 'paid_ready_to_complete').length;
   const missingCount = rows.filter((row) => ['schedule_missing', 'amount_missing'].includes(row.state)).length;
 
   const tone = (state: string) => {
-    if (state === 'billed_paid') return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
+    if (state === 'renewal_completed') return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
+    if (state === 'paid_ready_to_complete') return 'border-0 bg-teal-100 text-teal-800 dark:bg-teal-950/40 dark:text-teal-200';
+    if (state === 'paid_manual_completion') return 'border-0 bg-violet-100 text-violet-800 dark:bg-violet-950/40 dark:text-violet-200';
     if (state === 'billed') return 'border-0 bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200';
     if (state === 'overdue_unbilled') return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
     if (state.includes('missing')) return 'border-0 bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-200';
@@ -148,7 +169,7 @@ export default function FinanceRenewalBillingWorkspace({
         {[
           ['Renewals to bill', String(dueCount), CalendarClock],
           ['Unbilled value', unbilledValue, FileText],
-          ['Already billed', String(billedCount), CheckCircle2],
+          ['Paid to complete', String(readyToCompleteCount), CheckCircle2],
           ['Needs setup', String(missingCount), Settings2],
         ].map(([label, value, Icon]) => (
           <Card key={String(label)} className="border-border/60">
@@ -221,7 +242,29 @@ export default function FinanceRenewalBillingWorkspace({
                     <TableCell className="text-right font-semibold">{money(row.service.recurringAmount, row.service.currency)}</TableCell>
                     <TableCell data-export-ignore>
                       <div className="flex justify-end gap-2">
-                        {row.invoice ? (
+                        {row.invoice && row.state === 'paid_ready_to_complete' ? (
+                          <>
+                            <Button type="button" size="sm" variant="outline" onClick={() => onOpenInvoice(row.invoice!.id)}>Open invoice</Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => setPendingCompletion({
+                                invoiceId: row.invoice!.id,
+                                invoiceNumber: row.invoice!.invoiceNumber,
+                                customer: row.service.organization.name,
+                                service: row.service.name,
+                                cycleDate: row.billingDate,
+                              })}
+                            >
+                              <CheckCircle2 className="mr-1.5 size-3.5" /> Complete renewal
+                            </Button>
+                          </>
+                        ) : row.invoice && row.state === 'paid_manual_completion' ? (
+                          <>
+                            <Button type="button" size="sm" variant="outline" onClick={() => onOpenInvoice(row.invoice!.id)}>Open invoice</Button>
+                            <Button type="button" size="sm" onClick={() => onManageService(row.service.id)}>Set renewal dates</Button>
+                          </>
+                        ) : row.invoice ? (
                           <Button type="button" size="sm" variant="outline" onClick={() => onOpenInvoice(row.invoice!.id)}>Open invoice</Button>
                         ) : ['schedule_missing', 'amount_missing'].includes(row.state) ? (
                           <Button type="button" size="sm" variant="outline" onClick={() => onManageService(row.service.id)}>Manage service</Button>
@@ -240,6 +283,38 @@ export default function FinanceRenewalBillingWorkspace({
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmActionDialog
+        open={Boolean(pendingCompletion)}
+        onOpenChange={(open) => {
+          if (!open) setPendingCompletion(null);
+        }}
+        title="Complete paid service renewal?"
+        description={
+          pendingCompletion
+            ? 'This will advance ' + pendingCompletion.service + ' for ' + pendingCompletion.customer +
+              ' from renewal cycle ' + new Date(pendingCompletion.cycleDate + 'T00:00:00Z').toLocaleDateString() +
+              '. The previous dates remain in service history. This does not charge the customer again.'
+            : 'Complete this paid service renewal.'
+        }
+        confirmLabel="Complete renewal"
+        tone="default"
+        onConfirm={async () => {
+          if (!pendingCompletion) return;
+          try {
+            const response = await fetch(
+              '/api/admin/finance/invoices/' + encodeURIComponent(pendingCompletion.invoiceId) + '/complete-renewal',
+              { method: 'POST' },
+            );
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) throw new Error(payload?.error || 'Unable to complete service renewal');
+            toast.success(payload?.data?.alreadyCompleted ? 'Renewal was already completed' : 'Service renewal completed');
+            onRefresh();
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to complete service renewal');
+          }
+        }}
+      />
     </div>
   );
 }

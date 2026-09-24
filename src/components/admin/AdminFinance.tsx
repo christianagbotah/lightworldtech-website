@@ -92,6 +92,14 @@ type Service = {
     previousAmount: string | null;
     newAmount: string | null;
     effectiveAt: string;
+    sourceInvoiceId: string | null;
+    previousExpiryDate: string | null;
+    newExpiryDate: string | null;
+    previousNextDueDate: string | null;
+    newNextDueDate: string | null;
+    previousStatus: string;
+    newStatus: string;
+    notes: string;
   }>;
 };
 
@@ -107,6 +115,8 @@ type Invoice = {
   issueDate: string;
   dueDate: string;
   renewalForDate: string | null;
+  renewalCompletedAt: string | null;
+  renewalCompletedBy: string;
   subtotal: string;
   discount: string;
   tax: string;
@@ -1453,6 +1463,29 @@ export default function AdminFinance() {
                             {change.newAmount !== null ? money(change.newAmount, selectedService.currency) : '—'}
                           </p>
                         )}
+                        {(change.previousExpiryDate || change.newExpiryDate) && (
+                          <p className="mt-2 text-[10px] text-muted-foreground">
+                            Expiry: {change.previousExpiryDate ? new Date(change.previousExpiryDate).toLocaleDateString() : '—'}
+                            {' → '}
+                            {change.newExpiryDate ? new Date(change.newExpiryDate).toLocaleDateString() : '—'}
+                          </p>
+                        )}
+                        {(change.previousNextDueDate || change.newNextDueDate) && (
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            Next due: {change.previousNextDueDate ? new Date(change.previousNextDueDate).toLocaleDateString() : '—'}
+                            {' → '}
+                            {change.newNextDueDate ? new Date(change.newNextDueDate).toLocaleDateString() : '—'}
+                          </p>
+                        )}
+                        {change.previousStatus && change.newStatus && change.previousStatus !== change.newStatus && (
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            Status: {pretty(change.previousStatus)} → {pretty(change.newStatus)}
+                          </p>
+                        )}
+                        {change.sourceInvoiceId && (
+                          <p className="mt-1 text-[10px] font-medium text-amber-700 dark:text-amber-300">Paid renewal invoice recorded</p>
+                        )}
+                        {change.notes && <p className="mt-2 text-[10px] leading-4 text-muted-foreground">{change.notes}</p>}
                       </div>
                     ))}
                     {!selectedService.changes.length && (

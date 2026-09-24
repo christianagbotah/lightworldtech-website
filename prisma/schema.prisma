@@ -697,8 +697,15 @@ model ClientServiceChange {
   newPlan        String               @default("")
   previousAmount Decimal?             @db.Decimal(18, 2)
   newAmount      Decimal?             @db.Decimal(18, 2)
-  effectiveAt    DateTime
-  notes          String               @default("")
+  effectiveAt        DateTime
+  sourceInvoiceId     String?   @unique
+  previousExpiryDate  DateTime?
+  newExpiryDate       DateTime?
+  previousNextDueDate DateTime?
+  newNextDueDate      DateTime?
+  previousStatus      String    @default("")
+  newStatus           String    @default("")
+  notes               String               @default("")
   changedBy      String               @default("Admin")
 
   createdAt DateTime @default(now())
@@ -720,8 +727,10 @@ model ClientInvoice {
   currency       String             @default("GHS")
   issueDate      DateTime
   dueDate        DateTime
-  renewalForDate DateTime?
-  subtotal       Decimal            @db.Decimal(18, 2)
+  renewalForDate     DateTime?
+  renewalCompletedAt DateTime?
+  renewalCompletedBy String             @default("")
+  subtotal            Decimal            @db.Decimal(18, 2)
   discount       Decimal            @default(0) @db.Decimal(18, 2)
   tax            Decimal            @default(0) @db.Decimal(18, 2)
   taxTreatment   String             @default("legacy")
