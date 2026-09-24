@@ -23,7 +23,8 @@ import { useAppStore } from '@/lib/store';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import FinanceRecordDetailsDialog, { type FinanceRecordSelection } from '@/components/admin/FinanceRecordDetailsDialog';
 import FinanceCustomerCredits from '@/components/admin/FinanceCustomerCredits';
-import FinanceAccountingWorkspace from '@/components/admin/FinanceAccountingWorkspace';
+import FinanceAccountingWorkspace, { type FinanceAccountingView } from '@/components/admin/FinanceAccountingWorkspace';
+import FinanceExecutiveDashboard, { type FinanceExecutiveDashboardData } from '@/components/admin/FinanceExecutiveDashboard';
 import FinanceCollectionsWorkspace from '@/components/admin/FinanceCollectionsWorkspace';
 import FinanceRenewalBillingWorkspace from '@/components/admin/FinanceRenewalBillingWorkspace';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
@@ -203,65 +204,7 @@ type Expense = {
   vendor: { id: string; name: string } | null;
 };
 
-type Dashboard = {
-  period: { from: string; to: string };
-  byCurrency: Record<string, {
-    receivables: string;
-    payables: string;
-    cashIn: string;
-    cashOut: string;
-    netCashflow: string;
-    revenue: string;
-    expenses: string;
-    netProfit: string;
-  }>;
-  debtors: Array<{
-    id: string;
-    invoiceNumber: string;
-    customer: string;
-    organizationId: string;
-    service: string;
-    currency: string;
-    total: string;
-    balance: string;
-    dueDate: string;
-    status: string;
-  }>;
-  creditors: Array<{
-    id: string;
-    payableNumber: string;
-    vendor: string;
-    vendorId: string;
-    currency: string;
-    total: string;
-    balance: string;
-    dueDate: string;
-    status: string;
-  }>;
-  aging: {
-    debtors: Record<string, Record<string, string>>;
-    creditors: Record<string, Record<string, string>>;
-  };
-  serviceAlerts: Array<{
-    id: string;
-    customer: string;
-    name: string;
-    planName: string;
-    currency: string;
-    recurringAmount: string;
-    expiryDate: string | null;
-    nextDueDate: string | null;
-    expiryDays: number | null;
-    dueDays: number | null;
-    alert: string;
-  }>;
-  counts: {
-    customersWithDebt: number;
-    creditors: number;
-    activeVendors: number;
-    serviceAlerts: number;
-  };
-};
+type Dashboard = FinanceExecutiveDashboardData;
 
 type TaxProfile = {
   id: string;
@@ -339,6 +282,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 export default function AdminFinance() {
   const { navigate } = useAppStore();
   const [section, setSection] = useState<'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'accounting'>('overview');
+  const [accountingView, setAccountingView] = useState<FinanceAccountingView>('trial-balance');
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -864,149 +808,36 @@ export default function AdminFinance() {
       </div>
 
       {section === 'overview' && (
-        <div className="space-y-5">
-          {currencies.length ? currencies.map(([currency, totals]) => (
-            <Card key={currency} className="border-border/60">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">{currency} financial position</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {[
-                  ['Receivables', totals.receivables, UsersRound],
-                  ['Payables', totals.payables, Building2],
-                  ['Net cashflow', totals.netCashflow, WalletCards],
-                  ['Management profit', totals.netProfit, TrendingUp],
-                ].map(([label, value, Icon]) => (
-                  <div key={String(label)} className="rounded-xl border border-border/60 bg-muted/20 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{String(label)}</p>
-                        <p className="mt-1 text-xl font-bold">{money(String(value), currency)}</p>
-                      </div>
-                      <span className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700">
-                        <Icon className="size-5" />
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                <div className="sm:col-span-2 xl:col-span-4 grid gap-2 sm:grid-cols-4">
-                  <div className="rounded-xl bg-muted/40 p-3 text-sm"><span className="text-muted-foreground">Cash in:</span> <strong>{money(totals.cashIn, currency)}</strong></div>
-                  <div className="rounded-xl bg-muted/40 p-3 text-sm"><span className="text-muted-foreground">Cash out:</span> <strong>{money(totals.cashOut, currency)}</strong></div>
-                  <div className="rounded-xl bg-muted/40 p-3 text-sm"><span className="text-muted-foreground">Revenue:</span> <strong>{money(totals.revenue, currency)}</strong></div>
-                  <div className="rounded-xl bg-muted/40 p-3 text-sm"><span className="text-muted-foreground">Expenses:</span> <strong>{money(totals.expenses, currency)}</strong></div>
-                </div>
-              </CardContent>
-            </Card>
-          )) : (
-            <Card className="border-dashed"><CardContent className="p-8 text-center text-sm text-muted-foreground">No financial transactions recorded yet.</CardContent></Card>
-          )}
-
-          <div className="grid gap-5 xl:grid-cols-2">
-            <Card className="min-w-0 border-border/60">
-              <CardHeader><CardTitle className="text-base">Debtors</CardTitle></CardHeader>
-              <CardContent className="p-0">
-                <div className="max-w-full overflow-x-auto">
-                  <Table exportFileName="lightworld-finance-debtors">
-                    <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Invoice</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {data.dashboard.debtors.slice(0, 12).map((item) => (
-                        <TableRow
-                          key={item.id}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={'Open invoice ' + item.invoiceNumber + ' for ' + item.customer}
-                          onClick={() => openFinanceRecord('invoice', item.id)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter' || event.key === ' ') {
-                              event.preventDefault();
-                              openFinanceRecord('invoice', item.id);
-                            }
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <TableCell><p className="font-medium">{item.customer}</p><p className="text-[10px] text-muted-foreground">{item.service || 'General account'}</p></TableCell>
-                          <TableCell><span className="font-mono text-xs">{item.invoiceNumber}</span></TableCell>
-                          <TableCell><p className="text-xs">{new Date(item.dueDate).toLocaleDateString()}</p><Badge className={statusTone(item.status)}>{pretty(item.status)}</Badge></TableCell>
-                          <TableCell className="text-right font-semibold">{money(item.balance, item.currency)}</TableCell>
-                        </TableRow>
-                      ))}
-                      {!data.dashboard.debtors.length && <TableRow><TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No outstanding customer balances.</TableCell></TableRow>}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="min-w-0 border-border/60">
-              <CardHeader><CardTitle className="text-base">Creditors</CardTitle></CardHeader>
-              <CardContent className="p-0">
-                <div className="max-w-full overflow-x-auto">
-                  <Table exportFileName="lightworld-finance-creditors">
-                    <TableHeader><TableRow><TableHead>Supplier</TableHead><TableHead>Bill</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {data.dashboard.creditors.slice(0, 12).map((item) => (
-                        <TableRow
-                          key={item.id}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={'Open supplier bill ' + item.payableNumber + ' for ' + item.vendor}
-                          onClick={() => openFinanceRecord('bill', item.id)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter' || event.key === ' ') {
-                              event.preventDefault();
-                              openFinanceRecord('bill', item.id);
-                            }
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <TableCell className="font-medium">{item.vendor}</TableCell>
-                          <TableCell><span className="font-mono text-xs">{item.payableNumber}</span></TableCell>
-                          <TableCell><p className="text-xs">{new Date(item.dueDate).toLocaleDateString()}</p><Badge className={statusTone(item.status)}>{pretty(item.status)}</Badge></TableCell>
-                          <TableCell className="text-right font-semibold">{money(item.balance, item.currency)}</TableCell>
-                        </TableRow>
-                      ))}
-                      {!data.dashboard.creditors.length && <TableRow><TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No outstanding supplier balances.</TableCell></TableRow>}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="border-border/60">
-            <CardHeader><CardTitle className="flex items-center gap-2 text-base"><CalendarClock className="size-4 text-amber-600" /> Renewals and service due dates</CardTitle></CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {data.dashboard.serviceAlerts.map((service) => {
-                const serviceAccount = data.services.find((item) => item.id === service.id);
-                return (
-                  <div key={service.id} className="rounded-xl border border-border/60 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div><p className="font-semibold">{service.name}</p><p className="text-xs text-muted-foreground">{service.customer} · {service.planName || 'No plan'}</p></div>
-                      <Badge className={service.alert.includes('overdue') || service.alert === 'expired' ? statusTone('overdue') : statusTone('partially_paid')}>{pretty(service.alert)}</Badge>
-                    </div>
-                    <p className="mt-3 text-sm">{money(service.recurringAmount, service.currency)} / {service.currency}</p>
-                    <div className="mt-2 text-[11px] text-muted-foreground">
-                      {service.expiryDate && <p>Expires: {new Date(service.expiryDate).toLocaleDateString()}</p>}
-                      {service.nextDueDate && <p>Next due: {new Date(service.nextDueDate).toLocaleDateString()}</p>}
-                    </div>
-                    {serviceAccount && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <Button type="button" size="sm" variant="outline" onClick={() => openServiceManager(serviceAccount)}>
-                          Review service
-                        </Button>
-                        <Button type="button" size="sm" variant="outline" onClick={() => prepareRenewalInvoice(serviceAccount)}>
-                          <FileText className="mr-1.5 size-3.5" />
-                          Prepare invoice
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {!data.dashboard.serviceAlerts.length && <p className="text-sm text-muted-foreground">No upcoming service or renewal alerts.</p>}
-            </CardContent>
-          </Card>
-        </div>
+        <FinanceExecutiveDashboard
+          initialData={data.dashboard}
+          onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)}
+          onOpenBill={(billId) => openFinanceRecord('bill', billId)}
+          onOpenCustomer={(organizationId) => {
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('lw-client-organization-id', organizationId);
+            }
+            navigate('admin-clients');
+          }}
+          onReviewService={(serviceId) => {
+            const service = data.services.find((item) => item.id === serviceId);
+            if (service) openServiceManager(service);
+          }}
+          onPrepareRenewalInvoice={(serviceId) => {
+            const service = data.services.find((item) => item.id === serviceId);
+            if (service) prepareRenewalInvoice(service);
+          }}
+          onCollections={() => setSection('collections')}
+          onRenewals={() => setSection('renewals')}
+          onSuppliers={() => setSection('suppliers')}
+          onCashbook={() => {
+            setAccountingView('cashbook');
+            setSection('accounting');
+          }}
+          onStatements={() => {
+            setAccountingView('statements');
+            setSection('accounting');
+          }}
+        />
       )}
 
       {section === 'customers' && (
@@ -1244,7 +1075,7 @@ export default function AdminFinance() {
         />
       )}
 
-      {section === 'accounting' && <FinanceAccountingWorkspace />}
+      {section === 'accounting' && <FinanceAccountingWorkspace initialView={accountingView} />}
 
       <FinanceRecordDetailsDialog
         selection={financeRecord}

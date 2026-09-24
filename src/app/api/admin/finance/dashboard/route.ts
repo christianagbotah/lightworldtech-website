@@ -24,6 +24,39 @@ function ageBucket(dueDate: Date, now: Date): 'current' | '1_30' | '31_60' | '61
   return '90_plus';
 }
 
+function parseDateBoundary(value: string | null, fallback: Date, endOfDay = false): Date {
+  if (!value) return fallback;
+  return new Date(
+    value.length === 10
+      ? value + (endOfDay ? 'T23:59:59.999Z' : 'T00:00:00.000Z')
+      : value,
+  );
+}
+
+function monthKey(value: Date): string {
+  return value.getUTCFullYear() + '-' + String(value.getUTCMonth() + 1).padStart(2, '0');
+}
+
+function monthLabel(key: string): string {
+  const [year, month] = key.split('-').map(Number);
+  return new Intl.DateTimeFormat('en-GH', {
+    month: 'short',
+    year: '2-digit',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, 1)));
+}
+
+function monthKeys(from: Date, to: Date): string[] {
+  const result: string[] = [];
+  const cursor = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
+  const end = new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), 1));
+  while (cursor <= end && result.length < 120) {
+    result.push(monthKey(cursor));
+    cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+  }
+  return result;
+}
+
 export async function GET(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
   if (!actor || !hasAdminPermission(actor.role, actor.permissions, 'finance.manage')) {
@@ -33,14 +66,14 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const now = new Date();
   const defaultFrom = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-  const from = searchParams.get('from') ? new Date(searchParams.get('from')!) : defaultFrom;
-  const to = searchParams.get('to') ? new Date(searchParams.get('to')!) : now;
+  const from = parseDateBoundary(searchParams.get('from'), defaultFrom);
+  const to = parseDateBoundary(searchParams.get('to'), now, true);
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) {
     return NextResponse.json({ success: false, error: 'Invalid reporting period' }, { status: 400 });
   }
 
   const renewalWindow = new Date(now.getTime() + 60 * 86400000);
-  const dueWindow = new Date(now.getTime() + 30 * 86400000);
+  const dueWindow = renewalWindow;
 
   const [
     services,
@@ -52,6 +85,8 @@ export async function GET(request: NextRequest) {
     creditNotes,
     refunds,
     vendors,
+    cashLedgerLines,
+    collectionActivities,
   ] = await Promise.all([
     db.clientServiceAccount.findMany({
       where: {
@@ -108,15 +143,41 @@ export async function GET(request: NextRequest) {
         status: 'posted',
         issueDate: { gte: from, lte: to },
       },
-      select: { currency: true, total: true },
+      select: { currency: true, total: true, issueDate: true },
       take: 5000,
     }),
     db.financeCustomerRefund.findMany({
       where: { refundedAt: { gte: from, lte: to } },
-      select: { currency: true, amount: true },
+      select: { currency: true, amount: true, refundedAt: true },
       take: 5000,
     }),
     db.financeVendor.findMany({ where: { active: true }, select: { id: true, name: true } }),
+    db.financeJournalLine.findMany({
+      where: {
+        account: { systemKey: { in: ['cash', 'bank', 'mobile_money'] } },
+        entry: {
+          status: { in: ['posted', 'reversed'] },
+          entryDate: { lte: to },
+        },
+      },
+      select: {
+        debit: true,
+        credit: true,
+        account: { select: { systemKey: true } },
+        entry: { select: { currency: true } },
+      },
+      take: 20000,
+    }),
+    db.financeCollectionActivity.findMany({
+      where: {
+        OR: [
+          { type: 'promise_to_pay' },
+          { nextFollowUpAt: { not: null }, completedAt: null },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10000,
+    }),
   ]);
 
   const receivables: Totals = {};
@@ -127,8 +188,41 @@ export async function GET(request: NextRequest) {
   const accrualExpenses: Totals = {};
   const agedDebtors: Record<string, Totals> = { current: {}, '1_30': {}, '31_60': {}, '61_90': {}, '90_plus': {} };
   const agedCreditors: Record<string, Totals> = { current: {}, '1_30': {}, '31_60': {}, '61_90': {}, '90_plus': {} };
+  const cashPositionRaw: Record<string, {
+    cash: Prisma.Decimal;
+    bank: Prisma.Decimal;
+    mobileMoney: Prisma.Decimal;
+  }> = {};
+  const renewalExposureRaw: Record<string, {
+    amount: Prisma.Decimal;
+    count: number;
+    overdueCount: number;
+  }> = {};
+  const promiseAmounts: Totals = {};
+  const trendRaw = new Map<string, Map<string, {
+    revenue: Prisma.Decimal;
+    expenses: Prisma.Decimal;
+    cashIn: Prisma.Decimal;
+    cashOut: Prisma.Decimal;
+  }>>();
 
-  const debtors = invoices
+  const trendBucket = (currency: string, date: Date) => {
+    if (date < from || date > to) return null;
+    if (!trendRaw.has(currency)) trendRaw.set(currency, new Map());
+    const currencyTrend = trendRaw.get(currency)!;
+    const key = monthKey(date);
+    if (!currencyTrend.has(key)) {
+      currencyTrend.set(key, {
+        revenue: new Prisma.Decimal(0),
+        expenses: new Prisma.Decimal(0),
+        cashIn: new Prisma.Decimal(0),
+        cashOut: new Prisma.Decimal(0),
+      });
+    }
+    return currencyTrend.get(key)!;
+  };
+
+  const allDebtors = invoices
     .map((invoice) => {
       const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
       const status = invoiceStatusFromBalance({
@@ -161,10 +255,11 @@ export async function GET(request: NextRequest) {
       };
     })
     .filter((item) => Number(item.balance) > 0)
-    .sort((a, b) => Number(b.balance) - Number(a.balance))
-    .slice(0, 500);
+    .sort((a, b) => Number(b.balance) - Number(a.balance));
 
-  const creditors = bills
+  const debtors = allDebtors.slice(0, 500);
+
+  const allCreditors = bills
     .map((bill) => {
       const balance = invoiceBalance(bill.total, bill.allocations);
       const status = vendorBillStatusFromBalance({
@@ -196,17 +291,118 @@ export async function GET(request: NextRequest) {
       };
     })
     .filter((item) => Number(item.balance) > 0)
-    .sort((a, b) => b.balance.localeCompare(a.balance))
-    .slice(0, 500);
+    .sort((a, b) => Number(b.balance) - Number(a.balance));
 
-  for (const payment of payments) add(cashIn, payment.currency, payment.amount);
-  for (const note of creditNotes) add(accrualRevenue, note.currency, note.total.negated());
-  for (const payment of vendorPayments) add(cashOut, payment.currency, payment.amount);
-  for (const refund of refunds) add(cashOut, refund.currency, refund.amount);
+  const creditors = allCreditors.slice(0, 500);
+
+  for (const payment of payments) {
+    add(cashIn, payment.currency, payment.amount);
+    const bucket = trendBucket(payment.currency, payment.paidAt);
+    if (bucket) bucket.cashIn = bucket.cashIn.plus(payment.amount);
+  }
+  for (const invoice of invoices) {
+    if (invoice.issueDate >= from && invoice.issueDate <= to) {
+      const bucket = trendBucket(invoice.currency, invoice.issueDate);
+      if (bucket) bucket.revenue = bucket.revenue.plus(invoice.total);
+    }
+  }
+  for (const note of creditNotes) {
+    add(accrualRevenue, note.currency, note.total.negated());
+    const bucket = trendBucket(note.currency, note.issueDate);
+    if (bucket) bucket.revenue = bucket.revenue.minus(note.total);
+  }
+  for (const bill of bills) {
+    if (bill.issueDate >= from && bill.issueDate <= to) {
+      const bucket = trendBucket(bill.currency, bill.issueDate);
+      if (bucket) bucket.expenses = bucket.expenses.plus(bill.total);
+    }
+  }
+  for (const payment of vendorPayments) {
+    add(cashOut, payment.currency, payment.amount);
+    const bucket = trendBucket(payment.currency, payment.paidAt);
+    if (bucket) bucket.cashOut = bucket.cashOut.plus(payment.amount);
+  }
+  for (const refund of refunds) {
+    add(cashOut, refund.currency, refund.amount);
+    const bucket = trendBucket(refund.currency, refund.refundedAt);
+    if (bucket) bucket.cashOut = bucket.cashOut.plus(refund.amount);
+  }
   for (const expense of expenses) {
     add(accrualExpenses, expense.currency, expense.amount);
+    const accrualBucket = trendBucket(expense.currency, expense.incurredAt);
+    if (accrualBucket) accrualBucket.expenses = accrualBucket.expenses.plus(expense.amount);
     if (expense.paidAt && expense.paidAt >= from && expense.paidAt <= to) {
       add(cashOut, expense.currency, expense.amount);
+      const bucket = trendBucket(expense.currency, expense.paidAt);
+      if (bucket) bucket.cashOut = bucket.cashOut.plus(expense.amount);
+    }
+  }
+
+  for (const line of cashLedgerLines) {
+    const currency = line.entry.currency;
+    if (!cashPositionRaw[currency]) {
+      cashPositionRaw[currency] = {
+        cash: new Prisma.Decimal(0),
+        bank: new Prisma.Decimal(0),
+        mobileMoney: new Prisma.Decimal(0),
+      };
+    }
+    const movement = line.debit.minus(line.credit);
+    const systemKey = line.account.systemKey;
+    if (systemKey === 'cash') cashPositionRaw[currency].cash = cashPositionRaw[currency].cash.plus(movement);
+    if (systemKey === 'bank') cashPositionRaw[currency].bank = cashPositionRaw[currency].bank.plus(movement);
+    if (systemKey === 'mobile_money') cashPositionRaw[currency].mobileMoney = cashPositionRaw[currency].mobileMoney.plus(movement);
+  }
+
+  for (const service of services) {
+    if (!renewalExposureRaw[service.currency]) {
+      renewalExposureRaw[service.currency] = {
+        amount: new Prisma.Decimal(0),
+        count: 0,
+        overdueCount: 0,
+      };
+    }
+    const billingDate = service.nextDueDate || service.expiryDate;
+    if (!billingDate || billingDate > renewalWindow) continue;
+    renewalExposureRaw[service.currency].amount =
+      renewalExposureRaw[service.currency].amount.plus(service.recurringAmount);
+    renewalExposureRaw[service.currency].count += 1;
+    if (billingDate < now) renewalExposureRaw[service.currency].overdueCount += 1;
+  }
+
+  const debtorById = new Map(allDebtors.map((item) => [item.id, item]));
+  const latestPromiseByInvoice = new Map<string, typeof collectionActivities[number]>();
+  const followUpDueInvoices = new Set<string>();
+  for (const activity of collectionActivities) {
+    if (!debtorById.has(activity.invoiceId)) continue;
+    if (
+      activity.nextFollowUpAt &&
+      !activity.completedAt &&
+      activity.nextFollowUpAt.getTime() <= now.getTime()
+    ) {
+      followUpDueInvoices.add(activity.invoiceId);
+    }
+    if (activity.type === 'promise_to_pay' && !latestPromiseByInvoice.has(activity.invoiceId)) {
+      latestPromiseByInvoice.set(activity.invoiceId, activity);
+    }
+  }
+
+  let brokenPromises = 0;
+  let activePromises = 0;
+  for (const [invoiceId, activity] of latestPromiseByInvoice.entries()) {
+    const debtor = debtorById.get(invoiceId);
+    if (!debtor || !activity.promisedDate) continue;
+    if (activity.promisedDate.getTime() < now.getTime()) {
+      brokenPromises += 1;
+      continue;
+    }
+    activePromises += 1;
+    if (activity.promisedAmount) {
+      const promised = Prisma.Decimal.min(
+        new Prisma.Decimal(debtor.balance),
+        activity.promisedAmount,
+      );
+      add(promiseAmounts, debtor.currency, promised);
     }
   }
 
@@ -217,6 +413,10 @@ export async function GET(request: NextRequest) {
     ...Object.keys(cashOut),
     ...Object.keys(accrualRevenue),
     ...Object.keys(accrualExpenses),
+    ...Object.keys(cashPositionRaw),
+    ...Object.keys(renewalExposureRaw),
+    ...Object.keys(promiseAmounts),
+    ...trendRaw.keys(),
   ]);
 
   const byCurrency = Object.fromEntries([...currencies].sort().map((currency) => {
@@ -235,6 +435,52 @@ export async function GET(request: NextRequest) {
       netProfit: revenue.minus(expensesTotal).toFixed(2),
     }];
   }));
+
+  const cashPosition = Object.fromEntries(
+    Object.entries(cashPositionRaw)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([currency, value]) => [currency, {
+        cash: value.cash.toFixed(2),
+        bank: value.bank.toFixed(2),
+        mobileMoney: value.mobileMoney.toFixed(2),
+        total: value.cash.plus(value.bank).plus(value.mobileMoney).toFixed(2),
+      }]),
+  );
+
+  const renewalExposure = Object.fromEntries(
+    Object.entries(renewalExposureRaw)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([currency, value]) => [currency, {
+        amount: value.amount.toFixed(2),
+        count: value.count,
+        overdueCount: value.overdueCount,
+      }]),
+  );
+
+  const trendPeriods = monthKeys(from, to);
+  const trends = Object.fromEntries(
+    [...currencies].sort().map((currency) => {
+      const currencyTrend = trendRaw.get(currency) || new Map();
+      return [currency, trendPeriods.map((period) => {
+        const bucket = currencyTrend.get(period) || {
+          revenue: new Prisma.Decimal(0),
+          expenses: new Prisma.Decimal(0),
+          cashIn: new Prisma.Decimal(0),
+          cashOut: new Prisma.Decimal(0),
+        };
+        return {
+          period,
+          label: monthLabel(period),
+          revenue: bucket.revenue.toFixed(2),
+          expenses: bucket.expenses.toFixed(2),
+          netProfit: bucket.revenue.minus(bucket.expenses).toFixed(2),
+          cashIn: bucket.cashIn.toFixed(2),
+          cashOut: bucket.cashOut.toFixed(2),
+          netCashflow: bucket.cashIn.minus(bucket.cashOut).toFixed(2),
+        };
+      })];
+    }),
+  );
 
   const serviceAlerts = services.map((service) => {
     const expiryDays = service.expiryDate
@@ -275,6 +521,16 @@ export async function GET(request: NextRequest) {
     data: {
       period: { from, to },
       byCurrency,
+      cashPosition,
+      renewalExposure,
+      collections: {
+        followUpDue: followUpDueInvoices.size,
+        brokenPromises,
+        activePromises,
+        promiseAmounts: jsonTotals(promiseAmounts),
+        overdueInvoices: allDebtors.filter((item) => item.status === 'overdue').length,
+      },
+      trends,
       debtors,
       creditors,
       aging: {
@@ -314,8 +570,8 @@ export async function GET(request: NextRequest) {
         paidAt: expense.paidAt,
       })),
       counts: {
-        customersWithDebt: new Set(debtors.map((item) => item.organizationId)).size,
-        creditors: new Set(creditors.map((item) => item.vendorId)).size,
+        customersWithDebt: new Set(allDebtors.map((item) => item.organizationId)).size,
+        creditors: new Set(allCreditors.map((item) => item.vendorId)).size,
         activeVendors: vendors.length,
         serviceAlerts: serviceAlerts.length,
       },

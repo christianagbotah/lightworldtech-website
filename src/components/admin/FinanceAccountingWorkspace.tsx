@@ -149,7 +149,7 @@ type JournalFormLine = {
   credit: string;
 };
 
-type View = 'statements' | 'cashbook' | 'approvals' | 'tax' | 'reconciliation' | 'close' | 'accounts' | 'journals' | 'trial-balance' | 'general-ledger' | 'periods';
+export type FinanceAccountingView = 'statements' | 'cashbook' | 'approvals' | 'tax' | 'reconciliation' | 'close' | 'accounts' | 'journals' | 'trial-balance' | 'general-ledger' | 'periods';
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -206,8 +206,12 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return payload.data as T;
 }
 
-export default function FinanceAccountingWorkspace() {
-  const [view, setView] = useState<View>('trial-balance');
+export default function FinanceAccountingWorkspace({
+  initialView = 'trial-balance',
+}: {
+  initialView?: FinanceAccountingView;
+}) {
+  const [view, setView] = useState<FinanceAccountingView>(initialView);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [journals, setJournals] = useState<Journal[]>([]);
@@ -258,6 +262,10 @@ export default function FinanceAccountingWorkspace() {
   const [ledgerFrom, setLedgerFrom] = useState(year + '-01-01');
   const [ledgerTo, setLedgerTo] = useState(today());
   const [ledgerCurrency, setLedgerCurrency] = useState('');
+
+  useEffect(() => {
+    setView(initialView);
+  }, [initialView]);
 
   const load = async () => {
     setLoading(true);
