@@ -3,14 +3,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
+  ArrowUpRight,
   CalendarClock,
   CreditCard,
+  Download,
+  History,
   Loader2,
   ReceiptText,
   RefreshCw,
   WalletCards,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppStore } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +52,24 @@ type Service = {
   autoRenew: boolean;
   renewalNoticeDays: number;
   project: { id: string; name: string } | null;
+  changes: Array<{
+    id: string;
+    changeType: string;
+    previousPlan: string;
+    newPlan: string;
+    previousAmount: string | null;
+    newAmount: string | null;
+    effectiveAt: string;
+    sourceInvoiceId: string | null;
+    previousExpiryDate: string | null;
+    newExpiryDate: string | null;
+    previousNextDueDate: string | null;
+    newNextDueDate: string | null;
+    previousStatus: string;
+    newStatus: string;
+    notes: string;
+    changedBy: string;
+  }>;
   _count: { invoices: number };
 };
 
@@ -61,6 +83,9 @@ type Invoice = {
   currency: string;
   issueDate: string;
   dueDate: string;
+  renewalForDate: string | null;
+  renewalCompletedAt: string | null;
+  renewalCompletedBy: string;
   total: string;
   amountPaid: string;
   balance: string;
@@ -139,10 +164,12 @@ function statusTone(status: string) {
 }
 
 export default function ClientCommercialAccount({ organizationId, organizationName }: Props) {
+  const { navigate } = useAppStore();
   const [data, setData] = useState<CommercialData | null>(null);
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [statementDownloading, setStatementDownloading] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     currency: 'GHS',
@@ -193,7 +220,64 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
     [data?.invoices, paymentForm.currency],
   );
 
+  const serviceHistory = useMemo(
+    () => (data?.services || [])
+      .flatMap((service) =>
+        service.changes.map((change) => ({
+          ...change,
+          serviceName: service.name,
+          planName: service.planName,
+          currency: service.currency,
+          invoiceNumber:
+            change.sourceInvoiceId
+              ? data?.invoices.find((invoice) => invoice.id === change.sourceInvoiceId)?.invoiceNumber || ''
+              : '',
+        })),
+      )
+      .sort((a, b) => new Date(b.effectiveAt).getTime() - new Date(a.effectiveAt).getTime()),
+    [data?.services, data?.invoices],
+  );
+
   const currencyCodes = Object.keys(data?.byCurrency || {});
+
+  const openFinanceSection = (section: 'renewals' | 'collections') => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lw-finance-section', section);
+      sessionStorage.setItem('lw-finance-organization-id', organizationId);
+      sessionStorage.setItem('lw-finance-customer-name', organizationName);
+    }
+    navigate('admin-finance');
+  };
+
+  const downloadStatement = async () => {
+    setStatementDownloading(true);
+    try {
+      const response = await fetch(
+        '/api/admin/clients/' + encodeURIComponent(organizationId) + '/statement',
+        { cache: 'no-store' },
+      );
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error || 'Unable to download customer statement');
+      }
+      const blob = await response.blob();
+      const disposition = response.headers.get('Content-Disposition') || '';
+      const filename = disposition.match(/filename="([^"]+)"/i)?.[1] || 'lightworld-customer-statement.csv';
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Customer statement downloaded');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to download customer statement');
+    } finally {
+      setStatementDownloading(false);
+    }
+  };
   const openPayment = (invoice?: Invoice) => {
     const currency = invoice?.currency || currencyCodes[0] || 'GHS';
     const amount = invoice?.balance || '';
@@ -266,6 +350,16 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={() => void downloadStatement()} disabled={statementDownloading || loading}>
+              {statementDownloading ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <Download className="mr-2 size-3.5" />}
+              Statement
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => openFinanceSection('renewals')}>
+              <CalendarClock className="mr-2 size-3.5" /> Renewals
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => openFinanceSection('collections')}>
+              <ArrowUpRight className="mr-2 size-3.5" /> Collections
+            </Button>
             <Button type="button" size="sm" variant="outline" onClick={() => void load()} disabled={loading}>
               <RefreshCw className={loading ? 'mr-2 size-3.5 animate-spin' : 'mr-2 size-3.5'} />
               Refresh
@@ -448,6 +542,35 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                     {!data?.payments.length && (
                       <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No customer payments recorded yet.</TableCell></TableRow>
                     )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+
+            <div className="min-w-0 rounded-2xl border border-border/60">
+              <div className="flex items-center justify-between gap-3 border-b border-border/60 p-4">
+                <div>
+                  <p className="flex items-center gap-2 font-semibold"><History className="size-4 text-amber-600" /> Service commercial history</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">Renewals, upgrades, downgrades and date changes retained as an audit trail.</p>
+                </div>
+                <Badge variant="outline">{serviceHistory.length}</Badge>
+              </div>
+              <div className="max-w-full overflow-x-auto">
+                <Table exportFileName="lightworld-client-service-history" className="min-w-[980px]">
+                  <TableHeader><TableRow><TableHead>Service</TableHead><TableHead>Change</TableHead><TableHead>Effective</TableHead><TableHead>Amount</TableHead><TableHead>Expiry</TableHead><TableHead>Next due</TableHead><TableHead>Source / notes</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {serviceHistory.slice(0, 50).map((change) => (
+                      <TableRow key={change.id}>
+                        <TableCell><p className="text-xs font-semibold">{change.serviceName}</p><p className="text-[10px] text-muted-foreground">{change.planName || '—'}</p></TableCell>
+                        <TableCell><Badge variant="outline">{pretty(change.changeType)}</Badge></TableCell>
+                        <TableCell className="text-xs">{date(change.effectiveAt)}</TableCell>
+                        <TableCell className="text-xs">{change.previousAmount !== null || change.newAmount !== null ? (change.previousAmount !== null ? money(change.previousAmount, change.currency) : '—') + ' → ' + (change.newAmount !== null ? money(change.newAmount, change.currency) : '—') : '—'}</TableCell>
+                        <TableCell className="text-xs">{date(change.previousExpiryDate)} → {date(change.newExpiryDate)}</TableCell>
+                        <TableCell className="text-xs">{date(change.previousNextDueDate)} → {date(change.newNextDueDate)}</TableCell>
+                        <TableCell><p className="text-xs">{change.invoiceNumber ? 'Invoice ' + change.invoiceNumber : change.changedBy || 'Manual service change'}</p>{change.notes && <p className="mt-1 max-w-sm text-[10px] leading-4 text-muted-foreground">{change.notes}</p>}</TableCell>
+                      </TableRow>
+                    ))}
+                    {!serviceHistory.length && <TableRow><TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">No service changes have been recorded yet.</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </div>

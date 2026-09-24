@@ -127,6 +127,16 @@ export default function AdminClients() {
 
   useEffect(() => { void fetchOrganizations(); }, []);
 
+  useEffect(() => {
+    if (!organizations.length || typeof window === 'undefined') return;
+    const requestedOrganizationId = sessionStorage.getItem('lw-client-organization-id') || '';
+    if (!requestedOrganizationId) return;
+    sessionStorage.removeItem('lw-client-organization-id');
+    if (organizations.some((organization) => organization.id === requestedOrganizationId)) {
+      setSelectedId(requestedOrganizationId);
+    }
+  }, [organizations]);
+
   const counts = useMemo(() => ({
     organizations: organizations.length,
     users: organizations.reduce((sum, item) => sum + item._count.users, 0),

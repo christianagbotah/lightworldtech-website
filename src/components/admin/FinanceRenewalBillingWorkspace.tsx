@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarClock, CheckCircle2, FileText, RefreshCw, Settings2 } from 'lucide-react';
+import { BadgeCheck, CalendarClock, CheckCircle2, FileText, RefreshCw, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type RenewalService = {
   id: string;
@@ -72,15 +72,21 @@ export default function FinanceRenewalBillingWorkspace({
   onPrepareInvoice,
   onOpenInvoice,
   onManageService,
+  onOpenCustomer,
   onRefresh,
+  initialOrganizationId = '',
 }: {
   services: RenewalService[];
   invoices: RenewalInvoice[];
   onPrepareInvoice: (serviceId: string) => void;
   onOpenInvoice: (invoiceId: string) => void;
   onManageService: (serviceId: string) => void;
+  onOpenCustomer: (organizationId: string) => void;
   onRefresh: () => void;
+  initialOrganizationId?: string;
 }) {
+  const [windowDays, setWindowDays] = useState(60);
+  const [organizationId, setOrganizationId] = useState(initialOrganizationId);
   const [pendingCompletion, setPendingCompletion] = useState<{
     invoiceId: string;
     invoiceNumber: string;
@@ -89,12 +95,26 @@ export default function FinanceRenewalBillingWorkspace({
     cycleDate: string;
   } | null>(null);
 
+  useEffect(() => {
+    setOrganizationId(initialOrganizationId);
+  }, [initialOrganizationId]);
+
+  const organizations = useMemo(
+    () => Array.from(new Map(services.map((service) => [service.organization.id, service.organization])).values())
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [services],
+  );
+
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
-  const horizon = new Date(now.getTime() + 60 * 86400000).toISOString().slice(0, 10);
+  const horizon = new Date(now.getTime() + windowDays * 86400000).toISOString().slice(0, 10);
+  const filteredServices = services.filter(
+    (service) =>
+      ['active', 'pending', 'suspended'].includes(service.status) &&
+      (!organizationId || service.organizationId === organizationId),
+  );
 
-  const rows = services
-    .filter((service) => ['active', 'pending', 'suspended'].includes(service.status))
+  const rows = filteredServices
     .flatMap((service) => {
       const billingDate = dayKey(service.nextDueDate || service.expiryDate);
       if (billingDate && billingDate > horizon) return [];
@@ -152,6 +172,24 @@ export default function FinanceRenewalBillingWorkspace({
   const dueCount = rows.filter((row) => ['ready', 'overdue_unbilled'].includes(row.state)).length;
   const readyToCompleteCount = rows.filter((row) => row.state === 'paid_ready_to_complete').length;
   const missingCount = rows.filter((row) => ['schedule_missing', 'amount_missing'].includes(row.state)).length;
+  const filteredServiceIds = new Set(filteredServices.map((service) => service.id));
+  const completedSince = new Date(now.getTime() - windowDays * 86400000);
+  const completedRows = invoices
+    .filter((invoice) =>
+      Boolean(
+        invoice.serviceId &&
+        filteredServiceIds.has(invoice.serviceId) &&
+        invoice.renewalCompletedAt &&
+        new Date(invoice.renewalCompletedAt).getTime() >= completedSince.getTime(),
+      ),
+    )
+    .map((invoice) => ({
+      invoice,
+      service: filteredServices.find((service) => service.id === invoice.serviceId)!,
+    }))
+    .filter((row) => Boolean(row.service))
+    .sort((a, b) => new Date(b.invoice.renewalCompletedAt!).getTime() - new Date(a.invoice.renewalCompletedAt!).getTime());
+  const completedCount = completedRows.length;
 
   const tone = (state: string) => {
     if (state === 'renewal_completed') return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
@@ -165,11 +203,12 @@ export default function FinanceRenewalBillingWorkspace({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {[
           ['Renewals to bill', String(dueCount), CalendarClock],
           ['Unbilled value', unbilledValue, FileText],
           ['Paid to complete', String(readyToCompleteCount), CheckCircle2],
+          ['Completed', String(completedCount), BadgeCheck],
           ['Needs setup', String(missingCount), Settings2],
         ].map(([label, value, Icon]) => (
           <Card key={String(label)} className="border-border/60">
@@ -188,16 +227,26 @@ export default function FinanceRenewalBillingWorkspace({
 
       <Card className="border-border/60">
         <CardHeader>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <CardTitle className="text-base">Renewal billing queue</CardTitle>
               <p className="mt-1 text-xs text-muted-foreground">
-                Review service cycles due within 60 days. Issuing remains a finance action; auto-renew never means auto-charge.
+                Review service cycles due within {windowDays} days. Issuing remains a finance action; auto-renew never means auto-charge.
               </p>
             </div>
-            <Button type="button" variant="outline" onClick={onRefresh}>
-              <RefreshCw className="mr-2 size-4" /> Refresh
-            </Button>
+            <div className="grid gap-2 sm:grid-cols-[150px_minmax(220px,1fr)_auto]">
+              <select value={windowDays} onChange={(event) => setWindowDays(Number(event.target.value))} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+                <option value={7}>Next 7 days</option>
+                <option value={14}>Next 14 days</option>
+                <option value={30}>Next 30 days</option>
+                <option value={60}>Next 60 days</option>
+              </select>
+              <select value={organizationId} onChange={(event) => setOrganizationId(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+                <option value="">All customers</option>
+                {organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
+              </select>
+              <Button type="button" variant="outline" onClick={onRefresh}><RefreshCw className="mr-2 size-4" /> Refresh</Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -218,7 +267,9 @@ export default function FinanceRenewalBillingWorkspace({
                 {rows.map((row) => (
                   <TableRow key={row.service.id}>
                     <TableCell>
-                      <p className="font-medium">{row.service.organization.name}</p>
+                      <button type="button" className="font-medium hover:underline" onClick={() => onOpenCustomer(row.service.organizationId)}>
+                        {row.service.organization.name}
+                      </button>
                       <p className="text-xs text-muted-foreground">{row.service.name}{row.service.planName ? ' · ' + row.service.planName : ''}</p>
                     </TableCell>
                     <TableCell>
@@ -277,7 +328,37 @@ export default function FinanceRenewalBillingWorkspace({
                     </TableCell>
                   </TableRow>
                 ))}
-                {!rows.length && <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No active service renewals fall within the next 60 days.</TableCell></TableRow>}
+                {!rows.length && <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No active service renewals fall within the selected {windowDays}-day window.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="text-base">Completed renewals · last {windowDays} days</CardTitle>
+          <p className="text-xs text-muted-foreground">Paid renewal cycles that were completed and advanced into the next service period.</p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-completed-renewals" className="min-w-[840px]">
+              <TableHeader><TableRow><TableHead>Customer / service</TableHead><TableHead>Invoice</TableHead><TableHead>Renewal cycle</TableHead><TableHead>Completed</TableHead><TableHead>Completed by</TableHead><TableHead data-export-ignore className="text-right">Action</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {completedRows.slice(0, 50).map(({ invoice, service }) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell>
+                      <button type="button" className="font-medium hover:underline" onClick={() => onOpenCustomer(service.organizationId)}>{service.organization.name}</button>
+                      <p className="text-xs text-muted-foreground">{service.name}{service.planName ? ' · ' + service.planName : ''}</p>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{invoice.invoiceNumber}</TableCell>
+                    <TableCell className="text-xs">{invoice.renewalForDate ? new Date(invoice.renewalForDate).toLocaleDateString() : '—'}</TableCell>
+                    <TableCell className="text-xs">{invoice.renewalCompletedAt ? new Date(invoice.renewalCompletedAt).toLocaleString() : '—'}</TableCell>
+                    <TableCell className="text-xs">{invoice.renewalCompletedBy || '—'}</TableCell>
+                    <TableCell data-export-ignore className="text-right"><Button type="button" size="sm" variant="outline" onClick={() => onOpenInvoice(invoice.id)}>Open invoice</Button></TableCell>
+                  </TableRow>
+                ))}
+                {!completedRows.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No service renewals were completed in the selected lookback period.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>

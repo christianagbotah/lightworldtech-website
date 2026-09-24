@@ -19,6 +19,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppStore } from '@/lib/store';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import FinanceRecordDetailsDialog, { type FinanceRecordSelection } from '@/components/admin/FinanceRecordDetailsDialog';
 import FinanceCustomerCredits from '@/components/admin/FinanceCustomerCredits';
@@ -336,10 +337,13 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export default function AdminFinance() {
+  const { navigate } = useAppStore();
   const [section, setSection] = useState<'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'accounting'>('overview');
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [deepLinkOrganizationId, setDeepLinkOrganizationId] = useState('');
+  const [deepLinkCustomerName, setDeepLinkCustomerName] = useState('');
   const [dialog, setDialog] = useState<DialogName>(null);
   const [financeRecord, setFinanceRecord] = useState<FinanceRecordSelection>(null);
   const [saving, setSaving] = useState(false);
@@ -428,6 +432,19 @@ export default function AdminFinance() {
 
   useEffect(() => {
     void load();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const requestedSection = sessionStorage.getItem('lw-finance-section') || '';
+    if (['overview', 'customers', 'renewals', 'collections', 'suppliers', 'accounting'].includes(requestedSection)) {
+      setSection(requestedSection as 'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'accounting');
+    }
+    setDeepLinkOrganizationId(sessionStorage.getItem('lw-finance-organization-id') || '');
+    setDeepLinkCustomerName(sessionStorage.getItem('lw-finance-customer-name') || '');
+    sessionStorage.removeItem('lw-finance-section');
+    sessionStorage.removeItem('lw-finance-organization-id');
+    sessionStorage.removeItem('lw-finance-customer-name');
   }, []);
 
   const receiptInvoices = useMemo(
@@ -1198,6 +1215,7 @@ export default function AdminFinance() {
         <FinanceRenewalBillingWorkspace
           services={data.services}
           invoices={data.invoices}
+          initialOrganizationId={deepLinkOrganizationId}
           onPrepareInvoice={(serviceId) => {
             const service = data.services.find((item) => item.id === serviceId);
             if (service) prepareRenewalInvoice(service);
@@ -1207,12 +1225,19 @@ export default function AdminFinance() {
             const service = data.services.find((item) => item.id === serviceId);
             if (service) openServiceManager(service);
           }}
+          onOpenCustomer={(organizationId) => {
+            if (typeof window !== 'undefined') sessionStorage.setItem('lw-client-organization-id', organizationId);
+            navigate('admin-clients');
+          }}
           onRefresh={() => void load()}
         />
       )}
 
       {section === 'collections' && (
-        <FinanceCollectionsWorkspace onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)} />
+        <FinanceCollectionsWorkspace
+          initialQuery={deepLinkCustomerName}
+          onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)}
+        />
       )}
 
       {section === 'accounting' && <FinanceAccountingWorkspace />}

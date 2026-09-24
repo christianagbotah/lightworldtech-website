@@ -130,12 +130,14 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export default function FinanceCollectionsWorkspace({
   onOpenInvoice,
+  initialQuery = '',
 }: {
   onOpenInvoice: (invoiceId: string) => void;
+  initialQuery?: string;
 }) {
   const [data, setData] = useState<CollectionsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(initialQuery);
   const [bucket, setBucket] = useState('all');
   const [state, setState] = useState('all');
   const [selected, setSelected] = useState<CollectionItem | null>(null);
@@ -166,6 +168,10 @@ export default function FinanceCollectionsWorkspace({
       setLoading(false);
     }
   }, [q, bucket, state]);
+
+  useEffect(() => {
+    if (initialQuery) setQ(initialQuery);
+  }, [initialQuery]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 250);
