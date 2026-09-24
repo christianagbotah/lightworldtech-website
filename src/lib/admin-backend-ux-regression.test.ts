@@ -473,7 +473,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(invoices).toContain('const subtotal = lines.reduce');
     expect(invoices).toContain('Discount cannot exceed invoice subtotal');
     expect(schema).toContain('model InvoiceAccessLink');
-    expect(schema).toContain('accessLinks      InvoiceAccessLink[]');
+    expect(schema).toContain('accessLinks          InvoiceAccessLink[]');
     expect(invoiceAccessMigration).toContain('CREATE TABLE "InvoiceAccessLink"');
     expect(invoiceAccessLink).toContain('randomBytes(32).toString');
     expect(invoiceAccessLink).toContain('hashInvoiceAccessToken');
