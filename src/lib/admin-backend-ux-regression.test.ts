@@ -216,6 +216,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     const recordDetails = source('src/app/api/admin/finance/records/[type]/[id]/route.ts');
     const financeDetails = source('src/components/admin/FinanceRecordDetailsDialog.tsx');
     const accounting = source('src/components/admin/FinanceAccountingWorkspace.tsx');
+    const collections = source('src/components/admin/FinanceCollectionsWorkspace.tsx');
+    const collectionsApi = source('src/app/api/admin/finance/collections/route.ts');
+    const collectionCompleteApi = source('src/app/api/admin/finance/collections/[id]/route.ts');
+    const collectionsMigration = source('prisma/migrations/20260924003000_finance_collections_workflow/migration.sql');
     const accountsApi = source('src/app/api/admin/finance/accounting/accounts/route.ts');
     const periodsApi = source('src/app/api/admin/finance/accounting/periods/route.ts');
     const periodActionApi = source('src/app/api/admin/finance/accounting/periods/[id]/route.ts');
@@ -287,6 +291,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(schema).toContain('renewalNoticeDays');
     expect(schema).toContain('model FinanceApprovalPolicy');
     expect(schema).toContain('model FinanceOutflowApproval');
+    expect(schema).toContain('model FinanceCollectionActivity');
     expect(permissions).toContain("key: 'finance.manage'");
     expect(permissions).toContain("key: 'finance.approve'");
     expect(permissions).toContain("pathname.startsWith('/api/admin/finance')");
@@ -294,7 +299,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('Customer accounts');
     expect(finance).toContain('Suppliers & expenses');
     expect(finance).toContain("['accounting', 'Accounting']");
+    expect(finance).toContain("['collections', 'Collections']");
     expect(finance).toContain('FinanceAccountingWorkspace');
+    expect(finance).toContain('FinanceCollectionsWorkspace');
     expect(finance).toContain('Manage service');
     expect(finance).toContain('Save service change');
     expect(finance).toContain('Service history');
@@ -313,6 +320,19 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('Creditors');
     expect(finance).toContain('exportFileName="lightworld-finance-debtors"');
     expect(finance).toContain('exportFileName="lightworld-finance-creditors"');
+    expect(collections).toContain('Receivables collection queue');
+    expect(collections).toContain('Promise to pay');
+    expect(collections).toContain('Send Hubtel payment reminder');
+    expect(collections).toContain('Mark complete');
+    expect(collections).toContain('exportFileName="lightworld-receivables-collection-queue"');
+    expect(collectionsApi).toContain("'promise_to_pay'");
+    expect(collectionsApi).toContain("'sms_reminder'");
+    expect(collectionsApi).toContain("'communications.manage'");
+    expect(collectionsApi).toContain("key: 'payment_due'");
+    expect(collectionsApi).toContain('12 * 60 * 60 * 1000');
+    expect(collectionsApi).toContain('queueSingleSms');
+    expect(collectionCompleteApi).toContain('completedAt: new Date()');
+    expect(collectionsMigration).toContain('CREATE TABLE "FinanceCollectionActivity"');
     expect(finance).toContain('exportFileName="lightworld-client-services"');
     expect(finance).toContain('exportFileName="lightworld-client-invoices"');
     expect(finance).toContain('exportFileName="lightworld-client-receipts"');

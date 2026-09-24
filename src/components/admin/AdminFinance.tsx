@@ -23,6 +23,7 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import FinanceRecordDetailsDialog, { type FinanceRecordSelection } from '@/components/admin/FinanceRecordDetailsDialog';
 import FinanceCustomerCredits from '@/components/admin/FinanceCustomerCredits';
 import FinanceAccountingWorkspace from '@/components/admin/FinanceAccountingWorkspace';
+import FinanceCollectionsWorkspace from '@/components/admin/FinanceCollectionsWorkspace';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -323,7 +324,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export default function AdminFinance() {
-  const [section, setSection] = useState<'overview' | 'customers' | 'suppliers' | 'accounting'>('overview');
+  const [section, setSection] = useState<'overview' | 'customers' | 'collections' | 'suppliers' | 'accounting'>('overview');
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -814,6 +815,7 @@ export default function AdminFinance() {
         {[
           ['overview', 'Overview'],
           ['customers', 'Customer accounts'],
+          ['collections', 'Collections'],
           ['suppliers', 'Suppliers & expenses'],
           ['accounting', 'Accounting'],
         ].map(([value, label]) => (
@@ -1175,6 +1177,10 @@ export default function AdminFinance() {
             </Card>
           </div>
         </div>
+      )}
+
+      {section === 'collections' && (
+        <FinanceCollectionsWorkspace onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)} />
       )}
 
       {section === 'accounting' && <FinanceAccountingWorkspace />}

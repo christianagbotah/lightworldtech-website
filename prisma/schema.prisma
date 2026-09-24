@@ -437,6 +437,7 @@ model ClientOrganization {
   paymentIntents     HubtelPaymentIntent[]
   creditNotes        FinanceCreditNote[]
   refunds            FinanceCustomerRefund[]
+  collectionActivities FinanceCollectionActivity[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -737,6 +738,7 @@ model ClientInvoice {
   allocations    ClientPaymentAllocation[]
   paymentIntents  HubtelPaymentIntent[]
   creditNotes     FinanceCreditNote[]
+  collectionActivities FinanceCollectionActivity[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -799,6 +801,28 @@ model ClientPaymentAllocation {
 
   @@unique([paymentId, invoiceId])
   @@index([invoiceId])
+}
+
+model FinanceCollectionActivity {
+  id             String             @id @default(cuid())
+  organizationId String
+  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoiceId      String
+  invoice        ClientInvoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  type           String
+  note           String             @default("")
+  promisedAmount Decimal?           @db.Decimal(18, 2)
+  promisedDate   DateTime?
+  nextFollowUpAt DateTime?
+  completedAt    DateTime?
+  smsMessageId   String             @default("")
+  createdBy      String             @default("Admin")
+  createdAt      DateTime           @default(now())
+
+  @@index([invoiceId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([nextFollowUpAt, completedAt])
+  @@index([type, createdAt])
 }
 
 model HubtelPaymentIntent {
