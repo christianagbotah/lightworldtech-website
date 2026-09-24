@@ -57,6 +57,36 @@ function monthKeys(from: Date, to: Date): string[] {
   return result;
 }
 
+function earnedInvoiceRevenue(invoice: {
+  subtotal: Prisma.Decimal;
+  discount: Prisma.Decimal;
+}): Prisma.Decimal {
+  return Prisma.Decimal.max(
+    new Prisma.Decimal(0),
+    invoice.subtotal.minus(invoice.discount),
+  ).toDecimalPlaces(2);
+}
+
+function supplierExpenseBase(bill: {
+  taxRecoverable: boolean;
+  taxableAmount: Prisma.Decimal;
+  vatAmount: Prisma.Decimal;
+  nhilAmount: Prisma.Decimal;
+  getfundAmount: Prisma.Decimal;
+  total: Prisma.Decimal;
+}): Prisma.Decimal {
+  if (!bill.taxRecoverable) return bill.total.toDecimalPlaces(2);
+  if (bill.taxableAmount.gt(0)) return bill.taxableAmount.toDecimalPlaces(2);
+
+  const recoverableTax = bill.vatAmount
+    .plus(bill.nhilAmount)
+    .plus(bill.getfundAmount);
+  return Prisma.Decimal.max(
+    new Prisma.Decimal(0),
+    bill.total.minus(recoverableTax),
+  ).toDecimalPlaces(2);
+}
+
 export async function GET(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
   if (!actor || !hasAdminPermission(actor.role, actor.permissions, 'finance.manage')) {
@@ -143,7 +173,7 @@ export async function GET(request: NextRequest) {
         status: 'posted',
         issueDate: { gte: from, lte: to },
       },
-      select: { currency: true, total: true, issueDate: true },
+      select: { currency: true, subtotal: true, total: true, issueDate: true },
       take: 5000,
     }),
     db.financeCustomerRefund.findMany({
@@ -238,7 +268,7 @@ export async function GET(request: NextRequest) {
         add(agedDebtors[ageBucket(invoice.dueDate, now)], invoice.currency, balance);
       }
       if (invoice.issueDate >= from && invoice.issueDate <= to) {
-        add(accrualRevenue, invoice.currency, invoice.total);
+        add(accrualRevenue, invoice.currency, earnedInvoiceRevenue(invoice));
       }
       return {
         id: invoice.id,
@@ -274,7 +304,7 @@ export async function GET(request: NextRequest) {
         add(agedCreditors[ageBucket(bill.dueDate, now)], bill.currency, balance);
       }
       if (bill.issueDate >= from && bill.issueDate <= to) {
-        add(accrualExpenses, bill.currency, bill.total);
+        add(accrualExpenses, bill.currency, supplierExpenseBase(bill));
       }
       return {
         id: bill.id,
@@ -303,18 +333,18 @@ export async function GET(request: NextRequest) {
   for (const invoice of invoices) {
     if (invoice.issueDate >= from && invoice.issueDate <= to) {
       const bucket = trendBucket(invoice.currency, invoice.issueDate);
-      if (bucket) bucket.revenue = bucket.revenue.plus(invoice.total);
+      if (bucket) bucket.revenue = bucket.revenue.plus(earnedInvoiceRevenue(invoice));
     }
   }
   for (const note of creditNotes) {
-    add(accrualRevenue, note.currency, note.total.negated());
+    add(accrualRevenue, note.currency, note.subtotal.negated());
     const bucket = trendBucket(note.currency, note.issueDate);
-    if (bucket) bucket.revenue = bucket.revenue.minus(note.total);
+    if (bucket) bucket.revenue = bucket.revenue.minus(note.subtotal);
   }
   for (const bill of bills) {
     if (bill.issueDate >= from && bill.issueDate <= to) {
       const bucket = trendBucket(bill.currency, bill.issueDate);
-      if (bucket) bucket.expenses = bucket.expenses.plus(bill.total);
+      if (bucket) bucket.expenses = bucket.expenses.plus(supplierExpenseBase(bill));
     }
   }
   for (const payment of vendorPayments) {

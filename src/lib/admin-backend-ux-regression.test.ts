@@ -438,6 +438,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain('promiseAmounts');
     expect(dashboard).toContain('trendPeriods');
     expect(dashboard).toContain('trends');
+    expect(dashboard).toContain('earnedInvoiceRevenue');
+    expect(dashboard).toContain('invoice.subtotal.minus(invoice.discount)');
+    expect(dashboard).toContain('supplierExpenseBase');
+    expect(dashboard).toContain('bill.taxRecoverable');
+    expect(dashboard).toContain('note.subtotal.negated()');
     expect(invoices).toContain('const subtotal = lines.reduce');
     expect(invoices).toContain('Discount cannot exceed invoice subtotal');
     expect(receipts).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes)');
