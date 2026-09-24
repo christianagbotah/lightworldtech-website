@@ -8,7 +8,10 @@ import {
   CalendarClock,
   CircleDollarSign,
   Copy,
+  ExternalLink,
   FileText,
+  Link2,
+  Mail,
   Landmark,
   Loader2,
   ReceiptText,
@@ -288,11 +291,15 @@ export default function FinanceRecordDetailsDialog({
   const [data, setData] = useState<DetailPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [invoiceLink, setInvoiceLink] = useState<any>(null);
+  const [deliveryBusy, setDeliveryBusy] = useState<'link' | 'open' | 'email' | ''>('');
 
   useEffect(() => {
     if (!selection) {
       setData(null);
       setError('');
+      setInvoiceLink(null);
+      setDeliveryBusy('');
       return;
     }
 
@@ -387,6 +394,50 @@ export default function FinanceRecordDetailsDialog({
     }
   };
 
+  const issueSecureInvoiceLink = async (mode: 'link' | 'open' = 'link') => {
+    if (!data?.invoice?.id) return;
+    setDeliveryBusy(mode);
+    try {
+      const response = await fetch('/api/admin/finance/invoices/' + encodeURIComponent(data.invoice.id) + '/access-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expiresInDays: 30 }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to create secure invoice link');
+      setInvoiceLink({ ...payload.data.link, url: payload.data.url });
+      if (mode === 'open') {
+        window.open(payload.data.url, '_blank', 'noopener,noreferrer');
+        toast.success('Secure invoice opened in a new tab');
+      } else {
+        await navigator.clipboard.writeText(payload.data.url);
+        toast.success('New secure invoice link copied. Any previous link is now revoked.');
+      }
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : 'Unable to create secure invoice link');
+    } finally {
+      setDeliveryBusy('');
+    }
+  };
+
+  const emailSecureInvoice = async () => {
+    if (!data?.invoice?.id) return;
+    setDeliveryBusy('email');
+    try {
+      const response = await fetch('/api/admin/finance/invoices/' + encodeURIComponent(data.invoice.id) + '/send', {
+        method: 'POST',
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || payload?.detail || 'Unable to email invoice');
+      setInvoiceLink({ ...payload.data.link, url: payload.data.url });
+      toast.success('Invoice emailed to ' + payload.data.recipient);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : 'Unable to email invoice');
+    } finally {
+      setDeliveryBusy('');
+    }
+  };
+
   return (
     <Dialog open={Boolean(selection)} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[94vh] w-[calc(100vw-1rem)] max-w-6xl overflow-hidden p-0">
@@ -457,6 +508,62 @@ export default function FinanceRecordDetailsDialog({
                   </Button>
                 )}
               </div>
+
+              {!['draft', 'void'].includes(data.invoice.derivedStatus) && (
+                <Card className="border-amber-200/70 bg-amber-50/35 dark:border-amber-900/40 dark:bg-amber-950/10">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Invoice document & delivery</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                      <DetailItem
+                        label="Secure link"
+                        value={
+                          invoiceLink
+                            ? 'Active until ' + date(invoiceLink.expiresAt)
+                            : data.invoice.accessLinks?.find((link: any) => link.status === 'active' && !link.revokedAt && new Date(link.expiresAt).getTime() > Date.now())
+                              ? 'Active until ' + date(data.invoice.accessLinks.find((link: any) => link.status === 'active' && !link.revokedAt && new Date(link.expiresAt).getTime() > Date.now()).expiresAt)
+                              : 'Not created'
+                        }
+                      />
+                      <DetailItem
+                        label="Last emailed"
+                        value={invoiceLink?.lastSentAt ? date(invoiceLink.lastSentAt, true) : data.invoice.accessLinks?.find((link: any) => link.lastSentAt)?.lastSentAt ? date(data.invoice.accessLinks.find((link: any) => link.lastSentAt).lastSentAt, true) : 'Not sent'}
+                      />
+                      <DetailItem
+                        label="Last recipient"
+                        value={invoiceLink?.sentTo || data.invoice.accessLinks?.find((link: any) => link.sentTo)?.sentTo || data.invoice.organization.primaryEmail || '—'}
+                      />
+                      <DetailItem
+                        label="Views"
+                        value={String(invoiceLink?.viewCount ?? data.invoice.accessLinks?.[0]?.viewCount ?? 0)}
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" onClick={() => void issueSecureInvoiceLink('open')} disabled={Boolean(deliveryBusy)}>
+                        {deliveryBusy === 'open' ? <Loader2 className="mr-2 size-4 animate-spin" /> : <ExternalLink className="mr-2 size-4" />}
+                        Open / print invoice
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => void issueSecureInvoiceLink('link')} disabled={Boolean(deliveryBusy)}>
+                        {deliveryBusy === 'link' ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Link2 className="mr-2 size-4" />}
+                        Create & copy secure link
+                      </Button>
+                      <Button type="button" onClick={() => void emailSecureInvoice()} disabled={Boolean(deliveryBusy) || !data.invoice.organization.primaryEmail}>
+                        {deliveryBusy === 'email' ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Mail className="mr-2 size-4" />}
+                        Email invoice
+                      </Button>
+                      {invoiceLink?.url && (
+                        <Button type="button" variant="ghost" onClick={() => window.open(invoiceLink.url, '_blank', 'noopener,noreferrer')}>
+                          <ExternalLink className="mr-2 size-4" /> Reopen current link
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-[11px] leading-5 text-muted-foreground">
+                      Secure links expire after 30 days. Creating or emailing a new link revokes the previous one. Only the token hash is stored in the database; the raw token is never persisted.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
               <PositionCards position={data.accountPosition} />
 

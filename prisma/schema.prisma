@@ -438,6 +438,7 @@ model ClientOrganization {
   creditNotes        FinanceCreditNote[]
   refunds            FinanceCustomerRefund[]
   collectionActivities FinanceCollectionActivity[]
+  accessLinks      InvoiceAccessLink[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -759,6 +760,29 @@ model ClientInvoice {
   @@index([projectId])
   @@index([dueDate, status])
   @@index([issueDate])
+}
+
+model InvoiceAccessLink {
+  id            String        @id @default(cuid())
+  invoiceId     String
+  invoice       ClientInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  tokenHash     String        @unique
+  status        String        @default("active")
+  expiresAt     DateTime
+  createdBy     String        @default("Admin")
+  sentTo        String        @default("")
+  sentCount     Int           @default(0)
+  lastSentAt    DateTime?
+  firstViewedAt DateTime?
+  lastViewedAt  DateTime?
+  viewCount     Int           @default(0)
+  revokedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([invoiceId, status, expiresAt])
+  @@index([status, expiresAt])
 }
 
 model ClientInvoiceLine {

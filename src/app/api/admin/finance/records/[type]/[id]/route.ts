@@ -245,6 +245,24 @@ export async function GET(
             createdAt: true,
           },
         },
+        accessLinks: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            status: true,
+            expiresAt: true,
+            createdBy: true,
+            sentTo: true,
+            sentCount: true,
+            lastSentAt: true,
+            firstViewedAt: true,
+            lastViewedAt: true,
+            viewCount: true,
+            revokedAt: true,
+            createdAt: true,
+          },
+        },
       },
     });
     if (!invoice) return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
