@@ -581,7 +581,7 @@ export default function FinanceAccountingWorkspace({
           ['journals', 'Journal entries'],
           ['accounts', 'Chart of accounts'],
           ['periods', 'Accounting periods'],
-        ] as Array<[View, string]>).map(([value, label]) => (
+        ] as Array<[FinanceAccountingView, string]>).map(([value, label]) => (
           <Button
             key={value}
             type="button"
