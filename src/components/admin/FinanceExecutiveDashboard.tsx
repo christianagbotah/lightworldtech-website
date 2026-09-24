@@ -22,6 +22,7 @@ import {
   YAxis,
 } from 'recharts';
 import { toast } from 'sonner';
+import FinanceExecutiveActionCenter from '@/components/admin/FinanceExecutiveActionCenter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -266,6 +267,8 @@ export default function FinanceExecutiveDashboard({
   onSuppliers,
   onCashbook,
   onStatements,
+  onApprovals,
+  onClose,
 }: {
   initialData: FinanceExecutiveDashboardData;
   onOpenInvoice: (invoiceId: string) => void;
@@ -278,6 +281,8 @@ export default function FinanceExecutiveDashboard({
   onSuppliers: () => void;
   onCashbook: () => void;
   onStatements: () => void;
+  onApprovals: () => void;
+  onClose: () => void;
 }) {
   const [dashboard, setDashboard] = useState(initialData);
   const [preset, setPreset] = useState<Preset>('ytd');
@@ -472,6 +477,14 @@ export default function FinanceExecutiveDashboard({
           onClick={onCollections}
         />
       </div>
+
+      <FinanceExecutiveActionCenter
+        collections={dashboard.collections}
+        onCollections={onCollections}
+        onRenewals={onRenewals}
+        onApprovals={onApprovals}
+        onClose={onClose}
+      />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
         <Card className="min-w-0 border-border/60">

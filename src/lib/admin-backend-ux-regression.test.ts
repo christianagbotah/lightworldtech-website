@@ -212,6 +212,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     const permissions = source('src/lib/admin-permissions.ts');
     const finance = source('src/components/admin/AdminFinance.tsx');
     const executiveFinance = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+    const executiveActions = source('src/components/admin/FinanceExecutiveActionCenter.tsx');
+    const executiveActionsApi = source('src/app/api/admin/finance/executive-actions/route.ts');
     const clients = source('src/components/admin/AdminClients.tsx');
     const clientCommercial = source('src/components/admin/ClientCommercialAccount.tsx');
     const clientCommercialApi = source('src/app/api/admin/clients/[id]/commercial/route.ts');
@@ -328,6 +330,19 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain("['renewals', 'Renewals']");
     expect(finance).toContain('FinanceAccountingWorkspace');
     expect(finance).toContain('FinanceExecutiveDashboard');
+    expect(executiveFinance).toContain('FinanceExecutiveActionCenter');
+    expect(executiveActions).toContain('Executive action centre');
+    expect(executiveActions).toContain('Paid cycles awaiting completion');
+    expect(executiveActions).toContain('Outflows awaiting approval');
+    expect(executiveActions).toContain('Prior-month close');
+    expect(executiveActions).toContain('/api/admin/finance/executive-actions');
+    expect(executiveActionsApi).toContain("'finance.manage'");
+    expect(executiveActionsApi).toContain("status: 'pending'");
+    expect(executiveActionsApi).toContain('renewalCompletedAt: null');
+    expect(executiveActionsApi).toContain('invoiceBalance');
+    expect(executiveActionsApi).toContain('assessFinanceClose');
+    expect(finance).toContain("setAccountingView('approvals')");
+    expect(finance).toContain("setAccountingView('close')");
     expect(finance).toContain('FinanceRenewalBillingWorkspace');
     expect(finance).toContain('FinanceCollectionsWorkspace');
     expect(finance).toContain('Manage service');

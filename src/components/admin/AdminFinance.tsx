@@ -837,6 +837,14 @@ export default function AdminFinance() {
             setAccountingView('statements');
             setSection('accounting');
           }}
+          onApprovals={() => {
+            setAccountingView('approvals');
+            setSection('accounting');
+          }}
+          onClose={() => {
+            setAccountingView('close');
+            setSection('accounting');
+          }}
         />
       )}
 
