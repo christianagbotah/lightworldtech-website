@@ -429,10 +429,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain('netProfit');
     expect(dashboard).toContain('agedDebtors');
     expect(dashboard).toContain('agedCreditors');
-    expect(dashboard).toContain('cashLedgerLines');
+    expect(dashboard).toContain('cashBalances');
+    expect(dashboard).toContain('SUM(line."debit" - line."credit")');
     expect(dashboard).toContain('cashPosition');
     expect(dashboard).toContain('renewalExposure');
-    expect(dashboard).toContain('collectionActivities');
+    expect(dashboard).toContain('latestPromises');
+    expect(dashboard).toContain('DISTINCT ON (activity."invoiceId")');
+    expect(dashboard).toContain('dueFollowUps');
     expect(dashboard).toContain('followUpDueInvoices');
     expect(dashboard).toContain('brokenPromises');
     expect(dashboard).toContain('promiseAmounts');
@@ -443,6 +446,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain('supplierExpenseBase');
     expect(dashboard).toContain('bill.taxRecoverable');
     expect(dashboard).toContain('note.subtotal.negated()');
+    expect(dashboard).not.toContain('take: 20000');
+    expect(dashboard).not.toContain('take: 10000');
     expect(invoices).toContain('const subtotal = lines.reduce');
     expect(invoices).toContain('Discount cannot exceed invoice subtotal');
     expect(receipts).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes)');

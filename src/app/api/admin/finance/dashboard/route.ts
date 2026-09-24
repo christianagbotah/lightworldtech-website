@@ -115,8 +115,9 @@ export async function GET(request: NextRequest) {
     creditNotes,
     refunds,
     vendors,
-    cashLedgerLines,
-    collectionActivities,
+    cashBalances,
+    latestPromises,
+    dueFollowUps,
   ] = await Promise.all([
     db.clientServiceAccount.findMany({
       where: {
@@ -182,32 +183,39 @@ export async function GET(request: NextRequest) {
       take: 5000,
     }),
     db.financeVendor.findMany({ where: { active: true }, select: { id: true, name: true } }),
-    db.financeJournalLine.findMany({
-      where: {
-        account: { systemKey: { in: ['cash', 'bank', 'mobile_money'] } },
-        entry: {
-          status: { in: ['posted', 'reversed'] },
-          entryDate: { lte: to },
-        },
-      },
-      select: {
-        debit: true,
-        credit: true,
-        account: { select: { systemKey: true } },
-        entry: { select: { currency: true } },
-      },
-      take: 20000,
-    }),
-    db.financeCollectionActivity.findMany({
-      where: {
-        OR: [
-          { type: 'promise_to_pay' },
-          { nextFollowUpAt: { not: null }, completedAt: null },
-        ],
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 10000,
-    }),
+    db.$queryRaw<Array<{ currency: string; systemKey: string; balance: string }>>(Prisma.sql`
+      SELECT
+        entry."currency" AS "currency",
+        account."systemKey" AS "systemKey",
+        COALESCE(SUM(line."debit" - line."credit"), 0)::text AS "balance"
+      FROM "FinanceJournalLine" line
+      INNER JOIN "FinanceJournalEntry" entry ON entry."id" = line."entryId"
+      INNER JOIN "FinanceAccount" account ON account."id" = line."accountId"
+      WHERE account."systemKey" IN ('cash', 'bank', 'mobile_money')
+        AND entry."status" IN ('posted', 'reversed')
+        AND entry."entryDate" <= ${to}
+      GROUP BY entry."currency", account."systemKey"
+    `),
+    db.$queryRaw<Array<{
+      invoiceId: string;
+      promisedAmount: Prisma.Decimal | null;
+      promisedDate: Date | null;
+    }>>(Prisma.sql`
+      SELECT DISTINCT ON (activity."invoiceId")
+        activity."invoiceId" AS "invoiceId",
+        activity."promisedAmount" AS "promisedAmount",
+        activity."promisedDate" AS "promisedDate"
+      FROM "FinanceCollectionActivity" activity
+      WHERE activity."type" = 'promise_to_pay'
+      ORDER BY activity."invoiceId", activity."createdAt" DESC
+    `),
+    db.$queryRaw<Array<{ invoiceId: string }>>(Prisma.sql`
+      SELECT DISTINCT activity."invoiceId" AS "invoiceId"
+      FROM "FinanceCollectionActivity" activity
+      WHERE activity."nextFollowUpAt" IS NOT NULL
+        AND activity."completedAt" IS NULL
+        AND activity."nextFollowUpAt" <= ${now}
+    `),
   ]);
 
   const receivables: Totals = {};
@@ -368,8 +376,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  for (const line of cashLedgerLines) {
-    const currency = line.entry.currency;
+  for (const row of cashBalances) {
+    const currency = row.currency;
     if (!cashPositionRaw[currency]) {
       cashPositionRaw[currency] = {
         cash: new Prisma.Decimal(0),
@@ -377,11 +385,10 @@ export async function GET(request: NextRequest) {
         mobileMoney: new Prisma.Decimal(0),
       };
     }
-    const movement = line.debit.minus(line.credit);
-    const systemKey = line.account.systemKey;
-    if (systemKey === 'cash') cashPositionRaw[currency].cash = cashPositionRaw[currency].cash.plus(movement);
-    if (systemKey === 'bank') cashPositionRaw[currency].bank = cashPositionRaw[currency].bank.plus(movement);
-    if (systemKey === 'mobile_money') cashPositionRaw[currency].mobileMoney = cashPositionRaw[currency].mobileMoney.plus(movement);
+    const balance = new Prisma.Decimal(row.balance);
+    if (row.systemKey === 'cash') cashPositionRaw[currency].cash = balance;
+    if (row.systemKey === 'bank') cashPositionRaw[currency].bank = balance;
+    if (row.systemKey === 'mobile_money') cashPositionRaw[currency].mobileMoney = balance;
   }
 
   for (const service of services) {
@@ -401,26 +408,16 @@ export async function GET(request: NextRequest) {
   }
 
   const debtorById = new Map(allDebtors.map((item) => [item.id, item]));
-  const latestPromiseByInvoice = new Map<string, typeof collectionActivities[number]>();
-  const followUpDueInvoices = new Set<string>();
-  for (const activity of collectionActivities) {
-    if (!debtorById.has(activity.invoiceId)) continue;
-    if (
-      activity.nextFollowUpAt &&
-      !activity.completedAt &&
-      activity.nextFollowUpAt.getTime() <= now.getTime()
-    ) {
-      followUpDueInvoices.add(activity.invoiceId);
-    }
-    if (activity.type === 'promise_to_pay' && !latestPromiseByInvoice.has(activity.invoiceId)) {
-      latestPromiseByInvoice.set(activity.invoiceId, activity);
-    }
-  }
+  const followUpDueInvoices = new Set(
+    dueFollowUps
+      .filter((activity) => debtorById.has(activity.invoiceId))
+      .map((activity) => activity.invoiceId),
+  );
 
   let brokenPromises = 0;
   let activePromises = 0;
-  for (const [invoiceId, activity] of latestPromiseByInvoice.entries()) {
-    const debtor = debtorById.get(invoiceId);
+  for (const activity of latestPromises) {
+    const debtor = debtorById.get(activity.invoiceId);
     if (!debtor || !activity.promisedDate) continue;
     if (activity.promisedDate.getTime() < now.getTime()) {
       brokenPromises += 1;
