@@ -525,6 +525,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(accountingMigration).toContain("'service_revenue'");
     expect(portalApi).toContain('accountSummary');
     expect(portalApi).toContain('organization.invoices.map');
+    expect(portalApi).toContain('payableInvoiceByService');
+    expect(portalApi).toContain('payableInvoice: payableInvoiceByService.get(service.id) || null');
     expect(creditNotesApi).toContain('postCreditNoteJournal');
     expect(creditNotesApi).toContain('remainingRevenue');
     expect(creditNotesApi).toContain('remainingTax');
@@ -622,6 +624,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(smsAdmin).toContain('Reusable SMS templates');
     expect(smsAdmin).toContain('Scheduled campaigns');
     expect(portal).toContain('Pay with Hubtel');
+    expect(portal).toContain('Pay service with Hubtel');
+    expect(portal).toContain('No outstanding invoice for this service.');
     expect(portal).toContain('/api/client/payments/hubtel/status?reference=');
     expect(layout).toContain("label: 'SMS & OTP'");
   });

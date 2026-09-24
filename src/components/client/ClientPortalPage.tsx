@@ -135,6 +135,14 @@ type AccountService = {
   autoRenew: boolean;
   renewalNoticeDays: number;
   project: { id: string; name: string } | null;
+  payableInvoice: {
+    id: string;
+    invoiceNumber: string;
+    currency: string;
+    balance: string;
+    dueDate: string;
+    derivedStatus: string;
+  } | null;
   changes: Array<{
     id: string;
     changeType: string;
@@ -1080,6 +1088,39 @@ export default function ClientPortalPage() {
                       <span>{service.expiryDate ? 'Expires ' + new Date(service.expiryDate).toLocaleDateString() : 'No fixed expiry'}</span>
                       {service.autoRenew && <span>Auto-renew flag enabled</span>}
                     </div>
+                    {service.payableInvoice ? (
+                      <div className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/70 p-3 dark:border-amber-900/40 dark:bg-amber-950/15">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-700 dark:text-amber-300">Payment due</p>
+                            <p className="mt-1 text-sm font-semibold">
+                              {accountMoney(service.payableInvoice.balance, service.payableInvoice.currency)}
+                            </p>
+                            <p className="mt-1 text-[10px] text-slate-500 dark:text-white/35">
+                              {service.payableInvoice.invoiceNumber} · due {new Date(service.payableInvoice.dueDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          {service.payableInvoice.currency === 'GHS' && data.account.onlinePaymentsAvailable ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="w-full bg-amber-600 text-white hover:bg-amber-700 sm:w-auto"
+                              disabled={paymentStartingId === service.payableInvoice.id}
+                              onClick={() => void payInvoice(service.payableInvoice!.id)}
+                            >
+                              {paymentStartingId === service.payableInvoice.id ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <WalletCards className="mr-2 size-3.5" />}
+                              Pay service with Hubtel
+                            </Button>
+                          ) : service.payableInvoice.currency === 'GHS' ? (
+                            <span className="text-[10px] text-slate-500 dark:text-white/35">Online payment setup pending</span>
+                          ) : (
+                            <span className="text-[10px] text-slate-500 dark:text-white/35">Online checkout currently supports GHS invoices</span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-[10px] text-slate-400">No outstanding invoice for this service.</p>
+                    )}
                     {service.changes.length > 1 && (
                       <details className="mt-3 rounded-xl border border-slate-200/70 p-3 text-xs dark:border-white/[0.07]">
                         <summary className="cursor-pointer font-semibold">Service history ({service.changes.length})</summary>

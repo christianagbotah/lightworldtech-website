@@ -205,6 +205,31 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    const payableInvoiceByService = new Map<string, {
+      id: string;
+      invoiceNumber: string;
+      currency: string;
+      balance: string;
+      dueDate: Date;
+      derivedStatus: string;
+    }>();
+
+    for (const invoice of invoices) {
+      if (!invoice.serviceId || Number(invoice.balance) <= 0) continue;
+      const candidate = {
+        id: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        currency: invoice.currency,
+        balance: invoice.balance,
+        dueDate: invoice.dueDate,
+        derivedStatus: invoice.derivedStatus,
+      };
+      const existing = payableInvoiceByService.get(invoice.serviceId);
+      if (!existing || candidate.dueDate.getTime() < existing.dueDate.getTime()) {
+        payableInvoiceByService.set(invoice.serviceId, candidate);
+      }
+    }
+
     const payments = organization.payments.map((payment) => {
       const unallocated = paymentUnallocated(payment.amount, payment.allocations);
       ensureCurrency(payment.currency).credit =
@@ -228,6 +253,7 @@ export async function GET(request: NextRequest) {
     const services = organization.services.map((service) => ({
       ...service,
       recurringAmount: service.recurringAmount.toFixed(2),
+      payableInvoice: payableInvoiceByService.get(service.id) || null,
       changes: service.changes.map((change) => ({
         ...change,
         previousAmount: change.previousAmount?.toFixed(2) ?? null,
