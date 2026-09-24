@@ -7,10 +7,15 @@ import { hasAdminPermission } from '@/lib/admin-permissions';
 import { invoiceBalance, invoiceStatusFromBalance } from '@/lib/finance';
 import { hubtelConfiguration, normalizePhone, renderSmsTemplate } from '@/lib/hubtel';
 import { queueSingleSms } from '@/lib/sms';
+import {
+  getMailTransportStatus,
+  sanitizeMailError,
+  sendTransactionalMail,
+} from '@/lib/mail';
 
 const activitySchema = z.object({
   invoiceId: z.string().min(1),
-  type: z.enum(['note', 'call', 'email', 'follow_up', 'promise_to_pay', 'sms_reminder']),
+  type: z.enum(['note', 'call', 'email', 'follow_up', 'promise_to_pay', 'email_reminder', 'sms_reminder']),
   note: z.string().trim().max(4000).optional().default(''),
   promisedAmount: z.coerce.number().positive().max(999999999999).nullable().optional(),
   promisedDate: z.coerce.date().nullable().optional(),
@@ -34,6 +39,15 @@ function siteOrigin(): string {
 
 function sameCalendarDayOrLater(value: Date): boolean {
   return value.toISOString().slice(0, 10) >= new Date().toISOString().slice(0, 10);
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 export async function GET(request: NextRequest) {
@@ -206,6 +220,8 @@ export async function GET(request: NextRequest) {
         brokenPromises,
       },
       smsConfigured: hubtelConfiguration().sms,
+      emailConfigured: getMailTransportStatus().configured,
+      canSendCommunications: hasAdminPermission(actor.role, actor.permissions, 'communications.manage'),
     },
   });
 }
@@ -229,6 +245,7 @@ export async function POST(request: NextRequest) {
           id: true,
           name: true,
           primaryContactName: true,
+          primaryEmail: true,
           primaryPhone: true,
         },
       },
@@ -265,6 +282,170 @@ export async function POST(request: NextRequest) {
 
   let smsMessageId = '';
   let note = parsed.data.note;
+
+  if (parsed.data.type === 'email_reminder') {
+    if (!hasAdminPermission(actor.role, actor.permissions, 'communications.manage')) {
+      return NextResponse.json({ success: false, error: 'Communications permission is required to send an email reminder' }, { status: 403 });
+    }
+
+    const recipient = invoice.organization.primaryEmail.trim().toLowerCase();
+    if (!recipient) {
+      return NextResponse.json({ success: false, error: 'Client does not have a primary email address' }, { status: 409 });
+    }
+
+    const mailStatus = getMailTransportStatus();
+    if (!mailStatus.configured) {
+      return NextResponse.json({ success: false, error: 'Outbound email transport is not configured' }, { status: 503 });
+    }
+
+    const duplicateCutoff = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    const claim = await db.$transaction(async (tx) => {
+      await tx.$queryRawUnsafe(
+        'SELECT pg_advisory_xact_lock(hashtext($1))',
+        'lightworld-collection-email:' + invoice.id,
+      );
+
+      const duplicate = await tx.financeCollectionActivity.findFirst({
+        where: {
+          invoiceId: invoice.id,
+          type: { in: ['email_reminder', 'email_reminder_sending'] },
+          createdAt: { gte: duplicateCutoff },
+        },
+        select: { id: true },
+      });
+      if (duplicate) return null;
+
+      return tx.financeCollectionActivity.create({
+        data: {
+          organizationId: invoice.organizationId,
+          invoiceId: invoice.id,
+          type: 'email_reminder_sending',
+          note: parsed.data.note,
+          nextFollowUpAt: parsed.data.nextFollowUpAt || null,
+          createdBy: actor.name || actor.email,
+        },
+      });
+    });
+
+    if (!claim) {
+      return NextResponse.json({
+        success: false,
+        error: 'A payment reminder email was already sent or is being sent for this invoice within the last 12 hours',
+      }, { status: 409 });
+    }
+
+    const amount = new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: invoice.currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(balance));
+    const dueDate = new Intl.DateTimeFormat('en-GH', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Africa/Accra',
+    }).format(invoice.dueDate);
+    const customerName = invoice.organization.primaryContactName || invoice.organization.name;
+    const paymentLink = siteOrigin() + '/client#account';
+    const subject = 'Payment reminder · ' + invoice.invoiceNumber;
+    const text =
+      'Hello ' + customerName + ',\n\n' +
+      'This is a friendly payment reminder for invoice ' + invoice.invoiceNumber + '.\n' +
+      'Outstanding balance: ' + amount + '\n' +
+      'Due date: ' + dueDate + '\n\n' +
+      'You can review your account and payment options in the Lightworld Client Portal:\n' +
+      paymentLink + '\n\n' +
+      'If payment has already been made, please disregard this reminder or reply with the payment reference.\n\n' +
+      'Regards,\nLightworld Technologies Ltd\nhttps://lightworldtech.com';
+    const html =
+      '<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#0f172a;line-height:1.65">' +
+      '<div style="padding:32px;border:1px solid #e2e8f0;border-radius:24px">' +
+      '<p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#b7791f;font-weight:700;margin:0 0 18px">Lightworld Technologies</p>' +
+      '<h1 style="font-size:24px;margin:0 0 18px">Payment reminder</h1>' +
+      '<p>Hello ' + escapeHtml(customerName) + ',</p>' +
+      '<p>This is a friendly reminder for invoice <strong>' + escapeHtml(invoice.invoiceNumber) + '</strong>.</p>' +
+      '<div style="margin:20px 0;padding:16px;border-radius:14px;background:#f8fafc">' +
+      '<p style="margin:0 0 6px"><strong>Outstanding:</strong> ' + escapeHtml(amount) + '</p>' +
+      '<p style="margin:0"><strong>Due date:</strong> ' + escapeHtml(dueDate) + '</p>' +
+      '</div>' +
+      '<p><a href="' + escapeHtml(paymentLink) + '" style="display:inline-block;padding:11px 16px;border-radius:10px;background:#b7791f;color:#fff;text-decoration:none;font-weight:700">Open client account</a></p>' +
+      '<p style="font-size:13px;color:#64748b">If payment has already been made, please disregard this reminder or reply with the payment reference.</p>' +
+      '<p style="margin-top:24px">Regards,<br><strong>Lightworld Technologies Ltd</strong></p>' +
+      '</div></div>';
+
+    try {
+      const result = await sendTransactionalMail({
+        to: recipient,
+        subject,
+        text,
+        html,
+      });
+
+      const activity = await db.financeCollectionActivity.update({
+        where: { id: claim.id },
+        data: {
+          type: 'email_reminder',
+          note: parsed.data.note || 'Payment reminder emailed to ' + recipient + '.',
+        },
+      });
+
+      await recordAdminAudit({
+        admin: actor,
+        action: 'admin.finance_collection_email_reminder_sent',
+        entity: 'FinanceCollectionActivity',
+        entityId: activity.id,
+        details: {
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          organizationId: invoice.organizationId,
+          recipient,
+          transport: result.transport,
+          nextFollowUpAt: activity.nextFollowUpAt?.toISOString() || null,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...activity,
+          promisedAmount: null,
+        },
+      }, { status: 201 });
+    } catch (error) {
+      const safeError = sanitizeMailError(error);
+      await db.financeCollectionActivity.update({
+        where: { id: claim.id },
+        data: {
+          type: 'email_reminder_failed',
+          note: parsed.data.note
+            ? parsed.data.note + ' · Delivery failed: ' + safeError
+            : 'Payment reminder email failed: ' + safeError,
+        },
+      }).catch(() => null);
+
+      await recordAdminAudit({
+        admin: actor,
+        action: 'admin.finance_collection_email_reminder_failed',
+        entity: 'FinanceCollectionActivity',
+        entityId: claim.id,
+        details: {
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          organizationId: invoice.organizationId,
+          recipient,
+          error: safeError,
+        },
+      });
+
+      return NextResponse.json({
+        success: false,
+        error: 'Payment reminder email could not be delivered',
+        details: safeError,
+      }, { status: 503, headers: { 'Retry-After': '30' } });
+    }
+  }
+
   if (parsed.data.type === 'sms_reminder') {
     if (!hasAdminPermission(actor.role, actor.permissions, 'communications.manage')) {
       return NextResponse.json({ success: false, error: 'Communications permission is required to send an SMS reminder' }, { status: 403 });

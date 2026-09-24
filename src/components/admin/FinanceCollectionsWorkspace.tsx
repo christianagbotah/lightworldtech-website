@@ -94,6 +94,8 @@ type CollectionsData = {
     brokenPromises: number;
   };
   smsConfigured: boolean;
+  emailConfigured: boolean;
+  canSendCommunications: boolean;
 };
 
 function money(value: string | number, currency: string): string {
@@ -130,9 +132,11 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export default function FinanceCollectionsWorkspace({
   onOpenInvoice,
+  onOpenCustomer,
   initialQuery = '',
 }: {
   onOpenInvoice: (invoiceId: string) => void;
+  onOpenCustomer: (organizationId: string) => void;
   initialQuery?: string;
 }) {
   const [data, setData] = useState<CollectionsData | null>(null);
@@ -211,7 +215,13 @@ export default function FinanceCollectionsWorkspace({
           nextFollowUpAt: form.nextFollowUpAt || null,
         }),
       });
-      toast.success(form.type === 'sms_reminder' ? 'Payment reminder sent and logged' : 'Collection activity logged');
+      toast.success(
+        form.type === 'sms_reminder'
+          ? 'SMS payment reminder sent and logged'
+          : form.type === 'email_reminder'
+            ? 'Email payment reminder sent and logged'
+            : 'Collection activity logged',
+      );
       setActivityOpen(false);
       await load();
     } catch (error) {
@@ -309,9 +319,11 @@ export default function FinanceCollectionsWorkspace({
                 {data?.items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <button type="button" onClick={() => onOpenInvoice(item.id)} className="text-left">
-                        <p className="font-medium hover:underline">{item.customer}</p>
-                        <p className="font-mono text-[11px] text-muted-foreground">{item.invoiceNumber}</p>
+                      <button type="button" onClick={() => onOpenCustomer(item.organizationId)} className="text-left font-medium hover:underline">
+                        {item.customer}
+                      </button>
+                      <button type="button" onClick={() => onOpenInvoice(item.id)} className="block font-mono text-[11px] text-muted-foreground hover:underline">
+                        {item.invoiceNumber}
                       </button>
                       <p className="mt-1 text-[10px] text-muted-foreground">{item.contactName || item.email || item.phone || 'No contact details'}</p>
                     </TableCell>
@@ -390,7 +402,8 @@ export default function FinanceCollectionsWorkspace({
               <Label>Action</Label>
               <select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
                 <option value="call">Phone call</option>
-                <option value="email">Email contact</option>
+                <option value="email">Log email contact (no send)</option>
+                <option value="email_reminder">Send payment reminder email</option>
                 <option value="follow_up">Follow-up note</option>
                 <option value="promise_to_pay">Promise to pay</option>
                 <option value="note">Internal note</option>
@@ -408,25 +421,49 @@ export default function FinanceCollectionsWorkspace({
               <Input type="date" min={new Date().toISOString().slice(0, 10)} value={form.nextFollowUpAt} onChange={(event) => setForm({ ...form, nextFollowUpAt: event.target.value })} />
             </div>
             <div>
-              <Label>{form.type === 'sms_reminder' ? 'Internal note (optional)' : 'Notes'}</Label>
+              <Label>{['sms_reminder', 'email_reminder'].includes(form.type) ? 'Internal note (optional)' : 'Notes'}</Label>
               <Textarea value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} rows={4} placeholder="Record what was discussed, agreed or needs to happen next." />
             </div>
+            {form.type === 'email_reminder' && (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs leading-5 text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-200">
+                <div className="flex gap-2">
+                  <Send className="mt-0.5 size-4 shrink-0" />
+                  <span>
+                    This sends a payment reminder immediately through the configured Lightworld email transport to the client&apos;s primary email. It includes the invoice, outstanding balance, due date and Client Portal link. Duplicate reminders are blocked for 12 hours.
+                    {!data?.canSendCommunications && ' Your account does not have Communications permission.'}
+                    {data?.canSendCommunications && !data?.emailConfigured && ' Outbound email is currently not configured.'}
+                  </span>
+                </div>
+              </div>
+            )}
             {form.type === 'sms_reminder' && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
                 <div className="flex gap-2">
                   <Send className="mt-0.5 size-4 shrink-0" />
                   <span>
                     This sends the approved payment-due template immediately to the client&apos;s primary phone through Hubtel and logs the reminder. Duplicate reminders are blocked for 12 hours.
-                    {!data?.smsConfigured && ' Hubtel SMS is currently not configured.'}
+                    {!data?.canSendCommunications && ' Your account does not have Communications permission.'}
+                    {data?.canSendCommunications && !data?.smsConfigured && ' Hubtel SMS is currently not configured.'}
                   </span>
                 </div>
               </div>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setActivityOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving || (form.type === 'sms_reminder' && !data?.smsConfigured)}>
+              <Button
+                type="submit"
+                disabled={
+                  saving ||
+                  (form.type === 'sms_reminder' && (!data?.smsConfigured || !data?.canSendCommunications)) ||
+                  (form.type === 'email_reminder' && (!data?.emailConfigured || !data?.canSendCommunications))
+                }
+              >
                 {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
-                {form.type === 'sms_reminder' ? 'Send reminder & log' : 'Save activity'}
+                {form.type === 'sms_reminder'
+                  ? 'Send SMS & log'
+                  : form.type === 'email_reminder'
+                    ? 'Send email & log'
+                    : 'Save activity'}
               </Button>
             </DialogFooter>
           </form>

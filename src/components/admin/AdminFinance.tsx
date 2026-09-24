@@ -1237,6 +1237,10 @@ export default function AdminFinance() {
         <FinanceCollectionsWorkspace
           initialQuery={deepLinkCustomerName}
           onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)}
+          onOpenCustomer={(organizationId) => {
+            if (typeof window !== 'undefined') sessionStorage.setItem('lw-client-organization-id', organizationId);
+            navigate('admin-clients');
+          }}
         />
       )}
 
