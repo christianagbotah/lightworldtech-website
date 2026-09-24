@@ -85,6 +85,8 @@ describe('admin backend and responsive UX regression coverage', () => {
   test('keeps customer email replies inside the Lightworld admin portal', () => {
     const schema = source('prisma/schema.prisma');
     const replies = source('src/app/api/admin/messages/[id]/replies/route.ts');
+    const retryReply = source('src/app/api/admin/messages/[id]/replies/[replyId]/retry/route.ts');
+    const replyMail = source('src/lib/contact-reply-mail.ts');
     const messages = source('src/components/admin/AdminMessages.tsx');
     const crm = source('src/components/admin/AdminCRM.tsx');
     const proposals = source('src/components/admin/AdminProposals.tsx');
@@ -101,7 +103,15 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(replies).toContain('status: 503');
     expect(replies).toContain("'Retry-After': '30'");
     expect(replies).toContain('details: safeError');
+    expect(replies).toContain('buildContactReplyMail');
+    expect(retryReply).toContain("status: 'failed'");
+    expect(retryReply).toContain("data: { status: 'sending', error: '' }");
+    expect(retryReply).toContain("'admin.message_reply_retried'");
+    expect(retryReply).toContain("'admin.message_reply_retry_failed'");
+    expect(retryReply).toContain('sendTransactionalMail');
+    expect(replyMail).toContain('buildContactReplyMail');
     expect(messages).toContain('readMessageReplyApiPayload');
+    expect(messages).toContain('Retry delivery');
     expect(messages).toContain('response.text()');
     expect(messages).toContain('Reply internally');
     expect(messages).toContain('Internal correspondence history');

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Trash2, Mail, MailOpen, Eye, Phone, Copy, Check, GitBranch, Download, Loader2, X, Send, Reply } from 'lucide-react';
+import { Trash2, Mail, MailOpen, Eye, Phone, Copy, Check, GitBranch, Download, Loader2, X, Send, Reply, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -138,6 +138,7 @@ export default function AdminMessages() {
   const [replyHistory, setReplyHistory] = useState<ContactReply[]>([]);
   const [replyHistoryLoading, setReplyHistoryLoading] = useState(false);
   const [replySending, setReplySending] = useState(false);
+  const [retryingReplyId, setRetryingReplyId] = useState('');
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -257,6 +258,33 @@ export default function AdminMessages() {
       if (replyingTo) await loadReplies(replyingTo.id);
     } finally {
       setReplySending(false);
+    }
+  };
+
+  const retryFailedReply = async (reply: ContactReply) => {
+    if (!viewing || reply.status !== 'failed' || retryingReplyId) return;
+    setRetryingReplyId(reply.id);
+    try {
+      const response = await fetch(
+        '/api/admin/messages/' +
+          encodeURIComponent(viewing.id) +
+          '/replies/' +
+          encodeURIComponent(reply.id) +
+          '/retry',
+        { method: 'POST' },
+      );
+      const payload = await readMessageReplyApiPayload<ContactReply>(response);
+      if (!response.ok) throw new Error(payload?.details || payload?.error || 'Reply could not be retried');
+
+      toast.success('Reply delivered', {
+        description: 'The saved failed reply was sent successfully.',
+      });
+      await Promise.all([loadReplies(viewing.id), fetchMessages()]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Reply could not be retried');
+      await loadReplies(viewing.id);
+    } finally {
+      setRetryingReplyId('');
     }
   };
 
@@ -561,10 +589,24 @@ export default function AdminMessages() {
                         </div>
                         <p className="mt-3 text-xs font-semibold">{reply.subject}</p>
                         <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">{reply.body}</p>
-                        {reply.status === 'failed' && reply.error && (
-                          <p className="mt-3 rounded-lg bg-rose-50 p-2 text-xs text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
-                            Delivery failed. The attempt remains in the audit history.
-                          </p>
+                        {reply.status === 'failed' && (
+                          <div className="mt-3 rounded-lg bg-rose-50 p-3 text-xs text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
+                            <p className="font-semibold">Delivery failed. The attempt remains in the audit history.</p>
+                            {reply.error && <p className="mt-1 break-words opacity-80">{reply.error}</p>}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="mt-3 h-8 bg-background/80"
+                              disabled={Boolean(retryingReplyId)}
+                              onClick={() => void retryFailedReply(reply)}
+                            >
+                              {retryingReplyId === reply.id
+                                ? <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                                : <RefreshCw className="mr-1.5 size-3.5" />}
+                              Retry delivery
+                            </Button>
+                          </div>
                         )}
                       </div>
                     ))}
