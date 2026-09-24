@@ -648,7 +648,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(monthCloseApi).toContain('Only a super admin can reopen a closed month');
     expect(closeWorkspace).toContain('Month-end close control centre');
     expect(closeWorkspace).toContain('Close month');
-    expect(statement).toContain('Client Account Statement');
+    expect(customerStatement).toContain('Client Account Statement');
     expect(statement).toContain('Running balance');
     expect(statement).toContain("'Credit Note'");
     expect(statement).toContain("'Refund'");
