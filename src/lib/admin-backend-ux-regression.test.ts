@@ -649,9 +649,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(closeWorkspace).toContain('Month-end close control centre');
     expect(closeWorkspace).toContain('Close month');
     expect(customerStatement).toContain('Client Account Statement');
-    expect(statement).toContain('Running balance');
-    expect(statement).toContain("'Credit Note'");
-    expect(statement).toContain("'Refund'");
+    expect(customerStatement).toContain('Running balance');
+    expect(customerStatement).toContain("'Credit Note'");
+    expect(customerStatement).toContain("'Refund'");
     expect(statement).toContain('Content-Disposition');
     expect(statement).toContain('getActiveClientContext(request)');
     expect(portal).toContain('Account & billing');
