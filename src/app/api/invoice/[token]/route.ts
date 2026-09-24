@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { invoiceBalance, invoiceStatusFromBalance, sumAmounts } from '@/lib/finance';
@@ -125,7 +126,7 @@ export async function GET(
       tax: invoice.tax.toFixed(2),
       total: invoice.total.toFixed(2),
       amountPaid: amountPaid.toFixed(2),
-      creditedAmount: invoice.creditNotes.reduce((sum, note) => sum.plus(note.appliedAmount), new (await import('@prisma/client')).Prisma.Decimal(0)).toFixed(2),
+      creditedAmount: invoice.creditNotes.reduce((sum, note) => sum.plus(note.appliedAmount), new Prisma.Decimal(0)).toFixed(2),
       balance: balance.toFixed(2),
       notes: invoice.notes,
       lines: invoice.lines.map((line) => ({
