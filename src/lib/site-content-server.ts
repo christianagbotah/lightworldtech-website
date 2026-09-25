@@ -1,23 +1,32 @@
 import 'server-only';
 
+import { unstable_cache } from 'next/cache';
 import { db } from '@/lib/db';
 import type { SiteSettings } from '@/lib/site-content';
 
-export async function getSiteSettings(): Promise<SiteSettings> {
-  try {
-    const rows = await db.siteSetting.findMany({
-      select: { key: true, value: true },
-    });
+const readSiteSettings = unstable_cache(
+  async (): Promise<SiteSettings> => {
+    try {
+      const rows = await db.siteSetting.findMany({
+        select: { key: true, value: true },
+      });
 
-    return rows.reduce<SiteSettings>((acc, row) => {
-      acc[row.key] = row.value;
-      return acc;
-    }, {});
-  } catch {
-    // Public pages all have canonical content fallbacks. A CMS outage or a
-    // database-less CI build must not take down the public shell / 404 page.
-    return {};
-  }
+      return rows.reduce<SiteSettings>((acc, row) => {
+        acc[row.key] = row.value;
+        return acc;
+      }, {});
+    } catch {
+      // Public pages all have canonical content fallbacks. A CMS outage or a
+      // database-less CI build must not take down the public shell / 404 page.
+      return {};
+    }
+  },
+  ['public-site-settings'],
+  { revalidate: 300, tags: ['site-settings'] },
+);
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  return readSiteSettings();
 }
 
 export async function getActiveTeamMembers() {
