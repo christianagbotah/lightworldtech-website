@@ -762,7 +762,7 @@ export default function AdminClients() {
       <Card className="border-border/60">
         <CardHeader><CardTitle className="text-base">Add client organization</CardTitle></CardHeader>
         <CardContent>
-          <form onSubmit={createOrganization} className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+          <form onSubmit={createOrganization} className="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(180px,1.2fr)_minmax(160px,1fr)_minmax(200px,1.2fr)_minmax(150px,1fr)_auto] lg:items-center">
             <Input required placeholder="Organization name" value={orgForm.name} onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })} />
             <Input placeholder="Primary contact" value={orgForm.primaryContactName} onChange={(e) => setOrgForm({ ...orgForm, primaryContactName: e.target.value })} />
             <Input type="email" autoComplete="email" placeholder="Primary email" value={orgForm.primaryEmail} onChange={(e) => setOrgForm({ ...orgForm, primaryEmail: e.target.value })} />
