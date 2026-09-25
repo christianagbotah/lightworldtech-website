@@ -223,6 +223,12 @@ export async function GET(
     const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
     return balance.gt(0) && invoice.dueDate.getTime() < now.getTime();
   });
+  const nextCollectionInvoice = [...overdueInvoices].sort((a, b) => {
+    if (a.dueDate.getTime() !== b.dueDate.getTime()) return a.dueDate.getTime() - b.dueDate.getTime();
+    const aBalance = invoiceBalance(a.total, a.allocations, a.creditNotes);
+    const bBalance = invoiceBalance(b.total, b.allocations, b.creditNotes);
+    return Number(bBalance.minus(aBalance));
+  })[0] || null;
   const renewalCandidates = services
     .filter((service) => service.status !== 'cancelled')
     .map((service) => ({
@@ -668,6 +674,15 @@ export async function GET(
             .sort((a, b) => Number(b.revenue) - Number(a.revenue)),
           methodology: 'Invoice revenue excludes tax; direct cost includes only finance expenses explicitly attributed to this customer, project or service. Currencies are not converted.',
         },
+        collectionTarget: nextCollectionInvoice
+          ? {
+              id: nextCollectionInvoice.id,
+              invoiceNumber: nextCollectionInvoice.invoiceNumber,
+              currency: nextCollectionInvoice.currency,
+              balance: invoiceBalance(nextCollectionInvoice.total, nextCollectionInvoice.allocations, nextCollectionInvoice.creditNotes).toFixed(2),
+              dueDate: nextCollectionInvoice.dueDate,
+            }
+          : null,
         commitments: {
           nextCollectionFollowUp: pendingCollectionFollowUps[0]
             ? {
