@@ -345,6 +345,42 @@ export async function GET(
     const budgetUtilizationPercent = matchingBudget && matchingBudget.gt(0)
       ? row.directCost.div(matchingBudget).mul(100)
       : null;
+    const projectProgress = projectBudget ? projectBudget.progress : null;
+    const projectCompleted = Boolean(
+      projectBudget && (projectBudget.status === 'completed' || projectBudget.progress >= 100),
+    );
+    const forecastCostAtCompletion =
+      matchingBudget && projectBudget && projectProgress !== null && projectProgress > 0
+        ? projectCompleted
+          ? row.directCost
+          : row.directCost.div(new Prisma.Decimal(projectProgress).div(100))
+        : null;
+    const forecastCostToComplete = forecastCostAtCompletion
+      ? Prisma.Decimal.max(forecastCostAtCompletion.minus(row.directCost), new Prisma.Decimal(0))
+      : null;
+    const forecastBudgetVariance = matchingBudget && forecastCostAtCompletion
+      ? matchingBudget.minus(forecastCostAtCompletion)
+      : null;
+    const forecastBudgetVariancePercent = matchingBudget && matchingBudget.gt(0) && forecastBudgetVariance
+      ? forecastBudgetVariance.div(matchingBudget).mul(100)
+      : null;
+    const forecastMargin = forecastCostAtCompletion
+      ? row.revenue.minus(forecastCostAtCompletion)
+      : null;
+    const costProgressGapPercent =
+      budgetUtilizationPercent !== null && projectProgress !== null
+        ? budgetUtilizationPercent.minus(projectProgress)
+        : null;
+    const forecastMaturity =
+      !projectBudget || projectProgress === null || projectProgress <= 0
+        ? 'unavailable'
+        : projectCompleted
+          ? 'complete'
+          : projectProgress < 20
+            ? 'low'
+            : projectProgress < 60
+              ? 'medium'
+              : 'higher';
 
     return {
       scopeType: row.scopeType,
@@ -358,6 +394,14 @@ export async function GET(
       budgetAmount: matchingBudget?.toFixed(2) ?? null,
       budgetRemaining: budgetRemaining?.toFixed(2) ?? null,
       budgetUtilizationPercent: budgetUtilizationPercent?.toDecimalPlaces(2).toFixed(2) ?? null,
+      projectProgress,
+      forecastCostAtCompletion: forecastCostAtCompletion?.toDecimalPlaces(2).toFixed(2) ?? null,
+      forecastCostToComplete: forecastCostToComplete?.toDecimalPlaces(2).toFixed(2) ?? null,
+      forecastBudgetVariance: forecastBudgetVariance?.toDecimalPlaces(2).toFixed(2) ?? null,
+      forecastBudgetVariancePercent: forecastBudgetVariancePercent?.toDecimalPlaces(2).toFixed(2) ?? null,
+      forecastMargin: forecastMargin?.toDecimalPlaces(2).toFixed(2) ?? null,
+      costProgressGapPercent: costProgressGapPercent?.toDecimalPlaces(2).toFixed(2) ?? null,
+      forecastMaturity,
     };
   });
 
@@ -425,6 +469,8 @@ export async function GET(
     ...(renewalsDue30.length ? [{ key: 'renewal_due', label: 'Service renewals due within 30 days', count: renewalsDue30.length, severity: 'medium' as const }] : []),
     ...(overdueProjectRenewals.length ? [{ key: 'project_renewal_overdue', label: 'Project renewals overdue', count: overdueProjectRenewals.length, severity: 'high' as const }] : []),
     ...(projectRenewalsDue30.length ? [{ key: 'project_renewal_due', label: 'Project renewals due within 30 days', count: projectRenewalsDue30.length, severity: 'medium' as const }] : []),
+    ...(forecastOverBudgetRows.length ? [{ key: 'forecast_budget_overrun', label: 'Projects forecast over budget', count: forecastOverBudgetRows.length, severity: 'high' as const }] : []),
+    ...(costAheadOfProgressRows.length ? [{ key: 'cost_ahead_of_progress', label: 'Project cost ahead of progress', count: costAheadOfProgressRows.length, severity: 'medium' as const }] : []),
   ];
 
   const accountHealth =
@@ -510,6 +556,16 @@ export async function GET(
     && row.budgetRemaining !== null
     && Number(row.budgetRemaining) < 0
   );
+  const forecastOverBudgetRows = profitabilityRows.filter((row) =>
+    row.scopeType === 'project'
+    && row.forecastBudgetVariance !== null
+    && Number(row.forecastBudgetVariance) < 0
+  );
+  const costAheadOfProgressRows = profitabilityRows.filter((row) =>
+    row.scopeType === 'project'
+    && row.costProgressGapPercent !== null
+    && Number(row.costProgressGapPercent) >= 15
+  );
 
   type ExecutivePriority = {
     key: 'collections' | 'renewals' | 'support' | 'projects' | 'statement';
@@ -536,6 +592,24 @@ export async function GET(
           label: 'Intervene on over-budget delivery',
           detail: overBudgetRows.length + ' project/currency budget row' + (overBudgetRows.length === 1 ? ' is' : 's are') + ' already above the recorded direct-cost budget.',
           evidence: 'Project budget · attributed finance expenses',
+        }]
+      : []),
+    ...(forecastOverBudgetRows.length
+      ? [{
+          key: 'projects' as const,
+          severity: 'high' as const,
+          label: 'Review forecast budget overrun',
+          detail: forecastOverBudgetRows.length + ' project/currency row' + (forecastOverBudgetRows.length === 1 ? ' is' : 's are') + ' forecast to finish above budget using recorded progress and attributed direct cost.',
+          evidence: 'EAC = actual direct cost ÷ recorded progress, except completed projects use actual cost',
+        }]
+      : []),
+    ...(costAheadOfProgressRows.length
+      ? [{
+          key: 'projects' as const,
+          severity: 'medium' as const,
+          label: 'Investigate cost ahead of progress',
+          detail: costAheadOfProgressRows.length + ' project/currency row' + (costAheadOfProgressRows.length === 1 ? ' has' : 's have') + ' budget utilization at least 15 percentage points ahead of recorded delivery progress.',
+          evidence: 'Budget utilization compared with project progress',
         }]
       : []),
     ...(negativeMarginRows.length
@@ -688,7 +762,7 @@ export async function GET(
           services: profitabilityRows
             .filter((row) => row.scopeType === 'service')
             .sort((a, b) => Number(b.revenue) - Number(a.revenue)),
-          methodology: 'Invoice revenue excludes tax; direct cost includes only finance expenses explicitly attributed to this customer, project or service. Currencies are not converted.',
+          methodology: 'Invoice revenue excludes tax; direct cost includes only finance expenses explicitly attributed to this customer, project or service. Project EAC extrapolates attributed direct cost from recorded project progress; completed projects use actual cost. Forecast margin compares issued revenue to EAC, so it is decision support rather than a final contract-margin forecast. Currencies are not converted.',
         },
         collectionTarget: nextCollectionInvoice
           ? {
