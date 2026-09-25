@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import MotionPreferenceProvider from '@/components/providers/MotionPreferenceProvider';
-import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/ui/json-ld';
+import SeoStructuredData from '@/components/layout/SeoStructuredData';
 import { getSeoConfig } from '@/lib/seo-config';
 
 function seoAbsoluteFeedUrl(siteUrl: string): string {
@@ -109,18 +110,14 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const seo = await getSeoConfig();
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <OrganizationJsonLd config={seo} />
-        <WebSiteJsonLd config={seo} />
         <script
           dangerouslySetInnerHTML={{
             __html:
@@ -131,6 +128,9 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased bg-background text-foreground`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <MotionPreferenceProvider>
+            <Suspense fallback={null}>
+              <SeoStructuredData />
+            </Suspense>
             {children}
             <Toaster position="top-right" richColors closeButton />
           </MotionPreferenceProvider>
