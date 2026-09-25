@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { generateProposalDraft } from '@/lib/proposal-draft';
+import { deriveProposalReadiness } from '@/lib/proposal-readiness';
 
 const createSchema = z.object({
   leadId: z.string().min(1),
@@ -15,6 +16,52 @@ function parseTags(value: string): string[] {
   } catch {
     return [];
   }
+}
+
+function readinessFor(proposal: {
+  status: string;
+  title: string;
+  executiveSummary: string;
+  solution: string;
+  scope: string;
+  deliverables: string;
+  assumptions: string;
+  timeline: string;
+  commercialNotes: string;
+  nextSteps: string;
+  approvedAt: Date | null;
+  sentAt: Date | null;
+  lead: {
+    assignedTo: string;
+    company: string;
+    serviceInterest: string;
+    budgetRange: string;
+    expectedRevenue: { toString(): string };
+    deliveryWindow: string;
+  };
+}) {
+  return deriveProposalReadiness({
+    status: proposal.status,
+    title: proposal.title,
+    executiveSummary: proposal.executiveSummary,
+    solution: proposal.solution,
+    scope: proposal.scope,
+    deliverables: proposal.deliverables,
+    assumptions: proposal.assumptions,
+    timeline: proposal.timeline,
+    commercialNotes: proposal.commercialNotes,
+    nextSteps: proposal.nextSteps,
+    approvedAt: proposal.approvedAt,
+    sentAt: proposal.sentAt,
+    lead: {
+      assignedTo: proposal.lead.assignedTo,
+      company: proposal.lead.company,
+      serviceInterest: proposal.lead.serviceInterest,
+      budgetRange: proposal.lead.budgetRange,
+      expectedRevenue: Number(proposal.lead.expectedRevenue.toString()),
+      deliveryWindow: proposal.lead.deliveryWindow,
+    },
+  });
 }
 
 export async function GET(request: NextRequest) {
@@ -58,7 +105,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: proposals,
+      data: proposals.map((proposal) => ({ ...proposal, readiness: readinessFor(proposal) })),
       summary: {
         total: counts.reduce((sum, value) => sum + value, 0),
         byStatus: Object.fromEntries(statuses.map((item, index) => [item, counts[index]])),
@@ -99,7 +146,7 @@ export async function POST(request: NextRequest) {
           clientProject: { include: { organization: { select: { id: true, name: true } } } },
         },
       });
-      return NextResponse.json({ success: true, data: existing, created: false });
+      return NextResponse.json({ success: true, data: existing ? { ...existing, readiness: readinessFor(existing) } : null, created: false });
     }
 
     const draft = generateProposalDraft({
@@ -136,7 +183,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, data: proposal, created: true }, { status: 201 });
+    return NextResponse.json({ success: true, data: { ...proposal, readiness: readinessFor(proposal) }, created: true }, { status: 201 });
   } catch (error) {
     console.error('Error creating proposal:', error);
     return NextResponse.json({ success: false, error: 'Failed to create proposal' }, { status: 500 });
