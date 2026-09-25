@@ -185,17 +185,13 @@
      surrounding field has not already declared gap/space utilities.
      Existing grid gap-* / space-y-* groups keep their own spacing, while
      checkbox/radio and screen-reader-only labels remain unaffected. */
-  :where(div, section, fieldset)
-    :not([class*="gap-"])
-    :not([class*="space-y-"])
+  :where(div, section, fieldset):not([class*="gap-"]):not([class*="space-y-"])
     > [data-slot="label"]:not(.sr-only)
     + :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) {
     margin-top: 0.375rem;
   }
 
-  :where(div, section, fieldset)
-    :not([class*="gap-"])
-    :not([class*="space-y-"])
+  :where(div, section, fieldset):not([class*="gap-"]):not([class*="space-y-"])
     > label:not(.sr-only)
     + :is(
       input:not([type="checkbox"]):not([type="radio"]),
