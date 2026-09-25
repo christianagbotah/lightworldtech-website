@@ -20,6 +20,8 @@ describe('public experience quality', () => {
 
   test('public routes show a lightweight loader and above-fold heroes do not wait for hydration to become visible', () => {
     const loading = source('src/app/loading.tsx');
+    const layout = source('src/app/layout.tsx');
+    const seoIsland = source('src/components/layout/SeoStructuredData.tsx');
     const globalPage = source('src/components/pages/GlobalPage.tsx');
     const home = source('src/components/pages/HomePage.tsx');
     const pageHero = source('src/components/ui/page-hero.tsx');
@@ -27,6 +29,12 @@ describe('public experience quality', () => {
     expect(loading).toContain('Preparing your experience');
     expect(loading).toContain('role="status"');
     expect(loading).toContain('Lightworld Technologies');
+    expect(loading).toContain('fixed inset-0');
+    expect(loading).toContain('z-[120]');
+    expect(layout).toContain('<Suspense fallback={null}>');
+    expect(layout).toContain('<SeoStructuredData />');
+    expect(layout).not.toContain('export default async function RootLayout');
+    expect(seoIsland).toContain('await getSeoConfig()');
     expect(globalPage).toContain('initial={false} animate={{ opacity: 1, y: 0 }}');
     expect(home).toContain('initial={false}');
     expect(pageHero).toContain('initial={false}');
