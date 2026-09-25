@@ -239,7 +239,7 @@ export default function FinanceTaxWorkspace() {
                 Output tax less credit-note reversals and eligible input tax. Currencies remain separate.
               </p>
             </div>
-            <div className="grid gap-2 sm:grid-cols-[150px_150px_110px_auto]">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[160px_160px_110px_minmax(130px,auto)] lg:items-end">
               <div><Label className="text-[10px] uppercase tracking-[0.1em]">From</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
               <div><Label className="text-[10px] uppercase tracking-[0.1em]">To</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
               <div><Label className="text-[10px] uppercase tracking-[0.1em]">Currency</Label><Input maxLength={3} placeholder="All" value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase())} /></div>
