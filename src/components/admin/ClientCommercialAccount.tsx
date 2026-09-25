@@ -13,6 +13,8 @@ import {
   History,
   LifeBuoy,
   Loader2,
+  MessageSquareText,
+  Plus,
   ReceiptText,
   RefreshCw,
   WalletCards,
@@ -448,6 +450,23 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
     });
   };
 
+  const openNewProject = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lw-client-organization-id', organizationId);
+      sessionStorage.setItem('lw-client-action', 'new-project');
+    }
+    navigate('admin-clients');
+  };
+
+  const openCustomerSms = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lw-sms-recipient', data?.organization.primaryPhone || '');
+      sessionStorage.setItem('lw-sms-customer-name', data?.organization.primaryContactName || organizationName);
+      sessionStorage.setItem('lw-sms-organization-id', organizationId);
+    }
+    navigate('admin-sms');
+  };
+
   const openCustomerMessage = (messageId: string, mode: 'view' | 'reply') => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(mode === 'reply' ? 'lw-reply-message-id' : 'lw-open-message-id', messageId);
@@ -609,7 +628,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                 </div>
                 <Badge variant="outline">Operational shortcuts</Badge>
               </div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => openFinanceSection('customers', 'invoice')}>
                   <ReceiptText className="mr-2 size-4 shrink-0 text-amber-600" />
                   <span><span className="block text-xs font-semibold">Issue invoice</span><span className="block text-[10px] font-normal text-muted-foreground">Customer preselected</span></span>
@@ -633,6 +652,14 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                 <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={openProjectDates}>
                   <FolderKanban className="mr-2 size-4 shrink-0 text-indigo-600" />
                   <span><span className="block text-xs font-semibold">Project dates</span><span className="block text-[10px] font-normal text-muted-foreground">Expiry and next renewal</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={openNewProject}>
+                  <Plus className="mr-2 size-4 shrink-0 text-cyan-600" />
+                  <span><span className="block text-xs font-semibold">Create project</span><span className="block text-[10px] font-normal text-muted-foreground">Customer and commercial context preselected</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={openCustomerSms} disabled={!data?.organization.primaryPhone}>
+                  <MessageSquareText className="mr-2 size-4 shrink-0 text-emerald-600" />
+                  <span><span className="block text-xs font-semibold">SMS customer</span><span className="block text-[10px] font-normal text-muted-foreground">{data?.organization.primaryPhone ? 'Open Hubtel composer' : 'Primary phone required'}</span></span>
                 </Button>
               </div>
             </div>
