@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import {
   AlertTriangle,
   ArrowUpRight,
+  BrainCircuit,
   CalendarClock,
   CreditCard,
   Download,
@@ -128,6 +129,26 @@ type CommercialData = {
     renewalsDue30: number;
     expiredServices: number;
     accountHealth: 'healthy' | 'watch' | 'action_required';
+    executiveBrief: {
+      posture: 'intervention_required' | 'attention' | 'stable';
+      headline: string;
+      summary: string;
+      priorities: Array<{
+        key: 'collections' | 'renewals' | 'support' | 'projects' | 'statement';
+        severity: 'high' | 'medium' | 'low';
+        label: string;
+        detail: string;
+        evidence: string;
+      }>;
+      next30Days: Array<{
+        currency: string;
+        potential: string;
+        receivablesDue: string;
+        renewals: string;
+      }>;
+      controls: string;
+      generatedAt: string;
+    };
     riskSignals: Array<{
       key: string;
       label: string;
@@ -613,6 +634,94 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   <FolderKanban className="mr-2 size-4 shrink-0 text-indigo-600" />
                   <span><span className="block text-xs font-semibold">Project dates</span><span className="block text-[10px] font-normal text-muted-foreground">Expiry and next renewal</span></span>
                 </Button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-indigo-200/70 bg-gradient-to-br from-indigo-500/[0.07] via-background to-background dark:border-indigo-900/40">
+              <div className="flex flex-col gap-3 border-b border-border/60 p-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <BrainCircuit className="size-4 text-indigo-600 dark:text-indigo-300" />
+                    <p className="text-sm font-semibold">Executive intelligence brief</p>
+                  </div>
+                  <p className="mt-2 text-sm font-medium">{data?.customer360.executiveBrief.headline}</p>
+                  <p className="mt-1 max-w-4xl text-xs leading-5 text-muted-foreground">{data?.customer360.executiveBrief.summary}</p>
+                </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={
+                      data?.customer360.executiveBrief.posture === 'intervention_required'
+                        ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300'
+                        : data?.customer360.executiveBrief.posture === 'attention'
+                          ? 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300'
+                          : 'border-emerald-300 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300'
+                    }
+                  >
+                    {pretty(data?.customer360.executiveBrief.posture || 'stable')}
+                  </Badge>
+                  {data?.customer360.executiveBrief.generatedAt && (
+                    <span className="text-[10px] text-muted-foreground">As of {new Date(data.customer360.executiveBrief.generatedAt).toLocaleString()}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Management priorities</p>
+                  <div className="mt-3 grid gap-2">
+                    {(data?.customer360.executiveBrief.priorities || []).map((priority) => (
+                      <button
+                        key={priority.key + ':' + priority.label}
+                        type="button"
+                        onClick={() => runCustomerAction(priority.key)}
+                        className="group flex w-full items-start justify-between gap-3 rounded-xl border border-border/60 bg-background/80 p-3 text-left transition hover:border-indigo-300 hover:bg-indigo-500/[0.03]"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs font-semibold">{priority.label}</p>
+                            <Badge variant="outline" className={priority.severity === 'high' ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300' : priority.severity === 'medium' ? 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300' : ''}>
+                              {pretty(priority.severity)}
+                            </Badge>
+                          </div>
+                          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{priority.detail}</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">Evidence: {priority.evidence}</p>
+                        </div>
+                        <ArrowUpRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground transition group-hover:text-indigo-600" />
+                      </button>
+                    ))}
+                    {!data?.customer360.executiveBrief.priorities.length && (
+                      <div className="rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
+                        No material exception is currently prioritized by the evidence rules.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Next 30 days</p>
+                  <div className="mt-3 space-y-2">
+                    {(data?.customer360.executiveBrief.next30Days || []).map((row) => (
+                      <div key={row.currency} className="rounded-xl border border-border/60 bg-background/80 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs font-semibold">{row.currency}</p>
+                          <p className="text-sm font-bold">{money(row.potential, row.currency)}</p>
+                        </div>
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+                          <span>Receivables<br /><strong className="text-foreground">{money(row.receivablesDue, row.currency)}</strong></span>
+                          <span>Renewals<br /><strong className="text-foreground">{money(row.renewals, row.currency)}</strong></span>
+                        </div>
+                      </div>
+                    ))}
+                    {!data?.customer360.executiveBrief.next30Days.length && (
+                      <div className="rounded-xl border border-dashed p-3 text-xs text-muted-foreground">No scheduled receivable or renewal value in the next 30 days.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border/60 px-4 py-3 text-[10px] leading-5 text-muted-foreground">
+                {data?.customer360.executiveBrief.controls}
               </div>
             </div>
 
