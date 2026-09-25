@@ -443,11 +443,14 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
   const openFinanceSection = (
     section: 'customers' | 'renewals' | 'collections',
     action?: 'invoice' | 'receipt' | 'service',
+    scope?: { projectId?: string; serviceId?: string },
   ) => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('lw-finance-section', section);
       sessionStorage.setItem('lw-finance-organization-id', organizationId);
       sessionStorage.setItem('lw-finance-customer-name', organizationName);
+      if (scope?.projectId) sessionStorage.setItem('lw-finance-project-id', scope.projectId);
+      if (scope?.serviceId) sessionStorage.setItem('lw-finance-service-id', scope.serviceId);
       if (action) sessionStorage.setItem('lw-finance-action', action);
     }
     navigate('admin-finance');
@@ -852,7 +855,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                     </div>
                     <div className="max-w-full overflow-x-auto">
                       <Table exportFileName="lightworld-client-project-profitability" className="min-w-[620px]">
-                        <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Direct cost</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">Remaining</TableHead><TableHead className="text-right">Margin</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Direct cost</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">Remaining</TableHead><TableHead className="text-right">Margin</TableHead><TableHead data-export-ignore className="text-right">Action</TableHead></TableRow></TableHeader>
                         <TableBody>
                           {(data?.customer360.profitability.projects || []).slice(0, 20).map((row) => (
                             <TableRow key={row.scopeId + ':' + row.currency}>
@@ -874,6 +877,11 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                                   : '—'}
                               </TableCell>
                               <TableCell className="text-right"><span className={Number(row.margin) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{money(row.margin, row.currency)} · {Number(row.marginPercent).toFixed(2)}%</span></TableCell>
+                              <TableCell data-export-ignore className="text-right">
+                                <Button type="button" size="sm" variant="outline" onClick={() => openFinanceSection('customers', undefined, { projectId: row.scopeId })}>
+                                  Drill down <ArrowUpRight className="ml-1.5 size-3.5" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -888,7 +896,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                     </div>
                     <div className="max-w-full overflow-x-auto">
                       <Table exportFileName="lightworld-client-service-profitability" className="min-w-[620px]">
-                        <TableHeader><TableRow><TableHead>Service</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Direct cost</TableHead><TableHead className="text-right">Margin</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Service</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Direct cost</TableHead><TableHead className="text-right">Margin</TableHead><TableHead data-export-ignore className="text-right">Action</TableHead></TableRow></TableHeader>
                         <TableBody>
                           {(data?.customer360.profitability.services || []).slice(0, 20).map((row) => (
                             <TableRow key={row.scopeId + ':' + row.currency}>
@@ -897,6 +905,11 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                               <TableCell className="text-right text-xs">{money(row.revenue, row.currency)}</TableCell>
                               <TableCell className="text-right text-xs">{money(row.directCost, row.currency)}</TableCell>
                               <TableCell className="text-right"><span className={Number(row.margin) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{money(row.margin, row.currency)} · {Number(row.marginPercent).toFixed(2)}%</span></TableCell>
+                              <TableCell data-export-ignore className="text-right">
+                                <Button type="button" size="sm" variant="outline" onClick={() => openFinanceSection('customers', undefined, { serviceId: row.scopeId })}>
+                                  Drill down <ArrowUpRight className="ml-1.5 size-3.5" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
