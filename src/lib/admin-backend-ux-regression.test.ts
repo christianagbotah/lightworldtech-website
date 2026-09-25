@@ -280,6 +280,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const monthCloseMigration = source('prisma/migrations/20260923154500_finance_month_close_locks/migration.sql');
     const taxMigration = source('prisma/migrations/20260923162500_ghana_vat_tax_controls/migration.sql');
     const projectCommercialMigration = source('prisma/migrations/20260923165000_client_project_commercial_lifecycle/migration.sql');
+    const projectBudgetMigration = source('prisma/migrations/20260925120500_client_project_budget_planning/migration.sql');
     const approvalMigration = source('prisma/migrations/20260923172000_finance_outflow_maker_checker/migration.sql');
     const approvalPolicyApi = source('src/app/api/admin/finance/approvals/policy/route.ts');
     const approvalsApi = source('src/app/api/admin/finance/approvals/route.ts');
@@ -320,6 +321,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(schema).toContain('getfundAmount');
     expect(schema).toContain('nextRenewalDate');
     expect(schema).toContain('renewalAmount');
+    expect(schema).toContain('budgetCurrency');
+    expect(schema).toContain('budgetAmount');
     expect(schema).toContain('renewalCurrency');
     expect(schema).toContain('renewalNoticeDays');
     expect(schema).toContain('model FinanceApprovalPolicy');
@@ -453,6 +456,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('Expiry date');
     expect(clients).toContain('Next renewal');
     expect(clients).toContain('Renewal amount');
+    expect(clients).toContain('Project budget');
+    expect(clients).toContain('Budget CCY');
     expect(clients).toContain('Auto-renew');
     expect(clientCommercial).toContain('Account & billing');
     expect(clientCommercial).toContain('Record customer payment');
@@ -467,6 +472,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain('Project dates');
     expect(clientCommercial).toContain('Direct profitability');
     expect(clientCommercial).toContain('Project margins');
+    expect(clientCommercial).toContain('% used');
+    expect(clientCommercial).toContain('budgetRemaining');
     expect(clientCommercial).toContain('Service margins');
     expect(clientCommercial).toContain('30 / 90 day commercial forecast');
     expect(clientCommercial).toContain('Receivables due');
@@ -508,6 +515,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercialApi).toContain('profitabilityRows');
     expect(clientCommercialApi).toContain('directCost');
     expect(clientCommercialApi).toContain('marginPercent');
+    expect(clientCommercialApi).toContain('budgetUtilizationPercent');
+    expect(clientCommercialApi).toContain('budgetRemaining');
     expect(clientCommercialApi).toContain('buildForecast');
     expect(clientCommercialApi).toContain('next30Days');
     expect(clientCommercialApi).toContain('next90Days');
