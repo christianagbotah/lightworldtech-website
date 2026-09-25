@@ -448,6 +448,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain('Recent customer activity');
     expect(clientCommercial).toContain('Payments, invoices, collections, client announcements and support conversations');
     expect(clientCommercial).toContain('Customer communications');
+    expect(clientCommercial).toContain('Next collection follow-up');
+    expect(clientCommercial).toContain('Next promise to pay');
+    expect(clientCommercial).toContain('SLA breaches');
     expect(clientCommercial).toContain('Reply internally');
     expect(clientCommercial).toContain('lw-reply-message-id');
     expect(clientCommercial).toContain('lw-open-message-id');
@@ -470,6 +473,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercialApi).toContain('nextActions');
     expect(clientCommercialApi).toContain('recentActivity');
     expect(clientCommercialApi).toContain('communicationThreads');
+    expect(clientCommercialApi).toContain('commitments');
+    expect(clientCommercialApi).toContain('slaBreachedTickets');
+    expect(clientCommercialApi).toContain('nextCollectionFollowUp');
+    expect(clientCommercialApi).toContain('nextPaymentPromise');
     expect(clientCommercialApi).toContain('contactMessage.findMany');
     expect(clientCommercialApi).toContain("mode: 'insensitive'");
     expect(clientCommercialApi).toContain('financeCollectionActivity.findMany');
