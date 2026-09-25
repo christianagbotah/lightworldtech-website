@@ -570,7 +570,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('client-new-project-name');
     expect(clientCommercial).toContain('Direct profitability');
     expect(clientCommercial).toContain('Project profitability & completion forecast');
-    expect(clientCommercial).toContain('% used');
+    expect(clientCommercial).toContain('% budget used');
     expect(clientCommercial).toContain('budgetRemaining');
     expect(clientCommercial).toContain('Service margins');
     expect(clientCommercial).toContain('Forecasts are decision support');
