@@ -185,7 +185,7 @@
 /* Public inner pages render their hero background underneath the floating header.
    Reserve the header's physical clearance inside the hero rather than inserting
    a blank sibling spacer above the page. */
-.lw-hero-grid:not(.lw-home-hero)::before {
+.lw-hero-grid:not(.lw-home-hero):first-child::before {
   content: '';
   display: block;
   height: 76px;
@@ -193,7 +193,7 @@
 }
 
 @media (min-width: 640px) {
-  .lw-hero-grid:not(.lw-home-hero)::before {
+  .lw-hero-grid:not(.lw-home-hero):first-child::before {
     height: 88px;
   }
 }
