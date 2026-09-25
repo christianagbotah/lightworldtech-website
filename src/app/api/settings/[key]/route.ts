@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { isAdminRequest } from '@/lib/admin-auth';
@@ -67,6 +68,7 @@ export async function PUT(
       create: { key, value, type: type || 'text', group: group || 'general' },
     });
 
+    revalidateTag('site-settings', 'max');
     return NextResponse.json({ success: true, data: setting });
   } catch (error) {
     console.error('Error updating setting:', error);
