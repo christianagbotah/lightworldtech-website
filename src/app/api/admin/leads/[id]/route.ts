@@ -145,6 +145,7 @@ export async function PUT(
       include: {
         contactMessage: true,
         notes: { orderBy: { createdAt: 'desc' } },
+        proposal: { select: { status: true, approvedAt: true, sentAt: true } },
       },
     });
 
