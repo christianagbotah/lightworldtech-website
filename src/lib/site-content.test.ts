@@ -60,6 +60,18 @@ describe('full-site CMS registry', () => {
     expect(contentJson({ key: 'not-json' }, 'key', ['fallback'])).toEqual(['fallback']);
   });
 
+  test('caches public site settings and invalidates them after CMS writes', () => {
+    const server = readFileSync(join(process.cwd(), 'src/lib/site-content-server.ts'), 'utf8');
+    const bulkRoute = readFileSync(join(process.cwd(), 'src/app/api/settings/route.ts'), 'utf8');
+    const singleRoute = readFileSync(join(process.cwd(), 'src/app/api/settings/[key]/route.ts'), 'utf8');
+
+    expect(server).toContain('unstable_cache');
+    expect(server).toContain("tags: ['site-settings']");
+    expect(server).toContain('revalidate: 300');
+    expect(bulkRoute).toContain("revalidateTag('site-settings', 'max')");
+    expect(singleRoute).toContain("revalidateTag('site-settings', 'max')");
+  });
+
   test('wires the Services closing CTA description to its declared CMS field', () => {
     const page = readFileSync(
       join(process.cwd(), 'src/components/pages/ServicesPage.tsx'),
