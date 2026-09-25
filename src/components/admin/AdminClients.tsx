@@ -566,6 +566,28 @@ export default function AdminClients() {
                     <option value="inactive">Inactive / revoke portal</option>
                   </select>
                 </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                    <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Primary contact</p>
+                    <p className="mt-1 text-sm font-semibold">{selected.primaryContactName || 'Not set'}</p>
+                    <p className="mt-1 truncate text-[11px] text-muted-foreground">{selected.primaryEmail || 'No email'}{selected.primaryPhone ? ' · ' + selected.primaryPhone : ''}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                    <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Portal access</p>
+                    <p className="mt-1 text-sm font-semibold">{selected.users.filter((user) => user.active).length} active user{selected.users.filter((user) => user.active).length === 1 ? '' : 's'}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{selected.users.filter((user) => user.mustSetPassword).length} activation{selected.users.filter((user) => user.mustSetPassword).length === 1 ? '' : 's'} pending</p>
+                  </div>
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                    <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Delivery portfolio</p>
+                    <p className="mt-1 text-sm font-semibold">{selected.projects.filter((project) => !['completed', 'cancelled'].includes(project.status)).length} active project{selected.projects.filter((project) => !['completed', 'cancelled'].includes(project.status)).length === 1 ? '' : 's'}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{selected.projects.filter((project) => ['attention', 'at_risk'].includes(project.health)).length} need attention</p>
+                  </div>
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                    <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Support load</p>
+                    <p className="mt-1 text-sm font-semibold">{selected.tickets.filter((ticket) => !['resolved', 'closed'].includes(ticket.status)).length} open ticket{selected.tickets.filter((ticket) => !['resolved', 'closed'].includes(ticket.status)).length === 1 ? '' : 's'}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{selected.tickets.filter((ticket) => !['resolved', 'closed'].includes(ticket.status) && ['high', 'urgent', 'critical'].includes(ticket.priority)).length} high-priority</p>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="grid min-w-0 gap-5 xl:grid-cols-2">
                 <div id="client-portal-users" className="scroll-mt-28 rounded-2xl border border-border/60 p-4">
