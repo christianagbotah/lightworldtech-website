@@ -133,8 +133,6 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
     ...companyMenu.map((item) => ({ label: item.title, href: item.href })),
   ].filter((item, index, items) => items.findIndex((candidate) => candidate.href === item.href) === index);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const isHome = pathname === '/';
-
   const active = (href: string) => {
     if (!href.startsWith('/')) return false;
     if (href === '/') return pathname === '/';
@@ -352,8 +350,6 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
           </div>
         </div>
       </header>
-
-      {!isHome && <div className="h-[76px] sm:h-[88px]" aria-hidden="true" />}
 
       <nav
         className="fixed inset-x-3 bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-40 grid grid-cols-4 rounded-[22px] border border-white/[0.08] bg-[#071018]/92 p-1.5 shadow-2xl shadow-black/30 backdrop-blur-2xl lg:hidden"
