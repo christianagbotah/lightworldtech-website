@@ -469,7 +469,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain('Executive intelligence brief');
     expect(clientCommercial).toContain('Management priorities');
     expect(clientCommercial).toContain('Evidence:');
-    expect(clientCommercial).toContain('Decision support only');
+    expect(clientCommercial).toContain('executiveBrief.controls');
     expect(clientCommercial).toContain('Customer quick actions');
     expect(clientCommercial).toContain('Issue invoice');
     expect(clientCommercial).toContain('Add service');
