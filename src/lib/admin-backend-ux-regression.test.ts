@@ -238,6 +238,25 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain('await reconcileSupportEscalations()');
   });
 
+  test('provides a finance-authorized cross-customer executive portfolio cockpit', () => {
+    const clients = source('src/components/admin/AdminClients.tsx');
+    const portfolio = source('src/app/api/admin/clients/portfolio-intelligence/route.ts');
+
+    expect(clients).toContain('Executive client portfolio');
+    expect(clients).toContain('Accounts by management priority');
+    expect(clients).toContain('Currency exposure');
+    expect(clients).toContain('portfolio-intelligence');
+    expect(clients).toContain('setSelectedId(row.id)');
+    expect(portfolio).toContain("'finance.manage'");
+    expect(portfolio).toContain('invoiceBalance');
+    expect(portfolio).toContain('overdueReceivables');
+    expect(portfolio).toContain('renewals30');
+    expect(portfolio).toContain('budgetPressure');
+    expect(portfolio).toContain('overBudget');
+    expect(portfolio).toContain('slaBreaches');
+    expect(portfolio).toContain('Currency values are never converted');
+  });
+
   test('implements customer accounts billing debtors creditors cashflow and management P&L', () => {
     const schema = source('prisma/schema.prisma');
     const permissions = source('src/lib/admin-permissions.ts');
