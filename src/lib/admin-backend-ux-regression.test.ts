@@ -29,6 +29,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(crm).toContain('max-h-[36vh] overflow-y-auto');
   });
 
+  test('keeps client creation controls on one desktop row', () => {
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(clients).toContain('lg:grid-cols-[minmax(180px,1.2fr)_minmax(160px,1fr)_minmax(200px,1.2fr)_minmax(150px,1fr)_auto]');
+    expect(clients).toContain('lg:items-center');
+  });
+
   test('keeps the client portal workspace inside the viewport', () => {
     const portal = source('src/components/client/ClientPortalPage.tsx');
 
@@ -1034,9 +1041,10 @@ describe('admin backend and responsive UX regression coverage', () => {
   test('keeps Support Desk filters responsive and aligned on desktop', () => {
     const support = source('src/components/admin/AdminSupportDesk.tsx');
 
-    expect(support).toContain('sm:grid-cols-2 lg:grid-cols-3');
-    expect(support).toContain('xl:grid-cols-[minmax(220px,2fr)_repeat(4,minmax(0,1fr))_minmax(140px,1.2fr)_auto]');
-    expect(support).toContain('xl:items-center');
+    expect(support).toContain('sm:grid-cols-2 lg:grid-cols-[minmax(220px,2fr)_repeat(4,minmax(105px,1fr))_minmax(135px,1.2fr)_auto]');
+    expect(support).toContain('lg:items-center');
+    expect(support).toContain('lg:flex-row lg:items-center lg:justify-between');
+    expect(support).toContain('lg:min-w-[680px] xl:min-w-[760px]');
   });
 
   test('provides CSV export from the shared table primitive', () => {
