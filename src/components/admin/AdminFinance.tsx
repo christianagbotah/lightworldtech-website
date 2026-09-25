@@ -56,7 +56,19 @@ type Organization = {
   name: string;
   primaryContactName: string;
   primaryEmail: string;
-  projects: Array<{ id: string; name: string; status: string }>;
+  projects: Array<{
+    id: string;
+    name: string;
+    status: string;
+    health: string;
+    nextRenewalDate: string | null;
+    expiryDate: string | null;
+    renewalCycle: string;
+    renewalCurrency: string;
+    renewalAmount: string;
+    autoRenew: boolean;
+    renewalNoticeDays: number;
+  }>;
   services: Array<{
     id: string;
     name: string;
@@ -1193,6 +1205,13 @@ export default function AdminFinance() {
       {section === 'renewals' && (
         <FinanceRenewalBillingWorkspace
           services={data.services}
+          projects={data.organizations.flatMap((organization) =>
+            organization.projects.map((project) => ({
+              ...project,
+              organizationId: organization.id,
+              organization: { id: organization.id, name: organization.name },
+            })),
+          )}
           invoices={data.invoices}
           initialOrganizationId={deepLinkOrganizationId}
           onPrepareInvoice={(serviceId) => {
