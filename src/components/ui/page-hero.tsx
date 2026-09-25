@@ -61,7 +61,7 @@ export default function PageHero({
       <div className="container-main relative z-10">
         {/* Breadcrumbs */}
         <motion.nav
-          initial={{ opacity: 0, y: -10 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="flex items-center gap-2 text-sm text-slate-400 mb-6"
@@ -89,7 +89,7 @@ export default function PageHero({
         {/* Badge */}
         {badge && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={false}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm font-medium mb-6"
@@ -100,7 +100,7 @@ export default function PageHero({
 
         {/* Title */}
         <motion.h1
-          initial={{ opacity: 0, y: 20 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
           className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight"
@@ -111,7 +111,7 @@ export default function PageHero({
         {/* Subtitle */}
         {subtitle && (
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25 }}
             className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed"
@@ -123,7 +123,7 @@ export default function PageHero({
         {/* Extra children slot */}
         {children && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
           >
