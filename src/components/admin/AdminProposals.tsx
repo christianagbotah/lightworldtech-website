@@ -77,6 +77,14 @@ type Proposal = {
   createdAt: string;
   updatedAt: string;
   lead: Lead;
+  readiness: {
+    level: 'blocked' | 'review' | 'ready';
+    readyForApproval: boolean;
+    blockers: string[];
+    warnings: string[];
+    recommendedAction: string;
+    controls: string;
+  };
   clientProject?: {
     id: string;
     name: string;
@@ -379,9 +387,14 @@ export default function AdminProposals() {
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
                 <FileSignature className="size-5" />
               </span>
-              <Badge className={statusClass(proposal.status)}>
-                {statuses.find((item) => item.id === proposal.status)?.label || proposal.status}
-              </Badge>
+              <div className="flex flex-col items-end gap-1">
+                <Badge className={statusClass(proposal.status)}>
+                  {statuses.find((item) => item.id === proposal.status)?.label || proposal.status}
+                </Badge>
+                <Badge variant="outline" className={proposal.readiness.level === 'blocked' ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300' : proposal.readiness.level === 'review' ? 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300' : 'border-emerald-300 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300'}>
+                  {proposal.readiness.level}
+                </Badge>
+              </div>
             </div>
             <p className="mt-4 line-clamp-2 text-base font-semibold">{proposal.title}</p>
             <p className="mt-2 text-sm text-muted-foreground">{proposal.lead.contactMessage.name}</p>
@@ -415,6 +428,7 @@ export default function AdminProposals() {
                     <Label>Proposal title</Label>
                     <Input
                       className="mt-2"
+                      disabled={['sent', 'accepted'].includes(selected.status)}
                       value={selected.title}
                       onChange={(event) => setSelected({ ...selected, title: event.target.value })}
                       onBlur={(event) => void patchProposal({ title: event.target.value })}
@@ -433,6 +447,7 @@ export default function AdminProposals() {
                       <Label>{label}</Label>
                       <Textarea
                         className="mt-2"
+                        disabled={['sent', 'accepted'].includes(selected.status)}
                         rows={Number(rows)}
                         value={String(selected[key as keyof Proposal] || '')}
                         onChange={(event) => setSelected({ ...selected, [String(key)]: event.target.value })}
@@ -449,6 +464,7 @@ export default function AdminProposals() {
                       <Label>{label}</Label>
                       <Textarea
                         className="mt-2"
+                        disabled={['sent', 'accepted'].includes(selected.status)}
                         rows={7}
                         value={parseList(selected[key as 'deliverables' | 'assumptions']).join('\n')}
                         onChange={(event) => {
@@ -466,6 +482,33 @@ export default function AdminProposals() {
                 </div>
 
                 <aside className="space-y-4 rounded-2xl border border-border/60 bg-muted/15 p-4">
+                  <div className="rounded-xl border border-border/60 bg-background p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold">Proposal readiness</p>
+                      <Badge variant="outline" className={selected.readiness.level === 'blocked' ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300' : selected.readiness.level === 'review' ? 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300' : 'border-emerald-300 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300'}>
+                        {selected.readiness.level}
+                      </Badge>
+                    </div>
+                    <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{selected.readiness.recommendedAction}</p>
+                    {selected.readiness.blockers.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-rose-700 dark:text-rose-300">Approval blockers</p>
+                        <ul className="mt-1 space-y-1 text-[10px] text-muted-foreground">
+                          {selected.readiness.blockers.map((item) => <li key={item}>• {item}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {selected.readiness.warnings.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-amber-700 dark:text-amber-300">Qualification warnings</p>
+                        <ul className="mt-1 space-y-1 text-[10px] text-muted-foreground">
+                          {selected.readiness.warnings.map((item) => <li key={item}>• {item}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    <p className="mt-3 border-t border-border/60 pt-2 text-[9px] leading-4 text-muted-foreground">{selected.readiness.controls}</p>
+                  </div>
+
                   <div>
                     <Label>Status</Label>
                     <select
@@ -473,14 +516,26 @@ export default function AdminProposals() {
                       value={selected.status}
                       onChange={(event) => void patchProposal({ status: event.target.value }, 'Proposal status updated')}
                     >
-                      {statuses.map((status) => <option key={status.id} value={status.id}>{status.label}</option>)}
+                      {statuses.map((status) => (
+                        <option
+                          key={status.id}
+                          value={status.id}
+                          disabled={
+                            (status.id === 'ready' && !selected.readiness.readyForApproval)
+                            || (status.id === 'sent' && !selected.approvedAt)
+                            || (status.id === 'accepted' && !selected.sentAt)
+                          }
+                        >
+                          {status.label}
+                        </option>
+                      ))}
                     </select>
                     <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
                       “Ready” records the approving admin. “Sent” records the first sent timestamp.
                     </p>
                   </div>
 
-                  <Button variant="outline" className="w-full" disabled={saving} onClick={() => setRegenerateConfirmOpen(true)}>
+                  <Button variant="outline" className="w-full" disabled={saving || ['sent', 'accepted'].includes(selected.status)} onClick={() => setRegenerateConfirmOpen(true)}>
                     <Sparkles className="mr-2 size-4" /> Regenerate assisted draft
                   </Button>
 
