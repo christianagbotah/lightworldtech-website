@@ -620,7 +620,7 @@ export default function FinanceAccountingWorkspace({
                   <CardTitle className="flex items-center gap-2 text-base"><Scale className="size-4 text-amber-700" /> Trial balance</CardTitle>
                   <p className="mt-1 text-xs text-muted-foreground">Control report generated only from posted double-entry journal lines.</p>
                 </div>
-                <div className="grid gap-2 sm:grid-cols-[150px_120px_auto]">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[160px_120px_minmax(130px,auto)] lg:items-end">
                   <div><Label className="text-[10px] uppercase tracking-[0.1em]">As of</Label><Input type="date" value={trialAsOf} onChange={(event) => setTrialAsOf(event.target.value)} /></div>
                   <div><Label className="text-[10px] uppercase tracking-[0.1em]">Currency</Label><Input value={trialCurrency} maxLength={3} placeholder="All" onChange={(event) => setTrialCurrency(event.target.value.toUpperCase())} /></div>
                   <Button type="button" className="self-end" onClick={() => void refreshTrialBalance()}>Run report</Button>
@@ -696,7 +696,7 @@ export default function FinanceAccountingWorkspace({
         <div className="space-y-4">
           <Card className="border-border/60">
             <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><BookOpen className="size-4 text-amber-700" /> General ledger</CardTitle></CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_160px_160px_120px_auto]">
+            <CardContent className="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(280px,2fr)_minmax(150px,1fr)_minmax(150px,1fr)_120px_minmax(140px,auto)] lg:items-end">
               <div><Label>Account</Label><select value={ledgerAccountId} onChange={(event) => { setLedgerAccountId(event.target.value); setLedger(null); }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select account</option>{accounts.map((account) => <option key={account.id} value={account.id}>{account.code} · {account.name}</option>)}</select></div>
               <div><Label>From</Label><Input type="date" value={ledgerFrom} onChange={(event) => setLedgerFrom(event.target.value)} /></div>
               <div><Label>To</Label><Input type="date" value={ledgerTo} onChange={(event) => setLedgerTo(event.target.value)} /></div>
