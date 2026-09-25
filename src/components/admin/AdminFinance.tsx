@@ -291,33 +291,69 @@ function statusTone(status: string): string {
 }
 
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, { cache: 'no-store', ...init });
-  const raw = await response.text();
-  let payload: { data?: T; error?: string; detail?: string } | null = null;
+  const method = (init?.method || 'GET').toUpperCase();
+  const maxAttempts = method === 'GET' ? 2 : 1;
+  let lastError: Error | null = null;
 
-  if (raw.trim()) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      payload = JSON.parse(raw) as { data?: T; error?: string; detail?: string };
-    } catch {
-      throw new Error(
-        'Finance endpoint returned an invalid response (' + response.status + '): ' + url,
-      );
+      const response = await fetch(url, { cache: 'no-store', ...init });
+      const raw = await response.text();
+      let payload: { data?: T; error?: string; detail?: string } | null = null;
+
+      if (raw.trim()) {
+        try {
+          payload = JSON.parse(raw) as { data?: T; error?: string; detail?: string };
+        } catch {
+          const invalid = new Error(
+            'Finance endpoint returned invalid JSON (' + response.status + '): ' + url,
+          );
+          if (attempt < maxAttempts) {
+            lastError = invalid;
+            await new Promise((resolve) => window.setTimeout(resolve, 180));
+            continue;
+          }
+          throw invalid;
+        }
+      }
+
+      if (!response.ok) {
+        const failed = new Error(
+          payload?.error ||
+          payload?.detail ||
+          'Finance request failed (' + response.status + '): ' + url,
+        );
+        if (attempt < maxAttempts && [502, 503, 504].includes(response.status)) {
+          lastError = failed;
+          await new Promise((resolve) => window.setTimeout(resolve, 180));
+          continue;
+        }
+        throw failed;
+      }
+
+      if (!payload || !Object.prototype.hasOwnProperty.call(payload, 'data')) {
+        const empty = new Error('Finance endpoint returned an empty response: ' + url);
+        if (attempt < maxAttempts) {
+          lastError = empty;
+          await new Promise((resolve) => window.setTimeout(resolve, 180));
+          continue;
+        }
+        throw empty;
+      }
+
+      return payload.data as T;
+    } catch (error) {
+      const normalized = error instanceof Error ? error : new Error('Finance request failed: ' + url);
+      if (attempt < maxAttempts && method === 'GET') {
+        lastError = normalized;
+        await new Promise((resolve) => window.setTimeout(resolve, 180));
+        continue;
+      }
+      throw normalized;
     }
   }
 
-  if (!response.ok) {
-    throw new Error(
-      payload?.error ||
-      payload?.detail ||
-      'Finance request failed (' + response.status + '): ' + url,
-    );
-  }
-
-  if (!payload || !Object.prototype.hasOwnProperty.call(payload, 'data')) {
-    throw new Error('Finance endpoint returned an empty response: ' + url);
-  }
-
-  return payload.data as T;
+  throw lastError || new Error('Finance request failed: ' + url);
 }
 
 export default function AdminFinance() {
