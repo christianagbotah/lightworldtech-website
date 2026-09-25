@@ -292,9 +292,32 @@ function statusTone(status: string): string {
 
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: 'no-store', ...init });
-  const payload = await response.json();
-  if (!response.ok) throw new Error(payload?.error || 'Request failed');
-  return payload.data;
+  const raw = await response.text();
+  let payload: { data?: T; error?: string; detail?: string } | null = null;
+
+  if (raw.trim()) {
+    try {
+      payload = JSON.parse(raw) as { data?: T; error?: string; detail?: string };
+    } catch {
+      throw new Error(
+        'Finance endpoint returned an invalid response (' + response.status + '): ' + url,
+      );
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.error ||
+      payload?.detail ||
+      'Finance request failed (' + response.status + '): ' + url,
+    );
+  }
+
+  if (!payload || !Object.prototype.hasOwnProperty.call(payload, 'data')) {
+    throw new Error('Finance endpoint returned an empty response: ' + url);
+  }
+
+  return payload.data as T;
 }
 
 export default function AdminFinance() {
