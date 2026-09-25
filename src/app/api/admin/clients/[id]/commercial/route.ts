@@ -45,13 +45,22 @@ export async function GET(
       primaryContactName: true,
       primaryEmail: true,
       primaryPhone: true,
+      users: {
+        select: { email: true },
+      },
     },
   });
   if (!organization) {
     return NextResponse.json({ success: false, error: 'Client organization not found' }, { status: 404 });
   }
 
-  const [services, invoices, payments, projects, tickets, collectionActivities, announcements, ticketMessages] = await Promise.all([
+  const customerEmails = [...new Set(
+    [organization.primaryEmail, ...organization.users.map((user) => user.email)]
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  )];
+
+  const [services, invoices, payments, projects, tickets, collectionActivities, announcements, ticketMessages, contactMessages] = await Promise.all([
     db.clientServiceAccount.findMany({
       where: { organizationId: id },
       orderBy: [{ status: 'asc' }, { nextDueDate: 'asc' }, { expiryDate: 'asc' }],
@@ -141,6 +150,23 @@ export async function GET(
       take: 50,
       include: {
         ticket: { select: { ticketNumber: true, subject: true } },
+      },
+    }),
+    db.contactMessage.findMany({
+      where: customerEmails.length
+        ? {
+            OR: customerEmails.map((email) => ({
+              email: { equals: email, mode: 'insensitive' },
+            })),
+          }
+        : { id: { in: [] } },
+      orderBy: { createdAt: 'desc' },
+      take: 40,
+      include: {
+        replies: {
+          orderBy: { createdAt: 'asc' },
+          take: 50,
+        },
       },
     }),
   ]);
@@ -244,6 +270,24 @@ export async function GET(
       actor: message.authorName + ' · ' + (message.authorType === 'admin' ? 'Lightworld' : 'Client'),
       occurredAt: message.createdAt,
     })),
+    ...contactMessages.map((message) => ({
+      id: 'message:' + message.id,
+      type: 'message',
+      title: message.subject || 'Customer message',
+      detail: message.message.length > 140 ? message.message.slice(0, 137) + '...' : message.message,
+      actor: message.name + ' · Customer',
+      occurredAt: message.createdAt,
+    })),
+    ...contactMessages.flatMap((message) =>
+      message.replies.map((reply) => ({
+        id: 'message-reply:' + reply.id,
+        type: 'message',
+        title: reply.subject || 'Lightworld reply',
+        detail: reply.body.length > 140 ? reply.body.slice(0, 137) + '...' : reply.body,
+        actor: (reply.authorName || 'Administrator') + ' · Lightworld',
+        occurredAt: reply.sentAt || reply.createdAt,
+      })),
+    ),
   ]
     .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
     .slice(0, 40);
@@ -269,7 +313,14 @@ export async function GET(
   return NextResponse.json({
     success: true,
     data: {
-      organization,
+      organization: {
+        id: organization.id,
+        name: organization.name,
+        status: organization.status,
+        primaryContactName: organization.primaryContactName,
+        primaryEmail: organization.primaryEmail,
+        primaryPhone: organization.primaryPhone,
+      },
       byCurrency: Object.fromEntries(
         [...summary.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([currency, row]) => [
           currency,
@@ -293,6 +344,25 @@ export async function GET(
         riskSignals,
         nextActions,
         recentActivity,
+        communicationThreads: contactMessages.map((message) => ({
+          id: message.id,
+          name: message.name,
+          email: message.email,
+          phone: message.phone,
+          subject: message.subject,
+          message: message.message,
+          read: message.read,
+          createdAt: message.createdAt,
+          replies: message.replies.map((reply) => ({
+            id: reply.id,
+            authorName: reply.authorName,
+            subject: reply.subject,
+            body: reply.body,
+            status: reply.status,
+            sentAt: reply.sentAt,
+            createdAt: reply.createdAt,
+          })),
+        })),
         nextRenewal: renewalCandidates[0]
           ? {
               serviceId: renewalCandidates[0].service.id,
