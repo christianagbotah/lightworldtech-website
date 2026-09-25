@@ -114,7 +114,7 @@ export default function AboutPage({
         <CmsHeroMedia settings={settings} settingKey="about_hero_image" />
         <div className="relative container-main py-16 sm:py-20 lg:py-24 z-10">
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65 }}
             className="grid gap-12 lg:grid-cols-[1.05fr_.95fr] lg:items-end"
