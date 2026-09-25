@@ -1,0 +1,2 @@
+ALTER TABLE "FinanceVendorBill"
+  ADD COLUMN IF NOT EXISTS "taxRecoverable" BOOLEAN NOT NULL DEFAULT true;
