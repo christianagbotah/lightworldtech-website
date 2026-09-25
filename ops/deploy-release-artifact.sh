@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Production runs Bun under the dedicated lightworld account. Root does not
+# necessarily inherit that user's shell PATH during artifact deployment.
+export PATH="/home/lightworld/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 ARTIFACT_ZIP="${1:-}"
 EXPECTED_SHA="${2:-}"
 RELEASE_ROOT="/home/lightworld/releases"
