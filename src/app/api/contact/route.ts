@@ -62,7 +62,22 @@ const createContactSchema = z.object({
   phone: z.string().trim().max(50).optional().default(''),
   subject: z.string().trim().max(200).optional().default(''),
   message: z.string().trim().min(1, 'Message is required').max(8000),
+  company: z.string().trim().max(160).optional().default(''),
+  industry: z.string().trim().max(120).optional().default(''),
+  countryRegion: z.string().trim().max(120).optional().default(''),
+  timezone: z.string().trim().max(80).optional().default(''),
+  serviceInterest: z.string().trim().max(160).optional().default(''),
+  currency: z.string().trim().max(12).optional().default(''),
+  budgetRange: z.string().trim().max(120).optional().default(''),
+  deliveryWindow: z.string().trim().max(120).optional().default(''),
+  engagementModel: z.string().trim().max(120).optional().default(''),
 });
+
+function isInternationalCountry(countryRegion: string): boolean {
+  const normalized = countryRegion.trim().toLowerCase();
+  if (!normalized) return false;
+  return !/\bghana\b|\bgh\b/.test(normalized);
+}
 
 export async function POST(request: NextRequest) {
   const rate = consumePublicRateLimit(request, 'contact', 12, 10 * 60_000);
@@ -87,12 +102,22 @@ export async function POST(request: NextRequest) {
 
     const intelligence = deriveLeadIntelligence({
       subject: parsed.data.subject,
-      message: parsed.data.message,
+      message: [parsed.data.serviceInterest, parsed.data.industry, parsed.data.message].filter(Boolean).join(' '),
     });
+    const industryTag = parsed.data.industry
+      ? parsed.data.industry.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      : '';
+    const tags = Array.from(new Set([...intelligence.tags, industryTag].filter(Boolean))).slice(0, 8);
 
     const message = await db.$transaction(async (tx) => {
       const created = await tx.contactMessage.create({
-        data: parsed.data,
+        data: {
+          name: parsed.data.name,
+          email: parsed.data.email,
+          phone: parsed.data.phone,
+          subject: parsed.data.subject,
+          message: parsed.data.message,
+        },
       });
 
       await tx.lead.create({
@@ -100,8 +125,18 @@ export async function POST(request: NextRequest) {
           contactMessageId: created.id,
           source: intelligence.source,
           summary: intelligence.summary,
-          tags: JSON.stringify(intelligence.tags),
+          tags: JSON.stringify(tags),
           priority: intelligence.priority,
+          company: parsed.data.company,
+          industry: parsed.data.industry,
+          countryRegion: parsed.data.countryRegion,
+          timezone: parsed.data.timezone,
+          serviceInterest: parsed.data.serviceInterest,
+          currency: parsed.data.currency,
+          budgetRange: parsed.data.budgetRange,
+          deliveryWindow: parsed.data.deliveryWindow,
+          engagementModel: parsed.data.engagementModel,
+          international: isInternationalCountry(parsed.data.countryRegion),
         },
       });
 

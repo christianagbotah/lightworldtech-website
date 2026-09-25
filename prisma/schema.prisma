@@ -365,6 +365,19 @@ model Lead {
   source           String         @default("website")
   summary          String         @default("")
   tags             String         @default("[]")
+  company          String         @default("")
+  industry         String         @default("")
+  countryRegion    String         @default("")
+  timezone         String         @default("")
+  serviceInterest  String         @default("")
+  currency         String         @default("")
+  budgetRange      String         @default("")
+  deliveryWindow   String         @default("")
+  engagementModel  String         @default("")
+  international    Boolean        @default(false)
+  expectedRevenue  Decimal        @default(0) @db.Decimal(18, 2)
+  probability      Int            @default(10)
+  nextAction       String         @default("")
   nextFollowUp     DateTime?
   lastContactedAt  DateTime?
   notes            LeadNote[]
@@ -375,6 +388,9 @@ model Lead {
 
   @@index([status, updatedAt])
   @@index([priority, updatedAt])
+  @@index([international, updatedAt])
+  @@index([industry, updatedAt])
+  @@index([countryRegion, updatedAt])
   @@index([nextFollowUp])
 }
 

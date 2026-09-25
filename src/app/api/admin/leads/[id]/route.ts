@@ -15,6 +15,19 @@ const updateSchema = z.object({
   lastContactedAt: z.string().datetime().nullable().optional(),
   tags: z.array(z.string().trim().min(1).max(60)).max(12).optional(),
   summary: z.string().trim().max(600).optional(),
+  company: z.string().trim().max(160).optional(),
+  industry: z.string().trim().max(120).optional(),
+  countryRegion: z.string().trim().max(120).optional(),
+  timezone: z.string().trim().max(80).optional(),
+  serviceInterest: z.string().trim().max(160).optional(),
+  currency: z.string().trim().max(12).optional(),
+  budgetRange: z.string().trim().max(120).optional(),
+  deliveryWindow: z.string().trim().max(120).optional(),
+  engagementModel: z.string().trim().max(120).optional(),
+  international: z.boolean().optional(),
+  expectedRevenue: z.coerce.number().min(0).max(1_000_000_000).optional(),
+  probability: z.coerce.number().int().min(0).max(100).optional(),
+  nextAction: z.string().trim().max(240).optional(),
   regenerateIntelligence: z.boolean().optional(),
 });
 
@@ -69,6 +82,19 @@ export async function PUT(
     if (parsed.data.assignedTo !== undefined) data.assignedTo = parsed.data.assignedTo;
     if (parsed.data.summary !== undefined) data.summary = parsed.data.summary;
     if (parsed.data.tags !== undefined) data.tags = JSON.stringify(parsed.data.tags);
+    if (parsed.data.company !== undefined) data.company = parsed.data.company;
+    if (parsed.data.industry !== undefined) data.industry = parsed.data.industry;
+    if (parsed.data.countryRegion !== undefined) data.countryRegion = parsed.data.countryRegion;
+    if (parsed.data.timezone !== undefined) data.timezone = parsed.data.timezone;
+    if (parsed.data.serviceInterest !== undefined) data.serviceInterest = parsed.data.serviceInterest;
+    if (parsed.data.currency !== undefined) data.currency = parsed.data.currency;
+    if (parsed.data.budgetRange !== undefined) data.budgetRange = parsed.data.budgetRange;
+    if (parsed.data.deliveryWindow !== undefined) data.deliveryWindow = parsed.data.deliveryWindow;
+    if (parsed.data.engagementModel !== undefined) data.engagementModel = parsed.data.engagementModel;
+    if (parsed.data.international !== undefined) data.international = parsed.data.international;
+    if (parsed.data.expectedRevenue !== undefined) data.expectedRevenue = parsed.data.expectedRevenue;
+    if (parsed.data.probability !== undefined) data.probability = parsed.data.probability;
+    if (parsed.data.nextAction !== undefined) data.nextAction = parsed.data.nextAction;
     if (parsed.data.nextFollowUp !== undefined) {
       data.nextFollowUp = parsed.data.nextFollowUp ? new Date(parsed.data.nextFollowUp) : null;
     }
@@ -79,7 +105,7 @@ export async function PUT(
     if (parsed.data.regenerateIntelligence) {
       const intelligence = deriveLeadIntelligence({
         subject: existing.contactMessage.subject,
-        message: existing.contactMessage.message,
+        message: [existing.serviceInterest, existing.industry, existing.contactMessage.message].filter(Boolean).join(' '),
       });
       data.source = intelligence.source;
       data.summary = intelligence.summary;

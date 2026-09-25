@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock3,
   FileSignature,
+  Globe2,
   Mail,
   MessageSquarePlus,
   Phone,
@@ -81,6 +82,19 @@ type Lead = {
   source: string;
   summary: string;
   tags: string;
+  company: string;
+  industry: string;
+  countryRegion: string;
+  timezone: string;
+  serviceInterest: string;
+  currency: string;
+  budgetRange: string;
+  deliveryWindow: string;
+  engagementModel: string;
+  international: boolean;
+  expectedRevenue: string;
+  probability: number;
+  nextAction: string;
   nextFollowUp: string | null;
   lastContactedAt: string | null;
   createdAt: string;
@@ -93,6 +107,7 @@ type LeadSummary = {
   total: number;
   open: number;
   highPriority: number;
+  international: number;
   overdueFollowUps: number;
   byStatus: Record<Stage, number>;
 };
@@ -104,6 +119,8 @@ type SavedCrmView = {
   priority: string;
   query: string;
   overdueOnly: boolean;
+  industry?: string;
+  globalOnly?: boolean;
 };
 
 function parseTags(value: string): string[] {
@@ -153,6 +170,8 @@ export default function AdminCRM() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [query, setQuery] = useState('');
+  const [industryFilter, setIndustryFilter] = useState('all');
+  const [globalOnly, setGlobalOnly] = useState(false);
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [savedViews, setSavedViews] = useState<SavedCrmView[]>([]);
   const [saveViewOpen, setSaveViewOpen] = useState(false);
@@ -167,6 +186,8 @@ export default function AdminCRM() {
       const params = new URLSearchParams({ limit: '200' });
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (priorityFilter !== 'all') params.set('priority', priorityFilter);
+      if (industryFilter !== 'all') params.set('industry', industryFilter);
+      if (globalOnly) params.set('international', 'true');
       if (query.trim()) params.set('q', query.trim());
       if (overdueOnly) params.set('overdue', 'true');
 
@@ -231,7 +252,7 @@ export default function AdminCRM() {
     }, query ? 250 : 0);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, priorityFilter, query, overdueOnly]);
+  }, [statusFilter, priorityFilter, industryFilter, globalOnly, query, overdueOnly]);
 
   useEffect(() => {
     if (!leads.length || typeof window === 'undefined') return;
@@ -245,6 +266,8 @@ export default function AdminCRM() {
   const clearFilters = () => {
     setStatusFilter('all');
     setPriorityFilter('all');
+    setIndustryFilter('all');
+    setGlobalOnly(false);
     setQuery('');
     setOverdueOnly(false);
   };
@@ -266,6 +289,8 @@ export default function AdminCRM() {
         priority: priorityFilter,
         query,
         overdueOnly,
+        industry: industryFilter,
+        globalOnly,
       },
     ].slice(-20);
     persistSavedViews(next);
@@ -277,6 +302,8 @@ export default function AdminCRM() {
   const applySavedView = (view: SavedCrmView) => {
     setStatusFilter(view.status);
     setPriorityFilter(view.priority);
+    setIndustryFilter(view.industry || 'all');
+    setGlobalOnly(Boolean(view.globalOnly));
     setQuery(view.query);
     setOverdueOnly(view.overdueOnly);
   };
@@ -291,6 +318,8 @@ export default function AdminCRM() {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (priorityFilter !== 'all') params.set('priority', priorityFilter);
+      if (industryFilter !== 'all') params.set('industry', industryFilter);
+      if (globalOnly) params.set('international', 'true');
       if (query.trim()) params.set('q', query.trim());
       if (overdueOnly) params.set('overdue', 'true');
 
@@ -463,10 +492,11 @@ export default function AdminCRM() {
         />
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {[
           { label: 'Total leads', value: summary?.total || 0, icon: UsersRound, onClick: clearFilters },
-          { label: 'Open pipeline', value: summary?.open || 0, icon: UserRound, onClick: () => { setStatusFilter('all'); setPriorityFilter('all'); setOverdueOnly(false); } },
+          { label: 'Open pipeline', value: summary?.open || 0, icon: UserRound, onClick: () => { setStatusFilter('all'); setPriorityFilter('all'); setGlobalOnly(false); setOverdueOnly(false); } },
+          { label: 'Global opportunities', value: summary?.international || 0, icon: Globe2, onClick: () => { setGlobalOnly(true); setOverdueOnly(false); } },
           { label: 'High priority', value: summary?.highPriority || 0, icon: AlertTriangle, onClick: () => { setPriorityFilter('high'); setOverdueOnly(false); } },
           { label: 'Follow-ups overdue', value: summary?.overdueFollowUps || 0, icon: CalendarClock, onClick: () => setOverdueOnly(true) },
         ].map((item) => (
@@ -493,7 +523,7 @@ export default function AdminCRM() {
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search name, email, subject, owner or summary"
+              placeholder="Search person, company, country, industry, service, owner or summary"
               className="pl-9"
             />
           </label>
@@ -532,6 +562,32 @@ export default function AdminCRM() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+          <span className="mr-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Market</span>
+          <select
+            value={industryFilter}
+            onChange={(event) => setIndustryFilter(event.target.value)}
+            className="h-9 rounded-xl border border-input bg-background px-3 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
+            aria-label="Filter by industry"
+          >
+            <option value="all">All industries</option>
+            <option value="Education">Education</option>
+            <option value="Manufacturing">Manufacturing</option>
+            <option value="Logistics & transport">Logistics & transport</option>
+            <option value="Retail & commerce">Retail & commerce</option>
+            <option value="Professional services">Professional services</option>
+            <option value="Technology / startup">Technology / startup</option>
+            <option value="Public / nonprofit">Public / nonprofit</option>
+            <option value="Other">Other</option>
+          </select>
+          <Button
+            type="button"
+            size="sm"
+            variant={globalOnly ? 'default' : 'outline'}
+            onClick={() => setGlobalOnly((value) => !value)}
+          >
+            <Globe2 className="mr-2 size-3.5" /> Global only
+          </Button>
+          <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
           <span className="mr-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Saved views</span>
           {savedViews.map((view) => (
             <span key={view.id} className="inline-flex items-center rounded-full border border-border bg-muted/40 pl-3 text-xs">
@@ -546,7 +602,7 @@ export default function AdminCRM() {
           <Button type="button" size="sm" variant="outline" onClick={() => setSaveViewOpen(true)}>
             <BookmarkPlus className="mr-2 size-3.5" /> Save current view
           </Button>
-          {(statusFilter !== 'all' || priorityFilter !== 'all' || query || overdueOnly) && (
+          {(statusFilter !== 'all' || priorityFilter !== 'all' || industryFilter !== 'all' || globalOnly || query || overdueOnly) && (
             <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
               <Trash2 className="mr-2 size-3.5" /> Clear filters
             </Button>
@@ -585,6 +641,11 @@ export default function AdminCRM() {
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold">{lead.contactMessage.name}</p>
                           <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{lead.contactMessage.subject || lead.contactMessage.email}</p>
+                          {(lead.company || lead.countryRegion) && (
+                            <p className="mt-1 truncate text-[10px] font-medium text-amber-700/80 dark:text-amber-300/70">
+                              {[lead.company, lead.countryRegion].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
                         </div>
                         <span className={'shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase ' + priorityClass(lead.priority)}>
                           {lead.priority}
@@ -686,6 +747,94 @@ export default function AdminCRM() {
                     ) : (
                       <span className="flex items-center gap-2 text-sm text-muted-foreground"><Phone className="size-4" /> No phone provided</span>
                     )}
+                  </div>
+
+                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-300">Commercial qualification</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Structured market and opportunity context. The original customer enquiry below is never rewritten.</p>
+                      </div>
+                      <label className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium">
+                        <input
+                          type="checkbox"
+                          checked={selected.international}
+                          onChange={(event) => {
+                            const value = event.target.checked;
+                            setSelected({ ...selected, international: value });
+                            void patchLead(selected, { international: value });
+                          }}
+                        />
+                        International
+                      </label>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <Label>Company / organization</Label>
+                        <Input className="mt-2" value={selected.company} onChange={(event) => setSelected({ ...selected, company: event.target.value })} onBlur={(event) => void patchLead(selected, { company: event.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Industry</Label>
+                        <Input className="mt-2" value={selected.industry} onChange={(event) => setSelected({ ...selected, industry: event.target.value })} onBlur={(event) => void patchLead(selected, { industry: event.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Country / region</Label>
+                        <Input className="mt-2" value={selected.countryRegion} onChange={(event) => setSelected({ ...selected, countryRegion: event.target.value })} onBlur={(event) => void patchLead(selected, { countryRegion: event.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Time zone</Label>
+                        <Input className="mt-2" value={selected.timezone} onChange={(event) => setSelected({ ...selected, timezone: event.target.value })} onBlur={(event) => void patchLead(selected, { timezone: event.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Service interest</Label>
+                        <Input className="mt-2" value={selected.serviceInterest} onChange={(event) => setSelected({ ...selected, serviceInterest: event.target.value })} onBlur={(event) => void patchLead(selected, { serviceInterest: event.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Engagement model</Label>
+                        <Input className="mt-2" value={selected.engagementModel} onChange={(event) => setSelected({ ...selected, engagementModel: event.target.value })} onBlur={(event) => void patchLead(selected, { engagementModel: event.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Budget range</Label>
+                        <Input className="mt-2" value={selected.budgetRange} onChange={(event) => setSelected({ ...selected, budgetRange: event.target.value })} onBlur={(event) => void patchLead(selected, { budgetRange: event.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Delivery window</Label>
+                        <Input className="mt-2" value={selected.deliveryWindow} onChange={(event) => setSelected({ ...selected, deliveryWindow: event.target.value })} onBlur={(event) => void patchLead(selected, { deliveryWindow: event.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Currency</Label>
+                        <Input className="mt-2" value={selected.currency} onChange={(event) => setSelected({ ...selected, currency: event.target.value.toUpperCase().slice(0, 12) })} onBlur={(event) => void patchLead(selected, { currency: event.target.value.toUpperCase() })} />
+                      </div>
+                      <div>
+                        <Label>Expected revenue</Label>
+                        <Input
+                          className="mt-2"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={selected.expectedRevenue}
+                          onChange={(event) => setSelected({ ...selected, expectedRevenue: event.target.value })}
+                          onBlur={(event) => void patchLead(selected, { expectedRevenue: Number(event.target.value || 0) })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Probability (%)</Label>
+                        <Input
+                          className="mt-2"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={selected.probability}
+                          onChange={(event) => setSelected({ ...selected, probability: Math.max(0, Math.min(100, Number(event.target.value || 0))) })}
+                          onBlur={(event) => void patchLead(selected, { probability: Number(event.target.value || 0) })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Next action</Label>
+                        <Input className="mt-2" value={selected.nextAction} onChange={(event) => setSelected({ ...selected, nextAction: event.target.value })} onBlur={(event) => void patchLead(selected, { nextAction: event.target.value })} placeholder="e.g. Confirm discovery call" />
+                      </div>
+                    </div>
                   </div>
 
                   <div>

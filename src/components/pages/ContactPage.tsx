@@ -38,13 +38,63 @@ const services = [
   'Something else',
 ];
 
+const industries = [
+  '',
+  'Education',
+  'Manufacturing',
+  'Logistics & transport',
+  'Retail & commerce',
+  'Professional services',
+  'Technology / startup',
+  'Public / nonprofit',
+  'Other',
+];
+
+const currencies = ['', 'GHS', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'AED', 'Other'];
+
+const budgetRanges = [
+  '',
+  'Under 5,000',
+  '5,000 – 15,000',
+  '15,000 – 50,000',
+  '50,000 – 150,000',
+  '150,000+',
+  'Need help estimating',
+];
+
+const deliveryWindows = [
+  '',
+  'As soon as practical',
+  'Within 1 month',
+  '1 – 3 months',
+  '3 – 6 months',
+  '6+ months',
+  'Still exploring',
+];
+
+const engagementModels = [
+  '',
+  'Project delivery',
+  'Dedicated / extended team',
+  'Advisory / discovery',
+  'Modernization / takeover',
+  'Ongoing support & improvement',
+  'Not sure yet',
+];
+
 export default function ContactPage({ settings = {} }: { settings?: SiteSettings }) {
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
+    company: '',
+    industry: '',
     country: '',
     timezone: '',
+    currency: '',
+    budgetRange: '',
+    deliveryWindow: '',
+    engagementModel: '',
     service: services[0],
     subject: '',
     message: '',
@@ -113,11 +163,16 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
           email: form.email.trim(),
           phone: form.phone.trim(),
           subject: form.subject.trim() || form.service,
-          message:
-            '[' + form.service + ']\n' +
-            '[Country / region: ' + (form.country.trim() || 'Not provided') + ']\n' +
-            '[Preferred time zone: ' + (form.timezone.trim() || 'Not provided') + ']\n\n' +
-            form.message.trim(),
+          message: form.message.trim(),
+          company: form.company.trim(),
+          industry: form.industry,
+          countryRegion: form.country.trim(),
+          timezone: form.timezone.trim(),
+          serviceInterest: form.service,
+          currency: form.currency,
+          budgetRange: form.budgetRange,
+          deliveryWindow: form.deliveryWindow,
+          engagementModel: form.engagementModel,
         }),
       });
       const payload = await response.json().catch(() => null);
@@ -245,7 +300,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                           type="button"
                           onClick={() => {
                             resetResponse();
-                            setForm({ name: '', email: '', phone: '', country: '', timezone: '', service: services[0], subject: '', message: '' });
+                            setForm({ name: '', email: '', phone: '', company: '', industry: '', country: '', timezone: '', currency: '', budgetRange: '', deliveryWindow: '', engagementModel: '', service: services[0], subject: '', message: '' });
                           }}
                           className="inline-flex h-11 items-center justify-center rounded-full bg-green-600 px-6 text-sm font-semibold text-white transition hover:bg-green-500 dark:bg-green-500 dark:text-slate-950 dark:hover:bg-green-400"
                         >
@@ -319,6 +374,31 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Company / organization <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                        <input
+                          name="company"
+                          autoComplete="organization"
+                          value={form.company}
+                          onChange={(event) => setForm((current) => ({ ...current, company: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
+                          placeholder="Your organization"
+                        />
+                      </label>
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Industry <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                        <select
+                          name="industry"
+                          value={form.industry}
+                          onChange={(event) => setForm((current) => ({ ...current, industry: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-[#0c141b] dark:text-white"
+                        >
+                          {industries.map((industry) => <option key={industry || 'industry-placeholder'} value={industry}>{industry || 'Select industry'}</option>)}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
                         Phone <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <input
                           type="tel"
@@ -367,6 +447,56 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                           className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
                           placeholder="e.g. GMT, CET, EST"
                         />
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Budget range <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                        <select
+                          name="budgetRange"
+                          value={form.budgetRange}
+                          onChange={(event) => setForm((current) => ({ ...current, budgetRange: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-[#0c141b] dark:text-white"
+                        >
+                          {budgetRanges.map((item) => <option key={item || 'budget-placeholder'} value={item}>{item || 'Select budget range'}</option>)}
+                        </select>
+                      </label>
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Preferred currency <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                        <select
+                          name="currency"
+                          value={form.currency}
+                          onChange={(event) => setForm((current) => ({ ...current, currency: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-[#0c141b] dark:text-white"
+                        >
+                          {currencies.map((item) => <option key={item || 'currency-placeholder'} value={item}>{item || 'Select currency'}</option>)}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Desired delivery window <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                        <select
+                          name="deliveryWindow"
+                          value={form.deliveryWindow}
+                          onChange={(event) => setForm((current) => ({ ...current, deliveryWindow: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-[#0c141b] dark:text-white"
+                        >
+                          {deliveryWindows.map((item) => <option key={item || 'delivery-placeholder'} value={item}>{item || 'Select delivery window'}</option>)}
+                        </select>
+                      </label>
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Engagement model <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                        <select
+                          name="engagementModel"
+                          value={form.engagementModel}
+                          onChange={(event) => setForm((current) => ({ ...current, engagementModel: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-[#0c141b] dark:text-white"
+                        >
+                          {engagementModels.map((item) => <option key={item || 'engagement-placeholder'} value={item}>{item || 'Select engagement model'}</option>)}
+                        </select>
                       </label>
                     </div>
 

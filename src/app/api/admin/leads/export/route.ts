@@ -17,11 +17,16 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')?.trim();
     const priority = searchParams.get('priority')?.trim();
     const q = searchParams.get('q')?.trim();
+    const industry = searchParams.get('industry')?.trim();
+    const international = searchParams.get('international');
     const overdue = searchParams.get('overdue') === 'true';
 
     const where: Record<string, unknown> = {};
     if (status && status !== 'all') where.status = status;
     if (priority && priority !== 'all') where.priority = priority;
+    if (industry && industry !== 'all') where.industry = industry;
+    if (international === 'true') where.international = true;
+    if (international === 'false') where.international = false;
     if (overdue) {
       where.nextFollowUp = { lt: new Date() };
       where.status = status && status !== 'all' ? status : { notIn: ['won', 'lost'] };
@@ -30,6 +35,12 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { summary: { contains: q } },
         { assignedTo: { contains: q } },
+        { company: { contains: q } },
+        { industry: { contains: q } },
+        { countryRegion: { contains: q } },
+        { timezone: { contains: q } },
+        { serviceInterest: { contains: q } },
+        { nextAction: { contains: q } },
         { contactMessage: { name: { contains: q } } },
         { contactMessage: { email: { contains: q } } },
         { contactMessage: { subject: { contains: q } } },
@@ -46,8 +57,10 @@ export async function GET(request: NextRequest) {
     const rows: unknown[][] = [
       [
         'Lead ID', 'Status', 'Priority', 'Assigned To', 'Source',
-        'Customer Name', 'Email', 'Phone', 'Subject', 'Summary', 'Tags',
-        'Next Follow-up', 'Last Contacted', 'Created', 'Updated',
+        'Customer Name', 'Email', 'Phone', 'Company', 'Industry', 'Country / Region', 'Time Zone',
+        'Service Interest', 'Currency', 'Budget Range', 'Delivery Window', 'Engagement Model',
+        'International', 'Expected Revenue', 'Probability %', 'Next Action',
+        'Subject', 'Summary', 'Tags', 'Next Follow-up', 'Last Contacted', 'Created', 'Updated',
       ],
       ...leads.map((lead) => [
         lead.id,
@@ -58,6 +71,19 @@ export async function GET(request: NextRequest) {
         lead.contactMessage.name,
         lead.contactMessage.email,
         lead.contactMessage.phone,
+        lead.company,
+        lead.industry,
+        lead.countryRegion,
+        lead.timezone,
+        lead.serviceInterest,
+        lead.currency,
+        lead.budgetRange,
+        lead.deliveryWindow,
+        lead.engagementModel,
+        lead.international ? 'Yes' : 'No',
+        lead.expectedRevenue.toString(),
+        lead.probability,
+        lead.nextAction,
         lead.contactMessage.subject,
         lead.summary,
         lead.tags,
@@ -77,6 +103,8 @@ export async function GET(request: NextRequest) {
         filters: {
           status: status || 'all',
           priority: priority || 'all',
+          industry: industry || 'all',
+          international: international || 'all',
           overdue,
           queryApplied: Boolean(q),
         },
