@@ -31,6 +31,9 @@ describe('public experience quality', () => {
     expect(loading).toContain('Lightworld Technologies');
     expect(loading).toContain('fixed inset-0');
     expect(loading).toContain('z-[120]');
+    expect(loading).toContain('animate-[spin_1.35s_linear_infinite]');
+    expect(loading).toContain('animate-[spin_2.1s_linear_infinite_reverse]');
+    expect(loading).toContain('motion-reduce:animate-none');
     expect(layout).toContain('<Suspense fallback={null}>');
     expect(layout).toContain('<SeoStructuredData />');
     expect(layout).not.toContain('export default async function RootLayout');
@@ -39,6 +42,18 @@ describe('public experience quality', () => {
     expect(home).toContain('initial={false}');
     expect(pageHero).toContain('initial={false}');
     expect(globalPage).not.toContain('initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}');
+  });
+
+  test('product cards use consistent visual and title alignment', () => {
+    const products = source('src/components/pages/ProductsPage.tsx');
+
+    expect(products).toContain("import Image from 'next/image'");
+    expect(products.match(/image: '\/images\//g)?.length).toBeGreaterThanOrEqual(6);
+    expect(products).toContain('aspect-[16/9]');
+    expect(products).toContain('min-h-[58px]');
+    expect(products).toContain('min-h-[72px]');
+    expect(products).toContain('group-hover:scale-[1.035]');
+    expect(products).not.toContain('mt-auto pt-9');
   });
 
   test('inner-page header clearance is painted by the hero instead of a blank spacer', () => {
