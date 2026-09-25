@@ -197,6 +197,28 @@ export default function AdminSms() {
     void load();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const recipient = sessionStorage.getItem('lw-sms-recipient') || '';
+    if (!recipient) return;
+
+    const customerName = sessionStorage.getItem('lw-sms-customer-name') || '';
+    sessionStorage.removeItem('lw-sms-recipient');
+    sessionStorage.removeItem('lw-sms-customer-name');
+    sessionStorage.removeItem('lw-sms-organization-id');
+
+    setTab('single');
+    setSingle((current) => ({
+      ...current,
+      recipient,
+      content: current.content || (customerName ? 'Hello ' + customerName + ', ' : ''),
+    }));
+
+    window.setTimeout(() => {
+      document.getElementById('lw-single-sms-content')?.focus();
+    }, 0);
+  }, []);
+
   const selectedSingleTemplate = useMemo(
     () => data?.templates.find((item) => item.id === single.templateId) || null,
     [data?.templates, single.templateId],
@@ -514,6 +536,7 @@ export default function AdminSms() {
                   <div className="space-y-2">
                     <Label>Recipient</Label>
                     <Input
+                      id="lw-single-sms-recipient"
                       required
                       value={single.recipient}
                       onChange={(event) => setSingle({ ...single, recipient: event.target.value })}
@@ -553,6 +576,7 @@ export default function AdminSms() {
                   <div className="space-y-2">
                     <Label>Message</Label>
                     <Textarea
+                      id="lw-single-sms-content"
                       required
                       rows={6}
                       maxLength={2000}
