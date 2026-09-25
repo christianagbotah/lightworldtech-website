@@ -288,6 +288,7 @@ export default function AdminFinance() {
   const [loadError, setLoadError] = useState('');
   const [deepLinkOrganizationId, setDeepLinkOrganizationId] = useState('');
   const [deepLinkCustomerName, setDeepLinkCustomerName] = useState('');
+  const [deepLinkAction, setDeepLinkAction] = useState('');
   const [dialog, setDialog] = useState<DialogName>(null);
   const [financeRecord, setFinanceRecord] = useState<FinanceRecordSelection>(null);
   const [saving, setSaving] = useState(false);
@@ -386,10 +387,52 @@ export default function AdminFinance() {
     }
     setDeepLinkOrganizationId(sessionStorage.getItem('lw-finance-organization-id') || '');
     setDeepLinkCustomerName(sessionStorage.getItem('lw-finance-customer-name') || '');
+    setDeepLinkAction(sessionStorage.getItem('lw-finance-action') || '');
     sessionStorage.removeItem('lw-finance-section');
     sessionStorage.removeItem('lw-finance-organization-id');
     sessionStorage.removeItem('lw-finance-customer-name');
+    sessionStorage.removeItem('lw-finance-action');
   }, []);
+
+  useEffect(() => {
+    if (!data || !deepLinkAction || !deepLinkOrganizationId) return;
+    const organization = data.organizations.find((item) => item.id === deepLinkOrganizationId);
+    if (!organization) {
+      setDeepLinkAction('');
+      return;
+    }
+
+    setSection('customers');
+
+    if (deepLinkAction === 'invoice') {
+      setInvoiceForm((current) => ({
+        ...current,
+        organizationId: organization.id,
+        serviceId: '',
+        projectId: '',
+        renewalForDate: '',
+        notes: current.notes || 'Prepared from Customer 360. Review invoice lines, tax treatment and due date before issuing.',
+      }));
+      setDialog('invoice');
+    } else if (deepLinkAction === 'receipt') {
+      setReceiptForm((current) => ({
+        ...current,
+        organizationId: organization.id,
+        notes: current.notes || 'Customer payment recorded from Customer 360.',
+        allocations: [{ invoiceId: '', amount: '' }],
+      }));
+      setDialog('receipt');
+    } else if (deepLinkAction === 'service') {
+      setServiceForm((current) => ({
+        ...current,
+        organizationId: organization.id,
+        projectId: '',
+      }));
+      setDialog('service');
+    }
+
+    setDeepLinkAction('');
+  }, [data, deepLinkAction, deepLinkOrganizationId]);
 
   const receiptInvoices = useMemo(
     () => (data?.invoices || []).filter((invoice) =>
