@@ -439,6 +439,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain('Customer payment history');
     expect(clientCommercial).toContain('Service commercial history');
     expect(clientCommercial).toContain('Customer 360 commercial pulse');
+    expect(clientCommercial).toContain('Account health');
+    expect(clientCommercial).toContain('Recommended next actions');
+    expect(clientCommercial).toContain('runCustomerAction');
     expect(clientCommercial).toContain('Delivery portfolio');
     expect(clientCommercial).toContain('Support pressure');
     expect(clientCommercial).toContain('Due in 30 days');
@@ -452,6 +455,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercialApi).toContain('renewalsDue30');
     expect(clientCommercialApi).toContain('expiredServices');
     expect(clientCommercialApi).toContain('nextRenewal');
+    expect(clientCommercialApi).toContain('accountHealth');
+    expect(clientCommercialApi).toContain('riskSignals');
+    expect(clientCommercialApi).toContain('nextActions');
+    expect(clientCommercialApi).toContain('overdue_receivables');
+    expect(clientCommercialApi).toContain('urgent_support');
+    expect(clientCommercialApi).toContain('delivery_risk');
     expect(clientCommercial).toContain('lw-finance-section');
     expect(clientCommercial).toContain('/statement');
     expect(clientCommercial).toContain("fetch('/api/admin/finance/payments'");
