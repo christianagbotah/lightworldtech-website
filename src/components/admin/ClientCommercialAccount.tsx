@@ -35,6 +35,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 import {
   Table,
   TableBody,
@@ -226,6 +227,13 @@ type CommercialData = {
       }>;
       methodology: string;
     };
+    collectionTarget: {
+      id: string;
+      invoiceNumber: string;
+      currency: string;
+      balance: string;
+      dueDate: string;
+    } | null;
     commitments: {
       nextCollectionFollowUp: {
         id: string;
@@ -360,6 +368,8 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
   const [forbidden, setForbidden] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statementDownloading, setStatementDownloading] = useState(false);
+  const [pendingReminder, setPendingReminder] = useState<'payment_sms' | 'renewal_sms' | null>(null);
+  const [reminderBusy, setReminderBusy] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     currency: 'GHS',
@@ -487,6 +497,45 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
       return;
     }
     void downloadStatement();
+  };
+
+  const sendReminder = async () => {
+    if (!pendingReminder || !data) return;
+    setReminderBusy(true);
+    try {
+      if (pendingReminder === 'payment_sms') {
+        const target = data.customer360.collectionTarget;
+        if (!target) throw new Error('No overdue invoice is available for a payment reminder');
+        const response = await fetch('/api/admin/finance/collections', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            invoiceId: target.id,
+            type: 'sms_reminder',
+            note: 'Payment reminder sent from Customer 360.',
+          }),
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(payload?.error || 'Unable to send payment reminder');
+        toast.success('Payment reminder SMS sent');
+      } else {
+        const renewal = data.customer360.nextRenewal;
+        if (!renewal) throw new Error('No upcoming service renewal is available');
+        const response = await fetch(
+          '/api/admin/finance/services/' + encodeURIComponent(renewal.serviceId) + '/renewal-reminder',
+          { method: 'POST' },
+        );
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(payload?.error || 'Unable to send renewal reminder');
+        toast.success('Renewal reminder SMS sent');
+      }
+      setPendingReminder(null);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to send customer reminder');
+    } finally {
+      setReminderBusy(false);
+    }
   };
 
   const downloadStatement = async () => {
@@ -628,7 +677,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                 </div>
                 <Badge variant="outline">Operational shortcuts</Badge>
               </div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
                 <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => openFinanceSection('customers', 'invoice')}>
                   <ReceiptText className="mr-2 size-4 shrink-0 text-amber-600" />
                   <span><span className="block text-xs font-semibold">Issue invoice</span><span className="block text-[10px] font-normal text-muted-foreground">Customer preselected</span></span>
@@ -660,6 +709,14 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                 <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={openCustomerSms} disabled={!data?.organization.primaryPhone}>
                   <MessageSquareText className="mr-2 size-4 shrink-0 text-emerald-600" />
                   <span><span className="block text-xs font-semibold">SMS customer</span><span className="block text-[10px] font-normal text-muted-foreground">{data?.organization.primaryPhone ? 'Open Hubtel composer' : 'Primary phone required'}</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => setPendingReminder('payment_sms')} disabled={!data?.customer360.collectionTarget || !data?.organization.primaryPhone || reminderBusy}>
+                  <CreditCard className="mr-2 size-4 shrink-0 text-rose-600" />
+                  <span><span className="block text-xs font-semibold">Payment reminder</span><span className="block text-[10px] font-normal text-muted-foreground">{data?.customer360.collectionTarget ? data.customer360.collectionTarget.invoiceNumber : 'No overdue invoice'}</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => setPendingReminder('renewal_sms')} disabled={!data?.customer360.nextRenewal || !data?.organization.primaryPhone || reminderBusy}>
+                  <CalendarClock className="mr-2 size-4 shrink-0 text-violet-600" />
+                  <span><span className="block text-xs font-semibold">Renewal reminder</span><span className="block text-[10px] font-normal text-muted-foreground">{data?.customer360.nextRenewal ? data.customer360.nextRenewal.serviceName : 'No upcoming renewal'}</span></span>
                 </Button>
               </div>
             </div>
@@ -1375,6 +1432,24 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
           </>
         )}
       </CardContent>
+
+      <ConfirmActionDialog
+        open={Boolean(pendingReminder)}
+        onOpenChange={(open) => {
+          if (!open && !reminderBusy) setPendingReminder(null);
+        }}
+        title={pendingReminder === 'payment_sms' ? 'Send payment reminder SMS?' : 'Send renewal reminder SMS?'}
+        description={
+          pendingReminder === 'payment_sms' && data?.customer360.collectionTarget
+            ? 'Send the approved payment-due template to ' + (data.organization.primaryPhone || 'the customer') + ' for ' + data.customer360.collectionTarget.invoiceNumber + ' (' + money(data.customer360.collectionTarget.balance, data.customer360.collectionTarget.currency) + ' outstanding). Duplicate reminders are blocked for 12 hours.'
+            : pendingReminder === 'renewal_sms' && data?.customer360.nextRenewal
+              ? 'Send the approved renewal template to ' + (data.organization.primaryPhone || 'the customer') + ' for ' + data.customer360.nextRenewal.serviceName + '. Duplicate reminders are blocked for 12 hours.'
+              : 'Send this customer reminder?'
+        }
+        confirmLabel={reminderBusy ? 'Sending…' : 'Send SMS'}
+        tone="default"
+        onConfirm={() => void sendReminder()}
+      />
 
       <Dialog open={paymentOpen} onOpenChange={(open) => !saving && setPaymentOpen(open)}>
         <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto">
