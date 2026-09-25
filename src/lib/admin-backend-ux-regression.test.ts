@@ -404,6 +404,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(permissions).toContain("key: 'finance.approve'");
     expect(permissions).toContain("pathname.startsWith('/api/admin/finance')");
     expect(finance).toContain('Finance & Accounts');
+    expect(finance).toContain('const raw = await response.text()');
+    expect(finance).toContain('Finance endpoint returned invalid JSON');
+    expect(finance).toContain('Finance endpoint returned an empty response');
+    expect(finance).toContain("const maxAttempts = method === 'GET' ? 2 : 1");
+    expect(finance).toContain('[502, 503, 504].includes(response.status)');
+    expect(finance).not.toContain('const payload = await response.json();');
     expect(finance).toContain('Customer accounts');
     expect(finance).toContain('Suppliers & expenses');
     expect(finance).toContain("['accounting', 'Accounting']");
