@@ -22,6 +22,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -139,6 +140,24 @@ export default function AdminProposals() {
   const [saving, setSaving] = useState(false);
   const [regenerateConfirmOpen, setRegenerateConfirmOpen] = useState(false);
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
+  const [conversionOpen, setConversionOpen] = useState(false);
+  const [conversionForm, setConversionForm] = useState({
+    organizationName: '',
+    projectName: '',
+    manager: '',
+    startDate: new Date().toISOString().slice(0, 10),
+    targetDate: '',
+    expiryDate: '',
+    nextRenewalDate: '',
+    renewalCycle: 'annual',
+    renewalCurrency: 'GHS',
+    renewalAmount: '',
+    budgetCurrency: 'GHS',
+    budgetAmount: '',
+    autoRenew: false,
+    renewalNoticeDays: '30',
+    renewalNotes: '',
+  });
 
   const fetchData = async () => {
     try {
@@ -237,6 +256,28 @@ export default function AdminProposals() {
     await patchProposal({ regenerateDraft: true }, 'Proposal regenerated as a new draft version');
   };
 
+  const openConversion = () => {
+    if (!selected) return;
+    setConversionForm({
+      organizationName: selected.lead.contactMessage.name,
+      projectName: selected.title,
+      manager: '',
+      startDate: new Date().toISOString().slice(0, 10),
+      targetDate: '',
+      expiryDate: '',
+      nextRenewalDate: '',
+      renewalCycle: 'annual',
+      renewalCurrency: 'GHS',
+      renewalAmount: '',
+      budgetCurrency: 'GHS',
+      budgetAmount: '',
+      autoRenew: false,
+      renewalNoticeDays: '30',
+      renewalNotes: selected.commercialNotes || '',
+    });
+    setConversionOpen(true);
+  };
+
   const convertAcceptedProposal = async () => {
     if (!canManageClients || !selected || selected.status !== 'accepted') return;
     setSaving(true);
@@ -244,7 +285,12 @@ export default function AdminProposals() {
       const response = await fetch('/api/admin/proposals/' + selected.id + '/convert-client', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          ...conversionForm,
+          renewalAmount: Number(conversionForm.renewalAmount || 0),
+          budgetAmount: Number(conversionForm.budgetAmount || 0),
+          renewalNoticeDays: Number(conversionForm.renewalNoticeDays || 30),
+        }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Unable to create client workspace');
@@ -265,8 +311,9 @@ export default function AdminProposals() {
       if (payload?.activationUrl) {
         setActivationLinks((current) => ({ ...current, [selected.id]: String(payload.activationUrl) }));
       }
+      setConversionOpen(false);
       await fetchData();
-      toast.success(payload?.created ? 'Client workspace created' : 'Client workspace already exists');
+      toast.success(payload?.created ? 'Client workspace created with commercial terms' : 'Client workspace already exists');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to create client workspace');
     } finally {
@@ -547,8 +594,8 @@ export default function AdminProposals() {
                       <p className="mt-2">{selected.clientProject.organization.name} · {selected.clientProject.name}</p>
                     </div>
                   ) : canManageClients && selected.status === 'accepted' ? (
-                    <Button className="w-full" disabled={saving} onClick={() => void convertAcceptedProposal()}>
-                      <Building2 className="mr-2 size-4" /> Create client workspace
+                    <Button className="w-full" disabled={saving} onClick={openConversion}>
+                      <Building2 className="mr-2 size-4" /> Review & create client workspace
                     </Button>
                   ) : canManageClients ? (
                     <p className="rounded-xl border border-dashed border-border p-3 text-[10px] leading-4 text-muted-foreground">
@@ -613,6 +660,55 @@ export default function AdminProposals() {
           )}
         </DialogContent>
       </Dialog>
+      <Dialog open={conversionOpen} onOpenChange={(open) => !saving && setConversionOpen(open)}>
+        <DialogContent className="max-h-[94vh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Accepted proposal → client & project handoff</DialogTitle>
+          </DialogHeader>
+          <form
+            className="space-y-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void convertAcceptedProposal();
+            }}
+          >
+            <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
+              Review these commercial fields before conversion. Nothing here is inferred as a binding commitment from the assisted proposal text.
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div><Label>Client / organization name</Label><Input required value={conversionForm.organizationName} onChange={(e) => setConversionForm({ ...conversionForm, organizationName: e.target.value })} /></div>
+              <div><Label>Project name</Label><Input required value={conversionForm.projectName} onChange={(e) => setConversionForm({ ...conversionForm, projectName: e.target.value })} /></div>
+              <div><Label>Project manager</Label><Input value={conversionForm.manager} onChange={(e) => setConversionForm({ ...conversionForm, manager: e.target.value })} /></div>
+              <div><Label>Start date</Label><Input type="date" value={conversionForm.startDate} onChange={(e) => setConversionForm({ ...conversionForm, startDate: e.target.value })} /></div>
+              <div><Label>Target date</Label><Input type="date" value={conversionForm.targetDate} onChange={(e) => setConversionForm({ ...conversionForm, targetDate: e.target.value })} /></div>
+              <div><Label>Project expiry date</Label><Input type="date" value={conversionForm.expiryDate} onChange={(e) => setConversionForm({ ...conversionForm, expiryDate: e.target.value })} /></div>
+              <div><Label>Next renewal date</Label><Input type="date" value={conversionForm.nextRenewalDate} onChange={(e) => setConversionForm({ ...conversionForm, nextRenewalDate: e.target.value })} /></div>
+              <div><Label>Renewal cycle</Label><select value={conversionForm.renewalCycle} onChange={(e) => setConversionForm({ ...conversionForm, renewalCycle: e.target.value })} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="semiannual">Semiannual</option><option value="annual">Annual</option><option value="one_time">One-time</option><option value="custom">Custom</option></select></div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div><Label>Budget CCY</Label><Input maxLength={3} value={conversionForm.budgetCurrency} onChange={(e) => setConversionForm({ ...conversionForm, budgetCurrency: e.target.value.toUpperCase() })} /></div>
+              <div><Label>Project budget</Label><Input type="number" min="0" step="0.01" value={conversionForm.budgetAmount} onChange={(e) => setConversionForm({ ...conversionForm, budgetAmount: e.target.value })} /></div>
+              <div><Label>Renewal CCY</Label><Input maxLength={3} value={conversionForm.renewalCurrency} onChange={(e) => setConversionForm({ ...conversionForm, renewalCurrency: e.target.value.toUpperCase() })} /></div>
+              <div><Label>Renewal amount</Label><Input type="number" min="0" step="0.01" value={conversionForm.renewalAmount} onChange={(e) => setConversionForm({ ...conversionForm, renewalAmount: e.target.value })} /></div>
+            </div>
+
+            <div className="flex flex-col gap-4 rounded-xl border border-border/60 p-4 sm:flex-row sm:items-center">
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={conversionForm.autoRenew} onChange={(e) => setConversionForm({ ...conversionForm, autoRenew: e.target.checked })} /> Auto-renew flag</label>
+              <div className="sm:ml-auto"><Label>Renewal notice days</Label><Input type="number" min="0" max="365" className="mt-1 w-28" value={conversionForm.renewalNoticeDays} onChange={(e) => setConversionForm({ ...conversionForm, renewalNoticeDays: e.target.value })} /></div>
+            </div>
+
+            <div><Label>Commercial / renewal notes</Label><Textarea rows={4} value={conversionForm.renewalNotes} onChange={(e) => setConversionForm({ ...conversionForm, renewalNotes: e.target.value })} /></div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setConversionOpen(false)} disabled={saving}>Cancel</Button>
+              <Button disabled={saving}>{saving ? 'Creating…' : 'Create client & project'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <ConfirmActionDialog
         open={regenerateConfirmOpen}
         onOpenChange={setRegenerateConfirmOpen}
