@@ -10,8 +10,8 @@ export default function Loading() {
     >
       <div className="w-full max-w-sm text-center">
         <div className="relative mx-auto flex size-24 items-center justify-center rounded-full border border-amber-500/20 bg-white shadow-xl shadow-amber-500/10 dark:border-amber-300/10 dark:bg-slate-950">
-          <span className="absolute inset-[-10px] rounded-full border border-amber-500/15" />
-          <span className="absolute inset-[-18px] animate-pulse rounded-full border border-amber-500/10" />
+          <span className="absolute inset-[-10px] rounded-full border-2 border-amber-500/15 border-t-amber-500/75 border-r-amber-400/40 animate-[spin_1.35s_linear_infinite] motion-reduce:animate-none" />
+          <span className="absolute inset-[-18px] rounded-full border border-amber-500/10 border-b-amber-500/60 border-l-amber-300/35 animate-[spin_2.1s_linear_infinite_reverse] motion-reduce:animate-none" />
           <Image src="/logo.png" alt="" width={52} height={52} priority className="relative z-10 object-contain" />
         </div>
 
