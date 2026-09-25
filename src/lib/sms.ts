@@ -423,8 +423,143 @@ export async function queueDueServiceRenewalReminders() {
   };
 }
 
+export async function queueDueProjectRenewalReminders() {
+  const enabled = process.env.AUTO_PROJECT_RENEWAL_SMS === 'true';
+  const config = hubtelConfiguration();
+  if (!enabled || !config.sms || !config.senderId) {
+    return {
+      enabled,
+      configured: Boolean(config.sms && config.senderId),
+      considered: 0,
+      queued: 0,
+      skipped: 0,
+      invalidPhone: 0,
+    };
+  }
+
+  const now = new Date();
+  const horizon = new Date(now.getTime() + 365 * 86400000);
+  const configuredBatch = Number(process.env.PROJECT_RENEWAL_SMS_BATCH_SIZE || 10);
+  const batchSize = Math.max(
+    1,
+    Math.min(50, Number.isFinite(configuredBatch) ? configuredBatch : 10),
+  );
+
+  const [projects, templates] = await Promise.all([
+    db.clientProject.findMany({
+      where: {
+        status: { in: ['planned', 'active', 'on_hold'] },
+        nextRenewalDate: { not: null, lte: horizon },
+        renewalAmount: { gt: 0 },
+        organization: { primaryPhone: { not: '' } },
+      },
+      include: {
+        organization: {
+          select: {
+            name: true,
+            primaryContactName: true,
+            primaryPhone: true,
+          },
+        },
+      },
+      orderBy: { nextRenewalDate: 'asc' },
+      take: 500,
+    }),
+    db.smsTemplate.findMany({
+      where: {
+        key: { in: ['project_renewal', 'project_expired'] },
+        active: true,
+      },
+    }),
+  ]);
+
+  const templateByKey = new Map(templates.map((template) => [template.key, template]));
+  let considered = 0;
+  let queued = 0;
+  let skipped = 0;
+  let invalidPhone = 0;
+
+  for (const project of projects) {
+    if (queued >= batchSize || !project.nextRenewalDate) break;
+
+    const expired = project.nextRenewalDate.getTime() < now.getTime();
+    const daysUntilRenewal = Math.ceil(
+      (project.nextRenewalDate.getTime() - now.getTime()) / 86400000,
+    );
+    if (!expired && daysUntilRenewal > project.renewalNoticeDays) continue;
+
+    considered += 1;
+    const template = templateByKey.get(expired ? 'project_expired' : 'project_renewal');
+    if (!template) {
+      skipped += 1;
+      continue;
+    }
+
+    let recipient = '';
+    try {
+      recipient = normalizePhone(project.organization.primaryPhone);
+    } catch {
+      invalidPhone += 1;
+      continue;
+    }
+
+    const renewalDate = new Intl.DateTimeFormat('en-GH', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Africa/Accra',
+    }).format(project.nextRenewalDate);
+    const amount = new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: project.renewalCurrency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(project.renewalAmount));
+    const content = renderSmsTemplate(template.body, {
+      name: project.organization.primaryContactName || project.organization.name,
+      project: project.name,
+      renewalDate,
+      amount,
+    });
+
+    const duplicate = await db.smsMessage.findFirst({
+      where: {
+        recipient,
+        templateId: template.id,
+        content,
+        status: { in: ['queued', 'scheduled', 'sent', 'delivered'] },
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      skipped += 1;
+      continue;
+    }
+
+    await queueSingleSms({
+      recipient,
+      senderId: config.senderId,
+      content,
+      templateId: template.id,
+      scheduledAt: new Date(now.getTime() + 30 * 1000),
+      createdBy: 'System project renewal scheduler',
+    });
+    queued += 1;
+  }
+
+  return {
+    enabled: true,
+    configured: true,
+    considered,
+    queued,
+    skipped,
+    invalidPhone,
+  };
+}
+
 export async function dispatchDueSms() {
   const renewalQueue = await queueDueServiceRenewalReminders();
+  const projectRenewalQueue = await queueDueProjectRenewalReminders();
   if (!hubtelConfiguration().sms) {
     return {
       configured: false,
@@ -432,6 +567,7 @@ export async function dispatchDueSms() {
       singleFailed: 0,
       campaignsProcessed: 0,
       renewalQueue,
+      projectRenewalQueue,
     };
   }
 
@@ -481,5 +617,5 @@ export async function dispatchDueSms() {
     }
   }
 
-  return { configured: true, singleSent, singleFailed, campaignsProcessed, renewalQueue };
+  return { configured: true, singleSent, singleFailed, campaignsProcessed, renewalQueue, projectRenewalQueue };
 }
