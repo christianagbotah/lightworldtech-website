@@ -606,7 +606,7 @@ export default function AdminSupportDesk() {
         </CardContent>
       </Card>
 
-      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(220px,2fr)_repeat(4,minmax(0,1fr))_minmax(140px,1.2fr)_auto] xl:items-center">
+      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(220px,2fr)_repeat(4,minmax(105px,1fr))_minmax(135px,1.2fr)_auto] lg:items-center">
         <label className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ticket, client, subject, email or assignee" className="pl-9" />
@@ -642,12 +642,12 @@ export default function AdminSupportDesk() {
 
       {selectedIds.size > 0 && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-semibold">{selectedIds.size} ticket{selectedIds.size === 1 ? '' : 's'} selected</p>
               <p className="mt-1 text-xs text-muted-foreground">Bulk status changes are limited to 25 cases per request; assignment/priority can update up to 100.</p>
             </div>
-            <div className="grid gap-2 sm:grid-cols-3 xl:min-w-[760px]">
+            <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[680px] xl:min-w-[760px]">
               <div className="flex gap-2">
                 <select value={bulkAssignee} onChange={(event) => setBulkAssignee(event.target.value)} className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-xs transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
                   <option value="">Choose assignee</option>
