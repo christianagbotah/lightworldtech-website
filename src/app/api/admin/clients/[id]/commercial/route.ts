@@ -110,6 +110,8 @@ export async function GET(
         nextRenewalDate: true,
         renewalCurrency: true,
         renewalAmount: true,
+        renewalNoticeDays: true,
+        autoRenew: true,
         budgetCurrency: true,
         budgetAmount: true,
         updatedAt: true,
@@ -239,6 +241,12 @@ export async function GET(
     .sort((a, b) => a.date.getTime() - b.date.getTime());
   const renewalsDue30 = renewalCandidates.filter((item) => item.date >= now && item.date <= renewalWindow);
   const expiredServices = services.filter((service) => service.expiryDate && service.expiryDate.getTime() < now.getTime() && service.status !== 'cancelled');
+  const projectRenewalCandidates = projects
+    .filter((project) => project.nextRenewalDate && project.renewalAmount.gt(0) && !['completed', 'cancelled', 'archived'].includes(project.status))
+    .map((project) => ({ project, date: project.nextRenewalDate! }))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  const projectRenewalsDue30 = projectRenewalCandidates.filter((item) => item.date >= now && item.date <= renewalWindow);
+  const overdueProjectRenewals = projectRenewalCandidates.filter((item) => item.date < now);
   const slaBreachedTickets = openTickets.filter((ticket) =>
     (ticket.firstResponseDueAt && ticket.firstResponseDueAt.getTime() < now.getTime() && !ticket.firstRespondedAt)
     || (ticket.resolutionDueAt && ticket.resolutionDueAt.getTime() < now.getTime() && !ticket.resolvedAt),
@@ -414,7 +422,9 @@ export async function GET(
     ...(urgentTickets.length ? [{ key: 'urgent_support', label: 'Urgent support issues', count: urgentTickets.length, severity: 'high' as const }] : []),
     ...(slaBreachedTickets.length ? [{ key: 'sla_breach', label: 'Support SLA breaches', count: slaBreachedTickets.length, severity: 'high' as const }] : []),
     ...(atRiskProjects.length ? [{ key: 'delivery_risk', label: 'Projects needing attention', count: atRiskProjects.length, severity: 'medium' as const }] : []),
-    ...(renewalsDue30.length ? [{ key: 'renewal_due', label: 'Renewals due within 30 days', count: renewalsDue30.length, severity: 'medium' as const }] : []),
+    ...(renewalsDue30.length ? [{ key: 'renewal_due', label: 'Service renewals due within 30 days', count: renewalsDue30.length, severity: 'medium' as const }] : []),
+    ...(overdueProjectRenewals.length ? [{ key: 'project_renewal_overdue', label: 'Project renewals overdue', count: overdueProjectRenewals.length, severity: 'high' as const }] : []),
+    ...(projectRenewalsDue30.length ? [{ key: 'project_renewal_due', label: 'Project renewals due within 30 days', count: projectRenewalsDue30.length, severity: 'medium' as const }] : []),
   ];
 
   const accountHealth =
@@ -546,13 +556,17 @@ export async function GET(
           evidence: 'Support Desk · priority and SLA timestamps',
         }]
       : []),
-    ...((expiredServices.length || renewalsDue30.length)
+    ...((expiredServices.length || renewalsDue30.length || overdueProjectRenewals.length || projectRenewalsDue30.length)
       ? [{
           key: 'renewals' as const,
-          severity: expiredServices.length ? 'high' as const : 'medium' as const,
+          severity: (expiredServices.length || overdueProjectRenewals.length) ? 'high' as const : 'medium' as const,
           label: 'Protect renewal continuity',
-          detail: expiredServices.length + ' expired and ' + renewalsDue30.length + ' due-within-30-days service renewal' + ((expiredServices.length + renewalsDue30.length) === 1 ? '' : 's') + ' are in scope.',
-          evidence: 'Service expiry and next-due dates',
+          detail:
+            expiredServices.length + ' expired service' + (expiredServices.length === 1 ? '' : 's') + ', ' +
+            renewalsDue30.length + ' service renewal' + (renewalsDue30.length === 1 ? '' : 's') + ' due within 30 days, ' +
+            overdueProjectRenewals.length + ' overdue project renewal' + (overdueProjectRenewals.length === 1 ? '' : 's') + ', and ' +
+            projectRenewalsDue30.length + ' project renewal' + (projectRenewalsDue30.length === 1 ? '' : 's') + ' due within 30 days.',
+          evidence: 'Service expiry/next-due dates · project renewal dates and commercial terms',
         }]
       : []),
     ...(budgetPressureRows.length && !overBudgetRows.length
@@ -602,7 +616,7 @@ export async function GET(
       activeProjects.length + ' active project' + (activeProjects.length === 1 ? '' : 's') + ', ' +
       openTickets.length + ' open support ticket' + (openTickets.length === 1 ? '' : 's') + ', ' +
       overdueInvoices.length + ' overdue invoice' + (overdueInvoices.length === 1 ? '' : 's') + ', and ' +
-      (expiredServices.length + renewalsDue30.length) + ' renewal item' + ((expiredServices.length + renewalsDue30.length) === 1 ? '' : 's') + ' requiring near-term visibility.',
+      (expiredServices.length + renewalsDue30.length + overdueProjectRenewals.length + projectRenewalsDue30.length) + ' renewal item' + ((expiredServices.length + renewalsDue30.length + overdueProjectRenewals.length + projectRenewalsDue30.length) === 1 ? '' : 's') + ' requiring near-term visibility.',
     priorities: executivePriorities,
     next30Days: forecast30Summary,
     controls: 'Decision support only. Pricing, contracts, payments, credits, renewals and customer communications remain human-authorized actions.',
@@ -613,8 +627,8 @@ export async function GET(
     ...(overdueInvoices.length
       ? [{ key: 'collections', label: 'Work overdue receivables', detail: overdueInvoices.length + ' invoice' + (overdueInvoices.length === 1 ? '' : 's') + ' need collection follow-up.' }]
       : []),
-    ...(renewalsDue30.length || expiredServices.length
-      ? [{ key: 'renewals', label: 'Review renewals', detail: (renewalsDue30.length + expiredServices.length) + ' service' + ((renewalsDue30.length + expiredServices.length) === 1 ? '' : 's') + ' need renewal attention.' }]
+    ...(renewalsDue30.length || expiredServices.length || projectRenewalsDue30.length || overdueProjectRenewals.length
+      ? [{ key: 'renewals', label: 'Review renewals', detail: (renewalsDue30.length + expiredServices.length + projectRenewalsDue30.length + overdueProjectRenewals.length) + ' service/project renewal item' + ((renewalsDue30.length + expiredServices.length + projectRenewalsDue30.length + overdueProjectRenewals.length) === 1 ? '' : 's') + ' need attention.' }]
       : []),
     ...(urgentTickets.length || slaBreachedTickets.length
       ? [{ key: 'support', label: 'Resolve support pressure', detail: (urgentTickets.length + slaBreachedTickets.length) + ' urgent or SLA-breached support item' + ((urgentTickets.length + slaBreachedTickets.length) === 1 ? '' : 's') + ' need attention.' }]
@@ -658,6 +672,8 @@ export async function GET(
         overdueInvoices: overdueInvoices.length,
         renewalsDue30: renewalsDue30.length,
         expiredServices: expiredServices.length,
+        projectRenewalsDue30: projectRenewalsDue30.length,
+        overdueProjectRenewals: overdueProjectRenewals.length,
         accountHealth,
         executiveBrief,
         riskSignals,
@@ -732,6 +748,18 @@ export async function GET(
               date: renewalCandidates[0].date,
               currency: renewalCandidates[0].service.currency,
               amount: renewalCandidates[0].service.recurringAmount.toFixed(2),
+            }
+          : null,
+        nextProjectRenewal: projectRenewalCandidates[0]
+          ? {
+              projectId: projectRenewalCandidates[0].project.id,
+              projectName: projectRenewalCandidates[0].project.name,
+              date: projectRenewalCandidates[0].date,
+              currency: projectRenewalCandidates[0].project.renewalCurrency,
+              amount: projectRenewalCandidates[0].project.renewalAmount.toFixed(2),
+              renewalNoticeDays: projectRenewalCandidates[0].project.renewalNoticeDays,
+              autoRenew: projectRenewalCandidates[0].project.autoRenew,
+              overdue: projectRenewalCandidates[0].date < now,
             }
           : null,
         projects: projects.slice(0, 12).map((project) => ({
