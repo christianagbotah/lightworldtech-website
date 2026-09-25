@@ -174,6 +174,9 @@ type CommercialData = {
         directCost: string;
         margin: string;
         marginPercent: string;
+        budgetAmount?: string | null;
+        budgetRemaining?: string | null;
+        budgetUtilizationPercent?: string | null;
       }>;
       projects: Array<{
         scopeType: 'project';
@@ -254,6 +257,8 @@ type CommercialData = {
       nextRenewalDate: string | null;
       renewalCurrency: string;
       renewalAmount: string;
+      budgetCurrency: string;
+      budgetAmount: string;
       updatedAt: string;
     }>;
     tickets: Array<{
@@ -651,7 +656,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                     </div>
                     <div className="max-w-full overflow-x-auto">
                       <Table exportFileName="lightworld-client-project-profitability" className="min-w-[620px]">
-                        <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Direct cost</TableHead><TableHead className="text-right">Margin</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Direct cost</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">Remaining</TableHead><TableHead className="text-right">Margin</TableHead></TableRow></TableHeader>
                         <TableBody>
                           {(data?.customer360.profitability.projects || []).slice(0, 20).map((row) => (
                             <TableRow key={row.scopeId + ':' + row.currency}>
@@ -659,6 +664,19 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                               <TableCell className="text-xs">{row.currency}</TableCell>
                               <TableCell className="text-right text-xs">{money(row.revenue, row.currency)}</TableCell>
                               <TableCell className="text-right text-xs">{money(row.directCost, row.currency)}</TableCell>
+                              <TableCell className="text-right text-xs">
+                                {row.budgetAmount !== null && row.budgetAmount !== undefined
+                                  ? money(row.budgetAmount, row.currency)
+                                  : '—'}
+                                {row.budgetUtilizationPercent !== null && row.budgetUtilizationPercent !== undefined && (
+                                  <span className="block text-[10px] text-muted-foreground">{Number(row.budgetUtilizationPercent).toFixed(2)}% used</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right text-xs">
+                                {row.budgetRemaining !== null && row.budgetRemaining !== undefined
+                                  ? <span className={Number(row.budgetRemaining) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{money(row.budgetRemaining, row.currency)}</span>
+                                  : '—'}
+                              </TableCell>
                               <TableCell className="text-right"><span className={Number(row.margin) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{money(row.margin, row.currency)} · {Number(row.marginPercent).toFixed(2)}%</span></TableCell>
                             </TableRow>
                           ))}
@@ -1004,7 +1022,8 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                             <TableCell className="text-xs">{date(project.targetDate)}</TableCell>
                             <TableCell>
                               <p className="text-xs">{date(project.nextRenewalDate || project.expiryDate)}</p>
-                              {Number(project.renewalAmount) > 0 && <p className="text-[10px] text-muted-foreground">{money(project.renewalAmount, project.renewalCurrency)}</p>}
+                              {Number(project.renewalAmount) > 0 && <p className="text-[10px] text-muted-foreground">{money(project.renewalAmount, project.renewalCurrency)} renewal</p>}
+                              {Number(project.budgetAmount) > 0 && <p className="text-[10px] text-muted-foreground">{money(project.budgetAmount, project.budgetCurrency)} budget</p>}
                             </TableCell>
                           </TableRow>
                         ))}
