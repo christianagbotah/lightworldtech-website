@@ -187,6 +187,9 @@ type CommercialData = {
         directCost: string;
         margin: string;
         marginPercent: string;
+        budgetAmount?: string | null;
+        budgetRemaining?: string | null;
+        budgetUtilizationPercent?: string | null;
       }>;
       services: Array<{
         scopeType: 'service';
