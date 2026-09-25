@@ -19,6 +19,11 @@ describe('public accessibility and mobile UX', () => {
     expect(contact).toContain('name="phone"');
     expect(contact).toContain('autoComplete="tel"');
     expect(contact).toContain('name="message"');
+    expect(contact).toContain('lw-public-form-field');
+
+    const styles = source('src/app/globals.css');
+    expect(styles).toContain('.lw-public-form-field > :is(input, select, textarea)');
+    expect(styles).toContain('margin-top: 0.5rem');
   });
 
   test('newsletter forms expose email semantics and keyboard focus feedback', () => {

@@ -344,7 +344,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
 
                   <form onSubmit={submit} className="mt-7 space-y-5" aria-busy={sending}>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Name
                         <input
                           required
@@ -356,7 +356,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                           placeholder="Your name"
                         />
                       </label>
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Work email
                         <input
                           required
@@ -373,7 +373,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Company / organization <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <input
                           name="company"
@@ -384,7 +384,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                           placeholder="Your organization"
                         />
                       </label>
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Industry <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <select
                           name="industry"
@@ -398,7 +398,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Phone <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <input
                           type="tel"
@@ -412,7 +412,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                         />
                       </label>
 
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         What can we help with?
                         <select
                           name="service"
@@ -426,7 +426,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Country / region <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <input
                           name="country"
@@ -437,7 +437,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                           placeholder="e.g. Ghana, UK, USA, UAE"
                         />
                       </label>
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Preferred time zone <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <input
                           name="timezone"
@@ -451,7 +451,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Budget range <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <select
                           name="budgetRange"
@@ -462,7 +462,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                           {budgetRanges.map((item) => <option key={item || 'budget-placeholder'} value={item}>{item || 'Select budget range'}</option>)}
                         </select>
                       </label>
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Preferred currency <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <select
                           name="currency"
@@ -476,7 +476,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Desired delivery window <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <select
                           name="deliveryWindow"
@@ -487,7 +487,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                           {deliveryWindows.map((item) => <option key={item || 'delivery-placeholder'} value={item}>{item || 'Select delivery window'}</option>)}
                         </select>
                       </label>
-                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                      <label className="lw-public-form-field text-xs font-medium text-slate-500 dark:text-white/35">
                         Engagement model <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                         <select
                           name="engagementModel"
@@ -500,7 +500,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                       </label>
                     </div>
 
-                    <label className="block space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                    <label className="lw-public-form-field block text-xs font-medium text-slate-500 dark:text-white/35">
                       Subject <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
                       <input
                         name="subject"
@@ -512,7 +512,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                       />
                     </label>
 
-                    <label className="block space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                    <label className="lw-public-form-field block text-xs font-medium text-slate-500 dark:text-white/35">
                       What is the problem or opportunity?
                       <textarea
                         required

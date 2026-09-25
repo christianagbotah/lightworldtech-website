@@ -1281,6 +1281,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Public website forms: keep field controls visually separated from their labels.
+   This intentionally targets only labeled public form fields, not checkbox/radio labels. */
+.lw-public-form-field > :is(input, select, textarea) {
+  display: block;
+  margin-top: 0.5rem;
+}
+
 .lw-hero-grid {
   position: relative;
   isolation: isolate;
