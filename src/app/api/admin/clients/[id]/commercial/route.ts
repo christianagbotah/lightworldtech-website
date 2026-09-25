@@ -325,6 +325,61 @@ export async function GET(
     };
   });
 
+  const buildForecast = (days: number) => {
+    const horizon = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    const buckets = new Map<string, {
+      receivablesDue: Prisma.Decimal;
+      serviceRenewals: Prisma.Decimal;
+      projectRenewals: Prisma.Decimal;
+    }>();
+
+    const row = (currency: string) => {
+      if (!buckets.has(currency)) {
+        buckets.set(currency, {
+          receivablesDue: new Prisma.Decimal(0),
+          serviceRenewals: new Prisma.Decimal(0),
+          projectRenewals: new Prisma.Decimal(0),
+        });
+      }
+      return buckets.get(currency)!;
+    };
+
+    for (const invoice of invoices) {
+      if (['draft', 'void'].includes(invoice.status) || invoice.dueDate > horizon) continue;
+      const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
+      if (balance.gt(0)) row(invoice.currency).receivablesDue = row(invoice.currency).receivablesDue.plus(balance);
+    }
+
+    for (const service of services) {
+      if (service.status === 'cancelled') continue;
+      const due = service.nextDueDate || service.expiryDate;
+      if (!due || due < now || due > horizon) continue;
+      row(service.currency).serviceRenewals = row(service.currency).serviceRenewals.plus(service.recurringAmount);
+    }
+
+    for (const project of projects) {
+      if (!project.nextRenewalDate || project.nextRenewalDate < now || project.nextRenewalDate > horizon) continue;
+      if (project.renewalAmount.lte(0)) continue;
+      row(project.renewalCurrency).projectRenewals = row(project.renewalCurrency).projectRenewals.plus(project.renewalAmount);
+    }
+
+    return [...buckets.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([currency, values]) => ({
+        currency,
+        receivablesDue: values.receivablesDue.toFixed(2),
+        serviceRenewals: values.serviceRenewals.toFixed(2),
+        projectRenewals: values.projectRenewals.toFixed(2),
+        totalPotential: values.receivablesDue.plus(values.serviceRenewals).plus(values.projectRenewals).toFixed(2),
+      }));
+  };
+
+  const commercialForecast = {
+    next30Days: buildForecast(30),
+    next90Days: buildForecast(90),
+    methodology: 'Potential commercial inflows combine unpaid invoice balances due by the horizon with scheduled service and project renewals. They are not a guaranteed cash forecast and currencies are not converted.',
+  };
+
   const riskSignals = [
     ...(overdueInvoices.length ? [{ key: 'overdue_receivables', label: 'Overdue receivables', count: overdueInvoices.length, severity: 'high' as const }] : []),
     ...(expiredServices.length ? [{ key: 'expired_services', label: 'Expired services', count: expiredServices.length, severity: 'high' as const }] : []),
@@ -457,6 +512,7 @@ export async function GET(
         riskSignals,
         nextActions,
         recentActivity,
+        forecast: commercialForecast,
         profitability: {
           customer: profitabilityRows.filter((row) => row.scopeType === 'customer'),
           projects: profitabilityRows
