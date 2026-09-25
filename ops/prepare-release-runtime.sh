@@ -24,11 +24,19 @@ test -f "$STANDALONE/server.js"
 test -f "$STANDALONE/RELEASE_SHA"
 
 install -d -o "$APP_USER" -g "$APP_GROUP" -m 0750 "$STANDALONE/.next/cache"
+chown -R "$APP_USER:$APP_GROUP" "$STANDALONE/.next/cache"
+find "$STANDALONE/.next/cache" -type d -exec chmod 0750 {} +
+
+chown -R "$APP_USER:$APP_GROUP" "$STANDALONE/.next/server/app"
+find "$STANDALONE/.next/server/app" -type d -exec chmod 0750 {} +
+find "$STANDALONE/.next/server/app" -type f -exec chmod 0640 {} +
+
 install -d -o "$APP_USER" -g "$APP_GROUP" -m 0750 "$SHARED/uploads"
 ln -sfn "$SHARED/.env" "$STANDALONE/.env"
 
 runuser -u "$APP_USER" -- test -r "$SHARED/.env"
 runuser -u "$APP_USER" -- test -w "$STANDALONE/.next/cache"
+runuser -u "$APP_USER" -- test -w "$STANDALONE/.next/server/app"
 runuser -u "$APP_USER" -- test -w "$SHARED/uploads"
 
 echo "Runtime prepared: $RELEASE"

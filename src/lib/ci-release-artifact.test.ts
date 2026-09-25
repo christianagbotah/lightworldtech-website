@@ -35,7 +35,18 @@ describe('CI-built release artifacts', () => {
     expect(deploy).toContain('promote-release.sh');
     expect(deploy).toContain('chown -R lightworld:lightworld');
     expect(deploy).toContain('.next/standalone/.next/cache');
+    expect(deploy).toContain('.next/standalone/.next/server/app');
     expect(deploy).toContain('chmod 0750');
+    expect(deploy).toContain('chmod 0640');
+  });
+
+  test('runtime preparation grants only Next-managed write surfaces', () => {
+    const prepare = source('ops/prepare-release-runtime.sh');
+
+    expect(prepare).toContain('$STANDALONE/.next/cache');
+    expect(prepare).toContain('$STANDALONE/.next/server/app');
+    expect(prepare).toContain('runuser -u "$APP_USER" -- test -w "$STANDALONE/.next/server/app"');
+    expect(prepare).toContain('chmod 0640');
   });
 
   test('production ops installer publishes the artifact deployer', () => {
