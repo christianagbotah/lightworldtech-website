@@ -28,7 +28,7 @@ export default function IndustriesPage() {
       <section className="lw-hero-grid relative overflow-hidden border-b border-slate-200/70 dark:border-white/[0.06]">
         <div className="absolute -left-24 top-10 size-80 rounded-full bg-amber-400/10 blur-[120px]" />
         <div className="container-main relative py-16 sm:py-20 lg:py-28">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl">
+          <motion.div initial={false} animate={{ opacity: 1, y: 0 }} className="max-w-5xl">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-300">Industry solutions</p>
             <h1 className="mt-5 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
               Technology shaped around how the work actually happens.
