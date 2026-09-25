@@ -138,6 +138,14 @@ type CommercialData = {
       label: string;
       detail: string;
     }>;
+    recentActivity: Array<{
+      id: string;
+      type: 'payment' | 'invoice' | 'collection' | 'announcement' | 'support';
+      title: string;
+      detail: string;
+      actor: string;
+      occurredAt: string;
+    }>;
     nextRenewal: {
       serviceId: string;
       serviceName: string;
@@ -583,6 +591,34 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                     <p className="mt-1 text-xl font-bold">{value}</p>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-4 rounded-xl border border-border/60 bg-background/70">
+                <div className="flex flex-col gap-2 border-b border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Recent customer activity</p>
+                    <p className="text-[11px] text-muted-foreground">Payments, invoices, collections, client announcements and support conversations in one timeline.</p>
+                  </div>
+                  <Badge variant="outline">{data?.customer360.recentActivity.length || 0} recent</Badge>
+                </div>
+                <div className="divide-y divide-border/60">
+                  {(data?.customer360.recentActivity || []).slice(0, 12).map((activity) => (
+                    <div key={activity.id} className="grid gap-2 px-4 py-3 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:items-start">
+                      <div>
+                        <Badge variant="outline" className="text-[10px]">{pretty(activity.type)}</Badge>
+                        <p className="mt-1 text-[10px] text-muted-foreground">{new Date(activity.occurredAt).toLocaleString()}</p>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold">{pretty(activity.title)}</p>
+                        <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{activity.detail}</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground sm:text-right">{activity.actor}</p>
+                    </div>
+                  ))}
+                  {!data?.customer360.recentActivity.length && (
+                    <div className="px-4 py-6 text-sm text-muted-foreground">No customer activity has been recorded yet.</div>
+                  )}
+                </div>
               </div>
 
               <div className="mt-4 grid gap-4 2xl:grid-cols-2">
