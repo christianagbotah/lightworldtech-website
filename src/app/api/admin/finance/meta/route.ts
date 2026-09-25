@@ -20,7 +20,19 @@ export async function GET(request: NextRequest) {
         primaryEmail: true,
         projects: {
           orderBy: { name: 'asc' },
-          select: { id: true, name: true, status: true },
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            health: true,
+            nextRenewalDate: true,
+            expiryDate: true,
+            renewalCycle: true,
+            renewalCurrency: true,
+            renewalAmount: true,
+            autoRenew: true,
+            renewalNoticeDays: true,
+          },
         },
         services: {
           orderBy: { name: 'asc' },
@@ -48,6 +60,10 @@ export async function GET(request: NextRequest) {
     data: {
       organizations: organizations.map((organization) => ({
         ...organization,
+        projects: organization.projects.map((project) => ({
+          ...project,
+          renewalAmount: project.renewalAmount.toFixed(2),
+        })),
         services: organization.services.map((service) => ({
           ...service,
           recurringAmount: service.recurringAmount.toFixed(2),
