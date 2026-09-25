@@ -44,6 +44,13 @@ const updatePortfolioSchema = z.object({
   featured: z.boolean().optional(),
   active: z.boolean().optional(),
   order: z.number().int().optional(),
+  caseStudyPublished: z.boolean().optional(),
+  caseStudySlug: z.string().trim().max(120).nullable().optional(),
+  caseStudyClientName: z.string().max(180).optional(),
+  caseStudyChallenge: z.string().max(12000).optional(),
+  caseStudySolution: z.string().max(12000).optional(),
+  caseStudyOutcomes: z.string().max(12000).optional(),
+  caseStudyApprovalReference: z.string().max(500).optional(),
 });
 
 export async function PUT(
@@ -72,9 +79,36 @@ export async function PUT(
       );
     }
 
+    const next = {
+      ...existing,
+      ...parsed.data,
+      caseStudySlug:
+        parsed.data.caseStudySlug === undefined
+          ? existing.caseStudySlug
+          : parsed.data.caseStudySlug?.trim() || null,
+    };
+
+    if (next.caseStudyPublished) {
+      if (!next.caseStudySlug || !next.caseStudyChallenge.trim() || !next.caseStudySolution.trim() || !next.caseStudyOutcomes.trim() || !next.caseStudyApprovalReference.trim()) {
+        return NextResponse.json(
+          { success: false, error: 'Publishing a case study requires a slug, challenge, solution, outcomes and internal approval reference.' },
+          { status: 400 },
+        );
+      }
+    }
+
     const project = await db.portfolioProject.update({
       where: { id },
-      data: parsed.data,
+      data: {
+        ...parsed.data,
+        caseStudySlug: next.caseStudySlug,
+        caseStudyPublishedAt:
+          next.caseStudyPublished && !existing.caseStudyPublished
+            ? new Date()
+            : !next.caseStudyPublished
+              ? null
+              : existing.caseStudyPublishedAt,
+      },
     });
 
     return NextResponse.json({ success: true, data: project });

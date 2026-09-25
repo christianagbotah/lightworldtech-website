@@ -452,7 +452,17 @@ export async function answerConcierge(
     };
   }
 
-  if (/portfolio|case stud|work|project.*done|client work|examples/.test(q)) {
+  if (/case stud/.test(q)) {
+    return {
+      intent: 'portfolio',
+      reply:
+        'Lightworld publishes case studies separately from general portfolio examples. A case study is shown publicly only after the portfolio record contains a documented challenge, solution, outcomes and an internal publication-approval reference.',
+      suggestions: ['Show me your work', 'What industries do you serve?', 'Start a project'],
+      cta: { label: 'View approved case studies', href: '/case-studies' },
+    };
+  }
+
+  if (/portfolio|work|project.*done|client work|examples/.test(q)) {
     const examples = knowledge.portfolio
       .slice(0, 4)
       .map((item) => item.title + (item.category ? ' (' + item.category + ')' : ''));

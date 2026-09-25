@@ -171,7 +171,8 @@ export default function GlobalPage({ settings = {} }: { settings?: SiteSettings 
               <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Trust should be supported by evidence.</h2>
               <p className="mt-4 max-w-xl text-sm leading-7 text-white/42">We link recognition to the publisher source and keep security claims scoped to practices we can substantiate.</p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link href="/newsroom" className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-slate-950">Newsroom & evidence <ArrowRight className="size-4" /></Link>
+                <Link href="/case-studies" className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-slate-950">Approved case studies <ArrowRight className="size-4" /></Link>
+                <Link href="/newsroom" className="inline-flex h-11 items-center gap-2 rounded-full border border-white/10 px-5 text-sm font-semibold text-white/75">Newsroom & evidence <ArrowRight className="size-4" /></Link>
                 <Link href="/trust" className="inline-flex h-11 items-center gap-2 rounded-full border border-white/10 px-5 text-sm font-semibold text-white/75">Trust Center <ShieldCheck className="size-4" /></Link>
               </div>
             </div>

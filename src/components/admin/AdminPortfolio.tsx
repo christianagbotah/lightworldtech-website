@@ -49,12 +49,23 @@ interface PortfolioProject {
   featured: boolean;
   active: boolean;
   order: number;
+  caseStudyPublished: boolean;
+  caseStudySlug: string | null;
+  caseStudyClientName: string;
+  caseStudyChallenge: string;
+  caseStudySolution: string;
+  caseStudyOutcomes: string;
+  caseStudyApprovalReference: string;
+  caseStudyPublishedAt: string | null;
   createdAt: string;
 }
 
 const emptyProject = {
   title: '', description: '', image: '', url: '', category: '',
   technologies: '', featured: false, active: true, order: 0,
+  caseStudyPublished: false, caseStudySlug: '', caseStudyClientName: '',
+  caseStudyChallenge: '', caseStudySolution: '', caseStudyOutcomes: '',
+  caseStudyApprovalReference: '',
 };
 
 export default function AdminPortfolio() {
@@ -95,6 +106,13 @@ export default function AdminPortfolio() {
       url: p.url, category: p.category,
       technologies: Array.isArray(JSON.parse(p.technologies || '[]')) ? (JSON.parse(p.technologies) as string[]).join(', ') : p.technologies,
       featured: p.featured, active: p.active, order: p.order,
+      caseStudyPublished: p.caseStudyPublished,
+      caseStudySlug: p.caseStudySlug || '',
+      caseStudyClientName: p.caseStudyClientName,
+      caseStudyChallenge: p.caseStudyChallenge,
+      caseStudySolution: p.caseStudySolution,
+      caseStudyOutcomes: p.caseStudyOutcomes,
+      caseStudyApprovalReference: p.caseStudyApprovalReference,
     });
     setDialogOpen(true);
   };
@@ -104,10 +122,20 @@ export default function AdminPortfolio() {
       toast.error('Title is required');
       return;
     }
+    if (form.caseStudyPublished) {
+      if (!form.caseStudySlug.trim() || !form.caseStudyChallenge.trim() || !form.caseStudySolution.trim() || !form.caseStudyOutcomes.trim() || !form.caseStudyApprovalReference.trim()) {
+        toast.error('Case study publication requires a slug, challenge, solution, outcomes and approval reference.');
+        return;
+      }
+    }
     setSaving(true);
     try {
       const techArray = form.technologies.split(',').map(t => t.trim()).filter(Boolean);
-      const payload = { ...form, technologies: JSON.stringify(techArray) };
+      const payload = {
+        ...form,
+        technologies: JSON.stringify(techArray),
+        caseStudySlug: form.caseStudySlug.trim() || null,
+      };
       const url = editing ? `/api/portfolio/${editing.id}` : '/api/portfolio';
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -195,6 +223,7 @@ export default function AdminPortfolio() {
                 <TableHead className="text-xs font-semibold">Title</TableHead>
                 <TableHead className="text-xs font-semibold hidden sm:table-cell">Category</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Featured</TableHead>
+                <TableHead className="text-xs font-semibold text-center">Case study</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Status</TableHead>
                 <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
               </TableRow>
@@ -202,7 +231,7 @@ export default function AdminPortfolio() {
             <TableBody>
               {projects.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No projects yet. Add your first portfolio project!
                   </TableCell>
                 </TableRow>
@@ -219,6 +248,11 @@ export default function AdminPortfolio() {
                           <StarOff className="h-4 w-4 text-muted-foreground mx-auto" />
                         )}
                       </button>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className={p.caseStudyPublished ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300' : ''}>
+                        {p.caseStudyPublished ? 'Published' : 'Not published'}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge className={p.active ? 'bg-amber-100 text-amber-500 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}>
@@ -294,6 +328,44 @@ export default function AdminPortfolio() {
               <div className="flex items-center gap-2">
                 <Switch checked={form.active} onCheckedChange={(checked) => setForm(f => ({ ...f, active: checked }))} />
                 <Label>Active</Label>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-amber-200/70 bg-amber-50/60 p-4 dark:border-amber-900/40 dark:bg-amber-950/10">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <Label className="text-sm font-semibold">Evidence-governed case study</Label>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">Publishing is blocked until challenge, solution, outcomes and an internal approval reference are recorded.</p>
+                </div>
+                <Switch checked={form.caseStudyPublished} onCheckedChange={(checked) => setForm(f => ({ ...f, caseStudyPublished: checked }))} />
+              </div>
+              <div className="mt-4 grid gap-4">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label>Public case-study slug</Label>
+                    <Input value={form.caseStudySlug} onChange={(e) => setForm(f => ({ ...f, caseStudySlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') }))} placeholder="school-platform-modernization" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Public client name <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                    <Input value={form.caseStudyClientName} onChange={(e) => setForm(f => ({ ...f, caseStudyClientName: e.target.value }))} placeholder="Leave blank for anonymized case study" />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Challenge</Label>
+                  <Textarea value={form.caseStudyChallenge} onChange={(e) => setForm(f => ({ ...f, caseStudyChallenge: e.target.value }))} rows={4} placeholder="What verified problem or operational constraint was being addressed?" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Solution delivered</Label>
+                  <Textarea value={form.caseStudySolution} onChange={(e) => setForm(f => ({ ...f, caseStudySolution: e.target.value }))} rows={4} placeholder="What did Lightworld actually design, build, integrate or improve?" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Outcomes / evidence</Label>
+                  <Textarea value={form.caseStudyOutcomes} onChange={(e) => setForm(f => ({ ...f, caseStudyOutcomes: e.target.value }))} rows={4} placeholder="State only outcomes that can be substantiated. Avoid invented percentages or results." />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Internal approval reference</Label>
+                  <Input value={form.caseStudyApprovalReference} onChange={(e) => setForm(f => ({ ...f, caseStudyApprovalReference: e.target.value }))} placeholder="Email/thread/document/ticket reference — never shown publicly" />
+                  <p className="text-[11px] leading-5 text-muted-foreground">This reference stays internal and is required before public publication.</p>
+                </div>
               </div>
             </div>
           </div>

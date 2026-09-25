@@ -18,6 +18,7 @@ function coreSitemap(base: string, lastModified?: Date): MetadataRoute.Sitemap {
       priority: 0.85,
     })),
     { url: base + '/portfolio', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
+    { url: base + '/case-studies', ...freshness, changeFrequency: 'monthly', priority: 0.82 },
     { url: base + '/products', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
     { url: base + '/about', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
     { url: base + '/global', ...freshness, changeFrequency: 'monthly', priority: 0.85 },
@@ -51,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = seo.siteUrl;
 
   try {
-    const [posts, settingsFreshness] = await Promise.all([
+    const [posts, settingsFreshness, caseStudies] = await Promise.all([
       db.blogPost.findMany({
         where: { published: true },
         select: { slug: true, updatedAt: true },
@@ -59,6 +60,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
       db.siteSetting.aggregate({
         _max: { updatedAt: true },
+      }),
+      db.portfolioProject.findMany({
+        where: { active: true, caseStudyPublished: true, caseStudySlug: { not: null } },
+        select: { caseStudySlug: true, updatedAt: true },
+        orderBy: { updatedAt: 'desc' },
       }),
     ]);
 
@@ -70,6 +76,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'monthly' as const,
         priority: 0.65,
       })),
+      ...caseStudies
+        .filter((item): item is typeof item & { caseStudySlug: string } => Boolean(item.caseStudySlug))
+        .map((item) => ({
+          url: base + '/case-studies/' + item.caseStudySlug,
+          lastModified: item.updatedAt,
+          changeFrequency: 'monthly' as const,
+          priority: 0.75,
+        })),
     ];
   } catch {
     // Core marketing URLs remain discoverable even if the CMS database is temporarily unavailable.

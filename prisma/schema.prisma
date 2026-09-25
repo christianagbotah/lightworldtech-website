@@ -134,6 +134,15 @@ model PortfolioProject {
   active      Boolean @default(true)
   order       Int     @default(0)
 
+  caseStudyPublished         Boolean   @default(false)
+  caseStudySlug              String?   @unique
+  caseStudyClientName        String    @default("")
+  caseStudyChallenge         String    @default("")
+  caseStudySolution          String    @default("")
+  caseStudyOutcomes          String    @default("")
+  caseStudyApprovalReference String    @default("")
+  caseStudyPublishedAt       DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

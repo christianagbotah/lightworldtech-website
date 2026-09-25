@@ -52,6 +52,13 @@ const createPortfolioSchema = z.object({
   featured: z.boolean().optional().default(false),
   active: z.boolean().optional().default(true),
   order: z.number().int().optional().default(0),
+  caseStudyPublished: z.boolean().optional().default(false),
+  caseStudySlug: z.string().trim().max(120).nullable().optional().default(null),
+  caseStudyClientName: z.string().max(180).optional().default(''),
+  caseStudyChallenge: z.string().max(12000).optional().default(''),
+  caseStudySolution: z.string().max(12000).optional().default(''),
+  caseStudyOutcomes: z.string().max(12000).optional().default(''),
+  caseStudyApprovalReference: z.string().max(500).optional().default(''),
 });
 
 export async function POST(request: NextRequest) {
@@ -68,9 +75,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const project = await db.portfolioProject.create({
-      data: parsed.data,
-    });
+    const data = {
+      ...parsed.data,
+      caseStudySlug: parsed.data.caseStudySlug?.trim() || null,
+      caseStudyPublishedAt: parsed.data.caseStudyPublished ? new Date() : null,
+    };
+
+    if (data.caseStudyPublished) {
+      if (!data.caseStudySlug || !data.caseStudyChallenge.trim() || !data.caseStudySolution.trim() || !data.caseStudyOutcomes.trim() || !data.caseStudyApprovalReference.trim()) {
+        return NextResponse.json(
+          { success: false, error: 'Publishing a case study requires a slug, challenge, solution, outcomes and internal approval reference.' },
+          { status: 400 },
+        );
+      }
+    }
+
+    const project = await db.portfolioProject.create({ data });
 
     return NextResponse.json({ success: true, data: project }, { status: 201 });
   } catch (error) {

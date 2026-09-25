@@ -251,9 +251,14 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
               <h2 className="text-2xl font-semibold tracking-tight">{contentText(settings, 'portfolio_cta_title', 'Have a harder problem than these?')}</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/38">{contentText(settings, 'portfolio_cta_description', 'Good. The most useful work usually starts where a template stops being enough.')}</p>
             </div>
-            <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white dark:text-slate-950">
-              Discuss your project <ArrowRight className="size-4" />
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/case-studies" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-emerald-500/25 bg-white px-5 text-sm font-semibold text-emerald-700 dark:bg-transparent dark:text-emerald-300">
+                View approved case studies <ArrowRight className="size-4" />
+              </Link>
+              <Link href="/contact" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-semibold text-white dark:text-slate-950">
+                Discuss your project <ArrowRight className="size-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
