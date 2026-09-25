@@ -17,6 +17,9 @@ export default function CmsHeroMedia({
       <img
         src={src}
         alt=""
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
         className="h-full w-full scale-[1.02] object-cover opacity-30 dark:opacity-25"
       />
       <div className="absolute inset-0 bg-gradient-to-r from-[#f7f9f8] via-[#f7f9f8]/90 to-[#f7f9f8]/45 dark:from-[#050b10] dark:via-[#050b10]/90 dark:to-[#050b10]/50" />
