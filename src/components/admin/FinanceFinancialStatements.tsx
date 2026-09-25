@@ -213,7 +213,7 @@ export default function FinanceFinancialStatements() {
                 Currencies are kept separate and are never silently consolidated.
               </p>
             </div>
-            <div className="grid gap-2 sm:grid-cols-[150px_150px_120px_auto]">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[160px_160px_120px_minmax(150px,auto)] lg:items-end">
               <div>
                 <Label className="text-[10px] uppercase tracking-[0.1em]">From</Label>
                 <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
