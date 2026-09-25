@@ -418,6 +418,17 @@ export async function answerConcierge(
     };
   }
 
+  if (/international|global|worldwide|overseas|outside ghana|outside of ghana|abroad|remote delivery|remote team/.test(q)) {
+    return {
+      intent: 'company',
+      reply:
+        companyName +
+        ' is headquartered in Tema, Ghana and can work with organizations outside Ghana through remote delivery. International engagements use documented scope, named owners, secure project systems, review points and controlled releases. Lightworld does not claim foreign offices unless a verified office is published.',
+      suggestions: ['How does remote delivery work?', 'What services do you offer?', 'Start an international project'],
+      cta: { label: 'Explore global delivery', href: '/global' },
+    };
+  }
+
   if (/service|what.*do|offer|solution|capabilit|build/.test(q)) {
     const serviceNames = knowledge.services.map((service) => service.title);
     return {

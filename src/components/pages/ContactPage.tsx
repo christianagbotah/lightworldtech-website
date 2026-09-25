@@ -43,6 +43,8 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
     name: '',
     email: '',
     phone: '',
+    country: '',
+    timezone: '',
     service: services[0],
     subject: '',
     message: '',
@@ -111,7 +113,11 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
           email: form.email.trim(),
           phone: form.phone.trim(),
           subject: form.subject.trim() || form.service,
-          message: '[' + form.service + ']\n\n' + form.message.trim(),
+          message:
+            '[' + form.service + ']\n' +
+            '[Country / region: ' + (form.country.trim() || 'Not provided') + ']\n' +
+            '[Preferred time zone: ' + (form.timezone.trim() || 'Not provided') + ']\n\n' +
+            form.message.trim(),
         }),
       });
       const payload = await response.json().catch(() => null);
@@ -239,7 +245,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                           type="button"
                           onClick={() => {
                             resetResponse();
-                            setForm({ name: '', email: '', phone: '', service: services[0], subject: '', message: '' });
+                            setForm({ name: '', email: '', phone: '', country: '', timezone: '', service: services[0], subject: '', message: '' });
                           }}
                           className="inline-flex h-11 items-center justify-center rounded-full bg-green-600 px-6 text-sm font-semibold text-white transition hover:bg-green-500 dark:bg-green-500 dark:text-slate-950 dark:hover:bg-green-400"
                         >
@@ -336,6 +342,31 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
                         >
                           {services.map((service) => <option key={service}>{service}</option>)}
                         </select>
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Country / region <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                        <input
+                          name="country"
+                          autoComplete="country-name"
+                          value={form.country}
+                          onChange={(event) => setForm((current) => ({ ...current, country: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
+                          placeholder="e.g. Ghana, UK, USA, UAE"
+                        />
+                      </label>
+                      <label className="space-y-2 text-xs font-medium text-slate-500 dark:text-white/35">
+                        Preferred time zone <span className="font-normal text-slate-400 dark:text-white/20">optional</span>
+                        <input
+                          name="timezone"
+                          autoComplete="off"
+                          value={form.timezone}
+                          onChange={(event) => setForm((current) => ({ ...current, timezone: event.target.value }))}
+                          className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-white"
+                          placeholder="e.g. GMT, CET, EST"
+                        />
                       </label>
                     </div>
 

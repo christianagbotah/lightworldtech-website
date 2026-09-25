@@ -36,6 +36,7 @@ const defaultPrimaryNav = [
   { label: 'Work', href: '/portfolio' },
   { label: 'Products', href: '/products' },
   { label: 'Insights', href: '/blog' },
+  { label: 'Global', href: '/global' },
 ];
 
 const defaultCompanyMenu = [
@@ -91,10 +92,13 @@ function navigationIcon(key: string) {
 
 export default function Header({ settings = {} }: { settings?: SiteSettings }) {
   const pathname = usePathname();
-  const primaryNav = normalizeNavigationLinks(
+  const configuredPrimaryNav = normalizeNavigationLinks(
     contentJson<unknown>(settings, 'header_primary_links', defaultPrimaryNav),
     defaultPrimaryNav,
   );
+  const primaryNav = configuredPrimaryNav.some((item) => item.href === '/global')
+    ? configuredPrimaryNav
+    : [...configuredPrimaryNav, { label: 'Global', href: '/global' }];
   const serviceMenu = normalizeNavigationMenu(
     contentJson<unknown>(settings, 'header_service_menu', defaultServiceMenu),
     defaultServiceMenu,

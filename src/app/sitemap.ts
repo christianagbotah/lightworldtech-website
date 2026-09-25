@@ -20,6 +20,7 @@ function coreSitemap(base: string, lastModified?: Date): MetadataRoute.Sitemap {
     { url: base + '/portfolio', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
     { url: base + '/products', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
     { url: base + '/about', ...freshness, changeFrequency: 'monthly', priority: 0.8 },
+    { url: base + '/global', ...freshness, changeFrequency: 'monthly', priority: 0.85 },
     { url: base + '/team', ...freshness, changeFrequency: 'monthly', priority: 0.7 },
     { url: base + '/blog', ...freshness, changeFrequency: 'weekly', priority: 0.8 },
     { url: base + '/careers', ...freshness, changeFrequency: 'weekly', priority: 0.6 },

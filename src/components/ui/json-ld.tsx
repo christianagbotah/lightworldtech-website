@@ -112,7 +112,7 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
         contactType: 'sales and customer service',
         email: config.contactEmail,
         availableLanguage: ['English'],
-        areaServed: 'GH',
+        areaServed: ['GH', 'Worldwide'],
       },
     ],
     knowsAbout: [
@@ -134,6 +134,7 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
       { '@type': 'Country', name: 'Ghana' },
       { '@type': 'AdministrativeArea', name: 'Greater Accra Region' },
       { '@type': 'Place', name: 'Africa' },
+      { '@type': 'Place', name: 'Worldwide' },
     ],
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
@@ -144,7 +145,11 @@ export function OrganizationJsonLd({ config }: { config: SeoConfig }) {
           '@type': 'Service',
           name: service,
           provider: { '@id': organizationId },
-          areaServed: { '@type': 'Country', name: 'Ghana' },
+          areaServed: [
+            { '@type': 'Country', name: 'Ghana' },
+            { '@type': 'Place', name: 'Africa' },
+            { '@type': 'Place', name: 'Worldwide' },
+          ],
         },
       })),
     },
@@ -239,6 +244,8 @@ export function ServiceJsonLd({
     areaServed: [
       { '@type': 'Country', name: 'Ghana' },
       { '@type': 'AdministrativeArea', name: 'Greater Accra Region' },
+      { '@type': 'Place', name: 'Africa' },
+      { '@type': 'Place', name: 'Worldwide' },
     ],
     availableChannel: {
       '@type': 'ServiceChannel',

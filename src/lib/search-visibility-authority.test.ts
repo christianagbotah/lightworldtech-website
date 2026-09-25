@@ -75,6 +75,27 @@ describe('search visibility and entity authority', () => {
     expect(cms).toContain("{ label: 'About', href: '/about' }");
   });
 
+  test('publishes a factual global-delivery surface without inventing foreign offices', () => {
+    const page = source('src/app/global/page.tsx');
+    const global = source('src/components/pages/GlobalPage.tsx');
+    const schema = source('src/components/ui/json-ld.tsx');
+    const sitemap = source('src/app/sitemap.ts');
+    const header = source('src/components/layout/Header.tsx');
+    const assistant = source('src/lib/assistant-knowledge.ts');
+    const contact = source('src/components/pages/ContactPage.tsx');
+
+    expect(page).toContain("path: '/global'");
+    expect(global).toContain('headquartered in Tema, Ghana');
+    expect(global).toContain('does not have to be in the same city');
+    expect(global).not.toContain('global offices');
+    expect(schema).toContain("{ '@type': 'Place', name: 'Worldwide' }");
+    expect(sitemap).toContain("base + '/global'");
+    expect(header).toContain("{ label: 'Global', href: '/global' }");
+    expect(assistant).toContain("href: '/global'");
+    expect(contact).toContain('Country / region');
+    expect(contact).toContain('Preferred time zone');
+  });
+
   test('sitemap uses real CMS freshness instead of inventing now on every request', () => {
     const sitemap = source('src/app/sitemap.ts');
 

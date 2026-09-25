@@ -35,6 +35,7 @@ const defaultExploreLinks = [
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Products', href: '/products' },
   { label: 'Insights', href: '/blog' },
+  { label: 'Global delivery', href: '/global' },
   { label: 'About', href: '/about' },
   { label: 'Leadership', href: '/team' },
   { label: 'Trust Center', href: '/trust' },
@@ -77,10 +78,13 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
     contentJson<unknown>(settings, 'footer_build_links', defaultBuildLinks),
     defaultBuildLinks,
   );
-  const exploreLinks = normalizeNavigationLinks(
+  const configuredExploreLinks = normalizeNavigationLinks(
     contentJson<unknown>(settings, 'footer_explore_links', defaultExploreLinks),
     defaultExploreLinks,
   );
+  const exploreLinks = configuredExploreLinks.some((item) => item.href === '/global')
+    ? configuredExploreLinks
+    : [...configuredExploreLinks, { label: 'Global delivery', href: '/global' }];
   const connectLinks = normalizeNavigationLinks(
     contentJson<unknown>(settings, 'footer_connect_links', [
       { label: 'Start a project', href: '/contact' },
