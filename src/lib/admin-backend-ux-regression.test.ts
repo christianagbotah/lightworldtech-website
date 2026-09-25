@@ -445,6 +445,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain('Customer 360 commercial pulse');
     expect(clientCommercial).toContain('Account health');
     expect(clientCommercial).toContain('Recommended next actions');
+    expect(clientCommercial).toContain('Recent customer activity');
+    expect(clientCommercial).toContain('Payments, invoices, collections, client announcements and support conversations');
     expect(clientCommercial).toContain('runCustomerAction');
     expect(clientCommercial).toContain('Delivery portfolio');
     expect(clientCommercial).toContain('Support pressure');
@@ -462,6 +464,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercialApi).toContain('accountHealth');
     expect(clientCommercialApi).toContain('riskSignals');
     expect(clientCommercialApi).toContain('nextActions');
+    expect(clientCommercialApi).toContain('recentActivity');
+    expect(clientCommercialApi).toContain('financeCollectionActivity.findMany');
+    expect(clientCommercialApi).toContain('clientAnnouncement.findMany');
+    expect(clientCommercialApi).toContain('clientTicketMessage.findMany');
     expect(clientCommercialApi).toContain('overdue_receivables');
     expect(clientCommercialApi).toContain('urgent_support');
     expect(clientCommercialApi).toContain('delivery_risk');
