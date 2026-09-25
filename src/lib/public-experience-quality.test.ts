@@ -39,9 +39,11 @@ describe('public experience quality', () => {
     const home = source('src/components/pages/HomePage.tsx');
 
     expect(header).not.toContain('h-[76px] sm:h-[88px]');
-    expect(css).toContain('.lw-hero-grid:not(.lw-home-hero):first-child::before');
-    expect(css).toContain('height: 76px');
-    expect(css).toContain('height: 88px');
+    expect(css).toContain('.lw-hero-grid:not(.lw-home-hero):first-child');
+    expect(css).toContain('padding-top: 76px');
+    expect(css).toContain('padding-top: 88px');
+    expect(css).toContain('.lw-hero-grid > :not(.absolute)');
+    expect(css).not.toContain('.lw-hero-grid > * {');
     expect(home).toContain('lw-home-hero');
     const serviceDetail = source('src/app/services/[slug]/page.tsx');
     expect(serviceDetail.indexOf('lw-hero-grid')).toBeGreaterThan(serviceDetail.indexOf('</section>'));
