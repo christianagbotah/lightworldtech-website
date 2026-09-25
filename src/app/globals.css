@@ -182,6 +182,22 @@
   }
 }
 
+/* Public inner pages render their hero background underneath the floating header.
+   Reserve the header's physical clearance inside the hero rather than inserting
+   a blank sibling spacer above the page. */
+.lw-hero-grid:not(.lw-home-hero)::before {
+  content: '';
+  display: block;
+  height: 76px;
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .lw-hero-grid:not(.lw-home-hero)::before {
+    height: 88px;
+  }
+}
+
 @layer utilities {
   .text-gradient {
     @apply bg-gradient-to-r from-amber-700 to-amber-400 bg-clip-text text-transparent;
