@@ -35,6 +35,7 @@ const defaultExploreLinks = [
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Products', href: '/products' },
   { label: 'Insights', href: '/blog' },
+  { label: 'Industry solutions', href: '/industries' },
   { label: 'Global delivery', href: '/global' },
   { label: 'About', href: '/about' },
   { label: 'Leadership', href: '/team' },
@@ -82,9 +83,12 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
     contentJson<unknown>(settings, 'footer_explore_links', defaultExploreLinks),
     defaultExploreLinks,
   );
-  const exploreLinks = configuredExploreLinks.some((item) => item.href === '/global')
+  const withIndustries = configuredExploreLinks.some((item) => item.href === '/industries')
     ? configuredExploreLinks
-    : [...configuredExploreLinks, { label: 'Global delivery', href: '/global' }];
+    : [...configuredExploreLinks, { label: 'Industry solutions', href: '/industries' }];
+  const exploreLinks = withIndustries.some((item) => item.href === '/global')
+    ? withIndustries
+    : [...withIndustries, { label: 'Global delivery', href: '/global' }];
   const connectLinks = normalizeNavigationLinks(
     contentJson<unknown>(settings, 'footer_connect_links', [
       { label: 'Start a project', href: '/contact' },

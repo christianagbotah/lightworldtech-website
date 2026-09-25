@@ -418,6 +418,17 @@ export async function answerConcierge(
     };
   }
 
+  if (/education|school|manufactur|factory|industrial|logistics|fleet|transport|retail|commerce|professional service|consulting firm|startup|venture|industry solution/.test(q)) {
+    return {
+      intent: 'services',
+      reply:
+        companyName +
+        ' publishes industry-specific solution paths for education, manufacturing and industrial operations, logistics and fleet, retail and commerce, professional services, and startups. These pages describe operating problems and relevant capabilities without claiming unverified customer results.',
+      suggestions: ['Show industry solutions', 'What services do you offer?', 'Start a project brief'],
+      cta: { label: 'Explore industry solutions', href: '/industries' },
+    };
+  }
+
   if (/international|global|worldwide|overseas|outside ghana|outside of ghana|abroad|remote delivery|remote team/.test(q)) {
     return {
       intent: 'company',

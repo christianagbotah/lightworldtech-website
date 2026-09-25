@@ -36,6 +36,7 @@ const defaultPrimaryNav = [
   { label: 'Work', href: '/portfolio' },
   { label: 'Products', href: '/products' },
   { label: 'Insights', href: '/blog' },
+  { label: 'Industries', href: '/industries' },
   { label: 'Global', href: '/global' },
 ];
 
@@ -96,9 +97,12 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
     contentJson<unknown>(settings, 'header_primary_links', defaultPrimaryNav),
     defaultPrimaryNav,
   );
-  const primaryNav = configuredPrimaryNav.some((item) => item.href === '/global')
+  const withIndustries = configuredPrimaryNav.some((item) => item.href === '/industries')
     ? configuredPrimaryNav
-    : [...configuredPrimaryNav, { label: 'Global', href: '/global' }];
+    : [...configuredPrimaryNav, { label: 'Industries', href: '/industries' }];
+  const primaryNav = withIndustries.some((item) => item.href === '/global')
+    ? withIndustries
+    : [...withIndustries, { label: 'Global', href: '/global' }];
   const serviceMenu = normalizeNavigationMenu(
     contentJson<unknown>(settings, 'header_service_menu', defaultServiceMenu),
     defaultServiceMenu,

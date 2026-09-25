@@ -75,6 +75,28 @@ describe('search visibility and entity authority', () => {
     expect(cms).toContain("{ label: 'About', href: '/about' }");
   });
 
+  test('publishes crawlable industry solution paths without inventing client results', () => {
+    const data = source('src/lib/industry-solutions.ts');
+    const indexPage = source('src/app/industries/page.tsx');
+    const detailPage = source('src/app/industries/[slug]/page.tsx');
+    const sitemap = source('src/app/sitemap.ts');
+    const header = source('src/components/layout/Header.tsx');
+    const assistant = source('src/lib/assistant-knowledge.ts');
+
+    for (const slug of ['education', 'manufacturing', 'logistics', 'retail-commerce', 'professional-services', 'startups']) {
+      expect(data).toContain("slug: '" + slug + "'");
+      expect(sitemap).toContain("'" + slug + "'");
+    }
+
+    expect(indexPage).toContain("path: '/industries'");
+    expect(detailPage).toContain("path: '/industries/' + industry.slug");
+    expect(header).toContain("{ label: 'Industries', href: '/industries' }");
+    expect(assistant).toContain("href: '/industries'");
+    expect(data).not.toContain('client results');
+    expect(data).not.toContain('we increased');
+    expect(data).not.toContain('% improvement');
+  });
+
   test('publishes a factual global-delivery surface without inventing foreign offices', () => {
     const page = source('src/app/global/page.tsx');
     const global = source('src/components/pages/GlobalPage.tsx');
