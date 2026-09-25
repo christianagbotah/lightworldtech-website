@@ -88,6 +88,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const leadDetail = source('src/app/api/admin/leads/[id]/route.ts');
     const crmIntelligence = source('src/lib/crm-operating-intelligence.ts');
     const proposals = source('src/components/admin/AdminProposals.tsx');
+    const convertClientRoute = source('src/app/api/admin/proposals/[id]/convert-client/route.ts');
     const proposalList = source('src/app/api/admin/proposals/route.ts');
     const proposalDetail = source('src/app/api/admin/proposals/[id]/route.ts');
     const proposalReadiness = source('src/lib/proposal-readiness.ts');
@@ -152,7 +153,19 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(crm).toContain("sessionStorage.setItem('lw-reply-message-id'");
     expect(crm).not.toContain("href={'mailto:' + selected.contactMessage.email}");
     expect(proposals).toContain("sessionStorage.setItem('lw-reply-message-id'");
+    expect(proposals).toContain('Accepted proposal → client & project handoff');
+    expect(proposals).toContain('Project expiry date');
+    expect(proposals).toContain('Next renewal date');
+    expect(proposals).toContain('Project budget');
+    expect(proposals).toContain('Renewal amount');
+    expect(proposals).toContain('Review these commercial fields before conversion');
+    expect(proposals).toContain('Review & create client workspace');
     expect(proposals).not.toContain("href={'mailto:' + selected.lead.contactMessage.email}");
+    expect(convertClientRoute).toContain('budgetAmount');
+    expect(convertClientRoute).toContain('renewalAmount');
+    expect(convertClientRoute).toContain('nextRenewalDate');
+    expect(convertClientRoute).toContain('renewalNoticeDays');
+    expect(convertClientRoute).toContain("'admin.proposal_converted_to_client'");
   });
 
   test('implements the enterprise Support Desk across admin and client portal', () => {
