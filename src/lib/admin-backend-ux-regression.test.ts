@@ -301,6 +301,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     const expenseAttributionMigration = source('prisma/migrations/20260925114500_finance_expense_customer_attribution/migration.sql');
     const vendorPayments = source('src/app/api/admin/finance/vendor-payments/route.ts');
     const renewalReminder = source('src/app/api/admin/finance/services/[id]/renewal-reminder/route.ts');
+    const projectRenewalReminder = source('src/app/api/admin/client-projects/[id]/renewal-reminder/route.ts');
+    const projectRenewalTemplateMigration = source('prisma/migrations/20260925140500_project_renewal_sms_templates/migration.sql');
     const recordDetails = source('src/app/api/admin/finance/records/[type]/[id]/route.ts');
     const financeDetails = source('src/components/admin/FinanceRecordDetailsDialog.tsx');
     const accounting = source('src/components/admin/FinanceAccountingWorkspace.tsx');
@@ -542,6 +544,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain('SMS customer');
     expect(clientCommercial).toContain('Payment reminder');
     expect(clientCommercial).toContain('Renewal reminder');
+    expect(clientCommercial).toContain('Project renewal reminder');
+    expect(clientCommercial).toContain("setPendingReminder('project_renewal_sms')");
+    expect(clientCommercial).toContain('/api/admin/client-projects/');
     expect(clientCommercial).toContain("setPendingReminder('payment_sms')");
     expect(clientCommercial).toContain("setPendingReminder('renewal_sms')");
     expect(clientCommercial).toContain("fetch('/api/admin/finance/collections'");
@@ -605,6 +610,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercialApi).toContain('renewalsDue30');
     expect(clientCommercialApi).toContain('expiredServices');
     expect(clientCommercialApi).toContain('nextRenewal');
+    expect(clientCommercialApi).toContain('nextProjectRenewal');
+    expect(clientCommercialApi).toContain('projectRenewalsDue30');
+    expect(clientCommercialApi).toContain('overdueProjectRenewals');
+    expect(clientCommercialApi).toContain('project_renewal_overdue');
     expect(clientCommercialApi).toContain('accountHealth');
     expect(clientCommercialApi).toContain('executiveBrief');
     expect(clientCommercialApi).toContain('executivePriorities');
@@ -655,6 +664,14 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(projectCreateApi).toContain('renewalAmount');
     expect(projectUpdateApi).toContain('nextRenewalDate');
     expect(projectUpdateApi).toContain('renewalCurrency');
+    expect(projectRenewalReminder).toContain("'finance.manage'");
+    expect(projectRenewalReminder).toContain("'communications.manage'");
+    expect(projectRenewalReminder).toContain("'project_renewal'");
+    expect(projectRenewalReminder).toContain("'project_expired'");
+    expect(projectRenewalReminder).toContain('12 * 60 * 60 * 1000');
+    expect(projectRenewalReminder).toContain("'admin.project_renewal_reminder_sent'");
+    expect(projectRenewalTemplateMigration).toContain("'project_renewal'");
+    expect(projectRenewalTemplateMigration).toContain("'project_expired'");
     expect(dashboard).toContain('netCashflow');
     expect(dashboard).toContain('netProfit');
     expect(dashboard).toContain('agedDebtors');
@@ -1000,6 +1017,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(callback).toContain('finalizeHubtelPayment');
     expect(sms).toContain('dispatchDueSms');
     expect(sms).toContain('queueDueServiceRenewalReminders');
+    expect(sms).toContain('queueDueProjectRenewalReminders');
+    expect(sms).toContain('AUTO_PROJECT_RENEWAL_SMS');
+    expect(sms).toContain('PROJECT_RENEWAL_SMS_BATCH_SIZE');
+    expect(sms).toContain('project.renewalNoticeDays');
+    expect(sms).toContain("createdBy: 'System project renewal scheduler'");
     expect(sms).toContain('AUTO_SERVICE_RENEWAL_SMS');
     expect(sms).toContain('SERVICE_RENEWAL_SMS_BATCH_SIZE');
     expect(sms).toContain('service.renewalNoticeDays');
