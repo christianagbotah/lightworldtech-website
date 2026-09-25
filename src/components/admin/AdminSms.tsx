@@ -492,7 +492,7 @@ export default function AdminSms() {
         />
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ['Programmable SMS', data.configuration.sms, data.configuration.senderId || 'Sender ID not configured', MessageSquareText],
           ['OTP', data.configuration.otp, data.configuration.otp ? 'Send & verify ready' : 'OTP endpoints required', KeyRound],
@@ -527,7 +527,7 @@ export default function AdminSms() {
       </div>
 
       {tab === 'single' && (
-        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(300px,.8fr)]">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,.8fr)]">
           <Card className="min-w-0 border-border/60">
             <CardHeader><CardTitle className="text-base">Send or schedule one SMS</CardTitle></CardHeader>
             <CardContent>
@@ -831,7 +831,7 @@ export default function AdminSms() {
       )}
 
       {tab === 'otp' && (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <Card className="border-border/60">
             <CardHeader><CardTitle className="text-base">Hubtel OTP diagnostics</CardTitle></CardHeader>
             <CardContent className="space-y-5">
