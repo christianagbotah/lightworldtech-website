@@ -3,13 +3,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { hashAdminPassword } from '@/lib/admin-auth';
-import { getActiveAdminContext } from '@/lib/admin-governance';
+import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { clientActivationUrl, createClientInvite } from '@/lib/client-invite';
+
+const optionalDate = z.string().trim().optional().default('').refine(
+  (value) => !value || !Number.isNaN(Date.parse(value)),
+  'Invalid date',
+);
 
 const schema = z.object({
   organizationName: z.string().trim().min(2).max(180).optional(),
   projectName: z.string().trim().min(2).max(240).optional(),
   manager: z.string().trim().max(180).optional().default(''),
+  startDate: optionalDate,
+  targetDate: optionalDate,
+  expiryDate: optionalDate,
+  nextRenewalDate: optionalDate,
+  renewalCycle: z.enum(['monthly', 'quarterly', 'semiannual', 'annual', 'one_time', 'custom']).optional().default('annual'),
+  renewalCurrency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/).optional().default('GHS'),
+  renewalAmount: z.coerce.number().min(0).max(999999999999).optional().default(0),
+  budgetCurrency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/).optional().default('GHS'),
+  budgetAmount: z.coerce.number().min(0).max(999999999999).optional().default(0),
+  autoRenew: z.boolean().optional().default(false),
+  renewalNoticeDays: z.coerce.number().int().min(0).max(365).optional().default(30),
+  renewalNotes: z.string().trim().max(4000).optional().default(''),
 });
 
 export async function POST(
@@ -129,13 +146,42 @@ export async function POST(
         health: 'on_track',
         progress: 0,
         manager: parsed.data.manager,
-        startDate: new Date(),
+        startDate: parsed.data.startDate ? new Date(parsed.data.startDate) : new Date(),
+        targetDate: parsed.data.targetDate ? new Date(parsed.data.targetDate) : null,
+        expiryDate: parsed.data.expiryDate ? new Date(parsed.data.expiryDate) : null,
+        nextRenewalDate: parsed.data.nextRenewalDate ? new Date(parsed.data.nextRenewalDate) : null,
+        renewalCycle: parsed.data.renewalCycle,
+        renewalCurrency: parsed.data.renewalCurrency,
+        renewalAmount: parsed.data.renewalAmount,
+        budgetCurrency: parsed.data.budgetCurrency,
+        budgetAmount: parsed.data.budgetAmount,
+        autoRenew: parsed.data.autoRenew,
+        renewalNoticeDays: parsed.data.renewalNoticeDays,
+        renewalNotes: parsed.data.renewalNotes || proposal.commercialNotes,
       },
     });
 
     await db.lead.update({
       where: { id: proposal.leadId },
       data: { status: 'won', lastContactedAt: new Date() },
+    });
+
+    await recordAdminAudit({
+      admin: session,
+      action: 'admin.proposal_converted_to_client',
+      entity: 'Proposal',
+      entityId: proposal.id,
+      details: {
+        organizationId: organization.id,
+        projectId: project.id,
+        leadId: proposal.leadId,
+        budgetCurrency: project.budgetCurrency,
+        budgetAmount: project.budgetAmount.toFixed(2),
+        renewalCurrency: project.renewalCurrency,
+        renewalAmount: project.renewalAmount.toFixed(2),
+        renewalCycle: project.renewalCycle,
+        autoRenew: project.autoRenew,
+      },
     });
 
     return NextResponse.json({
