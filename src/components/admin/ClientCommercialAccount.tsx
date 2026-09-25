@@ -126,6 +126,18 @@ type CommercialData = {
     overdueInvoices: number;
     renewalsDue30: number;
     expiredServices: number;
+    accountHealth: 'healthy' | 'watch' | 'action_required';
+    riskSignals: Array<{
+      key: string;
+      label: string;
+      count: number;
+      severity: 'medium' | 'high';
+    }>;
+    nextActions: Array<{
+      key: 'collections' | 'renewals' | 'support' | 'projects' | 'statement';
+      label: string;
+      detail: string;
+    }>;
     nextRenewal: {
       serviceId: string;
       serviceName: string;
@@ -297,6 +309,21 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
       sessionStorage.setItem('lw-finance-customer-name', organizationName);
     }
     navigate('admin-finance');
+  };
+
+  const runCustomerAction = (key: CommercialData['customer360']['nextActions'][number]['key']) => {
+    if (key === 'collections' || key === 'renewals') {
+      openFinanceSection(key);
+      return;
+    }
+    if (key === 'support' || key === 'projects') {
+      document.getElementById(key === 'support' ? 'client-support' : 'client-projects')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      return;
+    }
+    void downloadStatement();
   };
 
   const downloadStatement = async () => {
@@ -478,6 +505,64 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                     </p>
                   </div>
                 )}
+              </div>
+
+              <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,.95fr)]">
+                <div className="rounded-xl border border-border/60 bg-background/80 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Account health</p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <Badge className={
+                          data?.customer360.accountHealth === 'healthy'
+                            ? statusTone('active')
+                            : data?.customer360.accountHealth === 'action_required'
+                              ? statusTone('overdue')
+                              : statusTone('partially_paid')
+                        }>
+                          {data?.customer360.accountHealth === 'healthy'
+                            ? 'Healthy'
+                            : data?.customer360.accountHealth === 'action_required'
+                              ? 'Action required'
+                              : 'Watch'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {data?.customer360.riskSignals.length || 0} active risk signal{(data?.customer360.riskSignals.length || 0) === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(data?.customer360.riskSignals || []).map((signal) => (
+                        <Badge key={signal.key} variant="outline" className={signal.severity === 'high' ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300' : 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300'}>
+                          {signal.label}: {signal.count}
+                        </Badge>
+                      ))}
+                      {!data?.customer360.riskSignals.length && (
+                        <Badge variant="outline">No urgent risks flagged</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/60 bg-background/80 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Recommended next actions</p>
+                  <div className="mt-3 grid gap-2">
+                    {(data?.customer360.nextActions || []).map((action) => (
+                      <button
+                        key={action.key}
+                        type="button"
+                        onClick={() => runCustomerAction(action.key)}
+                        className="group flex w-full items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2 text-left transition hover:border-amber-400/50 hover:bg-amber-500/[0.04]"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold">{action.label}</p>
+                          <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">{action.detail}</p>
+                        </div>
+                        <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground transition group-hover:text-amber-600" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
