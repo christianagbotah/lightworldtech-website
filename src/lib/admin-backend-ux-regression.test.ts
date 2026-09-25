@@ -346,6 +346,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const financeControlsMigration = source('prisma/migrations/20260923151500_finance_controls_credit_refund_reconciliation/migration.sql');
     const monthCloseMigration = source('prisma/migrations/20260923154500_finance_month_close_locks/migration.sql');
     const taxMigration = source('prisma/migrations/20260923162500_ghana_vat_tax_controls/migration.sql');
+    const financeVendorBillTaxRepair = source('prisma/migrations/20260925151500_finance_vendor_bill_tax_recoverable_repair/migration.sql');
     const projectCommercialMigration = source('prisma/migrations/20260923165000_client_project_commercial_lifecycle/migration.sql');
     const projectBudgetMigration = source('prisma/migrations/20260925120500_client_project_budget_planning/migration.sql');
     const approvalMigration = source('prisma/migrations/20260923172000_finance_outflow_maker_checker/migration.sql');
@@ -930,6 +931,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(taxMigration).toContain("'VAT Input Tax'");
     expect(taxMigration).toContain("'NHIL Input Tax'");
     expect(taxMigration).toContain("'GETFund Input Levy'");
+    expect(financeVendorBillTaxRepair).toContain('ADD COLUMN IF NOT EXISTS "taxRecoverable"');
     expect(projectCommercialMigration).toContain('"expiryDate"');
     expect(projectCommercialMigration).toContain('"nextRenewalDate"');
     expect(projectCommercialMigration).toContain('"renewalAmount"');
