@@ -524,6 +524,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain('Issue invoice');
     expect(clientCommercial).toContain('Add service');
     expect(clientCommercial).toContain('Project dates');
+    expect(clientCommercial).toContain('Create project');
+    expect(clientCommercial).toContain('SMS customer');
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-client-action', 'new-project')");
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-sms-recipient'");
+    expect(clients).toContain("sessionStorage.getItem('lw-client-action')");
+    expect(clients).toContain("pendingClientAction !== 'new-project'");
+    expect(clients).toContain('client-new-project-name');
     expect(clientCommercial).toContain('Direct profitability');
     expect(clientCommercial).toContain('Project margins');
     expect(clientCommercial).toContain('% used');
@@ -959,6 +966,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(smsAdmin).toContain('SMS, campaigns, scheduling & OTP');
     expect(smsAdmin).toContain('Reusable SMS templates');
     expect(smsAdmin).toContain('Scheduled campaigns');
+    expect(smsAdmin).toContain("sessionStorage.getItem('lw-sms-recipient')");
+    expect(smsAdmin).toContain('lw-single-sms-recipient');
+    expect(smsAdmin).toContain('lw-single-sms-content');
     expect(portal).toContain('Pay with Hubtel');
     expect(portal).toContain('Pay service with Hubtel');
     expect(portal).toContain('No outstanding invoice for this service.');
