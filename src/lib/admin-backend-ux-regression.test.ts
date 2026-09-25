@@ -1038,6 +1038,25 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(portal).toContain('Payment / receipt history');
   });
 
+  test('adds responsive operational filters to Messages and Newsletter', () => {
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    const newsletter = source('src/components/admin/AdminNewsletter.tsx');
+
+    expect(messages).toContain('Search sender, email, phone, subject or message');
+    expect(messages).toContain('Filter messages by read status');
+    expect(messages).toContain('visibleMessages');
+    expect(messages).toContain('Select all visible messages');
+    expect(messages).toContain('lg:grid-cols-[minmax(260px,2fr)_170px_auto]');
+
+    expect(newsletter).toContain('Search subscriber email');
+    expect(newsletter).toContain('Filter subscribers by status');
+    expect(newsletter).toContain('Search recipient, subject or error');
+    expect(newsletter).toContain('Filter delivery activity by status');
+    expect(newsletter).toContain('visibleSubscribers');
+    expect(newsletter).toContain('visibleDeliveries');
+    expect(newsletter).toContain('lg:min-w-[480px]');
+  });
+
   test('uses desktop workspace splits for SMS and campaigns from lg', () => {
     const sms = source('src/components/admin/AdminSms.tsx');
     const campaigns = source('src/components/admin/AdminCampaigns.tsx');
