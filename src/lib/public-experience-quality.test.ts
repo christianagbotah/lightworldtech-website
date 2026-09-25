@@ -44,6 +44,21 @@ describe('public experience quality', () => {
     expect(globalPage).not.toContain('initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}');
   });
 
+  test('keeps consistent form label spacing without doubling explicit field gaps', () => {
+    const label = source('src/components/ui/label.tsx');
+    const globals = source('src/app/globals.css');
+    const taxWorkspace = source('src/components/admin/FinanceTaxWorkspace.tsx');
+
+    expect(label).toContain('text-sm leading-5 font-medium');
+    expect(label).not.toContain('text-sm leading-none font-medium');
+    expect(globals).toContain(':where(div, section, fieldset):not([class*="gap-"]):not([class*="space-y-"])');
+    expect(globals).toContain('> [data-slot="label"]:not(.sr-only)');
+    expect(globals).toContain('+ :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"])');
+    expect(globals).toContain('input:not([type="checkbox"]):not([type="radio"])');
+    expect(globals).toContain('margin-top: 0.375rem');
+    expect(taxWorkspace).toContain('<div><Label>VAT registration number</Label><Input');
+  });
+
   test('product cards use consistent visual and title alignment', () => {
     const products = source('src/components/pages/ProductsPage.tsx');
 
