@@ -147,6 +147,23 @@ type CommercialData = {
       actor: string;
       occurredAt: string;
     }>;
+    forecast: {
+      next30Days: Array<{
+        currency: string;
+        receivablesDue: string;
+        serviceRenewals: string;
+        projectRenewals: string;
+        totalPotential: string;
+      }>;
+      next90Days: Array<{
+        currency: string;
+        receivablesDue: string;
+        serviceRenewals: string;
+        projectRenewals: string;
+        totalPotential: string;
+      }>;
+      methodology: string;
+    };
     profitability: {
       customer: Array<{
         scopeType: 'customer';
@@ -674,6 +691,48 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   </div>
                 </div>
               ) : null}
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-background/80">
+              <div className="flex flex-col gap-2 border-b border-border/60 p-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold">30 / 90 day commercial forecast</p>
+                  <p className="mt-1 max-w-3xl text-[11px] leading-5 text-muted-foreground">
+                    {data?.customer360.forecast.methodology || 'Upcoming receivables and renewal exposure by currency.'}
+                  </p>
+                </div>
+                <Badge variant="outline">Forward view</Badge>
+              </div>
+              <div className="grid gap-4 p-4 2xl:grid-cols-2">
+                {([
+                  ['Next 30 days', data?.customer360.forecast.next30Days || []],
+                  ['Next 90 days', data?.customer360.forecast.next90Days || []],
+                ] as const).map(([label, rows]) => (
+                  <div key={label} className="min-w-0 rounded-xl border border-border/60">
+                    <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
+                      <p className="text-xs font-semibold">{label}</p>
+                      <Badge variant="outline">{rows.length} currenc{rows.length === 1 ? 'y' : 'ies'}</Badge>
+                    </div>
+                    <div className="max-w-full overflow-x-auto">
+                      <Table exportFileName={'lightworld-client-' + label.toLowerCase().replaceAll(' ', '-') + '-forecast'} className="min-w-[680px]">
+                        <TableHeader><TableRow><TableHead>Currency</TableHead><TableHead className="text-right">Receivables due</TableHead><TableHead className="text-right">Service renewals</TableHead><TableHead className="text-right">Project renewals</TableHead><TableHead className="text-right">Potential</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                          {rows.map((row) => (
+                            <TableRow key={label + ':' + row.currency}>
+                              <TableCell className="text-xs font-semibold">{row.currency}</TableCell>
+                              <TableCell className="text-right text-xs">{money(row.receivablesDue, row.currency)}</TableCell>
+                              <TableCell className="text-right text-xs">{money(row.serviceRenewals, row.currency)}</TableCell>
+                              <TableCell className="text-right text-xs">{money(row.projectRenewals, row.currency)}</TableCell>
+                              <TableCell className="text-right text-xs font-semibold">{money(row.totalPotential, row.currency)}</TableCell>
+                            </TableRow>
+                          ))}
+                          {!rows.length && <TableRow><TableCell colSpan={5} className="py-6 text-center text-xs text-muted-foreground">No receivable or renewal value is scheduled inside this horizon.</TableCell></TableRow>}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
