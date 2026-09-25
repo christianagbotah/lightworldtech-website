@@ -219,7 +219,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
       <section className="lw-hero-grid relative border-b border-slate-200/70 dark:border-white/[0.06] overflow-hidden">
         <CmsHeroMedia settings={settings} settingKey="contact_hero_image" />
         <div className="relative container-main py-16 sm:py-20 lg:py-24 z-10">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end">
+          <motion.div initial={false} animate={{ opacity: 1, y: 0 }} className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
                 <Sparkles className="size-3.5" />
