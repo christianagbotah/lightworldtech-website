@@ -82,6 +82,37 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(leads).toContain("where.status = status && status !== 'all' ? status : { notIn: ['won', 'lost'] }");
   });
 
+  test('adds human-controlled CRM operating intelligence and governed proposal readiness', () => {
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const leadList = source('src/app/api/admin/leads/route.ts');
+    const leadDetail = source('src/app/api/admin/leads/[id]/route.ts');
+    const crmIntelligence = source('src/lib/crm-operating-intelligence.ts');
+    const proposals = source('src/components/admin/AdminProposals.tsx');
+    const proposalList = source('src/app/api/admin/proposals/route.ts');
+    const proposalDetail = source('src/app/api/admin/proposals/[id]/route.ts');
+    const proposalReadiness = source('src/lib/proposal-readiness.ts');
+
+    expect(crm).toContain('Operating intelligence');
+    expect(crm).toContain('Use as next action');
+    expect(crm).toContain('operatingIntelligence.urgency');
+    expect(leadList).toContain('deriveCrmOperatingIntelligence');
+    expect(leadDetail).toContain('deriveCrmOperatingIntelligence');
+    expect(crmIntelligence).toContain('overdue follow-up');
+    expect(crmIntelligence).toContain('human-controlled');
+
+    expect(proposals).toContain('Proposal readiness');
+    expect(proposals).toContain('Approval blockers');
+    expect(proposals).toContain('Qualification warnings');
+    expect(proposals).toContain("status.id === 'sent' && !selected.approvedAt");
+    expect(proposalList).toContain('readinessFor');
+    expect(proposalDetail).toContain('Proposal must be human-approved as Ready before it can be marked Sent.');
+    expect(proposalDetail).toContain('Proposal must be marked Sent before it can be marked Accepted.');
+    expect(proposalDetail).toContain('Sent or accepted proposals cannot be edited in place.');
+    expect(proposalDetail).toContain('Proposal content changes must be reviewed and approved');
+    expect(proposalReadiness).toContain('readyForApproval');
+    expect(proposalReadiness).toContain('Pricing, taxes, payment terms');
+  });
+
   test('keeps customer email replies inside the Lightworld admin portal', () => {
     const schema = source('prisma/schema.prisma');
     const replies = source('src/app/api/admin/messages/[id]/replies/route.ts');
