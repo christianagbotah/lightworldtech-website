@@ -50,7 +50,7 @@ type Project = {
   id: string; name: string; summary: string; status: string; health: string;
   progress: number; manager: string; startDate: string | null; targetDate: string | null;
   expiryDate: string | null; nextRenewalDate: string | null; renewalCycle: string;
-  renewalCurrency: string; renewalAmount: string; autoRenew: boolean;
+  renewalCurrency: string; renewalAmount: string; budgetCurrency: string; budgetAmount: string; autoRenew: boolean;
   renewalNoticeDays: number; renewalNotes: string;
   milestones: Milestone[]; documents: DocumentItem[]; announcements: Announcement[];
 };
@@ -95,6 +95,8 @@ export default function AdminClients() {
     renewalCycle: 'annual',
     renewalCurrency: 'GHS',
     renewalAmount: '',
+    budgetCurrency: 'GHS',
+    budgetAmount: '',
     autoRenew: false,
     renewalNoticeDays: '30',
     renewalNotes: '',
@@ -245,6 +247,8 @@ export default function AdminClients() {
           renewalCycle: projectForm.renewalCycle,
           renewalCurrency: projectForm.renewalCurrency,
           renewalAmount: Number(projectForm.renewalAmount || 0),
+          budgetCurrency: projectForm.budgetCurrency,
+          budgetAmount: Number(projectForm.budgetAmount || 0),
           autoRenew: projectForm.autoRenew,
           renewalNoticeDays: Number(projectForm.renewalNoticeDays || 30),
           renewalNotes: projectForm.renewalNotes,
@@ -262,6 +266,8 @@ export default function AdminClients() {
         renewalCycle: 'annual',
         renewalCurrency: 'GHS',
         renewalAmount: '',
+        budgetCurrency: 'GHS',
+        budgetAmount: '',
         autoRenew: false,
         renewalNoticeDays: '30',
         renewalNotes: '',
@@ -679,6 +685,10 @@ export default function AdminClients() {
                           <div><Label>Renewal amount</Label><Input type="number" min="0" step="0.01" value={projectForm.renewalAmount} onChange={(e) => setProjectForm({ ...projectForm, renewalAmount: e.target.value })} /></div>
                           <div><Label>Currency</Label><Input maxLength={3} value={projectForm.renewalCurrency} onChange={(e) => setProjectForm({ ...projectForm, renewalCurrency: e.target.value.toUpperCase() })} /></div>
                         </div>
+                        <div className="grid grid-cols-[1fr_92px] gap-2">
+                          <div><Label>Project budget</Label><Input type="number" min="0" step="0.01" value={projectForm.budgetAmount} onChange={(e) => setProjectForm({ ...projectForm, budgetAmount: e.target.value })} /></div>
+                          <div><Label>Budget CCY</Label><Input maxLength={3} value={projectForm.budgetCurrency} onChange={(e) => setProjectForm({ ...projectForm, budgetCurrency: e.target.value.toUpperCase() })} /></div>
+                        </div>
                         <div><Label>Renewal notice days</Label><Input type="number" min="0" max="365" value={projectForm.renewalNoticeDays} onChange={(e) => setProjectForm({ ...projectForm, renewalNoticeDays: e.target.value })} /></div>
                         <label className="flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm">
                           <input type="checkbox" checked={projectForm.autoRenew} onChange={(e) => setProjectForm({ ...projectForm, autoRenew: e.target.checked })} />
@@ -837,6 +847,28 @@ export default function AdminClients() {
                               value={project.renewalCurrency}
                               onChange={(e) => updateProjectLocal(project.id, { renewalCurrency: e.target.value.toUpperCase() })}
                               onBlur={(e) => void patchProject(project.id, { renewalCurrency: e.target.value.toUpperCase() })}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-[1fr_84px] gap-2">
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-[0.08em]">Project budget</Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={project.budgetAmount}
+                              onChange={(e) => updateProjectLocal(project.id, { budgetAmount: e.target.value })}
+                              onBlur={(e) => void patchProject(project.id, { budgetAmount: Number(e.target.value || 0) })}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-[0.08em]">Budget CCY</Label>
+                            <Input
+                              maxLength={3}
+                              value={project.budgetCurrency}
+                              onChange={(e) => updateProjectLocal(project.id, { budgetCurrency: e.target.value.toUpperCase() })}
+                              onBlur={(e) => void patchProject(project.id, { budgetCurrency: e.target.value.toUpperCase() })}
                             />
                           </div>
                         </div>
