@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { z } from 'zod';
@@ -51,6 +52,7 @@ export async function PUT(request: NextRequest) {
 
     if (updates.length > 0) {
       await db.$transaction(updates);
+      revalidateTag('site-settings', 'max');
     }
     return NextResponse.json({ success: true, updated: updates.length });
   } catch (error) {
