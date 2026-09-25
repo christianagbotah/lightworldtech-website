@@ -110,6 +110,8 @@ export async function GET(
         nextRenewalDate: true,
         renewalCurrency: true,
         renewalAmount: true,
+        budgetCurrency: true,
+        budgetAmount: true,
         updatedAt: true,
       },
     }),
@@ -308,11 +310,28 @@ export async function GET(
     }
   }
 
+  for (const project of projects) {
+    if (project.budgetAmount.gt(0)) {
+      profitabilityBucket('project', project.id, project.name, project.budgetCurrency);
+    }
+  }
+
   const profitabilityRows = [...profitability.values()].map((row) => {
     const margin = row.revenue.minus(row.directCost);
     const marginPercent = row.revenue.gt(0)
       ? margin.div(row.revenue).mul(100)
       : new Prisma.Decimal(0);
+    const projectBudget = row.scopeType === 'project'
+      ? projects.find((project) => project.id === row.scopeId)
+      : null;
+    const matchingBudget = projectBudget && projectBudget.budgetCurrency === row.currency
+      ? projectBudget.budgetAmount
+      : null;
+    const budgetRemaining = matchingBudget ? matchingBudget.minus(row.directCost) : null;
+    const budgetUtilizationPercent = matchingBudget && matchingBudget.gt(0)
+      ? row.directCost.div(matchingBudget).mul(100)
+      : null;
+
     return {
       scopeType: row.scopeType,
       scopeId: row.scopeId,
@@ -322,6 +341,9 @@ export async function GET(
       directCost: row.directCost.toFixed(2),
       margin: margin.toFixed(2),
       marginPercent: marginPercent.toDecimalPlaces(2).toFixed(2),
+      budgetAmount: matchingBudget?.toFixed(2) ?? null,
+      budgetRemaining: budgetRemaining?.toFixed(2) ?? null,
+      budgetUtilizationPercent: budgetUtilizationPercent?.toDecimalPlaces(2).toFixed(2) ?? null,
     };
   });
 
@@ -577,6 +599,7 @@ export async function GET(
         projects: projects.slice(0, 12).map((project) => ({
           ...project,
           renewalAmount: project.renewalAmount.toFixed(2),
+          budgetAmount: project.budgetAmount.toFixed(2),
         })),
         tickets: openTickets.slice(0, 12),
       },
