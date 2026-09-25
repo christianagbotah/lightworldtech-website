@@ -147,6 +147,39 @@ type CommercialData = {
       actor: string;
       occurredAt: string;
     }>;
+    profitability: {
+      customer: Array<{
+        scopeType: 'customer';
+        scopeId: string;
+        name: string;
+        currency: string;
+        revenue: string;
+        directCost: string;
+        margin: string;
+        marginPercent: string;
+      }>;
+      projects: Array<{
+        scopeType: 'project';
+        scopeId: string;
+        name: string;
+        currency: string;
+        revenue: string;
+        directCost: string;
+        margin: string;
+        marginPercent: string;
+      }>;
+      services: Array<{
+        scopeType: 'service';
+        scopeId: string;
+        name: string;
+        currency: string;
+        revenue: string;
+        directCost: string;
+        margin: string;
+        marginPercent: string;
+      }>;
+      methodology: string;
+    };
     commitments: {
       nextCollectionFollowUp: {
         id: string;
@@ -556,6 +589,91 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   <span><span className="block text-xs font-semibold">Project dates</span><span className="block text-[10px] font-normal text-muted-foreground">Expiry and next renewal</span></span>
                 </Button>
               </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-background/80">
+              <div className="flex flex-col gap-2 border-b border-border/60 p-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Direct profitability</p>
+                  <p className="mt-1 max-w-3xl text-[11px] leading-5 text-muted-foreground">
+                    {data?.customer360.profitability.methodology || 'Profitability is calculated from issued invoice revenue and explicitly attributed direct expenses.'}
+                  </p>
+                </div>
+                <Badge variant="outline">Actual finance data</Badge>
+              </div>
+
+              <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+                {(data?.customer360.profitability.customer || []).map((row) => (
+                  <div key={row.scopeId + ':' + row.currency} className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{row.currency} direct margin</p>
+                      <Badge variant="outline" className={Number(row.margin) >= 0 ? 'border-emerald-300 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300' : 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300'}>
+                        {Number(row.marginPercent).toFixed(2)}%
+                      </Badge>
+                    </div>
+                    <p className="mt-2 text-lg font-bold">{money(row.margin, row.currency)}</p>
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+                      <span>Revenue<br /><strong className="text-foreground">{money(row.revenue, row.currency)}</strong></span>
+                      <span>Direct cost<br /><strong className="text-foreground">{money(row.directCost, row.currency)}</strong></span>
+                    </div>
+                  </div>
+                ))}
+                {!data?.customer360.profitability.customer.length && (
+                  <div className="sm:col-span-2 xl:col-span-4 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                    No attributable revenue or direct expense data is available yet. Use Record expense and choose this customer/project/service to begin profitability tracking.
+                  </div>
+                )}
+              </div>
+
+              {(data?.customer360.profitability.projects.length || data?.customer360.profitability.services.length) ? (
+                <div className="grid gap-4 border-t border-border/60 p-4 2xl:grid-cols-2">
+                  <div className="min-w-0 rounded-xl border border-border/60">
+                    <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
+                      <p className="text-xs font-semibold">Project margins</p>
+                      <Badge variant="outline">{data?.customer360.profitability.projects.length || 0}</Badge>
+                    </div>
+                    <div className="max-w-full overflow-x-auto">
+                      <Table exportFileName="lightworld-client-project-profitability" className="min-w-[620px]">
+                        <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Direct cost</TableHead><TableHead className="text-right">Margin</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                          {(data?.customer360.profitability.projects || []).slice(0, 20).map((row) => (
+                            <TableRow key={row.scopeId + ':' + row.currency}>
+                              <TableCell className="text-xs font-medium">{row.name}</TableCell>
+                              <TableCell className="text-xs">{row.currency}</TableCell>
+                              <TableCell className="text-right text-xs">{money(row.revenue, row.currency)}</TableCell>
+                              <TableCell className="text-right text-xs">{money(row.directCost, row.currency)}</TableCell>
+                              <TableCell className="text-right"><span className={Number(row.margin) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{money(row.margin, row.currency)} · {Number(row.marginPercent).toFixed(2)}%</span></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 rounded-xl border border-border/60">
+                    <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
+                      <p className="text-xs font-semibold">Service margins</p>
+                      <Badge variant="outline">{data?.customer360.profitability.services.length || 0}</Badge>
+                    </div>
+                    <div className="max-w-full overflow-x-auto">
+                      <Table exportFileName="lightworld-client-service-profitability" className="min-w-[620px]">
+                        <TableHeader><TableRow><TableHead>Service</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Direct cost</TableHead><TableHead className="text-right">Margin</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                          {(data?.customer360.profitability.services || []).slice(0, 20).map((row) => (
+                            <TableRow key={row.scopeId + ':' + row.currency}>
+                              <TableCell className="text-xs font-medium">{row.name}</TableCell>
+                              <TableCell className="text-xs">{row.currency}</TableCell>
+                              <TableCell className="text-right text-xs">{money(row.revenue, row.currency)}</TableCell>
+                              <TableCell className="text-right text-xs">{money(row.directCost, row.currency)}</TableCell>
+                              <TableCell className="text-right"><span className={Number(row.margin) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{money(row.margin, row.currency)} · {Number(row.marginPercent).toFixed(2)}%</span></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
