@@ -8,6 +8,9 @@ import { nextExpenseNumber, normalizeCurrency } from '@/lib/finance';
 
 const schema = z.object({
   vendorId: z.string().min(1).nullable().optional(),
+  organizationId: z.string().min(1).nullable().optional(),
+  projectId: z.string().min(1).nullable().optional(),
+  serviceId: z.string().min(1).nullable().optional(),
   category: z.string().trim().min(2).max(120).default('operating_expense'),
   description: z.string().trim().min(2).max(500),
   currency: z.string().trim().max(3).default('GHS'),
@@ -26,7 +29,12 @@ export async function GET(request: NextRequest) {
   }
   const expenses = await db.financeExpense.findMany({
     orderBy: [{ incurredAt: 'desc' }, { createdAt: 'desc' }],
-    include: { vendor: { select: { id: true, name: true } } },
+    include: {
+      vendor: { select: { id: true, name: true } },
+      organization: { select: { id: true, name: true } },
+      project: { select: { id: true, name: true } },
+      service: { select: { id: true, name: true, planName: true } },
+    },
     take: 2000,
   });
   return NextResponse.json({
@@ -48,6 +56,43 @@ export async function POST(request: NextRequest) {
     if (!vendor) return NextResponse.json({ success: false, error: 'Supplier not found' }, { status: 404 });
   }
 
+  let organizationId = parsed.data.organizationId || null;
+  let projectId = parsed.data.projectId || null;
+  let serviceId = parsed.data.serviceId || null;
+
+  if (organizationId) {
+    const organization = await db.clientOrganization.findUnique({ where: { id: organizationId }, select: { id: true } });
+    if (!organization) return NextResponse.json({ success: false, error: 'Customer not found' }, { status: 404 });
+  }
+
+  if (projectId) {
+    const project = await db.clientProject.findUnique({
+      where: { id: projectId },
+      select: { id: true, organizationId: true },
+    });
+    if (!project) return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 });
+    if (organizationId && project.organizationId !== organizationId) {
+      return NextResponse.json({ success: false, error: 'Project does not belong to the selected customer' }, { status: 409 });
+    }
+    organizationId = project.organizationId;
+  }
+
+  if (serviceId) {
+    const service = await db.clientServiceAccount.findUnique({
+      where: { id: serviceId },
+      select: { id: true, organizationId: true, projectId: true },
+    });
+    if (!service) return NextResponse.json({ success: false, error: 'Service not found' }, { status: 404 });
+    if (organizationId && service.organizationId !== organizationId) {
+      return NextResponse.json({ success: false, error: 'Service does not belong to the selected customer' }, { status: 409 });
+    }
+    if (projectId && service.projectId && service.projectId !== projectId) {
+      return NextResponse.json({ success: false, error: 'Service is linked to a different project' }, { status: 409 });
+    }
+    organizationId = service.organizationId;
+    if (!projectId && service.projectId) projectId = service.projectId;
+  }
+
   const expenseNumber = await nextExpenseNumber(parsed.data.incurredAt);
   const currency = normalizeCurrency(parsed.data.currency);
   const expense = await db.$transaction(async (tx) => {
@@ -55,6 +100,9 @@ export async function POST(request: NextRequest) {
       data: {
         expenseNumber,
         vendorId: parsed.data.vendorId || null,
+        organizationId,
+        projectId,
+        serviceId,
         category: parsed.data.category,
         description: parsed.data.description,
         currency,
@@ -66,7 +114,12 @@ export async function POST(request: NextRequest) {
         notes: parsed.data.notes,
         recordedBy: actor.name || actor.email,
       },
-      include: { vendor: { select: { id: true, name: true } } },
+      include: {
+        vendor: { select: { id: true, name: true } },
+        organization: { select: { id: true, name: true } },
+        project: { select: { id: true, name: true } },
+        service: { select: { id: true, name: true, planName: true } },
+      },
     });
 
     await postExpenseJournal(tx, {
@@ -89,7 +142,15 @@ export async function POST(request: NextRequest) {
     action: 'admin.finance_expense_recorded',
     entity: 'FinanceExpense',
     entityId: expense.id,
-    details: { expenseNumber, amount: expense.amount.toFixed(2), currency: expense.currency, category: expense.category },
+    details: {
+      expenseNumber,
+      amount: expense.amount.toFixed(2),
+      currency: expense.currency,
+      category: expense.category,
+      organizationId,
+      projectId,
+      serviceId,
+    },
   });
   return NextResponse.json({ success: true, data: { ...expense, amount: expense.amount.toFixed(2) } }, { status: 201 });
 }
