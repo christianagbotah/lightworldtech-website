@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
           dueDate: true,
           status: true,
           allocations: { select: { amount: true } },
-          creditNotes: { where: { status: 'posted' }, select: { amount: true } },
+          creditNotes: { where: { status: 'posted' }, select: { appliedAmount: true } },
         },
       },
       services: {
