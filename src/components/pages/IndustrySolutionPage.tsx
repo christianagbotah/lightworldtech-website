@@ -17,7 +17,7 @@ export default function IndustrySolutionPage({ industry }: { industry: IndustryS
       <section className="lw-hero-grid relative overflow-hidden border-b border-slate-200/70 dark:border-white/[0.06]">
         <div className="absolute -right-24 top-10 size-96 rounded-full bg-emerald-400/10 blur-[140px]" />
         <div className="container-main relative py-16 sm:py-20 lg:py-28">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="grid gap-10 lg:grid-cols-[1.12fr_.88fr] lg:items-end">
+          <motion.div initial={false} animate={{ opacity: 1, y: 0 }} className="grid gap-10 lg:grid-cols-[1.12fr_.88fr] lg:items-end">
             <div>
               <Link href="/industries" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
                 Industry solutions
