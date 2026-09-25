@@ -308,6 +308,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const accounting = source('src/components/admin/FinanceAccountingWorkspace.tsx');
     const collections = source('src/components/admin/FinanceCollectionsWorkspace.tsx');
     const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
+    const financeMeta = source('src/app/api/admin/finance/meta/route.ts');
     const renewalCompletionApi = source('src/app/api/admin/finance/invoices/[id]/complete-renewal/route.ts');
     const serviceRenewalLib = source('src/lib/service-renewal.ts');
     const serviceRenewalTest = source('src/lib/service-renewal.test.ts');
@@ -408,6 +409,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain("['accounting', 'Accounting']");
     expect(finance).toContain("['collections', 'Collections']");
     expect(finance).toContain("['renewals', 'Renewals']");
+    expect(finance).toContain('projects={data.organizations.flatMap');
     expect(finance).toContain('FinanceAccountingWorkspace');
     expect(finance).toContain('FinanceExecutiveDashboard');
     expect(executiveFinance).toContain('FinanceExecutiveActionCenter');
@@ -664,6 +666,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(projectCreateApi).toContain('renewalAmount');
     expect(projectUpdateApi).toContain('nextRenewalDate');
     expect(projectUpdateApi).toContain('renewalCurrency');
+    expect(financeMeta).toContain('nextRenewalDate: true');
+    expect(financeMeta).toContain('renewalAmount: true');
+    expect(financeMeta).toContain('renewalNoticeDays: true');
+    expect(financeMeta).toContain('renewalAmount: project.renewalAmount.toFixed(2)');
     expect(projectRenewalReminder).toContain("'finance.manage'");
     expect(projectRenewalReminder).toContain("'communications.manage'");
     expect(projectRenewalReminder).toContain("'project_renewal'");
@@ -732,6 +738,16 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(invoices).toContain('pg_advisory_xact_lock');
     expect(invoices).toContain('A renewal invoice already exists for this service and renewal date');
     expect(renewals).toContain('Renewal billing queue');
+    expect(renewals).toContain('projects: RenewalProject[]');
+    expect(renewals).toContain('Project renewals needing action');
+    expect(renewals).toContain('Project renewal value in view');
+    expect(renewals).toContain('Project renewal queue');
+    expect(renewals).toContain('lightworld-project-renewal-queue');
+    expect(renewals).toContain("'notice_window'");
+    expect(renewals).toContain("'overdue'");
+    expect(renewals).toContain('/api/admin/client-projects/');
+    expect(renewals).toContain('Send project renewal reminder?');
+    expect(renewals).toContain('duplicate sends are blocked for 12 hours');
     expect(renewals).toContain('auto-renew never means auto-charge');
     expect(renewals).toContain('exportFileName="lightworld-renewal-billing-queue"');
     expect(renewals).toContain('Complete renewal');
