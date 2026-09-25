@@ -294,6 +294,8 @@ export default function AdminFinance() {
   const [loadError, setLoadError] = useState('');
   const [deepLinkOrganizationId, setDeepLinkOrganizationId] = useState('');
   const [deepLinkCustomerName, setDeepLinkCustomerName] = useState('');
+  const [deepLinkProjectId, setDeepLinkProjectId] = useState('');
+  const [deepLinkServiceId, setDeepLinkServiceId] = useState('');
   const [deepLinkAction, setDeepLinkAction] = useState('');
   const [dialog, setDialog] = useState<DialogName>(null);
   const [financeRecord, setFinanceRecord] = useState<FinanceRecordSelection>(null);
@@ -394,10 +396,14 @@ export default function AdminFinance() {
     }
     setDeepLinkOrganizationId(sessionStorage.getItem('lw-finance-organization-id') || '');
     setDeepLinkCustomerName(sessionStorage.getItem('lw-finance-customer-name') || '');
+    setDeepLinkProjectId(sessionStorage.getItem('lw-finance-project-id') || '');
+    setDeepLinkServiceId(sessionStorage.getItem('lw-finance-service-id') || '');
     setDeepLinkAction(sessionStorage.getItem('lw-finance-action') || '');
     sessionStorage.removeItem('lw-finance-section');
     sessionStorage.removeItem('lw-finance-organization-id');
     sessionStorage.removeItem('lw-finance-customer-name');
+    sessionStorage.removeItem('lw-finance-project-id');
+    sessionStorage.removeItem('lw-finance-service-id');
     sessionStorage.removeItem('lw-finance-action');
   }, []);
 
@@ -458,6 +464,47 @@ export default function AdminFinance() {
     ),
     [data?.bills, supplierPaymentForm.vendorId],
   );
+
+  const scopedCustomerServices = useMemo(
+    () => (data?.services || []).filter((item) =>
+      (!deepLinkOrganizationId || item.organizationId === deepLinkOrganizationId) &&
+      (!deepLinkProjectId || item.project?.id === deepLinkProjectId) &&
+      (!deepLinkServiceId || item.id === deepLinkServiceId)
+    ),
+    [data?.services, deepLinkOrganizationId, deepLinkProjectId, deepLinkServiceId],
+  );
+
+  const scopedCustomerInvoices = useMemo(
+    () => (data?.invoices || []).filter((item) =>
+      (!deepLinkOrganizationId || item.organizationId === deepLinkOrganizationId) &&
+      (!deepLinkProjectId || item.projectId === deepLinkProjectId) &&
+      (!deepLinkServiceId || item.serviceId === deepLinkServiceId)
+    ),
+    [data?.invoices, deepLinkOrganizationId, deepLinkProjectId, deepLinkServiceId],
+  );
+
+  const scopedCustomerReceipts = useMemo(
+    () => (data?.receipts || []).filter((item) =>
+      !deepLinkOrganizationId || item.organizationId === deepLinkOrganizationId
+    ),
+    [data?.receipts, deepLinkOrganizationId],
+  );
+
+  const scopedCustomerExpenses = useMemo(
+    () => (data?.expenses || []).filter((item) =>
+      (!deepLinkOrganizationId || item.organizationId === deepLinkOrganizationId) &&
+      (!deepLinkProjectId || item.projectId === deepLinkProjectId) &&
+      (!deepLinkServiceId || item.serviceId === deepLinkServiceId)
+    ),
+    [data?.expenses, deepLinkOrganizationId, deepLinkProjectId, deepLinkServiceId],
+  );
+
+  const clearCustomerScope = () => {
+    setDeepLinkOrganizationId('');
+    setDeepLinkCustomerName('');
+    setDeepLinkProjectId('');
+    setDeepLinkServiceId('');
+  };
 
   const post = async (url: string, body: unknown, success: string) => {
     setSaving(true);
@@ -904,6 +951,19 @@ export default function AdminFinance() {
 
       {section === 'customers' && (
         <div className="space-y-5">
+          {(deepLinkOrganizationId || deepLinkProjectId || deepLinkServiceId) && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-amber-300/60 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/15 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-800 dark:text-amber-200">Customer finance drill-down</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {deepLinkCustomerName || 'Selected customer'}
+                  {deepLinkProjectId ? ' · project scope' : ''}
+                  {deepLinkServiceId ? ' · service scope' : ''}
+                </p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={clearCustomerScope}>Show all customer finance</Button>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => setDialog('service')}><Plus className="mr-2 size-4" /> Add service</Button>
             <Button variant="outline" onClick={() => setDialog('invoice')}><FileText className="mr-2 size-4" /> Issue invoice</Button>
@@ -916,7 +976,7 @@ export default function AdminFinance() {
               <Table exportFileName="lightworld-client-services" className="min-w-[720px]">
                 <TableHeader><TableRow><TableHead>Customer / service</TableHead><TableHead>Plan</TableHead><TableHead>Cycle</TableHead><TableHead>Expiry</TableHead><TableHead>Next due</TableHead><TableHead className="text-right">Recurring</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {data.services.map((item) => (
+                  {scopedCustomerServices.map((item) => (
                     <TableRow
                       key={item.id}
                       role="button"
@@ -940,7 +1000,7 @@ export default function AdminFinance() {
                       <TableCell className="text-right font-semibold">{money(item.recurringAmount, item.currency)}</TableCell>
                     </TableRow>
                   ))}
-                  {!data.services.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No client services recorded yet.</TableCell></TableRow>}
+                  {!scopedCustomerServices.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No client services recorded yet.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div></CardContent>
@@ -952,7 +1012,7 @@ export default function AdminFinance() {
               <Table exportFileName="lightworld-client-invoices" className="min-w-[720px]">
                 <TableHeader><TableRow><TableHead>Invoice</TableHead><TableHead>Customer</TableHead><TableHead>Status</TableHead><TableHead>Issued / due</TableHead><TableHead className="text-right">Total</TableHead><TableHead className="text-right">Paid</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {data.invoices.map((item) => (
+                  {scopedCustomerInvoices.map((item) => (
                     <TableRow
                       key={item.id}
                       role="button"
@@ -976,7 +1036,7 @@ export default function AdminFinance() {
                       <TableCell className="text-right font-semibold">{money(item.balance, item.currency)}</TableCell>
                     </TableRow>
                   ))}
-                  {!data.invoices.length && <TableRow><TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">No invoices recorded yet.</TableCell></TableRow>}
+                  {!scopedCustomerInvoices.length && <TableRow><TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">No invoices recorded yet.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div></CardContent>
@@ -988,7 +1048,7 @@ export default function AdminFinance() {
               <Table exportFileName="lightworld-client-receipts" className="min-w-[720px]">
                 <TableHeader><TableRow><TableHead>Receipt</TableHead><TableHead>Customer</TableHead><TableHead>Date</TableHead><TableHead>Method</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Unapplied</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {data.receipts.map((item) => (
+                  {scopedCustomerReceipts.map((item) => (
                     <TableRow
                       key={item.id}
                       role="button"
@@ -1011,14 +1071,40 @@ export default function AdminFinance() {
                       <TableCell className="text-right">{money(item.unallocatedAmount, item.currency)}</TableCell>
                     </TableRow>
                   ))}
-                  {!data.receipts.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No customer receipts recorded yet.</TableCell></TableRow>}
+                  {!scopedCustomerReceipts.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No customer receipts recorded yet.</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div></CardContent>
+          </Card>
+
+          <Card className="min-w-0 border-border/60">
+            <CardHeader><CardTitle className="text-base">Attributed direct expenses</CardTitle></CardHeader>
+            <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
+              <Table exportFileName="lightworld-customer-attributed-expenses">
+                <TableHeader><TableRow><TableHead>Expense</TableHead><TableHead>Project / service</TableHead><TableHead>Description</TableHead><TableHead>Date</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {scopedCustomerExpenses.map((item) => (
+                    <TableRow key={item.id} role="button" tabIndex={0} className="cursor-pointer" onClick={() => openFinanceRecord('expense', item.id)} onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        openFinanceRecord('expense', item.id);
+                      }
+                    }}>
+                      <TableCell><span className="font-mono text-xs">{item.expenseNumber}</span><p className="text-[10px] text-muted-foreground">{pretty(item.category)}</p></TableCell>
+                      <TableCell><p className="text-xs font-medium">{item.project?.name || 'No project'}</p><p className="text-[10px] text-muted-foreground">{item.service?.name || 'No service'}</p></TableCell>
+                      <TableCell><p className="max-w-[260px] truncate text-sm">{item.description}</p><p className="text-[10px] text-muted-foreground">{item.vendor?.name || 'No supplier'}</p></TableCell>
+                      <TableCell className="text-xs">{new Date(item.incurredAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right font-semibold">{money(item.amount, item.currency)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {!scopedCustomerExpenses.length && <TableRow><TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">No direct expenses match this customer/project/service scope.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div></CardContent>
           </Card>
 
           <FinanceCustomerCredits
-            invoices={data.invoices}
+            invoices={scopedCustomerInvoices}
             onFinanceChanged={load}
           />
         </div>
