@@ -460,6 +460,30 @@ export async function GET(
     methodology: 'Potential commercial inflows combine unpaid invoice balances due by the horizon with scheduled service and project renewals. They are not a guaranteed cash forecast and currencies are not converted.',
   };
 
+  const negativeMarginRows = profitabilityRows.filter((row) =>
+    ['customer', 'project', 'service'].includes(row.scopeType) && Number(row.margin) < 0
+  );
+  const budgetPressureRows = profitabilityRows.filter((row) =>
+    row.scopeType === 'project'
+    && row.budgetUtilizationPercent !== null
+    && Number(row.budgetUtilizationPercent) >= 85
+  );
+  const overBudgetRows = profitabilityRows.filter((row) =>
+    row.scopeType === 'project'
+    && row.budgetRemaining !== null
+    && Number(row.budgetRemaining) < 0
+  );
+  const forecastOverBudgetRows = profitabilityRows.filter((row) =>
+    row.scopeType === 'project'
+    && row.forecastBudgetVariance !== null
+    && Number(row.forecastBudgetVariance) < 0
+  );
+  const costAheadOfProgressRows = profitabilityRows.filter((row) =>
+    row.scopeType === 'project'
+    && row.costProgressGapPercent !== null
+    && Number(row.costProgressGapPercent) >= 15
+  );
+
   const riskSignals = [
     ...(overdueInvoices.length ? [{ key: 'overdue_receivables', label: 'Overdue receivables', count: overdueInvoices.length, severity: 'high' as const }] : []),
     ...(expiredServices.length ? [{ key: 'expired_services', label: 'Expired services', count: expiredServices.length, severity: 'high' as const }] : []),
@@ -542,30 +566,6 @@ export async function GET(
   ]
     .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
     .slice(0, 40);
-
-  const negativeMarginRows = profitabilityRows.filter((row) =>
-    ['customer', 'project', 'service'].includes(row.scopeType) && Number(row.margin) < 0
-  );
-  const budgetPressureRows = profitabilityRows.filter((row) =>
-    row.scopeType === 'project'
-    && row.budgetUtilizationPercent !== null
-    && Number(row.budgetUtilizationPercent) >= 85
-  );
-  const overBudgetRows = profitabilityRows.filter((row) =>
-    row.scopeType === 'project'
-    && row.budgetRemaining !== null
-    && Number(row.budgetRemaining) < 0
-  );
-  const forecastOverBudgetRows = profitabilityRows.filter((row) =>
-    row.scopeType === 'project'
-    && row.forecastBudgetVariance !== null
-    && Number(row.forecastBudgetVariance) < 0
-  );
-  const costAheadOfProgressRows = profitabilityRows.filter((row) =>
-    row.scopeType === 'project'
-    && row.costProgressGapPercent !== null
-    && Number(row.costProgressGapPercent) >= 15
-  );
 
   type ExecutivePriority = {
     key: 'collections' | 'renewals' | 'support' | 'projects' | 'statement';
