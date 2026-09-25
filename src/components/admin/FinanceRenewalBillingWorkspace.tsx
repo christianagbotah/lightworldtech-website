@@ -31,6 +31,22 @@ type RenewalService = {
   organization: { id: string; name: string };
 };
 
+type RenewalProject = {
+  id: string;
+  organizationId: string;
+  name: string;
+  status: string;
+  health: string;
+  nextRenewalDate: string | null;
+  expiryDate: string | null;
+  renewalCycle: string;
+  renewalCurrency: string;
+  renewalAmount: string;
+  autoRenew: boolean;
+  renewalNoticeDays: number;
+  organization: { id: string; name: string };
+};
+
 type RenewalInvoice = {
   id: string;
   invoiceNumber: string;
@@ -68,6 +84,7 @@ function dayKey(value: string | null): string {
 
 export default function FinanceRenewalBillingWorkspace({
   services,
+  projects,
   invoices,
   onPrepareInvoice,
   onOpenInvoice,
@@ -77,6 +94,7 @@ export default function FinanceRenewalBillingWorkspace({
   initialOrganizationId = '',
 }: {
   services: RenewalService[];
+  projects: RenewalProject[];
   invoices: RenewalInvoice[];
   onPrepareInvoice: (serviceId: string) => void;
   onOpenInvoice: (invoiceId: string) => void;
@@ -87,6 +105,8 @@ export default function FinanceRenewalBillingWorkspace({
 }) {
   const [windowDays, setWindowDays] = useState(60);
   const [organizationId, setOrganizationId] = useState(initialOrganizationId);
+  const [pendingProjectReminder, setPendingProjectReminder] = useState<RenewalProject | null>(null);
+  const [projectReminderBusy, setProjectReminderBusy] = useState(false);
   const [pendingCompletion, setPendingCompletion] = useState<{
     invoiceId: string;
     invoiceNumber: string;
@@ -100,9 +120,13 @@ export default function FinanceRenewalBillingWorkspace({
   }, [initialOrganizationId]);
 
   const organizations = useMemo(
-    () => Array.from(new Map(services.map((service) => [service.organization.id, service.organization])).values())
-      .sort((a, b) => a.name.localeCompare(b.name)),
-    [services],
+    () => Array.from(
+      new Map(
+        [...services.map((service) => service.organization), ...projects.map((project) => project.organization)]
+          .map((organization) => [organization.id, organization]),
+      ).values(),
+    ).sort((a, b) => a.name.localeCompare(b.name)),
+    [services, projects],
   );
 
   const now = new Date();
@@ -159,6 +183,46 @@ export default function FinanceRenewalBillingWorkspace({
       return (a.billingDate || '').localeCompare(b.billingDate || '');
     });
 
+  const projectRows = projects
+    .filter((project) =>
+      ['planned', 'active', 'on_hold'].includes(project.status) &&
+      (!organizationId || project.organizationId === organizationId),
+    )
+    .map((project) => {
+      const renewalDate = dayKey(project.nextRenewalDate);
+      const days = renewalDate
+        ? Math.ceil((new Date(renewalDate + 'T00:00:00Z').getTime() - new Date(today + 'T00:00:00Z').getTime()) / 86400000)
+        : null;
+      const insideWindow = !renewalDate || renewalDate <= horizon;
+      const state = !renewalDate
+        ? 'schedule_missing'
+        : Number(project.renewalAmount) <= 0
+          ? 'amount_missing'
+          : days !== null && days < 0
+            ? 'overdue'
+            : days !== null && days <= project.renewalNoticeDays
+              ? 'notice_window'
+              : 'scheduled';
+      return { project, renewalDate, days, insideWindow, state };
+    })
+    .filter((row) => row.insideWindow || ['schedule_missing', 'amount_missing'].includes(row.state))
+    .sort((a, b) => {
+      if (!a.renewalDate && b.renewalDate) return 1;
+      if (a.renewalDate && !b.renewalDate) return -1;
+      return (a.renewalDate || '').localeCompare(b.renewalDate || '');
+    });
+
+  const projectDueCount = projectRows.filter((row) => ['overdue', 'notice_window'].includes(row.state)).length;
+  const projectRenewalTotals: Record<string, number> = {};
+  for (const row of projectRows) {
+    if (!['overdue', 'notice_window', 'scheduled'].includes(row.state)) continue;
+    projectRenewalTotals[row.project.renewalCurrency] =
+      (projectRenewalTotals[row.project.renewalCurrency] || 0) + Number(row.project.renewalAmount || 0);
+  }
+  const projectRenewalValue = Object.entries(projectRenewalTotals).length
+    ? Object.entries(projectRenewalTotals).map(([currency, value]) => money(value, currency)).join(' · ')
+    : '—';
+
   const unbilledTotals: Record<string, number> = {};
   for (const row of rows) {
     if (!['ready', 'overdue_unbilled'].includes(row.state)) continue;
@@ -196,7 +260,9 @@ export default function FinanceRenewalBillingWorkspace({
     if (state === 'paid_ready_to_complete') return 'border-0 bg-teal-100 text-teal-800 dark:bg-teal-950/40 dark:text-teal-200';
     if (state === 'paid_manual_completion') return 'border-0 bg-violet-100 text-violet-800 dark:bg-violet-950/40 dark:text-violet-200';
     if (state === 'billed') return 'border-0 bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200';
-    if (state === 'overdue_unbilled') return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
+    if (state === 'overdue_unbilled' || state === 'overdue') return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
+    if (state === 'notice_window') return 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200';
+    if (state === 'scheduled') return 'border-0 bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-200';
     if (state.includes('missing')) return 'border-0 bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-200';
     return 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200';
   };
@@ -223,6 +289,27 @@ export default function FinanceRenewalBillingWorkspace({
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="border-border/60">
+          <CardContent className="flex items-center justify-between gap-3 p-5">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Project renewals needing action</p>
+              <p className="mt-2 text-xl font-bold">{projectDueCount}</p>
+            </div>
+            <CalendarClock className="size-5 text-indigo-600" />
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardContent className="flex items-center justify-between gap-3 p-5">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Project renewal value in view</p>
+              <p className="mt-2 truncate text-xl font-bold">{projectRenewalValue}</p>
+            </div>
+            <FileText className="size-5 text-indigo-600" />
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-border/60">
@@ -337,6 +424,82 @@ export default function FinanceRenewalBillingWorkspace({
 
       <Card className="border-border/60">
         <CardHeader>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="text-base">Project renewal queue</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Project-level commercial renewals due within the selected window. Reminders never create invoices or renew projects automatically.
+              </p>
+            </div>
+            <Badge variant="outline">{projectRows.length} projects</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-project-renewal-queue" className="min-w-[980px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer / project</TableHead>
+                  <TableHead>Cycle</TableHead>
+                  <TableHead>Renewal date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Auto renew</TableHead>
+                  <TableHead className="text-right">Renewal amount</TableHead>
+                  <TableHead data-export-ignore className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projectRows.map((row) => (
+                  <TableRow key={row.project.id}>
+                    <TableCell>
+                      <button type="button" className="font-medium hover:underline" onClick={() => onOpenCustomer(row.project.organizationId)}>
+                        {row.project.organization.name}
+                      </button>
+                      <p className="text-xs text-muted-foreground">{row.project.name} · {pretty(row.project.health)}</p>
+                    </TableCell>
+                    <TableCell className="text-sm">{pretty(row.project.renewalCycle)}</TableCell>
+                    <TableCell>
+                      {row.renewalDate ? (
+                        <>
+                          <p className="text-sm">{new Date(row.renewalDate + 'T00:00:00Z').toLocaleDateString()}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {row.days !== null && row.days < 0
+                              ? Math.abs(row.days) + ' days overdue'
+                              : row.days === 0
+                                ? 'Due today'
+                                : row.days + ' days remaining'}
+                          </p>
+                        </>
+                      ) : <span className="text-sm text-muted-foreground">Not scheduled</span>}
+                    </TableCell>
+                    <TableCell><Badge className={tone(row.state)}>{pretty(row.state)}</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{row.project.autoRenew ? 'Yes' : 'No'}</Badge>
+                      <p className="mt-1 text-[10px] text-muted-foreground">{row.project.renewalNoticeDays} day notice</p>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">{money(row.project.renewalAmount, row.project.renewalCurrency)}</TableCell>
+                    <TableCell data-export-ignore className="text-right">
+                      {['schedule_missing', 'amount_missing'].includes(row.state) ? (
+                        <Button type="button" size="sm" variant="outline" onClick={() => onOpenCustomer(row.project.organizationId)}>Complete setup</Button>
+                      ) : (
+                        <Button type="button" size="sm" variant="outline" disabled={projectReminderBusy} onClick={() => setPendingProjectReminder(row.project)}>
+                          Send reminder
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!projectRows.length && (
+                  <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No project renewals fall within the selected {windowDays}-day window.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardHeader>
           <CardTitle className="text-base">Completed renewals · last {windowDays} days</CardTitle>
           <p className="text-xs text-muted-foreground">Paid renewal cycles that were completed and advanced into the next service period.</p>
         </CardHeader>
@@ -364,6 +527,40 @@ export default function FinanceRenewalBillingWorkspace({
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmActionDialog
+        open={Boolean(pendingProjectReminder)}
+        onOpenChange={(open) => {
+          if (!open && !projectReminderBusy) setPendingProjectReminder(null);
+        }}
+        title="Send project renewal reminder?"
+        description={
+          pendingProjectReminder
+            ? 'Send the approved project renewal SMS for ' + pendingProjectReminder.name + ' to ' + pendingProjectReminder.organization.name + '. The reminder uses the recorded renewal date and amount, and duplicate sends are blocked for 12 hours.'
+            : 'Send this project renewal reminder?'
+        }
+        confirmLabel={projectReminderBusy ? 'Sending…' : 'Send reminder'}
+        tone="default"
+        onConfirm={async () => {
+          if (!pendingProjectReminder) return;
+          setProjectReminderBusy(true);
+          try {
+            const response = await fetch(
+              '/api/admin/client-projects/' + encodeURIComponent(pendingProjectReminder.id) + '/renewal-reminder',
+              { method: 'POST' },
+            );
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) throw new Error(payload?.error || 'Unable to send project renewal reminder');
+            toast.success('Project renewal reminder sent');
+            setPendingProjectReminder(null);
+            onRefresh();
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to send project renewal reminder');
+          } finally {
+            setProjectReminderBusy(false);
+          }
+        }}
+      />
 
       <ConfirmActionDialog
         open={Boolean(pendingCompletion)}
