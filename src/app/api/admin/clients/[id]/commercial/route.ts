@@ -51,7 +51,7 @@ export async function GET(
     return NextResponse.json({ success: false, error: 'Client organization not found' }, { status: 404 });
   }
 
-  const [services, invoices, payments, projects, tickets] = await Promise.all([
+  const [services, invoices, payments, projects, tickets, collectionActivities, announcements, ticketMessages] = await Promise.all([
     db.clientServiceAccount.findMany({
       where: { organizationId: id },
       orderBy: [{ status: 'asc' }, { nextDueDate: 'asc' }, { expiryDate: 'asc' }],
@@ -119,6 +119,30 @@ export async function GET(
         updatedAt: true,
       },
     }),
+    db.financeCollectionActivity.findMany({
+      where: { organizationId: id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        invoice: { select: { invoiceNumber: true, currency: true } },
+      },
+    }),
+    db.clientAnnouncement.findMany({
+      where: { organizationId: id },
+      orderBy: [{ publishAt: 'desc' }, { createdAt: 'desc' }],
+      take: 30,
+      include: {
+        project: { select: { name: true } },
+      },
+    }),
+    db.clientTicketMessage.findMany({
+      where: { ticket: { organizationId: id } },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        ticket: { select: { ticketNumber: true, subject: true } },
+      },
+    }),
   ]);
 
   const summary = new Map<string, CurrencySummary>();
@@ -179,6 +203,51 @@ export async function GET(
         ? 'watch'
         : 'healthy';
 
+  const recentActivity = [
+    ...payments.map((payment) => ({
+      id: 'payment:' + payment.id,
+      type: 'payment',
+      title: 'Payment recorded',
+      detail: payment.paymentNumber + ' · ' + payment.currency + ' ' + payment.amount.toFixed(2) + (payment.reference ? ' · ' + payment.reference : ''),
+      actor: payment.receivedBy || 'Finance',
+      occurredAt: payment.paidAt,
+    })),
+    ...invoices.map((invoice) => ({
+      id: 'invoice:' + invoice.id,
+      type: 'invoice',
+      title: 'Invoice ' + invoice.invoiceNumber,
+      detail: invoice.currency + ' ' + invoice.total.toFixed(2) + ' · due ' + invoice.dueDate.toISOString().slice(0, 10),
+      actor: 'Finance',
+      occurredAt: invoice.issueDate,
+    })),
+    ...collectionActivities.map((activity) => ({
+      id: 'collection:' + activity.id,
+      type: 'collection',
+      title: activity.type.replaceAll('_', ' '),
+      detail: activity.invoice.invoiceNumber + (activity.note ? ' · ' + activity.note : ''),
+      actor: activity.createdBy || 'Admin',
+      occurredAt: activity.createdAt,
+    })),
+    ...announcements.map((announcement) => ({
+      id: 'announcement:' + announcement.id,
+      type: 'announcement',
+      title: announcement.title,
+      detail: announcement.project?.name ? 'Project: ' + announcement.project.name : 'Organization-wide announcement',
+      actor: 'Client communications',
+      occurredAt: announcement.publishAt,
+    })),
+    ...ticketMessages.map((message) => ({
+      id: 'ticket-message:' + message.id,
+      type: 'support',
+      title: message.ticket.ticketNumber + ' · ' + message.ticket.subject,
+      detail: message.message.length > 140 ? message.message.slice(0, 137) + '...' : message.message,
+      actor: message.authorName + ' · ' + (message.authorType === 'admin' ? 'Lightworld' : 'Client'),
+      occurredAt: message.createdAt,
+    })),
+  ]
+    .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
+    .slice(0, 40);
+
   const nextActions = [
     ...(overdueInvoices.length
       ? [{ key: 'collections', label: 'Work overdue receivables', detail: overdueInvoices.length + ' invoice' + (overdueInvoices.length === 1 ? '' : 's') + ' need collection follow-up.' }]
@@ -223,6 +292,7 @@ export async function GET(
         accountHealth,
         riskSignals,
         nextActions,
+        recentActivity,
         nextRenewal: renewalCandidates[0]
           ? {
               serviceId: renewalCandidates[0].service.id,
