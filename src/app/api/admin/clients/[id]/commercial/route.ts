@@ -60,7 +60,7 @@ export async function GET(
       .filter(Boolean),
   )];
 
-  const [services, invoices, payments, projects, tickets, collectionActivities, announcements, ticketMessages, contactMessages] = await Promise.all([
+  const [services, invoices, payments, projects, tickets, collectionActivities, announcements, ticketMessages, contactMessages, expenses] = await Promise.all([
     db.clientServiceAccount.findMany({
       where: { organizationId: id },
       orderBy: [{ status: 'asc' }, { nextDueDate: 'asc' }, { expiryDate: 'asc' }],
@@ -173,6 +173,20 @@ export async function GET(
         },
       },
     }),
+    db.financeExpense.findMany({
+      where: { organizationId: id },
+      orderBy: [{ incurredAt: 'desc' }, { createdAt: 'desc' }],
+      take: 2000,
+      select: {
+        id: true,
+        currency: true,
+        amount: true,
+        projectId: true,
+        serviceId: true,
+        incurredAt: true,
+        description: true,
+      },
+    }),
   ]);
 
   const summary = new Map<string, CurrencySummary>();
@@ -227,6 +241,89 @@ export async function GET(
   const activePaymentPromises = collectionActivities
     .filter((activity) => activity.type === 'promise_to_pay' && activity.promisedDate && !activity.completedAt)
     .sort((a, b) => (a.promisedDate?.getTime() || 0) - (b.promisedDate?.getTime() || 0));
+
+  type ProfitabilityRow = {
+    scopeType: 'customer' | 'project' | 'service';
+    scopeId: string;
+    name: string;
+    currency: string;
+    revenue: Prisma.Decimal;
+    directCost: Prisma.Decimal;
+  };
+
+  const profitability = new Map<string, ProfitabilityRow>();
+  const profitabilityBucket = (
+    scopeType: ProfitabilityRow['scopeType'],
+    scopeId: string,
+    name: string,
+    currency: string,
+  ) => {
+    const key = [scopeType, scopeId, currency].join(':');
+    if (!profitability.has(key)) {
+      profitability.set(key, {
+        scopeType,
+        scopeId,
+        name,
+        currency,
+        revenue: new Prisma.Decimal(0),
+        directCost: new Prisma.Decimal(0),
+      });
+    }
+    return profitability.get(key)!;
+  };
+
+  for (const invoice of invoices) {
+    if (invoice.status === 'draft' || invoice.status === 'void') continue;
+    const revenue = invoice.subtotal.minus(invoice.discount);
+    profitabilityBucket('customer', id, organization.name, invoice.currency).revenue =
+      profitabilityBucket('customer', id, organization.name, invoice.currency).revenue.plus(revenue);
+
+    if (invoice.projectId) {
+      const project = projects.find((item) => item.id === invoice.projectId);
+      profitabilityBucket('project', invoice.projectId, project?.name || 'Project', invoice.currency).revenue =
+        profitabilityBucket('project', invoice.projectId, project?.name || 'Project', invoice.currency).revenue.plus(revenue);
+    }
+
+    if (invoice.serviceId) {
+      const service = services.find((item) => item.id === invoice.serviceId);
+      profitabilityBucket('service', invoice.serviceId, service?.name || 'Service', invoice.currency).revenue =
+        profitabilityBucket('service', invoice.serviceId, service?.name || 'Service', invoice.currency).revenue.plus(revenue);
+    }
+  }
+
+  for (const expense of expenses) {
+    profitabilityBucket('customer', id, organization.name, expense.currency).directCost =
+      profitabilityBucket('customer', id, organization.name, expense.currency).directCost.plus(expense.amount);
+
+    if (expense.projectId) {
+      const project = projects.find((item) => item.id === expense.projectId);
+      profitabilityBucket('project', expense.projectId, project?.name || 'Project', expense.currency).directCost =
+        profitabilityBucket('project', expense.projectId, project?.name || 'Project', expense.currency).directCost.plus(expense.amount);
+    }
+
+    if (expense.serviceId) {
+      const service = services.find((item) => item.id === expense.serviceId);
+      profitabilityBucket('service', expense.serviceId, service?.name || 'Service', expense.currency).directCost =
+        profitabilityBucket('service', expense.serviceId, service?.name || 'Service', expense.currency).directCost.plus(expense.amount);
+    }
+  }
+
+  const profitabilityRows = [...profitability.values()].map((row) => {
+    const margin = row.revenue.minus(row.directCost);
+    const marginPercent = row.revenue.gt(0)
+      ? margin.div(row.revenue).mul(100)
+      : new Prisma.Decimal(0);
+    return {
+      scopeType: row.scopeType,
+      scopeId: row.scopeId,
+      name: row.name,
+      currency: row.currency,
+      revenue: row.revenue.toFixed(2),
+      directCost: row.directCost.toFixed(2),
+      margin: margin.toFixed(2),
+      marginPercent: marginPercent.toDecimalPlaces(2).toFixed(2),
+    };
+  });
 
   const riskSignals = [
     ...(overdueInvoices.length ? [{ key: 'overdue_receivables', label: 'Overdue receivables', count: overdueInvoices.length, severity: 'high' as const }] : []),
@@ -360,6 +457,16 @@ export async function GET(
         riskSignals,
         nextActions,
         recentActivity,
+        profitability: {
+          customer: profitabilityRows.filter((row) => row.scopeType === 'customer'),
+          projects: profitabilityRows
+            .filter((row) => row.scopeType === 'project')
+            .sort((a, b) => Number(b.revenue) - Number(a.revenue)),
+          services: profitabilityRows
+            .filter((row) => row.scopeType === 'service')
+            .sort((a, b) => Number(b.revenue) - Number(a.revenue)),
+          methodology: 'Invoice revenue excludes tax; direct cost includes only finance expenses explicitly attributed to this customer, project or service. Currencies are not converted.',
+        },
         commitments: {
           nextCollectionFollowUp: pendingCollectionFollowUps[0]
             ? {
