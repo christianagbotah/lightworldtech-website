@@ -140,11 +140,30 @@ type CommercialData = {
     }>;
     recentActivity: Array<{
       id: string;
-      type: 'payment' | 'invoice' | 'collection' | 'announcement' | 'support';
+      type: 'payment' | 'invoice' | 'collection' | 'announcement' | 'support' | 'message';
       title: string;
       detail: string;
       actor: string;
       occurredAt: string;
+    }>;
+    communicationThreads: Array<{
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+      subject: string;
+      message: string;
+      read: boolean;
+      createdAt: string;
+      replies: Array<{
+        id: string;
+        authorName: string;
+        subject: string;
+        body: string;
+        status: string;
+        sentAt: string | null;
+        createdAt: string;
+      }>;
     }>;
     nextRenewal: {
       serviceId: string;
@@ -317,6 +336,13 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
       sessionStorage.setItem('lw-finance-customer-name', organizationName);
     }
     navigate('admin-finance');
+  };
+
+  const openCustomerMessage = (messageId: string, mode: 'view' | 'reply') => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(mode === 'reply' ? 'lw-reply-message-id' : 'lw-open-message-id', messageId);
+    }
+    navigate('admin-messages');
   };
 
   const runCustomerAction = (key: CommercialData['customer360']['nextActions'][number]['key']) => {
@@ -617,6 +643,54 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   ))}
                   {!data?.customer360.recentActivity.length && (
                     <div className="px-4 py-6 text-sm text-muted-foreground">No customer activity has been recorded yet.</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-border/60 bg-background/70">
+                <div className="flex flex-col gap-2 border-b border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Customer communications</p>
+                    <p className="text-[11px] text-muted-foreground">Website enquiries and Lightworld replies matched to this client’s known email addresses.</p>
+                  </div>
+                  <Badge variant="outline">{data?.customer360.communicationThreads.length || 0} thread{(data?.customer360.communicationThreads.length || 0) === 1 ? '' : 's'}</Badge>
+                </div>
+                <div className="divide-y divide-border/60">
+                  {(data?.customer360.communicationThreads || []).slice(0, 8).map((thread) => {
+                    const latestReply = thread.replies[thread.replies.length - 1];
+                    return (
+                      <div key={thread.id} className="grid gap-3 px-4 py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-xs font-semibold">{thread.subject || 'Customer message'}</p>
+                            <Badge variant="outline" className={thread.read ? '' : 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300'}>
+                              {thread.read ? 'Read' : 'Unread'}
+                            </Badge>
+                            {latestReply && (
+                              <Badge variant="outline">
+                                Last reply: {pretty(latestReply.status)}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="mt-1 text-[11px] text-muted-foreground">{thread.name} · {thread.email} · {new Date(thread.createdAt).toLocaleString()}</p>
+                          <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{thread.message}</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">{thread.replies.length} internal repl{thread.replies.length === 1 ? 'y' : 'ies'}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => openCustomerMessage(thread.id, 'view')}>
+                            View thread
+                          </Button>
+                          <Button type="button" size="sm" onClick={() => openCustomerMessage(thread.id, 'reply')}>
+                            Reply internally
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {!data?.customer360.communicationThreads.length && (
+                    <div className="px-4 py-6 text-sm text-muted-foreground">
+                      No website message thread is currently matched to this client’s known email addresses.
+                    </div>
                   )}
                 </div>
               </div>
