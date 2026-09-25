@@ -33,6 +33,9 @@ describe('CI-built release artifacts', () => {
     expect(deploy).toContain('bunx "prisma@$PRISMA_VERSION" migrate deploy');
     expect(deploy).toContain('bash "$REL/ops/install-production-ops.sh"');
     expect(deploy).toContain('promote-release.sh');
+    expect(deploy).toContain('chown -R lightworld:lightworld');
+    expect(deploy).toContain('.next/standalone/.next/cache');
+    expect(deploy).toContain('chmod 0750');
   });
 
   test('production ops installer publishes the artifact deployer', () => {
