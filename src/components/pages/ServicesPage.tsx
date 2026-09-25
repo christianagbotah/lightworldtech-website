@@ -218,7 +218,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
         <CmsHeroMedia settings={settings} settingKey="services_hero_image" />
         <div className="relative container-main z-10">
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65 }}
             className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end"
