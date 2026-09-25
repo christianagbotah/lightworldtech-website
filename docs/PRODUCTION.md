@@ -514,9 +514,15 @@ Automatic client service renewal/expiry reminders are deliberately opt-in. To le
 ```bash
 AUTO_SERVICE_RENEWAL_SMS=true
 SERVICE_RENEWAL_SMS_BATCH_SIZE=10
+
+# Project-level renewal reminders are separately opt-in.
+AUTO_PROJECT_RENEWAL_SMS=true
+PROJECT_RENEWAL_SMS_BATCH_SIZE=10
 ```
 
-The renewal scheduler is bounded to at most 50 new reminders per run, uses the existing `service_renewal` / `service_expired` templates, and will not automatically resend an identical reminder that was already queued, sent or delivered. It does not create invoices, charge customers, or renew services by itself.
+The service renewal scheduler is bounded to at most 50 new reminders per run, uses the `service_renewal` / `service_expired` templates, and will not automatically resend an identical reminder that was already queued, sent or delivered.
+
+The project renewal scheduler is independently opt-in, is also bounded to at most 50 new reminders per run, and uses the `project_renewal` / `project_expired` templates. A project must have a next renewal date, positive renewal amount and client phone number before it can be queued. Project reminders respect the recorded `renewalNoticeDays` window. Neither scheduler creates invoices, charges customers, changes renewal dates, or renews services/projects by itself.
 
 `ops/install-production-ops.sh` installs and enables `lightworld-sms-dispatch.timer`, which invokes the dispatcher approximately once per minute as the dedicated `lightworld` user. The runner sends only bounded batches and silently skips delivery when Hubtel SMS or the scheduler secret is not configured.
 
