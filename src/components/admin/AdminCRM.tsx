@@ -101,6 +101,14 @@ type Lead = {
   updatedAt: string;
   contactMessage: ContactMessage;
   notes: LeadNote[];
+  operatingIntelligence: {
+    urgency: 'critical' | 'high' | 'normal' | 'low';
+    readiness: 'closed' | 'needs_discovery' | 'proposal_ready' | 'proposal_in_progress' | 'follow_up' | 'closing';
+    recommendedAction: string;
+    rationale: string;
+    gaps: string[];
+    controls: string;
+  };
 };
 
 type LeadSummary = {
@@ -176,6 +184,13 @@ function priorityClass(priority: Priority): string {
   if (priority === 'high') return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300';
   if (priority === 'low') return 'border-slate-200 bg-slate-50 text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-white/40';
   return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300';
+}
+
+function operatingTone(urgency: Lead['operatingIntelligence']['urgency']): string {
+  if (urgency === 'critical') return 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200';
+  if (urgency === 'high') return 'border-orange-300 bg-orange-50 text-orange-800 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-200';
+  if (urgency === 'low') return 'border-slate-200 bg-slate-50 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/50';
+  return 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200';
 }
 
 export default function AdminCRM() {
@@ -755,9 +770,14 @@ export default function AdminCRM() {
                             </p>
                           )}
                         </div>
-                        <span className={'shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase ' + priorityClass(lead.priority)}>
-                          {lead.priority}
-                        </span>
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <span className={'rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase ' + priorityClass(lead.priority)}>
+                            {lead.priority}
+                          </span>
+                          <span className={'rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase ' + operatingTone(lead.operatingIntelligence.urgency)}>
+                            {lead.operatingIntelligence.urgency}
+                          </span>
+                        </div>
                       </div>
 
                       <p className="mt-3 line-clamp-3 text-xs leading-5 text-muted-foreground">
@@ -855,6 +875,45 @@ export default function AdminCRM() {
                     ) : (
                       <span className="flex items-center gap-2 text-sm text-muted-foreground"><Phone className="size-4" /> No phone provided</span>
                     )}
+                  </div>
+
+                  <div className="rounded-2xl border border-indigo-200/70 bg-indigo-500/[0.04] p-4 dark:border-indigo-900/40">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Sparkles className="size-4 text-indigo-600 dark:text-indigo-300" />
+                          <p className="text-sm font-semibold">Operating intelligence</p>
+                          <Badge variant="outline" className={operatingTone(selected.operatingIntelligence.urgency)}>
+                            {selected.operatingIntelligence.urgency}
+                          </Badge>
+                          <Badge variant="outline">{selected.operatingIntelligence.readiness.replaceAll('_', ' ')}</Badge>
+                        </div>
+                        <p className="mt-3 text-sm font-medium">{selected.operatingIntelligence.recommendedAction}</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">{selected.operatingIntelligence.rationale}</p>
+                        {selected.operatingIntelligence.gaps.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1.5">
+                            {selected.operatingIntelligence.gaps.map((gap) => (
+                              <span key={gap} className="rounded-full border border-border/60 bg-background px-2 py-1 text-[10px] text-muted-foreground">
+                                Gap: {gap}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0"
+                        disabled={saving || selected.nextAction === selected.operatingIntelligence.recommendedAction}
+                        onClick={() => void patchLead(selected, { nextAction: selected.operatingIntelligence.recommendedAction })}
+                      >
+                        Use as next action
+                      </Button>
+                    </div>
+                    <p className="mt-3 border-t border-border/60 pt-3 text-[10px] leading-5 text-muted-foreground">
+                      {selected.operatingIntelligence.controls}
+                    </p>
                   </div>
 
                   <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
