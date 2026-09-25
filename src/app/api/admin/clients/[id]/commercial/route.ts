@@ -164,6 +164,39 @@ export async function GET(
   const renewalsDue30 = renewalCandidates.filter((item) => item.date >= now && item.date <= renewalWindow);
   const expiredServices = services.filter((service) => service.expiryDate && service.expiryDate.getTime() < now.getTime() && service.status !== 'cancelled');
 
+  const riskSignals = [
+    ...(overdueInvoices.length ? [{ key: 'overdue_receivables', label: 'Overdue receivables', count: overdueInvoices.length, severity: 'high' as const }] : []),
+    ...(expiredServices.length ? [{ key: 'expired_services', label: 'Expired services', count: expiredServices.length, severity: 'high' as const }] : []),
+    ...(urgentTickets.length ? [{ key: 'urgent_support', label: 'Urgent support issues', count: urgentTickets.length, severity: 'high' as const }] : []),
+    ...(atRiskProjects.length ? [{ key: 'delivery_risk', label: 'Projects needing attention', count: atRiskProjects.length, severity: 'medium' as const }] : []),
+    ...(renewalsDue30.length ? [{ key: 'renewal_due', label: 'Renewals due within 30 days', count: renewalsDue30.length, severity: 'medium' as const }] : []),
+  ];
+
+  const accountHealth =
+    riskSignals.some((signal) => signal.severity === 'high')
+      ? 'action_required'
+      : riskSignals.length
+        ? 'watch'
+        : 'healthy';
+
+  const nextActions = [
+    ...(overdueInvoices.length
+      ? [{ key: 'collections', label: 'Work overdue receivables', detail: overdueInvoices.length + ' invoice' + (overdueInvoices.length === 1 ? '' : 's') + ' need collection follow-up.' }]
+      : []),
+    ...(renewalsDue30.length || expiredServices.length
+      ? [{ key: 'renewals', label: 'Review renewals', detail: (renewalsDue30.length + expiredServices.length) + ' service' + ((renewalsDue30.length + expiredServices.length) === 1 ? '' : 's') + ' need renewal attention.' }]
+      : []),
+    ...(urgentTickets.length
+      ? [{ key: 'support', label: 'Resolve urgent support', detail: urgentTickets.length + ' urgent support ticket' + (urgentTickets.length === 1 ? '' : 's') + ' remain open.' }]
+      : []),
+    ...(atRiskProjects.length
+      ? [{ key: 'projects', label: 'Review delivery risk', detail: atRiskProjects.length + ' project' + (atRiskProjects.length === 1 ? '' : 's') + ' need delivery attention.' }]
+      : []),
+    ...(!riskSignals.length
+      ? [{ key: 'statement', label: 'Review account statement', detail: 'No urgent commercial or delivery risks are currently flagged.' }]
+      : []),
+  ].slice(0, 4);
+
   return NextResponse.json({
     success: true,
     data: {
@@ -187,6 +220,9 @@ export async function GET(
         overdueInvoices: overdueInvoices.length,
         renewalsDue30: renewalsDue30.length,
         expiredServices: expiredServices.length,
+        accountHealth,
+        riskSignals,
+        nextActions,
         nextRenewal: renewalCandidates[0]
           ? {
               serviceId: renewalCandidates[0].service.id,
