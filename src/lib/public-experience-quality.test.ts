@@ -33,6 +33,18 @@ describe('public experience quality', () => {
     expect(globalPage).not.toContain('initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}');
   });
 
+  test('inner-page header clearance is painted by the hero instead of a blank spacer', () => {
+    const header = source('src/components/layout/Header.tsx');
+    const css = source('src/app/globals.css');
+    const home = source('src/components/pages/HomePage.tsx');
+
+    expect(header).not.toContain('h-[76px] sm:h-[88px]');
+    expect(css).toContain('.lw-hero-grid:not(.lw-home-hero)::before');
+    expect(css).toContain('height: 76px');
+    expect(css).toContain('height: 88px');
+    expect(home).toContain('lw-home-hero');
+  });
+
   test('service cards are semantic links rather than mouse-only click targets', () => {
     const services = source('src/components/sections/ServicesSection.tsx');
 
