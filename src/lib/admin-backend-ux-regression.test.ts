@@ -569,10 +569,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain("pendingClientAction !== 'new-project'");
     expect(clients).toContain('client-new-project-name');
     expect(clientCommercial).toContain('Direct profitability');
-    expect(clientCommercial).toContain('Project margins');
+    expect(clientCommercial).toContain('Project profitability & completion forecast');
     expect(clientCommercial).toContain('% used');
     expect(clientCommercial).toContain('budgetRemaining');
     expect(clientCommercial).toContain('Service margins');
+    expect(clientCommercial).toContain('Forecasts are decision support');
+    expect(clientCommercial).toContain('Actual cost');
+    expect(clientCommercial).toContain('Progress / burn');
+    expect(clientCommercial).toContain('EAC');
+    expect(clientCommercial).toContain('ETC');
+    expect(clientCommercial).toContain('Forecast variance');
+    expect(clientCommercial).toContain('Forecast margin');
+    expect(clientCommercial).toContain('Cost +');
+    expect(clientCommercial).toContain('vs issued revenue');
+
     expect(clientCommercial).toContain('Drill down');
     expect(clientCommercial).toContain("sessionStorage.setItem('lw-finance-project-id'");
     expect(clientCommercial).toContain("sessionStorage.setItem('lw-finance-service-id'");
@@ -637,6 +647,19 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercialApi).toContain('marginPercent');
     expect(clientCommercialApi).toContain('budgetUtilizationPercent');
     expect(clientCommercialApi).toContain('budgetRemaining');
+    expect(clientCommercialApi).toContain('forecastCostAtCompletion');
+    expect(clientCommercialApi).toContain('forecastCostToComplete');
+    expect(clientCommercialApi).toContain('forecastBudgetVariance');
+    expect(clientCommercialApi).toContain('forecastBudgetVariancePercent');
+    expect(clientCommercialApi).toContain('forecastMargin');
+    expect(clientCommercialApi).toContain('costProgressGapPercent');
+    expect(clientCommercialApi).toContain('forecastMaturity');
+    expect(clientCommercialApi).toContain('forecastOverBudgetRows');
+    expect(clientCommercialApi).toContain('costAheadOfProgressRows');
+    expect(clientCommercialApi).toContain('forecast_budget_overrun');
+    expect(clientCommercialApi).toContain('cost_ahead_of_progress');
+    expect(clientCommercialApi).toContain('EAC = actual direct cost');
+
     expect(clientCommercialApi).toContain('buildForecast');
     expect(clientCommercialApi).toContain('next30Days');
     expect(clientCommercialApi).toContain('next90Days');
