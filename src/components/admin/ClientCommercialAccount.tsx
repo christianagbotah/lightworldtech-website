@@ -203,6 +203,14 @@ type CommercialData = {
         budgetAmount?: string | null;
         budgetRemaining?: string | null;
         budgetUtilizationPercent?: string | null;
+        projectProgress?: number | null;
+        forecastCostAtCompletion?: string | null;
+        forecastCostToComplete?: string | null;
+        forecastBudgetVariance?: string | null;
+        forecastBudgetVariancePercent?: string | null;
+        forecastMargin?: string | null;
+        costProgressGapPercent?: string | null;
+        forecastMaturity?: 'unavailable' | 'low' | 'medium' | 'higher' | 'complete';
       }>;
       projects: Array<{
         scopeType: 'project';
@@ -854,7 +862,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                     {data?.customer360.profitability.methodology || 'Profitability is calculated from issued invoice revenue and explicitly attributed direct expenses.'}
                   </p>
                 </div>
-                <Badge variant="outline">Actual finance data</Badge>
+                <div className="flex flex-wrap gap-2"><Badge variant="outline">Actual finance data</Badge><Badge variant="outline">Forecasts are decision support</Badge></div>
               </div>
 
               <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -884,12 +892,15 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                 <div className="grid gap-4 border-t border-border/60 p-4 2xl:grid-cols-2">
                   <div className="min-w-0 rounded-xl border border-border/60">
                     <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
-                      <p className="text-xs font-semibold">Project margins</p>
+                      <div>
+                        <p className="text-xs font-semibold">Project profitability & completion forecast</p>
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">Actual ledger data stays separate from EAC/ETC projections derived from recorded delivery progress.</p>
+                      </div>
                       <Badge variant="outline">{data?.customer360.profitability.projects.length || 0}</Badge>
                     </div>
                     <div className="max-w-full overflow-x-auto">
-                      <Table exportFileName="lightworld-client-project-profitability" className="min-w-[620px]">
-                        <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Direct cost</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">Remaining</TableHead><TableHead className="text-right">Margin</TableHead><TableHead data-export-ignore className="text-right">Action</TableHead></TableRow></TableHeader>
+                      <Table exportFileName="lightworld-client-project-profitability" className="min-w-[1180px]">
+                        <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Actual cost</TableHead><TableHead className="text-right">Progress / burn</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">EAC</TableHead><TableHead className="text-right">ETC</TableHead><TableHead className="text-right">Forecast variance</TableHead><TableHead className="text-right">Actual margin</TableHead><TableHead className="text-right">Forecast margin</TableHead><TableHead data-export-ignore className="text-right">Action</TableHead></TableRow></TableHeader>
                         <TableBody>
                           {(data?.customer360.profitability.projects || []).slice(0, 20).map((row) => (
                             <TableRow key={row.scopeId + ':' + row.currency}>
@@ -898,19 +909,54 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                               <TableCell className="text-right text-xs">{money(row.revenue, row.currency)}</TableCell>
                               <TableCell className="text-right text-xs">{money(row.directCost, row.currency)}</TableCell>
                               <TableCell className="text-right text-xs">
-                                {row.budgetAmount !== null && row.budgetAmount !== undefined
-                                  ? money(row.budgetAmount, row.currency)
-                                  : '—'}
+                                <span>{row.projectProgress !== null && row.projectProgress !== undefined ? row.projectProgress + '% progress' : '—'}</span>
                                 {row.budgetUtilizationPercent !== null && row.budgetUtilizationPercent !== undefined && (
-                                  <span className="block text-[10px] text-muted-foreground">{Number(row.budgetUtilizationPercent).toFixed(2)}% used</span>
+                                  <span className="block text-[10px] text-muted-foreground">{Number(row.budgetUtilizationPercent).toFixed(2)}% budget used</span>
+                                )}
+                                {row.costProgressGapPercent !== null && row.costProgressGapPercent !== undefined && Number(row.costProgressGapPercent) >= 15 && (
+                                  <Badge variant="outline" className="mt-1 border-amber-300 text-[9px] text-amber-700 dark:border-amber-900 dark:text-amber-300">
+                                    Cost +{Number(row.costProgressGapPercent).toFixed(1)} pts ahead
+                                  </Badge>
                                 )}
                               </TableCell>
                               <TableCell className="text-right text-xs">
-                                {row.budgetRemaining !== null && row.budgetRemaining !== undefined
-                                  ? <span className={Number(row.budgetRemaining) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{money(row.budgetRemaining, row.currency)}</span>
+                                {row.budgetAmount !== null && row.budgetAmount !== undefined
+                                  ? money(row.budgetAmount, row.currency)
+                                  : '—'}
+                                {row.budgetRemaining !== null && row.budgetRemaining !== undefined && (
+                                  <span className={Number(row.budgetRemaining) >= 0 ? 'block text-[10px] text-emerald-700 dark:text-emerald-300' : 'block text-[10px] text-rose-700 dark:text-rose-300'}>
+                                    {money(row.budgetRemaining, row.currency)} actual remaining
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right text-xs">
+                                {row.forecastCostAtCompletion !== null && row.forecastCostAtCompletion !== undefined
+                                  ? money(row.forecastCostAtCompletion, row.currency)
+                                  : '—'}
+                                <span className="block text-[10px] text-muted-foreground">{pretty(row.forecastMaturity || 'unavailable')} maturity</span>
+                              </TableCell>
+                              <TableCell className="text-right text-xs">
+                                {row.forecastCostToComplete !== null && row.forecastCostToComplete !== undefined
+                                  ? money(row.forecastCostToComplete, row.currency)
                                   : '—'}
                               </TableCell>
+                              <TableCell className="text-right text-xs">
+                                {row.forecastBudgetVariance !== null && row.forecastBudgetVariance !== undefined
+                                  ? <span className={Number(row.forecastBudgetVariance) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>
+                                      {money(row.forecastBudgetVariance, row.currency)}
+                                    </span>
+                                  : '—'}
+                                {row.forecastBudgetVariancePercent !== null && row.forecastBudgetVariancePercent !== undefined && (
+                                  <span className="block text-[10px] text-muted-foreground">{Number(row.forecastBudgetVariancePercent).toFixed(2)}% of budget</span>
+                                )}
+                              </TableCell>
                               <TableCell className="text-right"><span className={Number(row.margin) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{money(row.margin, row.currency)} · {Number(row.marginPercent).toFixed(2)}%</span></TableCell>
+                              <TableCell className="text-right text-xs">
+                                {row.forecastMargin !== null && row.forecastMargin !== undefined
+                                  ? <span className={Number(row.forecastMargin) >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{money(row.forecastMargin, row.currency)}</span>
+                                  : '—'}
+                                <span className="block text-[10px] text-muted-foreground">vs issued revenue</span>
+                              </TableCell>
                               <TableCell data-export-ignore className="text-right">
                                 <Button type="button" size="sm" variant="outline" onClick={() => openFinanceSection('customers', undefined, { projectId: row.scopeId })}>
                                   Drill down <ArrowUpRight className="ml-1.5 size-3.5" />
