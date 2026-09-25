@@ -3,6 +3,28 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { isAdminRequest } from '@/lib/admin-auth';
 
+const publicPortfolioSelect = {
+  id: true,
+  title: true,
+  description: true,
+  image: true,
+  url: true,
+  category: true,
+  technologies: true,
+  featured: true,
+  active: true,
+  order: true,
+  caseStudyPublished: true,
+  caseStudySlug: true,
+  caseStudyClientName: true,
+  caseStudyChallenge: true,
+  caseStudySolution: true,
+  caseStudyOutcomes: true,
+  caseStudyPublishedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 // GET all portfolio projects
 export async function GET(request: NextRequest) {
   try {
@@ -29,6 +51,7 @@ export async function GET(request: NextRequest) {
     const projects = await db.portfolioProject.findMany({
       where: Object.keys(where).length > 0 ? where : undefined,
       orderBy: { order: 'asc' },
+      ...(adminRequest ? {} : { select: publicPortfolioSelect }),
     });
 
     return NextResponse.json({ success: true, data: projects });

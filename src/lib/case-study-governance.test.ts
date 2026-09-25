@@ -29,6 +29,15 @@ describe('evidence-governed case studies', () => {
     expect(detail).toContain('active: true');
     expect(detail).not.toContain('caseStudyApprovalReference: true');
     expect(detail).toContain('Internal approval references are retained privately');
+
+    const publicListApi = source('src/app/api/portfolio/route.ts');
+    const publicItemApi = source('src/app/api/portfolio/[id]/route.ts');
+    expect(publicListApi).toContain('publicPortfolioSelect');
+    expect(publicItemApi).toContain('publicPortfolioSelect');
+    const listSelect = publicListApi.slice(publicListApi.indexOf('const publicPortfolioSelect'), publicListApi.indexOf('export async function GET'));
+    const itemSelect = publicItemApi.slice(publicItemApi.indexOf('const publicPortfolioSelect'), publicItemApi.indexOf('// GET individual'));
+    expect(listSelect).not.toContain('caseStudyApprovalReference');
+    expect(itemSelect).not.toContain('caseStudyApprovalReference');
   });
 
   test('admin portfolio makes publication governance explicit', () => {

@@ -3,6 +3,28 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { isAdminRequest } from '@/lib/admin-auth';
 
+const publicPortfolioSelect = {
+  id: true,
+  title: true,
+  description: true,
+  image: true,
+  url: true,
+  category: true,
+  technologies: true,
+  featured: true,
+  active: true,
+  order: true,
+  caseStudyPublished: true,
+  caseStudySlug: true,
+  caseStudyClientName: true,
+  caseStudyChallenge: true,
+  caseStudySolution: true,
+  caseStudyOutcomes: true,
+  caseStudyPublishedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 // GET individual portfolio project
 export async function GET(
   request: NextRequest,
@@ -14,7 +36,10 @@ export async function GET(
     const adminRequest = await isAdminRequest(request);
     const project = adminRequest
       ? await db.portfolioProject.findUnique({ where: { id } })
-      : await db.portfolioProject.findFirst({ where: { id, active: true } });
+      : await db.portfolioProject.findFirst({
+          where: { id, active: true },
+          select: publicPortfolioSelect,
+        });
 
     if (!project) {
       return NextResponse.json(
