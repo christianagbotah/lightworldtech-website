@@ -65,7 +65,7 @@ export default function GlobalPage({ settings = {} }: { settings?: SiteSettings 
         <div className="absolute -left-24 top-20 size-80 rounded-full bg-emerald-400/10 blur-[120px]" />
         <div className="absolute -right-20 top-0 size-96 rounded-full bg-amber-400/10 blur-[140px]" />
         <div className="container-main relative py-16 sm:py-20 lg:py-28">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="grid gap-10 lg:grid-cols-[1.15fr_.85fr] lg:items-end">
+          <motion.div initial={false} animate={{ opacity: 1, y: 0 }} className="grid gap-10 lg:grid-cols-[1.15fr_.85fr] lg:items-end">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                 <Globe2 className="size-3.5" /> {heroEyebrow}
