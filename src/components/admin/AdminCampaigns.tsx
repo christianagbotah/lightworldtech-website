@@ -308,7 +308,7 @@ export default function AdminCampaigns() {
         }
       />
 
-      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
         <Card className="border-border/50">
           <CardHeader>
             <CardTitle className="text-base">Campaigns</CardTitle>
