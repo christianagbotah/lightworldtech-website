@@ -527,6 +527,8 @@ model ClientProject {
   renewalCycle      String             @default("annual")
   renewalCurrency   String             @default("GHS")
   renewalAmount     Decimal            @default(0) @db.Decimal(18, 2)
+  budgetCurrency    String             @default("GHS")
+  budgetAmount      Decimal            @default(0) @db.Decimal(18, 2)
   autoRenew         Boolean            @default(false)
   renewalNoticeDays Int                @default(30)
   renewalNotes      String             @default("")
