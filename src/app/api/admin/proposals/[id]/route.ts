@@ -133,6 +133,13 @@ export async function PUT(
       );
     }
 
+    if (hasContentChanges && parsed.data.status && ['sent', 'accepted'].includes(parsed.data.status)) {
+      return NextResponse.json(
+        { success: false, error: 'Proposal content changes must be reviewed and approved before the proposal can be Sent or Accepted.' },
+        { status: 409 },
+      );
+    }
+
     if (hasContentChanges && existing.status === 'ready' && parsed.data.status === undefined) {
       data.status = 'review';
       data.approvedBy = '';
