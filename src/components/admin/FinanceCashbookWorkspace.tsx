@@ -155,7 +155,7 @@ export default function FinanceCashbookWorkspace() {
                 Internal transfers are identified instead of being mistaken for external business cash flow.
               </p>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[150px_150px_120px_170px_auto]">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[150px_150px_110px_minmax(150px,170px)_minmax(140px,auto)] lg:items-end">
               <div><Label className="text-[10px] uppercase tracking-[0.1em]">From</Label><Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} /></div>
               <div><Label className="text-[10px] uppercase tracking-[0.1em]">To</Label><Input type="date" value={to} onChange={(event) => setTo(event.target.value)} /></div>
               <div><Label className="text-[10px] uppercase tracking-[0.1em]">Currency</Label><Input maxLength={3} value={currency} placeholder="All" onChange={(event) => setCurrency(event.target.value.toUpperCase())} /></div>
