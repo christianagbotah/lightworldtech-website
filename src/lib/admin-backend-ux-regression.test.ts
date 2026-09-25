@@ -1143,7 +1143,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(crm).toContain("fetch('/api/admin/leads/export?'");
     expect(messages).toContain("fetch('/api/admin/messages/export'");
     expect(messages).toContain("fetch('/api/admin/messages/bulk'");
-    expect(messages).toContain('Select all loaded messages');
+    expect(messages).toContain('Select all visible messages');
     expect(crmExport).toContain("'admin.crm_exported'");
     expect(messageExport).toContain("'admin.messages_exported'");
     expect(messageBulk).toContain('.max(100)');
