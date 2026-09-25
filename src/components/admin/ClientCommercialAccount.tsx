@@ -123,6 +123,7 @@ type CommercialData = {
     atRiskProjects: number;
     openTickets: number;
     urgentTickets: number;
+    slaBreaches: number;
     overdueInvoices: number;
     renewalsDue30: number;
     expiredServices: number;
@@ -146,6 +147,25 @@ type CommercialData = {
       actor: string;
       occurredAt: string;
     }>;
+    commitments: {
+      nextCollectionFollowUp: {
+        id: string;
+        invoiceNumber: string;
+        type: string;
+        note: string;
+        nextFollowUpAt: string;
+        createdBy: string;
+      } | null;
+      nextPaymentPromise: {
+        id: string;
+        invoiceNumber: string;
+        note: string;
+        promisedAmount: string | null;
+        promisedDate: string;
+        currency: string;
+        createdBy: string;
+      } | null;
+    };
     communicationThreads: Array<{
       id: string;
       name: string;
@@ -605,6 +625,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   { label: 'At-risk projects', value: data?.customer360.atRiskProjects || 0, Icon: AlertTriangle },
                   { label: 'Open tickets', value: data?.customer360.openTickets || 0, Icon: LifeBuoy },
                   { label: 'Urgent tickets', value: data?.customer360.urgentTickets || 0, Icon: AlertTriangle },
+                  { label: 'SLA breaches', value: data?.customer360.slaBreaches || 0, Icon: AlertTriangle },
                   { label: 'Overdue invoices', value: data?.customer360.overdueInvoices || 0, Icon: ReceiptText },
                   { label: 'Due in 30 days', value: data?.customer360.renewalsDue30 || 0, Icon: CalendarClock },
                   { label: 'Expired services', value: data?.customer360.expiredServices || 0, Icon: History },
@@ -643,6 +664,44 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   ))}
                   {!data?.customer360.recentActivity.length && (
                     <div className="px-4 py-6 text-sm text-muted-foreground">No customer activity has been recorded yet.</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                <div className="rounded-xl border border-border/60 bg-background/70 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Next collection follow-up</p>
+                  {data?.customer360.commitments.nextCollectionFollowUp ? (
+                    <>
+                      <p className="mt-2 text-sm font-semibold">{data.customer360.commitments.nextCollectionFollowUp.invoiceNumber}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{pretty(data.customer360.commitments.nextCollectionFollowUp.type)} · {new Date(data.customer360.commitments.nextCollectionFollowUp.nextFollowUpAt).toLocaleString()}</p>
+                      {data.customer360.commitments.nextCollectionFollowUp.note && <p className="mt-2 text-xs leading-5 text-muted-foreground">{data.customer360.commitments.nextCollectionFollowUp.note}</p>}
+                      <Button type="button" size="sm" variant="outline" className="mt-3" onClick={() => openFinanceSection('collections')}>
+                        Open collections
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-xs text-muted-foreground">No pending collection follow-up is scheduled.</p>
+                  )}
+                </div>
+                <div className="rounded-xl border border-border/60 bg-background/70 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Next promise to pay</p>
+                  {data?.customer360.commitments.nextPaymentPromise ? (
+                    <>
+                      <p className="mt-2 text-sm font-semibold">{data.customer360.commitments.nextPaymentPromise.invoiceNumber}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {data.customer360.commitments.nextPaymentPromise.promisedAmount
+                          ? money(data.customer360.commitments.nextPaymentPromise.promisedAmount, data.customer360.commitments.nextPaymentPromise.currency) + ' · '
+                          : ''}
+                        {new Date(data.customer360.commitments.nextPaymentPromise.promisedDate).toLocaleDateString()}
+                      </p>
+                      {data.customer360.commitments.nextPaymentPromise.note && <p className="mt-2 text-xs leading-5 text-muted-foreground">{data.customer360.commitments.nextPaymentPromise.note}</p>}
+                      <Button type="button" size="sm" variant="outline" className="mt-3" onClick={() => openFinanceSection('collections')}>
+                        Review commitment
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-xs text-muted-foreground">No active promise-to-pay commitment is recorded.</p>
                   )}
                 </div>
               </div>
