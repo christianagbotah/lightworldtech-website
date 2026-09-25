@@ -481,6 +481,128 @@ export async function GET(
     .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime())
     .slice(0, 40);
 
+  const negativeMarginRows = profitabilityRows.filter((row) =>
+    ['customer', 'project', 'service'].includes(row.scopeType) && Number(row.margin) < 0
+  );
+  const budgetPressureRows = profitabilityRows.filter((row) =>
+    row.scopeType === 'project'
+    && row.budgetUtilizationPercent !== null
+    && Number(row.budgetUtilizationPercent) >= 85
+  );
+  const overBudgetRows = profitabilityRows.filter((row) =>
+    row.scopeType === 'project'
+    && row.budgetRemaining !== null
+    && Number(row.budgetRemaining) < 0
+  );
+
+  type ExecutivePriority = {
+    key: 'collections' | 'renewals' | 'support' | 'projects' | 'statement';
+    severity: 'high' | 'medium' | 'low';
+    label: string;
+    detail: string;
+    evidence: string;
+  };
+
+  const executivePriorities: ExecutivePriority[] = [
+    ...(overdueInvoices.length
+      ? [{
+          key: 'collections' as const,
+          severity: 'high' as const,
+          label: 'Recover overdue receivables',
+          detail: overdueInvoices.length + ' overdue invoice' + (overdueInvoices.length === 1 ? '' : 's') + ' currently carry unpaid balances.',
+          evidence: 'Finance ledger · invoice balances and due dates',
+        }]
+      : []),
+    ...(overBudgetRows.length
+      ? [{
+          key: 'projects' as const,
+          severity: 'high' as const,
+          label: 'Intervene on over-budget delivery',
+          detail: overBudgetRows.length + ' project/currency budget row' + (overBudgetRows.length === 1 ? ' is' : 's are') + ' already above the recorded direct-cost budget.',
+          evidence: 'Project budget · attributed finance expenses',
+        }]
+      : []),
+    ...(negativeMarginRows.length
+      ? [{
+          key: 'projects' as const,
+          severity: 'high' as const,
+          label: 'Review negative direct margin',
+          detail: negativeMarginRows.length + ' profitability row' + (negativeMarginRows.length === 1 ? ' has' : 's have') + ' negative direct margin based on issued revenue and attributed costs.',
+          evidence: 'Issued invoice revenue excluding tax · attributed direct expenses',
+        }]
+      : []),
+    ...((urgentTickets.length || slaBreachedTickets.length)
+      ? [{
+          key: 'support' as const,
+          severity: 'high' as const,
+          label: 'Reduce support pressure',
+          detail: (urgentTickets.length + slaBreachedTickets.length) + ' urgent or SLA-breached support item' + ((urgentTickets.length + slaBreachedTickets.length) === 1 ? ' needs' : 's need') + ' operational attention.',
+          evidence: 'Support Desk · priority and SLA timestamps',
+        }]
+      : []),
+    ...((expiredServices.length || renewalsDue30.length)
+      ? [{
+          key: 'renewals' as const,
+          severity: expiredServices.length ? 'high' as const : 'medium' as const,
+          label: 'Protect renewal continuity',
+          detail: expiredServices.length + ' expired and ' + renewalsDue30.length + ' due-within-30-days service renewal' + ((expiredServices.length + renewalsDue30.length) === 1 ? '' : 's') + ' are in scope.',
+          evidence: 'Service expiry and next-due dates',
+        }]
+      : []),
+    ...(budgetPressureRows.length && !overBudgetRows.length
+      ? [{
+          key: 'projects' as const,
+          severity: 'medium' as const,
+          label: 'Watch project budget utilization',
+          detail: budgetPressureRows.length + ' project/currency budget row' + (budgetPressureRows.length === 1 ? ' has' : 's have') + ' reached at least 85% utilization.',
+          evidence: 'Project budget · attributed finance expenses',
+        }]
+      : []),
+    ...(atRiskProjects.length
+      ? [{
+          key: 'projects' as const,
+          severity: 'medium' as const,
+          label: 'Review delivery health',
+          detail: atRiskProjects.length + ' active project' + (atRiskProjects.length === 1 ? ' is' : 's are') + ' not currently marked on track.',
+          evidence: 'Client project health status',
+        }]
+      : []),
+  ].slice(0, 6);
+
+  const executivePosture: 'intervention_required' | 'attention' | 'stable' =
+    executivePriorities.some((item) => item.severity === 'high')
+      ? 'intervention_required'
+      : executivePriorities.length
+        ? 'attention'
+        : 'stable';
+
+  const forecast30Summary = commercialForecast.next30Days.map((row) => ({
+    currency: row.currency,
+    potential: row.totalPotential,
+    receivablesDue: row.receivablesDue,
+    renewals: new Prisma.Decimal(row.serviceRenewals).plus(row.projectRenewals).toFixed(2),
+  }));
+
+  const executiveBrief = {
+    posture: executivePosture,
+    headline:
+      executivePosture === 'intervention_required'
+        ? 'Commercial or delivery intervention is required.'
+        : executivePosture === 'attention'
+          ? 'The account is broadly operating, with items that need active management.'
+          : 'No material commercial or delivery exception is currently flagged.',
+    summary:
+      organization.name + ' currently has ' +
+      activeProjects.length + ' active project' + (activeProjects.length === 1 ? '' : 's') + ', ' +
+      openTickets.length + ' open support ticket' + (openTickets.length === 1 ? '' : 's') + ', ' +
+      overdueInvoices.length + ' overdue invoice' + (overdueInvoices.length === 1 ? '' : 's') + ', and ' +
+      (expiredServices.length + renewalsDue30.length) + ' renewal item' + ((expiredServices.length + renewalsDue30.length) === 1 ? '' : 's') + ' requiring near-term visibility.',
+    priorities: executivePriorities,
+    next30Days: forecast30Summary,
+    controls: 'Decision support only. Pricing, contracts, payments, credits, renewals and customer communications remain human-authorized actions.',
+    generatedAt: now,
+  };
+
   const nextActions = [
     ...(overdueInvoices.length
       ? [{ key: 'collections', label: 'Work overdue receivables', detail: overdueInvoices.length + ' invoice' + (overdueInvoices.length === 1 ? '' : 's') + ' need collection follow-up.' }]
@@ -531,6 +653,7 @@ export async function GET(
         renewalsDue30: renewalsDue30.length,
         expiredServices: expiredServices.length,
         accountHealth,
+        executiveBrief,
         riskSignals,
         nextActions,
         recentActivity,
