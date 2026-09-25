@@ -3,11 +3,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
+  AlertTriangle,
   ArrowUpRight,
   CalendarClock,
   CreditCard,
   Download,
+  FolderKanban,
   History,
+  LifeBuoy,
   Loader2,
   ReceiptText,
   RefreshCw,
@@ -107,7 +110,54 @@ type Payment = {
 };
 
 type CommercialData = {
-  organization: { id: string; name: string; status: string };
+  organization: {
+    id: string;
+    name: string;
+    status: string;
+    primaryContactName: string;
+    primaryEmail: string;
+    primaryPhone: string;
+  };
+  customer360: {
+    activeProjects: number;
+    atRiskProjects: number;
+    openTickets: number;
+    urgentTickets: number;
+    overdueInvoices: number;
+    renewalsDue30: number;
+    expiredServices: number;
+    nextRenewal: {
+      serviceId: string;
+      serviceName: string;
+      date: string;
+      currency: string;
+      amount: string;
+    } | null;
+    projects: Array<{
+      id: string;
+      name: string;
+      status: string;
+      health: string;
+      progress: number;
+      manager: string;
+      targetDate: string | null;
+      expiryDate: string | null;
+      nextRenewalDate: string | null;
+      renewalCurrency: string;
+      renewalAmount: string;
+      updatedAt: string;
+    }>;
+    tickets: Array<{
+      id: string;
+      ticketNumber: string;
+      subject: string;
+      status: string;
+      priority: string;
+      assignedTo: string;
+      lastActivityAt: string;
+      updatedAt: string;
+    }>;
+  };
   byCurrency: Record<string, {
     invoiced: string;
     paid: string;
@@ -402,6 +452,115 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   No invoices or customer payments have been recorded yet.
                 </div>
               )}
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-amber-500/[0.05] via-background to-background p-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Customer 360 commercial pulse</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Delivery, receivables, renewals and support signals for one client account.
+                  </p>
+                  {(data?.organization.primaryContactName || data?.organization.primaryEmail) && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Primary contact: <span className="font-medium text-foreground">{data?.organization.primaryContactName || 'Not named'}</span>
+                      {data?.organization.primaryEmail ? ' · ' + data.organization.primaryEmail : ''}
+                      {data?.organization.primaryPhone ? ' · ' + data.organization.primaryPhone : ''}
+                    </p>
+                  )}
+                </div>
+                {data?.customer360.nextRenewal && (
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs">
+                    <p className="font-semibold text-amber-700 dark:text-amber-300">Next commercial renewal</p>
+                    <p className="mt-1 font-medium">{data.customer360.nextRenewal.serviceName}</p>
+                    <p className="text-muted-foreground">
+                      {date(data.customer360.nextRenewal.date)} · {money(data.customer360.nextRenewal.amount, data.customer360.nextRenewal.currency)}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+                {[
+                  ['Active projects', data?.customer360.activeProjects || 0, FolderKanban],
+                  ['At-risk projects', data?.customer360.atRiskProjects || 0, AlertTriangle],
+                  ['Open tickets', data?.customer360.openTickets || 0, LifeBuoy],
+                  ['Urgent tickets', data?.customer360.urgentTickets || 0, AlertTriangle],
+                  ['Overdue invoices', data?.customer360.overdueInvoices || 0, ReceiptText],
+                  ['Due in 30 days', data?.customer360.renewalsDue30 || 0, CalendarClock],
+                  ['Expired services', data?.customer360.expiredServices || 0, History],
+                ].map(([label, value, Icon]) => (
+                  <div key={String(label)} className="rounded-xl border border-border/60 bg-background/80 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{String(label)}</p>
+                      <Icon className="size-3.5 text-amber-600" />
+                    </div>
+                    <p className="mt-1 text-xl font-bold">{String(value)}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 grid gap-4 2xl:grid-cols-2">
+                <div className="min-w-0 rounded-xl border border-border/60 bg-background/70">
+                  <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold">Delivery portfolio</p>
+                      <p className="text-[11px] text-muted-foreground">Current project health, progress and commercial dates.</p>
+                    </div>
+                    <Badge variant="outline">{data?.customer360.projects.length || 0}</Badge>
+                  </div>
+                  <div className="max-w-full overflow-x-auto">
+                    <Table exportFileName="lightworld-client-project-commercial-pulse" className="min-w-[720px]">
+                      <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Health</TableHead><TableHead>Progress</TableHead><TableHead>Target</TableHead><TableHead>Renewal</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {(data?.customer360.projects || []).map((project) => (
+                          <TableRow key={project.id}>
+                            <TableCell>
+                              <p className="text-xs font-semibold">{project.name}</p>
+                              <p className="text-[10px] text-muted-foreground">{project.manager || pretty(project.status)}</p>
+                            </TableCell>
+                            <TableCell><Badge className={statusTone(project.health === 'on_track' ? 'active' : project.health)}>{pretty(project.health)}</Badge></TableCell>
+                            <TableCell className="text-xs font-medium">{project.progress}%</TableCell>
+                            <TableCell className="text-xs">{date(project.targetDate)}</TableCell>
+                            <TableCell>
+                              <p className="text-xs">{date(project.nextRenewalDate || project.expiryDate)}</p>
+                              {Number(project.renewalAmount) > 0 && <p className="text-[10px] text-muted-foreground">{money(project.renewalAmount, project.renewalCurrency)}</p>}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {!data?.customer360.projects.length && <TableRow><TableCell colSpan={5} className="py-7 text-center text-sm text-muted-foreground">No delivery projects recorded.</TableCell></TableRow>}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+
+                <div className="min-w-0 rounded-xl border border-border/60 bg-background/70">
+                  <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold">Support pressure</p>
+                      <p className="text-[11px] text-muted-foreground">Open client issues that may affect delivery or renewal confidence.</p>
+                    </div>
+                    <Badge variant="outline">{data?.customer360.tickets.length || 0}</Badge>
+                  </div>
+                  <div className="max-w-full overflow-x-auto">
+                    <Table exportFileName="lightworld-client-open-support-pulse" className="min-w-[660px]">
+                      <TableHeader><TableRow><TableHead>Ticket</TableHead><TableHead>Subject</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead><TableHead>Owner</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {(data?.customer360.tickets || []).map((ticket) => (
+                          <TableRow key={ticket.id}>
+                            <TableCell className="font-mono text-xs">{ticket.ticketNumber}</TableCell>
+                            <TableCell className="max-w-[240px] truncate text-xs" title={ticket.subject}>{ticket.subject}</TableCell>
+                            <TableCell><Badge className={['urgent', 'critical', 'high'].includes(ticket.priority) ? statusTone('overdue') : statusTone('active')}>{pretty(ticket.priority)}</Badge></TableCell>
+                            <TableCell className="text-xs">{pretty(ticket.status)}</TableCell>
+                            <TableCell className="text-xs">{ticket.assignedTo || 'Unassigned'}</TableCell>
+                          </TableRow>
+                        ))}
+                        {!data?.customer360.tickets.length && <TableRow><TableCell colSpan={5} className="py-7 text-center text-sm text-muted-foreground">No open support pressure for this client.</TableCell></TableRow>}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-5 2xl:grid-cols-2">
