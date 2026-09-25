@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { deriveLeadIntelligence } from '@/lib/lead-intelligence';
+import { deriveCrmOperatingIntelligence } from '@/lib/crm-operating-intelligence';
 
 const statusSchema = z.enum(['new', 'qualified', 'discovery', 'proposal', 'negotiation', 'won', 'lost']);
 const prioritySchema = z.enum(['low', 'normal', 'high']);
@@ -45,11 +46,36 @@ export async function GET(
     include: {
       contactMessage: true,
       notes: { orderBy: { createdAt: 'desc' } },
+      proposal: { select: { status: true, approvedAt: true, sentAt: true } },
     },
   });
 
   if (!lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
-  return NextResponse.json({ success: true, data: lead });
+  return NextResponse.json({
+    success: true,
+    data: {
+      ...lead,
+      operatingIntelligence: deriveCrmOperatingIntelligence({
+        status: lead.status,
+        priority: lead.priority,
+        assignedTo: lead.assignedTo,
+        company: lead.company,
+        industry: lead.industry,
+        countryRegion: lead.countryRegion,
+        serviceInterest: lead.serviceInterest,
+        currency: lead.currency,
+        budgetRange: lead.budgetRange,
+        deliveryWindow: lead.deliveryWindow,
+        engagementModel: lead.engagementModel,
+        expectedRevenue: Number(lead.expectedRevenue.toString()),
+        probability: lead.probability,
+        nextAction: lead.nextAction,
+        nextFollowUp: lead.nextFollowUp,
+        lastContactedAt: lead.lastContactedAt,
+        proposal: lead.proposal,
+      }),
+    },
+  });
 }
 
 export async function PUT(
@@ -122,7 +148,31 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({ success: true, data: lead });
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...lead,
+        operatingIntelligence: deriveCrmOperatingIntelligence({
+          status: lead.status,
+          priority: lead.priority,
+          assignedTo: lead.assignedTo,
+          company: lead.company,
+          industry: lead.industry,
+          countryRegion: lead.countryRegion,
+          serviceInterest: lead.serviceInterest,
+          currency: lead.currency,
+          budgetRange: lead.budgetRange,
+          deliveryWindow: lead.deliveryWindow,
+          engagementModel: lead.engagementModel,
+          expectedRevenue: Number(lead.expectedRevenue.toString()),
+          probability: lead.probability,
+          nextAction: lead.nextAction,
+          nextFollowUp: lead.nextFollowUp,
+          lastContactedAt: lead.lastContactedAt,
+          proposal: lead.proposal,
+        }),
+      },
+    });
   } catch (error) {
     console.error('Error updating CRM lead:', error);
     return NextResponse.json(
