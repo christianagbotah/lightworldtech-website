@@ -551,7 +551,7 @@ export default function AdminClients() {
           title="Client organizations could not be loaded"
           message={loadError}
           retrying={loading}
-          onRetry={() => void fetchOrganizations()}
+          onRetry={() => void Promise.all([fetchOrganizations(), fetchPortfolio()])}
         />
       </div>
     );
@@ -564,7 +564,7 @@ export default function AdminClients() {
         title="Client organizations & delivery visibility"
         description="Provision only real client organizations. Portal users see projects, milestones and support requests scoped to their organization."
         actions={
-          <Button variant="outline" onClick={() => void fetchOrganizations()} disabled={loading}>
+          <Button variant="outline" onClick={() => void Promise.all([fetchOrganizations(), fetchPortfolio()])} disabled={loading}>
             <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} /> Refresh
           </Button>
         }
@@ -575,7 +575,7 @@ export default function AdminClients() {
           title="Client workspace refresh failed"
           message={loadError + '. Showing the last successfully loaded client records.'}
           retrying={loading}
-          onRetry={() => void fetchOrganizations()}
+          onRetry={() => void Promise.all([fetchOrganizations(), fetchPortfolio()])}
         />
       )}
 
@@ -602,6 +602,146 @@ export default function AdminClients() {
           );
         })}
       </div>
+
+      {!portfolioForbidden && (
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Activity className="size-4 text-indigo-600" />
+                  Executive client portfolio
+                </CardTitle>
+                <p className="mt-1 max-w-4xl text-xs leading-5 text-muted-foreground">
+                  Cross-customer commercial and delivery exceptions. {portfolio?.methodology || 'Financial values stay separated by currency.'}
+                </p>
+              </div>
+              <Badge variant="outline">Finance-authorized view</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {portfolioLoading && !portfolio ? (
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-20 rounded-xl" />)}
+              </div>
+            ) : portfolio ? (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                  {[
+                    { label: 'Intervention', value: portfolio.summary.interventionRequired, icon: AlertTriangle, tone: 'text-rose-600 bg-rose-500/10' },
+                    { label: 'Attention', value: portfolio.summary.attention, icon: Activity, tone: 'text-amber-600 bg-amber-500/10' },
+                    { label: 'Stable', value: portfolio.summary.stable, icon: Building2, tone: 'text-emerald-600 bg-emerald-500/10' },
+                    { label: 'Overdue invoices', value: portfolio.summary.overdueInvoices, icon: CircleDollarSign, tone: 'text-rose-600 bg-rose-500/10' },
+                    { label: 'Renewals ≤30d', value: portfolio.summary.renewalsDue30, icon: CalendarClock, tone: 'text-violet-600 bg-violet-500/10' },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={item.label} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background p-3">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{item.label}</p>
+                          <p className="mt-1 text-xl font-bold">{item.value}</p>
+                        </div>
+                        <span className={'flex size-9 items-center justify-center rounded-xl ' + item.tone}><Icon className="size-4" /></span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="grid gap-4 2xl:grid-cols-[minmax(0,.75fr)_minmax(0,1.25fr)]">
+                  <div className="min-w-0 rounded-xl border border-border/60">
+                    <div className="border-b border-border/60 px-4 py-3">
+                      <p className="text-sm font-semibold">Currency exposure</p>
+                      <p className="text-[11px] text-muted-foreground">Overdue receivables and scheduled renewal value within 30 days.</p>
+                    </div>
+                    <div className="divide-y divide-border/60">
+                      {portfolio.byCurrency.map((row) => (
+                        <div key={row.currency} className="grid grid-cols-[70px_1fr_1fr] gap-3 px-4 py-3 text-xs">
+                          <span className="font-semibold">{row.currency}</span>
+                          <span className="text-right"><span className="block text-[9px] uppercase text-muted-foreground">Overdue</span>{money(row.overdueReceivables, row.currency)}</span>
+                          <span className="text-right"><span className="block text-[9px] uppercase text-muted-foreground">Renewals</span>{money(row.renewals30, row.currency)}</span>
+                        </div>
+                      ))}
+                      {!portfolio.byCurrency.length && <div className="px-4 py-6 text-xs text-muted-foreground">No overdue receivable or near-term renewal exposure is currently recorded.</div>}
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 rounded-xl border border-border/60">
+                    <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold">Accounts by management priority</p>
+                        <p className="text-[11px] text-muted-foreground">Highest exception score first. Click an account to open its command centre.</p>
+                      </div>
+                      <Badge variant="outline">{portfolio.data.length}</Badge>
+                    </div>
+                    <div className="max-h-[420px] divide-y divide-border/60 overflow-y-auto">
+                      {portfolio.data.slice(0, 30).map((row) => (
+                        <button
+                          key={row.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedId(row.id);
+                            window.setTimeout(() => document.getElementById('client-overview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+                          }}
+                          className="grid w-full gap-3 px-4 py-3 text-left transition hover:bg-muted/30 lg:grid-cols-[minmax(0,1fr)_auto]"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="truncate text-xs font-semibold">{row.name}</p>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  row.posture === 'intervention_required'
+                                    ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300'
+                                    : row.posture === 'attention'
+                                      ? 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300'
+                                      : 'border-emerald-300 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300'
+                                }
+                              >
+                                {pretty(row.posture)}
+                              </Badge>
+                            </div>
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              {row.metrics.overdueInvoices} overdue · {row.metrics.renewalsDue30} renewals · {row.metrics.atRiskProjects} delivery risk · {row.metrics.budgetPressure} budget pressure · {row.metrics.urgentTickets + row.metrics.slaBreaches} support pressure
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                            {row.exposure.slice(0, 2).map((exposure) => (
+                              <span key={exposure.currency} className="rounded-lg border border-border/60 bg-background px-2 py-1 text-[9px] text-muted-foreground">
+                                {exposure.currency}: {money(exposure.overdueReceivables, exposure.currency)} overdue
+                              </span>
+                            ))}
+                          </div>
+                        </button>
+                      ))}
+                      {!portfolio.data.length && <div className="px-4 py-6 text-xs text-muted-foreground">No client organizations are available for portfolio analysis.</div>}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                  {[
+                    ['At-risk projects', portfolio.summary.atRiskProjects],
+                    ['Budget pressure', portfolio.summary.budgetPressure],
+                    ['Over budget', portfolio.summary.overBudget],
+                    ['Urgent support', portfolio.summary.urgentTickets],
+                    ['SLA breaches', portfolio.summary.slaBreaches],
+                    ['Active clients', portfolio.summary.activeOrganizations],
+                  ].map(([label, value]) => (
+                    <div key={String(label)} className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                      <p className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+                      <p className="mt-1 text-lg font-bold">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="rounded-xl border border-dashed p-4 text-xs text-muted-foreground">
+                Executive client portfolio data is temporarily unavailable. Core client management remains available below.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-border/60">
         <CardHeader><CardTitle className="text-base">Add client organization</CardTitle></CardHeader>
