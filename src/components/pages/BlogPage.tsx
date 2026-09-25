@@ -95,7 +95,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
         <CmsHeroMedia settings={settings} settingKey="blog_hero_image" />
         <div className="relative container-main py-16 sm:py-20 lg:py-24 z-10">
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="grid gap-9 lg:grid-cols-[1.05fr_.95fr] lg:items-end"
