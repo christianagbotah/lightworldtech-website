@@ -182,31 +182,15 @@
   }
 }
 
-/* Floating-header clearance: never use the hero pseudo-elements for layout because
-   ::before/::after are reserved for decorative effects. */
+/* Floating-header clearance belongs to the hero box itself.
+   Decorative ::before/::after layers remain visual-only and absolute children stay absolute. */
 .lw-hero-grid:not(.lw-home-hero):first-child {
-  --lw-header-clearance: 76px;
+  padding-top: 76px;
 }
 
 @media (min-width: 640px) {
   .lw-hero-grid:not(.lw-home-hero):first-child {
-    --lw-header-clearance: 88px;
-  }
-}
-
-.lw-hero-grid:not(.lw-home-hero):first-child > :not(.absolute):first-of-type {
-  padding-top: calc(var(--lw-header-clearance) + 4rem);
-}
-
-@media (min-width: 640px) {
-  .lw-hero-grid:not(.lw-home-hero):first-child > :not(.absolute):first-of-type {
-    padding-top: calc(var(--lw-header-clearance) + 5rem);
-  }
-}
-
-@media (min-width: 1024px) {
-  .lw-hero-grid:not(.lw-home-hero):first-child > :not(.absolute):first-of-type {
-    padding-top: calc(var(--lw-header-clearance) + 6rem);
+    padding-top: 88px;
   }
 }
 
