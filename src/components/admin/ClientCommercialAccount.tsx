@@ -224,6 +224,14 @@ type CommercialData = {
         budgetAmount?: string | null;
         budgetRemaining?: string | null;
         budgetUtilizationPercent?: string | null;
+        projectProgress?: number | null;
+        forecastCostAtCompletion?: string | null;
+        forecastCostToComplete?: string | null;
+        forecastBudgetVariance?: string | null;
+        forecastBudgetVariancePercent?: string | null;
+        forecastMargin?: string | null;
+        costProgressGapPercent?: string | null;
+        forecastMaturity?: 'unavailable' | 'low' | 'medium' | 'higher' | 'complete';
       }>;
       services: Array<{
         scopeType: 'service';
