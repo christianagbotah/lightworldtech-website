@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -24,6 +25,7 @@ import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 const productDirections = [
   {
     icon: Workflow,
+    image: '/images/portfolio/erp-system.png',
     title: 'Operations platforms',
     stage: 'Product family',
     text: 'Modular systems for assets, maintenance, inventory, people, approvals and operational reporting.',
@@ -31,6 +33,7 @@ const productDirections = [
   },
   {
     icon: School,
+    image: '/images/portfolio/lms.png',
     title: 'Education platforms',
     stage: 'Product family',
     text: 'School administration, learning, assessment, billing and communication experiences designed around the institution.',
@@ -38,6 +41,7 @@ const productDirections = [
   },
   {
     icon: BrainCircuit,
+    image: '/images/hero-slide-4.png',
     title: 'AI-assisted products',
     stage: 'R&D',
     text: 'Focused intelligent experiences that help teams search knowledge, interpret information and automate repetitive work.',
@@ -45,6 +49,7 @@ const productDirections = [
   },
   {
     icon: BarChart3,
+    image: '/images/portfolio/security.png',
     title: 'Business intelligence',
     stage: 'R&D',
     text: 'Operational dashboards and reporting products that bring data from separate workflows into one decision surface.',
@@ -52,6 +57,7 @@ const productDirections = [
   },
   {
     icon: GraduationCap,
+    image: '/images/hero-slide-3.png',
     title: 'Learning & skills',
     stage: 'R&D',
     text: 'Digital learning and capability-building experiences for companies, institutions and individual learners.',
@@ -59,6 +65,7 @@ const productDirections = [
   },
   {
     icon: Layers3,
+    image: '/images/process-workflow.png',
     title: 'Reusable industry modules',
     stage: 'Platform',
     text: 'Reusable product building blocks that shorten delivery time while keeping room for industry-specific workflows.',
@@ -79,6 +86,7 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
   ).map((item, index) => ({
     ...item,
     icon: productDirections[index]?.icon || PackageSearch,
+    image: productDirections[index]?.image || '/images/portfolio/erp-system.png',
     features: item.features.split(',').map((value) => value.trim()).filter(Boolean),
   }));
 
@@ -145,18 +153,28 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.04 }}
-                className="group flex min-h-[320px] flex-col rounded-[28px] border border-slate-200/70 bg-white p-6 transition hover:-translate-y-0.5 hover:border-amber-300/60 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]"
+                className="group flex min-h-[430px] flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white transition hover:-translate-y-0.5 hover:border-amber-300/60 dark:border-white/[0.07] dark:bg-white/[0.025] dark:hover:bg-white/[0.04]"
               >
-                <div className="flex items-start justify-between">
-                  <span className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/[0.08] text-amber-600 dark:text-amber-300">
+                <div className="relative aspect-[16/9] shrink-0 overflow-hidden bg-slate-100 dark:bg-white/[0.03]">
+                  <Image
+                    src={product.image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition duration-700 group-hover:scale-[1.035]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
+                  <div className="absolute left-4 top-4 flex size-10 items-center justify-center rounded-2xl border border-white/15 bg-slate-950/45 text-amber-300 backdrop-blur-lg">
                     <product.icon className="size-5" />
-                  </span>
-                  <span className="rounded-full border border-slate-200/80 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:border-white/[0.07] dark:text-white/25">{product.stage}</span>
+                  </div>
+                  <span className="absolute right-4 top-4 rounded-full border border-white/15 bg-slate-950/45 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/80 backdrop-blur-lg">{product.stage}</span>
                 </div>
-                <div className="mt-auto pt-9">
-                  <h2 className="text-xl font-semibold tracking-tight">{product.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-white/36">{product.text}</p>
-                  <div className="mt-5 flex flex-wrap gap-1.5">
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="min-h-[58px]">
+                    <h2 className="text-xl font-semibold leading-7 tracking-tight">{product.title}</h2>
+                  </div>
+                  <p className="mt-2 min-h-[72px] text-sm leading-6 text-slate-500 dark:text-white/36">{product.text}</p>
+                  <div className="mt-auto flex flex-wrap gap-1.5 pt-5">
                     {product.features.map((feature) => (
                       <span key={feature} className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-500 dark:bg-white/[0.04] dark:text-white/28">{feature}</span>
                     ))}
