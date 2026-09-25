@@ -195,6 +195,12 @@ type Expense = {
   id: string;
   expenseNumber: string;
   vendorId: string | null;
+  organizationId: string | null;
+  projectId: string | null;
+  serviceId: string | null;
+  organization: { id: string; name: string } | null;
+  project: { id: string; name: string } | null;
+  service: { id: string; name: string; planName: string } | null;
   category: string;
   description: string;
   currency: string;
@@ -334,7 +340,8 @@ export default function AdminFinance() {
     allocations: [{ billId: '', amount: '' }],
   });
   const [expenseForm, setExpenseForm] = useState({
-    vendorId: '', category: 'operating_expense', description: '', currency: 'GHS',
+    vendorId: '', organizationId: '', projectId: '', serviceId: '',
+    category: 'operating_expense', description: '', currency: 'GHS',
     amount: '', incurredAt: today(), paidAt: today(), method: 'bank_transfer',
     reference: '', notes: '',
   });
@@ -742,11 +749,15 @@ export default function AdminFinance() {
     const ok = await post('/api/admin/finance/expenses', {
       ...expenseForm,
       vendorId: expenseForm.vendorId || null,
+      organizationId: expenseForm.organizationId || null,
+      projectId: expenseForm.projectId || null,
+      serviceId: expenseForm.serviceId || null,
       amount: Number(expenseForm.amount || 0),
       paidAt: expenseForm.paidAt || null,
     }, 'Expense recorded');
     if (ok) setExpenseForm({
-      vendorId: '', category: 'operating_expense', description: '', currency: 'GHS',
+      vendorId: '', organizationId: '', projectId: '', serviceId: '',
+      category: 'operating_expense', description: '', currency: 'GHS',
       amount: '', incurredAt: today(), paidAt: today(), method: 'bank_transfer',
       reference: '', notes: '',
     });
@@ -1577,7 +1588,84 @@ export default function AdminFinance() {
       </Dialog>
 
       <Dialog open={dialog === 'expense'} onOpenChange={(open) => !open && setDialog(null)}>
-        <DialogContent className="max-w-xl"><DialogHeader><DialogTitle>Record direct expense</DialogTitle></DialogHeader><form onSubmit={submitExpense} className="space-y-3"><select value={expenseForm.vendorId} onChange={(e) => setExpenseForm({ ...expenseForm, vendorId: e.target.value })} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">No linked supplier</option>{data.vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select><Input required placeholder="Expense description" value={expenseForm.description} onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })} /><div className="grid gap-3 sm:grid-cols-2"><Input required value={expenseForm.category} onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })} placeholder="Category" /><Input required type="number" min="0.01" step="0.01" placeholder="Amount" value={expenseForm.amount} onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })} /></div><div className="grid gap-3 sm:grid-cols-2"><div><Label>Incurred date</Label><Input required type="date" value={expenseForm.incurredAt} onChange={(e) => setExpenseForm({ ...expenseForm, incurredAt: e.target.value })} /></div><div><Label>Paid date</Label><Input type="date" value={expenseForm.paidAt} onChange={(e) => setExpenseForm({ ...expenseForm, paidAt: e.target.value })} /></div></div><Input placeholder="Reference" value={expenseForm.reference} onChange={(e) => setExpenseForm({ ...expenseForm, reference: e.target.value })} /><Textarea placeholder="Expense notes" value={expenseForm.notes} onChange={(e) => setExpenseForm({ ...expenseForm, notes: e.target.value })} /><DialogFooter><Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button><Button disabled={saving}>Record expense</Button></DialogFooter></form></DialogContent>
+        <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Record direct expense</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={submitExpense} className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label>Supplier</Label>
+                <select value={expenseForm.vendorId} onChange={(e) => setExpenseForm({ ...expenseForm, vendorId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                  <option value="">No linked supplier</option>
+                  {data.vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label>Customer attribution</Label>
+                <select
+                  value={expenseForm.organizationId}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, organizationId: e.target.value, projectId: '', serviceId: '' })}
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">General company expense</option>
+                  {data.organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {expenseForm.organizationId && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>Project</Label>
+                  <select
+                    value={expenseForm.projectId}
+                    onChange={(e) => setExpenseForm({ ...expenseForm, projectId: e.target.value, serviceId: '' })}
+                    className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">Customer-level / no project</option>
+                    {(data.organizations.find((organization) => organization.id === expenseForm.organizationId)?.projects || []).map((project) => (
+                      <option key={project.id} value={project.id}>{project.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label>Service</Label>
+                  <select
+                    value={expenseForm.serviceId}
+                    onChange={(e) => setExpenseForm({ ...expenseForm, serviceId: e.target.value })}
+                    className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">No linked service</option>
+                    {data.services
+                      .filter((service) =>
+                        service.organizationId === expenseForm.organizationId
+                        && (!expenseForm.projectId || !service.project || service.project.id === expenseForm.projectId)
+                      )
+                      .map((service) => <option key={service.id} value={service.id}>{service.name}{service.planName ? ' · ' + service.planName : ''}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/15 dark:text-amber-100">
+              Customer/project/service attribution feeds Customer 360 profitability reporting. Leave it blank only for general company overhead.
+            </div>
+
+            <Input required placeholder="Expense description" value={expenseForm.description} onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input required value={expenseForm.category} onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })} placeholder="Category" />
+              <Input required type="number" min="0.01" step="0.01" placeholder="Amount" value={expenseForm.amount} onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>Incurred date</Label><Input required type="date" value={expenseForm.incurredAt} onChange={(e) => setExpenseForm({ ...expenseForm, incurredAt: e.target.value })} /></div>
+              <div><Label>Paid date</Label><Input type="date" value={expenseForm.paidAt} onChange={(e) => setExpenseForm({ ...expenseForm, paidAt: e.target.value })} /></div>
+            </div>
+            <Input placeholder="Reference" value={expenseForm.reference} onChange={(e) => setExpenseForm({ ...expenseForm, reference: e.target.value })} />
+            <Textarea placeholder="Expense notes" value={expenseForm.notes} onChange={(e) => setExpenseForm({ ...expenseForm, notes: e.target.value })} />
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button><Button disabled={saving}>Record expense</Button></DialogFooter>
+          </form>
+        </DialogContent>
       </Dialog>
     </div>
   );
