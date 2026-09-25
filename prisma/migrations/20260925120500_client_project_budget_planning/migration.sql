@@ -1,0 +1,3 @@
+ALTER TABLE "ClientProject"
+  ADD COLUMN "budgetCurrency" TEXT NOT NULL DEFAULT 'GHS',
+  ADD COLUMN "budgetAmount" DECIMAL(18,2) NOT NULL DEFAULT 0;
