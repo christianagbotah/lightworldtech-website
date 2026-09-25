@@ -124,6 +124,10 @@ export async function GET(
         status: true,
         priority: true,
         assignedTo: true,
+        firstResponseDueAt: true,
+        resolutionDueAt: true,
+        firstRespondedAt: true,
+        resolvedAt: true,
         lastActivityAt: true,
         updatedAt: true,
       },
@@ -213,11 +217,22 @@ export async function GET(
     .sort((a, b) => a.date.getTime() - b.date.getTime());
   const renewalsDue30 = renewalCandidates.filter((item) => item.date >= now && item.date <= renewalWindow);
   const expiredServices = services.filter((service) => service.expiryDate && service.expiryDate.getTime() < now.getTime() && service.status !== 'cancelled');
+  const slaBreachedTickets = openTickets.filter((ticket) =>
+    (ticket.firstResponseDueAt && ticket.firstResponseDueAt.getTime() < now.getTime() && !ticket.firstRespondedAt)
+    || (ticket.resolutionDueAt && ticket.resolutionDueAt.getTime() < now.getTime() && !ticket.resolvedAt),
+  );
+  const pendingCollectionFollowUps = collectionActivities
+    .filter((activity) => activity.nextFollowUpAt && !activity.completedAt && activity.nextFollowUpAt.getTime() >= now.getTime())
+    .sort((a, b) => (a.nextFollowUpAt?.getTime() || 0) - (b.nextFollowUpAt?.getTime() || 0));
+  const activePaymentPromises = collectionActivities
+    .filter((activity) => activity.type === 'promise_to_pay' && activity.promisedDate && !activity.completedAt)
+    .sort((a, b) => (a.promisedDate?.getTime() || 0) - (b.promisedDate?.getTime() || 0));
 
   const riskSignals = [
     ...(overdueInvoices.length ? [{ key: 'overdue_receivables', label: 'Overdue receivables', count: overdueInvoices.length, severity: 'high' as const }] : []),
     ...(expiredServices.length ? [{ key: 'expired_services', label: 'Expired services', count: expiredServices.length, severity: 'high' as const }] : []),
     ...(urgentTickets.length ? [{ key: 'urgent_support', label: 'Urgent support issues', count: urgentTickets.length, severity: 'high' as const }] : []),
+    ...(slaBreachedTickets.length ? [{ key: 'sla_breach', label: 'Support SLA breaches', count: slaBreachedTickets.length, severity: 'high' as const }] : []),
     ...(atRiskProjects.length ? [{ key: 'delivery_risk', label: 'Projects needing attention', count: atRiskProjects.length, severity: 'medium' as const }] : []),
     ...(renewalsDue30.length ? [{ key: 'renewal_due', label: 'Renewals due within 30 days', count: renewalsDue30.length, severity: 'medium' as const }] : []),
   ];
@@ -299,8 +314,8 @@ export async function GET(
     ...(renewalsDue30.length || expiredServices.length
       ? [{ key: 'renewals', label: 'Review renewals', detail: (renewalsDue30.length + expiredServices.length) + ' service' + ((renewalsDue30.length + expiredServices.length) === 1 ? '' : 's') + ' need renewal attention.' }]
       : []),
-    ...(urgentTickets.length
-      ? [{ key: 'support', label: 'Resolve urgent support', detail: urgentTickets.length + ' urgent support ticket' + (urgentTickets.length === 1 ? '' : 's') + ' remain open.' }]
+    ...(urgentTickets.length || slaBreachedTickets.length
+      ? [{ key: 'support', label: 'Resolve support pressure', detail: (urgentTickets.length + slaBreachedTickets.length) + ' urgent or SLA-breached support item' + ((urgentTickets.length + slaBreachedTickets.length) === 1 ? '' : 's') + ' need attention.' }]
       : []),
     ...(atRiskProjects.length
       ? [{ key: 'projects', label: 'Review delivery risk', detail: atRiskProjects.length + ' project' + (atRiskProjects.length === 1 ? '' : 's') + ' need delivery attention.' }]
@@ -337,6 +352,7 @@ export async function GET(
         atRiskProjects: atRiskProjects.length,
         openTickets: openTickets.length,
         urgentTickets: urgentTickets.length,
+        slaBreaches: slaBreachedTickets.length,
         overdueInvoices: overdueInvoices.length,
         renewalsDue30: renewalsDue30.length,
         expiredServices: expiredServices.length,
@@ -344,6 +360,29 @@ export async function GET(
         riskSignals,
         nextActions,
         recentActivity,
+        commitments: {
+          nextCollectionFollowUp: pendingCollectionFollowUps[0]
+            ? {
+                id: pendingCollectionFollowUps[0].id,
+                invoiceNumber: pendingCollectionFollowUps[0].invoice.invoiceNumber,
+                type: pendingCollectionFollowUps[0].type,
+                note: pendingCollectionFollowUps[0].note,
+                nextFollowUpAt: pendingCollectionFollowUps[0].nextFollowUpAt,
+                createdBy: pendingCollectionFollowUps[0].createdBy,
+              }
+            : null,
+          nextPaymentPromise: activePaymentPromises[0]
+            ? {
+                id: activePaymentPromises[0].id,
+                invoiceNumber: activePaymentPromises[0].invoice.invoiceNumber,
+                note: activePaymentPromises[0].note,
+                promisedAmount: activePaymentPromises[0].promisedAmount?.toFixed(2) ?? null,
+                promisedDate: activePaymentPromises[0].promisedDate,
+                currency: activePaymentPromises[0].invoice.currency,
+                createdBy: activePaymentPromises[0].createdBy,
+              }
+            : null,
+        },
         communicationThreads: contactMessages.map((message) => ({
           id: message.id,
           name: message.name,
