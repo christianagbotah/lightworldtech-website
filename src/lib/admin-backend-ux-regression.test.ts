@@ -420,6 +420,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('billVatPreview');
     expect(clients).toContain('ClientCommercialAccount');
     expect(clients).toContain('Client command centre sections');
+    expect(clients).toContain('Primary contact');
+    expect(clients).toContain('Portal access');
+    expect(clients).toContain('Delivery portfolio');
+    expect(clients).toContain('Support load');
     expect(clients).toContain('client-overview');
     expect(clients).toContain('client-portal-users');
     expect(clients).toContain('client-commercial');
