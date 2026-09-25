@@ -2,8 +2,11 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
+  Activity,
+  AlertTriangle,
   Building2,
   CalendarClock,
+  CircleDollarSign,
   Copy,
   FileText,
   FolderKanban,
@@ -70,12 +73,80 @@ type Organization = {
   _count: { users: number; projects: number; tickets: number };
 };
 
+type PortfolioIntelligence = {
+  summary: {
+    organizations: number;
+    activeOrganizations: number;
+    interventionRequired: number;
+    attention: number;
+    stable: number;
+    overdueInvoices: number;
+    renewalsDue30: number;
+    atRiskProjects: number;
+    budgetPressure: number;
+    overBudget: number;
+    urgentTickets: number;
+    slaBreaches: number;
+  };
+  byCurrency: Array<{
+    currency: string;
+    overdueReceivables: string;
+    renewals30: string;
+  }>;
+  methodology: string;
+  data: Array<{
+    id: string;
+    name: string;
+    status: string;
+    primaryContactName: string;
+    primaryEmail: string;
+    primaryPhone: string;
+    posture: 'intervention_required' | 'attention' | 'stable';
+    riskScore: number;
+    metrics: {
+      users: number;
+      projects: number;
+      activeProjects: number;
+      atRiskProjects: number;
+      openTickets: number;
+      urgentTickets: number;
+      slaBreaches: number;
+      overdueInvoices: number;
+      expiredServices: number;
+      renewalsDue30: number;
+      budgetPressure: number;
+      overBudget: number;
+    };
+    exposure: Array<{
+      currency: string;
+      overdueReceivables: string;
+      renewals30: string;
+    }>;
+  }>;
+};
+
 function pretty(value: string) {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function money(value: string | number, currency = 'GHS') {
+  try {
+    return new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(value || 0));
+  } catch {
+    return currency + ' ' + Number(value || 0).toFixed(2);
+  }
+}
+
 export default function AdminClients() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [portfolio, setPortfolio] = useState<PortfolioIntelligence | null>(null);
+  const [portfolioLoading, setPortfolioLoading] = useState(true);
+  const [portfolioForbidden, setPortfolioForbidden] = useState(false);
   const [selectedId, setSelectedId] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -108,6 +179,31 @@ export default function AdminClients() {
 
   const selected = organizations.find((item) => item.id === selectedId) || organizations[0] || null;
 
+  const fetchPortfolio = async () => {
+    setPortfolioLoading(true);
+    try {
+      const response = await fetch('/api/admin/clients/portfolio-intelligence', { cache: 'no-store' });
+      if (response.status === 403) {
+        setPortfolioForbidden(true);
+        setPortfolio(null);
+        return;
+      }
+      if (!response.ok) throw new Error('Could not load executive client portfolio');
+      const payload = await response.json();
+      setPortfolio({
+        summary: payload.summary,
+        byCurrency: payload.byCurrency || [],
+        methodology: payload.methodology || '',
+        data: payload.data || [],
+      });
+      setPortfolioForbidden(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not load executive client portfolio');
+    } finally {
+      setPortfolioLoading(false);
+    }
+  };
+
   const fetchOrganizations = async () => {
     setLoading(true);
     setLoadError('');
@@ -127,7 +223,7 @@ export default function AdminClients() {
     }
   };
 
-  useEffect(() => { void fetchOrganizations(); }, []);
+  useEffect(() => { void Promise.all([fetchOrganizations(), fetchPortfolio()]); }, []);
 
   useEffect(() => {
     if (!organizations.length || typeof window === 'undefined') return;
@@ -152,7 +248,7 @@ export default function AdminClients() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update),
       });
       if (!response.ok) throw new Error('Could not update client organization');
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update client organization');
     }
@@ -168,7 +264,7 @@ export default function AdminClients() {
       if (payload?.activationUrl) {
         setActivationLinks((current) => ({ ...current, [id]: String(payload.activationUrl) }));
       }
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       if (success) toast.success(success);
       return payload;
     } catch (error) {
@@ -199,7 +295,7 @@ export default function AdminClients() {
       if (!response.ok) throw new Error(payload?.error || 'Could not create client organization');
       setOrgForm({ name: '', primaryContactName: '', primaryEmail: '', primaryPhone: '' });
       setSelectedId(payload.data.id);
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       toast.success('Client organization created');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not create client organization');
@@ -220,7 +316,7 @@ export default function AdminClients() {
       if (payload?.activationUrl && payload?.data?.id) {
         setActivationLinks((current) => ({ ...current, [payload.data.id]: String(payload.activationUrl) }));
       }
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       toast.success('Portal user provisioned — share the activation link securely');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not create portal user');
@@ -273,7 +369,7 @@ export default function AdminClients() {
         renewalNotes: '',
       });
       setMilestoneForm((current) => ({ ...current, projectId: payload.data.id }));
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       toast.success('Client project created');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not create client project');
@@ -286,7 +382,7 @@ export default function AdminClients() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update),
       });
       if (!response.ok) throw new Error('Could not update project');
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update project');
     }
@@ -321,7 +417,7 @@ export default function AdminClients() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Could not create milestone');
       setMilestoneForm({ projectId: milestoneForm.projectId, title: '', dueDate: '' });
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       toast.success('Milestone published');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not create milestone');
@@ -334,7 +430,7 @@ export default function AdminClients() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }),
       });
       if (!response.ok) throw new Error('Could not update milestone');
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
     } catch { toast.error('Could not update milestone'); }
   };
 
@@ -344,7 +440,7 @@ export default function AdminClients() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }),
       });
       if (!response.ok) throw new Error('Could not update support ticket');
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
     } catch { toast.error('Could not update support ticket'); }
   };
 
@@ -362,7 +458,7 @@ export default function AdminClients() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Could not publish document');
       setDocumentForms((current) => ({ ...current, [projectId]: { title: '', url: '', description: '', category: 'document' } }));
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       toast.success('Client document published');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not publish document');
@@ -373,7 +469,7 @@ export default function AdminClients() {
     try {
       const response = await fetch('/api/admin/client-documents/' + id, { method: 'DELETE' });
       if (!response.ok) throw new Error('Could not remove document');
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       toast.success('Client document removed');
     } catch { toast.error('Could not remove document'); }
   };
@@ -395,7 +491,7 @@ export default function AdminClients() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Could not publish announcement');
       setAnnouncementForm({ title: '', body: '', projectId: '' });
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       toast.success('Client announcement published');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not publish announcement');
@@ -408,7 +504,7 @@ export default function AdminClients() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active }),
       });
       if (!response.ok) throw new Error('Could not update announcement');
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
     } catch { toast.error('Could not update announcement'); }
   };
 
@@ -416,7 +512,7 @@ export default function AdminClients() {
     try {
       const response = await fetch('/api/admin/client-announcements/' + id, { method: 'DELETE' });
       if (!response.ok) throw new Error('Could not delete announcement');
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       toast.success('Announcement deleted');
     } catch { toast.error('Could not delete announcement'); }
   };
@@ -432,7 +528,7 @@ export default function AdminClients() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Could not send reply');
       setTicketReplies((current) => ({ ...current, [ticketId]: '' }));
-      await fetchOrganizations();
+      await Promise.all([fetchOrganizations(), fetchPortfolio()]);
       toast.success('Support reply sent');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not send reply');
