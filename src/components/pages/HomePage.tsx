@@ -402,7 +402,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
           <div className="grid w-full items-center gap-14 lg:grid-cols-[1.02fr_.98fr] lg:gap-12">
             <div className="max-w-3xl">
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55 }}
                 className="inline-flex items-center gap-2 rounded-full border border-emerald-600/15 bg-emerald-500/[0.07] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-300/15 dark:text-emerald-300"
@@ -412,7 +412,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               </motion.div>
 
               <motion.h1
-                initial={{ opacity: 0, y: 22 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.72, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-7 max-w-[900px] text-[clamp(3.2rem,8vw,7.4rem)] font-semibold leading-[0.9] tracking-[-0.065em]"
@@ -421,7 +421,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               </motion.h1>
 
               <motion.p
-                initial={{ opacity: 0, y: 18 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.14 }}
                 className="mt-7 max-w-2xl text-base leading-7 text-slate-600 dark:text-white/50 sm:text-lg sm:leading-8"
@@ -430,7 +430,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               </motion.p>
 
               <motion.p
-                initial={{ opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.19 }}
                 className="mt-4 max-w-2xl text-xs leading-6 text-slate-500 dark:text-white/35 sm:text-sm"
@@ -439,7 +439,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               </motion.p>
 
               <motion.div
-                initial={{ opacity: 0, y: 18 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.22 }}
                 className="mt-8 flex flex-col gap-3 sm:flex-row"
@@ -461,7 +461,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.7, delay: 0.34 }}
                 className="mt-10 grid max-w-2xl grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4"
@@ -476,7 +476,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
             </div>
 
             <motion.div
-              initial={{ opacity: 0, x: 24, scale: 0.98 }}
+              initial={false}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
               className="lg:pl-3"
