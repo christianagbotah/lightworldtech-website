@@ -306,6 +306,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const recordDetails = source('src/app/api/admin/finance/records/[type]/[id]/route.ts');
     const financeDetails = source('src/components/admin/FinanceRecordDetailsDialog.tsx');
     const accounting = source('src/components/admin/FinanceAccountingWorkspace.tsx');
+    const statementsWorkspace = source('src/components/admin/FinanceFinancialStatements.tsx');
     const collections = source('src/components/admin/FinanceCollectionsWorkspace.tsx');
     const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
     const financeMeta = source('src/app/api/admin/finance/meta/route.ts');
@@ -850,7 +851,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(accounting).toContain('FinanceFinancialStatements');
     expect(cashbookWorkspace).toContain('lg:grid-cols-[150px_150px_110px_minmax(150px,170px)_minmax(140px,auto)]');
     expect(statementsWorkspace).toContain('lg:grid-cols-[160px_160px_120px_minmax(150px,auto)]');
-    expect(taxWorkspaceLayout).toContain('lg:grid-cols-[160px_160px_110px_minmax(130px,auto)]');
+    expect(taxWorkspace).toContain('lg:grid-cols-[160px_160px_110px_minmax(130px,auto)]');
     expect(accounting).toContain('Cashbook & treasury');
     expect(accounting).toContain('FinanceCashbookWorkspace');
     expect(accounting).toContain('FinanceLedgerInitialization');
