@@ -153,6 +153,7 @@ export default function AdminClients() {
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ kind: 'document' | 'announcement'; id: string; label: string } | null>(null);
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
+  const [pendingClientAction, setPendingClientAction] = useState('');
 
   const [orgForm, setOrgForm] = useState({ name: '', primaryContactName: '', primaryEmail: '', primaryPhone: '' });
   const [userForm, setUserForm] = useState({ name: '', email: '', role: 'client_admin' });
@@ -228,12 +229,27 @@ export default function AdminClients() {
   useEffect(() => {
     if (!organizations.length || typeof window === 'undefined') return;
     const requestedOrganizationId = sessionStorage.getItem('lw-client-organization-id') || '';
-    if (!requestedOrganizationId) return;
+    const requestedAction = sessionStorage.getItem('lw-client-action') || '';
+    if (!requestedOrganizationId && !requestedAction) return;
+
     sessionStorage.removeItem('lw-client-organization-id');
-    if (organizations.some((organization) => organization.id === requestedOrganizationId)) {
+    sessionStorage.removeItem('lw-client-action');
+
+    if (requestedOrganizationId && organizations.some((organization) => organization.id === requestedOrganizationId)) {
       setSelectedId(requestedOrganizationId);
     }
+    if (requestedAction) setPendingClientAction(requestedAction);
   }, [organizations]);
+
+  useEffect(() => {
+    if (pendingClientAction !== 'new-project' || !selected) return;
+    const id = window.setTimeout(() => {
+      document.getElementById('client-new-project')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('client-new-project-name')?.focus();
+      setPendingClientAction('');
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [pendingClientAction, selected?.id]);
 
   const counts = useMemo(() => ({
     organizations: organizations.length,
@@ -890,10 +906,10 @@ export default function AdminClients() {
                   </form>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 p-4">
+                <div id="client-new-project" className="scroll-mt-28 rounded-2xl border border-border/60 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">New project</p>
                   <form onSubmit={createProject} className="mt-3 space-y-4">
-                    <Input required placeholder="Project name" value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} />
+                    <Input id="client-new-project-name" required placeholder="Project name" value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} />
                     <Textarea rows={3} placeholder="Client-visible project summary" value={projectForm.summary} onChange={(e) => setProjectForm({ ...projectForm, summary: e.target.value })} />
 
                     <div className="grid gap-3 sm:grid-cols-2">
