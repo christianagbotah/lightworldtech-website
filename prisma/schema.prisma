@@ -463,6 +463,7 @@ model ClientOrganization {
   creditNotes        FinanceCreditNote[]
   refunds            FinanceCustomerRefund[]
   collectionActivities FinanceCollectionActivity[]
+  expenses           FinanceExpense[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -535,6 +536,7 @@ model ClientProject {
   tickets        ClientSupportTicket[]
   services       ClientServiceAccount[]
   invoices       ClientInvoice[]
+  expenses       FinanceExpense[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -703,6 +705,7 @@ model ClientServiceAccount {
   notes              String             @default("")
   changes            ClientServiceChange[]
   invoices           ClientInvoice[]
+  expenses           FinanceExpense[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1101,10 +1104,16 @@ model FinanceVendorPaymentAllocation {
 }
 
 model FinanceExpense {
-  id            String         @id @default(cuid())
-  expenseNumber String         @unique
-  vendorId      String?
-  vendor        FinanceVendor? @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  id             String                @id @default(cuid())
+  expenseNumber  String                @unique
+  vendorId       String?
+  vendor         FinanceVendor?        @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   ClientOrganization?   @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  projectId      String?
+  project        ClientProject?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  serviceId      String?
+  service        ClientServiceAccount? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   category      String         @default("operating_expense")
   description   String
   currency      String         @default("GHS")
@@ -1120,6 +1129,9 @@ model FinanceExpense {
   updatedAt DateTime @updatedAt
 
   @@index([vendorId, incurredAt])
+  @@index([organizationId, incurredAt])
+  @@index([projectId, incurredAt])
+  @@index([serviceId, incurredAt])
   @@index([category, incurredAt])
   @@index([paidAt])
 }
