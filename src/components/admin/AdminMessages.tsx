@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { Trash2, Mail, MailOpen, Eye, Phone, Copy, Check, GitBranch, Download, Loader2, X, Send, Reply, RefreshCw } from 'lucide-react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { Trash2, Mail, MailOpen, Eye, Phone, Copy, Check, GitBranch, Download, Loader2, X, Send, Reply, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -139,6 +139,8 @@ export default function AdminMessages() {
   const [replyHistoryLoading, setReplyHistoryLoading] = useState(false);
   const [replySending, setReplySending] = useState(false);
   const [retryingReplyId, setRetryingReplyId] = useState('');
+  const [messageQuery, setMessageQuery] = useState('');
+  const [messageStatus, setMessageStatus] = useState<'all' | 'unread' | 'read'>('all');
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -189,6 +191,38 @@ export default function AdminMessages() {
   }, [messages]);
 
   const unreadCount = messages.filter(m => !m.read).length;
+
+  const visibleMessages = useMemo(() => {
+    const query = messageQuery.trim().toLowerCase();
+    return messages.filter((message) => {
+      if (messageStatus === 'unread' && message.read) return false;
+      if (messageStatus === 'read' && !message.read) return false;
+      if (!query) return true;
+      return [
+        message.name,
+        message.email,
+        message.phone,
+        message.subject,
+        message.message,
+      ].some((value) => value?.toLowerCase().includes(query));
+    });
+  }, [messages, messageQuery, messageStatus]);
+
+  const allVisibleSelected =
+    visibleMessages.length > 0 &&
+    visibleMessages.every((message) => selectedIds.has(message.id));
+
+  const toggleAllVisible = () => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (allVisibleSelected) {
+        visibleMessages.forEach((message) => next.delete(message.id));
+      } else {
+        visibleMessages.forEach((message) => next.add(message.id));
+      }
+      return next;
+    });
+  };
 
   const loadReplies = async (messageId: string) => {
     setReplyHistoryLoading(true);
@@ -302,8 +336,6 @@ export default function AdminMessages() {
     }
   };
 
-  const allLoadedSelected = messages.length > 0 && selectedIds.size === messages.length;
-
   const toggleSelected = (id: string) => {
     setSelectedIds((current) => {
       const next = new Set(current);
@@ -311,10 +343,6 @@ export default function AdminMessages() {
       else next.add(id);
       return next;
     });
-  };
-
-  const toggleAllLoaded = () => {
-    setSelectedIds(allLoadedSelected ? new Set() : new Set(messages.map((message) => message.id)));
   };
 
   const bulkMark = async (read: boolean) => {
@@ -407,11 +435,36 @@ export default function AdminMessages() {
         }
       />
 
+      <div className="grid min-w-0 gap-3 rounded-2xl border border-border/60 bg-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(260px,2fr)_170px_auto] lg:items-center">
+        <label className="relative sm:col-span-2 lg:col-span-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={messageQuery}
+            onChange={(event) => setMessageQuery(event.target.value)}
+            placeholder="Search sender, email, phone, subject or message"
+            className="pl-9"
+          />
+        </label>
+        <select
+          value={messageStatus}
+          onChange={(event) => setMessageStatus(event.target.value as 'all' | 'unread' | 'read')}
+          className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15"
+          aria-label="Filter messages by read status"
+        >
+          <option value="all">All messages</option>
+          <option value="unread">Unread only</option>
+          <option value="read">Read only</option>
+        </select>
+        <Button type="button" variant="outline" onClick={() => void fetchMessages()} className="lg:justify-self-end">
+          <RefreshCw className="mr-2 size-4" /> Refresh
+        </Button>
+      </div>
+
       {selectedIds.size > 0 && (
         <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/40 dark:bg-amber-950/20 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold">{selectedIds.size} selected</p>
-            <p className="text-xs text-muted-foreground">Bulk actions are limited to the currently loaded records.</p>
+            <p className="text-xs text-muted-foreground">Bulk actions apply only to the messages you selected in the current loaded inbox.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => void bulkMark(true)} disabled={bulkUpdating}>
@@ -435,9 +488,9 @@ export default function AdminMessages() {
                 <TableHead className="w-10 text-xs font-semibold">
                   <input
                     type="checkbox"
-                    checked={allLoadedSelected}
-                    onChange={toggleAllLoaded}
-                    aria-label="Select all loaded messages"
+                    checked={allVisibleSelected}
+                    onChange={toggleAllVisible}
+                    aria-label="Select all visible messages"
                     className="size-4 rounded border-border accent-amber-600"
                   />
                 </TableHead>
@@ -450,14 +503,14 @@ export default function AdminMessages() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {messages.length === 0 ? (
+              {visibleMessages.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No messages yet.
+                    {messages.length === 0 ? 'No messages yet.' : 'No messages match the current search or status filter.'}
                   </TableCell>
                 </TableRow>
               ) : (
-                messages.map((msg) => (
+                visibleMessages.map((msg) => (
                   <TableRow
                     key={msg.id}
                     onClick={() => handleView(msg)}
