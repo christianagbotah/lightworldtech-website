@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { ensureHistoricalLeads } from '@/lib/crm';
+import { deriveCrmOperatingIntelligence } from '@/lib/crm-operating-intelligence';
 
 export const runtime = 'nodejs';
 
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
       include: {
         contactMessage: true,
         notes: { orderBy: { createdAt: 'desc' }, take: 20 },
+        proposal: { select: { status: true, approvedAt: true, sentAt: true } },
       },
       orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
       take: limit,
@@ -108,7 +110,29 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: leads,
+      data: leads.map((lead) => ({
+        ...lead,
+        operatingIntelligence: deriveCrmOperatingIntelligence({
+          status: lead.status,
+          priority: lead.priority,
+          assignedTo: lead.assignedTo,
+          company: lead.company,
+          industry: lead.industry,
+          countryRegion: lead.countryRegion,
+          serviceInterest: lead.serviceInterest,
+          currency: lead.currency,
+          budgetRange: lead.budgetRange,
+          deliveryWindow: lead.deliveryWindow,
+          engagementModel: lead.engagementModel,
+          expectedRevenue: Number(lead.expectedRevenue.toString()),
+          probability: lead.probability,
+          nextAction: lead.nextAction,
+          nextFollowUp: lead.nextFollowUp,
+          lastContactedAt: lead.lastContactedAt,
+          proposal: lead.proposal,
+          now,
+        }),
+      })),
       summary: {
         total: all.length,
         open: openLeads.length,
