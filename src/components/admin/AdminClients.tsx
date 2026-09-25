@@ -529,7 +529,31 @@ export default function AdminClients() {
 
         {selected ? (
           <div className="space-y-6">
-            <Card className="border-border/60">
+            <div className="sticky top-16 z-20 -mx-1 overflow-x-auto rounded-2xl border border-border/60 bg-background/95 p-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85">
+              <nav aria-label="Client command centre sections" className="flex min-w-max items-center gap-1">
+                {[
+                  ['Overview', 'client-overview'],
+                  ['Portal users', 'client-portal-users'],
+                  ['Commercial', 'client-commercial'],
+                  ['Communications', 'client-communications'],
+                  ['Projects & documents', 'client-projects'],
+                  ['Support', 'client-support'],
+                ].map(([label, target]) => (
+                  <Button
+                    key={target}
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 whitespace-nowrap text-xs"
+                    onClick={() => document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </nav>
+            </div>
+
+            <Card id="client-overview" className="scroll-mt-28 border-border/60">
               <CardHeader>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <CardTitle>{selected.name}</CardTitle>
@@ -544,7 +568,7 @@ export default function AdminClients() {
                 </div>
               </CardHeader>
               <CardContent className="grid min-w-0 gap-5 xl:grid-cols-2">
-                <div className="rounded-2xl border border-border/60 p-4">
+                <div id="client-portal-users" className="scroll-mt-28 rounded-2xl border border-border/60 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Portal users</p>
                   <div className="mt-3 space-y-2">
                     {selected.users.map((user) => (
@@ -657,12 +681,14 @@ export default function AdminClients() {
               </CardContent>
             </Card>
 
-            <ClientCommercialAccount
-              organizationId={selected.id}
-              organizationName={selected.name}
-            />
+            <div id="client-commercial" className="scroll-mt-28">
+              <ClientCommercialAccount
+                organizationId={selected.id}
+                organizationName={selected.name}
+              />
+            </div>
 
-            <Card className="border-border/60">
+            <Card id="client-communications" className="scroll-mt-28 border-border/60">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base"><Megaphone className="size-4 text-amber-600" /> Client announcements</CardTitle>
               </CardHeader>
@@ -702,7 +728,7 @@ export default function AdminClients() {
               </CardContent>
             </Card>
 
-            <div className="grid gap-4">
+            <div id="client-projects" className="scroll-mt-28 grid gap-4">
               {selected.projects.map((project) => (
                 <Card key={project.id} className="border-border/60">
                   <CardContent className="p-5">
@@ -887,7 +913,7 @@ export default function AdminClients() {
               {!selected.projects.length && <Card className="border-dashed"><CardContent className="p-6 text-sm text-muted-foreground">No projects created for this organization yet.</CardContent></Card>}
             </div>
 
-            <Card className="border-border/60">
+            <Card id="client-support" className="scroll-mt-28 border-border/60">
               <CardHeader><CardTitle className="text-base">Support tickets</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 {selected.tickets.map((ticket) => (
