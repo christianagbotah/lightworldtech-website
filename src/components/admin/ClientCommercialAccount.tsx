@@ -482,20 +482,20 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
                 {[
-                  ['Active projects', data?.customer360.activeProjects || 0, FolderKanban],
-                  ['At-risk projects', data?.customer360.atRiskProjects || 0, AlertTriangle],
-                  ['Open tickets', data?.customer360.openTickets || 0, LifeBuoy],
-                  ['Urgent tickets', data?.customer360.urgentTickets || 0, AlertTriangle],
-                  ['Overdue invoices', data?.customer360.overdueInvoices || 0, ReceiptText],
-                  ['Due in 30 days', data?.customer360.renewalsDue30 || 0, CalendarClock],
-                  ['Expired services', data?.customer360.expiredServices || 0, History],
-                ].map(([label, value, Icon]) => (
-                  <div key={String(label)} className="rounded-xl border border-border/60 bg-background/80 p-3">
+                  { label: 'Active projects', value: data?.customer360.activeProjects || 0, Icon: FolderKanban },
+                  { label: 'At-risk projects', value: data?.customer360.atRiskProjects || 0, Icon: AlertTriangle },
+                  { label: 'Open tickets', value: data?.customer360.openTickets || 0, Icon: LifeBuoy },
+                  { label: 'Urgent tickets', value: data?.customer360.urgentTickets || 0, Icon: AlertTriangle },
+                  { label: 'Overdue invoices', value: data?.customer360.overdueInvoices || 0, Icon: ReceiptText },
+                  { label: 'Due in 30 days', value: data?.customer360.renewalsDue30 || 0, Icon: CalendarClock },
+                  { label: 'Expired services', value: data?.customer360.expiredServices || 0, Icon: History },
+                ].map(({ label, value, Icon }) => (
+                  <div key={label} className="rounded-xl border border-border/60 bg-background/80 p-3">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{String(label)}</p>
+                      <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
                       <Icon className="size-3.5 text-amber-600" />
                     </div>
-                    <p className="mt-1 text-xl font-bold">{String(value)}</p>
+                    <p className="mt-1 text-xl font-bold">{value}</p>
                   </div>
                 ))}
               </div>
