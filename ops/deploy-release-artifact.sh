@@ -48,6 +48,13 @@ install -d -o lightworld -g lightworld -m 0750 "$REL/.next/standalone/.next/cach
 chown -R lightworld:lightworld "$REL/.next/standalone/.next/cache"
 find "$REL/.next/standalone/.next/cache" -type d -exec chmod 0750 {} +
 
+# Next.js 16 may refresh prerendered App Router output in server/app at runtime.
+# The artifact itself stays immutable apart from the two framework-managed
+# cache surfaces that the application process must be able to update.
+chown -R lightworld:lightworld "$REL/.next/standalone/.next/server/app"
+find "$REL/.next/standalone/.next/server/app" -type d -exec chmod 0750 {} +
+find "$REL/.next/standalone/.next/server/app" -type f -exec chmod 0640 {} +
+
 [ -f "$REL/.next/standalone/server.js" ] || fail "Standalone server is missing from extracted runtime"
 [ -f "$REL/.next/standalone/RELEASE_SHA" ] || fail "RELEASE_SHA is missing from extracted runtime"
 [ "$(tr -d '\r\n' < "$REL/.next/standalone/RELEASE_SHA")" = "$EXPECTED_SHA" ] || fail "Artifact commit does not match requested commit"
