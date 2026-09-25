@@ -122,6 +122,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const messages = source('src/components/admin/AdminMessages.tsx');
     const crm = source('src/components/admin/AdminCRM.tsx');
     const proposals = source('src/components/admin/AdminProposals.tsx');
+    const convertClientRoute = source('src/app/api/admin/proposals/[id]/convert-client/route.ts');
 
     expect(schema).toContain('model ContactMessageReply');
     expect(schema).toContain('replies ContactMessageReply[]');
