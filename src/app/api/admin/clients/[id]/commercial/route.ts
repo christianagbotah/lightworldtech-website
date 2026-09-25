@@ -104,7 +104,7 @@ export async function GET(
         updatedAt: true,
       },
     }),
-    db.clientTicket.findMany({
+    db.clientSupportTicket.findMany({
       where: { organizationId: id },
       orderBy: [{ lastActivityAt: 'desc' }, { updatedAt: 'desc' }],
       take: 100,
