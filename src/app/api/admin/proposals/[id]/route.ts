@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { generateProposalDraft } from '@/lib/proposal-draft';
+import { deriveProposalReadiness } from '@/lib/proposal-readiness';
 
 const statusSchema = z.enum(['draft', 'review', 'ready', 'sent', 'accepted', 'declined']);
 
@@ -29,6 +30,52 @@ function parseTags(value: string): string[] {
   }
 }
 
+function readinessFor(proposal: {
+  status: string;
+  title: string;
+  executiveSummary: string;
+  solution: string;
+  scope: string;
+  deliverables: string;
+  assumptions: string;
+  timeline: string;
+  commercialNotes: string;
+  nextSteps: string;
+  approvedAt: Date | null;
+  sentAt: Date | null;
+  lead: {
+    assignedTo: string;
+    company: string;
+    serviceInterest: string;
+    budgetRange: string;
+    expectedRevenue: { toString(): string };
+    deliveryWindow: string;
+  };
+}) {
+  return deriveProposalReadiness({
+    status: proposal.status,
+    title: proposal.title,
+    executiveSummary: proposal.executiveSummary,
+    solution: proposal.solution,
+    scope: proposal.scope,
+    deliverables: proposal.deliverables,
+    assumptions: proposal.assumptions,
+    timeline: proposal.timeline,
+    commercialNotes: proposal.commercialNotes,
+    nextSteps: proposal.nextSteps,
+    approvedAt: proposal.approvedAt,
+    sentAt: proposal.sentAt,
+    lead: {
+      assignedTo: proposal.lead.assignedTo,
+      company: proposal.lead.company,
+      serviceInterest: proposal.lead.serviceInterest,
+      budgetRange: proposal.lead.budgetRange,
+      expectedRevenue: Number(proposal.lead.expectedRevenue.toString()),
+      deliveryWindow: proposal.lead.deliveryWindow,
+    },
+  });
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -46,7 +93,7 @@ export async function GET(
   });
 
   if (!proposal) return NextResponse.json({ error: 'Proposal not found' }, { status: 404 });
-  return NextResponse.json({ success: true, data: proposal });
+  return NextResponse.json({ success: true, data: { ...proposal, readiness: readinessFor(proposal) } });
 }
 
 export async function PUT(
@@ -76,6 +123,22 @@ export async function PUT(
     if (!existing) return NextResponse.json({ error: 'Proposal not found' }, { status: 404 });
 
     const data: Record<string, unknown> = {};
+    const contentKeys = ['title', 'executiveSummary', 'solution', 'scope', 'deliverables', 'assumptions', 'timeline', 'commercialNotes', 'nextSteps'] as const;
+    const hasContentChanges = contentKeys.some((key) => parsed.data[key] !== undefined) || Boolean(parsed.data.regenerateDraft);
+
+    if (hasContentChanges && ['sent', 'accepted'].includes(existing.status)) {
+      return NextResponse.json(
+        { success: false, error: 'Sent or accepted proposals cannot be edited in place. Move the commercial process into a reviewed revision workflow.' },
+        { status: 409 },
+      );
+    }
+
+    if (hasContentChanges && existing.status === 'ready' && parsed.data.status === undefined) {
+      data.status = 'review';
+      data.approvedBy = '';
+      data.approvedAt = null;
+      data.sentAt = null;
+    }
 
     if (parsed.data.regenerateDraft) {
       const draft = generateProposalDraft({
@@ -122,6 +185,41 @@ export async function PUT(
     if (parsed.data.nextSteps !== undefined) data.nextSteps = parsed.data.nextSteps;
 
     if (parsed.data.status !== undefined) {
+      if (parsed.data.status === 'sent' && !existing.approvedAt) {
+        return NextResponse.json(
+          { success: false, error: 'Proposal must be human-approved as Ready before it can be marked Sent.' },
+          { status: 409 },
+        );
+      }
+      if (parsed.data.status === 'accepted' && !existing.sentAt) {
+        return NextResponse.json(
+          { success: false, error: 'Proposal must be marked Sent before it can be marked Accepted.' },
+          { status: 409 },
+        );
+      }
+
+      if (parsed.data.status === 'ready') {
+        const prospective = {
+          ...existing,
+          title: parsed.data.title ?? existing.title,
+          executiveSummary: parsed.data.executiveSummary ?? existing.executiveSummary,
+          solution: parsed.data.solution ?? existing.solution,
+          scope: parsed.data.scope ?? existing.scope,
+          deliverables: parsed.data.deliverables !== undefined ? JSON.stringify(parsed.data.deliverables) : existing.deliverables,
+          assumptions: parsed.data.assumptions !== undefined ? JSON.stringify(parsed.data.assumptions) : existing.assumptions,
+          timeline: parsed.data.timeline ?? existing.timeline,
+          commercialNotes: parsed.data.commercialNotes ?? existing.commercialNotes,
+          nextSteps: parsed.data.nextSteps ?? existing.nextSteps,
+        };
+        const readiness = readinessFor(prospective);
+        if (!readiness.readyForApproval) {
+          return NextResponse.json(
+            { success: false, error: 'Proposal is not ready for approval', blockers: readiness.blockers, warnings: readiness.warnings },
+            { status: 409 },
+          );
+        }
+      }
+
       data.status = parsed.data.status;
 
       if (parsed.data.status === 'ready') {
@@ -147,7 +245,7 @@ export async function PUT(
     },
     });
 
-    return NextResponse.json({ success: true, data: proposal });
+    return NextResponse.json({ success: true, data: { ...proposal, readiness: readinessFor(proposal) } });
   } catch (error) {
     console.error('Error updating proposal:', error);
     return NextResponse.json({ success: false, error: 'Failed to update proposal' }, { status: 500 });
