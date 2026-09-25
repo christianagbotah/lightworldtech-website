@@ -466,6 +466,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain('Customer payment history');
     expect(clientCommercial).toContain('Service commercial history');
     expect(clientCommercial).toContain('Customer 360 commercial pulse');
+    expect(clientCommercial).toContain('Executive intelligence brief');
+    expect(clientCommercial).toContain('Management priorities');
+    expect(clientCommercial).toContain('Evidence:');
+    expect(clientCommercial).toContain('Decision support only');
     expect(clientCommercial).toContain('Customer quick actions');
     expect(clientCommercial).toContain('Issue invoice');
     expect(clientCommercial).toContain('Add service');
@@ -503,6 +507,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercialApi).toContain('expiredServices');
     expect(clientCommercialApi).toContain('nextRenewal');
     expect(clientCommercialApi).toContain('accountHealth');
+    expect(clientCommercialApi).toContain('executiveBrief');
+    expect(clientCommercialApi).toContain('executivePriorities');
+    expect(clientCommercialApi).toContain('negativeMarginRows');
+    expect(clientCommercialApi).toContain('budgetPressureRows');
+    expect(clientCommercialApi).toContain('overBudgetRows');
+    expect(clientCommercialApi).toContain('Decision support only');
     expect(clientCommercialApi).toContain('riskSignals');
     expect(clientCommercialApi).toContain('nextActions');
     expect(clientCommercialApi).toContain('recentActivity');
