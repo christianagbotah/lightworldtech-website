@@ -59,7 +59,18 @@ export async function GET(request: NextRequest) {
     });
 
     const all = await db.lead.findMany({
-      select: { status: true, priority: true, nextFollowUp: true, international: true },
+      select: {
+        status: true,
+        priority: true,
+        nextFollowUp: true,
+        international: true,
+        countryRegion: true,
+        industry: true,
+        currency: true,
+        expectedRevenue: true,
+        probability: true,
+        nextAction: true,
+      },
     });
 
     const stages = ['new', 'qualified', 'discovery', 'proposal', 'negotiation', 'won', 'lost'];
@@ -67,19 +78,50 @@ export async function GET(request: NextRequest) {
       stages.map((stage) => [stage, all.filter((lead) => lead.status === stage).length]),
     );
     const now = new Date();
-    const overdueFollowUps = all.filter(
-      (lead) => lead.nextFollowUp && lead.nextFollowUp < now && !['won', 'lost'].includes(lead.status),
+    const openLeads = all.filter((lead) => !['won', 'lost'].includes(lead.status));
+    const overdueFollowUps = openLeads.filter(
+      (lead) => lead.nextFollowUp && lead.nextFollowUp < now,
     ).length;
+
+    const pipeline = new Map<string, { currency: string; opportunities: number; expectedRevenue: number; weightedRevenue: number }>();
+    for (const lead of openLeads) {
+      const amount = Number(lead.expectedRevenue.toString());
+      if (!Number.isFinite(amount) || amount <= 0) continue;
+      const currency = lead.currency.trim().toUpperCase() || 'UNSPECIFIED';
+      const current = pipeline.get(currency) || { currency, opportunities: 0, expectedRevenue: 0, weightedRevenue: 0 };
+      current.opportunities += 1;
+      current.expectedRevenue += amount;
+      current.weightedRevenue += amount * Math.max(0, Math.min(100, lead.probability)) / 100;
+      pipeline.set(currency, current);
+    }
+
+    const countBy = (values: string[]) => {
+      const counts = new Map<string, number>();
+      for (const raw of values) {
+        const value = raw.trim() || 'Unspecified';
+        counts.set(value, (counts.get(value) || 0) + 1);
+      }
+      return Array.from(counts, ([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+        .slice(0, 8);
+    };
 
     return NextResponse.json({
       success: true,
       data: leads,
       summary: {
         total: all.length,
-        open: all.filter((lead) => !['won', 'lost'].includes(lead.status)).length,
-        highPriority: all.filter((lead) => lead.priority === 'high').length,
+        open: openLeads.length,
+        highPriority: openLeads.filter((lead) => lead.priority === 'high').length,
         international: all.filter((lead) => lead.international).length,
+        internationalOpen: openLeads.filter((lead) => lead.international).length,
+        domesticOpen: openLeads.filter((lead) => !lead.international).length,
+        actionGaps: openLeads.filter((lead) => !lead.nextAction.trim()).length,
+        valuedOpportunities: openLeads.filter((lead) => Number(lead.expectedRevenue.toString()) > 0).length,
         overdueFollowUps,
+        pipelineByCurrency: Array.from(pipeline.values()).sort((a, b) => b.expectedRevenue - a.expectedRevenue),
+        countries: countBy(openLeads.map((lead) => lead.countryRegion)),
+        industries: countBy(openLeads.map((lead) => lead.industry)),
         byStatus,
       },
     });

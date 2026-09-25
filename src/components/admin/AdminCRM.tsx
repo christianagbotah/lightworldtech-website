@@ -108,7 +108,19 @@ type LeadSummary = {
   open: number;
   highPriority: number;
   international: number;
+  internationalOpen: number;
+  domesticOpen: number;
+  actionGaps: number;
+  valuedOpportunities: number;
   overdueFollowUps: number;
+  pipelineByCurrency: Array<{
+    currency: string;
+    opportunities: number;
+    expectedRevenue: number;
+    weightedRevenue: number;
+  }>;
+  countries: Array<{ name: string; count: number }>;
+  industries: Array<{ name: string; count: number }>;
   byStatus: Record<Stage, number>;
 };
 
@@ -151,6 +163,13 @@ function isOverdue(lead: Lead): boolean {
       new Date(lead.nextFollowUp).getTime() < Date.now() &&
       !['won', 'lost'].includes(lead.status),
   );
+}
+
+function formatPipelineAmount(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function priorityClass(priority: Priority): string {
@@ -514,6 +533,95 @@ export default function AdminCRM() {
             </Card>
           </button>
         ))}
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.15fr_.85fr]">
+        <Card className="border-border/60">
+          <CardContent className="p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-300">Opportunity value</p>
+                <h2 className="mt-1 text-lg font-semibold">Weighted pipeline by currency</h2>
+                <p className="mt-1 text-xs text-muted-foreground">Expected values stay separated by currency. Weighted value = expected revenue × probability.</p>
+              </div>
+              <Badge variant="secondary">{summary?.valuedOpportunities || 0} valued</Badge>
+            </div>
+            <div className="mt-4 space-y-2">
+              {(summary?.pipelineByCurrency || []).length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+                  Add expected revenue, currency and probability to open opportunities to build the forecast.
+                </div>
+              ) : (
+                summary?.pipelineByCurrency.map((row) => (
+                  <div key={row.currency} className="grid gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
+                    <div>
+                      <p className="text-sm font-semibold">{row.currency === 'UNSPECIFIED' ? 'Currency not set' : row.currency}</p>
+                      <p className="text-[11px] text-muted-foreground">{row.opportunities} open valued opportunit{row.opportunities === 1 ? 'y' : 'ies'}</p>
+                    </div>
+                    <div className="sm:text-right">
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Expected</p>
+                      <p className="text-sm font-semibold">{formatPipelineAmount(row.expectedRevenue)} {row.currency === 'UNSPECIFIED' ? '' : row.currency}</p>
+                    </div>
+                    <div className="sm:text-right">
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Weighted</p>
+                      <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{formatPipelineAmount(row.weightedRevenue)} {row.currency === 'UNSPECIFIED' ? '' : row.currency}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-700 dark:text-emerald-300">Market coverage</p>
+                <h2 className="mt-1 text-lg font-semibold">Open opportunity intelligence</h2>
+              </div>
+              <Globe2 className="size-5 text-emerald-600" />
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <button type="button" onClick={() => setGlobalOnly(true)} className="rounded-xl border border-border/60 bg-muted/20 p-3 text-left transition hover:border-amber-300">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Global</p>
+                <p className="mt-1 text-xl font-bold">{summary?.internationalOpen || 0}</p>
+              </button>
+              <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Domestic</p>
+                <p className="mt-1 text-xl font-bold">{summary?.domesticOpen || 0}</p>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Action gaps</p>
+                <p className={'mt-1 text-xl font-bold ' + ((summary?.actionGaps || 0) > 0 ? 'text-rose-600' : 'text-emerald-600')}>{summary?.actionGaps || 0}</p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Top countries / regions</p>
+                <div className="mt-2 space-y-1.5">
+                  {(summary?.countries || []).slice(0, 5).map((item) => (
+                    <div key={item.name} className="flex items-center justify-between gap-3 text-xs">
+                      <span className="truncate">{item.name}</span><span className="font-semibold">{item.count}</span>
+                    </div>
+                  ))}
+                  {(summary?.countries || []).length === 0 && <p className="text-xs text-muted-foreground">No market data yet.</p>}
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Top industries</p>
+                <div className="mt-2 space-y-1.5">
+                  {(summary?.industries || []).slice(0, 5).map((item) => (
+                    <button key={item.name} type="button" onClick={() => item.name !== 'Unspecified' && setIndustryFilter(item.name)} className="flex w-full items-center justify-between gap-3 text-left text-xs hover:text-amber-700 dark:hover:text-amber-300">
+                      <span className="truncate">{item.name}</span><span className="font-semibold">{item.count}</span>
+                    </button>
+                  ))}
+                  {(summary?.industries || []).length === 0 && <p className="text-xs text-muted-foreground">No industry data yet.</p>}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-card p-4">
