@@ -40,6 +40,14 @@ REL="$RELEASE_ROOT/lightworldtech-${EXPECTED_SHA:0:12}-$STAMP"
 install -d -m 0755 "$REL"
 tar -xzf "$ARCHIVE" -C "$REL"
 
+# GitHub artifacts preserve numeric ownership from the build runner. Keep the
+# release immutable/root-owned, but explicitly hand the Next.js runtime cache to
+# the dedicated application service account so fetch/prerender cache writes do
+# not fail after promotion.
+install -d -o lightworld -g lightworld -m 0750 "$REL/.next/standalone/.next/cache"
+chown -R lightworld:lightworld "$REL/.next/standalone/.next/cache"
+find "$REL/.next/standalone/.next/cache" -type d -exec chmod 0750 {} +
+
 [ -f "$REL/.next/standalone/server.js" ] || fail "Standalone server is missing from extracted runtime"
 [ -f "$REL/.next/standalone/RELEASE_SHA" ] || fail "RELEASE_SHA is missing from extracted runtime"
 [ "$(tr -d '\r\n' < "$REL/.next/standalone/RELEASE_SHA")" = "$EXPECTED_SHA" ] || fail "Artifact commit does not match requested commit"
