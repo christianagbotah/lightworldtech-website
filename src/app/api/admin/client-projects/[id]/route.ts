@@ -18,6 +18,8 @@ const schema = z.object({
   renewalCycle: z.enum(['monthly', 'quarterly', 'semiannual', 'annual', 'one_time', 'custom']).optional(),
   renewalCurrency: z.string().trim().max(3).optional(),
   renewalAmount: z.coerce.number().min(0).max(999999999999).optional(),
+  budgetCurrency: z.string().trim().max(3).optional(),
+  budgetAmount: z.coerce.number().min(0).max(999999999999).optional(),
   autoRenew: z.boolean().optional(),
   renewalNoticeDays: z.coerce.number().int().min(0).max(365).optional(),
   renewalNotes: z.string().trim().max(8000).optional(),
@@ -38,6 +40,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (parsed.data.expiryDate !== undefined) data.expiryDate = parsed.data.expiryDate ? new Date(parsed.data.expiryDate) : null;
   if (parsed.data.nextRenewalDate !== undefined) data.nextRenewalDate = parsed.data.nextRenewalDate ? new Date(parsed.data.nextRenewalDate) : null;
   if (parsed.data.renewalCurrency !== undefined) data.renewalCurrency = normalizeCurrency(parsed.data.renewalCurrency);
+  if (parsed.data.budgetCurrency !== undefined) data.budgetCurrency = normalizeCurrency(parsed.data.budgetCurrency);
   const project = await db.clientProject.update({ where: { id }, data });
   return NextResponse.json({ success: true, data: project });
 }
