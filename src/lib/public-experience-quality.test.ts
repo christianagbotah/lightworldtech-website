@@ -18,6 +18,21 @@ describe('public experience quality', () => {
     expect(css).toContain('animation: none !important');
   });
 
+  test('public routes show a lightweight loader and above-fold heroes do not wait for hydration to become visible', () => {
+    const loading = source('src/app/loading.tsx');
+    const globalPage = source('src/components/pages/GlobalPage.tsx');
+    const home = source('src/components/pages/HomePage.tsx');
+    const pageHero = source('src/components/ui/page-hero.tsx');
+
+    expect(loading).toContain('Preparing your experience');
+    expect(loading).toContain('role="status"');
+    expect(loading).toContain('Lightworld Technologies');
+    expect(globalPage).toContain('initial={false} animate={{ opacity: 1, y: 0 }}');
+    expect(home).toContain('initial={false}');
+    expect(pageHero).toContain('initial={false}');
+    expect(globalPage).not.toContain('initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}');
+  });
+
   test('service cards are semantic links rather than mouse-only click targets', () => {
     const services = source('src/components/sections/ServicesSection.tsx');
 
