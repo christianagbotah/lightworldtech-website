@@ -131,6 +131,8 @@ type CommercialData = {
     overdueInvoices: number;
     renewalsDue30: number;
     expiredServices: number;
+    projectRenewalsDue30: number;
+    overdueProjectRenewals: number;
     accountHealth: 'healthy' | 'watch' | 'action_required';
     executiveBrief: {
       posture: 'intervention_required' | 'attention' | 'stable';
@@ -279,6 +281,16 @@ type CommercialData = {
       currency: string;
       amount: string;
     } | null;
+    nextProjectRenewal: {
+      projectId: string;
+      projectName: string;
+      date: string;
+      currency: string;
+      amount: string;
+      renewalNoticeDays: number;
+      autoRenew: boolean;
+      overdue: boolean;
+    } | null;
     projects: Array<{
       id: string;
       name: string;
@@ -291,6 +303,8 @@ type CommercialData = {
       nextRenewalDate: string | null;
       renewalCurrency: string;
       renewalAmount: string;
+      renewalNoticeDays: number;
+      autoRenew: boolean;
       budgetCurrency: string;
       budgetAmount: string;
       updatedAt: string;
@@ -368,7 +382,8 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
   const [forbidden, setForbidden] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statementDownloading, setStatementDownloading] = useState(false);
-  const [pendingReminder, setPendingReminder] = useState<'payment_sms' | 'renewal_sms' | null>(null);
+  const [pendingReminder, setPendingReminder] = useState<'payment_sms' | 'renewal_sms' | 'project_renewal_sms' | null>(null);
+  const [pendingProjectReminderId, setPendingProjectReminderId] = useState('');
   const [reminderBusy, setReminderBusy] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
@@ -521,7 +536,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
         const payload = await response.json().catch(() => null);
         if (!response.ok) throw new Error(payload?.error || 'Unable to send payment reminder');
         toast.success('Payment reminder SMS sent');
-      } else {
+      } else if (pendingReminder === 'renewal_sms') {
         const renewal = data.customer360.nextRenewal;
         if (!renewal) throw new Error('No upcoming service renewal is available');
         const response = await fetch(
@@ -529,10 +544,21 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
           { method: 'POST' },
         );
         const payload = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(payload?.error || 'Unable to send renewal reminder');
-        toast.success('Renewal reminder SMS sent');
+        if (!response.ok) throw new Error(payload?.error || 'Unable to send service renewal reminder');
+        toast.success('Service renewal reminder SMS sent');
+      } else {
+        const projectId = pendingProjectReminderId || data.customer360.nextProjectRenewal?.projectId || '';
+        if (!projectId) throw new Error('No project renewal is available');
+        const response = await fetch(
+          '/api/admin/client-projects/' + encodeURIComponent(projectId) + '/renewal-reminder',
+          { method: 'POST' },
+        );
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(payload?.error || 'Unable to send project renewal reminder');
+        toast.success('Project renewal reminder SMS sent');
       }
       setPendingReminder(null);
+      setPendingProjectReminderId('');
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to send customer reminder');
@@ -680,7 +706,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                 </div>
                 <Badge variant="outline">Operational shortcuts</Badge>
               </div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6">
                 <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => openFinanceSection('customers', 'invoice')}>
                   <ReceiptText className="mr-2 size-4 shrink-0 text-amber-600" />
                   <span><span className="block text-xs font-semibold">Issue invoice</span><span className="block text-[10px] font-normal text-muted-foreground">Customer preselected</span></span>
@@ -720,6 +746,14 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                 <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => setPendingReminder('renewal_sms')} disabled={!data?.customer360.nextRenewal || !data?.organization.primaryPhone || reminderBusy}>
                   <CalendarClock className="mr-2 size-4 shrink-0 text-violet-600" />
                   <span><span className="block text-xs font-semibold">Renewal reminder</span><span className="block text-[10px] font-normal text-muted-foreground">{data?.customer360.nextRenewal ? data.customer360.nextRenewal.serviceName : 'No upcoming renewal'}</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => {
+                  const target = data?.customer360.nextProjectRenewal;
+                  if (target) setPendingProjectReminderId(target.projectId);
+                  setPendingReminder('project_renewal_sms');
+                }} disabled={!data?.customer360.nextProjectRenewal || !data?.organization.primaryPhone || reminderBusy}>
+                  <FolderKanban className="mr-2 size-4 shrink-0 text-indigo-600" />
+                  <span><span className="block text-xs font-semibold">Project renewal reminder</span><span className="block text-[10px] font-normal text-muted-foreground">{data?.customer360.nextProjectRenewal ? data.customer360.nextProjectRenewal.projectName : 'No project renewal due'}</span></span>
                 </Button>
               </div>
             </div>
@@ -1218,7 +1252,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   </div>
                   <div className="max-w-full overflow-x-auto">
                     <Table exportFileName="lightworld-client-project-commercial-pulse" className="min-w-[720px]">
-                      <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Health</TableHead><TableHead>Progress</TableHead><TableHead>Target</TableHead><TableHead>Renewal</TableHead></TableRow></TableHeader>
+                      <TableHeader><TableRow><TableHead>Project</TableHead><TableHead>Health</TableHead><TableHead>Progress</TableHead><TableHead>Target</TableHead><TableHead>Renewal</TableHead><TableHead data-export-ignore className="text-right">Action</TableHead></TableRow></TableHeader>
                       <TableBody>
                         {(data?.customer360.projects || []).map((project) => (
                           <TableRow key={project.id}>
@@ -1234,9 +1268,23 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                               {Number(project.renewalAmount) > 0 && <p className="text-[10px] text-muted-foreground">{money(project.renewalAmount, project.renewalCurrency)} renewal</p>}
                               {Number(project.budgetAmount) > 0 && <p className="text-[10px] text-muted-foreground">{money(project.budgetAmount, project.budgetCurrency)} budget</p>}
                             </TableCell>
+                            <TableCell data-export-ignore className="text-right">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={!project.nextRenewalDate || Number(project.renewalAmount) <= 0 || !data?.organization.primaryPhone || reminderBusy}
+                                onClick={() => {
+                                  setPendingProjectReminderId(project.id);
+                                  setPendingReminder('project_renewal_sms');
+                                }}
+                              >
+                                Remind
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
-                        {!data?.customer360.projects.length && <TableRow><TableCell colSpan={5} className="py-7 text-center text-sm text-muted-foreground">No delivery projects recorded.</TableCell></TableRow>}
+                        {!data?.customer360.projects.length && <TableRow><TableCell colSpan={6} className="py-7 text-center text-sm text-muted-foreground">No delivery projects recorded.</TableCell></TableRow>}
                       </TableBody>
                     </Table>
                   </div>
@@ -1449,15 +1497,39 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
       <ConfirmActionDialog
         open={Boolean(pendingReminder)}
         onOpenChange={(open) => {
-          if (!open && !reminderBusy) setPendingReminder(null);
+          if (!open && !reminderBusy) {
+            setPendingReminder(null);
+            setPendingProjectReminderId('');
+          }
         }}
-        title={pendingReminder === 'payment_sms' ? 'Send payment reminder SMS?' : 'Send renewal reminder SMS?'}
+        title={
+          pendingReminder === 'payment_sms'
+            ? 'Send payment reminder SMS?'
+            : pendingReminder === 'project_renewal_sms'
+              ? 'Send project renewal reminder SMS?'
+              : 'Send service renewal reminder SMS?'
+        }
         description={
           pendingReminder === 'payment_sms' && data?.customer360.collectionTarget
             ? 'Send the approved payment-due template to ' + (data.organization.primaryPhone || 'the customer') + ' for ' + data.customer360.collectionTarget.invoiceNumber + ' (' + money(data.customer360.collectionTarget.balance, data.customer360.collectionTarget.currency) + ' outstanding). Duplicate reminders are blocked for 12 hours.'
             : pendingReminder === 'renewal_sms' && data?.customer360.nextRenewal
-              ? 'Send the approved renewal template to ' + (data.organization.primaryPhone || 'the customer') + ' for ' + data.customer360.nextRenewal.serviceName + '. Duplicate reminders are blocked for 12 hours.'
-              : 'Send this customer reminder?'
+              ? 'Send the approved service renewal template to ' + (data.organization.primaryPhone || 'the customer') + ' for ' + data.customer360.nextRenewal.serviceName + '. Duplicate reminders are blocked for 12 hours.'
+              : pendingReminder === 'project_renewal_sms'
+                ? (() => {
+                    const project = data?.customer360.projects.find((item) => item.id === pendingProjectReminderId)
+                      || (data?.customer360.nextProjectRenewal
+                        ? {
+                            name: data.customer360.nextProjectRenewal.projectName,
+                            renewalAmount: data.customer360.nextProjectRenewal.amount,
+                            renewalCurrency: data.customer360.nextProjectRenewal.currency,
+                            nextRenewalDate: data.customer360.nextProjectRenewal.date,
+                          }
+                        : null);
+                    return project
+                      ? 'Send the approved project renewal template to ' + (data?.organization.primaryPhone || 'the customer') + ' for ' + project.name + ' (' + money(project.renewalAmount, project.renewalCurrency) + ', renewal ' + date(project.nextRenewalDate) + '). Duplicate reminders are blocked for 12 hours.'
+                      : 'Send this project renewal reminder?';
+                  })()
+                : 'Send this customer reminder?'
         }
         confirmLabel={reminderBusy ? 'Sending…' : 'Send SMS'}
         tone="default"
