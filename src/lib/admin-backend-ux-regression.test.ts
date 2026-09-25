@@ -419,6 +419,14 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('invoiceVatPreview');
     expect(finance).toContain('billVatPreview');
     expect(clients).toContain('ClientCommercialAccount');
+    expect(clients).toContain('Client command centre sections');
+    expect(clients).toContain('client-overview');
+    expect(clients).toContain('client-portal-users');
+    expect(clients).toContain('client-commercial');
+    expect(clients).toContain('client-communications');
+    expect(clients).toContain('client-projects');
+    expect(clients).toContain('client-support');
+    expect(clients).toContain('scrollIntoView');
     expect(clients).toContain('Commercial lifecycle');
     expect(clients).toContain('Expiry date');
     expect(clients).toContain('Next renewal');
