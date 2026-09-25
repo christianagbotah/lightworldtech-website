@@ -59,8 +59,8 @@ export default async function CaseStudies() {
       <EntityWebPageJsonLd config={seo} path="/case-studies" name="Approved Lightworld Technologies case studies" description={description} pageType="CollectionPage" />
       <BreadcrumbJsonLd config={seo} items={[{ name: 'Home', path: '/' }, { name: 'Case studies', path: '/case-studies' }]} />
       <main className="min-h-screen bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
-        <section className="lw-hero-grid border-b border-slate-200/70 py-16 dark:border-white/[0.06] sm:py-20 lg:py-24">
-          <div className="container-main">
+        <section className="lw-hero-grid border-b border-slate-200/70 dark:border-white/[0.06]">
+          <div className="container-main py-16 sm:py-20 lg:py-24">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Approved client evidence</p>
             <h1 className="mt-4 max-w-5xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">Case studies with a higher bar for publication.</h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-600 dark:text-white/45 sm:text-lg">
