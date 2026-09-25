@@ -349,13 +349,24 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
 
   const currencyCodes = Object.keys(data?.byCurrency || {});
 
-  const openFinanceSection = (section: 'renewals' | 'collections') => {
+  const openFinanceSection = (
+    section: 'customers' | 'renewals' | 'collections',
+    action?: 'invoice' | 'receipt' | 'service',
+  ) => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('lw-finance-section', section);
       sessionStorage.setItem('lw-finance-organization-id', organizationId);
       sessionStorage.setItem('lw-finance-customer-name', organizationName);
+      if (action) sessionStorage.setItem('lw-finance-action', action);
     }
     navigate('admin-finance');
+  };
+
+  const openProjectDates = () => {
+    document.getElementById('client-projects')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
   };
 
   const openCustomerMessage = (messageId: string, mode: 'view' | 'reply') => {
@@ -509,6 +520,44 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
           </div>
         ) : (
           <>
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Customer quick actions</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Start the most common finance, renewal and delivery actions for {organizationName} without leaving the customer context.
+                  </p>
+                </div>
+                <Badge variant="outline">Operational shortcuts</Badge>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => openFinanceSection('customers', 'invoice')}>
+                  <ReceiptText className="mr-2 size-4 shrink-0 text-amber-600" />
+                  <span><span className="block text-xs font-semibold">Issue invoice</span><span className="block text-[10px] font-normal text-muted-foreground">Customer preselected</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => openPayment()} disabled={loading}>
+                  <CreditCard className="mr-2 size-4 shrink-0 text-emerald-600" />
+                  <span><span className="block text-xs font-semibold">Record payment</span><span className="block text-[10px] font-normal text-muted-foreground">Post receipt to ledger</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => openFinanceSection('customers', 'service')}>
+                  <WalletCards className="mr-2 size-4 shrink-0 text-sky-600" />
+                  <span><span className="block text-xs font-semibold">Add service</span><span className="block text-[10px] font-normal text-muted-foreground">Subscription or managed service</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => openFinanceSection('renewals')}>
+                  <CalendarClock className="mr-2 size-4 shrink-0 text-violet-600" />
+                  <span><span className="block text-xs font-semibold">Manage renewals</span><span className="block text-[10px] font-normal text-muted-foreground">Expiry, billing and reminders</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={() => openFinanceSection('collections')}>
+                  <ArrowUpRight className="mr-2 size-4 shrink-0 text-rose-600" />
+                  <span><span className="block text-xs font-semibold">Collections</span><span className="block text-[10px] font-normal text-muted-foreground">Follow-ups and promises to pay</span></span>
+                </Button>
+                <Button type="button" variant="outline" className="h-auto justify-start py-3 text-left" onClick={openProjectDates}>
+                  <FolderKanban className="mr-2 size-4 shrink-0 text-indigo-600" />
+                  <span><span className="block text-xs font-semibold">Project dates</span><span className="block text-[10px] font-normal text-muted-foreground">Expiry and next renewal</span></span>
+                </Button>
+              </div>
+            </div>
+
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {Object.entries(data?.byCurrency || {}).flatMap(([currency, totals]) => [
                 <div key={currency + '-invoiced'} className="rounded-xl border border-border/60 bg-muted/20 p-3">
