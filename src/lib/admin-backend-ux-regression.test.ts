@@ -1038,6 +1038,17 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(portal).toContain('Payment / receipt history');
   });
 
+  test('uses desktop workspace splits for SMS and campaigns from lg', () => {
+    const sms = source('src/components/admin/AdminSms.tsx');
+    const campaigns = source('src/components/admin/AdminCampaigns.tsx');
+
+    expect(sms).toContain('lg:grid-cols-4');
+    expect(sms).toContain('lg:grid-cols-[minmax(0,1fr)_minmax(280px,.8fr)]');
+    expect(sms).toContain('lg:grid-cols-[minmax(0,1fr)_320px]');
+    expect(campaigns).toContain('lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]');
+    expect(campaigns).toContain('xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)]');
+  });
+
   test('keeps Support Desk filters responsive and aligned on desktop', () => {
     const support = source('src/components/admin/AdminSupportDesk.tsx');
 
