@@ -836,6 +836,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(accounting).toContain('Posted journals');
     expect(accounting).toContain('Trial balance');
     expect(accounting).toContain('General ledger');
+    expect(accounting).toContain('lg:grid-cols-[minmax(280px,2fr)_minmax(150px,1fr)_minmax(150px,1fr)_120px_minmax(140px,auto)]');
+    expect(accounting).toContain('lg:grid-cols-[160px_120px_minmax(130px,auto)]');
+    expect(accounting).toContain('lg:items-end');
     expect(accounting).toContain('Accounting periods');
     expect(accounting).toContain('Post balanced journal');
     expect(accounting).toContain('Control difference');
@@ -845,6 +848,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(accounting).toContain('Post reversal');
     expect(accounting).toContain('Financial statements');
     expect(accounting).toContain('FinanceFinancialStatements');
+    expect(cashbookWorkspace).toContain('lg:grid-cols-[150px_150px_110px_minmax(150px,170px)_minmax(140px,auto)]');
+    expect(statementsWorkspace).toContain('lg:grid-cols-[160px_160px_120px_minmax(150px,auto)]');
+    expect(taxWorkspaceLayout).toContain('lg:grid-cols-[160px_160px_110px_minmax(130px,auto)]');
     expect(accounting).toContain('Cashbook & treasury');
     expect(accounting).toContain('FinanceCashbookWorkspace');
     expect(accounting).toContain('FinanceLedgerInitialization');
