@@ -391,7 +391,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
 
   return (
     <div className="overflow-hidden bg-[#f7f9f8] text-slate-950 dark:bg-[#050b10] dark:text-white">
-      <section className="lw-hero-grid relative min-h-[92svh] border-b border-slate-200/70 dark:border-white/[0.06] overflow-hidden">
+      <section className="lw-hero-grid lw-home-hero relative min-h-[92svh] border-b border-slate-200/70 dark:border-white/[0.06] overflow-hidden">
         <CmsHeroMedia settings={settings} settingKey="home_hero_image" />
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-[8%] top-24 size-72 rounded-full bg-emerald-300/20 blur-[120px] dark:bg-emerald-500/10" />
