@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   MailCheck,
@@ -10,6 +10,7 @@ import {
   Send,
   Server,
   Users,
+  Search,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -113,6 +114,10 @@ export default function AdminNewsletter() {
   const [testEmail, setTestEmail] = useState('');
   const [sendingTest, setSendingTest] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [subscriberQuery, setSubscriberQuery] = useState('');
+  const [subscriberStatus, setSubscriberStatus] = useState<'all' | 'active' | 'paused'>('all');
+  const [deliveryQuery, setDeliveryQuery] = useState('');
+  const [deliveryStatus, setDeliveryStatus] = useState<'all' | 'sent' | 'failed'>('all');
 
   const load = useCallback(async (quiet = false) => {
     if (quiet) setRefreshing(true);
@@ -220,6 +225,30 @@ export default function AdminNewsletter() {
     failedDeliveries: 0,
   };
   const transport = data?.transport;
+
+  const visibleSubscribers = useMemo(() => {
+    const query = subscriberQuery.trim().toLowerCase();
+    return (data?.subscribers || []).filter((subscriber) => {
+      if (subscriberStatus === 'active' && !subscriber.active) return false;
+      if (subscriberStatus === 'paused' && subscriber.active) return false;
+      return !query || subscriber.email.toLowerCase().includes(query);
+    });
+  }, [data?.subscribers, subscriberQuery, subscriberStatus]);
+
+  const visibleDeliveries = useMemo(() => {
+    const query = deliveryQuery.trim().toLowerCase();
+    return (data?.deliveries || []).filter((delivery) => {
+      if (deliveryStatus !== 'all' && delivery.status !== deliveryStatus) return false;
+      if (!query) return true;
+      return [
+        delivery.recipient,
+        delivery.kind,
+        delivery.subject,
+        delivery.transport,
+        delivery.error,
+      ].some((value) => value?.toLowerCase().includes(query));
+    });
+  }, [data?.deliveries, deliveryQuery, deliveryStatus]);
 
   return (
     <div className="space-y-6">
@@ -390,7 +419,33 @@ export default function AdminNewsletter() {
 
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle className="text-base">Subscribers</CardTitle>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <CardTitle className="text-base">Subscribers</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">{visibleSubscribers.length} of {data?.subscribers.length || 0} shown</p>
+            </div>
+            <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(220px,1fr)_150px] lg:min-w-[480px]">
+              <label className="relative">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={subscriberQuery}
+                  onChange={(event) => setSubscriberQuery(event.target.value)}
+                  placeholder="Search subscriber email"
+                  className="pl-9"
+                />
+              </label>
+              <select
+                value={subscriberStatus}
+                onChange={(event) => setSubscriberStatus(event.target.value as 'all' | 'active' | 'paused')}
+                className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm"
+                aria-label="Filter subscribers by status"
+              >
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+              </select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="max-h-[460px] max-w-full overflow-auto">
@@ -404,8 +459,8 @@ export default function AdminNewsletter() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data?.subscribers.length ? (
-                  data.subscribers.map((subscriber) => (
+                {visibleSubscribers.length ? (
+                  visibleSubscribers.map((subscriber) => (
                     <TableRow key={subscriber.id}>
                       <TableCell className="font-medium">{subscriber.email}</TableCell>
                       <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
@@ -432,7 +487,7 @@ export default function AdminNewsletter() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                      No newsletter subscribers yet.
+                      {data?.subscribers.length ? 'No subscribers match the current search or status filter.' : 'No newsletter subscribers yet.'}
                     </TableCell>
                   </TableRow>
                 )}
@@ -444,7 +499,33 @@ export default function AdminNewsletter() {
 
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle className="text-base">Recent delivery activity</CardTitle>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <CardTitle className="text-base">Recent delivery activity</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">{visibleDeliveries.length} of {data?.deliveries.length || 0} shown</p>
+            </div>
+            <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(220px,1fr)_150px] lg:min-w-[480px]">
+              <label className="relative">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={deliveryQuery}
+                  onChange={(event) => setDeliveryQuery(event.target.value)}
+                  placeholder="Search recipient, subject or error"
+                  className="pl-9"
+                />
+              </label>
+              <select
+                value={deliveryStatus}
+                onChange={(event) => setDeliveryStatus(event.target.value as 'all' | 'sent' | 'failed')}
+                className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm"
+                aria-label="Filter delivery activity by status"
+              >
+                <option value="all">All results</option>
+                <option value="sent">Sent</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="max-h-[520px] max-w-full overflow-auto">
@@ -460,8 +541,8 @@ export default function AdminNewsletter() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data?.deliveries.length ? (
-                  data.deliveries.map((delivery) => (
+                {visibleDeliveries.length ? (
+                  visibleDeliveries.map((delivery) => (
                     <TableRow key={delivery.id}>
                       <TableCell className="max-w-[220px] truncate font-medium">{delivery.recipient}</TableCell>
                       <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
@@ -492,7 +573,7 @@ export default function AdminNewsletter() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                      No delivery attempts have been recorded yet.
+                      {data?.deliveries.length ? 'No delivery records match the current search or status filter.' : 'No delivery attempts have been recorded yet.'}
                     </TableCell>
                   </TableRow>
                 )}
