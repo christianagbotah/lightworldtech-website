@@ -45,6 +45,9 @@ describe('CMS hero media', () => {
     expect(media).toContain('object-cover');
     expect(media).toContain('bg-gradient-to-r');
     expect(media).toContain('pointer-events-none');
+    expect(media).toContain('loading="eager"');
+    expect(media).toContain('fetchPriority="high"');
+    expect(media).toContain('decoding="async"');
   });
 
   test('all core marketing heroes render the shared media layer', () => {
