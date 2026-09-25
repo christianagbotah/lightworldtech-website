@@ -552,6 +552,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain('% used');
     expect(clientCommercial).toContain('budgetRemaining');
     expect(clientCommercial).toContain('Service margins');
+    expect(clientCommercial).toContain('Drill down');
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-finance-project-id'");
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-finance-service-id'");
+    expect(finance).toContain("sessionStorage.getItem('lw-finance-project-id')");
+    expect(finance).toContain("sessionStorage.getItem('lw-finance-service-id')");
+    expect(finance).toContain('Customer finance drill-down');
+    expect(finance).toContain('scopedCustomerServices');
+    expect(finance).toContain('scopedCustomerInvoices');
+    expect(finance).toContain('scopedCustomerReceipts');
+    expect(finance).toContain('scopedCustomerExpenses');
+    expect(finance).toContain('Attributed direct expenses');
+    expect(finance).toContain('Show all customer finance');
     expect(clientCommercial).toContain('30 / 90 day commercial forecast');
     expect(clientCommercial).toContain('Receivables due');
     expect(clientCommercial).toContain('Account health');
