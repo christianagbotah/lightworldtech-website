@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { companyProfile } from '@/lib/company-profile';
+import { readJsonResponse } from '@/lib/client-api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -323,6 +324,14 @@ export default function ClientPortalPage() {
     confirmPassword: '',
   });
   const [passwordSaving, setPasswordSaving] = useState(false);
+  const [serviceRequest, setServiceRequest] = useState({
+    open: false,
+    serviceId: '',
+    action: 'renewal',
+    requestedPlan: '',
+    notes: '',
+  });
+  const [serviceRequestSaving, setServiceRequestSaving] = useState(false);
 
   const loadPortal = async (): Promise<boolean> => {
     try {
@@ -510,6 +519,83 @@ export default function ClientPortalPage() {
       toast.error(error instanceof Error ? error.message : 'Unable to change password');
     } finally {
       setPasswordSaving(false);
+    }
+  };
+
+  const openServiceRequest = (service: AccountService) => {
+    setServiceRequest({
+      open: true,
+      serviceId: service.id,
+      action: 'renewal',
+      requestedPlan: service.planName || '',
+      notes: '',
+    });
+  };
+
+  const submitServiceRequest = async (event: FormEvent) => {
+    event.preventDefault();
+    const service = data?.account.services.find((item) => item.id === serviceRequest.serviceId);
+    if (!service) {
+      toast.error('The selected service is no longer available');
+      return;
+    }
+
+    const actionLabel: Record<string, string> = {
+      renewal: 'Renewal',
+      upgrade: 'Upgrade',
+      downgrade: 'Downgrade',
+      cancellation: 'Cancellation',
+      plan_change: 'Plan change',
+      other: 'Other service change',
+    };
+    const label = actionLabel[serviceRequest.action] || 'Service change';
+
+    setServiceRequestSaving(true);
+    try {
+      const response = await fetch('/api/client/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: service.name + ' — ' + label + ' request',
+          message: [
+            'Service change request submitted from the Lightworld Client Portal.',
+            '',
+            'Service: ' + service.name,
+            'Service ID: ' + service.id,
+            'Current plan: ' + (service.planName || 'Not specified'),
+            'Request type: ' + label,
+            'Requested plan: ' + (serviceRequest.requestedPlan.trim() || 'Not specified'),
+            'Current billing cycle: ' + statusLabel(service.billingCycle),
+            'Current recurring amount: ' + accountMoney(service.recurringAmount, service.currency),
+            '',
+            'Client notes:',
+            serviceRequest.notes.trim() || 'No additional notes supplied.',
+            '',
+            'This request is for review only. No service, billing or renewal state should change until an authorized Lightworld representative approves and processes it.',
+          ].join('\n'),
+          priority: 'normal',
+          category: 'project_change',
+          projectId: service.project?.id || null,
+        }),
+      });
+      const payload = await readJsonResponse<any>(response, 'Unable to submit service request');
+      setServiceRequest({
+        open: false,
+        serviceId: '',
+        action: 'renewal',
+        requestedPlan: '',
+        notes: '',
+      });
+      await loadPortal();
+      toast.success(
+        payload?.data?.ticketNumber
+          ? 'Service request submitted as ' + payload.data.ticketNumber
+          : 'Service request submitted to Lightworld',
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to submit service request');
+    } finally {
+      setServiceRequestSaving(false);
     }
   };
 
@@ -914,6 +1000,85 @@ export default function ClientPortalPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={serviceRequest.open}
+        onOpenChange={(open) => {
+          if (serviceRequestSaving) return;
+          setServiceRequest((current) => ({ ...current, open }));
+        }}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Request a service change</DialogTitle>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Submit a renewal, upgrade, downgrade or cancellation request for review. This does not change your service or create a charge automatically.
+            </p>
+          </DialogHeader>
+          <form onSubmit={submitServiceRequest} className="space-y-4">
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-sm">
+              <p className="font-semibold">
+                {data?.account.services.find((item) => item.id === serviceRequest.serviceId)?.name || 'Selected service'}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Current plan: {data?.account.services.find((item) => item.id === serviceRequest.serviceId)?.planName || 'Not specified'}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-service-request-type">Request type</Label>
+              <select
+                id="client-service-request-type"
+                value={serviceRequest.action}
+                onChange={(event) => setServiceRequest((current) => ({ ...current, action: event.target.value }))}
+                className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm"
+              >
+                <option value="renewal">Renew service</option>
+                <option value="upgrade">Upgrade plan / capacity</option>
+                <option value="downgrade">Downgrade plan / capacity</option>
+                <option value="plan_change">Other plan change</option>
+                <option value="cancellation">Request cancellation</option>
+                <option value="other">Other service change</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-service-request-plan">Requested plan or change</Label>
+              <Input
+                id="client-service-request-plan"
+                value={serviceRequest.requestedPlan}
+                onChange={(event) => setServiceRequest((current) => ({ ...current, requestedPlan: event.target.value }))}
+                placeholder="e.g. Business plan, 20 users, annual renewal"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-service-request-notes">Notes</Label>
+              <Textarea
+                id="client-service-request-notes"
+                rows={4}
+                value={serviceRequest.notes}
+                onChange={(event) => setServiceRequest((current) => ({ ...current, notes: event.target.value }))}
+                placeholder="Tell us what you want changed, your preferred effective date, or any questions for the account team."
+              />
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+              Lightworld will review commercial terms, outstanding balances, effective dates and technical impact before applying any service change.
+            </div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={serviceRequestSaving}
+                onClick={() => setServiceRequest((current) => ({ ...current, open: false }))}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={serviceRequestSaving}>
+                {serviceRequestSaving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Submit request
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <nav className="sticky top-16 z-30 border-b border-slate-200/70 bg-[#f7f9f8]/92 backdrop-blur-xl dark:border-white/[0.07] dark:bg-[#050b10]/92" aria-label="Client workspace sections">
         <div className="container-main flex max-w-full gap-1 overflow-x-auto py-2">
           {[
@@ -1094,6 +1259,12 @@ export default function ClientPortalPage() {
                       <span>Started {new Date(service.startDate).toLocaleDateString()}</span>
                       <span>{service.expiryDate ? 'Expires ' + new Date(service.expiryDate).toLocaleDateString() : 'No fixed expiry'}</span>
                       {service.autoRenew && <span>Auto-renew flag enabled</span>}
+                    </div>
+                    <div className="mt-3">
+                      <Button type="button" size="sm" variant="outline" onClick={() => openServiceRequest(service)}>
+                        <LifeBuoy className="mr-2 size-3.5" />
+                        Request renewal / change
+                      </Button>
                     </div>
                     {service.payableInvoice ? (
                       <div className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/70 p-3 dark:border-amber-900/40 dark:bg-amber-950/15">

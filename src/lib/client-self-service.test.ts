@@ -27,6 +27,20 @@ describe('client self-service profile and security', () => {
     expect(route).toContain('createClientSessionToken');
   });
 
+  test('clients can request reviewed service renewals and plan changes', () => {
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+    const ticketApi = source('src/app/api/client/tickets/route.ts');
+
+    expect(portal).toContain('Request renewal / change');
+    expect(portal).toContain('Request a service change');
+    expect(portal).toContain("category: 'project_change'");
+    expect(portal).toContain("fetch('/api/client/tickets'");
+    expect(portal).toContain('This request is for review only');
+    expect(portal).toContain('service.project?.id || null');
+    expect(ticketApi).toContain('notifySupportDesk');
+    expect(ticketApi).toContain('supportSla');
+  });
+
   test('client portal exposes responsive profile and password controls', () => {
     const portal = source('src/components/client/ClientPortalPage.tsx');
 
