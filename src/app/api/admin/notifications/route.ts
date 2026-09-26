@@ -69,7 +69,15 @@ export async function GET(request: NextRequest) {
     const warningMinutes = Math.max(5, Math.min(1440, Number.isFinite(configuredWarningMinutes) ? configuredWarningMinutes : 60));
     const warningHorizon = new Date(now.getTime() + warningMinutes * 60_000);
     const agreementHorizon = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
-    const [unreadTickets, slaBreached, slaAtRisk, activeAgreementExpiries, expiredActiveAgreements] = await Promise.all([
+    const [
+      unreadTickets,
+      slaBreached,
+      slaAtRisk,
+      activeAgreementExpiries,
+      expiredActiveAgreements,
+      pendingAgreementApprovals,
+      rejectedAgreementApprovals,
+    ] = await Promise.all([
       db.clientSupportTicket.count({
         where: { unreadByAdmin: true },
       }),
@@ -104,6 +112,18 @@ export async function GET(request: NextRequest) {
           expiryDate: { lt: now },
         },
       }),
+      db.clientAgreement.count({
+        where: {
+          approvalStatus: 'pending',
+          status: { notIn: ['expired', 'terminated', 'superseded'] },
+        },
+      }),
+      db.clientAgreement.count({
+        where: {
+          approvalStatus: 'rejected',
+          status: { notIn: ['expired', 'terminated', 'superseded'] },
+        },
+      }),
     ]);
 
     const agreementsInNoticeWindow = activeAgreementExpiries.filter((agreement) => {
@@ -111,6 +131,28 @@ export async function GET(request: NextRequest) {
       const daysRemaining = Math.ceil((agreement.expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
       return daysRemaining >= 0 && daysRemaining <= agreement.renewalNoticeDays;
     }).length;
+
+    if (rejectedAgreementApprovals > 0) {
+      notices.push({
+        id: 'client-agreements-approval-rejected',
+        severity: 'critical',
+        title: 'Agreement approvals rejected',
+        message: rejectedAgreementApprovals + ' agreement' + (rejectedAgreementApprovals === 1 ? ' has' : 's have') + ' a rejected approval decision and require revision or closure.',
+        count: rejectedAgreementApprovals,
+        action: 'admin-clients-agreements',
+      });
+    }
+
+    if (pendingAgreementApprovals > 0) {
+      notices.push({
+        id: 'client-agreements-approval-pending',
+        severity: 'warning',
+        title: 'Agreements awaiting approval',
+        message: pendingAgreementApprovals + ' agreement' + (pendingAgreementApprovals === 1 ? ' is' : 's are') + ' waiting for a human approval decision before activation.',
+        count: pendingAgreementApprovals,
+        action: 'admin-clients-agreements',
+      });
+    }
 
     if (expiredActiveAgreements > 0) {
       notices.push({

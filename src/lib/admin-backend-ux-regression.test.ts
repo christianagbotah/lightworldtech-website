@@ -1702,6 +1702,24 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("sessionStorage.setItem('lw-client-action', 'agreements')");
   });
 
+  test('surfaces agreement approval exceptions in notifications and executive portfolio', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const portfolioApi = source('src/app/api/admin/clients/portfolio-intelligence/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(notifications).toContain("approvalStatus: 'pending'");
+    expect(notifications).toContain("approvalStatus: 'rejected'");
+    expect(notifications).toContain('Agreements awaiting approval');
+    expect(notifications).toContain('Agreement approvals rejected');
+    expect(portfolioApi).toContain('pendingAgreementApprovals');
+    expect(portfolioApi).toContain('rejectedAgreementApprovals');
+    expect(portfolioApi).toContain('Resolve rejected agreement approvals');
+    expect(clients).toContain('Pending approvals');
+    expect(clients).toContain('Rejected approvals');
+    expect(clients).toContain('Pending agreement approvals');
+    expect(clients).toContain('Rejected agreement approvals');
+  });
+
   test('keeps dashboard and governance tables exportable', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const governance = source('src/components/admin/AdminGovernance.tsx');
