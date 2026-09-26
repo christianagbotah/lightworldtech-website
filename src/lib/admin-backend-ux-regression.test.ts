@@ -1246,6 +1246,17 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(portal).toContain('Auto-renew records the intended renewal workflow');
   });
 
+  test('notifies the configured team mailbox after persisting a public contact lead', () => {
+    const contact = source('src/app/api/contact/route.ts');
+
+    expect(contact).toContain('CONTACT_NOTIFICATION_EMAIL');
+    expect(contact).toContain('sendTransactionalMail');
+    expect(contact).toContain('Contact lead notification failed');
+    expect(contact).toContain('notificationSent: notification.sent');
+    expect(contact).toContain('await tx.contactMessage.create');
+    expect(contact).toContain('await tx.lead.create');
+  });
+
   test('adds permission-scoped business activity to the main dashboard', () => {
     const activity = source('src/app/api/admin/activity/route.ts');
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
