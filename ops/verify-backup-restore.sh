@@ -17,20 +17,21 @@ tar -tzf "$UPLOAD_BACKUP" >/dev/null
 WORK="$(mktemp -d /tmp/lightworld-restore-verify.XXXXXX)"
 chown postgres:postgres "$WORK"
 chmod 0700 "$WORK"
-DATA="$WORK/data"; SOCKET="$WORK/socket"; PORT=55439; STARTED=0
+DATA="$WORK/data"; SOCKET="$WORK/socket"; RESTORE_DUMP="$WORK/database.dump"; PORT=55439; STARTED=0
 cleanup(){
   if [ "$STARTED" -eq 1 ]; then runuser -u postgres -- "$PG_BIN/pg_ctl" -D "$DATA" -m fast -w stop >/dev/null 2>&1 || true; fi
   rm -rf "$WORK"
 }
 trap cleanup EXIT
 install -d -o postgres -g postgres -m 0700 "$DATA" "$SOCKET"
+install -o postgres -g postgres -m 0600 "$DB_BACKUP" "$RESTORE_DUMP"
 runuser -u postgres -- "$PG_BIN/initdb" -D "$DATA" --no-locale --encoding=UTF8 --auth=trust >/dev/null
 printf "listen_addresses = ''\nport = %s\nunix_socket_directories = '%s'\nfsync = off\nsynchronous_commit = off\nfull_page_writes = off\n" "$PORT" "$SOCKET" >> "$DATA/postgresql.conf"
 chown postgres:postgres "$DATA/postgresql.conf"
 runuser -u postgres -- "$PG_BIN/pg_ctl" -D "$DATA" -w start >/dev/null
 STARTED=1
 runuser -u postgres -- "$PG_BIN/createdb" -h "$SOCKET" -p "$PORT" lightworld_restore_verify
-runuser -u postgres -- "$PG_BIN/pg_restore" -h "$SOCKET" -p "$PORT" -d lightworld_restore_verify --no-owner --no-privileges --exit-on-error "$DB_BACKUP" >/dev/null
+runuser -u postgres -- "$PG_BIN/pg_restore" -h "$SOCKET" -p "$PORT" -d lightworld_restore_verify --no-owner --no-privileges --exit-on-error "$RESTORE_DUMP" >/dev/null
 TABLE_COUNT="$(runuser -u postgres -- "$PG_BIN/psql" -h "$SOCKET" -p "$PORT" -d lightworld_restore_verify -Atc "SELECT count(*) FROM pg_tables WHERE schemaname='public';")"
 [ "${TABLE_COUNT:-0}" -gt 0 ] || { echo "Restore rehearsal produced no public tables." >&2; exit 4; }
 UPLOAD_ENTRIES="$(tar -tzf "$UPLOAD_BACKUP" | wc -l)"
