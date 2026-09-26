@@ -322,6 +322,44 @@ export async function GET(request: NextRequest) {
   }
 
   if (canComms) {
+    const automationEnabled =
+      process.env.AUTO_SERVICE_RENEWAL_SMS === 'true' ||
+      process.env.AUTO_PROJECT_RENEWAL_SMS === 'true' ||
+      process.env.AUTO_COLLECTION_REMINDER_SMS === 'true' ||
+      process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true' ||
+      process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true';
+    const runtimeMaxAgeMinutes = Math.max(
+      2,
+      Math.min(60, Number(process.env.AUTOMATION_RUNTIME_MAX_AGE_MINUTES || 5) || 5),
+    );
+    const runtime = automationEnabled
+      ? await db.automationRuntimeState.findUnique({ where: { id: 'communications-dispatcher' } }).catch(() => null)
+      : null;
+    const runtimeAgeMinutes = runtime?.lastSuccessAt
+      ? Math.max(0, (Date.now() - runtime.lastSuccessAt.getTime()) / 60000)
+      : null;
+
+    if (
+      automationEnabled &&
+      (
+        !runtime ||
+        runtime.status === 'failed' ||
+        runtimeAgeMinutes === null ||
+        runtimeAgeMinutes > runtimeMaxAgeMinutes
+      )
+    ) {
+      notices.push({
+        id: 'automation-runtime-health',
+        severity: runtime?.status === 'failed' ? 'critical' : 'warning',
+        title: runtime?.status === 'failed' ? 'Automation dispatcher failed' : 'Automation dispatcher stale',
+        message: runtime?.status === 'failed'
+          ? 'The protected communications and renewal dispatcher reported a failed run.'
+          : 'Automation is enabled but no recent successful dispatcher run is recorded.',
+        count: Math.max(1, runtime?.consecutiveFailures || 0),
+        action: 'admin-sms',
+      });
+    }
+
     const failedDeliveries = await db.newsletterCampaignDelivery.count({
       where: {
         status: 'failed',
