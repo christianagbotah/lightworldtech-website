@@ -15,7 +15,9 @@ UPLOAD_BACKUP="$(find "$UPLOAD_BACKUP_DIR" -maxdepth 1 -type f -name 'uploads-*.
 "$PG_BIN/pg_restore" --list "$DB_BACKUP" >/dev/null
 tar -tzf "$UPLOAD_BACKUP" >/dev/null
 WORK="$(mktemp -d /tmp/lightworld-restore-verify.XXXXXX)"
-DATA="$WORK/data"; SOCKET="$WORK/socket"; PORT=$((55000 + ($$ % 5000))); STARTED=0
+chown postgres:postgres "$WORK"
+chmod 0700 "$WORK"
+DATA="$WORK/data"; SOCKET="$WORK/socket"; PORT=$((55000 + ($ % 5000))); STARTED=0
 cleanup(){
   if [ "$STARTED" -eq 1 ]; then runuser -u postgres -- "$PG_BIN/pg_ctl" -D "$DATA" -m fast -w stop >/dev/null 2>&1 || true; fi
   rm -rf "$WORK"
