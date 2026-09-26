@@ -1349,6 +1349,15 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(auditExport).toContain("'Cache-Control': 'private, no-store, max-age=0'");
   });
 
+  test('surfaces renewal draft invoices as a distinct finance review state', () => {
+    const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
+    expect(renewals).toContain("'draft_review'");
+    expect(renewals).toContain('Drafts to review');
+    expect(renewals).toContain('draftReviewCount');
+    expect(renewals).toContain("invoice.status === 'draft'");
+    expect(renewals).toContain("invoice?.status === 'draft'");
+  });
+
   test('supports project renewal billing with safe draft automation and manual preparation', () => {
     const automation = source('src/lib/renewal-draft-automation.ts');
     const sms = source('src/lib/sms.ts');
