@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { readJsonSafely } from '@/lib/http-response';
 import {
   CommandDialog,
   CommandEmpty,
@@ -291,10 +292,10 @@ export default function CommandPalette({ settings = {} }: { settings?: SiteSetti
 
     let cancelled = false;
     Promise.allSettled([
-      fetch('/api/services?active=true', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
-      fetch('/api/blog?published=true&limit=20', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
-      fetch('/api/portfolio?active=true', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
-      fetch('/api/faqs?active=true', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+      fetch('/api/services?active=true', { cache: 'no-store' }).then((response) => response.ok ? readJsonSafely<any>(response) : null),
+      fetch('/api/blog?published=true&limit=20', { cache: 'no-store' }).then((response) => response.ok ? readJsonSafely<any>(response) : null),
+      fetch('/api/portfolio?active=true', { cache: 'no-store' }).then((response) => response.ok ? readJsonSafely<any>(response) : null),
+      fetch('/api/faqs?active=true', { cache: 'no-store' }).then((response) => response.ok ? readJsonSafely<any>(response) : null),
     ]).then((results) => {
       if (cancelled) return;
       const values = results.map((result) => result.status === 'fulfilled' ? result.value : null);
