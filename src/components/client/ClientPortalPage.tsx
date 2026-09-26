@@ -700,22 +700,42 @@ export default function ClientPortalPage() {
     }
   };
 
-  const uploadTicketAttachment = async (ticketId: string, file: File | null) => {
-    if (!file) return;
+  const uploadTicketAttachments = async (ticketId: string, selectedFiles: FileList | File[]) => {
+    const files = Array.from(selectedFiles).slice(0, 5);
+    if (!files.length) return;
+    if (selectedFiles.length > 5) {
+      toast.message('Only the first 5 files will be uploaded in this batch.');
+    }
+
     setUploadingTicketId(ticketId);
+    let uploaded = 0;
+    const failed: string[] = [];
     try {
-      const form = new FormData();
-      form.set('file', file);
-      const response = await fetch('/api/client/tickets/' + ticketId + '/attachments', {
-        method: 'POST',
-        body: form,
-      });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(payload?.error || 'Unable to upload attachment');
-      await loadPortal();
-      toast.success('Attachment added to support ticket');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to upload attachment');
+      for (const file of files) {
+        try {
+          const form = new FormData();
+          form.set('file', file);
+          const response = await fetch('/api/client/tickets/' + ticketId + '/attachments', {
+            method: 'POST',
+            body: form,
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok) throw new Error(payload?.error || 'Unable to upload attachment');
+          uploaded += 1;
+        } catch (error) {
+          failed.push(file.name);
+        }
+      }
+
+      if (uploaded) {
+        await loadPortal();
+        toast.success(uploaded + ' support file' + (uploaded === 1 ? '' : 's') + ' uploaded');
+      }
+      if (failed.length) {
+        toast.error(failed.length + ' file' + (failed.length === 1 ? '' : 's') + ' could not be uploaded', {
+          description: failed.slice(0, 3).join(', ') + (failed.length > 3 ? '…' : ''),
+        });
+      }
     } finally {
       setUploadingTicketId('');
     }
@@ -1902,18 +1922,22 @@ export default function ClientPortalPage() {
                               Add evidence
                               <input
                                 type="file"
+                                multiple
                                 accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
                                 className="sr-only"
                                 disabled={uploadingTicketId === item.id}
                                 onChange={(event) => {
-                                  const file = event.target.files?.[0] || null;
-                                  void uploadTicketAttachment(item.id, file);
+                                  const files = event.currentTarget.files;
+                                  if (files) void uploadTicketAttachments(item.id, files);
                                   event.currentTarget.value = '';
                                 }}
                               />
                             </label>
                           )}
                         </div>
+                        {item.status !== 'closed' && (
+                          <p className="mt-2 text-[10px] text-slate-400">Select up to 5 files at once · JPG, PNG, WebP or PDF · 10 MB each.</p>
+                        )}
                         {item.attachments.length ? (
                           <div className="mt-2 grid gap-2 sm:grid-cols-2">
                             {item.attachments.map((attachment) => (
