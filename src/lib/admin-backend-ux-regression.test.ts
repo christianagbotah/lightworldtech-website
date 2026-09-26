@@ -1667,6 +1667,15 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain('Renewal invoice drafts awaiting review');
   });
 
+  test('alerts finance when fully paid renewal invoices still need cycle completion', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    expect(notifications).toContain('renewalCompletionCandidates');
+    expect(notifications).toContain('renewalCompletedAt: null');
+    expect(notifications).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).eq(0)');
+    expect(notifications).toContain('Paid renewals awaiting completion');
+    expect(notifications).toContain("action: 'admin-finance-renewals'");
+  });
+
   test('routes finance notifications directly to operational exception queues', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
     const layout = source('src/components/admin/AdminLayout.tsx');
