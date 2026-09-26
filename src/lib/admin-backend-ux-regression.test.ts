@@ -1349,6 +1349,19 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(auditExport).toContain("'Cache-Control': 'private, no-store, max-age=0'");
   });
 
+  test('provides export controls across remaining admin data tables', () => {
+    expect(source('src/components/admin/AdminBlog.tsx')).toContain('exportFileName="lightworld-blog-posts"');
+    expect(source('src/components/admin/AdminTeam.tsx')).toContain('exportFileName="lightworld-team-members"');
+    expect(source('src/components/admin/AdminServices.tsx')).toContain('exportFileName="lightworld-services"');
+    expect(source('src/components/admin/AdminPortfolio.tsx')).toContain('exportFileName="lightworld-portfolio-projects"');
+    expect(source('src/components/admin/AdminTestimonials.tsx')).toContain('exportFileName="lightworld-testimonials"');
+    expect(source('src/components/admin/AdminMessages.tsx')).toContain('exportFileName="lightworld-customer-messages"');
+    expect(source('src/components/admin/AdminCampaigns.tsx')).toContain('exportFileName="lightworld-campaign-deliveries"');
+    const newsletter = source('src/components/admin/AdminNewsletter.tsx');
+    expect(newsletter).toContain('exportFileName="lightworld-newsletter-subscribers"');
+    expect(newsletter).toContain('exportFileName="lightworld-newsletter-deliveries"');
+  });
+
   test('supports audited enterprise exports and bounded message bulk actions', () => {
     const crm = source('src/components/admin/AdminCRM.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');

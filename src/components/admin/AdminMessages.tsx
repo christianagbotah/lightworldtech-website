@@ -482,7 +482,7 @@ export default function AdminMessages() {
 
       <div className="border border-border rounded-xl bg-card overflow-hidden">
         <div className="max-w-full overflow-x-auto max-h-[600px] overflow-y-auto">
-          <Table>
+          <Table exportFileName="lightworld-customer-messages">
             <TableHeader>
               <TableRow className="bg-gradient-to-r from-muted/80 to-muted/30 dark:from-slate-800/80 dark:to-slate-800/30">
                 <TableHead className="w-10 text-xs font-semibold">

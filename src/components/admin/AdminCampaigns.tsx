@@ -499,7 +499,7 @@ export default function AdminCampaigns() {
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="max-h-[420px] overflow-auto">
-                    <Table>
+                    <Table exportFileName="lightworld-campaign-deliveries">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Recipient</TableHead>

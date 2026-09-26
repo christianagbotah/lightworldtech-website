@@ -449,7 +449,7 @@ export default function AdminNewsletter() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="max-h-[460px] max-w-full overflow-auto">
-            <Table>
+            <Table exportFileName="lightworld-newsletter-subscribers">
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
@@ -529,7 +529,7 @@ export default function AdminNewsletter() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="max-h-[520px] max-w-full overflow-auto">
-            <Table>
+            <Table exportFileName="lightworld-newsletter-deliveries">
               <TableHeader>
                 <TableRow>
                   <TableHead>Recipient</TableHead>
