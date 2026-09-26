@@ -28,6 +28,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: 'Invalid agreement', details: parsed.error.flatten() }, { status: 400 });
   }
+  if (parsed.data.status === 'active') {
+    return NextResponse.json(
+      { success: false, error: 'New agreements must be approved before they can be activated' },
+      { status: 409 },
+    );
+  }
 
   const organization = await db.clientOrganization.findUnique({ where: { id }, select: { id: true } });
   if (!organization) return NextResponse.json({ error: 'Client organization not found' }, { status: 404 });

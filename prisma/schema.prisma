@@ -572,6 +572,10 @@ model ClientAgreement {
   documentUrl       String             @default("")
   notes             String             @default("")
   signedAt          DateTime?
+  approvalStatus    String             @default("pending")
+  approvalDecisionBy String            @default("")
+  approvalDecisionAt DateTime?
+  approvalNotes     String             @default("")
   attachments       ClientAgreementAttachment[]
   changes           ClientAgreementChange[]
 

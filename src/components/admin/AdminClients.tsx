@@ -74,6 +74,7 @@ type Agreement = {
   projectId: string | null; currency: string; contractValue: string; effectiveDate: string | null;
   expiryDate: string | null; renewalNoticeDays: number; owner: string; documentUrl: string;
   notes: string; signedAt: string | null; project: { id: string; name: string } | null;
+  approvalStatus: string; approvalDecisionBy: string; approvalDecisionAt: string | null; approvalNotes: string;
   attachments: AgreementAttachment[]; changes: AgreementChange[];
 };
 type TicketMessage = {
@@ -188,6 +189,7 @@ export default function AdminClients() {
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ kind: 'document' | 'announcement' | 'agreement-attachment'; id: string; label: string } | null>(null);
   const [agreementUploadingId, setAgreementUploadingId] = useState('');
+  const [agreementApprovalNotes, setAgreementApprovalNotes] = useState<Record<string, string>>({});
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
   const [pendingClientAction, setPendingClientAction] = useState('');
 
@@ -593,6 +595,26 @@ export default function AdminClients() {
       toast.success('Agreement updated');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update agreement');
+    }
+  };
+
+  const decideAgreementApproval = async (agreementId: string, decision: 'approved' | 'rejected') => {
+    try {
+      const response = await fetch('/api/admin/client-agreements/' + agreementId + '/approval', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          decision,
+          notes: agreementApprovalNotes[agreementId] || '',
+        }),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not record agreement approval decision');
+      setAgreementApprovalNotes((current) => ({ ...current, [agreementId]: '' }));
+      await fetchOrganizations();
+      toast.success(decision === 'approved' ? 'Agreement approved for activation' : 'Agreement approval rejected');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not record agreement approval decision');
     }
   };
 
@@ -1324,7 +1346,7 @@ export default function AdminClients() {
                     <div><Label>Agreement title</Label><Input required value={agreementForm.title} onChange={(e) => setAgreementForm({ ...agreementForm, title: e.target.value })} placeholder="Managed services agreement" /></div>
                     <div><Label>Reference number</Label><Input value={agreementForm.referenceNumber} onChange={(e) => setAgreementForm({ ...agreementForm, referenceNumber: e.target.value })} placeholder="LWT-CTR-2026-001" /></div>
                     <div><Label>Agreement type</Label><select value={agreementForm.agreementType} onChange={(e) => setAgreementForm({ ...agreementForm, agreementType: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="contract">Contract</option><option value="statement_of_work">Statement of work</option><option value="service_agreement">Service agreement</option><option value="nda">NDA</option><option value="license">License</option><option value="other">Other</option></select></div>
-                    <div><Label>Status</Label><select value={agreementForm.status} onChange={(e) => setAgreementForm({ ...agreementForm, status: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="draft">Draft</option><option value="active">Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select></div>
+                    <div><Label>Status</Label><select value={agreementForm.status} onChange={(e) => setAgreementForm({ ...agreementForm, status: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="draft">Draft</option><option value="active" disabled>Active after approval</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select></div>
                     <div><Label>Linked project</Label><select value={agreementForm.projectId} onChange={(e) => setAgreementForm({ ...agreementForm, projectId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Organization level</option>{selected.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></div>
                     <div><Label>Agreement owner</Label><Input value={agreementForm.owner} onChange={(e) => setAgreementForm({ ...agreementForm, owner: e.target.value })} placeholder="Account / project owner" /></div>
                     <div className="grid grid-cols-[1fr_92px] gap-2"><div><Label>Contract value</Label><Input type="number" min="0" step="0.01" value={agreementForm.contractValue} onChange={(e) => setAgreementForm({ ...agreementForm, contractValue: e.target.value })} /></div><div><Label>Currency</Label><Input maxLength={3} value={agreementForm.currency} onChange={(e) => setAgreementForm({ ...agreementForm, currency: e.target.value.toUpperCase() })} /></div></div>
@@ -1344,7 +1366,12 @@ export default function AdminClients() {
                     return <div key={agreement.id} className="rounded-2xl border border-border/60 p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0"><p className="text-sm font-semibold">{agreement.title}</p><p className="mt-1 text-xs text-muted-foreground">{pretty(agreement.agreementType)}{agreement.referenceNumber ? ' · ' + agreement.referenceNumber : ''}{agreement.project?.name ? ' · ' + agreement.project.name : ''}</p></div>
-                        <div className="flex flex-wrap gap-1"><Badge variant="outline">{pretty(agreement.status)}</Badge>{noticeDue && <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Notice window open</Badge>}{daysToExpiry !== null && daysToExpiry < 0 && <Badge className="bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200">Expired</Badge>}</div>
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="outline">{pretty(agreement.status)}</Badge>
+                          <Badge variant="outline">Approval: {pretty(agreement.approvalStatus)}</Badge>
+                          {noticeDue && <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Notice window open</Badge>}
+                          {daysToExpiry !== null && daysToExpiry < 0 && <Badge className="bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200">Expired</Badge>}
+                        </div>
                       </div>
                       <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 xl:grid-cols-3"><p><span className="text-muted-foreground">Value:</span> {money(agreement.contractValue, agreement.currency)}</p><p><span className="text-muted-foreground">Owner:</span> {agreement.owner || 'Unassigned'}</p><p><span className="text-muted-foreground">Signed:</span> {agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'Not recorded'}</p><p><span className="text-muted-foreground">Effective:</span> {agreement.effectiveDate ? new Date(agreement.effectiveDate).toLocaleDateString() : 'Not set'}</p><p><span className="text-muted-foreground">Expiry:</span> {agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString() : 'Open-ended'}</p><p><span className="text-muted-foreground">Notice:</span> {agreement.renewalNoticeDays} days</p></div>
                       {agreement.notes && <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{agreement.notes}</p>}
@@ -1408,6 +1435,33 @@ export default function AdminClients() {
                       </div>
 
                       <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Approval governance</p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              {agreement.approvalDecisionAt
+                                ? pretty(agreement.approvalStatus) + ' by ' + (agreement.approvalDecisionBy || 'Admin') + ' · ' + new Date(agreement.approvalDecisionAt).toLocaleString()
+                                : 'Pending human approval before activation.'}
+                            </p>
+                          </div>
+                          <Badge variant="outline">{pretty(agreement.approvalStatus)}</Badge>
+                        </div>
+                        {agreement.approvalNotes && <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">{agreement.approvalNotes}</p>}
+                        {agreement.status !== 'active' && (
+                          <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+                            <Input
+                              value={agreementApprovalNotes[agreement.id] || ''}
+                              onChange={(event) => setAgreementApprovalNotes((current) => ({ ...current, [agreement.id]: event.target.value }))}
+                              placeholder="Approval / rejection note"
+                              className="h-9 text-xs"
+                            />
+                            <Button type="button" size="sm" onClick={() => void decideAgreementApproval(agreement.id, 'approved')}>Approve for activation</Button>
+                            <Button type="button" size="sm" variant="outline" onClick={() => void decideAgreementApproval(agreement.id, 'rejected')}>Reject</Button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
                         <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Agreement change history</p>
                         <div className="mt-2 space-y-2">
                           {agreement.changes.slice(0, 5).map((change) => (
@@ -1426,7 +1480,7 @@ export default function AdminClients() {
                       </div>
 
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active">Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>
+                        <select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active" disabled={agreement.approvalStatus !== 'approved'}>Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>
                         {agreement.documentUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(agreement.documentUrl, '_blank', 'noopener,noreferrer')}><FileText className="mr-2 size-3.5" /> Open legacy link</Button>}
                       </div>
                     </div>;
