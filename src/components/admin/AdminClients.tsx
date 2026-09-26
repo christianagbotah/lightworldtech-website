@@ -61,11 +61,16 @@ type Project = {
   renewalNoticeDays: number; renewalNotes: string;
   milestones: Milestone[]; documents: DocumentItem[]; announcements: Announcement[];
 };
+type AgreementAttachment = {
+  id: string; originalName: string; mimeType: string; sizeBytes: number;
+  uploadedBy: string; createdAt: string;
+};
 type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
   projectId: string | null; currency: string; contractValue: string; effectiveDate: string | null;
   expiryDate: string | null; renewalNoticeDays: number; owner: string; documentUrl: string;
   notes: string; signedAt: string | null; project: { id: string; name: string } | null;
+  attachments: AgreementAttachment[];
 };
 type TicketMessage = {
   id: string; authorType: string; authorName: string; message: string; createdAt: string;
@@ -177,7 +182,8 @@ export default function AdminClients() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<{ kind: 'document' | 'announcement'; id: string; label: string } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ kind: 'document' | 'announcement' | 'agreement-attachment'; id: string; label: string } | null>(null);
+  const [agreementUploadingId, setAgreementUploadingId] = useState('');
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
   const [pendingClientAction, setPendingClientAction] = useState('');
 
@@ -583,6 +589,43 @@ export default function AdminClients() {
       toast.success('Agreement updated');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update agreement');
+    }
+  };
+
+  const uploadAgreementFiles = async (agreementId: string, files: FileList | null) => {
+    if (!files?.length) return;
+    setAgreementUploadingId(agreementId);
+    try {
+      let uploaded = 0;
+      for (const file of Array.from(files)) {
+        const form = new FormData();
+        form.append('file', file);
+        const response = await fetch('/api/admin/client-agreements/' + agreementId + '/attachments', {
+          method: 'POST',
+          body: form,
+        });
+        const payload = await readJsonResponse<any>(response, 'Invalid server response');
+        if (!response.ok) throw new Error(payload?.error || 'Could not upload agreement file');
+        uploaded += 1;
+      }
+      await fetchOrganizations();
+      toast.success(uploaded + ' agreement PDF' + (uploaded === 1 ? '' : 's') + ' uploaded');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not upload agreement file');
+    } finally {
+      setAgreementUploadingId('');
+    }
+  };
+
+  const deleteAgreementAttachment = async (attachmentId: string) => {
+    try {
+      const response = await fetch('/api/agreement-attachments/' + attachmentId, { method: 'DELETE' });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not delete agreement file');
+      await fetchOrganizations();
+      toast.success('Agreement file deleted');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not delete agreement file');
     }
   };
 
@@ -1285,7 +1328,61 @@ export default function AdminClients() {
                       </div>
                       <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 xl:grid-cols-3"><p><span className="text-muted-foreground">Value:</span> {money(agreement.contractValue, agreement.currency)}</p><p><span className="text-muted-foreground">Owner:</span> {agreement.owner || 'Unassigned'}</p><p><span className="text-muted-foreground">Signed:</span> {agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'Not recorded'}</p><p><span className="text-muted-foreground">Effective:</span> {agreement.effectiveDate ? new Date(agreement.effectiveDate).toLocaleDateString() : 'Not set'}</p><p><span className="text-muted-foreground">Expiry:</span> {agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString() : 'Open-ended'}</p><p><span className="text-muted-foreground">Notice:</span> {agreement.renewalNoticeDays} days</p></div>
                       {agreement.notes && <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{agreement.notes}</p>}
-                      <div className="mt-3 flex flex-wrap gap-2"><select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active">Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>{agreement.documentUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(agreement.documentUrl, '_blank', 'noopener,noreferrer')}><FileText className="mr-2 size-3.5" /> Open document</Button>}</div>
+
+                      <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Secure document vault</p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">Private PDF storage · 15MB max per file · downloads are audited.</p>
+                          </div>
+                          <label className="inline-flex cursor-pointer items-center rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted">
+                            {agreementUploadingId === agreement.id ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <Plus className="mr-2 size-3.5" />}
+                            {agreementUploadingId === agreement.id ? 'Uploading…' : 'Add PDFs'}
+                            <input
+                              type="file"
+                              accept=".pdf,application/pdf"
+                              multiple
+                              className="sr-only"
+                              disabled={agreementUploadingId === agreement.id}
+                              onChange={(event) => {
+                                void uploadAgreementFiles(agreement.id, event.target.files);
+                                event.currentTarget.value = '';
+                              }}
+                            />
+                          </label>
+                        </div>
+                        <div className="mt-3 space-y-2">
+                          {agreement.attachments.map((attachment) => (
+                            <div key={attachment.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-background p-2.5">
+                              <div className="min-w-0">
+                                <p className="truncate text-xs font-medium">{attachment.originalName}</p>
+                                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                  {(attachment.sizeBytes / 1024 / 1024).toFixed(2)} MB · uploaded by {attachment.uploadedBy} · {new Date(attachment.createdAt).toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button type="button" size="sm" variant="outline" onClick={() => window.open('/api/agreement-attachments/' + attachment.id, '_blank', 'noopener,noreferrer')}>
+                                  <Download className="mr-1 size-3.5" /> Download
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setPendingDelete({ kind: 'agreement-attachment', id: attachment.id, label: attachment.originalName })}
+                                >
+                                  <Trash2 className="mr-1 size-3.5 text-destructive" /> Delete
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                          {!agreement.attachments.length && <p className="text-[11px] text-muted-foreground">No managed agreement PDFs uploaded yet.</p>}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active">Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>
+                        {agreement.documentUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(agreement.documentUrl, '_blank', 'noopener,noreferrer')}><FileText className="mr-2 size-3.5" /> Open legacy link</Button>}
+                      </div>
                     </div>;
                   })}
                   {!selected.agreements.length && <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">No contracts or statements of work registered for this client yet.</p>}
@@ -1597,18 +1694,33 @@ export default function AdminClients() {
           if (!open) setPendingDelete(null);
         }}
         tone="destructive"
-        title={pendingDelete?.kind === 'document' ? 'Remove client document?' : 'Delete client announcement?'}
+        title={
+          pendingDelete?.kind === 'document'
+            ? 'Remove client document?'
+            : pendingDelete?.kind === 'agreement-attachment'
+              ? 'Delete agreement PDF?'
+              : 'Delete client announcement?'
+        }
         description={
           pendingDelete?.kind === 'document'
             ? 'Remove “' + pendingDelete.label + '” from the client portal. The linked source file is not deleted by this action.'
-            : pendingDelete
-              ? 'Permanently delete the announcement “' + pendingDelete.label + '”. Clients will no longer be able to view it.'
-              : 'Confirm this destructive action.'
+            : pendingDelete?.kind === 'agreement-attachment'
+              ? 'Permanently delete the managed agreement file “' + pendingDelete.label + '”. This removes the private stored PDF and its database record.'
+              : pendingDelete
+                ? 'Permanently delete the announcement “' + pendingDelete.label + '”. Clients will no longer be able to view it.'
+                : 'Confirm this destructive action.'
         }
-        confirmLabel={pendingDelete?.kind === 'document' ? 'Remove document' : 'Delete announcement'}
+        confirmLabel={
+          pendingDelete?.kind === 'document'
+            ? 'Remove document'
+            : pendingDelete?.kind === 'agreement-attachment'
+              ? 'Delete agreement PDF'
+              : 'Delete announcement'
+        }
         onConfirm={async () => {
           if (!pendingDelete) return;
           if (pendingDelete.kind === 'document') await deleteDocument(pendingDelete.id);
+          else if (pendingDelete.kind === 'agreement-attachment') await deleteAgreementAttachment(pendingDelete.id);
           else await deleteAnnouncement(pendingDelete.id);
         }}
       />
