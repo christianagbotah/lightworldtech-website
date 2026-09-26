@@ -1224,6 +1224,22 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain("sessionStorage.setItem('lw-client-organization-id', organizationId)");
   });
 
+  test('routes finance notifications directly to operational exception queues', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(notifications).toContain('Project renewals due');
+    expect(notifications).toContain('Client services expired');
+    expect(notifications).toContain('Collection follow-ups due');
+    expect(notifications).toContain('Payment promises overdue');
+    expect(notifications).toContain("action: 'admin-finance-collections'");
+    expect(notifications).toContain("action: 'admin-finance-renewals'");
+    expect(notifications).toContain("action: 'admin-finance-suppliers'");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'collections')");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'renewals')");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'suppliers')");
+  });
+
   test('supports dashboard drill-downs and a real authenticated health signal', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
