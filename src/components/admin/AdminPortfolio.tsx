@@ -225,7 +225,7 @@ export default function AdminPortfolio() {
                 <TableHead className="text-xs font-semibold text-center">Featured</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Case study</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Status</TableHead>
-                <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
+                <TableHead data-export-ignore className="text-xs font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -259,7 +259,7 @@ export default function AdminPortfolio() {
                         {p.active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell data-export-ignore className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); void toggleActive(p); }}>
                           {p.active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

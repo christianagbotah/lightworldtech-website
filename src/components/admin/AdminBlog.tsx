@@ -190,7 +190,7 @@ export default function AdminBlog() {
                   <TableHead className="text-xs font-semibold text-center">Status</TableHead>
                   <TableHead className="text-xs font-semibold text-center hidden md:table-cell">Featured</TableHead>
                   <TableHead className="text-xs font-semibold hidden md:table-cell">Date</TableHead>
-                  <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
+                  <TableHead data-export-ignore className="text-xs font-semibold text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -230,8 +230,8 @@ export default function AdminBlog() {
                       <TableCell className="text-xs text-muted-foreground hidden md:table-cell">
                         {new Date(post.createdAt).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
+                      <TableCell data-export-ignore className="text-right">
+                      <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); handleEdit(post); }}>
                             <Pencil className="h-4 w-4" />
                           </Button>

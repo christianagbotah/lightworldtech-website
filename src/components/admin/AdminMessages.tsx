@@ -485,7 +485,7 @@ export default function AdminMessages() {
           <Table exportFileName="lightworld-customer-messages">
             <TableHeader>
               <TableRow className="bg-gradient-to-r from-muted/80 to-muted/30 dark:from-slate-800/80 dark:to-slate-800/30">
-                <TableHead className="w-10 text-xs font-semibold">
+                <TableHead data-export-ignore className="w-10 text-xs font-semibold">
                   <input
                     type="checkbox"
                     checked={allVisibleSelected}
@@ -499,7 +499,7 @@ export default function AdminMessages() {
                 <TableHead className="text-xs font-semibold hidden md:table-cell">Subject</TableHead>
                 <TableHead className="text-xs font-semibold hidden lg:table-cell">Date</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Status</TableHead>
-                <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
+                <TableHead data-export-ignore className="text-xs font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -518,7 +518,7 @@ export default function AdminMessages() {
                       !msg.read ? 'border-l-[3px] border-l-amber-500 dark:border-l-amber-400 bg-amber-50/30 dark:bg-amber-900/5' : 'border-l-[3px] border-l-transparent'
                     }`}
                   >
-                    <TableCell onClick={(event) => event.stopPropagation()}>
+                    <TableCell data-export-ignore onClick={(event) => event.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedIds.has(msg.id)}
@@ -564,7 +564,7 @@ export default function AdminMessages() {
                         </Badge>
                       </button>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell data-export-ignore className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button variant="ghost" size="icon" onClick={(event) => { event.stopPropagation(); handleView(msg); }} title="View">
                           <Eye className="h-4 w-4" />
