@@ -69,13 +69,18 @@ type AgreementChange = {
   id: string; changedBy: string; changeType: string; fields: string;
   beforeState: Record<string, unknown>; afterState: Record<string, unknown>; createdAt: string;
 };
+type AgreementObligation = {
+  id: string; title: string; category: string; owner: string; dueDate: string | null;
+  status: string; notes: string; evidenceUrl: string; completedAt: string | null;
+  completedBy: string; createdAt: string; updatedAt: string;
+};
 type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
   projectId: string | null; currency: string; contractValue: string; effectiveDate: string | null;
   expiryDate: string | null; renewalNoticeDays: number; owner: string; documentUrl: string;
   notes: string; signedAt: string | null; project: { id: string; name: string } | null;
   approvalStatus: string; approvalDecisionBy: string; approvalDecisionAt: string | null; approvalNotes: string;
-  attachments: AgreementAttachment[]; changes: AgreementChange[];
+  attachments: AgreementAttachment[]; changes: AgreementChange[]; obligations: AgreementObligation[];
 };
 type TicketMessage = {
   id: string; authorType: string; authorName: string; message: string; createdAt: string;
@@ -106,6 +111,8 @@ type PortfolioIntelligence = {
     agreementsInNoticeWindow: number;
     pendingAgreementApprovals: number;
     rejectedAgreementApprovals: number;
+    overdueAgreementObligations: number;
+    agreementObligationsDue30: number;
     atRiskProjects: number;
     budgetPressure: number;
     overBudget: number;
@@ -152,6 +159,8 @@ type PortfolioIntelligence = {
       agreementsInNoticeWindow: number;
       pendingAgreementApprovals: number;
       rejectedAgreementApprovals: number;
+      overdueAgreementObligations: number;
+      agreementObligationsDue30: number;
       budgetPressure: number;
       overBudget: number;
     };
@@ -194,6 +203,9 @@ export default function AdminClients() {
   const [pendingDelete, setPendingDelete] = useState<{ kind: 'document' | 'announcement' | 'agreement-attachment'; id: string; label: string } | null>(null);
   const [agreementUploadingId, setAgreementUploadingId] = useState('');
   const [agreementApprovalNotes, setAgreementApprovalNotes] = useState<Record<string, string>>({});
+  const [agreementObligationForms, setAgreementObligationForms] = useState<Record<string, {
+    title: string; category: string; owner: string; dueDate: string; notes: string; evidenceUrl: string;
+  }>>({});
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
   const [pendingClientAction, setPendingClientAction] = useState('');
 
@@ -363,6 +375,8 @@ export default function AdminClients() {
         'Agreements in notice window',
         'Pending agreement approvals',
         'Rejected agreement approvals',
+        'Overdue agreement obligations',
+        'Agreement obligations due 30d',
         'At-risk projects',
         'Budget pressure',
         'Over budget',
@@ -381,6 +395,8 @@ export default function AdminClients() {
         String(row.metrics.agreementsInNoticeWindow),
         String(row.metrics.pendingAgreementApprovals),
         String(row.metrics.rejectedAgreementApprovals),
+        String(row.metrics.overdueAgreementObligations),
+        String(row.metrics.agreementObligationsDue30),
         String(row.metrics.atRiskProjects),
         String(row.metrics.budgetPressure),
         String(row.metrics.overBudget),
@@ -603,6 +619,53 @@ export default function AdminClients() {
       toast.success('Agreement updated');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update agreement');
+    }
+  };
+
+  const createAgreementObligation = async (event: FormEvent, agreementId: string) => {
+    event.preventDefault();
+    const form = agreementObligationForms[agreementId] || {
+      title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '',
+    };
+    if (!form.title.trim()) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/client-agreements/' + agreementId + '/obligations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : null,
+        }),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not create agreement obligation');
+      setAgreementObligationForms((current) => ({
+        ...current,
+        [agreementId]: { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' },
+      }));
+      await fetchOrganizations();
+      toast.success('Agreement obligation added');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not create agreement obligation');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const patchAgreementObligation = async (obligationId: string, update: Record<string, unknown>) => {
+    try {
+      const response = await fetch('/api/admin/agreement-obligations/' + obligationId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not update agreement obligation');
+      await fetchOrganizations();
+      toast.success('Agreement obligation updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update agreement obligation');
     }
   };
 
@@ -943,7 +1006,7 @@ export default function AdminClients() {
                     { label: 'Stable', value: portfolio.summary.stable, icon: Building2, tone: 'text-emerald-600 bg-emerald-500/10' },
                     { label: 'Overdue invoices', value: portfolio.summary.overdueInvoices, icon: CircleDollarSign, tone: 'text-rose-600 bg-rose-500/10' },
                     { label: 'Renewals ≤30d', value: portfolio.summary.renewalsDue30, icon: CalendarClock, tone: 'text-violet-600 bg-violet-500/10' },
-                    { label: 'Agreement exceptions', value: portfolio.summary.expiredAgreements + portfolio.summary.agreementsInNoticeWindow, icon: FileText, tone: 'text-amber-600 bg-amber-500/10' },
+                    { label: 'Agreement exceptions', value: portfolio.summary.expiredAgreements + portfolio.summary.agreementsInNoticeWindow + portfolio.summary.overdueAgreementObligations, icon: FileText, tone: 'text-amber-600 bg-amber-500/10' },
                   ].map((item) => {
                     const Icon = item.icon;
                     return (
@@ -1012,7 +1075,7 @@ export default function AdminClients() {
                               </Badge>
                             </div>
                             <p className="mt-1 text-[10px] text-muted-foreground">
-                              {row.metrics.overdueInvoices} overdue · {row.metrics.renewalsDue30} renewals · {row.metrics.expiredAgreements + row.metrics.agreementsInNoticeWindow} agreement exceptions · {row.metrics.atRiskProjects} delivery risk · {row.metrics.budgetPressure} budget pressure · {row.metrics.urgentTickets + row.metrics.slaBreaches} support pressure
+                              {row.metrics.overdueInvoices} overdue · {row.metrics.renewalsDue30} renewals · {row.metrics.expiredAgreements + row.metrics.agreementsInNoticeWindow + row.metrics.overdueAgreementObligations} agreement exceptions · {row.metrics.agreementObligationsDue30} obligations due ≤30d · {row.metrics.atRiskProjects} delivery risk · {row.metrics.budgetPressure} budget pressure · {row.metrics.urgentTickets + row.metrics.slaBreaches} support pressure
                             </p>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
@@ -1075,12 +1138,14 @@ export default function AdminClients() {
                   </div>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-10">
+                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-12">
                   {[
                     ['Expired agreements', portfolio.summary.expiredAgreements],
                     ['Notice-window agreements', portfolio.summary.agreementsInNoticeWindow],
                     ['Pending approvals', portfolio.summary.pendingAgreementApprovals],
                     ['Rejected approvals', portfolio.summary.rejectedAgreementApprovals],
+                    ['Overdue obligations', portfolio.summary.overdueAgreementObligations],
+                    ['Obligations ≤30d', portfolio.summary.agreementObligationsDue30],
                     ['At-risk projects', portfolio.summary.atRiskProjects],
                     ['Budget pressure', portfolio.summary.budgetPressure],
                     ['Over budget', portfolio.summary.overBudget],
@@ -1469,6 +1534,116 @@ export default function AdminClients() {
                             <Button type="button" size="sm" variant="outline" onClick={() => void decideAgreementApproval(agreement.id, 'rejected')}>Reject</Button>
                           </div>
                         )}
+                      </div>
+
+                      <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Agreement obligations</p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">Track delivery, payment, support, security, compliance, renewal and reporting commitments with accountable owners and due dates.</p>
+                          </div>
+                          <Badge variant="outline">
+                            {agreement.obligations.filter((item) => !['completed', 'waived'].includes(item.status)).length} open
+                          </Badge>
+                        </div>
+                        <div className="mt-3 space-y-2">
+                          {agreement.obligations.map((obligation) => {
+                            const overdue = Boolean(obligation.dueDate && !['completed', 'waived'].includes(obligation.status) && new Date(obligation.dueDate).getTime() < Date.now());
+                            return (
+                              <div key={obligation.id} className="rounded-lg border border-border/60 bg-background p-2.5">
+                                <div className="flex flex-wrap items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-semibold">{obligation.title}</p>
+                                    <p className="mt-1 text-[10px] text-muted-foreground">
+                                      {pretty(obligation.category)} · {obligation.owner || 'Unassigned'}
+                                      {obligation.dueDate ? ' · due ' + new Date(obligation.dueDate).toLocaleDateString() : ' · no due date'}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1">
+                                    <Badge variant="outline">{pretty(obligation.status)}</Badge>
+                                    {overdue && <Badge className="bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200">Overdue</Badge>}
+                                  </div>
+                                </div>
+                                {obligation.notes && <p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{obligation.notes}</p>}
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <select
+                                    value={obligation.status}
+                                    onChange={(event) => void patchAgreementObligation(obligation.id, { status: event.target.value })}
+                                    className="h-8 rounded-lg border border-input bg-background px-2 text-[11px]"
+                                  >
+                                    <option value="open">Open</option>
+                                    <option value="in_progress">In progress</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="waived">Waived</option>
+                                  </select>
+                                  {obligation.evidenceUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(obligation.evidenceUrl, '_blank', 'noopener,noreferrer')}>Evidence</Button>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {!agreement.obligations.length && <p className="text-[11px] text-muted-foreground">No obligations recorded for this agreement yet.</p>}
+                        </div>
+                        <form
+                          onSubmit={(event) => void createAgreementObligation(event, agreement.id)}
+                          className="mt-3 space-y-2 border-t border-border/60 pt-3"
+                        >
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <Input
+                              required
+                              placeholder="Obligation / commitment"
+                              value={agreementObligationForms[agreement.id]?.title || ''}
+                              onChange={(event) => setAgreementObligationForms((current) => ({
+                                ...current,
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), title: event.target.value },
+                              }))}
+                            />
+                            <select
+                              value={agreementObligationForms[agreement.id]?.category || 'general'}
+                              onChange={(event) => setAgreementObligationForms((current) => ({
+                                ...current,
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), category: event.target.value },
+                              }))}
+                              className="h-10 rounded-xl border border-input bg-background px-3 text-sm"
+                            >
+                              <option value="general">General</option><option value="delivery">Delivery</option><option value="payment">Payment</option><option value="support">Support</option><option value="security">Security</option><option value="compliance">Compliance</option><option value="renewal">Renewal</option><option value="reporting">Reporting</option><option value="other">Other</option>
+                            </select>
+                            <Input
+                              placeholder="Owner"
+                              value={agreementObligationForms[agreement.id]?.owner || ''}
+                              onChange={(event) => setAgreementObligationForms((current) => ({
+                                ...current,
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), owner: event.target.value },
+                              }))}
+                            />
+                            <Input
+                              type="date"
+                              value={agreementObligationForms[agreement.id]?.dueDate || ''}
+                              onChange={(event) => setAgreementObligationForms((current) => ({
+                                ...current,
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), dueDate: event.target.value },
+                              }))}
+                            />
+                          </div>
+                          <Textarea
+                            rows={2}
+                            placeholder="Notes / acceptance criteria"
+                            value={agreementObligationForms[agreement.id]?.notes || ''}
+                            onChange={(event) => setAgreementObligationForms((current) => ({
+                              ...current,
+                              [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), notes: event.target.value },
+                            }))}
+                          />
+                          <Input
+                            type="url"
+                            placeholder="Evidence URL (optional)"
+                            value={agreementObligationForms[agreement.id]?.evidenceUrl || ''}
+                            onChange={(event) => setAgreementObligationForms((current) => ({
+                              ...current,
+                              [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), evidenceUrl: event.target.value },
+                            }))}
+                          />
+                          <Button disabled={saving} type="submit" size="sm" variant="outline"><Plus className="mr-1 size-3.5" /> Add obligation</Button>
+                        </form>
                       </div>
 
                       <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">

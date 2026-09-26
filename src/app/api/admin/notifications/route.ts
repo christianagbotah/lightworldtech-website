@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
     const warningMinutes = Math.max(5, Math.min(1440, Number.isFinite(configuredWarningMinutes) ? configuredWarningMinutes : 60));
     const warningHorizon = new Date(now.getTime() + warningMinutes * 60_000);
     const agreementHorizon = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+    const obligationHorizon = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const [
       unreadTickets,
       slaBreached,
@@ -77,6 +78,8 @@ export async function GET(request: NextRequest) {
       expiredActiveAgreements,
       pendingAgreementApprovals,
       rejectedAgreementApprovals,
+      overdueAgreementObligations,
+      agreementObligationsDue30,
     ] = await Promise.all([
       db.clientSupportTicket.count({
         where: { unreadByAdmin: true },
@@ -124,6 +127,18 @@ export async function GET(request: NextRequest) {
           status: { notIn: ['expired', 'terminated', 'superseded'] },
         },
       }),
+      db.clientAgreementObligation.count({
+        where: {
+          status: { notIn: ['completed', 'waived'] },
+          dueDate: { lt: now },
+        },
+      }),
+      db.clientAgreementObligation.count({
+        where: {
+          status: { notIn: ['completed', 'waived'] },
+          dueDate: { gte: now, lte: obligationHorizon },
+        },
+      }),
     ]);
 
     const agreementsInNoticeWindow = activeAgreementExpiries.filter((agreement) => {
@@ -131,6 +146,28 @@ export async function GET(request: NextRequest) {
       const daysRemaining = Math.ceil((agreement.expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
       return daysRemaining >= 0 && daysRemaining <= agreement.renewalNoticeDays;
     }).length;
+
+    if (overdueAgreementObligations > 0) {
+      notices.push({
+        id: 'client-agreement-obligations-overdue',
+        severity: 'critical',
+        title: 'Agreement obligations overdue',
+        message: overdueAgreementObligations + ' active agreement obligation' + (overdueAgreementObligations === 1 ? ' is' : 's are') + ' past the recorded due date and require action.',
+        count: overdueAgreementObligations,
+        action: 'admin-clients-agreements',
+      });
+    }
+
+    if (agreementObligationsDue30 > 0) {
+      notices.push({
+        id: 'client-agreement-obligations-due-30',
+        severity: 'warning',
+        title: 'Agreement obligations due soon',
+        message: agreementObligationsDue30 + ' active agreement obligation' + (agreementObligationsDue30 === 1 ? ' is' : 's are') + ' due within 30 days.',
+        count: agreementObligationsDue30,
+        action: 'admin-clients-agreements',
+      });
+    }
 
     if (rejectedAgreementApprovals > 0) {
       notices.push({

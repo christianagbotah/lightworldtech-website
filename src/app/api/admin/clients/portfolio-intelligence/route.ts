@@ -77,6 +77,9 @@ export async function GET(request: NextRequest) {
           approvalStatus: true,
           expiryDate: true,
           renewalNoticeDays: true,
+          obligations: {
+            select: { status: true, dueDate: true },
+          },
         },
       },
       tickets: {
@@ -159,10 +162,17 @@ export async function GET(request: NextRequest) {
     let agreementsInNoticeWindow = 0;
     let pendingAgreementApprovals = 0;
     let rejectedAgreementApprovals = 0;
+    let overdueAgreementObligations = 0;
+    let agreementObligationsDue30 = 0;
     for (const agreement of organization.agreements) {
       if (!['expired', 'terminated', 'superseded'].includes(agreement.status)) {
         if (agreement.approvalStatus === 'pending') pendingAgreementApprovals += 1;
         if (agreement.approvalStatus === 'rejected') rejectedAgreementApprovals += 1;
+      }
+      for (const obligation of agreement.obligations) {
+        if (['completed', 'waived'].includes(obligation.status) || !obligation.dueDate) continue;
+        if (obligation.dueDate < now) overdueAgreementObligations += 1;
+        else if (obligation.dueDate <= horizon30) agreementObligationsDue30 += 1;
       }
       if (agreement.status !== 'active' || !agreement.expiryDate) continue;
       if (agreement.expiryDate < now) {
@@ -208,6 +218,8 @@ export async function GET(request: NextRequest) {
     if (overBudget) riskScore += 3;
     if (expiredAgreements) riskScore += 3;
     if (rejectedAgreementApprovals) riskScore += 2;
+    if (overdueAgreementObligations) riskScore += 3;
+    if (agreementObligationsDue30) riskScore += 1;
     if (atRiskProjects) riskScore += 1;
     if (renewalsDue30 || projectRenewals30 || agreementsInNoticeWindow || pendingAgreementApprovals) riskScore += 1;
     if (budgetPressure && !overBudget) riskScore += 1;
@@ -238,6 +250,8 @@ export async function GET(request: NextRequest) {
         agreementsInNoticeWindow,
         pendingAgreementApprovals,
         rejectedAgreementApprovals,
+        overdueAgreementObligations,
+        agreementObligationsDue30,
         budgetPressure,
         overBudget,
       },
@@ -304,10 +318,14 @@ export async function GET(request: NextRequest) {
         row.metrics.expiredAgreements > 0 ||
         row.metrics.agreementsInNoticeWindow > 0 ||
         row.metrics.pendingAgreementApprovals > 0 ||
-        row.metrics.rejectedAgreementApprovals > 0
+        row.metrics.rejectedAgreementApprovals > 0 ||
+        row.metrics.overdueAgreementObligations > 0 ||
+        row.metrics.agreementObligationsDue30 > 0
       ) {
         const hasHighAgreementException =
-          row.metrics.expiredAgreements > 0 || row.metrics.rejectedAgreementApprovals > 0;
+          row.metrics.expiredAgreements > 0 ||
+          row.metrics.rejectedAgreementApprovals > 0 ||
+          row.metrics.overdueAgreementObligations > 0;
         actions.push({
           id: row.id + ':agreements',
           organizationId: row.id,
@@ -315,13 +333,17 @@ export async function GET(request: NextRequest) {
           type: 'agreements',
           severity: hasHighAgreementException ? 'high' : 'medium',
           title:
-            row.metrics.rejectedAgreementApprovals > 0
-              ? 'Resolve rejected agreement approvals'
-              : row.metrics.expiredAgreements > 0
-                ? 'Review expired agreements'
-                : row.metrics.pendingAgreementApprovals > 0
-                  ? 'Review pending agreement approvals'
-                  : 'Act within agreement notice window',
+            row.metrics.overdueAgreementObligations > 0
+              ? 'Resolve overdue agreement obligations'
+              : row.metrics.rejectedAgreementApprovals > 0
+                ? 'Resolve rejected agreement approvals'
+                : row.metrics.expiredAgreements > 0
+                  ? 'Review expired agreements'
+                  : row.metrics.pendingAgreementApprovals > 0
+                    ? 'Review pending agreement approvals'
+                    : row.metrics.agreementObligationsDue30 > 0
+                      ? 'Prepare upcoming agreement obligations'
+                      : 'Act within agreement notice window',
           detail:
             row.metrics.expiredAgreements +
             ' expired · ' +
@@ -330,7 +352,11 @@ export async function GET(request: NextRequest) {
             row.metrics.pendingAgreementApprovals +
             ' pending approval · ' +
             row.metrics.rejectedAgreementApprovals +
-            ' rejected.',
+            ' rejected · ' +
+            row.metrics.overdueAgreementObligations +
+            ' overdue obligations · ' +
+            row.metrics.agreementObligationsDue30 +
+            ' obligations due within 30 days.',
           score: row.riskScore + (hasHighAgreementException ? 7 : 3),
         });
       }
@@ -411,6 +437,8 @@ export async function GET(request: NextRequest) {
     agreementsInNoticeWindow: rows.reduce((sum, row) => sum + row.metrics.agreementsInNoticeWindow, 0),
     pendingAgreementApprovals: rows.reduce((sum, row) => sum + row.metrics.pendingAgreementApprovals, 0),
     rejectedAgreementApprovals: rows.reduce((sum, row) => sum + row.metrics.rejectedAgreementApprovals, 0),
+    overdueAgreementObligations: rows.reduce((sum, row) => sum + row.metrics.overdueAgreementObligations, 0),
+    agreementObligationsDue30: rows.reduce((sum, row) => sum + row.metrics.agreementObligationsDue30, 0),
     atRiskProjects: rows.reduce((sum, row) => sum + row.metrics.atRiskProjects, 0),
     budgetPressure: rows.reduce((sum, row) => sum + row.metrics.budgetPressure, 0),
     overBudget: rows.reduce((sum, row) => sum + row.metrics.overBudget, 0),
@@ -430,6 +458,6 @@ export async function GET(request: NextRequest) {
         overdueReceivables: values.overdueReceivables.toFixed(2),
         renewals30: values.renewals30.toFixed(2),
       })),
-    methodology: 'Portfolio posture is deterministic. High-severity exceptions include overdue receivables, expired services, expired or rejected agreements, urgent/SLA-breached support and over-budget projects. Pending agreement approvals and agreement notice windows are attention signals. Currency values are never converted.',
+    methodology: 'Portfolio posture is deterministic. High-severity exceptions include overdue receivables, expired services, expired or rejected agreements, overdue agreement obligations, urgent/SLA-breached support and over-budget projects. Pending agreement approvals, near-term obligations and agreement notice windows are attention signals. Currency values are never converted.',
   });
 }

@@ -578,6 +578,7 @@ model ClientAgreement {
   approvalNotes     String             @default("")
   attachments       ClientAgreementAttachment[]
   changes           ClientAgreementChange[]
+  obligations       ClientAgreementObligation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -600,6 +601,27 @@ model ClientAgreementChange {
   createdAt DateTime @default(now())
 
   @@index([agreementId, createdAt])
+}
+
+model ClientAgreementObligation {
+  id          String          @id @default(cuid())
+  agreementId String
+  agreement   ClientAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  title       String
+  category    String          @default("general")
+  owner       String          @default("")
+  dueDate     DateTime?
+  status      String          @default("open")
+  notes       String          @default("")
+  evidenceUrl String          @default("")
+  completedAt DateTime?
+  completedBy String          @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([agreementId, status])
+  @@index([dueDate])
 }
 
 model ClientAgreementAttachment {

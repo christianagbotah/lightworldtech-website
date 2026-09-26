@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
           project: { select: { id: true, name: true } },
           attachments: { orderBy: { createdAt: 'desc' } },
           changes: { orderBy: { createdAt: 'desc' }, take: 50 },
+          obligations: { orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }] },
         },
         orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
       },
