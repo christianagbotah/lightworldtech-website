@@ -213,6 +213,15 @@ export async function GET(request: NextRequest) {
       dueDate: Date;
       derivedStatus: string;
     }>();
+    const payableInvoiceByProject = new Map<string, {
+      id: string;
+      invoiceNumber: string;
+      currency: string;
+      balance: string;
+      dueDate: Date;
+      derivedStatus: string;
+      renewalForDate: Date | null;
+    }>();
 
     for (const invoice of invoices) {
       if (!invoice.serviceId || Number(invoice.balance) <= 0) continue;
@@ -227,6 +236,23 @@ export async function GET(request: NextRequest) {
       const existing = payableInvoiceByService.get(invoice.serviceId);
       if (!existing || candidate.dueDate.getTime() < existing.dueDate.getTime()) {
         payableInvoiceByService.set(invoice.serviceId, candidate);
+      }
+    }
+
+    for (const invoice of invoices) {
+      if (!invoice.projectId || Number(invoice.balance) <= 0) continue;
+      const candidate = {
+        id: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        currency: invoice.currency,
+        balance: invoice.balance,
+        dueDate: invoice.dueDate,
+        derivedStatus: invoice.derivedStatus,
+        renewalForDate: invoice.renewalForDate,
+      };
+      const existing = payableInvoiceByProject.get(invoice.projectId);
+      if (!existing || candidate.dueDate.getTime() < existing.dueDate.getTime()) {
+        payableInvoiceByProject.set(invoice.projectId, candidate);
       }
     }
 
@@ -283,7 +309,12 @@ export async function GET(request: NextRequest) {
           primaryEmail: organization.primaryEmail,
           primaryPhone: organization.primaryPhone,
         },
-        projects: organization.projects,
+        projects: organization.projects.map((project) => ({
+          ...project,
+          renewalAmount: project.renewalAmount.toFixed(2),
+          budgetAmount: project.budgetAmount.toFixed(2),
+          payableInvoice: payableInvoiceByProject.get(project.id) || null,
+        })),
         tickets: organization.tickets,
         announcements: organization.announcements,
         account: {
