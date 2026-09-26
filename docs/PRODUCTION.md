@@ -547,6 +547,7 @@ AUTO_COLLECTION_REMINDER_SMS=true
 COLLECTION_REMINDER_SMS_BATCH_SIZE=10
 COLLECTION_REMINDER_SMS_INTERVAL_DAYS=7
 COLLECTION_REMINDER_SMS_MIN_DAYS_OVERDUE=1
+COLLECTION_REMINDER_MAX_AUTOMATED_CYCLES=3
 ```
 
 The service renewal scheduler is bounded to at most 50 new reminders per run, uses the `service_renewal` / `service_expired` templates, and will not automatically resend an identical reminder that was already queued, sent or delivered.
@@ -580,6 +581,8 @@ After adding real credentials, smoke-test in this order:
 When `AUTO_COLLECTION_REMINDER_SMS=true`, the protected SMS dispatcher also reviews overdue customer invoices with a remaining balance. It schedules at most `COLLECTION_REMINDER_SMS_BATCH_SIZE` reminders per run, defers customers with an unexpired promise-to-pay, skips invalid or missing phone numbers, and suppresses repeat copies of the same reminder for `COLLECTION_REMINDER_SMS_INTERVAL_DAYS` days. The default interval is seven days and the default minimum age is one day overdue.
 
 Each automatic reminder uses the approved `payment_due` template and creates an auditable `FinanceCollectionActivity` entry linked to the SMS message. The reminder directs the customer to the secure Client Portal for account and payment options; it does not mark an invoice paid or alter the finance ledger.
+
+Automated collection outreach is also capped by `COLLECTION_REMINDER_MAX_AUTOMATED_CYCLES` (default 3). SMS and email contacts sent on the same UTC day count as one reminder cycle. Once the cap is reached, the scheduler creates an `automation_hold` collection activity with an immediately due follow-up and stops further automated contact until a human reviews the account and completes the hold.
 
 
 ### Contact lead notifications

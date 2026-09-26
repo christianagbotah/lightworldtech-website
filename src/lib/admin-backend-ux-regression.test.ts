@@ -1437,6 +1437,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).toContain("createdBy: 'System collections scheduler'");
     expect(sms).toContain("type: 'sms_reminder_scheduled'");
     expect(sms).toContain('promisesDeferred');
+    expect(sms).toContain('COLLECTION_REMINDER_MAX_AUTOMATED_CYCLES');
+    expect(sms).toContain('automatedCollectionCycleCount');
+    expect(sms).toContain("type: 'automation_hold'");
+    expect(sms).toContain('manualReviewRequired');
+    expect(smsOverview).toContain('maxAutomatedCycles');
+    expect(smsAdmin).toContain('human review after');
     expect(sms).toContain('AUTO_COLLECTION_REMINDER_EMAIL');
     expect(sms).toContain('COLLECTION_REMINDER_EMAIL_BATCH_SIZE');
     expect(sms).toContain('COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS');
