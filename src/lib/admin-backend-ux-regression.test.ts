@@ -1275,6 +1275,14 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain("SMS {health?.communications?.smsConfigured");
   });
 
+  test('counts only genuinely unpaid overdue supplier bills', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('overdueBillCount');
+    expect(notifications).toContain('invoiceBalance(bill.total, bill.allocations).gt(0)');
+    expect(notifications).toContain('past the due date with an outstanding balance');
+  });
+
   test('suppresses stale collection alerts after invoice settlement', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
 
