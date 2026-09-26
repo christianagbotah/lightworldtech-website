@@ -652,6 +652,47 @@ export async function GET(request: NextRequest) {
     }),
   );
 
+  const renewalInvoices = invoices.filter(
+    (invoice) => invoice.serviceId && invoice.renewalForDate,
+  );
+  const renewalsDueInPeriod = renewalInvoices.filter((invoice) =>
+    Boolean(
+      invoice.renewalForDate
+      && invoice.renewalForDate >= from
+      && invoice.renewalForDate <= to
+    ),
+  );
+  const completedDueInPeriod = renewalsDueInPeriod.filter(
+    (invoice) => Boolean(invoice.renewalCompletedAt),
+  );
+  const overdueOpenRenewals = renewalInvoices.filter((invoice) =>
+    Boolean(
+      invoice.renewalForDate
+      && invoice.renewalForDate < now
+      && !invoice.renewalCompletedAt
+      && !['draft', 'void'].includes(invoice.status)
+    ),
+  ).length;
+  const completedInPeriod = renewalInvoices.filter((invoice) =>
+    Boolean(
+      invoice.renewalCompletedAt
+      && invoice.renewalCompletedAt >= from
+      && invoice.renewalCompletedAt <= to
+    ),
+  ).length;
+  const completionRatePct = renewalsDueInPeriod.length
+    ? Math.round((completedDueInPeriod.length / renewalsDueInPeriod.length) * 1000) / 10
+    : null;
+
+  const renewalPerformance = {
+    dueInPeriod: renewalsDueInPeriod.length,
+    completedDueInPeriod: completedDueInPeriod.length,
+    completedInPeriod,
+    overdueOpen: overdueOpenRenewals,
+    completionRatePct,
+    methodology: 'Workflow completion only: completed renewal invoices divided by renewal invoices due in the selected reporting period. This is not a customer-retention rate.',
+  };
+
   const serviceAlerts = services.filter((service) => {
     const billingDate = service.nextDueDate || service.expiryDate;
     return Boolean(billingDate && billingDate <= renewalWindow);
@@ -698,6 +739,7 @@ export async function GET(request: NextRequest) {
       renewalExposure,
       recurringRevenue,
       receivableConcentration,
+      renewalPerformance,
       runway,
       collections: {
         followUpDue: followUpDueInvoices.size,
