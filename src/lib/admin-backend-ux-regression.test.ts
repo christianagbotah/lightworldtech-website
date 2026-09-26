@@ -1420,6 +1420,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
 
     expect(notifications).toContain("createdBy: 'System renewal draft scheduler'");
+    expect(notifications).toContain('collectionInvoices, renewalDrafts');
     expect(notifications).toContain('Renewal invoice drafts awaiting review');
     expect(notifications).toContain("action: 'admin-finance-renewals'");
   });
