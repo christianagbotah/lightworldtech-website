@@ -12,10 +12,16 @@ APP_GROUP="lightworld"
 
 install -d -o root -g "$APP_GROUP" -m 0750 "$TARGET_DIR"
 
-for script in prepare-release-runtime.sh promote-release.sh deploy-release-artifact.sh prune-releases.sh run-sms-dispatch.sh; do
+for script in prepare-release-runtime.sh promote-release.sh deploy-release-artifact.sh prune-releases.sh; do
   bash -n "$SOURCE_DIR/$script"
   install -o root -g "$APP_GROUP" -m 0700 "$SOURCE_DIR/$script" "$TARGET_DIR/$script"
 done
+
+# The dispatcher runs as the unprivileged lightworld service account, so its
+# script must remain readable/executable by the application group. Deployment
+# and release-management scripts stay root-only.
+bash -n "$SOURCE_DIR/run-sms-dispatch.sh"
+install -o root -g "$APP_GROUP" -m 0750 "$SOURCE_DIR/run-sms-dispatch.sh" "$TARGET_DIR/run-sms-dispatch.sh"
 
 for unit in lightworldtech-app.service lightworld-sms-dispatch.service lightworld-sms-dispatch.timer; do
   install -o root -g root -m 0644 "$SOURCE_DIR/$unit" "/etc/systemd/system/$unit"
