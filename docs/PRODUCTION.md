@@ -580,3 +580,17 @@ When `AUTO_RENEWAL_DRAFT_INVOICES=true`, the protected scheduler may prepare dra
 These invoices are **drafts only**. Automation never issues or emails them, never posts an accounting journal, never charges Hubtel, never changes a service renewal date, and never completes a renewal cycle. The generated draft uses the recurring service amount and deliberately sets tax treatment to `none` with a visible note requiring finance staff to confirm tax, scope, pricing and due date before issue. A system audit event is recorded for every generated draft.
 
 `RENEWAL_DRAFT_INVOICE_DUE_DAYS` is used only when the recorded renewal date is already in the past; otherwise the draft due date is the recorded renewal date.
+
+
+### Automated collection email reminders
+
+The same protected dispatcher can run a second, independent receivables channel:
+
+```bash
+AUTO_COLLECTION_REMINDER_EMAIL=true
+COLLECTION_REMINDER_EMAIL_BATCH_SIZE=10
+COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS=7
+COLLECTION_REMINDER_EMAIL_MIN_DAYS_OVERDUE=1
+```
+
+Email collection reminders are opt-in, bounded to 50 per run, require the configured transactional mail transport, defer invoices covered by a current promise-to-pay, and use PostgreSQL advisory locking plus recent collection activity to prevent duplicate sends inside the configured interval. Successes and failures are recorded in `FinanceCollectionActivity` for auditability. Email reminders do not modify invoice, payment or ledger state.
