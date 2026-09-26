@@ -683,7 +683,7 @@ export default function AdminSupportDesk() {
 
       <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
         <div className="max-w-full overflow-x-auto">
-          <Table hideExport exportFileName="lightworld-support-desk">
+          <Table exportFileName="lightworld-support-desk">
             <TableHeader>
               <TableRow className="bg-muted/40">
                 <TableHead className="w-10">
