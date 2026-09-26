@@ -557,3 +557,12 @@ After adding real credentials, smoke-test in this order:
 When `AUTO_COLLECTION_REMINDER_SMS=true`, the protected SMS dispatcher also reviews overdue customer invoices with a remaining balance. It schedules at most `COLLECTION_REMINDER_SMS_BATCH_SIZE` reminders per run, defers customers with an unexpired promise-to-pay, skips invalid or missing phone numbers, and suppresses repeat copies of the same reminder for `COLLECTION_REMINDER_SMS_INTERVAL_DAYS` days. The default interval is seven days and the default minimum age is one day overdue.
 
 Each automatic reminder uses the approved `payment_due` template and creates an auditable `FinanceCollectionActivity` entry linked to the SMS message. The reminder directs the customer to the secure Client Portal for account and payment options; it does not mark an invoice paid or alter the finance ledger.
+
+
+### Contact lead notifications
+
+Set `CONTACT_NOTIFICATION_EMAIL` to the internal mailbox that should receive immediate alerts for new public Contact / project-brief submissions. If omitted, the application falls back to `MAIL_REPLY_TO` when configured. Lead persistence and CRM creation are authoritative: a mail transport failure is logged but never rolls back or rejects a successfully stored customer enquiry.
+
+```bash
+CONTACT_NOTIFICATION_EMAIL=mail@lightworldtech.com
+```
