@@ -374,6 +374,32 @@ export async function queueDueServiceRenewalReminders() {
       continue;
     }
 
+    const existingHold = invoice.collectionActivities.find(
+      (activity) => activity.type === 'automation_hold' && !activity.completedAt,
+    );
+    const automatedCycles = automatedCollectionCycleCount(invoice.collectionActivities);
+    if (existingHold || automatedCycles >= maxAutomatedCycles) {
+      manualReviewRequired += 1;
+      if (!existingHold) {
+        await db.financeCollectionActivity.create({
+          data: {
+            organizationId: invoice.organizationId,
+            invoiceId: invoice.id,
+            type: 'automation_hold',
+            note:
+              'Automatic collection outreach paused after ' +
+              automatedCycles +
+              ' reminder cycle' +
+              (automatedCycles === 1 ? '' : 's') +
+              '. Human review is required before further customer contact.',
+            nextFollowUpAt: now,
+            createdBy: 'System collections scheduler',
+          },
+        });
+      }
+      continue;
+    }
+
     let recipient = '';
     try {
       recipient = normalizePhone(service.organization.primaryPhone);
@@ -846,6 +872,27 @@ export async function sendDueProjectRenewalEmailReminders() {
   return { enabled: true, configured: true, considered, sent, skipped, failed, missingEmail };
 }
 
+function automatedCollectionCycleCount(activities: Array<{
+  type: string;
+  createdBy: string;
+  createdAt: Date;
+}>): number {
+  const days = new Set(
+    activities
+      .filter((activity) =>
+        (
+          activity.type === 'sms_reminder_scheduled'
+          && activity.createdBy === 'System collections scheduler'
+        ) || (
+          activity.type === 'email_reminder'
+          && activity.createdBy === 'System collections email scheduler'
+        ),
+      )
+      .map((activity) => activity.createdAt.toISOString().slice(0, 10)),
+  );
+  return days.size;
+}
+
 export async function queueDueCollectionReminders() {
   const enabled = process.env.AUTO_COLLECTION_REMINDER_SMS === 'true';
   const config = hubtelConfiguration();
@@ -858,6 +905,7 @@ export async function queueDueCollectionReminders() {
       skipped: 0,
       invalidPhone: 0,
       promisesDeferred: 0,
+      manualReviewRequired: 0,
     };
   }
 
@@ -876,6 +924,11 @@ export async function queueDueCollectionReminders() {
   const minDaysOverdue = Math.max(
     1,
     Math.min(365, Number.isFinite(configuredMinDays) ? configuredMinDays : 1),
+  );
+  const configuredMaxCycles = Number(process.env.COLLECTION_REMINDER_MAX_AUTOMATED_CYCLES || 3);
+  const maxAutomatedCycles = Math.max(
+    1,
+    Math.min(12, Number.isFinite(configuredMaxCycles) ? configuredMaxCycles : 3),
   );
   const duplicateCutoff = new Date(now.getTime() - intervalDays * 86400000);
 
@@ -898,9 +951,11 @@ export async function queueDueCollectionReminders() {
         allocations: true,
         creditNotes: { where: { status: 'posted' } },
         collectionActivities: {
-          where: { type: 'promise_to_pay', promisedDate: { not: null } },
+          where: {
+            type: { in: ['promise_to_pay', 'sms_reminder_scheduled', 'email_reminder', 'automation_hold'] },
+          },
           orderBy: { createdAt: 'desc' },
-          take: 1,
+          take: 50,
         },
       },
       orderBy: [{ dueDate: 'asc' }, { issueDate: 'asc' }],
@@ -920,6 +975,7 @@ export async function queueDueCollectionReminders() {
       skipped: invoices.length,
       invalidPhone: 0,
       promisesDeferred: 0,
+      manualReviewRequired: 0,
     };
   }
 
@@ -928,6 +984,7 @@ export async function queueDueCollectionReminders() {
   let skipped = 0;
   let invalidPhone = 0;
   let promisesDeferred = 0;
+  let manualReviewRequired = 0;
 
   for (const invoice of invoices) {
     if (queued >= batchSize) break;
@@ -943,7 +1000,9 @@ export async function queueDueCollectionReminders() {
 
     considered += 1;
 
-    const latestPromise = invoice.collectionActivities[0];
+    const latestPromise = invoice.collectionActivities.find(
+      (activity) => activity.type === 'promise_to_pay' && activity.promisedDate,
+    );
     if (latestPromise?.promisedDate && latestPromise.promisedDate.getTime() >= now.getTime()) {
       promisesDeferred += 1;
       continue;
@@ -1044,6 +1103,7 @@ export async function queueDueCollectionReminders() {
     skipped,
     invalidPhone,
     promisesDeferred,
+    manualReviewRequired,
   };
 }
 
@@ -1061,6 +1121,7 @@ export async function sendDueCollectionEmailReminders() {
       failed: 0,
       promisesDeferred: 0,
       missingEmail: 0,
+      manualReviewRequired: 0,
     };
   }
 
@@ -1071,6 +1132,8 @@ export async function sendDueCollectionEmailReminders() {
   const intervalDays = Math.max(1, Math.min(30, Number.isFinite(configuredIntervalDays) ? configuredIntervalDays : 7));
   const configuredMinDays = Number(process.env.COLLECTION_REMINDER_EMAIL_MIN_DAYS_OVERDUE || 1);
   const minDaysOverdue = Math.max(1, Math.min(365, Number.isFinite(configuredMinDays) ? configuredMinDays : 1));
+  const configuredMaxCycles = Number(process.env.COLLECTION_REMINDER_MAX_AUTOMATED_CYCLES || 3);
+  const maxAutomatedCycles = Math.max(1, Math.min(12, Number.isFinite(configuredMaxCycles) ? configuredMaxCycles : 3));
   const duplicateCutoff = new Date(now.getTime() - intervalDays * 86400000);
 
   const invoices = await db.clientInvoice.findMany({
@@ -1090,9 +1153,11 @@ export async function sendDueCollectionEmailReminders() {
       allocations: true,
       creditNotes: { where: { status: 'posted' } },
       collectionActivities: {
-        where: { type: 'promise_to_pay', promisedDate: { not: null } },
+        where: {
+          type: { in: ['promise_to_pay', 'sms_reminder_scheduled', 'email_reminder', 'automation_hold'] },
+        },
         orderBy: { createdAt: 'desc' },
-        take: 1,
+        take: 50,
       },
     },
     orderBy: [{ dueDate: 'asc' }, { issueDate: 'asc' }],
@@ -1105,6 +1170,7 @@ export async function sendDueCollectionEmailReminders() {
   let failed = 0;
   let promisesDeferred = 0;
   let missingEmail = 0;
+  let manualReviewRequired = 0;
 
   for (const invoice of invoices) {
     if (sent >= batchSize) break;
@@ -1119,9 +1185,37 @@ export async function sendDueCollectionEmailReminders() {
     if (daysOverdue < minDaysOverdue) continue;
     considered += 1;
 
-    const latestPromise = invoice.collectionActivities[0];
+    const latestPromise = invoice.collectionActivities.find(
+      (activity) => activity.type === 'promise_to_pay' && activity.promisedDate,
+    );
     if (latestPromise?.promisedDate && latestPromise.promisedDate.getTime() >= now.getTime()) {
       promisesDeferred += 1;
+      continue;
+    }
+
+    const existingHold = invoice.collectionActivities.find(
+      (activity) => activity.type === 'automation_hold' && !activity.completedAt,
+    );
+    const automatedCycles = automatedCollectionCycleCount(invoice.collectionActivities);
+    if (existingHold || automatedCycles >= maxAutomatedCycles) {
+      manualReviewRequired += 1;
+      if (!existingHold) {
+        await db.financeCollectionActivity.create({
+          data: {
+            organizationId: invoice.organizationId,
+            invoiceId: invoice.id,
+            type: 'automation_hold',
+            note:
+              'Automatic collection outreach paused after ' +
+              automatedCycles +
+              ' reminder cycle' +
+              (automatedCycles === 1 ? '' : 's') +
+              '. Human review is required before further customer contact.',
+            nextFollowUpAt: now,
+            createdBy: 'System collections email scheduler',
+          },
+        });
+      }
       continue;
     }
 
@@ -1248,6 +1342,7 @@ export async function sendDueCollectionEmailReminders() {
     failed,
     promisesDeferred,
     missingEmail,
+    manualReviewRequired,
   };
 }
 
