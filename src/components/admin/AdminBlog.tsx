@@ -28,6 +28,7 @@ import {
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { readJsonResponse } from '@/lib/client-api';
 
 interface BlogPost {
   id: string;
@@ -75,7 +76,7 @@ export default function AdminBlog() {
       if (f === 'featured') params.set('featured', 'true');
       const res = await fetch(`/api/blog?${params.toString()}`, { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to fetch');
-      const payload = await res.json();
+      const payload = await readJsonResponse<any>(res, 'Invalid server response');
       setPosts(Array.isArray(payload) ? payload : (payload.data || []));
     } catch {
       toast.error('Failed to load posts');
