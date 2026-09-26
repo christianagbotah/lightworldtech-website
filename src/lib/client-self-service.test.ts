@@ -27,6 +27,18 @@ describe('client self-service profile and security', () => {
     expect(route).toContain('createClientSessionToken');
   });
 
+  test('clients can prefill a reviewed project renewal request from the project card', () => {
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(portal).toContain('Request project renewal');
+    expect(portal).toContain('prepareProjectRenewalRequest');
+    expect(portal).toContain("'Project renewal request · ' + project.name");
+    expect(portal).toContain("category: 'project_change'");
+    expect(portal).toContain("projectId: project.id");
+    expect(portal).toContain("document.getElementById('support')");
+    expect(portal).toContain('Please confirm the applicable scope, commercial terms, invoice and effective renewal date');
+  });
+
   test('clients can request reviewed service renewals and plan changes', () => {
     const portal = source('src/components/client/ClientPortalPage.tsx');
     const ticketApi = source('src/app/api/client/tickets/route.ts');
