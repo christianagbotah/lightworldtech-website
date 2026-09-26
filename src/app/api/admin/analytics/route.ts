@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
         event: true,
         path: true,
         referrer: true,
+        metadata: true,
         createdAt: true,
       },
     });
@@ -36,6 +37,22 @@ export async function GET(request: NextRequest) {
     const pageViews = events.filter((event) => event.event === 'page_view');
     const assistantMessages = events.filter((event) => event.event === 'assistant_message');
     const projectScopes = events.filter((event) => event.event === 'assistant_project_scope');
+    const assistantFeedback = events.filter((event) => event.event === 'assistant_feedback');
+    let assistantHelpful = 0;
+    let assistantNotHelpful = 0;
+    for (const event of assistantFeedback) {
+      try {
+        const metadata = JSON.parse(event.metadata || '{}') as { rating?: string };
+        if (metadata.rating === 'helpful') assistantHelpful += 1;
+        if (metadata.rating === 'not_helpful') assistantNotHelpful += 1;
+      } catch {
+        // Ignore malformed legacy analytics metadata.
+      }
+    }
+    const assistantFeedbackTotal = assistantHelpful + assistantNotHelpful;
+    const assistantHelpfulnessRate = assistantFeedbackTotal
+      ? Math.round((assistantHelpful / assistantFeedbackTotal) * 100)
+      : null;
     const contactSubmits = events.filter((event) => event.event === 'contact_submit');
 
     const pageCounts = new Map<string, number>();
@@ -81,6 +98,10 @@ export async function GET(request: NextRequest) {
         pageViews: pageViews.length,
         assistantMessages: assistantMessages.length,
         projectScopes: projectScopes.length,
+        assistantHelpful,
+        assistantNotHelpful,
+        assistantFeedbackTotal,
+        assistantHelpfulnessRate,
         contactSubmits: contactSubmits.length,
         topPages: [...pageCounts.entries()]
           .sort((a, b) => b[1] - a[1])

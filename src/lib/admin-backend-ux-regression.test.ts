@@ -1596,6 +1596,25 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).not.toContain('const payload = await response.json();');
   });
 
+  test('captures privacy-bounded assistant quality feedback', () => {
+    const analyticsClient = source('src/lib/analytics-client.ts');
+    const analyticsApi = source('src/app/api/analytics/route.ts');
+    const adminAnalytics = source('src/app/api/admin/analytics/route.ts');
+    const floating = source('src/components/layout/FloatingWidgets.tsx');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(analyticsClient).toContain("'assistant_feedback'");
+    expect(analyticsApi).toContain("'assistant_feedback'");
+    expect(floating).toContain('Was this helpful?');
+    expect(floating).toContain("trackEvent('assistant_feedback'");
+    expect(floating).toContain("rating: 'helpful'");
+    expect(floating).toContain("rating: 'not_helpful'");
+    expect(adminAnalytics).toContain('assistantHelpfulnessRate');
+    expect(adminAnalytics).toContain('assistantHelpful');
+    expect(adminAnalytics).toContain('assistantNotHelpful');
+    expect(dashboard).toContain('Assistant Helpful');
+  });
+
   test('supports dashboard drill-downs and a real authenticated health signal', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
