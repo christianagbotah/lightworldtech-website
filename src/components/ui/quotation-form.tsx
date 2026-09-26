@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { readJsonSafely } from '@/lib/http-response';
 import { z } from 'zod';
 
 interface QuotationFormProps {
@@ -162,9 +163,9 @@ export default function QuotationForm({ open, onOpenChange, preselectedService }
         }),
       });
 
-      const data = await response.json();
+      const data = await readJsonSafely<any>(response);
 
-      if (data.success) {
+      if (response.ok && data?.success) {
         setSubmitted(true);
         toast.success('Quotation request submitted! We\'ll get back to you within 24 hours.');
         setTimeout(() => handleClose(), 3000);
