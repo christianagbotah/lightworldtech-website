@@ -38,7 +38,9 @@ export async function GET(request: NextRequest) {
   const hubtel = hubtelConfiguration();
   const automation = {
     serviceRenewals: process.env.AUTO_SERVICE_RENEWAL_SMS === 'true',
+    serviceRenewalEmail: process.env.AUTO_SERVICE_RENEWAL_EMAIL === 'true',
     projectRenewals: process.env.AUTO_PROJECT_RENEWAL_SMS === 'true',
+    projectRenewalEmail: process.env.AUTO_PROJECT_RENEWAL_EMAIL === 'true',
     collections: process.env.AUTO_COLLECTION_REMINDER_SMS === 'true',
     collectionEmail: process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true',
     renewalDrafts: process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true',
@@ -46,7 +48,9 @@ export async function GET(request: NextRequest) {
   };
   const smsAutomationEnabled =
     automation.serviceRenewals || automation.projectRenewals || automation.collections;
-  const automationEnabled = smsAutomationEnabled || automation.collectionEmail || automation.renewalDrafts || automation.projectRenewalDrafts;
+  const emailAutomationEnabled =
+    automation.collectionEmail || automation.serviceRenewalEmail || automation.projectRenewalEmail;
+  const automationEnabled = smsAutomationEnabled || emailAutomationEnabled || automation.renewalDrafts || automation.projectRenewalDrafts;
   const dispatcherConfigured = Boolean((process.env.SMS_CRON_SECRET || '').trim());
   const runtimeMaxAgeMinutes = Math.max(
     2,
@@ -66,7 +70,7 @@ export async function GET(request: NextRequest) {
   const automationHealthy =
     (!automationEnabled || dispatcherConfigured) &&
     (!smsAutomationEnabled || hubtel.sms) &&
-    (!automation.collectionEmail || mail.configured) &&
+    (!emailAutomationEnabled || mail.configured) &&
     runtimeHealthy;
   const overall =
     database.status === 'healthy' && mailHealthy && automationHealthy
@@ -109,8 +113,8 @@ export async function GET(request: NextRequest) {
               ? 'Automation is enabled but the protected scheduler secret is not configured.'
               : smsAutomationEnabled && !hubtel.sms
                 ? 'SMS automation is enabled but Hubtel SMS is not configured.'
-                : automation.collectionEmail && !mail.configured
-                  ? 'Collection email automation is enabled but outbound mail is not configured.'
+                : emailAutomationEnabled && !mail.configured
+                  ? 'Email automation is enabled but outbound mail is not configured.'
                   : runtimeState?.status === 'failed'
                     ? 'The protected automation dispatcher is reporting a failed run.'
                     : automationEnabled && !runtimeHealthy

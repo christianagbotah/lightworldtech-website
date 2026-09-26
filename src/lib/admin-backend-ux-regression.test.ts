@@ -1289,6 +1289,15 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).toContain('project.renewalNoticeDays');
     expect(sms).toContain("createdBy: 'System project renewal scheduler'");
     expect(sms).toContain('AUTO_SERVICE_RENEWAL_SMS');
+    expect(sms).toContain('AUTO_SERVICE_RENEWAL_EMAIL');
+    expect(sms).toContain('SERVICE_RENEWAL_EMAIL_BATCH_SIZE');
+    expect(sms).toContain('sendDueServiceRenewalEmailReminders');
+    expect(sms).toContain("'system.service_renewal_email_sent'");
+    expect(sms).toContain('AUTO_PROJECT_RENEWAL_EMAIL');
+    expect(sms).toContain('PROJECT_RENEWAL_EMAIL_BATCH_SIZE');
+    expect(sms).toContain('sendDueProjectRenewalEmailReminders');
+    expect(sms).toContain("'system.project_renewal_email_sent'");
+    expect(sms).toContain('renewalEmailIdentity');
     expect(sms).toContain('SERVICE_RENEWAL_SMS_BATCH_SIZE');
     expect(sms).toContain('service.renewalNoticeDays');
     expect(sms).toContain("createdBy: 'System renewal scheduler'");
@@ -1307,6 +1316,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).toContain('sendDueCollectionEmailReminders');
     expect(sms).toContain('collectionEmailQueue');
     expect(sms).toContain('createDueRenewalInvoiceDrafts');
+    expect(smsOverview).toContain('AUTO_SERVICE_RENEWAL_EMAIL');
+    expect(smsOverview).toContain('AUTO_PROJECT_RENEWAL_EMAIL');
     expect(smsOverview).toContain('AUTO_RENEWAL_DRAFT_INVOICES');
     expect(smsOverview).toContain('RENEWAL_DRAFT_INVOICE_BATCH_SIZE');
     expect(smsAdmin).toContain('SMS, campaigns, scheduling & OTP');
@@ -1319,6 +1330,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(smsOverview).toContain('AUTO_COLLECTION_REMINDER_SMS');
     expect(smsOverview).toContain('AUTO_COLLECTION_REMINDER_EMAIL');
     expect(smsOverview).toContain('COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS');
+    expect(smsAdmin).toContain('Service renewal email');
+    expect(smsAdmin).toContain('Project renewal email');
     expect(smsAdmin).toContain('Collection email');
     expect(smsOverview).toContain('COLLECTION_REMINDER_SMS_INTERVAL_DAYS');
     expect(smsAdmin).toContain("sessionStorage.getItem('lw-sms-recipient')");

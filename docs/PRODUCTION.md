@@ -515,8 +515,17 @@ Automatic client service renewal/expiry reminders are deliberately opt-in. To le
 AUTO_SERVICE_RENEWAL_SMS=true
 SERVICE_RENEWAL_SMS_BATCH_SIZE=10
 
+# Service renewal email is an independent channel.
+AUTO_SERVICE_RENEWAL_EMAIL=true
+SERVICE_RENEWAL_EMAIL_BATCH_SIZE=10
+
 # Project-level renewal reminders are separately opt-in.
 AUTO_PROJECT_RENEWAL_SMS=true
+PROJECT_RENEWAL_SMS_BATCH_SIZE=10
+
+# Project renewal email is an independent channel.
+AUTO_PROJECT_RENEWAL_EMAIL=true
+PROJECT_RENEWAL_EMAIL_BATCH_SIZE=10
 
 # Draft-only renewal billing automation is separately opt-in.
 AUTO_RENEWAL_DRAFT_INVOICES=true
@@ -533,7 +542,6 @@ AUTO_COLLECTION_REMINDER_SMS=true
 COLLECTION_REMINDER_SMS_BATCH_SIZE=10
 COLLECTION_REMINDER_SMS_INTERVAL_DAYS=7
 COLLECTION_REMINDER_SMS_MIN_DAYS_OVERDUE=1
-PROJECT_RENEWAL_SMS_BATCH_SIZE=10
 ```
 
 The service renewal scheduler is bounded to at most 50 new reminders per run, uses the `service_renewal` / `service_expired` templates, and will not automatically resend an identical reminder that was already queued, sent or delivered.
@@ -615,3 +623,19 @@ When `AUTO_PROJECT_RENEWAL_DRAFT_INVOICES=true`, the protected dispatcher may pr
 Project renewal invoices are **drafts only**. They are never issued, emailed, posted to the accounting ledger, charged through Hubtel, or used to advance project dates automatically. Finance staff must review the project scope, tax treatment, renewal amount and due date before issue. Every generated draft records a system audit event.
 
 The Finance → Renewals queue also allows a finance user to prepare the same project renewal invoice manually. If an invoice already exists for the project and renewal cycle, the queue opens that invoice instead of offering another preparation action.
+
+
+### Automated renewal email reminders
+
+The protected communications dispatcher can send transactional renewal emails independently of Hubtel SMS:
+
+```bash
+AUTO_SERVICE_RENEWAL_EMAIL=true
+SERVICE_RENEWAL_EMAIL_BATCH_SIZE=10
+AUTO_PROJECT_RENEWAL_EMAIL=true
+PROJECT_RENEWAL_EMAIL_BATCH_SIZE=10
+```
+
+Both channels require the configured transactional mail transport and are bounded to 50 sends per dispatcher run. For each recorded renewal cycle the system can send at most one notice-window email and, if the date later passes, one expired/overdue email. Idempotency uses the existing governance audit log with the service/project ID, renewal date and lifecycle state, so a completed renewal can safely generate notifications again when its next cycle date advances.
+
+These emails link the customer back to the secure Client Portal. They do not issue invoices, post journals, collect money, advance renewal dates or change service/project status. Successful and failed sends are recorded as system governance audit events.

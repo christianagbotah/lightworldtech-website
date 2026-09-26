@@ -62,9 +62,19 @@ export async function GET(request: NextRequest) {
           enabled: process.env.AUTO_SERVICE_RENEWAL_SMS === 'true',
           batchSize: Math.max(1, Math.min(50, Number(process.env.SERVICE_RENEWAL_SMS_BATCH_SIZE || 10) || 10)),
         },
+        serviceRenewalEmail: {
+          enabled: process.env.AUTO_SERVICE_RENEWAL_EMAIL === 'true',
+          configured: getMailTransportStatus().configured,
+          batchSize: Math.max(1, Math.min(50, Number(process.env.SERVICE_RENEWAL_EMAIL_BATCH_SIZE || 10) || 10)),
+        },
         projectRenewals: {
           enabled: process.env.AUTO_PROJECT_RENEWAL_SMS === 'true',
           batchSize: Math.max(1, Math.min(50, Number(process.env.PROJECT_RENEWAL_SMS_BATCH_SIZE || 10) || 10)),
+        },
+        projectRenewalEmail: {
+          enabled: process.env.AUTO_PROJECT_RENEWAL_EMAIL === 'true',
+          configured: getMailTransportStatus().configured,
+          batchSize: Math.max(1, Math.min(50, Number(process.env.PROJECT_RENEWAL_EMAIL_BATCH_SIZE || 10) || 10)),
         },
         renewalDrafts: {
           enabled: process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true',
