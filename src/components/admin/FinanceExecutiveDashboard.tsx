@@ -82,6 +82,14 @@ export type FinanceExecutiveDashboardData = {
     top3SharePct: number;
     methodology: string;
   }>;
+  collectionHealth: Record<string, {
+    reportingDays: number;
+    receivableDaysProxy: number | null;
+    overdueSharePct: number;
+    severeAgingSharePct: number;
+    collectionCoveragePct: number | null;
+    methodology: string;
+  }>;
   renewalPerformance: {
     dueInPeriod: number;
     completedDueInPeriod: number;
@@ -334,6 +342,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.renewalExposure || {}),
       ...Object.keys(dashboard.recurringRevenue || {}),
       ...Object.keys(dashboard.receivableConcentration || {}),
+      ...Object.keys(dashboard.collectionHealth || {}),
       ...Object.keys(dashboard.runway || {}),
       ...Object.keys(dashboard.trends || {}),
     ])).sort(),
@@ -377,7 +386,7 @@ export default function FinanceExecutiveDashboard({
       ['Reporting period', dashboard.period.from + ' to ' + dashboard.period.to],
       ['Generated at', new Date().toISOString()],
       [],
-      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Largest customer receivable share %', 'Top 3 receivable share %', 'Payables', 'Revenue', 'Expenses', 'Net profit', 'MRR', 'ARR', 'Active recurring services', 'Excluded non-standard cycles', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
+      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Receivable days proxy', 'Overdue receivable share %', '61+ day share %', 'Collection coverage %', 'Largest customer receivable share %', 'Top 3 receivable share %', 'Payables', 'Revenue', 'Expenses', 'Net profit', 'MRR', 'ARR', 'Active recurring services', 'Excluded non-standard cycles', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
     ];
 
     const codes = Array.from(new Set([
@@ -386,6 +395,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.runway || {}),
       ...Object.keys(dashboard.recurringRevenue || {}),
       ...Object.keys(dashboard.receivableConcentration || {}),
+      ...Object.keys(dashboard.collectionHealth || {}),
       ...Object.keys(dashboard.renewalExposure || {}),
     ])).sort();
 
@@ -396,12 +406,17 @@ export default function FinanceExecutiveDashboard({
       const renewals = dashboard.renewalExposure[code];
       const recurring = dashboard.recurringRevenue[code];
       const concentration = dashboard.receivableConcentration[code];
+      const collectionHealth = dashboard.collectionHealth[code];
       lines.push([
         code,
         position?.total || '0.00',
         coverage?.months || '',
         coverage?.averageMonthlyCashOut || '0.00',
         finance?.receivables || '0.00',
+        collectionHealth?.receivableDaysProxy === null || collectionHealth?.receivableDaysProxy === undefined ? '' : String(collectionHealth.receivableDaysProxy),
+        String(collectionHealth?.overdueSharePct || 0),
+        String(collectionHealth?.severeAgingSharePct || 0),
+        collectionHealth?.collectionCoveragePct === null || collectionHealth?.collectionCoveragePct === undefined ? '' : String(collectionHealth.collectionCoveragePct),
         String(concentration?.topSharePct || 0),
         String(concentration?.top3SharePct || 0),
         finance?.payables || '0.00',
@@ -485,6 +500,14 @@ export default function FinanceExecutiveDashboard({
     topSharePct: 0,
     top3SharePct: 0,
     methodology: 'No open customer receivables are currently recorded for this currency.',
+  };
+  const collectionHealth = dashboard.collectionHealth[currency] || {
+    reportingDays: 0,
+    receivableDaysProxy: null,
+    overdueSharePct: 0,
+    severeAgingSharePct: 0,
+    collectionCoveragePct: null,
+    methodology: 'Collection efficiency becomes available when receivables, revenue or customer receipts are recorded.',
   };
   const runway = dashboard.runway[currency] || {
     liquidity: cash.total,
@@ -665,6 +688,30 @@ export default function FinanceExecutiveDashboard({
             <button key={String(label)} type="button" onClick={onRenewals} className="rounded-xl border border-border/60 p-4 text-left transition hover:bg-muted/40">
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{String(label)}</p>
               <p className="mt-2 text-xl font-bold">{String(value)}</p>
+            </button>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Timer className="size-4 text-amber-600" />
+            Collection efficiency · {currency}
+          </CardTitle>
+          <p className="text-xs leading-5 text-muted-foreground">{collectionHealth.methodology}</p>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            ['Receivable days proxy', collectionHealth.receivableDaysProxy === null ? '—' : collectionHealth.receivableDaysProxy.toFixed(1) + ' days', 'Ending AR relative to ' + collectionHealth.reportingDays + ' reporting day(s) of revenue'],
+            ['Overdue share', collectionHealth.overdueSharePct.toFixed(1) + '%', 'Share of current receivables already past due'],
+            ['61+ day share', collectionHealth.severeAgingSharePct.toFixed(1) + '%', 'Older receivables carrying higher collection risk'],
+            ['Collection coverage', collectionHealth.collectionCoveragePct === null ? '—' : collectionHealth.collectionCoveragePct.toFixed(1) + '%', 'Period customer receipts vs receipts plus current open AR'],
+          ].map(([label, value, detail]) => (
+            <button key={String(label)} type="button" onClick={onCollections} className="rounded-xl border border-border/60 p-4 text-left transition hover:bg-muted/40">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{String(label)}</p>
+              <p className="mt-2 text-xl font-bold tabular-nums">{String(value)}</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{String(detail)}</p>
             </button>
           ))}
         </CardContent>
