@@ -1794,6 +1794,27 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain("id={'agreement-' + agreement.id}");
   });
 
+  test('routes personal agreement obligation alerts into the accountable work queue', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(notifications).toContain('myOverdueAgreementObligations');
+    expect(notifications).toContain('myAgreementObligationsDue7');
+    expect(notifications).toContain('Your agreement obligations are overdue');
+    expect(notifications).toContain('Your agreement obligations due this week');
+    expect(notifications).toContain("ownerAdminId: admin.id");
+    expect(notifications).toContain("action: 'admin-clients-obligations-mine'");
+    expect(notifications).toContain('Team agreement obligations overdue');
+    expect(notifications).toContain("action: 'admin-clients-obligations-overdue'");
+    expect(notifications).toContain("action: 'admin-clients-obligations-due'");
+    expect(layout).toContain("sessionStorage.setItem('lw-client-obligation-scope', scope)");
+    expect(layout).toContain("sessionStorage.setItem('lw-client-action', 'obligations')");
+    expect(clients).toContain("sessionStorage.getItem('lw-client-obligation-scope')");
+    expect(clients).toContain("pendingClientAction === 'obligations'");
+    expect(clients).toContain('id="client-obligation-queue"');
+  });
+
   test('preserves proposal to project to agreement commercial lineage', () => {
     const clientsApi = source('src/app/api/admin/clients/route.ts');
     const clients = source('src/components/admin/AdminClients.tsx');
