@@ -217,7 +217,7 @@ export default function AdminPortfolio() {
 
       <div className="border border-border rounded-xl bg-card overflow-hidden">
         <div className="max-w-full overflow-x-auto max-h-[600px] overflow-y-auto">
-          <Table>
+          <Table exportFileName="lightworld-portfolio-projects">
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="text-xs font-semibold">Title</TableHead>
