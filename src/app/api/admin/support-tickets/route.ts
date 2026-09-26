@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
 
     const performanceSince = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-    const [tickets, total, open, unread, highPriority, breached, atRisk, awaitingClient, performanceTickets] = await Promise.all([
+    const [tickets, total, open, unread, highPriority, breached, atRisk, awaitingClient, performanceTickets, openBacklog] = await Promise.all([
       db.clientSupportTicket.findMany({
         where,
         take: limit,
@@ -114,7 +114,17 @@ export async function GET(request: NextRequest) {
           firstRespondedAt: true,
           resolvedAt: true,
           clientRating: true,
+          events: {
+            where: { type: 'ticket_reopened' },
+            select: { id: true },
+          },
         },
+      }),
+      db.clientSupportTicket.findMany({
+        where: { status: { notIn: ['resolved', 'closed'] } },
+        orderBy: { createdAt: 'asc' },
+        take: 5000,
+        select: { createdAt: true },
       }),
     ]);
 
@@ -171,6 +181,20 @@ export async function GET(request: NextRequest) {
         ) / 100
       : null;
 
+    const backlogAgeMinutes = openBacklog.map((ticket) =>
+      Math.max(0, now.getTime() - ticket.createdAt.getTime()) / 60000,
+    );
+    const avgOpenAgeMinutes = backlogAgeMinutes.length
+      ? Math.round(backlogAgeMinutes.reduce((sum, value) => sum + value, 0) / backlogAgeMinutes.length)
+      : null;
+    const oldestOpenAgeMinutes = backlogAgeMinutes.length
+      ? Math.round(Math.max(...backlogAgeMinutes))
+      : null;
+    const reopenedTickets = performanceTickets.filter((ticket) => ticket.events.length > 0).length;
+    const reopenIncidencePct = performanceTickets.length
+      ? Math.round((reopenedTickets / performanceTickets.length) * 1000) / 10
+      : null;
+
     return NextResponse.json({
       success: true,
       data: tickets.map((ticket) => ({
@@ -193,6 +217,11 @@ export async function GET(request: NextRequest) {
           csatAverage,
           csatResponses: ratedSamples.length,
           resolvedSamples: resolutionSamples.length,
+          avgOpenAgeMinutes,
+          oldestOpenAgeMinutes,
+          reopenedTickets,
+          reopenIncidencePct,
+          reopenMethodology: 'Reopen incidence is the share of tickets created in the rolling performance window that have at least one client reopen event. It is not a defect attribution metric.',
         },
       },
       filters: {
