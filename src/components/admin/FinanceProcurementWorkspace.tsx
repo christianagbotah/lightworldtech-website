@@ -224,14 +224,14 @@ export default function FinanceProcurementWorkspace() {
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ['Awaiting approval', summary.submitted, ClipboardList],
-          ['Approved to order', summary.approved, CheckCircle2],
-          ['POs in transit', summary.issued, ShoppingCart],
-          ['Received / bill next', summary.received, PackageCheck],
-        ].map(([label, value, Icon]) => (
-          <Card key={String(label)} className="border-border/60">
+          { label: 'Awaiting approval', value: summary.submitted, Icon: ClipboardList },
+          { label: 'Approved to order', value: summary.approved, Icon: CheckCircle2 },
+          { label: 'POs in transit', value: summary.issued, Icon: ShoppingCart },
+          { label: 'Received / bill next', value: summary.received, Icon: PackageCheck },
+        ].map(({ label, value, Icon }) => (
+          <Card key={label} className="border-border/60">
             <CardContent className="flex items-center justify-between p-4">
-              <div><p className="text-xs text-muted-foreground">{String(label)}</p><p className="mt-1 text-2xl font-bold">{String(value)}</p></div>
+              <div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold">{value}</p></div>
               <Icon className="size-5 text-amber-600" />
             </CardContent>
           </Card>
