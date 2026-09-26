@@ -1190,6 +1190,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).toContain("createdBy: 'System collections scheduler'");
     expect(sms).toContain("type: 'sms_reminder_scheduled'");
     expect(sms).toContain('promisesDeferred');
+    expect(sms).toContain('AUTO_COLLECTION_REMINDER_EMAIL');
+    expect(sms).toContain('COLLECTION_REMINDER_EMAIL_BATCH_SIZE');
+    expect(sms).toContain('COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS');
+    expect(sms).toContain("createdBy: 'System collections email scheduler'");
+    expect(sms).toContain('sendDueCollectionEmailReminders');
+    expect(sms).toContain('collectionEmailQueue');
     expect(sms).toContain('createDueRenewalInvoiceDrafts');
     expect(smsOverview).toContain('AUTO_RENEWAL_DRAFT_INVOICES');
     expect(smsOverview).toContain('RENEWAL_DRAFT_INVOICE_BATCH_SIZE');
@@ -1201,6 +1207,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(smsAdmin).toContain('Overdue collections');
     expect(smsOverview).toContain('dispatcherConfigured');
     expect(smsOverview).toContain('AUTO_COLLECTION_REMINDER_SMS');
+    expect(smsOverview).toContain('AUTO_COLLECTION_REMINDER_EMAIL');
+    expect(smsOverview).toContain('COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS');
+    expect(smsAdmin).toContain('Collection email');
     expect(smsOverview).toContain('COLLECTION_REMINDER_SMS_INTERVAL_DAYS');
     expect(smsAdmin).toContain("sessionStorage.getItem('lw-sms-recipient')");
     expect(smsAdmin).toContain('lw-single-sms-recipient');
