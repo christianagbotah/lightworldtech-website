@@ -40,6 +40,23 @@ export async function GET(request: NextRequest) {
     success: true,
     data: {
       configuration: hubtelConfiguration(),
+      automation: {
+        dispatcherConfigured: Boolean((process.env.SMS_CRON_SECRET || '').trim()),
+        serviceRenewals: {
+          enabled: process.env.AUTO_SERVICE_RENEWAL_SMS === 'true',
+          batchSize: Math.max(1, Math.min(50, Number(process.env.SERVICE_RENEWAL_SMS_BATCH_SIZE || 10) || 10)),
+        },
+        projectRenewals: {
+          enabled: process.env.AUTO_PROJECT_RENEWAL_SMS === 'true',
+          batchSize: Math.max(1, Math.min(50, Number(process.env.PROJECT_RENEWAL_SMS_BATCH_SIZE || 10) || 10)),
+        },
+        collections: {
+          enabled: process.env.AUTO_COLLECTION_REMINDER_SMS === 'true',
+          batchSize: Math.max(1, Math.min(50, Number(process.env.COLLECTION_REMINDER_SMS_BATCH_SIZE || 10) || 10)),
+          intervalDays: Math.max(1, Math.min(30, Number(process.env.COLLECTION_REMINDER_SMS_INTERVAL_DAYS || 7) || 7)),
+          minDaysOverdue: Math.max(1, Math.min(365, Number(process.env.COLLECTION_REMINDER_SMS_MIN_DAYS_OVERDUE || 1) || 1)),
+        },
+      },
       activeClients,
       templates: templates.map((template) => ({
         ...template,
