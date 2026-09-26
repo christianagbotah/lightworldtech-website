@@ -132,8 +132,8 @@ describe('public experience quality', () => {
     expect(products).toContain("import Image from 'next/image'");
     expect(products.match(/image: '\/images\//g)?.length).toBeGreaterThanOrEqual(6);
     expect(products).toContain('aspect-[16/9]');
-    expect(products).toContain('min-h-[58px]');
-    expect(products).toContain('min-h-[72px]');
+    expect(products).toContain('grid-rows-[58px_minmax(96px,1fr)_auto]');
+    expect(products).toContain('line-clamp-2 text-xl font-semibold');
     expect(products).toContain('group-hover:scale-[1.035]');
     expect(products).not.toContain('mt-auto pt-9');
   });
