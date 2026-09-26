@@ -111,6 +111,9 @@ type Payment = {
   method: string;
   reference: string;
   receivedBy: string;
+  customerNotificationStatus: string;
+  customerNotificationChannels: string;
+  customerNotificationError: string;
 };
 
 type CommercialData = {
@@ -398,6 +401,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
   const [forbidden, setForbidden] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statementDownloading, setStatementDownloading] = useState(false);
+  const [notificationRetryId, setNotificationRetryId] = useState('');
   const [pendingReminder, setPendingReminder] = useState<'payment_sms' | 'renewal_sms' | 'project_renewal_sms' | null>(null);
   const [pendingProjectReminderId, setPendingProjectReminderId] = useState('');
   const [reminderBusy, setReminderBusy] = useState(false);
@@ -580,6 +584,28 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
       toast.error(error instanceof Error ? error.message : 'Unable to send customer reminder');
     } finally {
       setReminderBusy(false);
+    }
+  };
+
+  const retryPaymentNotification = async (paymentId: string) => {
+    setNotificationRetryId(paymentId);
+    try {
+      const response = await fetch(
+        '/api/admin/finance/payments/' + encodeURIComponent(paymentId) + '/notification',
+        { method: 'POST' },
+      );
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to retry payment confirmation');
+      toast.success(
+        payload?.data?.status === 'sent'
+          ? 'Payment confirmation delivered'
+          : 'Payment confirmation retry completed with remaining delivery issues',
+      );
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to retry payment confirmation');
+    } finally {
+      setNotificationRetryId('');
     }
   };
 
@@ -1490,6 +1516,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                       <TableHead>Date</TableHead>
                       <TableHead>Method / reference</TableHead>
                       <TableHead>Received by</TableHead>
+                      <TableHead>Customer confirmation</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
                       <TableHead className="text-right">Unapplied</TableHead>
                     </TableRow>
@@ -1504,12 +1531,36 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                           <p className="text-[10px] text-muted-foreground">{payment.reference || 'No reference'}</p>
                         </TableCell>
                         <TableCell className="text-xs">{payment.receivedBy}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline">{pretty(payment.customerNotificationStatus || 'pending')}</Badge>
+                            {['failed', 'partial'].includes(payment.customerNotificationStatus) && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-[11px]"
+                                disabled={notificationRetryId === payment.id}
+                                onClick={() => void retryPaymentNotification(payment.id)}
+                              >
+                                {notificationRetryId === payment.id && <Loader2 className="mr-1.5 size-3 animate-spin" />}
+                                Retry confirmation
+                              </Button>
+                            )}
+                          </div>
+                          {payment.customerNotificationChannels && (
+                            <p className="mt-1 text-[10px] text-muted-foreground">Sent: {payment.customerNotificationChannels.replaceAll(',', ' + ')}</p>
+                          )}
+                          {payment.customerNotificationError && (
+                            <p className="mt-1 max-w-xs text-[10px] text-rose-600 dark:text-rose-300">{payment.customerNotificationError}</p>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right font-semibold">{money(payment.amount, payment.currency)}</TableCell>
                         <TableCell className="text-right">{money(payment.unallocatedAmount, payment.currency)}</TableCell>
                       </TableRow>
                     ))}
                     {!data?.payments.length && (
-                      <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No customer payments recorded yet.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">No customer payments recorded yet.</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
