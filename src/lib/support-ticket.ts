@@ -1,5 +1,7 @@
 import { db } from '@/lib/db';
 import { getMailTransportStatus, sanitizeMailError, sendTransactionalMail } from '@/lib/mail';
+import { hubtelConfiguration, normalizePhone, renderSmsTemplate } from '@/lib/hubtel';
+import { queueSingleSms } from '@/lib/sms';
 
 export const SUPPORT_TICKET_CATEGORIES = [
   'technical',
@@ -155,12 +157,65 @@ export async function notifyClientTicketCreated(input: {
   }
 }
 
+async function notifySupportUpdateSms(input: {
+  phone?: string;
+  customerName: string;
+  ticketNumber: string;
+  status: string;
+}) {
+  if (!input.phone?.trim()) return;
+  const config = hubtelConfiguration();
+  if (!config.sms || !config.senderId) return;
+
+  try {
+    const template = await db.smsTemplate.findFirst({
+      where: { key: 'support_update', active: true },
+    });
+    if (!template) return;
+
+    const recipient = normalizePhone(input.phone);
+    const statusLabel = input.status.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+    const content = renderSmsTemplate(template.body, {
+      name: input.customerName,
+      ticket: input.ticketNumber,
+      status: statusLabel,
+    });
+
+    const duplicate = await db.smsMessage.findFirst({
+      where: {
+        recipient,
+        templateId: template.id,
+        content,
+        status: { in: ['queued', 'scheduled', 'sent', 'delivered'] },
+        createdAt: { gte: new Date(Date.now() - 30 * 60 * 1000) },
+      },
+      select: { id: true },
+    });
+    if (duplicate) return;
+
+    await queueSingleSms({
+      recipient,
+      senderId: config.senderId,
+      content,
+      templateId: template.id,
+      scheduledAt: new Date(Date.now() + 30_000),
+      createdBy: 'System support update',
+    });
+  } catch (error) {
+    console.error(
+      'Client support SMS notification failed:',
+      error instanceof Error ? error.message.slice(0, 500) : 'SMS notification failed',
+    );
+  }
+}
+
 export async function notifyClientOfSupportStatus(input: {
   to: string;
   customerName: string;
   ticketNumber: string;
   subject: string;
   status: string;
+  phone?: string;
 }) {
   const statusLabel = input.status.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
   try {
@@ -188,6 +243,13 @@ export async function notifyClientOfSupportStatus(input: {
     console.error('Support ticket status email failed:', sanitizeMailError(error));
   }
 }
+
+  await notifySupportUpdateSms({
+    phone: input.phone,
+    customerName: input.customerName,
+    ticketNumber: input.ticketNumber,
+    status: input.status,
+  });
 
 export async function notifySupportDesk(input: {
   ticketNumber: string;
@@ -242,6 +304,8 @@ export async function notifyClientOfSupportReply(input: {
   subject: string;
   message: string;
   authorName: string;
+  phone?: string;
+  status?: string;
 }) {
   try {
     await sendTransactionalMail({
@@ -265,3 +329,10 @@ export async function notifyClientOfSupportReply(input: {
     console.error('Client ticket reply notification failed:', sanitizeMailError(error));
   }
 }
+
+  await notifySupportUpdateSms({
+    phone: input.phone,
+    customerName: input.customerName,
+    ticketNumber: input.ticketNumber,
+    status: input.status || 'awaiting_client',
+  });
