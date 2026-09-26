@@ -405,7 +405,7 @@ export default function AdminFinance() {
   });
   const [vendorForm, setVendorForm] = useState({ name: '', email: '', phone: '', taxId: '', notes: '' });
   const [billForm, setBillForm] = useState({
-    vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
+    purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
     issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
   });
   const [supplierPaymentForm, setSupplierPaymentForm] = useState({
@@ -865,7 +865,7 @@ export default function AdminFinance() {
       taxTreatment: billForm.taxTreatment,
     }, 'Supplier bill recorded');
     if (ok) setBillForm({
-      vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
+      purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
       issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
     });
   };
@@ -1072,7 +1072,26 @@ export default function AdminFinance() {
         />
       )}
 
-      {section === 'procurement' && <FinanceProcurementWorkspace />}
+      {section === 'procurement' && (
+        <FinanceProcurementWorkspace
+          onPrepareBill={(order) => {
+            setBillForm({
+              purchaseOrderId: order.id,
+              vendorId: order.vendorId,
+              vendorReference: '',
+              category: 'operating_expense',
+              currency: order.currency,
+              issueDate: today(),
+              dueDate: inDays(14),
+              taxableAmount: order.total,
+              taxTreatment: 'none',
+              taxRecoverable: true,
+              notes: 'Prepared from received purchase order ' + order.poNumber + '. Review supplier invoice reference, tax treatment and due date before posting.',
+            });
+            setDialog('bill');
+          }}
+        />
+      )}
 
       {section === 'customers' && (
         <div className="space-y-5">
@@ -1718,15 +1737,28 @@ export default function AdminFinance() {
         <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Add supplier</DialogTitle></DialogHeader><form onSubmit={submitVendor} className="space-y-3"><Input required placeholder="Supplier name" value={vendorForm.name} onChange={(e) => setVendorForm({ ...vendorForm, name: e.target.value })} /><Input type="email" placeholder="Email" value={vendorForm.email} onChange={(e) => setVendorForm({ ...vendorForm, email: e.target.value })} /><Input placeholder="Phone" value={vendorForm.phone} onChange={(e) => setVendorForm({ ...vendorForm, phone: e.target.value })} /><Input placeholder="Tax / registration ID (optional)" value={vendorForm.taxId} onChange={(e) => setVendorForm({ ...vendorForm, taxId: e.target.value })} /><Textarea placeholder="Supplier notes" value={vendorForm.notes} onChange={(e) => setVendorForm({ ...vendorForm, notes: e.target.value })} /><DialogFooter><Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button><Button disabled={saving}>Save supplier</Button></DialogFooter></form></DialogContent>
       </Dialog>
 
-      <Dialog open={dialog === 'bill'} onOpenChange={(open) => !open && setDialog(null)}>
+      <Dialog
+        open={dialog === 'bill'}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDialog(null);
+            setBillForm((current) => ({ ...current, purchaseOrderId: '' }));
+          }
+        }}
+      >
         <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Record supplier bill</DialogTitle>
           </DialogHeader>
           <form onSubmit={submitBill} className="space-y-4">
+            {billForm.purchaseOrderId && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-200">
+                Matched to a received purchase order. Supplier, currency and net amount are enforced server-side against the PO before posting.
+              </div>
+            )}
             <div>
               <Label>Supplier</Label>
-              <select required value={billForm.vendorId} onChange={(e) => setBillForm({ ...billForm, vendorId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+              <select required disabled={Boolean(billForm.purchaseOrderId)} value={billForm.vendorId} onChange={(e) => setBillForm({ ...billForm, vendorId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
                 <option value="">Select supplier</option>
                 {data.vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
               </select>
@@ -1740,7 +1772,7 @@ export default function AdminFinance() {
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div><Label>Issue date</Label><Input required type="date" value={billForm.issueDate} onChange={(e) => setBillForm({ ...billForm, issueDate: e.target.value })} /></div>
               <div><Label>Due date</Label><Input required type="date" value={billForm.dueDate} onChange={(e) => setBillForm({ ...billForm, dueDate: e.target.value })} /></div>
-              <div><Label>Net / taxable amount</Label><Input required type="number" min="0.01" step="0.01" value={billForm.taxableAmount} onChange={(e) => setBillForm({ ...billForm, taxableAmount: e.target.value })} /></div>
+              <div><Label>Net / taxable amount</Label><Input required disabled={Boolean(billForm.purchaseOrderId)} type="number" min="0.01" step="0.01" value={billForm.taxableAmount} onChange={(e) => setBillForm({ ...billForm, taxableAmount: e.target.value })} /></div>
               <div>
                 <Label>Tax treatment</Label>
                 <select value={billForm.taxTreatment} onChange={(e) => setBillForm({ ...billForm, taxTreatment: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">

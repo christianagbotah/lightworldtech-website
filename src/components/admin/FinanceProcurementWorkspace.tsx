@@ -98,7 +98,11 @@ async function readJson(response: Response) {
   }
 }
 
-export default function FinanceProcurementWorkspace() {
+export default function FinanceProcurementWorkspace({
+  onPrepareBill,
+}: {
+  onPrepareBill?: (order: PurchaseOrder) => void;
+}) {
   const [data, setData] = useState<ProcurementData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -324,7 +328,12 @@ export default function FinanceProcurementWorkspace() {
                   <TableCell>
                     {item.status === 'issued' && <Button size="sm" variant="outline" disabled={saving} onClick={() => void action(item.id, 'receive')}><PackageCheck className="mr-1 size-3.5" />Confirm received</Button>}
                     {item.status === 'received' && <div className="space-y-2"><p className="text-xs text-muted-foreground">Received by {item.receivedBy || 'Finance'}{item.receivedAt ? ' · ' + new Date(item.receivedAt).toLocaleString() : ''}</p><Button size="sm" variant="outline" disabled={saving} onClick={() => void action(item.id, 'close')}>Close PO</Button></div>}
-                    {item.status === 'closed' && <p className="text-xs text-muted-foreground">Closed. Supplier bill can now be matched in Accounts Payable.</p>}
+                    {['received', 'closed'].includes(item.status) && (
+                      <div className="space-y-2">
+                        {item.status === 'closed' && <p className="text-xs text-muted-foreground">PO closed and ready for Accounts Payable matching.</p>}
+                        {onPrepareBill && <Button size="sm" onClick={() => onPrepareBill(item)}>Prepare matched bill</Button>}
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
