@@ -550,6 +550,45 @@ export async function GET(request: NextRequest) {
     }];
   }));
 
+  const reportingDays = Math.max(1, Math.ceil((to.getTime() - from.getTime()) / 86400000) + 1);
+  const collectionHealth = Object.fromEntries(
+    [...currencies].sort().map((currency) => {
+      const openReceivables = receivables[currency] || new Prisma.Decimal(0);
+      const periodRevenue = accrualRevenue[currency] || new Prisma.Decimal(0);
+      const collected = cashIn[currency] || new Prisma.Decimal(0);
+      const overdue = ['1_30', '31_60', '61_90', '90_plus'].reduce(
+        (sum, bucket) => sum.plus(agedDebtors[bucket][currency] || 0),
+        new Prisma.Decimal(0),
+      );
+      const severeAging = ['61_90', '90_plus'].reduce(
+        (sum, bucket) => sum.plus(agedDebtors[bucket][currency] || 0),
+        new Prisma.Decimal(0),
+      );
+      const receivableDaysProxy = periodRevenue.gt(0)
+        ? Number(openReceivables.div(periodRevenue).mul(reportingDays).toFixed(1))
+        : null;
+      const overdueSharePct = openReceivables.gt(0)
+        ? Number(overdue.div(openReceivables).mul(100).toFixed(1))
+        : 0;
+      const severeAgingSharePct = openReceivables.gt(0)
+        ? Number(severeAging.div(openReceivables).mul(100).toFixed(1))
+        : 0;
+      const collectionBase = collected.plus(openReceivables);
+      const collectionCoveragePct = collectionBase.gt(0)
+        ? Number(collected.div(collectionBase).mul(100).toFixed(1))
+        : null;
+
+      return [currency, {
+        reportingDays,
+        receivableDaysProxy,
+        overdueSharePct,
+        severeAgingSharePct,
+        collectionCoveragePct,
+        methodology: 'Receivable days is an ending-AR / selected-period revenue proxy, not audited DSO. Overdue and severe-aging shares use current open receivables. Collection coverage compares selected-period customer receipts with those receipts plus current open receivables. Currencies remain separate.',
+      }];
+    }),
+  );
+
   const cashPosition = Object.fromEntries(
     Object.entries(cashPositionRaw)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -739,6 +778,7 @@ export async function GET(request: NextRequest) {
       renewalExposure,
       recurringRevenue,
       receivableConcentration,
+      collectionHealth,
       renewalPerformance,
       runway,
       collections: {
