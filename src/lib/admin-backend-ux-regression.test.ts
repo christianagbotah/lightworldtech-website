@@ -1349,6 +1349,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(health).toContain('AUTO_SERVICE_RENEWAL_SMS');
     expect(health).toContain('AUTO_PROJECT_RENEWAL_SMS');
     expect(health).toContain('AUTO_COLLECTION_REMINDER_SMS');
+    expect(health).toContain('AUTO_RENEWAL_DRAFT_INVOICES');
+    expect(health).toContain('smsAutomationEnabled');
     expect(health).toContain('dispatcherConfigured');
     expect(health).toContain('automationHealthy');
     expect(dashboard).toContain('communications: {');
