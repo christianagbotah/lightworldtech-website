@@ -30,6 +30,22 @@ describe('public experience quality', () => {
     expect(css).toContain('animation: none !important');
   });
 
+  test('public CMS background refreshes tolerate malformed gateway responses', () => {
+    const pages = [
+      'src/components/pages/BlogPage.tsx',
+      'src/components/pages/ServicesPage.tsx',
+      'src/components/pages/PortfolioPage.tsx',
+      'src/components/pages/HomePage.tsx',
+      'src/components/ui/command-palette.tsx',
+    ];
+    for (const path of pages) {
+      const value = source(path);
+      expect(value).toContain('readJsonSafely');
+      expect(value).not.toContain('response.ok ? response.json()');
+      expect(value).not.toContain('return response.json();');
+    }
+  });
+
   test('public and client submissions tolerate empty or malformed JSON responses', () => {
     const helper = source('src/lib/http-response.ts');
     const footer = source('src/components/layout/Footer.tsx');

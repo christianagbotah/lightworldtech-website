@@ -8,6 +8,7 @@ import { ArrowRight, ArrowUpRight, Briefcase, Layers3, Sparkles } from 'lucide-r
 import { contentText, type SiteSettings } from '@/lib/site-content';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import { safeNavigationHref } from '@/lib/navigation-content';
+import { readJsonSafely } from '@/lib/http-response';
 
 interface PortfolioItem {
   id: string;
@@ -88,7 +89,7 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
     fetch('/api/portfolio?active=true')
       .then((response) => {
         if (!response.ok) throw new Error('Portfolio unavailable');
-        return response.json();
+        return readJsonSafely<any>(response);
       })
       .then((payload) => {
         const data = Array.isArray(payload?.data) ? payload.data : [];
