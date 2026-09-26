@@ -84,6 +84,14 @@ const navItems = [
   { id: 'settings', label: 'Settings', icon: Settings, page: 'admin-settings' as const, permission: 'site.manage' as AdminPermission, group: 'administration' },
 ];
 
+type AdminSearchResult = {
+  kind: 'client' | 'invoice' | 'support' | 'lead' | 'message';
+  id: string;
+  title: string;
+  subtitle: string;
+  workspace: 'admin-clients' | 'admin-finance' | 'admin-support' | 'admin-crm' | 'admin-messages';
+};
+
 type AdminNotice = {
   id: string;
   severity: 'info' | 'warning' | 'critical';
@@ -99,6 +107,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
+  const [commandQuery, setCommandQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<AdminSearchResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [notices, setNotices] = useState<AdminNotice[]>([]);
   const [noticeTotal, setNoticeTotal] = useState(0);
   const [noticeLoading, setNoticeLoading] = useState(true);
@@ -131,6 +142,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     void loadNotifications();
   }, [adminTab]);
+
+  useEffect(() => {
+    if (!commandOpen || commandQuery.trim().length < 2) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const response = await fetch('/api/admin/search?q=' + encodeURIComponent(commandQuery.trim()), {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        const payload = await readJsonResponse(response);
+        if (!response.ok) throw new Error(payload?.error || 'Unable to search operations');
+        setSearchResults(Array.isArray(payload?.data) ? payload.data : []);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        setSearchResults([]);
+      } finally {
+        if (!controller.signal.aborted) setSearchLoading(false);
+      }
+    }, 180);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [commandOpen, commandQuery]);
+
 
   useEffect(() => {
     const refresh = () => {
@@ -199,6 +243,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     const item = visibleNavItems.find((entry) => entry.page === action);
     if (item) handleNavClick(item.id, item.page);
+  };
+
+  const openSearchResult = (result: AdminSearchResult) => {
+    if (result.kind === 'client') {
+      sessionStorage.setItem('lw-client-organization-id', result.id);
+      navigate('admin-clients');
+    } else if (result.kind === 'invoice') {
+      sessionStorage.setItem('lw-finance-section', 'customers');
+      sessionStorage.setItem('lw-finance-record-type', 'invoice');
+      sessionStorage.setItem('lw-finance-record-id', result.id);
+      navigate('admin-finance');
+    } else if (result.kind === 'support') {
+      sessionStorage.setItem('lw-support-ticket-id', result.id);
+      navigate('admin-support');
+    } else if (result.kind === 'lead') {
+      sessionStorage.setItem('lw-open-lead-id', result.id);
+      navigate('admin-crm');
+    } else {
+      sessionStorage.setItem('lw-open-message-id', result.id);
+      navigate('admin-messages');
+    }
+    setCommandQuery('');
+    setSearchResults([]);
+    setCommandOpen(false);
   };
 
   const handleLogout = async () => {
@@ -517,9 +585,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         description="Search and navigate Lightworld administrator workspaces"
         className="max-w-2xl"
       >
-        <CommandInput placeholder="Search dashboard, CRM, clients, finance, content, mail or governance…" />
+        <CommandInput
+          value={commandQuery}
+          onValueChange={setCommandQuery}
+          placeholder="Search workspaces, clients, invoices, tickets, leads or messages…"
+        />
         <CommandList className="max-h-[420px]">
-          <CommandEmpty>No matching administrator workspace.</CommandEmpty>
+          <CommandEmpty>{searchLoading ? 'Searching operational records…' : 'No matching workspace or operational record.'}</CommandEmpty>
+          {searchResults.length > 0 && (
+            <CommandGroup heading="Operational records">
+              {searchResults.map((result) => (
+                <CommandItem
+                  key={result.kind + '-' + result.id}
+                  value={result.kind + ' ' + result.title + ' ' + result.subtitle}
+                  onSelect={() => openSearchResult(result)}
+                >
+                  {result.kind === 'client' ? <Building2 className="size-4" /> :
+                   result.kind === 'invoice' ? <Landmark className="size-4" /> :
+                   result.kind === 'support' ? <LifeBuoy className="size-4" /> :
+                   result.kind === 'lead' ? <GitBranch className="size-4" /> :
+                   <Mail className="size-4" />}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate">{result.title}</span>
+                    <span className="block truncate text-[11px] text-muted-foreground">{result.subtitle}</span>
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
           <CommandGroup heading="Workspaces">
             {visibleNavItems.map((item) => {
               const Icon = item.icon;

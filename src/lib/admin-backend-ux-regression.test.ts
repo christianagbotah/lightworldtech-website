@@ -1644,6 +1644,35 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(crm).toContain('Unassigned');
   });
 
+  test('supports permission-aware global operational search and record deep links', () => {
+    const layout = source('src/components/admin/AdminLayout.tsx');
+    const search = source('src/app/api/admin/search/route.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const messages = source('src/components/admin/AdminMessages.tsx');
+
+    expect(search).toContain("hasAdminPermission(actor.role, actor.permissions, 'clients.manage')");
+    expect(search).toContain("hasAdminPermission(actor.role, actor.permissions, 'finance.manage')");
+    expect(search).toContain("hasAdminPermission(actor.role, actor.permissions, 'crm.manage')");
+    expect(search).toContain('db.clientOrganization.findMany');
+    expect(search).toContain('db.clientInvoice.findMany');
+    expect(search).toContain('db.clientSupportTicket.findMany');
+    expect(search).toContain('db.lead.findMany');
+    expect(search).toContain('db.contactMessage.findMany');
+    expect(layout).toContain("fetch('/api/admin/search?q='");
+    expect(layout).toContain('Operational records');
+    expect(layout).toContain("sessionStorage.setItem('lw-client-organization-id'");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-record-type', 'invoice')");
+    expect(layout).toContain("sessionStorage.setItem('lw-support-ticket-id'");
+    expect(layout).toContain("sessionStorage.setItem('lw-open-lead-id'");
+    expect(layout).toContain("sessionStorage.setItem('lw-open-message-id'");
+    expect(finance).toContain("sessionStorage.getItem('lw-finance-record-type')");
+    expect(crm).toContain("sessionStorage.getItem('lw-open-lead-id')");
+    expect(support).toContain("sessionStorage.getItem('lw-support-ticket-id')");
+    expect(messages).toContain("sessionStorage.getItem('lw-open-message-id')");
+  });
+
   test('keeps dashboard and governance tables exportable', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const governance = source('src/components/admin/AdminGovernance.tsx');
