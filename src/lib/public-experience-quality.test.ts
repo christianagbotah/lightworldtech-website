@@ -30,6 +30,27 @@ describe('public experience quality', () => {
     expect(css).toContain('animation: none !important');
   });
 
+  test('public and client submissions tolerate empty or malformed JSON responses', () => {
+    const helper = source('src/lib/http-response.ts');
+    const footer = source('src/components/layout/Footer.tsx');
+    const products = source('src/components/pages/ProductsPage.tsx');
+    const quotation = source('src/components/ui/quotation-form.tsx');
+    const testimonials = source('src/components/sections/TestimonialsSection.tsx');
+    const activate = source('src/components/client/ClientActivatePage.tsx');
+    const reset = source('src/components/client/ClientResetPasswordPage.tsx');
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(helper).toContain('readJsonSafely');
+    expect(helper).toContain('requireJson');
+    expect(footer).toContain("requireJson<any>(response, 'Subscription request failed')");
+    expect(products).toContain("requireJson<any>(response, 'Unable to subscribe')");
+    expect(quotation).toContain('readJsonSafely<any>(response)');
+    expect(testimonials).toContain('readJsonSafely<any>(response)');
+    expect(activate).toContain('readJsonSafely<any>(response)');
+    expect(reset).toContain('readJsonSafely<any>(response)');
+    expect(portal).toContain('response.json().catch(() => null)');
+  });
+
   test('public routes show a lightweight loader and above-fold heroes do not wait for hydration to become visible', () => {
     const loading = source('src/app/loading.tsx');
     const layout = source('src/app/layout.tsx');
