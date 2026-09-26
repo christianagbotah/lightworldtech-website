@@ -82,6 +82,22 @@ type AgreementObligation = {
   status: string; notes: string; evidenceUrl: string; completedAt: string | null;
   completedBy: string; createdAt: string; updatedAt: string;
 };
+type ObligationQueueItem = {
+  id: string; title: string; category: string; status: string; owner: string; ownerAdminId: string | null;
+  dueDate: string | null; notes: string; updatedAt: string;
+  ownerAdmin: { id: string; name: string; email: string } | null;
+  agreement: {
+    id: string; title: string; referenceNumber: string;
+    organization: { id: string; name: string };
+    project: { id: string; name: string } | null;
+  };
+};
+type ObligationQueueState = {
+  scope: 'all' | 'mine' | 'unassigned' | 'overdue' | 'due_30';
+  actor: { id: string; name: string; email: string } | null;
+  summary: { total: number; mine: number; unassigned: number; overdue: number; due30: number };
+  data: ObligationQueueItem[];
+};
 type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
   projectId: string | null; currency: string; contractValue: string; effectiveDate: string | null;
@@ -216,6 +232,13 @@ export default function AdminClients() {
     title: string; category: string; owner: string; ownerAdminId: string; dueDate: string; notes: string; evidenceUrl: string;
   }>>({});
   const [obligationOwners, setObligationOwners] = useState<ObligationOwner[]>([]);
+  const [obligationQueue, setObligationQueue] = useState<ObligationQueueState>({
+    scope: 'mine',
+    actor: null,
+    summary: { total: 0, mine: 0, unassigned: 0, overdue: 0, due30: 0 },
+    data: [],
+  });
+  const [obligationQueueLoading, setObligationQueueLoading] = useState(true);
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
   const [pendingClientAction, setPendingClientAction] = useState('');
 
@@ -275,6 +298,25 @@ export default function AdminClients() {
     }
   };
 
+  const fetchObligationQueue = async (scope: ObligationQueueState['scope'] = 'mine') => {
+    setObligationQueueLoading(true);
+    try {
+      const response = await fetch('/api/admin/agreement-obligations/queue?scope=' + encodeURIComponent(scope), { cache: 'no-store' });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not load agreement obligation queue');
+      setObligationQueue({
+        scope: payload.scope || scope,
+        actor: payload.actor || null,
+        summary: payload.summary || { total: 0, mine: 0, unassigned: 0, overdue: 0, due30: 0 },
+        data: payload.data || [],
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not load agreement obligation queue');
+    } finally {
+      setObligationQueueLoading(false);
+    }
+  };
+
   const fetchObligationOwners = async () => {
     try {
       const response = await fetch('/api/admin/client-operators', { cache: 'no-store' });
@@ -305,7 +347,7 @@ export default function AdminClients() {
     }
   };
 
-  useEffect(() => { void Promise.all([fetchOrganizations(), fetchPortfolio(), fetchObligationOwners()]); }, []);
+  useEffect(() => { void Promise.all([fetchOrganizations(), fetchPortfolio(), fetchObligationOwners(), fetchObligationQueue('mine')]); }, []);
 
   useEffect(() => {
     if (!organizations.length || typeof window === 'undefined') return;
@@ -335,6 +377,13 @@ export default function AdminClients() {
     }, 0);
     return () => window.clearTimeout(id);
   }, [pendingClientAction, selected?.id]);
+
+  const openObligationQueueItem = (item: ObligationQueueItem) => {
+    setSelectedId(item.agreement.organization.id);
+    window.setTimeout(() => {
+      document.getElementById('agreement-' + item.agreement.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  };
 
   const openPortfolioAction = (action: PortfolioIntelligence['actionQueue'][number]) => {
     if (action.type === 'collections' || action.type === 'renewals') {
@@ -1005,6 +1054,83 @@ export default function AdminClients() {
         })}
       </div>
 
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CalendarClock className="size-4 text-amber-600" />
+                Agreement obligation work queue
+              </CardTitle>
+              <p className="mt-1 max-w-4xl text-xs leading-5 text-muted-foreground">
+                Cross-client commitments with accountable ownership. Use Mine for your workload, then clear unassigned, overdue and near-term obligations before they become commercial exceptions.
+              </p>
+            </div>
+            {obligationQueue.actor && <Badge variant="outline">Signed in: {obligationQueue.actor.name}</Badge>}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {[
+              ['mine', 'Mine', obligationQueue.summary.mine],
+              ['unassigned', 'Unassigned', obligationQueue.summary.unassigned],
+              ['overdue', 'Overdue', obligationQueue.summary.overdue],
+              ['due_30', 'Due ≤30d', obligationQueue.summary.due30],
+              ['all', 'All open', obligationQueue.summary.total],
+            ].map(([scope, label, count]) => (
+              <Button
+                key={String(scope)}
+                type="button"
+                size="sm"
+                variant={obligationQueue.scope === scope ? 'default' : 'outline'}
+                onClick={() => void fetchObligationQueue(scope as ObligationQueueState['scope'])}
+                disabled={obligationQueueLoading}
+              >
+                {label} · {count}
+              </Button>
+            ))}
+          </div>
+          {obligationQueueLoading ? (
+            <div className="space-y-2">{Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-16 rounded-xl" />)}</div>
+          ) : (
+            <div className="max-h-[460px] divide-y divide-border/60 overflow-y-auto rounded-xl border border-border/60">
+              {obligationQueue.data.map((item) => {
+                const overdue = Boolean(item.dueDate && new Date(item.dueDate).getTime() < Date.now());
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => openObligationQueueItem(item)}
+                    className="grid w-full gap-2 px-4 py-3 text-left transition hover:bg-muted/30 lg:grid-cols-[minmax(0,1fr)_auto]"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-xs font-semibold">{item.title}</p>
+                        <Badge variant="outline">{pretty(item.category)}</Badge>
+                        {overdue && <Badge className="bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200">Overdue</Badge>}
+                      </div>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {item.agreement.organization.name} · {item.agreement.title}
+                        {item.agreement.project?.name ? ' · ' + item.agreement.project.name : ''}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground lg:justify-end">
+                      <span>{item.ownerAdmin?.name || item.owner || 'Unassigned'}</span>
+                      <span>{item.dueDate ? 'Due ' + new Date(item.dueDate).toLocaleDateString() : 'No due date'}</span>
+                    </div>
+                  </button>
+                );
+              })}
+              {!obligationQueue.data.length && (
+                <div className="px-4 py-8 text-center text-xs text-muted-foreground">
+                  No open obligations match this workload view.
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {!portfolioForbidden && (
         <Card className="border-border/60">
           <CardHeader className="pb-3">
@@ -1467,7 +1593,7 @@ export default function AdminClients() {
                   {selected.agreements.map((agreement) => {
                     const daysToExpiry = agreement.expiryDate ? Math.ceil((new Date(agreement.expiryDate).getTime() - Date.now()) / 86400000) : null;
                     const noticeDue = daysToExpiry !== null && daysToExpiry <= agreement.renewalNoticeDays && daysToExpiry >= 0;
-                    return <div key={agreement.id} className="rounded-2xl border border-border/60 p-4">
+                    return <div id={'agreement-' + agreement.id} key={agreement.id} className="scroll-mt-28 rounded-2xl border border-border/60 p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0"><p className="text-sm font-semibold">{agreement.title}</p><p className="mt-1 text-xs text-muted-foreground">{pretty(agreement.agreementType)}{agreement.referenceNumber ? ' · ' + agreement.referenceNumber : ''}{agreement.project?.name ? ' · ' + agreement.project.name : ''}</p></div>
                         <div className="flex flex-wrap gap-1">
