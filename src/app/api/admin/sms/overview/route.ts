@@ -104,6 +104,7 @@ export async function GET(request: NextRequest) {
           batchSize: Math.max(1, Math.min(50, Number(process.env.COLLECTION_REMINDER_SMS_BATCH_SIZE || 10) || 10)),
           intervalDays: Math.max(1, Math.min(30, Number(process.env.COLLECTION_REMINDER_SMS_INTERVAL_DAYS || 7) || 7)),
           minDaysOverdue: Math.max(1, Math.min(365, Number(process.env.COLLECTION_REMINDER_SMS_MIN_DAYS_OVERDUE || 1) || 1)),
+          maxAutomatedCycles: Math.max(1, Math.min(12, Number(process.env.COLLECTION_REMINDER_MAX_AUTOMATED_CYCLES || 3) || 3)),
         },
       },
       activeClients,
