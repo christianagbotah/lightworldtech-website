@@ -1,5 +1,6 @@
 'use client';
 
+import { readJsonResponse } from '@/lib/client-api';
 import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
@@ -264,7 +265,7 @@ export default function AdminSupportDesk() {
       const response = await fetch('/api/admin/support-tickets?' + params.toString(), {
         cache: 'no-store',
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to load Support Desk');
       const nextTickets: TicketListItem[] = payload.data || [];
       setTickets(nextTickets);
@@ -312,7 +313,7 @@ export default function AdminSupportDesk() {
   useEffect(() => {
     fetch('/api/admin/support-agents', { cache: 'no-store' })
       .then(async (response) => {
-        const payload = await response.json();
+        const payload = await readJsonResponse(response);
         if (!response.ok) throw new Error(payload?.error || 'Unable to load support agents');
         setAgents(payload.data || []);
       })
@@ -352,7 +353,7 @@ export default function AdminSupportDesk() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids, ...patch }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to update selected tickets');
       toast.success(String(payload?.data?.updated || ids.length) + ' support ticket(s) updated');
       setSelectedIds(new Set());
@@ -401,7 +402,7 @@ export default function AdminSupportDesk() {
       const response = await fetch('/api/admin/support-tickets/' + encodeURIComponent(id), {
         cache: 'no-store',
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to load support ticket');
       setSelected(payload.data);
       setReply('');
@@ -431,7 +432,7 @@ export default function AdminSupportDesk() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to update support ticket');
       toast.success('Ticket updated');
       await refreshSelected();
@@ -451,7 +452,7 @@ export default function AdminSupportDesk() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: reply.trim() }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to send support reply');
       setReply('');
       toast.success('Reply sent to client portal');
@@ -473,7 +474,7 @@ export default function AdminSupportDesk() {
         method: 'POST',
         body: form,
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to upload attachment');
       toast.success('Evidence attached to ticket');
       await refreshSelected();
@@ -493,7 +494,7 @@ export default function AdminSupportDesk() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ note: note.trim() }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to add internal note');
       setNote('');
       toast.success('Private note added');
