@@ -85,11 +85,11 @@ const navItems = [
 ];
 
 type AdminSearchResult = {
-  kind: 'client' | 'invoice' | 'support' | 'lead' | 'message';
+  kind: 'client' | 'project' | 'invoice' | 'payment' | 'support' | 'lead' | 'proposal' | 'message';
   id: string;
   title: string;
   subtitle: string;
-  workspace: 'admin-clients' | 'admin-finance' | 'admin-support' | 'admin-crm' | 'admin-messages';
+  workspace: 'admin-clients' | 'admin-finance' | 'admin-support' | 'admin-crm' | 'admin-proposals' | 'admin-messages';
 };
 
 type AdminNotice = {
@@ -249,9 +249,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (result.kind === 'client') {
       sessionStorage.setItem('lw-client-organization-id', result.id);
       navigate('admin-clients');
+    } else if (result.kind === 'project') {
+      sessionStorage.setItem('lw-finance-section', 'customers');
+      sessionStorage.setItem('lw-finance-project-id', result.id);
+      navigate('admin-finance');
     } else if (result.kind === 'invoice') {
       sessionStorage.setItem('lw-finance-section', 'customers');
       sessionStorage.setItem('lw-finance-record-type', 'invoice');
+      sessionStorage.setItem('lw-finance-record-id', result.id);
+      navigate('admin-finance');
+    } else if (result.kind === 'payment') {
+      sessionStorage.setItem('lw-finance-section', 'customers');
+      sessionStorage.setItem('lw-finance-record-type', 'receipt');
       sessionStorage.setItem('lw-finance-record-id', result.id);
       navigate('admin-finance');
     } else if (result.kind === 'support') {
@@ -260,6 +269,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } else if (result.kind === 'lead') {
       sessionStorage.setItem('lw-open-lead-id', result.id);
       navigate('admin-crm');
+    } else if (result.kind === 'proposal') {
+      sessionStorage.setItem('lw-open-proposal-id', result.id);
+      navigate('admin-proposals');
     } else {
       sessionStorage.setItem('lw-open-message-id', result.id);
       navigate('admin-messages');
@@ -588,7 +600,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <CommandInput
           value={commandQuery}
           onValueChange={setCommandQuery}
-          placeholder="Search workspaces, clients, invoices, tickets, leads or messages…"
+          placeholder="Search workspaces, clients, projects, invoices, payments, proposals, tickets, leads or messages…"
         />
         <CommandList className="max-h-[420px]">
           <CommandEmpty>{searchLoading ? 'Searching operational records…' : 'No matching workspace or operational record.'}</CommandEmpty>
@@ -601,9 +613,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   onSelect={() => openSearchResult(result)}
                 >
                   {result.kind === 'client' ? <Building2 className="size-4" /> :
-                   result.kind === 'invoice' ? <Landmark className="size-4" /> :
+                   result.kind === 'project' ? <FolderOpen className="size-4" /> :
+                   result.kind === 'invoice' || result.kind === 'payment' ? <Landmark className="size-4" /> :
                    result.kind === 'support' ? <LifeBuoy className="size-4" /> :
                    result.kind === 'lead' ? <GitBranch className="size-4" /> :
+                   result.kind === 'proposal' ? <FileSignature className="size-4" /> :
                    <Mail className="size-4" />}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate">{result.title}</span>

@@ -6,11 +6,11 @@ import { hasAdminPermission } from '@/lib/admin-permissions';
 export const runtime = 'nodejs';
 
 type SearchResult = {
-  kind: 'client' | 'invoice' | 'support' | 'lead' | 'message';
+  kind: 'client' | 'project' | 'invoice' | 'payment' | 'support' | 'lead' | 'proposal' | 'message';
   id: string;
   title: string;
   subtitle: string;
-  workspace: 'admin-clients' | 'admin-finance' | 'admin-support' | 'admin-crm' | 'admin-messages';
+  workspace: 'admin-clients' | 'admin-finance' | 'admin-support' | 'admin-crm' | 'admin-proposals' | 'admin-messages';
 };
 
 export async function GET(request: NextRequest) {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const canFinance = hasAdminPermission(actor.role, actor.permissions, 'finance.manage');
   const canCrm = hasAdminPermission(actor.role, actor.permissions, 'crm.manage');
 
-  const [clients, invoices, tickets, leads, messages] = await Promise.all([
+  const [clients, projects, invoices, payments, tickets, leads, proposals, messages] = await Promise.all([
     canClients
       ? db.clientOrganization.findMany({
           where: {
@@ -46,6 +46,27 @@ export async function GET(request: NextRequest) {
             name: true,
             primaryContactName: true,
             primaryEmail: true,
+          },
+        })
+      : Promise.resolve([]),
+    canClients
+      ? db.clientProject.findMany({
+          where: {
+            OR: [
+              { name: { contains: q, mode: 'insensitive' } },
+              { summary: { contains: q, mode: 'insensitive' } },
+              { manager: { contains: q, mode: 'insensitive' } },
+              { organization: { name: { contains: q, mode: 'insensitive' } } },
+            ],
+          },
+          orderBy: { updatedAt: 'desc' },
+          take: 6,
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            health: true,
+            organization: { select: { name: true } },
           },
         })
       : Promise.resolve([]),
@@ -68,6 +89,28 @@ export async function GET(request: NextRequest) {
             total: true,
             organization: { select: { name: true } },
             service: { select: { name: true } },
+          },
+        })
+      : Promise.resolve([]),
+    canFinance
+      ? db.clientPayment.findMany({
+          where: {
+            OR: [
+              { paymentNumber: { contains: q, mode: 'insensitive' } },
+              { reference: { contains: q, mode: 'insensitive' } },
+              { providerReference: { contains: q, mode: 'insensitive' } },
+              { organization: { name: { contains: q, mode: 'insensitive' } } },
+            ],
+          },
+          orderBy: { paidAt: 'desc' },
+          take: 6,
+          select: {
+            id: true,
+            paymentNumber: true,
+            currency: true,
+            amount: true,
+            method: true,
+            organization: { select: { name: true } },
           },
         })
       : Promise.resolve([]),
@@ -116,6 +159,33 @@ export async function GET(request: NextRequest) {
           },
         })
       : Promise.resolve([]),
+    hasAdminPermission(actor.role, actor.permissions, 'proposals.manage')
+      ? db.proposal.findMany({
+          where: {
+            OR: [
+              { title: { contains: q, mode: 'insensitive' } },
+              { executiveSummary: { contains: q, mode: 'insensitive' } },
+              { lead: { company: { contains: q, mode: 'insensitive' } } },
+              { lead: { contactMessage: { name: { contains: q, mode: 'insensitive' } } } },
+              { lead: { contactMessage: { email: { contains: q, mode: 'insensitive' } } } },
+            ],
+          },
+          orderBy: { updatedAt: 'desc' },
+          take: 6,
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            version: true,
+            lead: {
+              select: {
+                company: true,
+                contactMessage: { select: { name: true, email: true } },
+              },
+            },
+          },
+        })
+      : Promise.resolve([]),
     canCrm
       ? db.contactMessage.findMany({
           where: {
@@ -148,6 +218,13 @@ export async function GET(request: NextRequest) {
       subtitle: [client.primaryContactName, client.primaryEmail].filter(Boolean).join(' · ') || 'Client organization',
       workspace: 'admin-clients' as const,
     })),
+    ...projects.map((project) => ({
+      kind: 'project' as const,
+      id: project.id,
+      title: project.name + ' · ' + project.organization.name,
+      subtitle: 'Project · ' + project.status.replaceAll('_', ' ') + ' · ' + project.health.replaceAll('_', ' '),
+      workspace: 'admin-clients' as const,
+    })),
     ...invoices.map((invoice) => ({
       kind: 'invoice' as const,
       id: invoice.id,
@@ -159,6 +236,19 @@ export async function GET(request: NextRequest) {
         ' ' +
         Number(invoice.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
         (invoice.service?.name ? ' · ' + invoice.service.name : ''),
+      workspace: 'admin-finance' as const,
+    })),
+    ...payments.map((payment) => ({
+      kind: 'payment' as const,
+      id: payment.id,
+      title: payment.paymentNumber + ' · ' + payment.organization.name,
+      subtitle:
+        'Payment · ' +
+        payment.currency +
+        ' ' +
+        Number(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+        ' · ' +
+        payment.method.replaceAll('_', ' '),
       workspace: 'admin-finance' as const,
     })),
     ...tickets.map((ticket) => ({
@@ -178,6 +268,18 @@ export async function GET(request: NextRequest) {
         (lead.serviceInterest ? ' · ' + lead.serviceInterest : '') +
         (lead.contactMessage.subject ? ' · ' + lead.contactMessage.subject : ''),
       workspace: 'admin-crm' as const,
+    })),
+    ...proposals.map((proposal) => ({
+      kind: 'proposal' as const,
+      id: proposal.id,
+      title: proposal.title,
+      subtitle:
+        (proposal.lead.company || proposal.lead.contactMessage.name || proposal.lead.contactMessage.email) +
+        ' · ' +
+        proposal.status.replaceAll('_', ' ') +
+        ' · v' +
+        proposal.version,
+      workspace: 'admin-proposals' as const,
     })),
     ...messages.map((message) => ({
       kind: 'message' as const,
