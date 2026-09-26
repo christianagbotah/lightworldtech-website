@@ -619,6 +619,35 @@ export default function ClientPortalPage() {
     setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
+  const prepareProjectRenewalRequest = (project: Project) => {
+    const renewalDate = project.nextRenewalDate
+      ? new Date(project.nextRenewalDate).toLocaleDateString()
+      : 'Not scheduled';
+    const amount = Number(project.renewalAmount) > 0
+      ? accountMoney(project.renewalAmount, project.renewalCurrency)
+      : 'To be confirmed';
+
+    setTicket({
+      projectId: project.id,
+      subject: 'Project renewal request · ' + project.name,
+      priority: 'normal',
+      category: 'project_change',
+      message: [
+        'I would like Lightworld to review the renewal of ' + project.name + '.',
+        '',
+        'Current renewal cycle: ' + statusLabel(project.renewalCycle || 'annual'),
+        'Next renewal date: ' + renewalDate,
+        'Recorded renewal amount: ' + amount,
+        '',
+        'Please confirm the applicable scope, commercial terms, invoice and effective renewal date before making any change.',
+      ].join('\n'),
+    });
+
+    window.setTimeout(() => {
+      document.getElementById('support')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  };
+
   const submitTicket = async (event: FormEvent) => {
     event.preventDefault();
     setTicketSending(true);
@@ -1525,6 +1554,17 @@ export default function ClientPortalPage() {
                             <p className="mt-3 text-[10px] leading-5 text-slate-500 dark:text-white/35">
                               Auto-renew records the intended renewal workflow; it does not automatically charge your account. Issued invoices and available payment options appear in Billing.
                             </p>
+                            <div className="mt-3">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => prepareProjectRenewalRequest(project)}
+                              >
+                                <LifeBuoy className="mr-2 size-3.5" />
+                                Request project renewal
+                              </Button>
+                            </div>
                             {project.payableInvoice ? (
                               <div className="mt-4 rounded-xl border border-amber-200/80 bg-white/75 p-3 dark:border-amber-900/40 dark:bg-black/10">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
