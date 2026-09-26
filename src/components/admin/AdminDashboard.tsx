@@ -358,7 +358,7 @@ export default function AdminDashboard() {
         <div className="relative z-10 px-6 py-6 md:px-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200/80">Operations overview</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-[-0.03em] text-white">Welcome back, {adminName || 'Admin'}</h1>
+            <h1 className="mt-1 text-2xl font-bold tracking-[-0.03em] text-white">WELCOME BACK, {(adminName || 'Admin').toUpperCase()}</h1>
             <p className="mt-1 text-sm text-amber-50/75 md:text-base">Your website, client, communication and operational signals in one place.</p>
           </div>
           <button
