@@ -544,6 +544,8 @@ model ClientProject {
   invoices       ClientInvoice[]
   expenses       FinanceExpense[]
   agreements     ClientAgreement[]
+  purchaseRequests FinancePurchaseRequest[]
+  purchaseOrders   FinancePurchaseOrder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1141,6 +1143,8 @@ model FinanceVendor {
   bills     FinanceVendorBill[]
   payments  FinanceVendorPayment[]
   expenses  FinanceExpense[]
+  purchaseRequests FinancePurchaseRequest[]
+  purchaseOrders   FinancePurchaseOrder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1247,6 +1251,81 @@ model FinanceExpense {
   @@index([serviceId, incurredAt])
   @@index([category, incurredAt])
   @@index([paidAt])
+}
+
+model FinancePurchaseRequest {
+  id                 String                       @id @default(cuid())
+  requestNumber      String                       @unique
+  title              String
+  description        String                       @default("")
+  vendorId           String?
+  vendor             FinanceVendor?               @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  projectId          String?
+  project            ClientProject?               @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  currency           String                       @default("GHS")
+  estimatedAmount    Decimal                      @default(0) @db.Decimal(18, 2)
+  neededBy           DateTime?
+  status             String                       @default("submitted")
+  requestedByAdminId String
+  requestedByName    String                       @default("")
+  submittedAt        DateTime                     @default(now())
+  decidedByAdminId   String                       @default("")
+  decidedByName      String                       @default("")
+  decidedAt          DateTime?
+  decisionNotes      String                       @default("")
+  convertedAt        DateTime?
+  lines              FinancePurchaseRequestLine[]
+  purchaseOrder      FinancePurchaseOrder?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, submittedAt])
+  @@index([vendorId, status])
+  @@index([projectId, status])
+}
+
+model FinancePurchaseRequestLine {
+  id          String                 @id @default(cuid())
+  requestId   String
+  request     FinancePurchaseRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal                @db.Decimal(12, 3)
+  unitPrice   Decimal                @db.Decimal(18, 2)
+  amount      Decimal                @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([requestId])
+}
+
+model FinancePurchaseOrder {
+  id           String                 @id @default(cuid())
+  poNumber     String                 @unique
+  requestId    String?                @unique
+  request      FinancePurchaseRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  vendorId     String
+  vendor       FinanceVendor          @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  projectId    String?
+  project      ClientProject?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  currency     String                 @default("GHS")
+  total        Decimal                @db.Decimal(18, 2)
+  issueDate    DateTime               @default(now())
+  expectedDate DateTime?
+  status       String                 @default("issued")
+  notes        String                 @default("")
+  issuedBy     String                 @default("Admin")
+  receivedAt   DateTime?
+  receivedBy   String                 @default("")
+  closedAt     DateTime?
+  closedBy     String                 @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vendorId, status])
+  @@index([projectId, status])
+  @@index([status, expectedDate])
 }
 
 model FinanceTaxProfile {
