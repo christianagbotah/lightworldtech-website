@@ -2,6 +2,7 @@ import 'server-only';
 
 import { randomUUID } from 'node:crypto';
 import { db } from '@/lib/db';
+import { recordAdminAudit } from '@/lib/admin-governance';
 import { invoiceBalance } from '@/lib/finance';
 import { createDueProjectRenewalInvoiceDrafts, createDueRenewalInvoiceDrafts } from '@/lib/renewal-draft-automation';
 import { getMailTransportStatus, sanitizeMailError, sendTransactionalMail } from '@/lib/mail';
@@ -570,6 +571,281 @@ export async function queueDueProjectRenewalReminders() {
 }
 
 
+
+function portalOrigin(): string {
+  return (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://lightworldtech.com')
+    .trim()
+    .replace(/\/$/, '');
+}
+
+function renewalEmailIdentity(id: string, date: Date, state: 'notice' | 'expired'): string {
+  return id + ':' + date.toISOString().slice(0, 10) + ':' + state;
+}
+
+async function sendRenewalEmail(input: {
+  recipient: string;
+  customerName: string;
+  subject: string;
+  heading: string;
+  summary: string;
+  detailLabel: string;
+  detailValue: string;
+  amount: string;
+  portalPath?: string;
+}) {
+  const portalUrl = portalOrigin() + (input.portalPath || '/client#billing');
+  const text =
+    'Hello ' + input.customerName + ',\n\n' +
+    input.summary + '\n' +
+    input.detailLabel + ': ' + input.detailValue + '\n' +
+    'Amount: ' + input.amount + '\n\n' +
+    'Review your account in the Lightworld Client Portal:\n' +
+    portalUrl + '\n\n' +
+    'Regards,\nLightworld Technologies Ltd';
+  const html =
+    '<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#0f172a;line-height:1.65">' +
+    '<div style="padding:32px;border:1px solid #e2e8f0;border-radius:24px">' +
+    '<p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#b7791f;font-weight:700;margin:0 0 18px">Lightworld Technologies</p>' +
+    '<h1 style="font-size:24px;margin:0 0 18px">' + escapeHtml(input.heading) + '</h1>' +
+    '<p>Hello ' + escapeHtml(input.customerName) + ',</p>' +
+    '<p>' + escapeHtml(input.summary) + '</p>' +
+    '<div style="margin:20px 0;padding:16px;border-radius:14px;background:#f8fafc">' +
+    '<p style="margin:0 0 6px"><strong>' + escapeHtml(input.detailLabel) + ':</strong> ' + escapeHtml(input.detailValue) + '</p>' +
+    '<p style="margin:0"><strong>Amount:</strong> ' + escapeHtml(input.amount) + '</p>' +
+    '</div>' +
+    '<p><a href="' + escapeHtml(portalUrl) + '" style="display:inline-block;padding:11px 16px;border-radius:10px;background:#b7791f;color:#fff;text-decoration:none;font-weight:700">Open client account</a></p>' +
+    '<p style="margin-top:24px">Regards,<br><strong>Lightworld Technologies Ltd</strong></p>' +
+    '</div></div>';
+  return sendTransactionalMail({ to: input.recipient, subject: input.subject, text, html });
+}
+
+export async function sendDueServiceRenewalEmailReminders() {
+  const enabled = process.env.AUTO_SERVICE_RENEWAL_EMAIL === 'true';
+  const mail = getMailTransportStatus();
+  if (!enabled || !mail.configured) {
+    return { enabled, configured: mail.configured, considered: 0, sent: 0, skipped: 0, failed: 0, missingEmail: 0 };
+  }
+
+  const now = new Date();
+  const horizon = new Date(now.getTime() + 365 * 86400000);
+  const configuredBatch = Number(process.env.SERVICE_RENEWAL_EMAIL_BATCH_SIZE || 10);
+  const batchSize = Math.max(1, Math.min(50, Number.isFinite(configuredBatch) ? configuredBatch : 10));
+  const services = await db.clientServiceAccount.findMany({
+    where: {
+      status: { in: ['active', 'pending', 'suspended'] },
+      expiryDate: { not: null, lte: horizon },
+    },
+    include: {
+      organization: {
+        select: { name: true, primaryContactName: true, primaryEmail: true },
+      },
+    },
+    orderBy: { expiryDate: 'asc' },
+    take: 500,
+  });
+
+  let considered = 0;
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+  let missingEmail = 0;
+
+  for (const service of services) {
+    if (sent >= batchSize || !service.expiryDate) break;
+    const expired = service.expiryDate.getTime() < now.getTime();
+    const daysUntilExpiry = Math.ceil((service.expiryDate.getTime() - now.getTime()) / 86400000);
+    if (!expired && daysUntilExpiry > service.renewalNoticeDays) continue;
+    considered += 1;
+
+    const recipient = service.organization.primaryEmail.trim().toLowerCase();
+    if (!recipient) {
+      missingEmail += 1;
+      continue;
+    }
+
+    const state: 'notice' | 'expired' = expired ? 'expired' : 'notice';
+    const entityId = renewalEmailIdentity(service.id, service.expiryDate, state);
+    const duplicate = await db.adminAuditLog.findFirst({
+      where: {
+        action: 'system.service_renewal_email_sent',
+        entity: 'ClientServiceAccountRenewal',
+        entityId,
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      skipped += 1;
+      continue;
+    }
+
+    const expiryDate = new Intl.DateTimeFormat('en-GH', {
+      day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Africa/Accra',
+    }).format(service.expiryDate);
+    const amount = new Intl.NumberFormat('en-GH', {
+      style: 'currency', currency: service.currency, minimumFractionDigits: 2, maximumFractionDigits: 2,
+    }).format(Number(service.recurringAmount));
+    const customerName = service.organization.primaryContactName || service.organization.name;
+
+    try {
+      const result = await sendRenewalEmail({
+        recipient,
+        customerName,
+        subject: (expired ? 'Service expired · ' : 'Service renewal reminder · ') + service.name,
+        heading: expired ? 'Service renewal required' : 'Upcoming service renewal',
+        summary: expired
+          ? 'Your ' + service.name + ' service has passed its recorded expiry date.'
+          : 'Your ' + service.name + ' service is approaching its recorded renewal date.',
+        detailLabel: 'Expiry date',
+        detailValue: expiryDate,
+        amount,
+      });
+      await recordAdminAudit({
+        action: 'system.service_renewal_email_sent',
+        entity: 'ClientServiceAccountRenewal',
+        entityId,
+        details: {
+          serviceId: service.id,
+          organizationName: service.organization.name,
+          recipient,
+          state,
+          expiryDate: service.expiryDate.toISOString(),
+          transport: result.transport,
+        },
+      });
+      sent += 1;
+    } catch (error) {
+      await recordAdminAudit({
+        action: 'system.service_renewal_email_failed',
+        entity: 'ClientServiceAccountRenewal',
+        entityId,
+        details: {
+          serviceId: service.id,
+          recipient,
+          state,
+          error: sanitizeMailError(error),
+        },
+      });
+      failed += 1;
+    }
+  }
+
+  return { enabled: true, configured: true, considered, sent, skipped, failed, missingEmail };
+}
+
+export async function sendDueProjectRenewalEmailReminders() {
+  const enabled = process.env.AUTO_PROJECT_RENEWAL_EMAIL === 'true';
+  const mail = getMailTransportStatus();
+  if (!enabled || !mail.configured) {
+    return { enabled, configured: mail.configured, considered: 0, sent: 0, skipped: 0, failed: 0, missingEmail: 0 };
+  }
+
+  const now = new Date();
+  const horizon = new Date(now.getTime() + 365 * 86400000);
+  const configuredBatch = Number(process.env.PROJECT_RENEWAL_EMAIL_BATCH_SIZE || 10);
+  const batchSize = Math.max(1, Math.min(50, Number.isFinite(configuredBatch) ? configuredBatch : 10));
+  const projects = await db.clientProject.findMany({
+    where: {
+      status: { in: ['planned', 'active', 'on_hold'] },
+      nextRenewalDate: { not: null, lte: horizon },
+      renewalAmount: { gt: 0 },
+    },
+    include: {
+      organization: {
+        select: { name: true, primaryContactName: true, primaryEmail: true },
+      },
+    },
+    orderBy: { nextRenewalDate: 'asc' },
+    take: 500,
+  });
+
+  let considered = 0;
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+  let missingEmail = 0;
+
+  for (const project of projects) {
+    if (sent >= batchSize || !project.nextRenewalDate) break;
+    const overdue = project.nextRenewalDate.getTime() < now.getTime();
+    const daysUntilRenewal = Math.ceil((project.nextRenewalDate.getTime() - now.getTime()) / 86400000);
+    if (!overdue && daysUntilRenewal > project.renewalNoticeDays) continue;
+    considered += 1;
+
+    const recipient = project.organization.primaryEmail.trim().toLowerCase();
+    if (!recipient) {
+      missingEmail += 1;
+      continue;
+    }
+
+    const state: 'notice' | 'expired' = overdue ? 'expired' : 'notice';
+    const entityId = renewalEmailIdentity(project.id, project.nextRenewalDate, state);
+    const duplicate = await db.adminAuditLog.findFirst({
+      where: {
+        action: 'system.project_renewal_email_sent',
+        entity: 'ClientProjectRenewal',
+        entityId,
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      skipped += 1;
+      continue;
+    }
+
+    const renewalDate = new Intl.DateTimeFormat('en-GH', {
+      day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Africa/Accra',
+    }).format(project.nextRenewalDate);
+    const amount = new Intl.NumberFormat('en-GH', {
+      style: 'currency', currency: project.renewalCurrency, minimumFractionDigits: 2, maximumFractionDigits: 2,
+    }).format(Number(project.renewalAmount));
+    const customerName = project.organization.primaryContactName || project.organization.name;
+
+    try {
+      const result = await sendRenewalEmail({
+        recipient,
+        customerName,
+        subject: (overdue ? 'Project renewal overdue · ' : 'Project renewal reminder · ') + project.name,
+        heading: overdue ? 'Project renewal requires attention' : 'Upcoming project renewal',
+        summary: overdue
+          ? 'The recorded renewal date for ' + project.name + ' has passed.'
+          : 'The recorded renewal date for ' + project.name + ' is approaching.',
+        detailLabel: 'Renewal date',
+        detailValue: renewalDate,
+        amount,
+      });
+      await recordAdminAudit({
+        action: 'system.project_renewal_email_sent',
+        entity: 'ClientProjectRenewal',
+        entityId,
+        details: {
+          projectId: project.id,
+          organizationName: project.organization.name,
+          recipient,
+          state,
+          renewalDate: project.nextRenewalDate.toISOString(),
+          transport: result.transport,
+        },
+      });
+      sent += 1;
+    } catch (error) {
+      await recordAdminAudit({
+        action: 'system.project_renewal_email_failed',
+        entity: 'ClientProjectRenewal',
+        entityId,
+        details: {
+          projectId: project.id,
+          recipient,
+          state,
+          error: sanitizeMailError(error),
+        },
+      });
+      failed += 1;
+    }
+  }
+
+  return { enabled: true, configured: true, considered, sent, skipped, failed, missingEmail };
+}
+
 export async function queueDueCollectionReminders() {
   const enabled = process.env.AUTO_COLLECTION_REMINDER_SMS === 'true';
   const config = hubtelConfiguration();
@@ -978,6 +1254,8 @@ export async function sendDueCollectionEmailReminders() {
 export async function dispatchDueSms() {
   const renewalQueue = await queueDueServiceRenewalReminders();
   const projectRenewalQueue = await queueDueProjectRenewalReminders();
+  const serviceRenewalEmailQueue = await sendDueServiceRenewalEmailReminders();
+  const projectRenewalEmailQueue = await sendDueProjectRenewalEmailReminders();
   const collectionQueue = await queueDueCollectionReminders();
   const renewalDraftQueue = await createDueRenewalInvoiceDrafts();
   const projectRenewalDraftQueue = await createDueProjectRenewalInvoiceDrafts();
@@ -990,6 +1268,8 @@ export async function dispatchDueSms() {
       campaignsProcessed: 0,
       renewalQueue,
       projectRenewalQueue,
+      serviceRenewalEmailQueue,
+      projectRenewalEmailQueue,
       collectionQueue,
       renewalDraftQueue,
       projectRenewalDraftQueue,
@@ -1050,6 +1330,8 @@ export async function dispatchDueSms() {
     campaignsProcessed,
     renewalQueue,
     projectRenewalQueue,
+    serviceRenewalEmailQueue,
+    projectRenewalEmailQueue,
     collectionQueue,
     renewalDraftQueue,
     projectRenewalDraftQueue,
