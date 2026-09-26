@@ -226,7 +226,7 @@ Campaign safety rules are enforced server-side:
 - arbitrary recipient addresses are accepted only for explicit admin test messages;
 - campaigns must be manually moved from Draft to Ready before live delivery;
 - once live delivery starts, campaign content becomes immutable;
-- each request processes at most 10 subscribers and limits concurrent SMTP sends;
+- each manual or scheduled batch processes at most 10 subscribers and limits concurrent SMTP sends;
 - failed recipients remain retryable while successfully sent recipients are idempotently skipped;
 - stale in-progress records can be retried after 15 minutes;
 - every live message contains a signed unsubscribe link plus `List-Unsubscribe` and `List-Unsubscribe-Post` one-click headers;
@@ -507,6 +507,11 @@ Scheduled SMS and campaigns use a protected local dispatcher:
 
 ```bash
 SMS_CRON_SECRET=<high-entropy-random-secret>
+
+# Approved newsletter campaigns can be dispatched automatically.
+AUTO_NEWSLETTER_CAMPAIGN_DISPATCH=true
+NEWSLETTER_CAMPAIGN_BATCH_SIZE=10
+NEWSLETTER_CAMPAIGNS_PER_RUN=2
 ```
 
 Automatic client service renewal/expiry reminders are deliberately opt-in. To let the protected SMS timer queue reminders when a service enters its configured `renewalNoticeDays` window, set:
@@ -639,3 +644,12 @@ PROJECT_RENEWAL_EMAIL_BATCH_SIZE=10
 Both channels require the configured transactional mail transport and are bounded to 50 sends per dispatcher run. For each recorded renewal cycle the system can send at most one notice-window email and, if the date later passes, one expired/overdue email. Idempotency uses the existing governance audit log with the service/project ID, renewal date and lifecycle state, so a completed renewal can safely generate notifications again when its next cycle date advances.
 
 These emails link the customer back to the secure Client Portal. They do not issue invoices, post journals, collect money, advance renewal dates or change service/project status. Successful and failed sends are recorded as system governance audit events.
+
+
+### Scheduled newsletter campaigns
+
+Newsletter campaigns remain human-controlled: an administrator must create, review and explicitly mark a campaign **Ready** before it can be scheduled. A Ready campaign can then receive a future delivery time in Campaign Studio.
+
+When `AUTO_NEWSLETTER_CAMPAIGN_DISPATCH=true`, the protected communications dispatcher starts due scheduled campaigns and continues their delivery in bounded batches. `NEWSLETTER_CAMPAIGN_BATCH_SIZE` is capped at 10 recipients per campaign per run and `NEWSLETTER_CAMPAIGNS_PER_RUN` is capped at four campaigns. Existing active-subscriber checks, signed unsubscribe links, retry handling, content immutability after delivery starts and SMTP concurrency limits remain in force.
+
+Removing a schedule is allowed only while the campaign is still Ready. Returning a campaign to Draft automatically clears its schedule. Manually starting a campaign remains available when no future schedule is active.
