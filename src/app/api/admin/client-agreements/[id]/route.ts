@@ -57,6 +57,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const existing = await db.clientAgreement.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
 
+  if (parsed.data.status === 'active' && existing.approvalStatus !== 'approved') {
+    return NextResponse.json(
+      { success: false, error: 'Agreement must be approved by an authorized administrator before activation' },
+      { status: 409 },
+    );
+  }
+
   if (parsed.data.projectId) {
     const project = await db.clientProject.findFirst({
       where: { id: parsed.data.projectId, organizationId: existing.organizationId },
