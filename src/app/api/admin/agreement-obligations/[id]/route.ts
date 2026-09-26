@@ -13,6 +13,7 @@ const updateSchema = z.object({
   status: z.enum(['open', 'in_progress', 'completed', 'waived']).optional(),
   reviewAction: z.enum(['approve', 'reject']).optional(),
   reviewNotes: z.string().trim().max(4000).optional(),
+  waiverReason: z.string().trim().max(4000).optional(),
   notes: z.string().trim().max(8000).optional(),
   evidenceUrl: z.string().trim().url().or(z.literal('')).optional(),
 });
@@ -80,6 +81,15 @@ export async function PATCH(
     }
   }
 
+  if (reviewAction === 'reject' && !(parsed.data.reviewNotes || '').trim()) {
+    return NextResponse.json({ success: false, error: 'A rejection reason is required' }, { status: 400 });
+  }
+
+  const waiving = parsed.data.status === 'waived';
+  if (waiving && !(parsed.data.waiverReason || '').trim()) {
+    return NextResponse.json({ success: false, error: 'A waiver reason is required' }, { status: 400 });
+  }
+
   const submittedEvidence = parsed.data.evidenceUrl ?? existing.evidenceUrl;
   const submittingCompletion = parsed.data.status === 'completed' && !reviewAction;
   if (submittingCompletion && !submittedEvidence) {
@@ -110,6 +120,23 @@ export async function PATCH(
             reviewNotes: '',
           }
         : {}),
+      ...(waiving
+        ? {
+            status: 'waived',
+            waiverReason: parsed.data.waiverReason!.trim(),
+            waivedAt: new Date(),
+            waivedBy: actor.name || actor.email,
+            completedAt: null,
+            completedBy: '',
+            completionSubmittedAt: null,
+            completionSubmittedByAdminId: null,
+            completionSubmittedBy: '',
+            reviewedAt: null,
+            reviewedByAdminId: null,
+            reviewedBy: '',
+            reviewNotes: '',
+          }
+        : {}),
       ...(reviewAction === 'approve'
         ? {
             status: 'completed',
@@ -133,6 +160,9 @@ export async function PATCH(
           : {}),
       ...(reopening
         ? {
+            waiverReason: '',
+            waivedAt: null,
+            waivedBy: '',
             completedAt: null,
             completedBy: '',
             completionSubmittedAt: null,
@@ -157,6 +187,7 @@ export async function PATCH(
       owner: obligation.owner,
       status: obligation.status,
       reviewAction: reviewAction || null,
+      waiverReason: obligation.waiverReason || null,
     },
   });
 

@@ -83,6 +83,7 @@ type AgreementObligation = {
   completionSubmittedByAdminId: string | null; completionSubmittedBy: string;
   completedAt: string | null; completedBy: string; reviewedAt: string | null;
   reviewedByAdminId: string | null; reviewedBy: string; reviewNotes: string;
+  waiverReason: string; waivedAt: string | null; waivedBy: string;
   createdAt: string; updatedAt: string;
 };
 type ObligationQueueItem = {
@@ -234,6 +235,7 @@ export default function AdminClients() {
   const [pendingDelete, setPendingDelete] = useState<{ kind: 'document' | 'announcement' | 'agreement-attachment'; id: string; label: string } | null>(null);
   const [agreementUploadingId, setAgreementUploadingId] = useState('');
   const [agreementApprovalNotes, setAgreementApprovalNotes] = useState<Record<string, string>>({});
+  const [obligationDecisionNotes, setObligationDecisionNotes] = useState<Record<string, string>>({});
   const [agreementObligationForms, setAgreementObligationForms] = useState<Record<string, {
     title: string; category: string; owner: string; ownerAdminId: string; dueDate: string; notes: string; evidenceUrl: string;
   }>>({});
@@ -767,9 +769,31 @@ export default function AdminClients() {
         fetchObligationQueue(obligationQueue.scope, obligationQueue.ownerId),
       ]);
       toast.success('Agreement obligation updated');
+      return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update agreement obligation');
+      return false;
     }
+  };
+
+  const rejectObligationCompletion = async (obligationId: string) => {
+    const note = (obligationDecisionNotes[obligationId] || '').trim();
+    if (!note) {
+      toast.error('Enter a rejection reason before returning the completion.');
+      return;
+    }
+    const updated = await patchAgreementObligation(obligationId, { reviewAction: 'reject', reviewNotes: note });
+    if (updated) setObligationDecisionNotes((current) => ({ ...current, [obligationId]: '' }));
+  };
+
+  const waiveAgreementObligation = async (obligationId: string) => {
+    const reason = (obligationDecisionNotes[obligationId] || '').trim();
+    if (!reason) {
+      toast.error('Enter a waiver reason before waiving the obligation.');
+      return;
+    }
+    const updated = await patchAgreementObligation(obligationId, { status: 'waived', waiverReason: reason });
+    if (updated) setObligationDecisionNotes((current) => ({ ...current, [obligationId]: '' }));
   };
 
   const decideAgreementApproval = async (agreementId: string, decision: 'approved' | 'rejected') => {
@@ -1187,7 +1211,6 @@ export default function AdminClients() {
                         <option value="open">Open</option>
                         <option value="in_progress">In progress</option>
                         {item.status === 'pending_review' && <option value="pending_review" disabled>Pending review</option>}
-                        <option value="waived">Waived</option>
                       </select>
                       <div className="flex flex-wrap gap-1">
                         {item.status === 'pending_review' && item.evidenceUrl && (
@@ -1196,7 +1219,6 @@ export default function AdminClients() {
                         {item.status === 'pending_review' && item.completionSubmittedByAdminId !== obligationQueue.actor?.id && (
                           <>
                             <Button type="button" size="sm" variant="outline" onClick={() => void patchAgreementObligation(item.id, { reviewAction: 'approve' })}>Approve</Button>
-                            <Button type="button" size="sm" variant="outline" onClick={() => void patchAgreementObligation(item.id, { reviewAction: 'reject', reviewNotes: 'Returned for correction from review queue.' })}>Reject</Button>
                           </>
                         )}
                         <Button type="button" size="sm" variant="outline" onClick={() => openObligationQueueItem(item)}>
@@ -1846,7 +1868,7 @@ export default function AdminClients() {
                                     <option value="in_progress">In progress</option>
                                     {obligation.status === 'pending_review' && <option value="pending_review" disabled>Pending review</option>}
                                     <option value="completed">Submit completion for review</option>
-                                    <option value="waived">Waived</option>
+                                    {obligation.status === 'waived' && <option value="waived" disabled>Waived</option>}
                                   </select>
                                   <select
                                     value={obligation.ownerAdminId || ''}
@@ -1861,12 +1883,36 @@ export default function AdminClients() {
                                   </select>
                                   {obligation.evidenceUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(obligation.evidenceUrl, '_blank', 'noopener,noreferrer')}>Evidence</Button>}
                                   {obligation.status === 'pending_review' && (
-                                    <>
-                                      <Button type="button" size="sm" variant="outline" onClick={() => void patchAgreementObligation(obligation.id, { reviewAction: 'approve' })}>Approve completion</Button>
-                                      <Button type="button" size="sm" variant="outline" onClick={() => void patchAgreementObligation(obligation.id, { reviewAction: 'reject', reviewNotes: 'Returned for correction.' })}>Reject completion</Button>
-                                    </>
+                                    <Button type="button" size="sm" variant="outline" onClick={() => void patchAgreementObligation(obligation.id, { reviewAction: 'approve' })}>Approve completion</Button>
                                   )}
                                 </div>
+                                {['pending_review', 'open', 'in_progress'].includes(obligation.status) && (
+                                  <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                                    <div>
+                                      <Label>{obligation.status === 'pending_review' ? 'Rejection reason' : 'Waiver reason'}</Label>
+                                      <Textarea
+                                        rows={2}
+                                        value={obligationDecisionNotes[obligation.id] || ''}
+                                        onChange={(event) => setObligationDecisionNotes((current) => ({ ...current, [obligation.id]: event.target.value }))}
+                                        placeholder={obligation.status === 'pending_review' ? 'Explain what must be corrected before resubmission…' : 'Explain why this contractual obligation is being waived…'}
+                                      />
+                                    </div>
+                                    {obligation.status === 'pending_review' ? (
+                                      <Button type="button" size="sm" variant="outline" disabled={!(obligationDecisionNotes[obligation.id] || '').trim()} onClick={() => void rejectObligationCompletion(obligation.id)}>
+                                        Reject completion
+                                      </Button>
+                                    ) : (
+                                      <Button type="button" size="sm" variant="outline" disabled={!(obligationDecisionNotes[obligation.id] || '').trim()} onClick={() => void waiveAgreementObligation(obligation.id)}>
+                                        Waive with reason
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+                                {obligation.waivedAt && (
+                                  <p className="mt-2 text-[10px] text-muted-foreground">
+                                    Waived by {obligation.waivedBy || 'Unknown'} · {new Date(obligation.waivedAt).toLocaleString()} · {obligation.waiverReason || 'No reason recorded'}
+                                  </p>
+                                )}
                                 {obligation.completionSubmittedAt && (
                                   <p className="mt-2 text-[10px] text-muted-foreground">
                                     Submitted by {obligation.completionSubmittedBy || 'Unknown'} · {new Date(obligation.completionSubmittedAt).toLocaleString()}
