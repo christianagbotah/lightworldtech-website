@@ -2,6 +2,7 @@ import 'server-only';
 
 import { randomUUID } from 'node:crypto';
 import { db } from '@/lib/db';
+import { invoiceBalance } from '@/lib/finance';
 import {
   hubtelConfiguration,
   normalizePhone,
@@ -557,9 +558,202 @@ export async function queueDueProjectRenewalReminders() {
   };
 }
 
+
+export async function queueDueCollectionReminders() {
+  const enabled = process.env.AUTO_COLLECTION_REMINDER_SMS === 'true';
+  const config = hubtelConfiguration();
+  if (!enabled || !config.sms || !config.senderId) {
+    return {
+      enabled,
+      configured: Boolean(config.sms && config.senderId),
+      considered: 0,
+      queued: 0,
+      skipped: 0,
+      invalidPhone: 0,
+      promisesDeferred: 0,
+    };
+  }
+
+  const now = new Date();
+  const configuredBatch = Number(process.env.COLLECTION_REMINDER_SMS_BATCH_SIZE || 10);
+  const batchSize = Math.max(
+    1,
+    Math.min(50, Number.isFinite(configuredBatch) ? configuredBatch : 10),
+  );
+  const configuredIntervalDays = Number(process.env.COLLECTION_REMINDER_SMS_INTERVAL_DAYS || 7);
+  const intervalDays = Math.max(
+    1,
+    Math.min(30, Number.isFinite(configuredIntervalDays) ? configuredIntervalDays : 7),
+  );
+  const configuredMinDays = Number(process.env.COLLECTION_REMINDER_SMS_MIN_DAYS_OVERDUE || 1);
+  const minDaysOverdue = Math.max(
+    1,
+    Math.min(365, Number.isFinite(configuredMinDays) ? configuredMinDays : 1),
+  );
+  const duplicateCutoff = new Date(now.getTime() - intervalDays * 86400000);
+
+  const [invoices, template] = await Promise.all([
+    db.clientInvoice.findMany({
+      where: {
+        status: { notIn: ['draft', 'void', 'paid'] },
+        dueDate: { lt: now },
+        organization: { primaryPhone: { not: '' } },
+      },
+      include: {
+        organization: {
+          select: {
+            id: true,
+            name: true,
+            primaryContactName: true,
+            primaryPhone: true,
+          },
+        },
+        allocations: true,
+        creditNotes: { where: { status: 'posted' } },
+        collectionActivities: {
+          where: { type: 'promise_to_pay', promisedDate: { not: null } },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: [{ dueDate: 'asc' }, { issueDate: 'asc' }],
+      take: 500,
+    }),
+    db.smsTemplate.findFirst({
+      where: { key: 'payment_due', active: true },
+    }),
+  ]);
+
+  if (!template) {
+    return {
+      enabled: true,
+      configured: true,
+      considered: 0,
+      queued: 0,
+      skipped: invoices.length,
+      invalidPhone: 0,
+      promisesDeferred: 0,
+    };
+  }
+
+  let considered = 0;
+  let queued = 0;
+  let skipped = 0;
+  let invalidPhone = 0;
+  let promisesDeferred = 0;
+
+  for (const invoice of invoices) {
+    if (queued >= batchSize) break;
+
+    const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
+    if (balance.lte(0)) {
+      skipped += 1;
+      continue;
+    }
+
+    const daysOverdue = Math.floor((now.getTime() - invoice.dueDate.getTime()) / 86400000);
+    if (daysOverdue < minDaysOverdue) continue;
+
+    considered += 1;
+
+    const latestPromise = invoice.collectionActivities[0];
+    if (latestPromise?.promisedDate && latestPromise.promisedDate.getTime() >= now.getTime()) {
+      promisesDeferred += 1;
+      continue;
+    }
+
+    let recipient = '';
+    try {
+      recipient = normalizePhone(invoice.organization.primaryPhone);
+    } catch {
+      invalidPhone += 1;
+      continue;
+    }
+
+    const amount = new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: invoice.currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(balance));
+    const dueDate = new Intl.DateTimeFormat('en-GH', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Africa/Accra',
+    }).format(invoice.dueDate);
+    const paymentLink =
+      (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://lightworldtech.com')
+        .trim()
+        .replace(/\/$/, '') + '/client#account';
+    const content = renderSmsTemplate(template.body, {
+      name: invoice.organization.primaryContactName || invoice.organization.name,
+      invoice: invoice.invoiceNumber,
+      amount,
+      dueDate,
+      paymentLink,
+    });
+
+    const duplicate = await db.smsMessage.findFirst({
+      where: {
+        recipient,
+        templateId: template.id,
+        content,
+        status: { in: ['queued', 'scheduled', 'sent', 'delivered'] },
+        createdAt: { gte: duplicateCutoff },
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      skipped += 1;
+      continue;
+    }
+
+    const message = await queueSingleSms({
+      recipient,
+      senderId: config.senderId,
+      content,
+      templateId: template.id,
+      scheduledAt: new Date(now.getTime() + 30 * 1000),
+      createdBy: 'System collections scheduler',
+    });
+
+    await db.financeCollectionActivity.create({
+      data: {
+        organizationId: invoice.organizationId,
+        invoiceId: invoice.id,
+        type: 'sms_reminder_scheduled',
+        note:
+          'Automatic payment reminder scheduled for ' +
+          invoice.invoiceNumber +
+          ' at ' +
+          daysOverdue +
+          ' day' +
+          (daysOverdue === 1 ? '' : 's') +
+          ' overdue.',
+        smsMessageId: message.id,
+        createdBy: 'System collections scheduler',
+      },
+    });
+
+    queued += 1;
+  }
+
+  return {
+    enabled: true,
+    configured: true,
+    considered,
+    queued,
+    skipped,
+    invalidPhone,
+    promisesDeferred,
+  };
+}
+
 export async function dispatchDueSms() {
   const renewalQueue = await queueDueServiceRenewalReminders();
   const projectRenewalQueue = await queueDueProjectRenewalReminders();
+  const collectionQueue = await queueDueCollectionReminders();
   if (!hubtelConfiguration().sms) {
     return {
       configured: false,
@@ -568,6 +762,7 @@ export async function dispatchDueSms() {
       campaignsProcessed: 0,
       renewalQueue,
       projectRenewalQueue,
+      collectionQueue,
     };
   }
 
@@ -617,5 +812,13 @@ export async function dispatchDueSms() {
     }
   }
 
-  return { configured: true, singleSent, singleFailed, campaignsProcessed, renewalQueue, projectRenewalQueue };
+  return {
+    configured: true,
+    singleSent,
+    singleFailed,
+    campaignsProcessed,
+    renewalQueue,
+    projectRenewalQueue,
+    collectionQueue,
+  };
 }

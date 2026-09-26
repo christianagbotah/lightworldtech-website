@@ -1119,6 +1119,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).toContain('service.renewalNoticeDays');
     expect(sms).toContain("createdBy: 'System renewal scheduler'");
     expect(sms).toContain('HUBTEL_SMS_BATCH_SIZE');
+    expect(sms).toContain('AUTO_COLLECTION_REMINDER_SMS');
+    expect(sms).toContain('COLLECTION_REMINDER_SMS_BATCH_SIZE');
+    expect(sms).toContain('COLLECTION_REMINDER_SMS_INTERVAL_DAYS');
+    expect(sms).toContain('COLLECTION_REMINDER_SMS_MIN_DAYS_OVERDUE');
+    expect(sms).toContain("createdBy: 'System collections scheduler'");
+    expect(sms).toContain("type: 'sms_reminder_scheduled'");
+    expect(sms).toContain('promisesDeferred');
     expect(smsAdmin).toContain('SMS, campaigns, scheduling & OTP');
     expect(smsAdmin).toContain('Reusable SMS templates');
     expect(smsAdmin).toContain('Scheduled campaigns');

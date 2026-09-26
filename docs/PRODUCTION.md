@@ -517,6 +517,12 @@ SERVICE_RENEWAL_SMS_BATCH_SIZE=10
 
 # Project-level renewal reminders are separately opt-in.
 AUTO_PROJECT_RENEWAL_SMS=true
+
+# Overdue invoice reminders are separately opt-in and bounded.
+AUTO_COLLECTION_REMINDER_SMS=true
+COLLECTION_REMINDER_SMS_BATCH_SIZE=10
+COLLECTION_REMINDER_SMS_INTERVAL_DAYS=7
+COLLECTION_REMINDER_SMS_MIN_DAYS_OVERDUE=1
 PROJECT_RENEWAL_SMS_BATCH_SIZE=10
 ```
 
@@ -544,3 +550,10 @@ After adding real credentials, smoke-test in this order:
 5. Send and verify an OTP to an internal test number.
 6. In a test client account with a GHS invoice, choose **Pay with Hubtel**, complete checkout, return to the portal, and confirm a single receipt/allocation is created and the invoice balance is reduced.
 7. Re-send/replay the same Hubtel callback and confirm no duplicate customer receipt is created.
+
+
+### Automated collections reminders
+
+When `AUTO_COLLECTION_REMINDER_SMS=true`, the protected SMS dispatcher also reviews overdue customer invoices with a remaining balance. It schedules at most `COLLECTION_REMINDER_SMS_BATCH_SIZE` reminders per run, defers customers with an unexpired promise-to-pay, skips invalid or missing phone numbers, and suppresses repeat copies of the same reminder for `COLLECTION_REMINDER_SMS_INTERVAL_DAYS` days. The default interval is seven days and the default minimum age is one day overdue.
+
+Each automatic reminder uses the approved `payment_due` template and creates an auditable `FinanceCollectionActivity` entry linked to the SMS message. The reminder directs the customer to the secure Client Portal for account and payment options; it does not mark an invoice paid or alter the finance ledger.
