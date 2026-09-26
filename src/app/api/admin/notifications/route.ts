@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
   if (canFinance) {
     const now = new Date();
     const renewalWindow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-    const [overdueInvoices, overdueBills, renewalCandidates] = await Promise.all([
+    const [overdueInvoices, overdueBills, renewalCandidates, projectRenewalCandidates, expiredServices, collectionFollowUps, brokenPromises] = await Promise.all([
       db.clientInvoice.count({
         where: {
           dueDate: { lt: now },
@@ -141,12 +141,45 @@ export async function GET(request: NextRequest) {
         select: { expiryDate: true, renewalNoticeDays: true },
         take: 1000,
       }),
+      db.clientProject.findMany({
+        where: {
+          status: { in: ['planned', 'active', 'on_hold'] },
+          nextRenewalDate: { gte: now, lte: renewalWindow },
+          renewalAmount: { gt: 0 },
+        },
+        select: { nextRenewalDate: true, renewalNoticeDays: true },
+        take: 1000,
+      }),
+      db.clientServiceAccount.count({
+        where: {
+          status: { in: ['active', 'suspended'] },
+          expiryDate: { lt: now },
+        },
+      }),
+      db.financeCollectionActivity.count({
+        where: {
+          nextFollowUpAt: { lt: now },
+          completedAt: null,
+        },
+      }),
+      db.financeCollectionActivity.count({
+        where: {
+          type: 'promise_to_pay',
+          promisedDate: { lt: now },
+          completedAt: null,
+        },
+      }),
     ]);
 
     const renewalsDue = renewalCandidates.filter((service) => {
       if (!service.expiryDate) return false;
       const days = Math.ceil((service.expiryDate.getTime() - now.getTime()) / 86400000);
       return days <= service.renewalNoticeDays;
+    }).length;
+    const projectRenewalsDue = projectRenewalCandidates.filter((project) => {
+      if (!project.nextRenewalDate) return false;
+      const days = Math.ceil((project.nextRenewalDate.getTime() - now.getTime()) / 86400000);
+      return days <= project.renewalNoticeDays;
     }).length;
 
     if (overdueInvoices > 0) {
@@ -156,7 +189,7 @@ export async function GET(request: NextRequest) {
         title: 'Customer invoices overdue',
         message: overdueInvoices + ' customer invoice' + (overdueInvoices === 1 ? ' is' : 's are') + ' past the due date.',
         count: overdueInvoices,
-        action: 'admin-finance',
+        action: 'admin-finance-collections',
       });
     }
 
@@ -167,7 +200,7 @@ export async function GET(request: NextRequest) {
         title: 'Supplier bills overdue',
         message: overdueBills + ' supplier bill' + (overdueBills === 1 ? ' is' : 's are') + ' past the due date.',
         count: overdueBills,
-        action: 'admin-finance',
+        action: 'admin-finance-suppliers',
       });
     }
 
@@ -178,7 +211,51 @@ export async function GET(request: NextRequest) {
         title: 'Service renewals due',
         message: renewalsDue + ' client service' + (renewalsDue === 1 ? ' is' : 's are') + ' inside the renewal-notice window.',
         count: renewalsDue,
-        action: 'admin-finance',
+        action: 'admin-finance-renewals',
+      });
+    }
+
+    if (projectRenewalsDue > 0) {
+      notices.push({
+        id: 'finance-project-renewals',
+        severity: 'warning',
+        title: 'Project renewals due',
+        message: projectRenewalsDue + ' client project' + (projectRenewalsDue === 1 ? ' is' : 's are') + ' inside the renewal-notice window.',
+        count: projectRenewalsDue,
+        action: 'admin-finance-renewals',
+      });
+    }
+
+    if (expiredServices > 0) {
+      notices.push({
+        id: 'finance-expired-services',
+        severity: 'critical',
+        title: 'Client services expired',
+        message: expiredServices + ' service' + (expiredServices === 1 ? ' has' : 's have') + ' passed the recorded expiry date and need renewal or status review.',
+        count: expiredServices,
+        action: 'admin-finance-renewals',
+      });
+    }
+
+    if (collectionFollowUps > 0) {
+      notices.push({
+        id: 'finance-collection-followups',
+        severity: 'warning',
+        title: 'Collection follow-ups due',
+        message: collectionFollowUps + ' collection follow-up' + (collectionFollowUps === 1 ? ' is' : 's are') + ' due for action.',
+        count: collectionFollowUps,
+        action: 'admin-finance-collections',
+      });
+    }
+
+    if (brokenPromises > 0) {
+      notices.push({
+        id: 'finance-broken-promises',
+        severity: 'critical',
+        title: 'Payment promises overdue',
+        message: brokenPromises + ' promise-to-pay commitment' + (brokenPromises === 1 ? ' is' : 's are') + ' past the promised date.',
+        count: brokenPromises,
+        action: 'admin-finance-collections',
       });
     }
   }

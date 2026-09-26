@@ -155,6 +155,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, []);
 
   const handleNoticeAction = (action: string) => {
+    if (action === 'admin-finance-collections') {
+      sessionStorage.setItem('lw-finance-section', 'collections');
+      navigate('admin-finance');
+      return;
+    }
+    if (action === 'admin-finance-renewals') {
+      sessionStorage.setItem('lw-finance-section', 'renewals');
+      navigate('admin-finance');
+      return;
+    }
+    if (action === 'admin-finance-suppliers') {
+      sessionStorage.setItem('lw-finance-section', 'suppliers');
+      navigate('admin-finance');
+      return;
+    }
     if (action === 'admin-crm-overdue') {
       sessionStorage.setItem('lw-crm-overdue-filter', '1');
       navigate('admin-crm');
