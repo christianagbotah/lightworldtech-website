@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         include: {
           project: { select: { id: true, name: true } },
           attachments: { orderBy: { createdAt: 'desc' } },
+          changes: { orderBy: { createdAt: 'desc' }, take: 50 },
         },
         orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
       },
