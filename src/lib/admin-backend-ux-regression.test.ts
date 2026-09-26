@@ -1593,6 +1593,14 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain("action: 'admin-sms'");
   });
 
+  test('counts service and project renewal drafts before raising finance review alerts', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    expect(notifications).toContain('collectionInvoices, renewalDrafts');
+    expect(notifications).toContain("'System renewal draft scheduler'");
+    expect(notifications).toContain("'System project renewal draft scheduler'");
+    expect(notifications).toContain('Renewal invoice drafts awaiting review');
+  });
+
   test('routes finance notifications directly to operational exception queues', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
     const layout = source('src/components/admin/AdminLayout.tsx');
