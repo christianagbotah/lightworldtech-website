@@ -108,6 +108,35 @@ ADMIN_SEED_PASSWORD="<secure-value>" bunx prisma db seed
 
 Do not use the development fallback password in production.
 
+## Backup and restore verification
+
+Production recovery operations are version-controlled and installed with each verified release. The application does not treat backup-file presence as proof that recovery works.
+
+The installed timers run:
+
+- PostgreSQL custom-format backup daily at approximately 02:43 UTC;
+- persistent uploads archive daily at approximately 03:03 UTC; and
+- an isolated restore rehearsal weekly on Sunday at approximately 04:00 UTC.
+
+Backup artifacts are stored below `LIGHTWORLD_BACKUP_DIR` (default `/home/lightworld/shared/lightworldtech/backups`) in separate `postgresql/` and `uploads/` directories. Directories are root-owned but group-readable by `lightworld` so the authenticated super-admin readiness API can inspect freshness without granting the application write access.
+
+The restore rehearsal never restores into `lightworld_website_db`. It starts a temporary PostgreSQL 18 cluster under `/tmp`, restores the newest custom-format dump with ownership and ACL restoration disabled, verifies that public tables exist, validates the newest uploads tarball, then shuts down and deletes the temporary cluster. A successful run writes the non-secret `restore-verification.json` marker with the tested artifact names, verification timestamp, restored public-table count and uploads archive entry count.
+
+The readiness panel treats restore verification older than eight days as stale. A healthy recovery signal therefore requires both backup streams to be fresh and a recent successful isolated restore rehearsal.
+
+Useful checks:
+
+```bash
+systemctl list-timers --all | grep lightworld-backup
+systemctl status lightworld-backup-postgresql.timer
+systemctl status lightworld-backup-uploads.timer
+systemctl status lightworld-backup-verify.timer
+sudo systemctl start lightworld-backup-verify.service
+cat /home/lightworld/shared/lightworldtech/backups/restore-verification.json
+```
+
+Legacy cron entries for the two backup scripts should be removed after the systemd timers are installed to prevent duplicate daily archives. Release pruning remains a separate operation.
+
 ## Smoke checks after deployment
 
 Verify:
