@@ -244,11 +244,9 @@ export default function AdminSettings() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const res = await fetch('/api/settings');
-      if (!res.ok) throw new Error('Failed to fetch');
-      setSettings(await res.json());
-    } catch {
-      toast.error('Failed to load settings');
+      setSettings(await fetchJson<SettingsData>('/api/settings', { cache: 'no-store' }, 'Failed to load settings'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to load settings');
     } finally {
       setLoading(false);
     }
@@ -268,16 +266,15 @@ export default function AdminSettings() {
         groupData[f.key] = settings[f.key] || '';
       });
 
-      const res = await fetch('/api/settings', {
+      await fetchJson('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(groupData),
-      });
+      }, 'Failed to save ' + group.title + ' settings');
 
-      if (!res.ok) throw new Error('Failed to save');
       toast.success(`${group.title} settings saved`);
-    } catch {
-      toast.error(`Failed to save ${group.title} settings`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `Failed to save ${group.title} settings`);
     } finally {
       setSaving(null);
     }
