@@ -43,13 +43,17 @@ export async function GET(request: NextRequest) {
     projectRenewalEmail: process.env.AUTO_PROJECT_RENEWAL_EMAIL === 'true',
     collections: process.env.AUTO_COLLECTION_REMINDER_SMS === 'true',
     collectionEmail: process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true',
+    newsletterCampaigns: process.env.AUTO_NEWSLETTER_CAMPAIGN_DISPATCH === 'true',
     renewalDrafts: process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true',
     projectRenewalDrafts: process.env.AUTO_PROJECT_RENEWAL_DRAFT_INVOICES === 'true',
   };
   const smsAutomationEnabled =
     automation.serviceRenewals || automation.projectRenewals || automation.collections;
   const emailAutomationEnabled =
-    automation.collectionEmail || automation.serviceRenewalEmail || automation.projectRenewalEmail;
+    automation.collectionEmail ||
+    automation.serviceRenewalEmail ||
+    automation.projectRenewalEmail ||
+    automation.newsletterCampaigns;
   const automationEnabled = smsAutomationEnabled || emailAutomationEnabled || automation.renewalDrafts || automation.projectRenewalDrafts;
   const dispatcherConfigured = Boolean((process.env.SMS_CRON_SECRET || '').trim());
   const runtimeMaxAgeMinutes = Math.max(
