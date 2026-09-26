@@ -1481,6 +1481,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).toContain('duplicateMessage || recentInvoiceReminder');
   });
 
+  test('shows project renewal invoices and payment options in the client portal', () => {
+    const portalApi = source('src/app/api/client/portal/route.ts');
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(portalApi).toContain('payableInvoiceByProject');
+    expect(portalApi).toContain('renewalAmount: project.renewalAmount.toFixed(2)');
+    expect(portalApi).toContain('payableInvoice: payableInvoiceByProject.get(project.id) || null');
+    expect(portal).toContain('Service / project');
+    expect(portal).toContain("invoice.service?.name || invoice.project?.name || 'General account'");
+    expect(portal).toContain('Project payment due');
+    expect(portal).toContain('Pay project with Hubtel');
+    expect(portal).toContain('project.payableInvoice.renewalForDate');
+  });
+
   test('shows project expiry and renewal terms in the client portal', () => {
     const portal = source('src/components/client/ClientPortalPage.tsx');
 
