@@ -200,7 +200,7 @@ export default function AdminServices() {
 
       <div className="border border-border rounded-xl bg-card overflow-hidden">
         <div className="max-w-full overflow-x-auto max-h-[600px] overflow-y-auto">
-          <Table>
+          <Table exportFileName="lightworld-services">
             <TableHeader>
               <TableRow className="bg-gradient-to-r from-muted/80 to-muted/30 dark:from-slate-800/80 dark:to-slate-800/30">
                 <TableHead className="text-xs font-semibold">Service</TableHead>
