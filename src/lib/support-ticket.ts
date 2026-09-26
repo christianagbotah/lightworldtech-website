@@ -242,7 +242,6 @@ export async function notifyClientOfSupportStatus(input: {
   } catch (error) {
     console.error('Support ticket status email failed:', sanitizeMailError(error));
   }
-}
 
   await notifySupportUpdateSms({
     phone: input.phone,
@@ -250,6 +249,7 @@ export async function notifyClientOfSupportStatus(input: {
     ticketNumber: input.ticketNumber,
     status: input.status,
   });
+}
 
 export async function notifySupportDesk(input: {
   ticketNumber: string;
@@ -328,7 +328,6 @@ export async function notifyClientOfSupportReply(input: {
   } catch (error) {
     console.error('Client ticket reply notification failed:', sanitizeMailError(error));
   }
-}
 
   await notifySupportUpdateSms({
     phone: input.phone,
@@ -336,3 +335,4 @@ export async function notifyClientOfSupportReply(input: {
     ticketNumber: input.ticketNumber,
     status: input.status || 'awaiting_client',
   });
+}
