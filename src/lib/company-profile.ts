@@ -137,3 +137,14 @@ export function answerCompanyQuestion(message: string): string {
 
   return 'Lightworld Technologies Limited is a Ghanaian technology company building software, apps, websites, enterprise systems, AI-enabled workflows, cloud infrastructure, training and advisory services. You can ask me about our leadership, services, awards, press coverage, training, or starting a project.';
 }
+
+
+export function isSafePublicSourceUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || !value.trim()) return false;
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === 'https:' && Boolean(url.hostname);
+  } catch {
+    return false;
+  }
+}
