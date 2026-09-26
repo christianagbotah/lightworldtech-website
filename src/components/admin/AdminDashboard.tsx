@@ -6,7 +6,7 @@ import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
   Plus, ExternalLink, Inbox, Activity, ArrowUpRight, ArrowDownRight,
   Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick, GitBranch,
-  Database, HardDrive, ShieldAlert, CircleDollarSign, CalendarClock, LifeBuoy, FolderKanban
+  Database, HardDrive, ShieldAlert, CircleDollarSign, CalendarClock, LifeBuoy, FolderKanban, ReceiptText
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,16 @@ interface ContactMessage {
   message: string;
   read: boolean;
   createdAt: string;
+}
+
+interface BusinessActivity {
+  id: string;
+  type: 'payment' | 'invoice' | 'collection' | 'support';
+  title: string;
+  detail: string;
+  occurredAt: string;
+  targetId: string;
+  organizationId: string;
 }
 
 interface CrmSummary {
@@ -189,6 +199,7 @@ export default function AdminDashboard() {
   const canSite = hasAdminPermission(adminRole, adminPermissions, 'site.manage');
   const canCrm = hasAdminPermission(adminRole, adminPermissions, 'crm.manage');
   const canFinance = hasAdminPermission(adminRole, adminPermissions, 'finance.manage');
+  const canClients = hasAdminPermission(adminRole, adminPermissions, 'clients.manage');
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
@@ -196,6 +207,7 @@ export default function AdminDashboard() {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [backup, setBackup] = useState<BackupData | null>(null);
   const [portfolio, setPortfolio] = useState<ExecutivePortfolio | null>(null);
+  const [businessActivity, setBusinessActivity] = useState<BusinessActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
@@ -204,7 +216,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsRes, postsRes, messagesRes, analyticsRes, healthRes, backupRes, portfolioRes] = await Promise.all([
+        const [statsRes, postsRes, messagesRes, analyticsRes, healthRes, backupRes, portfolioRes, activityRes] = await Promise.all([
           fetch('/api/admin/stats', { cache: 'no-store' }),
           canSite ? fetch('/api/blog?limit=5', { cache: 'no-store' }) : Promise.resolve(null),
           canCrm ? fetch('/api/contact?limit=20', { cache: 'no-store' }) : Promise.resolve(null),
@@ -216,6 +228,9 @@ export default function AdminDashboard() {
           canFinance
             ? fetch('/api/admin/clients/portfolio-intelligence', { cache: 'no-store' })
             : Promise.resolve(null),
+          canFinance || canClients
+            ? fetch('/api/admin/activity', { cache: 'no-store' })
+            : Promise.resolve(null),
         ]);
 
         if (
@@ -224,7 +239,8 @@ export default function AdminDashboard() {
           (messagesRes && !messagesRes.ok) ||
           (analyticsRes && !analyticsRes.ok) ||
           !healthRes.ok ||
-          (portfolioRes && !portfolioRes.ok)
+          (portfolioRes && !portfolioRes.ok) ||
+          (activityRes && !activityRes.ok)
         ) {
           throw new Error('Failed to fetch authorized dashboard data');
         }
@@ -236,6 +252,7 @@ export default function AdminDashboard() {
         const healthData = await healthRes.json();
         const backupData = backupRes && backupRes.ok ? await backupRes.json() : { data: null };
         const portfolioData = portfolioRes && portfolioRes.ok ? await portfolioRes.json() : null;
+        const activityData = activityRes && activityRes.ok ? await activityRes.json() : { data: [] };
 
         const rawStats = statsData.data || statsData;
 
@@ -263,6 +280,7 @@ export default function AdminDashboard() {
         setAnalytics(analyticsData.data || null);
         setHealth(healthData.data || null);
         setBackup(backupData.data || null);
+        setBusinessActivity(activityData.data || []);
         setPortfolio(portfolioData ? {
           summary: portfolioData.summary,
           byCurrency: portfolioData.byCurrency || [],
@@ -276,7 +294,7 @@ export default function AdminDashboard() {
       }
     }
     void fetchData();
-  }, [canSite, canCrm, canFinance, adminRole]);
+  }, [canSite, canCrm, canFinance, canClients, adminRole]);
 
   const openMessage = (messageId: string) => {
     sessionStorage.setItem('lw-open-message-id', messageId);
@@ -295,6 +313,20 @@ export default function AdminDashboard() {
 
   const openSupportDesk = () => {
     navigate('admin-support');
+  };
+
+  const openBusinessActivity = (activity: BusinessActivity) => {
+    if (activity.type === 'support') {
+      sessionStorage.setItem('lw-support-ticket-id', activity.targetId);
+      navigate('admin-support');
+      return;
+    }
+    sessionStorage.setItem(
+      'lw-finance-section',
+      activity.type === 'collection' ? 'collections' : 'customers',
+    );
+    sessionStorage.setItem('lw-finance-organization-id', activity.organizationId);
+    navigate('admin-finance');
   };
 
   const openCrm = (filter?: { status?: string; priority?: string }) => {
@@ -344,9 +376,33 @@ export default function AdminDashboard() {
       icon: FileText,
       iconColor: post.published ? 'text-emerald-500' : 'text-slate-400',
     }));
-    return [...messageActivity, ...postActivity]
+    const operationalActivity = businessActivity.map((activity) => ({
+      id: activity.id,
+      targetId: activity.targetId,
+      type: activity.type,
+      business: activity,
+      text: activity.title + ' · ' + activity.detail,
+      createdAt: activity.occurredAt,
+      icon:
+        activity.type === 'payment'
+          ? ReceiptText
+          : activity.type === 'invoice'
+            ? FileText
+            : activity.type === 'collection'
+              ? CircleDollarSign
+              : LifeBuoy,
+      iconColor:
+        activity.type === 'payment'
+          ? 'text-emerald-600'
+          : activity.type === 'collection'
+            ? 'text-amber-600'
+            : activity.type === 'support'
+              ? 'text-rose-600'
+              : 'text-sky-600',
+    }));
+    return [...operationalActivity, ...messageActivity, ...postActivity]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 6);
+      .slice(0, 10);
   })();
 
   const trafficData = analytics?.daily?.slice(-14) || [];
@@ -906,7 +962,15 @@ export default function AdminDashboard() {
                     <button
                       key={activity.id}
                       type="button"
-                      onClick={() => activity.type === 'message' ? openMessage(activity.targetId) : navigate('admin-blog-editor', activity.targetId)}
+                      onClick={() => {
+                        if ('business' in activity && activity.business) {
+                          openBusinessActivity(activity.business);
+                        } else if (activity.type === 'message') {
+                          openMessage(activity.targetId);
+                        } else {
+                          navigate('admin-blog-editor', activity.targetId);
+                        }
+                      }}
                       className="flex w-full items-start gap-3 px-5 py-3 text-left hover:bg-muted/50 transition-colors"
                     >
                       <div className={`size-8 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5`}>
