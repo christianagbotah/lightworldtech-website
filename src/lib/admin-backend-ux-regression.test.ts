@@ -235,6 +235,17 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientPortal).toContain("'/api/support-attachments/' + attachment.id");
   });
 
+  test('keeps export controls available on operational detail tables', () => {
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const details = source('src/components/admin/FinanceRecordDetailsDialog.tsx');
+
+    expect(support).toContain('exportFileName="lightworld-support-desk"');
+    expect(support).not.toContain('<Table hideExport exportFileName="lightworld-support-desk"');
+    expect(details).toContain('exportFileName="lightworld-finance-record-activity"');
+    expect(details).toContain('exportFileName="lightworld-finance-record-lines"');
+    expect(details).not.toContain('<Table hideExport');
+  });
+
   test('supports real Support Desk agents, bounded bulk actions, exports and SLA escalation', () => {
     const support = source('src/components/admin/AdminSupportDesk.tsx');
     const agents = source('src/app/api/admin/support-agents/route.ts');
