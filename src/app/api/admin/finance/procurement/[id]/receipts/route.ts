@@ -67,7 +67,7 @@ export async function POST(
   }
 
   const unique = new Set<string>();
-  const receivedLines = [];
+  const receivedLines: Array<{ requestLineId: string; quantity: Prisma.Decimal }> = [];
   for (const line of parsed.data.lines) {
     if (unique.has(line.requestLineId)) {
       return NextResponse.json({ success: false, error: 'Each purchase order line can appear only once per receipt' }, { status: 400 });
