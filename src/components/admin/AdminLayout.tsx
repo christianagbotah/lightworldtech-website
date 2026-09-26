@@ -168,6 +168,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, []);
 
   const handleNoticeAction = (action: string) => {
+    if (action === 'admin-support-at-risk') {
+      sessionStorage.setItem('lw-support-sla-filter', 'at_risk');
+      navigate('admin-support');
+      return;
+    }
     if (action === 'admin-clients') {
       navigate('admin-clients');
       return;
