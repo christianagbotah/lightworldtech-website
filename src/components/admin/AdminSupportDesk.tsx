@@ -151,6 +151,11 @@ type Summary = {
     csatAverage: number | null;
     csatResponses: number;
     resolvedSamples: number;
+    avgOpenAgeMinutes: number | null;
+    oldestOpenAgeMinutes: number | null;
+    reopenedTickets: number;
+    reopenIncidencePct: number | null;
+    reopenMethodology: string;
   };
 };
 
@@ -225,6 +230,11 @@ export default function AdminSupportDesk() {
       csatAverage: null,
       csatResponses: 0,
       resolvedSamples: 0,
+      avgOpenAgeMinutes: null,
+      oldestOpenAgeMinutes: null,
+      reopenedTickets: 0,
+      reopenIncidencePct: null,
+      reopenMethodology: '',
     },
   });
   const [query, setQuery] = useState('');
@@ -288,6 +298,11 @@ export default function AdminSupportDesk() {
           csatAverage: null,
           csatResponses: 0,
           resolvedSamples: 0,
+          avgOpenAgeMinutes: null,
+          oldestOpenAgeMinutes: null,
+          reopenedTickets: 0,
+          reopenIncidencePct: null,
+          reopenMethodology: '',
         },
       });
 
@@ -613,7 +628,7 @@ export default function AdminSupportDesk() {
               </p>
               <p className="mt-1 text-xs text-muted-foreground">Rolling {summary.performance.windowDays}-day operational metrics from actual ticket timestamps.</p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:min-w-[760px]">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6 xl:min-w-[1120px]">
               <div className="rounded-xl bg-muted/40 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Avg first response</p>
                 <p className="mt-1 text-lg font-bold">{formatDuration(summary.performance.avgFirstResponseMinutes)}</p>
@@ -633,6 +648,16 @@ export default function AdminSupportDesk() {
                   {summary.performance.csatAverage !== null && <Star className="size-4 fill-current text-amber-500" />}
                 </p>
                 <p className="text-[10px] text-muted-foreground">{summary.performance.csatResponses} response{summary.performance.csatResponses === 1 ? '' : 's'}</p>
+              </div>
+              <div className="rounded-xl bg-muted/40 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Avg open age</p>
+                <p className="mt-1 text-lg font-bold">{formatDuration(summary.performance.avgOpenAgeMinutes)}</p>
+                <p className="text-[10px] text-muted-foreground">Oldest {formatDuration(summary.performance.oldestOpenAgeMinutes)}</p>
+              </div>
+              <div className="rounded-xl bg-muted/40 p-3" title={summary.performance.reopenMethodology}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Reopen incidence</p>
+                <p className="mt-1 text-lg font-bold">{summary.performance.reopenIncidencePct === null ? 'No data' : summary.performance.reopenIncidencePct + '%'}</p>
+                <p className="text-[10px] text-muted-foreground">{summary.performance.reopenedTickets} ticket{summary.performance.reopenedTickets === 1 ? '' : 's'} reopened</p>
               </div>
             </div>
           </div>
