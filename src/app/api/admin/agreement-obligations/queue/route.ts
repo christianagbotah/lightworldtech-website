@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { hasAdminPermission, normalizeAdminPermissions } from '@/lib/admin-permissions';
 
-const scopes = new Set(['all', 'mine', 'unassigned', 'overdue', 'due_30', 'owner']);
+const scopes = new Set(['all', 'mine', 'unassigned', 'overdue', 'due_30', 'pending_review', 'owner']);
 
 export async function GET(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
@@ -28,10 +28,11 @@ export async function GET(request: NextRequest) {
     ...(scope === 'unassigned' ? { ownerAdminId: null } : {}),
     ...(scope === 'overdue' ? { dueDate: { lt: now } } : {}),
     ...(scope === 'due_30' ? { dueDate: { gte: now, lte: horizon30 } } : {}),
+    ...(scope === 'pending_review' ? { status: 'pending_review' } : {}),
     ...(scope === 'owner' ? { ownerAdminId: ownerId || actor.id } : {}),
   };
 
-  const [items, total, mine, unassigned, overdue, due30, admins, groupedTotal, groupedOverdue, groupedDue30] = await Promise.all([
+  const [items, total, mine, unassigned, overdue, due30, pendingReview, admins, groupedTotal, groupedOverdue, groupedDue30] = await Promise.all([
     db.clientAgreementObligation.findMany({
       where: scopedWhere,
       orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
@@ -45,6 +46,10 @@ export async function GET(request: NextRequest) {
         ownerAdminId: true,
         dueDate: true,
         notes: true,
+        evidenceUrl: true,
+        completionSubmittedAt: true,
+        completionSubmittedByAdminId: true,
+        completionSubmittedBy: true,
         updatedAt: true,
         ownerAdmin: { select: { id: true, name: true, email: true } },
         agreement: {
@@ -63,6 +68,7 @@ export async function GET(request: NextRequest) {
     db.clientAgreementObligation.count({ where: { ...openWhere, ownerAdminId: null } }),
     db.clientAgreementObligation.count({ where: { ...openWhere, dueDate: { lt: now } } }),
     db.clientAgreementObligation.count({ where: { ...openWhere, dueDate: { gte: now, lte: horizon30 } } }),
+    db.clientAgreementObligation.count({ where: { ...openWhere, status: 'pending_review' } }),
     db.admin.findMany({
       where: { active: true },
       orderBy: [{ name: 'asc' }, { email: 'asc' }],
@@ -96,7 +102,7 @@ export async function GET(request: NextRequest) {
     scope,
     ownerId: scope === 'owner' ? (ownerId || actor.id) : '',
     actor: { id: actor.id, name: actor.name, email: actor.email },
-    summary: { total, mine, unassigned, overdue, due30 },
+    summary: { total, mine, unassigned, overdue, due30, pendingReview },
     team,
     data: items,
   });
