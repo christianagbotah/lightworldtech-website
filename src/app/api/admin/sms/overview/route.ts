@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
 
-  const [templates, campaigns, messages, activeClients] = await Promise.all([
+  const [templates, campaigns, messages, activeClients, runtime] = await Promise.all([
     db.smsTemplate.findMany({
       where: { active: true },
       orderBy: [{ system: 'desc' }, { category: 'asc' }, { name: 'asc' }],
@@ -35,6 +35,9 @@ export async function GET(request: NextRequest) {
     db.clientOrganization.count({
       where: { status: 'active', primaryPhone: { not: '' } },
     }),
+    db.automationRuntimeState.findUnique({
+      where: { id: 'communications-dispatcher' },
+    }),
   ]);
 
   return NextResponse.json({
@@ -43,6 +46,18 @@ export async function GET(request: NextRequest) {
       configuration: hubtelConfiguration(),
       automation: {
         dispatcherConfigured: Boolean((process.env.SMS_CRON_SECRET || '').trim()),
+        runtime: runtime ? {
+          status: runtime.status,
+          lastStartedAt: runtime.lastStartedAt,
+          lastCompletedAt: runtime.lastCompletedAt,
+          lastSuccessAt: runtime.lastSuccessAt,
+          durationMs: runtime.durationMs,
+          consecutiveFailures: runtime.consecutiveFailures,
+          lastError: runtime.lastError,
+          result: (() => {
+            try { return JSON.parse(runtime.resultJson || '{}'); } catch { return {}; }
+          })(),
+        } : null,
         serviceRenewals: {
           enabled: process.env.AUTO_SERVICE_RENEWAL_SMS === 'true',
           batchSize: Math.max(1, Math.min(50, Number(process.env.SERVICE_RENEWAL_SMS_BATCH_SIZE || 10) || 10)),
