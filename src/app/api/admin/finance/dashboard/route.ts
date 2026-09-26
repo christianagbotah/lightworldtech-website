@@ -122,10 +122,6 @@ export async function GET(request: NextRequest) {
     db.clientServiceAccount.findMany({
       where: {
         status: { in: ['active', 'pending', 'suspended'] },
-        OR: [
-          { expiryDate: { lte: renewalWindow } },
-          { nextDueDate: { lte: dueWindow } },
-        ],
       },
       include: {
         organization: { select: { id: true, name: true } },
@@ -235,6 +231,12 @@ export async function GET(request: NextRequest) {
     amount: Prisma.Decimal;
     count: number;
     overdueCount: number;
+  }> = {};
+  const recurringRevenueRaw: Record<string, {
+    mrr: Prisma.Decimal;
+    arr: Prisma.Decimal;
+    activeServices: number;
+    excludedServices: number;
   }> = {};
   const promiseAmounts: Totals = {};
   const trendRaw = new Map<string, Map<string, {
@@ -392,6 +394,39 @@ export async function GET(request: NextRequest) {
   }
 
   for (const service of services) {
+    if (!recurringRevenueRaw[service.currency]) {
+      recurringRevenueRaw[service.currency] = {
+        mrr: new Prisma.Decimal(0),
+        arr: new Prisma.Decimal(0),
+        activeServices: 0,
+        excludedServices: 0,
+      };
+    }
+
+    if (service.status === 'active' && service.recurringAmount.gt(0)) {
+      const factor =
+        service.billingCycle === 'monthly'
+          ? new Prisma.Decimal(1)
+          : service.billingCycle === 'quarterly'
+            ? new Prisma.Decimal(1).div(3)
+            : service.billingCycle === 'semiannual'
+              ? new Prisma.Decimal(1).div(6)
+              : service.billingCycle === 'annual'
+                ? new Prisma.Decimal(1).div(12)
+                : null;
+
+      if (factor) {
+        const mrr = service.recurringAmount.mul(factor);
+        recurringRevenueRaw[service.currency].mrr =
+          recurringRevenueRaw[service.currency].mrr.plus(mrr);
+        recurringRevenueRaw[service.currency].arr =
+          recurringRevenueRaw[service.currency].arr.plus(mrr.mul(12));
+        recurringRevenueRaw[service.currency].activeServices += 1;
+      } else {
+        recurringRevenueRaw[service.currency].excludedServices += 1;
+      }
+    }
+
     if (!renewalExposureRaw[service.currency]) {
       renewalExposureRaw[service.currency] = {
         amount: new Prisma.Decimal(0),
@@ -442,6 +477,7 @@ export async function GET(request: NextRequest) {
     ...Object.keys(accrualExpenses),
     ...Object.keys(cashPositionRaw),
     ...Object.keys(renewalExposureRaw),
+    ...Object.keys(recurringRevenueRaw),
     ...Object.keys(promiseAmounts),
     ...trendRaw.keys(),
   ]);
@@ -481,6 +517,18 @@ export async function GET(request: NextRequest) {
         amount: value.amount.toFixed(2),
         count: value.count,
         overdueCount: value.overdueCount,
+      }]),
+  );
+
+  const recurringRevenue = Object.fromEntries(
+    Object.entries(recurringRevenueRaw)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([currency, value]) => [currency, {
+        mrr: value.mrr.toFixed(2),
+        arr: value.arr.toFixed(2),
+        activeServices: value.activeServices,
+        excludedServices: value.excludedServices,
+        methodology: 'Normalized from active recurring services only: monthly ×1, quarterly ÷3, semiannual ÷6 and annual ÷12. One-time and custom cycles are excluded rather than estimated.',
       }]),
   );
 
@@ -553,7 +601,10 @@ export async function GET(request: NextRequest) {
     }),
   );
 
-  const serviceAlerts = services.map((service) => {
+  const serviceAlerts = services.filter((service) => {
+    const billingDate = service.nextDueDate || service.expiryDate;
+    return Boolean(billingDate && billingDate <= renewalWindow);
+  }).map((service) => {
     const expiryDays = service.expiryDate
       ? Math.ceil((service.expiryDate.getTime() - now.getTime()) / 86400000)
       : null;
@@ -594,6 +645,7 @@ export async function GET(request: NextRequest) {
       byCurrency,
       cashPosition,
       renewalExposure,
+      recurringRevenue,
       runway,
       collections: {
         followUpDue: followUpDueInvoices.size,
