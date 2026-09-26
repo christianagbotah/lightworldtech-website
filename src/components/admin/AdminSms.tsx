@@ -111,7 +111,9 @@ type SmsOverview = {
       result: Record<string, unknown>;
     } | null;
     serviceRenewals: { enabled: boolean; batchSize: number };
+    serviceRenewalEmail: { enabled: boolean; configured: boolean; batchSize: number };
     projectRenewals: { enabled: boolean; batchSize: number };
+    projectRenewalEmail: { enabled: boolean; configured: boolean; batchSize: number };
     renewalDrafts: { enabled: boolean; batchSize: number; dueDays: number };
     projectRenewalDrafts: { enabled: boolean; batchSize: number; dueDays: number };
     collectionEmail: { enabled: boolean; configured: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
@@ -588,10 +590,24 @@ export default function AdminSms() {
                 Icon: CalendarClock,
               },
               {
+                label: 'Service renewal email',
+                enabled: data.automation.serviceRenewalEmail.enabled,
+                readyOverride: data.automation.serviceRenewalEmail.configured,
+                detail: 'One notice-window and one expired email per renewal cycle · batch ' + data.automation.serviceRenewalEmail.batchSize,
+                Icon: Send,
+              },
+              {
                 label: 'Project renewals',
                 enabled: data.automation.projectRenewals.enabled,
                 detail: 'Up to ' + data.automation.projectRenewals.batchSize + ' reminders per scheduler run',
                 Icon: ShieldCheck,
+              },
+              {
+                label: 'Project renewal email',
+                enabled: data.automation.projectRenewalEmail.enabled,
+                readyOverride: data.automation.projectRenewalEmail.configured,
+                detail: 'One notice-window and one overdue email per renewal cycle · batch ' + data.automation.projectRenewalEmail.batchSize,
+                Icon: Send,
               },
               {
                 label: 'Renewal invoice drafts',
