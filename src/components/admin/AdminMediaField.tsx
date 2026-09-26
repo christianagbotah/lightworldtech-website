@@ -1,5 +1,6 @@
 'use client';
 
+import { readJsonResponse } from '@/lib/client-api';
 import { ChangeEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ImageIcon, Images, Loader2, Search, Upload } from 'lucide-react';
 import { toast } from 'sonner';
@@ -59,7 +60,7 @@ export default function AdminMediaField({
     setLoading(true);
     try {
       const response = await fetch('/api/admin/media', { cache: 'no-store' });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to load media');
       setItems(Array.isArray(payload?.data?.items) ? payload.data.items : []);
     } catch (error) {
@@ -93,7 +94,7 @@ export default function AdminMediaField({
       const form = new FormData();
       form.set('file', file);
       const response = await fetch('/api/upload', { method: 'POST', body: form });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to upload image');
 
       const url = String(payload?.data?.url || '');

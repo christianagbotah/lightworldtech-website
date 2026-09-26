@@ -1,5 +1,6 @@
 'use client';
 
+import { readJsonResponse } from '@/lib/client-api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
@@ -158,7 +159,7 @@ export default function AdminGovernance() {
 
     try {
       const response = await fetch('/api/admin/governance', { cache: 'no-store' });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Failed to load admin governance');
       setData(payload.data);
     } catch (error) {
@@ -204,7 +205,7 @@ export default function AdminGovernance() {
           password: createForm.password,
         }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Failed to create administrator');
 
       toast.success('Administrator account created');
@@ -245,7 +246,7 @@ export default function AdminGovernance() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Failed to update administrator');
 
       toast.success('Administrator account updated');
@@ -268,7 +269,7 @@ export default function AdminGovernance() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ revokeSessions: true }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Failed to revoke administrator sessions');
 
       toast.success('Administrator sessions revoked');

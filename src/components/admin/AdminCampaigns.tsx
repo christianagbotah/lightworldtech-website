@@ -1,5 +1,6 @@
 'use client';
 
+import { readJsonResponse } from '@/lib/client-api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
@@ -132,7 +133,7 @@ export default function AdminCampaigns() {
   const loadCampaigns = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/newsletter/campaigns', { cache: 'no-store' });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Failed to load campaigns');
       setCampaigns(payload.data.campaigns || []);
       setActiveSubscribers(payload.data.activeSubscribers || 0);
@@ -150,7 +151,7 @@ export default function AdminCampaigns() {
       const response = await fetch('/api/admin/newsletter/campaigns/' + encodeURIComponent(id), {
         cache: 'no-store',
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Failed to load campaign');
       setDetail(payload.data);
       setForm(formFromCampaign(payload.data.campaign));
@@ -188,7 +189,7 @@ export default function AdminCampaigns() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, ...(status ? { status } : {}) }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Failed to save campaign');
       toast.success(status === 'ready' ? 'Campaign marked ready' : status === 'draft' ? 'Campaign returned to draft' : 'Campaign saved');
       await Promise.all([loadCampaigns(), loadDetail(selectedId)]);
@@ -208,7 +209,7 @@ export default function AdminCampaigns() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(createForm),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Failed to create campaign');
       setCreateOpen(false);
       setCreateForm(blankForm);
@@ -239,7 +240,7 @@ export default function AdminCampaigns() {
           body: JSON.stringify({ mode: 'test', email: testEmail.trim() }),
         },
       );
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.details || payload?.error || 'Campaign test failed');
       toast.success('Campaign test accepted by the mail transport');
     } catch (error) {
@@ -261,7 +262,7 @@ export default function AdminCampaigns() {
           body: JSON.stringify({ mode: 'batch', batchSize: 10 }),
         },
       );
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Campaign batch failed');
 
       const result = payload.data;

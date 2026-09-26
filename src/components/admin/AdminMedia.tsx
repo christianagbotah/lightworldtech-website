@@ -1,5 +1,6 @@
 'use client';
 
+import { readJsonResponse } from '@/lib/client-api';
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Copy,
@@ -62,7 +63,7 @@ export default function AdminMedia() {
     setLoading(true);
     try {
       const response = await fetch('/api/admin/media', { cache: 'no-store' });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to load media');
       setData(payload.data || { items: [], totalFiles: 0, totalBytes: 0 });
     } catch (error) {
@@ -96,7 +97,7 @@ export default function AdminMedia() {
       const form = new FormData();
       form.set('file', file);
       const response = await fetch('/api/upload', { method: 'POST', body: form });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to upload image');
       await loadMedia();
       toast.success('Image uploaded to the media library');
@@ -124,7 +125,7 @@ export default function AdminMedia() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: item.filename }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
 
       if (response.status === 409) {
         const references = Array.isArray(payload?.references)

@@ -1574,6 +1574,28 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'suppliers')");
   });
 
+  test('uses one resilient JSON parser across core admin workspaces', () => {
+    const helper = source('src/lib/client-api.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+    const sms = source('src/components/admin/AdminSms.tsx');
+    const media = source('src/components/admin/AdminMedia.tsx');
+    const mediaField = source('src/components/admin/AdminMediaField.tsx');
+    const security = source('src/components/admin/AdminSecurityDialog.tsx');
+    const campaigns = source('src/components/admin/AdminCampaigns.tsx');
+    const governance = source('src/components/admin/AdminGovernance.tsx');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+
+    expect(helper).toContain('response.text()');
+    expect(helper).toContain('invalid JSON response');
+    expect(helper).toContain('empty server response');
+    for (const workspace of [layout, sms, media, mediaField, security, campaigns, governance, support]) {
+      expect(workspace).toContain("from '@/lib/client-api'");
+      expect(workspace).toContain('readJsonResponse(response)');
+    }
+    expect(layout).not.toContain('const payload = await response.json();');
+    expect(sms).not.toContain('const payload = await response.json();');
+  });
+
   test('supports dashboard drill-downs and a real authenticated health signal', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
