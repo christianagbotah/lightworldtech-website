@@ -51,6 +51,7 @@ type RenewalInvoice = {
   id: string;
   invoiceNumber: string;
   serviceId: string | null;
+  projectId: string | null;
   status: string;
   derivedStatus: string;
   currency: string;
@@ -87,6 +88,7 @@ export default function FinanceRenewalBillingWorkspace({
   projects,
   invoices,
   onPrepareInvoice,
+  onPrepareProjectInvoice,
   onOpenInvoice,
   onManageService,
   onOpenCustomer,
@@ -97,6 +99,7 @@ export default function FinanceRenewalBillingWorkspace({
   projects: RenewalProject[];
   invoices: RenewalInvoice[];
   onPrepareInvoice: (serviceId: string) => void;
+  onPrepareProjectInvoice: (projectId: string) => void;
   onOpenInvoice: (invoiceId: string) => void;
   onManageService: (serviceId: string) => void;
   onOpenCustomer: (organizationId: string) => void;
@@ -194,6 +197,13 @@ export default function FinanceRenewalBillingWorkspace({
         ? Math.ceil((new Date(renewalDate + 'T00:00:00Z').getTime() - new Date(today + 'T00:00:00Z').getTime()) / 86400000)
         : null;
       const insideWindow = !renewalDate || renewalDate <= horizon;
+      const invoice = renewalDate
+        ? invoices.find((candidate) =>
+            candidate.projectId === project.id &&
+            dayKey(candidate.renewalForDate) === renewalDate &&
+            candidate.status !== 'void',
+          ) || null
+        : null;
       const state = !renewalDate
         ? 'schedule_missing'
         : Number(project.renewalAmount) <= 0
@@ -203,7 +213,7 @@ export default function FinanceRenewalBillingWorkspace({
             : days !== null && days <= project.renewalNoticeDays
               ? 'notice_window'
               : 'scheduled';
-      return { project, renewalDate, days, insideWindow, state };
+      return { project, renewalDate, days, insideWindow, state, invoice };
     })
     .filter((row) => row.insideWindow || ['schedule_missing', 'amount_missing'].includes(row.state))
     .sort((a, b) => {
@@ -415,7 +425,7 @@ export default function FinanceRenewalBillingWorkspace({
                     </TableCell>
                   </TableRow>
                 ))}
-                {!rows.length && <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No active service renewals fall within the selected {windowDays}-day window.</TableCell></TableRow>}
+                {!rows.length && <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No active service renewals fall within the selected {windowDays}-day window.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
@@ -443,6 +453,7 @@ export default function FinanceRenewalBillingWorkspace({
                   <TableHead>Cycle</TableHead>
                   <TableHead>Renewal date</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Invoice</TableHead>
                   <TableHead>Auto renew</TableHead>
                   <TableHead className="text-right">Renewal amount</TableHead>
                   <TableHead data-export-ignore className="text-right">Action</TableHead>
@@ -474,6 +485,14 @@ export default function FinanceRenewalBillingWorkspace({
                     </TableCell>
                     <TableCell><Badge className={tone(row.state)}>{pretty(row.state)}</Badge></TableCell>
                     <TableCell>
+                      {row.invoice ? (
+                        <button type="button" onClick={() => onOpenInvoice(row.invoice!.id)} className="text-left">
+                          <p className="font-mono text-xs font-semibold hover:underline">{row.invoice.invoiceNumber}</p>
+                          <p className="text-[10px] text-muted-foreground">{pretty(row.invoice.derivedStatus)} · {money(row.invoice.balance, row.invoice.currency)} balance</p>
+                        </button>
+                      ) : <span className="text-xs text-muted-foreground">Not issued</span>}
+                    </TableCell>
+                    <TableCell>
                       <Badge variant="outline">{row.project.autoRenew ? 'Yes' : 'No'}</Badge>
                       <p className="mt-1 text-[10px] text-muted-foreground">{row.project.renewalNoticeDays} day notice</p>
                     </TableCell>
@@ -481,10 +500,20 @@ export default function FinanceRenewalBillingWorkspace({
                     <TableCell data-export-ignore className="text-right">
                       {['schedule_missing', 'amount_missing'].includes(row.state) ? (
                         <Button type="button" size="sm" variant="outline" onClick={() => onOpenCustomer(row.project.organizationId)}>Complete setup</Button>
+                      ) : row.invoice ? (
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => onOpenInvoice(row.invoice!.id)}>Open invoice</Button>
+                          <Button type="button" size="sm" variant="outline" disabled={projectReminderBusy} onClick={() => setPendingProjectReminder(row.project)}>Send reminder</Button>
+                        </div>
                       ) : (
-                        <Button type="button" size="sm" variant="outline" disabled={projectReminderBusy} onClick={() => setPendingProjectReminder(row.project)}>
-                          Send reminder
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" size="sm" onClick={() => onPrepareProjectInvoice(row.project.id)}>
+                            <FileText className="mr-1.5 size-3.5" /> Prepare invoice
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" disabled={projectReminderBusy} onClick={() => setPendingProjectReminder(row.project)}>
+                            Send reminder
+                          </Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>
