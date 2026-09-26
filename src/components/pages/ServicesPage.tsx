@@ -19,6 +19,7 @@ import {
   Workflow,
 } from 'lucide-react';
 import { contentText, type SiteSettings } from '@/lib/site-content';
+import { readJsonSafely } from '@/lib/http-response';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 
 interface ServiceView {
@@ -149,7 +150,7 @@ export default function ServicesPage({ settings = {} }: { settings?: SiteSetting
     fetch('/api/services?active=true')
       .then((response) => {
         if (!response.ok) throw new Error('Unable to load managed services');
-        return response.json();
+        return readJsonSafely<any>(response);
       })
       .then((payload) => {
         const managed = Array.isArray(payload?.data) ? payload.data : [];
