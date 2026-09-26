@@ -97,6 +97,12 @@ type SmsOverview = {
     senderId: string;
     merchantAccountNumber: string;
   };
+  automation: {
+    dispatcherConfigured: boolean;
+    serviceRenewals: { enabled: boolean; batchSize: number };
+    projectRenewals: { enabled: boolean; batchSize: number };
+    collections: { enabled: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
+  };
   activeClients: number;
   templates: SmsTemplate[];
   campaigns: SmsCampaign[];
@@ -512,6 +518,68 @@ export default function AdminSms() {
           </Card>
         ))}
       </div>
+
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="text-base">Communication automation readiness</CardTitle>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Live configuration for the protected scheduler. Secrets remain server-only; this view exposes status and safe operating limits only.
+              </p>
+            </div>
+            <Badge variant="outline" className={data.automation.dispatcherConfigured ? 'w-fit border-emerald-300 text-emerald-700 dark:text-emerald-300' : 'w-fit border-amber-300 text-amber-700 dark:text-amber-300'}>
+              {data.automation.dispatcherConfigured ? 'Dispatcher ready' : 'Dispatcher secret missing'}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              {
+                label: 'Service renewals',
+                enabled: data.automation.serviceRenewals.enabled,
+                detail: 'Up to ' + data.automation.serviceRenewals.batchSize + ' reminders per scheduler run',
+                Icon: CalendarClock,
+              },
+              {
+                label: 'Project renewals',
+                enabled: data.automation.projectRenewals.enabled,
+                detail: 'Up to ' + data.automation.projectRenewals.batchSize + ' reminders per scheduler run',
+                Icon: ShieldCheck,
+              },
+              {
+                label: 'Overdue collections',
+                enabled: data.automation.collections.enabled,
+                detail:
+                  'From ' +
+                  data.automation.collections.minDaysOverdue +
+                  ' day(s) overdue · repeat guard ' +
+                  data.automation.collections.intervalDays +
+                  ' day(s) · batch ' +
+                  data.automation.collections.batchSize,
+                Icon: RefreshCw,
+              },
+            ].map(({ label, enabled, detail, Icon }) => {
+              const ready = enabled && data.automation.dispatcherConfigured && data.configuration.sms;
+              return (
+                <div key={label} className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className={'flex size-9 shrink-0 items-center justify-center rounded-lg ' + (ready ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300')}>
+                      <Icon className="size-4.5" />
+                    </span>
+                    <Badge variant="outline" className={ready ? 'border-emerald-300 text-emerald-700 dark:text-emerald-300' : 'border-amber-300 text-amber-700 dark:text-amber-300'}>
+                      {ready ? 'Active' : enabled ? 'Needs configuration' : 'Off'}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold">{label}</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{detail}</p>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
         {tabs.map(([value, label]) => (
