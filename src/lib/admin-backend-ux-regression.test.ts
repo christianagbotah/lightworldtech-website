@@ -1358,6 +1358,25 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(renewals).toContain("invoice?.status === 'draft'");
   });
 
+  test('completes fully paid project renewals idempotently and advances project dates', () => {
+    const completion = source('src/app/api/admin/finance/invoices/[id]/complete-project-renewal/route.ts');
+    const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
+
+    expect(completion).toContain("'lightworld-project-renewal-completion:' + id");
+    expect(completion).toContain('invoiceBalance');
+    expect(completion).toContain("derivedStatus !== 'paid'");
+    expect(completion).toContain('supportsAutomaticRenewalCycle(invoice.project.renewalCycle)');
+    expect(completion).toContain('calculateRenewedServiceDates');
+    expect(completion).toContain('nextRenewalDate: dates.nextDueDate');
+    expect(completion).toContain('renewalCompletedAt: completedAt');
+    expect(completion).toContain("'admin.finance_project_renewal_completed'");
+    expect(completion).toContain('financeCollectionActivity.updateMany');
+    expect(renewals).toContain('Complete paid project renewal?');
+    expect(renewals).toContain('/complete-project-renewal');
+    expect(renewals).toContain('Completed project renewals');
+    expect(renewals).toContain('lightworld-completed-project-renewals');
+  });
+
   test('supports project renewal billing with safe draft automation and manual preparation', () => {
     const automation = source('src/lib/renewal-draft-automation.ts');
     const sms = source('src/lib/sms.ts');
