@@ -207,6 +207,50 @@ export default function Preloader() {
                     <stop offset="100%" stopColor="#f59e0b" />
                   </linearGradient>
                 </defs>
+                {/* Continuous rotating border accents */}
+                <motion.g
+                  style={{ transformOrigin: '80px 80px' }}
+                  animate={exiting ? { opacity: 0 } : { rotate: 360 }}
+                  transition={exiting ? { duration: 0.25 } : { duration: 1.8, repeat: Infinity, ease: 'linear' }}
+                >
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="72"
+                    fill="none"
+                    stroke="url(#ring-gradient)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeDasharray="36 18 8 28"
+                    className="opacity-70"
+                  />
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="68"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    strokeLinecap="round"
+                    strokeDasharray="10 30 22 14"
+                    className="text-amber-400/55"
+                  />
+                </motion.g>
+                <motion.circle
+                  cx="80"
+                  cy="80"
+                  r="76"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  strokeDasharray="14 34"
+                  className="text-emerald-400/45"
+                  style={{ transformOrigin: '80px 80px' }}
+                  animate={exiting ? { opacity: 0 } : { rotate: -360 }}
+                  transition={exiting ? { duration: 0.25 } : { duration: 2.7, repeat: Infinity, ease: 'linear' }}
+                />
+
                 {/* Background track */}
                 <circle
                   cx="80"

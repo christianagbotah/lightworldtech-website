@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { getMailTransportStatus } from '@/lib/mail';
+import { invoiceBalance } from '@/lib/finance';
 import { reconcileSupportEscalations } from '@/lib/support-ticket';
 
 type Notice = {
@@ -121,11 +122,17 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     const renewalWindow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
     const [overdueInvoices, overdueBills, renewalCandidates, projectRenewalCandidates, expiredServices, collectionFollowUps, brokenPromises] = await Promise.all([
-      db.clientInvoice.count({
+      db.clientInvoice.findMany({
         where: {
           dueDate: { lt: now },
-          status: { notIn: ['draft', 'void', 'paid'] },
+          status: { notIn: ['draft', 'void'] },
         },
+        select: {
+          total: true,
+          allocations: { select: { amount: true } },
+          creditNotes: { where: { status: 'posted' }, select: { appliedAmount: true } },
+        },
+        take: 3000,
       }),
       db.financeVendorBill.count({
         where: {
@@ -171,6 +178,10 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    const overdueInvoiceCount = overdueInvoices.filter(
+      (invoice) => invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0),
+    ).length;
+
     const renewalsDue = renewalCandidates.filter((service) => {
       if (!service.expiryDate) return false;
       const days = Math.ceil((service.expiryDate.getTime() - now.getTime()) / 86400000);
@@ -182,13 +193,13 @@ export async function GET(request: NextRequest) {
       return days <= project.renewalNoticeDays;
     }).length;
 
-    if (overdueInvoices > 0) {
+    if (overdueInvoiceCount > 0) {
       notices.push({
         id: 'finance-overdue-invoices',
         severity: 'critical',
         title: 'Customer invoices overdue',
-        message: overdueInvoices + ' customer invoice' + (overdueInvoices === 1 ? ' is' : 's are') + ' past the due date.',
-        count: overdueInvoices,
+        message: overdueInvoiceCount + ' customer invoice' + (overdueInvoiceCount === 1 ? ' is' : 's are') + ' past the due date with an outstanding balance.',
+        count: overdueInvoiceCount,
         action: 'admin-finance-collections',
       });
     }
