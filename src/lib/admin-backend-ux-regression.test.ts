@@ -1746,6 +1746,19 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('Agreement obligations due 30d');
   });
 
+  test('preserves proposal to project to agreement commercial lineage', () => {
+    const clientsApi = source('src/app/api/admin/clients/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(clientsApi).toContain("proposal: { select: { id: true, title: true, status: true, version: true } }");
+    expect(clients).toContain('type ProposalLineage');
+    expect(clients).toContain('Commercial lineage');
+    expect(clients).toContain('Originating proposal:');
+    expect(clients).toContain('Open originating proposal');
+    expect(clients).toContain("sessionStorage.setItem('lw-open-proposal-id'");
+    expect(clients).toContain("navigate('admin-proposals')");
+  });
+
   test('keeps dashboard and governance tables exportable', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const governance = source('src/components/admin/AdminGovernance.tsx');

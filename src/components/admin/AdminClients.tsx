@@ -53,6 +53,9 @@ type Announcement = {
   id: string; projectId: string | null; title: string; body: string;
   active: boolean; publishAt: string; createdAt: string;
 };
+type ProposalLineage = {
+  id: string; title: string; status: string; version: number;
+};
 type Project = {
   id: string; name: string; summary: string; status: string; health: string;
   progress: number; manager: string; startDate: string | null; targetDate: string | null;
@@ -60,6 +63,7 @@ type Project = {
   renewalCurrency: string; renewalAmount: string; budgetCurrency: string; budgetAmount: string; autoRenew: boolean;
   renewalNoticeDays: number; renewalNotes: string;
   milestones: Milestone[]; documents: DocumentItem[]; announcements: Announcement[];
+  proposal: ProposalLineage | null;
 };
 type AgreementAttachment = {
   id: string; originalName: string; mimeType: string; sizeBytes: number;
@@ -78,7 +82,8 @@ type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
   projectId: string | null; currency: string; contractValue: string; effectiveDate: string | null;
   expiryDate: string | null; renewalNoticeDays: number; owner: string; documentUrl: string;
-  notes: string; signedAt: string | null; project: { id: string; name: string } | null;
+  notes: string; signedAt: string | null;
+  project: { id: string; name: string; proposal: ProposalLineage | null } | null;
   approvalStatus: string; approvalDecisionBy: string; approvalDecisionAt: string | null; approvalNotes: string;
   attachments: AgreementAttachment[]; changes: AgreementChange[]; obligations: AgreementObligation[];
 };
@@ -575,6 +580,13 @@ export default function AdminClients() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not create client project');
     } finally { setSaving(false); }
+  };
+
+  const openOriginatingProposal = (proposalId: string) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lw-open-proposal-id', proposalId);
+    }
+    useAppStore.getState().navigate('admin-proposals');
   };
 
   const createAgreement = async (event: FormEvent) => {
@@ -1450,6 +1462,36 @@ export default function AdminClients() {
                       </div>
                       <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 xl:grid-cols-3"><p><span className="text-muted-foreground">Value:</span> {money(agreement.contractValue, agreement.currency)}</p><p><span className="text-muted-foreground">Owner:</span> {agreement.owner || 'Unassigned'}</p><p><span className="text-muted-foreground">Signed:</span> {agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'Not recorded'}</p><p><span className="text-muted-foreground">Effective:</span> {agreement.effectiveDate ? new Date(agreement.effectiveDate).toLocaleDateString() : 'Not set'}</p><p><span className="text-muted-foreground">Expiry:</span> {agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString() : 'Open-ended'}</p><p><span className="text-muted-foreground">Notice:</span> {agreement.renewalNoticeDays} days</p></div>
                       {agreement.notes && <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{agreement.notes}</p>}
+
+                      {agreement.project && (
+                        <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Commercial lineage</p>
+                              <p className="mt-1 text-xs font-medium">
+                                {agreement.project.proposal ? 'Proposal → ' : ''}{agreement.project.name} → {agreement.title}
+                              </p>
+                              {agreement.project.proposal ? (
+                                <p className="mt-1 text-[10px] text-muted-foreground">
+                                  Originating proposal: {agreement.project.proposal.title} · v{agreement.project.proposal.version} · {pretty(agreement.project.proposal.status)}
+                                </p>
+                              ) : (
+                                <p className="mt-1 text-[10px] text-muted-foreground">This project is not linked to a converted CRM proposal.</p>
+                              )}
+                            </div>
+                            {agreement.project.proposal && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openOriginatingProposal(agreement.project!.proposal!.id)}
+                              >
+                                <FileText className="mr-1 size-3.5" /> Open originating proposal
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
