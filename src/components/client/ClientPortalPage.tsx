@@ -321,6 +321,7 @@ export default function ClientPortalPage() {
   const [ticketSending, setTicketSending] = useState(false);
   const [replies, setReplies] = useState<Record<string, string>>({});
   const [replyingTicketId, setReplyingTicketId] = useState('');
+  const [reopeningTicketId, setReopeningTicketId] = useState('');
   const [uploadingTicketId, setUploadingTicketId] = useState('');
   const [ratingDrafts, setRatingDrafts] = useState<Record<string, { rating: number; feedback: string }>>({});
   const [ratingTicketId, setRatingTicketId] = useState('');
@@ -739,6 +740,25 @@ export default function ClientPortalPage() {
       toast.error(error instanceof Error ? error.message : 'Unable to send reply');
     } finally {
       setReplyingTicketId('');
+    }
+  };
+
+  const reopenTicket = async (ticketId: string) => {
+    setReopeningTicketId(ticketId);
+    try {
+      const response = await fetch('/api/client/tickets/' + ticketId + '/reopen', {
+        method: 'POST',
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to reopen support ticket');
+      await loadPortal();
+      toast.success('Support ticket reopened', {
+        description: 'The Support Desk has been notified and a new SLA window has started.',
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to reopen support ticket');
+    } finally {
+      setReopeningTicketId('');
     }
   };
 
@@ -1852,7 +1872,31 @@ export default function ClientPortalPage() {
                           <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                             <Paperclip className="size-3.5" /> Attachments
                           </p>
-                          {item.status !== 'closed' && (
+                          {item.status === 'closed' && (
+                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900/40 dark:bg-amber-950/15">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-xs font-semibold text-amber-900 dark:text-amber-200">Need more help with this issue?</p>
+                              <p className="mt-1 text-[10px] leading-5 text-amber-800/75 dark:text-amber-200/70">
+                                Reopen this case to continue the same conversation and keep the original evidence attached.
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => void reopenTicket(item.id)}
+                              disabled={reopeningTicketId === item.id}
+                              className="shrink-0 border-amber-300"
+                            >
+                              {reopeningTicketId === item.id ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <LifeBuoy className="mr-2 size-3.5" />}
+                              Reopen ticket
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {item.status !== 'closed' && (
                             <label className="inline-flex cursor-pointer items-center rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold transition hover:border-amber-300 dark:border-white/10">
                               {uploadingTicketId === item.id ? <Loader2 className="mr-1.5 size-3 animate-spin" /> : <Upload className="mr-1.5 size-3" />}
                               Add evidence
