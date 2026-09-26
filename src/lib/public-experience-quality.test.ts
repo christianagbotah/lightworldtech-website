@@ -59,6 +59,24 @@ describe('public experience quality', () => {
     expect(taxWorkspace).toContain('<div><Label>VAT registration number</Label><Input');
   });
 
+  test('carries structured AI project scope into the public contact form', () => {
+    const floating = source('src/components/layout/FloatingWidgets.tsx');
+    const contact = source('src/components/pages/ContactPage.tsx');
+
+    expect(floating).toContain("PROJECT_BRIEF_DATA_KEY = 'lw-project-brief-data'");
+    expect(floating).toContain('projectScope?: ProjectScopeHandoff');
+    expect(floating).toContain('nextState.step === \'done\'');
+    expect(floating).toContain('JSON.stringify(msg.projectScope)');
+    expect(contact).toContain("sessionStorage.getItem('lw-project-brief-data')");
+    expect(contact).toContain('mapAssistantService');
+    expect(contact).toContain('mapAssistantTimeline');
+    expect(contact).toContain("'Mobile application'");
+    expect(contact).toContain("'Enterprise software / automation'");
+    expect(contact).toContain("'AI-enabled workflow'");
+    expect(contact).toContain("'1 – 3 months'");
+    expect(contact).toContain("sessionStorage.removeItem('lw-project-brief-data')");
+  });
+
   test('product cards use consistent visual and title alignment', () => {
     const products = source('src/components/pages/ProductsPage.tsx');
 
