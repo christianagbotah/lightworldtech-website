@@ -1772,16 +1772,23 @@ describe('admin backend and responsive UX regression coverage', () => {
     const queueApi = source('src/app/api/admin/agreement-obligations/queue/route.ts');
     const clients = source('src/components/admin/AdminClients.tsx');
 
-    expect(queueApi).toContain("const scopes = new Set(['all', 'mine', 'unassigned', 'overdue', 'due_30'])");
+    expect(queueApi).toContain("const scopes = new Set(['all', 'mine', 'unassigned', 'overdue', 'due_30', 'owner'])");
     expect(queueApi).toContain("ownerAdminId: actor.id");
     expect(queueApi).toContain("ownerAdminId: null");
     expect(queueApi).toContain("dueDate: { lt: now }");
     expect(queueApi).toContain("dueDate: { gte: now, lte: horizon30 }");
     expect(queueApi).toContain("summary: { total, mine, unassigned, overdue, due30 }");
+    expect(queueApi).toContain("db.clientAgreementObligation.groupBy");
+    expect(queueApi).toContain("normalizeAdminPermissions(admin.permissions).includes('clients.manage')");
+    expect(queueApi).toContain("team,");
     expect(clients).toContain('Agreement obligation work queue');
     expect(clients).toContain("fetch('/api/admin/agreement-obligations/queue?scope='");
     expect(clients).toContain('Mine for your workload');
     expect(clients).toContain('No open obligations match this workload view.');
+    expect(clients).toContain("fetchObligationQueue('owner', member.id)");
+    expect(clients).toContain("aria-label={'Reassign ' + item.title}");
+    expect(clients).toContain("aria-label={'Update status for ' + item.title}");
+    expect(clients).toContain('Open agreement');
     expect(clients).toContain("document.getElementById('agreement-' + item.agreement.id)");
     expect(clients).toContain("id={'agreement-' + agreement.id}");
   });

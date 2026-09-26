@@ -93,9 +93,11 @@ type ObligationQueueItem = {
   };
 };
 type ObligationQueueState = {
-  scope: 'all' | 'mine' | 'unassigned' | 'overdue' | 'due_30';
+  scope: 'all' | 'mine' | 'unassigned' | 'overdue' | 'due_30' | 'owner';
+  ownerId: string;
   actor: { id: string; name: string; email: string } | null;
   summary: { total: number; mine: number; unassigned: number; overdue: number; due30: number };
+  team: Array<{ id: string; name: string; email: string; total: number; overdue: number; due30: number }>;
   data: ObligationQueueItem[];
 };
 type Agreement = {
@@ -234,8 +236,10 @@ export default function AdminClients() {
   const [obligationOwners, setObligationOwners] = useState<ObligationOwner[]>([]);
   const [obligationQueue, setObligationQueue] = useState<ObligationQueueState>({
     scope: 'mine',
+    ownerId: '',
     actor: null,
     summary: { total: 0, mine: 0, unassigned: 0, overdue: 0, due30: 0 },
+    team: [],
     data: [],
   });
   const [obligationQueueLoading, setObligationQueueLoading] = useState(true);
@@ -298,16 +302,20 @@ export default function AdminClients() {
     }
   };
 
-  const fetchObligationQueue = async (scope: ObligationQueueState['scope'] = 'mine') => {
+  const fetchObligationQueue = async (scope: ObligationQueueState['scope'] = 'mine', ownerId = '') => {
     setObligationQueueLoading(true);
     try {
-      const response = await fetch('/api/admin/agreement-obligations/queue?scope=' + encodeURIComponent(scope), { cache: 'no-store' });
+      const query = new URLSearchParams({ scope });
+      if (ownerId) query.set('owner', ownerId);
+      const response = await fetch('/api/admin/agreement-obligations/queue?' + query.toString(), { cache: 'no-store' });
       const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not load agreement obligation queue');
       setObligationQueue({
         scope: payload.scope || scope,
+        ownerId: payload.ownerId || '',
         actor: payload.actor || null,
         summary: payload.summary || { total: 0, mine: 0, unassigned: 0, overdue: 0, due30: 0 },
+        team: payload.team || [],
         data: payload.data || [],
       });
     } catch (error) {
@@ -722,7 +730,10 @@ export default function AdminClients() {
         ...current,
         [agreementId]: { title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '' },
       }));
-      await fetchOrganizations();
+      await Promise.all([
+        fetchOrganizations(),
+        fetchObligationQueue(obligationQueue.scope, obligationQueue.ownerId),
+      ]);
       toast.success('Agreement obligation added');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not create agreement obligation');
@@ -740,7 +751,10 @@ export default function AdminClients() {
       });
       const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not update agreement obligation');
-      await fetchOrganizations();
+      await Promise.all([
+        fetchOrganizations(),
+        fetchObligationQueue(obligationQueue.scope, obligationQueue.ownerId),
+      ]);
       toast.success('Agreement obligation updated');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update agreement obligation');
@@ -1090,6 +1104,28 @@ export default function AdminClients() {
               </Button>
             ))}
           </div>
+          {obligationQueue.team.length > 0 && (
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              {obligationQueue.team.map((member) => (
+                <button
+                  key={member.id}
+                  type="button"
+                  onClick={() => void fetchObligationQueue('owner', member.id)}
+                  className={
+                    (obligationQueue.scope === 'owner' && obligationQueue.ownerId === member.id
+                      ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20 '
+                      : 'border-border/60 bg-background ') +
+                    'rounded-xl border p-3 text-left transition hover:bg-muted/30'
+                  }
+                >
+                  <p className="truncate text-xs font-semibold">{member.name}</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {member.total} open · {member.overdue} overdue · {member.due30} due ≤30d
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
           {obligationQueueLoading ? (
             <div className="space-y-2">{Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-16 rounded-xl" />)}</div>
           ) : (
@@ -1097,11 +1133,9 @@ export default function AdminClients() {
               {obligationQueue.data.map((item) => {
                 const overdue = Boolean(item.dueDate && new Date(item.dueDate).getTime() < Date.now());
                 return (
-                  <button
+                  <div
                     key={item.id}
-                    type="button"
-                    onClick={() => openObligationQueueItem(item)}
-                    className="grid w-full gap-2 px-4 py-3 text-left transition hover:bg-muted/30 lg:grid-cols-[minmax(0,1fr)_auto]"
+                    className="grid w-full gap-3 px-4 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:items-center"
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -1113,12 +1147,38 @@ export default function AdminClients() {
                         {item.agreement.organization.name} · {item.agreement.title}
                         {item.agreement.project?.name ? ' · ' + item.agreement.project.name : ''}
                       </p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {item.dueDate ? 'Due ' + new Date(item.dueDate).toLocaleDateString() : 'No due date'}
+                      </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground lg:justify-end">
-                      <span>{item.ownerAdmin?.name || item.owner || 'Unassigned'}</span>
-                      <span>{item.dueDate ? 'Due ' + new Date(item.dueDate).toLocaleDateString() : 'No due date'}</span>
+                    <div className="grid gap-2 sm:grid-cols-[minmax(130px,1fr)_130px_auto]">
+                      <select
+                        value={item.ownerAdminId || ''}
+                        onChange={(event) => void patchAgreementObligation(item.id, { ownerAdminId: event.target.value || null })}
+                        className="h-9 rounded-lg border border-input bg-background px-2 text-xs"
+                        aria-label={'Reassign ' + item.title}
+                      >
+                        <option value="">Unassigned</option>
+                        {obligationOwners.map((owner) => (
+                          <option key={owner.id} value={owner.id}>{owner.name || owner.email}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={item.status}
+                        onChange={(event) => void patchAgreementObligation(item.id, { status: event.target.value })}
+                        className="h-9 rounded-lg border border-input bg-background px-2 text-xs"
+                        aria-label={'Update status for ' + item.title}
+                      >
+                        <option value="open">Open</option>
+                        <option value="in_progress">In progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="waived">Waived</option>
+                      </select>
+                      <Button type="button" size="sm" variant="outline" onClick={() => openObligationQueueItem(item)}>
+                        Open agreement
+                      </Button>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
               {!obligationQueue.data.length && (
