@@ -82,6 +82,38 @@ const engagementModels = [
   'Not sure yet',
 ];
 
+type AssistantProjectScope = {
+  service?: string;
+  goal?: string;
+  users?: string;
+  timeline?: string;
+};
+
+function mapAssistantService(value?: string): string {
+  const normalized = (value || '').trim().toLowerCase();
+  if (!normalized) return services[0];
+  if (/mobile|\bapp\b/.test(normalized)) return 'Mobile application';
+  if (/\bai\b|artificial intelligence|machine learning|llm|automation with ai/.test(normalized)) return 'AI-enabled workflow';
+  if (/cloud|devops|security|cyber|infrastructure/.test(normalized)) return 'Cloud / DevOps / security';
+  if (/seo|digital growth|marketing|search engine/.test(normalized)) return 'SEO / digital growth';
+  if (/training|consult|advis/.test(normalized)) return 'Training / consultancy';
+  if (/enterprise|software|automation|system|platform|erp|crm/.test(normalized)) return 'Enterprise software / automation';
+  if (/website|\bweb\b|digital experience/.test(normalized)) return 'Website / digital experience';
+  return 'Something else';
+}
+
+function mapAssistantTimeline(value?: string): string {
+  const normalized = (value || '').trim().toLowerCase();
+  if (!normalized) return '';
+  if (/as soon|urgent|immediately|asap/.test(normalized)) return 'As soon as practical';
+  if (/within\s*1\s*month|less than a month|under a month/.test(normalized)) return 'Within 1 month';
+  if (/1\s*[–-]\s*3\s*month|one to three month/.test(normalized)) return '1 – 3 months';
+  if (/3\s*[–-]\s*6\s*month|three to six month/.test(normalized)) return '3 – 6 months';
+  if (/6\+\s*month|more than six month|over six month/.test(normalized)) return '6+ months';
+  if (/no fixed|explor|not sure|flexible/.test(normalized)) return 'Still exploring';
+  return '';
+}
+
 export default function ContactPage({ settings = {} }: { settings?: SiteSettings }) {
   const [form, setForm] = useState({
     name: '',
@@ -107,11 +139,31 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
   useEffect(() => {
     try {
       const projectBrief = sessionStorage.getItem('lw-project-brief');
-      if (!projectBrief) return;
+      const rawScope = sessionStorage.getItem('lw-project-brief-data');
+      let scope: AssistantProjectScope | null = null;
+      if (rawScope) {
+        try {
+          const parsed = JSON.parse(rawScope);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            scope = parsed as AssistantProjectScope;
+          }
+        } catch {
+          scope = null;
+        }
+      }
+      if (!projectBrief && !scope) return;
+
       setForm((current) => ({
         ...current,
+        service: scope?.service ? mapAssistantService(scope.service) : current.service,
+        deliveryWindow: scope?.timeline ? mapAssistantTimeline(scope.timeline) || current.deliveryWindow : current.deliveryWindow,
         subject: current.subject || 'Project brief from Lightworld Assistant',
-        message: current.message || projectBrief,
+        message: current.message || projectBrief || [
+          scope?.service ? 'Project type: ' + scope.service : '',
+          scope?.goal ? 'Primary outcome: ' + scope.goal : '',
+          scope?.users ? 'Primary users: ' + scope.users : '',
+          scope?.timeline ? 'Timeline: ' + scope.timeline : '',
+        ].filter(Boolean).join('\n'),
       }));
     } catch {
       // Session storage is optional; the form still works without it.
@@ -201,6 +253,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
       trackEvent('contact_submit', { metadata: { service: form.service.slice(0, 120) } });
       try {
         sessionStorage.removeItem('lw-project-brief');
+        sessionStorage.removeItem('lw-project-brief-data');
       } catch {
         // ignore
       }

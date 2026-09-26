@@ -39,6 +39,13 @@ interface ProjectScopeState {
   };
 }
 
+interface ProjectScopeHandoff {
+  service?: string;
+  goal?: string;
+  users?: string;
+  timeline?: string;
+}
+
 interface ChatMessage {
   id: string;
   text: string;
@@ -47,11 +54,13 @@ interface ChatMessage {
   suggestions?: string[];
   cta?: { label: string; href: string };
   projectBrief?: string;
+  projectScope?: ProjectScopeHandoff;
 }
 
 const CHAT_STORAGE_KEY = 'lw-chat-history';
 const ASSISTANT_STATE_KEY = 'lw-assistant-state';
 const PROJECT_BRIEF_KEY = 'lw-project-brief';
+const PROJECT_BRIEF_DATA_KEY = 'lw-project-brief-data';
 
 function loadChatHistory(): ChatMessage[] {
   try {
@@ -442,6 +451,12 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
               ? { label: String(payload.cta.label), href: String(payload.cta.href) }
               : undefined,
           projectBrief: payload?.projectBrief ? String(payload.projectBrief) : undefined,
+          projectScope:
+            payload?.intent === 'project-scope' &&
+            nextState?.mode === 'project-scope' &&
+            nextState.step === 'done'
+              ? { ...nextState.answers }
+              : undefined,
         };
 
         const withReply = [...updated, botMsg];
@@ -583,6 +598,9 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                           onClick={() => {
                             if (msg.projectBrief) {
                               sessionStorage.setItem(PROJECT_BRIEF_KEY, msg.projectBrief);
+                            }
+                            if (msg.projectScope) {
+                              sessionStorage.setItem(PROJECT_BRIEF_DATA_KEY, JSON.stringify(msg.projectScope));
                             }
                             trackEvent('cta_click', { metadata: { source: 'assistant', label: msg.cta?.label || '' } });
                           }}
