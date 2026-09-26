@@ -37,6 +37,7 @@ import {
 import { toast } from 'sonner';
 import AdminMediaField from '@/components/admin/AdminMediaField';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { readJsonResponse } from '@/lib/client-api';
 
 interface PortfolioProject {
   id: string;
@@ -82,7 +83,7 @@ export default function AdminPortfolio() {
     try {
       const res = await fetch('/api/portfolio');
       if (!res.ok) throw new Error('Failed to fetch');
-      const payload = await res.json();
+      const payload = await readJsonResponse<any>(res, 'Invalid server response');
       setProjects(payload.data || []);
     } catch {
       toast.error('Failed to load projects');
@@ -140,7 +141,7 @@ export default function AdminPortfolio() {
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!res.ok) {
-        const data = await res.json();
+        const data = await readJsonResponse<any>(res, 'Invalid server response');
         throw new Error(data.error || 'Failed to save');
       }
       toast.success(editing ? 'Project updated' : 'Project created');
