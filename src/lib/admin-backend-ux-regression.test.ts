@@ -316,6 +316,17 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dispatcher).toContain('renewalDraftQueue');
   });
 
+  test('exports a multi-currency executive finance management snapshot', () => {
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(dashboard).toContain('Download management pack');
+    expect(dashboard).toContain('Executive finance management snapshot');
+    expect(dashboard).toContain('Cash runway months');
+    expect(dashboard).toContain('Collections control');
+    expect(dashboard).toContain('Currencies remain separate');
+    expect(dashboard).toContain('lightworld-finance-management-');
+  });
+
   test('adds per-currency historical cash runway without FX assumptions', () => {
     const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
     const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
