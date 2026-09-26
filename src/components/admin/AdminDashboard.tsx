@@ -6,7 +6,7 @@ import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
   Plus, ExternalLink, Inbox, Activity, ArrowUpRight, ArrowDownRight,
   Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick, GitBranch,
-  Database, HardDrive, ShieldAlert
+  Database, HardDrive, ShieldAlert, CircleDollarSign, CalendarClock, LifeBuoy, FolderKanban
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,6 +83,45 @@ interface BackupArtifact {
   freshness: 'fresh' | 'stale';
 }
 
+interface ExecutivePortfolio {
+  summary: {
+    organizations: number;
+    activeOrganizations: number;
+    interventionRequired: number;
+    attention: number;
+    stable: number;
+    overdueInvoices: number;
+    renewalsDue30: number;
+    atRiskProjects: number;
+    budgetPressure: number;
+    overBudget: number;
+    urgentTickets: number;
+    slaBreaches: number;
+  };
+  byCurrency: Array<{
+    currency: string;
+    overdueReceivables: string;
+    renewals30: string;
+  }>;
+  data: Array<{
+    id: string;
+    name: string;
+    posture: 'intervention_required' | 'attention' | 'stable';
+    riskScore: number;
+    metrics: {
+      overdueInvoices: number;
+      expiredServices: number;
+      renewalsDue30: number;
+      atRiskProjects: number;
+      urgentTickets: number;
+      slaBreaches: number;
+      budgetPressure: number;
+      overBudget: number;
+    };
+  }>;
+  methodology: string;
+}
+
 interface BackupData {
   status: 'healthy' | 'attention' | 'missing';
   database: BackupArtifact | null;
@@ -139,12 +178,14 @@ export default function AdminDashboard() {
   const { navigate, adminRole, adminPermissions, adminName } = useAppStore();
   const canSite = hasAdminPermission(adminRole, adminPermissions, 'site.manage');
   const canCrm = hasAdminPermission(adminRole, adminPermissions, 'crm.manage');
+  const canFinance = hasAdminPermission(adminRole, adminPermissions, 'finance.manage');
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [recentMessages, setRecentMessages] = useState<ContactMessage[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [health, setHealth] = useState<HealthData | null>(null);
   const [backup, setBackup] = useState<BackupData | null>(null);
+  const [portfolio, setPortfolio] = useState<ExecutivePortfolio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
@@ -153,7 +194,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsRes, postsRes, messagesRes, analyticsRes, healthRes, backupRes] = await Promise.all([
+        const [statsRes, postsRes, messagesRes, analyticsRes, healthRes, backupRes, portfolioRes] = await Promise.all([
           fetch('/api/admin/stats', { cache: 'no-store' }),
           canSite ? fetch('/api/blog?limit=5', { cache: 'no-store' }) : Promise.resolve(null),
           canCrm ? fetch('/api/contact?limit=20', { cache: 'no-store' }) : Promise.resolve(null),
@@ -162,6 +203,9 @@ export default function AdminDashboard() {
           adminRole === 'super_admin'
             ? fetch('/api/admin/operations/backup-status', { cache: 'no-store' })
             : Promise.resolve(null),
+          canFinance
+            ? fetch('/api/admin/clients/portfolio-intelligence', { cache: 'no-store' })
+            : Promise.resolve(null),
         ]);
 
         if (
@@ -169,7 +213,8 @@ export default function AdminDashboard() {
           (postsRes && !postsRes.ok) ||
           (messagesRes && !messagesRes.ok) ||
           (analyticsRes && !analyticsRes.ok) ||
-          !healthRes.ok
+          !healthRes.ok ||
+          (portfolioRes && !portfolioRes.ok)
         ) {
           throw new Error('Failed to fetch authorized dashboard data');
         }
@@ -180,6 +225,7 @@ export default function AdminDashboard() {
         const analyticsData = analyticsRes ? await analyticsRes.json() : { data: null };
         const healthData = await healthRes.json();
         const backupData = backupRes && backupRes.ok ? await backupRes.json() : { data: null };
+        const portfolioData = portfolioRes && portfolioRes.ok ? await portfolioRes.json() : null;
 
         const rawStats = statsData.data || statsData;
 
@@ -207,6 +253,12 @@ export default function AdminDashboard() {
         setAnalytics(analyticsData.data || null);
         setHealth(healthData.data || null);
         setBackup(backupData.data || null);
+        setPortfolio(portfolioData ? {
+          summary: portfolioData.summary,
+          byCurrency: portfolioData.byCurrency || [],
+          data: portfolioData.data || [],
+          methodology: portfolioData.methodology || '',
+        } : null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -214,11 +266,25 @@ export default function AdminDashboard() {
       }
     }
     void fetchData();
-  }, [canSite, canCrm, adminRole]);
+  }, [canSite, canCrm, canFinance, adminRole]);
 
   const openMessage = (messageId: string) => {
     sessionStorage.setItem('lw-open-message-id', messageId);
     navigate('admin-messages');
+  };
+
+  const openClientAccount = (organizationId?: string) => {
+    if (organizationId) sessionStorage.setItem('lw-client-organization-id', organizationId);
+    navigate('admin-clients');
+  };
+
+  const openFinanceWorkspace = (section: 'collections' | 'renewals') => {
+    sessionStorage.setItem('lw-finance-section', section);
+    navigate('admin-finance');
+  };
+
+  const openSupportDesk = () => {
+    navigate('admin-support');
   };
 
   const openCrm = (filter?: { status?: string; priority?: string }) => {
@@ -359,6 +425,98 @@ export default function AdminDashboard() {
         })}
         </div>
       </div>
+      )}
+
+
+      {canFinance && portfolio && (
+        <div>
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Executive exceptions</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Commercial, delivery and support conditions that need management attention now.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => openClientAccount()}
+              className="text-left text-xs font-semibold text-amber-700 hover:underline dark:text-amber-300"
+            >
+              Open client portfolio
+            </button>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: 'Accounts needing intervention',
+                value: portfolio.summary.interventionRequired,
+                detail: portfolio.summary.attention + ' additional account(s) need attention',
+                icon: ShieldAlert,
+                onClick: () => openClientAccount(portfolio.data.find((item) => item.posture === 'intervention_required')?.id),
+              },
+              {
+                label: 'Overdue invoices',
+                value: portfolio.summary.overdueInvoices,
+                detail: portfolio.byCurrency.length
+                  ? portfolio.byCurrency.map((item) => item.currency + ' ' + Number(item.overdueReceivables || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })).join(' · ')
+                  : 'No overdue receivable exposure',
+                icon: CircleDollarSign,
+                onClick: () => openFinanceWorkspace('collections'),
+              },
+              {
+                label: 'Renewals due in 30 days',
+                value: portfolio.summary.renewalsDue30,
+                detail: portfolio.byCurrency.length
+                  ? portfolio.byCurrency.map((item) => item.currency + ' ' + Number(item.renewals30 || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })).join(' · ')
+                  : 'No renewal exposure recorded',
+                icon: CalendarClock,
+                onClick: () => openFinanceWorkspace('renewals'),
+              },
+              {
+                label: 'Operational risk',
+                value: portfolio.summary.atRiskProjects + portfolio.summary.slaBreaches + portfolio.summary.urgentTickets,
+                detail:
+                  portfolio.summary.atRiskProjects +
+                  ' project risk · ' +
+                  portfolio.summary.slaBreaches +
+                  ' SLA breach(es) · ' +
+                  portfolio.summary.urgentTickets +
+                  ' urgent ticket(s)',
+                icon: LifeBuoy,
+                onClick: () => openSupportDesk(),
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <button key={item.label} type="button" onClick={item.onClick} className="block h-full w-full text-left">
+                  <Card className="h-full border-border/60 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                          <Icon className="size-5" />
+                        </span>
+                        <ArrowUpRight className="size-4 text-muted-foreground" />
+                      </div>
+                      <p className="mt-4 text-2xl font-bold">{item.value}</p>
+                      <p className="mt-1 text-sm font-semibold">{item.label}</p>
+                      <p className="mt-2 line-clamp-2 text-[11px] leading-5 text-muted-foreground">{item.detail}</p>
+                    </CardContent>
+                  </Card>
+                </button>
+              );
+            })}
+          </div>
+
+          {portfolio.summary.overBudget > 0 || portfolio.summary.budgetPressure > 0 ? (
+            <button type="button" onClick={() => openClientAccount()} className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-left text-xs text-amber-950 transition hover:bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/15 dark:text-amber-100">
+              <span>
+                <strong>Budget watch:</strong> {portfolio.summary.overBudget} project(s) over budget and {portfolio.summary.budgetPressure} at or above the portfolio pressure threshold.
+              </span>
+              <FolderKanban className="size-4 shrink-0" />
+            </button>
+          ) : null}
+        </div>
       )}
 
       {/* CRM pipeline snapshot */}
