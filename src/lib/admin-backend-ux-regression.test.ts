@@ -1768,6 +1768,24 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('No staff owner');
   });
 
+  test('provides an accountable cross-client agreement obligation work queue', () => {
+    const queueApi = source('src/app/api/admin/agreement-obligations/queue/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(queueApi).toContain("const scopes = new Set(['all', 'mine', 'unassigned', 'overdue', 'due_30'])");
+    expect(queueApi).toContain("ownerAdminId: actor.id");
+    expect(queueApi).toContain("ownerAdminId: null");
+    expect(queueApi).toContain("dueDate: { lt: now }");
+    expect(queueApi).toContain("dueDate: { gte: now, lte: horizon30 }");
+    expect(queueApi).toContain("summary: { total, mine, unassigned, overdue, due30 }");
+    expect(clients).toContain('Agreement obligation work queue');
+    expect(clients).toContain("fetch('/api/admin/agreement-obligations/queue?scope='");
+    expect(clients).toContain('Mine for your workload');
+    expect(clients).toContain('No open obligations match this workload view.');
+    expect(clients).toContain("document.getElementById('agreement-' + item.agreement.id)");
+    expect(clients).toContain("id={'agreement-' + agreement.id}");
+  });
+
   test('preserves proposal to project to agreement commercial lineage', () => {
     const clientsApi = source('src/app/api/admin/clients/route.ts');
     const clients = source('src/components/admin/AdminClients.tsx');
