@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
           milestones: { orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] },
           documents: { orderBy: { createdAt: 'desc' } },
           announcements: { orderBy: [{ publishAt: 'desc' }, { createdAt: 'desc' }] },
+          proposal: { select: { id: true, title: true, status: true, version: true } },
         },
         orderBy: { updatedAt: 'desc' },
       },
@@ -38,7 +39,13 @@ export async function GET(request: NextRequest) {
       },
       agreements: {
         include: {
-          project: { select: { id: true, name: true } },
+          project: {
+            select: {
+              id: true,
+              name: true,
+              proposal: { select: { id: true, title: true, status: true, version: true } },
+            },
+          },
           attachments: { orderBy: { createdAt: 'desc' } },
           changes: { orderBy: { createdAt: 'desc' }, take: 50 },
           obligations: { orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }] },
