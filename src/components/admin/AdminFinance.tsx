@@ -648,6 +648,43 @@ export default function AdminFinance() {
     setDialog('invoice');
   };
 
+  const prepareProjectRenewalInvoice = (projectId: string) => {
+    const organization = data?.organizations.find((item) =>
+      item.projects.some((project) => project.id === projectId),
+    );
+    const project = organization?.projects.find((item) => item.id === projectId);
+    if (!organization || !project) {
+      toast.error('Project renewal details are unavailable');
+      return;
+    }
+
+    const todayValue = today();
+    const scheduledDue = project.nextRenewalDate?.slice(0, 10) || '';
+    const dueDate = scheduledDue && scheduledDue >= todayValue ? scheduledDue : inDays(14);
+    const cycle = pretty(project.renewalCycle).toLowerCase();
+
+    setInvoiceForm({
+      organizationId: organization.id,
+      serviceId: '',
+      projectId: project.id,
+      status: 'issued',
+      currency: project.renewalCurrency,
+      issueDate: todayValue,
+      dueDate,
+      renewalForDate: scheduledDue,
+      discount: '0',
+      taxTreatment: 'none',
+      notes: 'Prepared from the project renewal workflow. Review scope, amount, tax treatment and due date before issuing.',
+      lines: [{
+        description: project.name + ' · ' + cycle + ' project renewal',
+        quantity: '1',
+        unitPrice: project.renewalAmount,
+      }],
+    });
+    setSection('customers');
+    setDialog('invoice');
+  };
+
   const sendRenewalReminder = async (service: Service) => {
     setReminderSendingId(service.id);
     try {
@@ -1277,6 +1314,7 @@ export default function AdminFinance() {
             const service = data.services.find((item) => item.id === serviceId);
             if (service) prepareRenewalInvoice(service);
           }}
+          onPrepareProjectInvoice={prepareProjectRenewalInvoice}
           onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)}
           onManageService={(serviceId) => {
             const service = data.services.find((item) => item.id === serviceId);

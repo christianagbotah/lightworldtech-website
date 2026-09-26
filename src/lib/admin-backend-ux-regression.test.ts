@@ -1349,6 +1349,28 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(auditExport).toContain("'Cache-Control': 'private, no-store, max-age=0'");
   });
 
+  test('supports project renewal billing with safe draft automation and manual preparation', () => {
+    const automation = source('src/lib/renewal-draft-automation.ts');
+    const sms = source('src/lib/sms.ts');
+    const overview = source('src/app/api/admin/sms/overview/route.ts');
+    const health = source('src/app/api/admin/health/route.ts');
+    const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(automation).toContain('createDueProjectRenewalInvoiceDrafts');
+    expect(automation).toContain("AUTO_PROJECT_RENEWAL_DRAFT_INVOICES === 'true'");
+    expect(automation).toContain("action: 'system.finance_project_renewal_draft_created'");
+    expect(automation).toContain('projectId: project.id');
+    expect(automation).toContain("status: 'draft'");
+    expect(sms).toContain('projectRenewalDraftQueue');
+    expect(overview).toContain('projectRenewalDrafts');
+    expect(health).toContain('projectRenewalDrafts');
+    expect(renewals).toContain('onPrepareProjectInvoice');
+    expect(renewals).toContain('candidate.projectId === project.id');
+    expect(finance).toContain('prepareProjectRenewalInvoice');
+    expect(finance).toContain('Prepared from the project renewal workflow');
+  });
+
   test('provides export controls across remaining admin data tables', () => {
     expect(source('src/components/admin/AdminBlog.tsx')).toContain('exportFileName="lightworld-blog-posts"');
     expect(source('src/components/admin/AdminTeam.tsx')).toContain('exportFileName="lightworld-team-members"');

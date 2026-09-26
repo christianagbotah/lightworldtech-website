@@ -42,10 +42,11 @@ export async function GET(request: NextRequest) {
     collections: process.env.AUTO_COLLECTION_REMINDER_SMS === 'true',
     collectionEmail: process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true',
     renewalDrafts: process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true',
+    projectRenewalDrafts: process.env.AUTO_PROJECT_RENEWAL_DRAFT_INVOICES === 'true',
   };
   const smsAutomationEnabled =
     automation.serviceRenewals || automation.projectRenewals || automation.collections;
-  const automationEnabled = smsAutomationEnabled || automation.collectionEmail || automation.renewalDrafts;
+  const automationEnabled = smsAutomationEnabled || automation.collectionEmail || automation.renewalDrafts || automation.projectRenewalDrafts;
   const dispatcherConfigured = Boolean((process.env.SMS_CRON_SECRET || '').trim());
   const runtimeMaxAgeMinutes = Math.max(
     2,

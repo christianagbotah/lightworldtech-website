@@ -71,6 +71,11 @@ export async function GET(request: NextRequest) {
           batchSize: Math.max(1, Math.min(50, Number(process.env.RENEWAL_DRAFT_INVOICE_BATCH_SIZE || 10) || 10)),
           dueDays: Math.max(0, Math.min(60, Number(process.env.RENEWAL_DRAFT_INVOICE_DUE_DAYS || 7) || 7)),
         },
+        projectRenewalDrafts: {
+          enabled: process.env.AUTO_PROJECT_RENEWAL_DRAFT_INVOICES === 'true',
+          batchSize: Math.max(1, Math.min(50, Number(process.env.PROJECT_RENEWAL_DRAFT_INVOICE_BATCH_SIZE || 10) || 10)),
+          dueDays: Math.max(0, Math.min(60, Number(process.env.PROJECT_RENEWAL_DRAFT_INVOICE_DUE_DAYS || 7) || 7)),
+        },
         collectionEmail: {
           enabled: process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true',
           configured: getMailTransportStatus().configured,
