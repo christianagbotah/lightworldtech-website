@@ -113,6 +113,7 @@ type SmsOverview = {
     serviceRenewals: { enabled: boolean; batchSize: number };
     projectRenewals: { enabled: boolean; batchSize: number };
     renewalDrafts: { enabled: boolean; batchSize: number; dueDays: number };
+    projectRenewalDrafts: { enabled: boolean; batchSize: number; dueDays: number };
     collectionEmail: { enabled: boolean; configured: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
     collections: { enabled: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
   };
@@ -578,7 +579,7 @@ export default function AdminSms() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {[
               {
                 label: 'Service renewals',
@@ -600,6 +601,17 @@ export default function AdminSms() {
                   data.automation.renewalDrafts.batchSize +
                   ' · overdue-cycle due offset ' +
                   data.automation.renewalDrafts.dueDays +
+                  ' day(s)',
+                Icon: FileText,
+              },
+              {
+                label: 'Project invoice drafts',
+                enabled: data.automation.projectRenewalDrafts.enabled,
+                detail:
+                  'Draft only · batch ' +
+                  data.automation.projectRenewalDrafts.batchSize +
+                  ' · overdue-cycle due offset ' +
+                  data.automation.projectRenewalDrafts.dueDays +
                   ' day(s)',
                 Icon: FileText,
               },
