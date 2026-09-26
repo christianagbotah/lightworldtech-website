@@ -23,7 +23,10 @@ function money(value: unknown, currency: string): string {
   }).format(Number(value || 0));
 }
 
-export async function notifyCustomerPaymentReceived(paymentId: string) {
+export async function notifyCustomerPaymentReceived(
+  paymentId: string,
+  options: { retryFailedChannels?: boolean } = {},
+) {
   const payment = await db.clientPayment.findUnique({
     where: { id: paymentId },
     include: {
@@ -58,7 +61,13 @@ export async function notifyCustomerPaymentReceived(paymentId: string) {
       },
     });
     if (!current) return false;
-    if (['sent', 'partial', 'skipped'].includes(current.customerNotificationStatus)) {
+    if (['sent', 'skipped'].includes(current.customerNotificationStatus)) {
+      return false;
+    }
+    if (
+      ['partial', 'failed'].includes(current.customerNotificationStatus) &&
+      !options.retryFailedChannels
+    ) {
       return false;
     }
     if (
@@ -96,12 +105,15 @@ export async function notifyCustomerPaymentReceived(paymentId: string) {
       .trim()
       .replace(/\/$/, '') + '/client#billing';
 
-  const successes: string[] = [];
+  const previousSuccesses = new Set(
+    payment.customerNotificationChannels.split(',').filter(Boolean),
+  );
+  const successes = new Set(previousSuccesses);
   const errors: string[] = [];
 
   const mail = getMailTransportStatus();
   const email = payment.organization.primaryEmail.trim().toLowerCase();
-  if (mail.configured && email) {
+  if (!previousSuccesses.has('email') && mail.configured && email) {
     try {
       await sendTransactionalMail({
         to: email,
@@ -124,14 +136,14 @@ export async function notifyCustomerPaymentReceived(paymentId: string) {
           '<p>Thank you,<br><strong>Lightworld Technologies Ltd</strong></p>' +
           '</div></div>',
       });
-      successes.push('email');
+      successes.add('email');
     } catch (error) {
       errors.push('Email: ' + sanitizeMailError(error));
     }
   }
 
   const smsConfig = hubtelConfiguration();
-  if (smsConfig.sms && smsConfig.senderId && payment.organization.primaryPhone.trim()) {
+  if (!previousSuccesses.has('sms') && smsConfig.sms && smsConfig.senderId && payment.organization.primaryPhone.trim()) {
     try {
       const template = await db.smsTemplate.findFirst({
         where: { key: 'payment_received', active: true },
@@ -152,17 +164,21 @@ export async function notifyCustomerPaymentReceived(paymentId: string) {
           scheduledAt: new Date(Date.now() + 30_000),
           createdBy: 'System payment confirmation',
         });
-        successes.push('sms');
+        successes.add('sms');
       }
     } catch (error) {
       errors.push('SMS: ' + (error instanceof Error ? error.message.slice(0, 500) : 'Payment confirmation SMS failed'));
     }
   }
 
+  const successChannels = [...successes];
+  const attemptedChannels =
+    Number(previousSuccesses.has('email') || (mail.configured && Boolean(email))) +
+    Number(previousSuccesses.has('sms') || (smsConfig.sms && smsConfig.senderId && Boolean(payment.organization.primaryPhone.trim())));
   const status =
-    successes.length && !errors.length
+    successChannels.length && !errors.length && successChannels.length >= attemptedChannels
       ? 'sent'
-      : successes.length
+      : successChannels.length
         ? 'partial'
         : errors.length
           ? 'failed'
@@ -173,10 +189,10 @@ export async function notifyCustomerPaymentReceived(paymentId: string) {
     data: {
       customerNotificationStatus: status,
       customerNotificationCompletedAt: new Date(),
-      customerNotificationChannels: successes.join(','),
+      customerNotificationChannels: successChannels.join(','),
       customerNotificationError: errors.join(' | ').slice(0, 2000),
     },
   });
 
-  return { status, channels: successes, errors };
+  return { status, channels: successChannels, errors };
 }
