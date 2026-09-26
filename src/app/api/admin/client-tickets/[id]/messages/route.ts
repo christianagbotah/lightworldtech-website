@@ -22,6 +22,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       status: true,
       firstRespondedAt: true,
       createdBy: { select: { name: true, email: true } },
+      organization: { select: { primaryPhone: true } },
     },
   });
   if (!ticket) return NextResponse.json({ error: 'Support ticket not found' }, { status: 404 });
@@ -70,6 +71,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     subject: ticket.subject,
     message: parsed.data.message,
     authorName: session.name || session.email,
+    phone: ticket.organization.primaryPhone,
+    status: nextStatus,
   });
 
   await recordAdminAudit({
