@@ -119,7 +119,7 @@ type SmsOverview = {
     projectRenewalDrafts: { enabled: boolean; batchSize: number; dueDays: number };
     newsletterCampaigns: { enabled: boolean; configured: boolean; batchSize: number; campaignsPerRun: number };
     collectionEmail: { enabled: boolean; configured: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
-    collections: { enabled: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
+    collections: { enabled: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number; maxAutomatedCycles: number };
   };
   activeClients: number;
   templates: SmsTemplate[];
@@ -667,7 +667,10 @@ export default function AdminSms() {
                   ' day(s) overdue · repeat guard ' +
                   data.automation.collections.intervalDays +
                   ' day(s) · batch ' +
-                  data.automation.collections.batchSize,
+                  data.automation.collections.batchSize +
+                  ' · human review after ' +
+                  data.automation.collections.maxAutomatedCycles +
+                  ' automated cycle(s)',
                 Icon: RefreshCw,
               },
             ].map(({ label, enabled, detail, Icon, readyOverride }) => {
