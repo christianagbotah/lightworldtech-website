@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 import { serviceSearchHref } from '@/lib/service-search-content';
-import { companyProfile } from '@/lib/company-profile';
+import { companyProfile, isSafePublicSourceUrl } from '@/lib/company-profile';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -381,8 +381,10 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
   const secondaryCtaText = contentText(settings, 'home_secondary_cta_text', 'Explore our work');
   const secondaryCtaLink = contentText(settings, 'home_secondary_cta_link', '/portfolio');
   const cmsSignals = contentJson<string[]>(settings, 'home_signals', signals);
-  const homeRecognition = contentJson(settings, 'about_recognition', companyProfile.recognition);
-  const homeCoverage = contentJson(settings, 'about_coverage', companyProfile.coverage);
+  const homeRecognition = contentJson(settings, 'about_recognition', companyProfile.recognition)
+    .filter((item) => item && item.title && item.publisher && isSafePublicSourceUrl(item.href));
+  const homeCoverage = contentJson(settings, 'about_coverage', companyProfile.coverage)
+    .filter((item) => item && item.title && item.publisher && isSafePublicSourceUrl(item.href));
   const industryLabels = contentJson<string[]>(settings, 'home_industries', industries.map((item) => item.label));
   const cmsIndustries = industryLabels.map((label, index) => ({
     label,
