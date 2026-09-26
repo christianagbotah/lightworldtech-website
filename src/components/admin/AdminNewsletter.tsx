@@ -455,7 +455,7 @@ export default function AdminNewsletter() {
                   <TableHead>Email</TableHead>
                   <TableHead className="hidden sm:table-cell">Joined</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead data-export-ignore className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -471,7 +471,7 @@ export default function AdminNewsletter() {
                           {subscriber.active ? 'Active' : 'Paused'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell data-export-ignore className="text-right">
                         <Button
                           size="sm"
                           variant="outline"
