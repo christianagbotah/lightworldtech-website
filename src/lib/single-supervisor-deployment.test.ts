@@ -43,6 +43,9 @@ describe('single production supervisor deployment', () => {
     const smsUnit = source('ops/lightworld-sms-dispatch.service');
 
     expect(smsUnit).toContain('After=network-online.target lightworldtech-app.service');
+    const installer = source('ops/install-production-ops.sh');
+    expect(installer).toContain('-m 0750 "$SOURCE_DIR/run-sms-dispatch.sh" "$TARGET_DIR/run-sms-dispatch.sh"');
+    expect(installer).toContain('-m 0700 "$SOURCE_DIR/$script" "$TARGET_DIR/$script"');
     expect(smsUnit).toContain('Wants=network-online.target lightworldtech-app.service');
     expect(smsUnit).not.toContain('pm2-lightworld.service');
   });
