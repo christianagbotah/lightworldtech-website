@@ -572,6 +572,7 @@ model ClientAgreement {
   documentUrl       String             @default("")
   notes             String             @default("")
   signedAt          DateTime?
+  attachments       ClientAgreementAttachment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -579,6 +580,21 @@ model ClientAgreement {
   @@index([organizationId, status])
   @@index([projectId])
   @@index([expiryDate])
+}
+
+model ClientAgreementAttachment {
+  id           String          @id @default(cuid())
+  agreementId  String
+  agreement    ClientAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  originalName String
+  storageName  String          @unique
+  mimeType     String
+  sizeBytes    Int
+  uploadedBy   String          @default("Admin")
+
+  createdAt DateTime @default(now())
+
+  @@index([agreementId, createdAt])
 }
 
 model ClientMilestone {
