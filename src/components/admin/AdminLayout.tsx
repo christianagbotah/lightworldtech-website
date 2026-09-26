@@ -1,5 +1,6 @@
 'use client';
 
+import { readJsonResponse } from '@/lib/client-api';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   LayoutDashboard,
@@ -115,7 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setNoticeLoading(true);
     try {
       const response = await fetch('/api/admin/notifications', { cache: 'no-store' });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Could not load notifications');
       setNotices(payload?.data?.notices || []);
       setNoticeTotal(Number(payload?.data?.total || 0));
