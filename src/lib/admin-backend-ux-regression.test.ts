@@ -381,6 +381,22 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(knowledge).toContain('account-specific help');
   });
 
+  test('warns support operations before SLA breach', () => {
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const api = source('src/app/api/admin/support-tickets/route.ts');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(api).toContain('SUPPORT_SLA_WARNING_MINUTES');
+    expect(api).toContain("sla === 'at_risk'");
+    expect(api).toContain('atRisk');
+    expect(support).toContain('SLA at risk');
+    expect(support).toContain('<option value="at_risk">SLA at risk</option>');
+    expect(notifications).toContain('Support SLA approaching deadline');
+    expect(notifications).toContain("action: 'admin-support-at-risk'");
+    expect(layout).toContain("sessionStorage.setItem('lw-support-sla-filter', 'at_risk')");
+  });
+
   test('supports real Support Desk agents, bounded bulk actions, exports and SLA escalation', () => {
     const support = source('src/components/admin/AdminSupportDesk.tsx');
     const agents = source('src/app/api/admin/support-agents/route.ts');
