@@ -617,8 +617,15 @@ model ClientAgreementObligation {
   status      String          @default("open")
   notes       String          @default("")
   evidenceUrl String          @default("")
+  completionSubmittedAt DateTime?
+  completionSubmittedByAdminId String?
+  completionSubmittedBy String @default("")
   completedAt DateTime?
   completedBy String          @default("")
+  reviewedAt DateTime?
+  reviewedByAdminId String?
+  reviewedBy String           @default("")
+  reviewNotes String           @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -79,8 +79,11 @@ type ObligationOwner = {
 type AgreementObligation = {
   id: string; title: string; category: string; owner: string; ownerAdminId: string | null;
   ownerAdmin: { id: string; name: string; email: string; role: string } | null; dueDate: string | null;
-  status: string; notes: string; evidenceUrl: string; completedAt: string | null;
-  completedBy: string; createdAt: string; updatedAt: string;
+  status: string; notes: string; evidenceUrl: string; completionSubmittedAt: string | null;
+  completionSubmittedByAdminId: string | null; completionSubmittedBy: string;
+  completedAt: string | null; completedBy: string; reviewedAt: string | null;
+  reviewedByAdminId: string | null; reviewedBy: string; reviewNotes: string;
+  createdAt: string; updatedAt: string;
 };
 type ObligationQueueItem = {
   id: string; title: string; category: string; status: string; owner: string; ownerAdminId: string | null;
@@ -1178,7 +1181,7 @@ export default function AdminClients() {
                       >
                         <option value="open">Open</option>
                         <option value="in_progress">In progress</option>
-                        <option value="completed">Completed</option>
+                        {item.status === 'pending_review' && <option value="pending_review" disabled>Pending review</option>}
                         <option value="waived">Waived</option>
                       </select>
                       <Button type="button" size="sm" variant="outline" onClick={() => openObligationQueueItem(item)}>
@@ -1825,7 +1828,8 @@ export default function AdminClients() {
                                   >
                                     <option value="open">Open</option>
                                     <option value="in_progress">In progress</option>
-                                    <option value="completed">Completed</option>
+                                    {obligation.status === 'pending_review' && <option value="pending_review" disabled>Pending review</option>}
+                                    <option value="completed">Submit completion for review</option>
                                     <option value="waived">Waived</option>
                                   </select>
                                   <select
@@ -1840,7 +1844,20 @@ export default function AdminClients() {
                                     ))}
                                   </select>
                                   {obligation.evidenceUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(obligation.evidenceUrl, '_blank', 'noopener,noreferrer')}>Evidence</Button>}
+                                  {obligation.status === 'pending_review' && (
+                                    <>
+                                      <Button type="button" size="sm" variant="outline" onClick={() => void patchAgreementObligation(obligation.id, { reviewAction: 'approve' })}>Approve completion</Button>
+                                      <Button type="button" size="sm" variant="outline" onClick={() => void patchAgreementObligation(obligation.id, { reviewAction: 'reject', reviewNotes: 'Returned for correction.' })}>Reject completion</Button>
+                                    </>
+                                  )}
                                 </div>
+                                {obligation.completionSubmittedAt && (
+                                  <p className="mt-2 text-[10px] text-muted-foreground">
+                                    Submitted by {obligation.completionSubmittedBy || 'Unknown'} · {new Date(obligation.completionSubmittedAt).toLocaleString()}
+                                    {obligation.reviewedAt ? ' · reviewed by ' + (obligation.reviewedBy || 'Unknown') + ' · ' + new Date(obligation.reviewedAt).toLocaleString() : ''}
+                                  </p>
+                                )}
+                                {obligation.reviewNotes && <p className="mt-1 text-[10px] text-muted-foreground">Review note: {obligation.reviewNotes}</p>}
                               </div>
                             );
                           })}
