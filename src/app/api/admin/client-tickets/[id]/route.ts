@@ -27,6 +27,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     where: { id },
     include: {
       createdBy: { select: { name: true, email: true } },
+      organization: { select: { primaryPhone: true } },
     },
   });
   if (!existing) return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
@@ -79,6 +80,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       ticketNumber: ticket.ticketNumber,
       subject: ticket.subject,
       status: ticket.status,
+      phone: existing.organization.primaryPhone,
     });
   }
 

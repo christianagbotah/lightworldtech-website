@@ -246,6 +246,23 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(details).not.toContain('<Table hideExport');
   });
 
+  test('uses the approved support SMS template for best-effort client updates', () => {
+    const support = source('src/lib/support-ticket.ts');
+    const reply = source('src/app/api/admin/client-tickets/[id]/messages/route.ts');
+    const status = source('src/app/api/admin/client-tickets/[id]/route.ts');
+    const bulk = source('src/app/api/admin/support-tickets/bulk/route.ts');
+
+    expect(support).toContain("key: 'support_update'");
+    expect(support).toContain("createdBy: 'System support update'");
+    expect(support).toContain('30 * 60 * 1000');
+    expect(support).toContain('queueSingleSms');
+    expect(support).toContain('notifySupportUpdateSms');
+    expect(reply).toContain('organization: { select: { primaryPhone: true } }');
+    expect(reply).toContain('phone: ticket.organization.primaryPhone');
+    expect(status).toContain('phone: existing.organization.primaryPhone');
+    expect(bulk).toContain('phone: ticket.organization.primaryPhone');
+  });
+
   test('sends idempotent customer payment confirmations for manual and Hubtel receipts', () => {
     const schema = source('prisma/schema.prisma');
     const migration = source('prisma/migrations/20260926123500_payment_customer_notifications/migration.sql');

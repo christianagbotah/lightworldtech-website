@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
     where: { id: { in: parsed.data.ids } },
     include: {
       createdBy: { select: { name: true, email: true } },
+      organization: { select: { primaryPhone: true } },
     },
   });
 
@@ -128,6 +129,7 @@ export async function POST(request: NextRequest) {
             ticketNumber: ticket.ticketNumber,
             subject: ticket.subject,
             status: parsed.data.status!,
+            phone: ticket.organization.primaryPhone,
           }),
         ),
     );
