@@ -117,6 +117,13 @@ export default function FinanceRenewalBillingWorkspace({
     service: string;
     cycleDate: string;
   } | null>(null);
+  const [pendingProjectCompletion, setPendingProjectCompletion] = useState<{
+    invoiceId: string;
+    invoiceNumber: string;
+    customer: string;
+    project: string;
+    cycleDate: string;
+  } | null>(null);
 
   useEffect(() => {
     setOrganizationId(initialOrganizationId);
@@ -215,12 +222,23 @@ export default function FinanceRenewalBillingWorkspace({
             : days !== null && days <= project.renewalNoticeDays
               ? 'notice_window'
               : 'scheduled';
+      const invoiceState = invoice
+        ? invoice.status === 'draft'
+          ? 'draft_review'
+          : invoice.renewalCompletedAt
+            ? 'renewal_completed'
+            : invoice.derivedStatus === 'paid'
+              ? ['custom', 'one_time'].includes(project.renewalCycle)
+                ? 'paid_manual_completion'
+                : 'paid_ready_to_complete'
+              : 'billed'
+        : state;
       return {
         project,
         renewalDate,
         days,
         insideWindow,
-        state: invoice?.status === 'draft' ? 'draft_review' : state,
+        state: invoiceState,
         invoice,
       };
     })
@@ -253,7 +271,9 @@ export default function FinanceRenewalBillingWorkspace({
     ? Object.entries(unbilledTotals).map(([currency, value]) => money(value, currency)).join(' · ')
     : '—';
   const dueCount = rows.filter((row) => ['ready', 'overdue_unbilled'].includes(row.state)).length;
-  const readyToCompleteCount = rows.filter((row) => row.state === 'paid_ready_to_complete').length;
+  const readyToCompleteCount =
+    rows.filter((row) => row.state === 'paid_ready_to_complete').length +
+    projectRows.filter((row) => row.state === 'paid_ready_to_complete').length;
   const draftReviewCount =
     rows.filter((row) => row.state === 'draft_review').length +
     projectRows.filter((row) => row.state === 'draft_review').length;
@@ -275,7 +295,28 @@ export default function FinanceRenewalBillingWorkspace({
     }))
     .filter((row) => Boolean(row.service))
     .sort((a, b) => new Date(b.invoice.renewalCompletedAt!).getTime() - new Date(a.invoice.renewalCompletedAt!).getTime());
-  const completedCount = completedRows.length;
+  const filteredProjectIds = new Set(
+    projects
+      .filter((project) => !organizationId || project.organizationId === organizationId)
+      .map((project) => project.id),
+  );
+  const completedProjectRows = invoices
+    .filter((invoice) =>
+      Boolean(
+        invoice.projectId &&
+        !invoice.serviceId &&
+        filteredProjectIds.has(invoice.projectId) &&
+        invoice.renewalCompletedAt &&
+        new Date(invoice.renewalCompletedAt).getTime() >= completedSince.getTime(),
+      ),
+    )
+    .map((invoice) => ({
+      invoice,
+      project: projects.find((project) => project.id === invoice.projectId)!,
+    }))
+    .filter((row) => Boolean(row.project))
+    .sort((a, b) => new Date(b.invoice.renewalCompletedAt!).getTime() - new Date(a.invoice.renewalCompletedAt!).getTime());
+  const completedCount = completedRows.length + completedProjectRows.length;
 
   const tone = (state: string) => {
     if (state === 'renewal_completed') return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
@@ -514,10 +555,34 @@ export default function FinanceRenewalBillingWorkspace({
                     <TableCell data-export-ignore className="text-right">
                       {['schedule_missing', 'amount_missing'].includes(row.state) ? (
                         <Button type="button" size="sm" variant="outline" onClick={() => onOpenCustomer(row.project.organizationId)}>Complete setup</Button>
+                      ) : row.invoice && row.state === 'paid_ready_to_complete' ? (
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => onOpenInvoice(row.invoice!.id)}>Open invoice</Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => setPendingProjectCompletion({
+                              invoiceId: row.invoice!.id,
+                              invoiceNumber: row.invoice!.invoiceNumber,
+                              customer: row.project.organization.name,
+                              project: row.project.name,
+                              cycleDate: row.renewalDate,
+                            })}
+                          >
+                            <CheckCircle2 className="mr-1.5 size-3.5" /> Complete renewal
+                          </Button>
+                        </div>
+                      ) : row.invoice && row.state === 'paid_manual_completion' ? (
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => onOpenInvoice(row.invoice!.id)}>Open invoice</Button>
+                          <Button type="button" size="sm" onClick={() => onOpenCustomer(row.project.organizationId)}>Set renewal dates</Button>
+                        </div>
                       ) : row.invoice ? (
                         <div className="flex justify-end gap-2">
                           <Button type="button" size="sm" variant="outline" onClick={() => onOpenInvoice(row.invoice!.id)}>Open invoice</Button>
-                          <Button type="button" size="sm" variant="outline" disabled={projectReminderBusy} onClick={() => setPendingProjectReminder(row.project)}>Send reminder</Button>
+                          {row.state !== 'renewal_completed' && (
+                            <Button type="button" size="sm" variant="outline" disabled={projectReminderBusy} onClick={() => setPendingProjectReminder(row.project)}>Send reminder</Button>
+                          )}
                         </div>
                       ) : (
                         <div className="flex justify-end gap-2">
@@ -571,6 +636,45 @@ export default function FinanceRenewalBillingWorkspace({
         </CardContent>
       </Card>
 
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="text-base">Completed project renewals · last {windowDays} days</CardTitle>
+          <p className="text-xs text-muted-foreground">Paid project renewal cycles that were completed and advanced into the next commercial period.</p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-completed-project-renewals" className="min-w-[840px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer / project</TableHead>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>Renewal cycle</TableHead>
+                  <TableHead>Completed</TableHead>
+                  <TableHead>Completed by</TableHead>
+                  <TableHead data-export-ignore className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {completedProjectRows.slice(0, 50).map(({ invoice, project }) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell>
+                      <button type="button" className="font-medium hover:underline" onClick={() => onOpenCustomer(project.organizationId)}>{project.organization.name}</button>
+                      <p className="text-xs text-muted-foreground">{project.name}</p>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{invoice.invoiceNumber}</TableCell>
+                    <TableCell className="text-xs">{invoice.renewalForDate ? new Date(invoice.renewalForDate).toLocaleDateString() : '—'}</TableCell>
+                    <TableCell className="text-xs">{invoice.renewalCompletedAt ? new Date(invoice.renewalCompletedAt).toLocaleString() : '—'}</TableCell>
+                    <TableCell className="text-xs">{invoice.renewalCompletedBy || '—'}</TableCell>
+                    <TableCell data-export-ignore className="text-right"><Button type="button" size="sm" variant="outline" onClick={() => onOpenInvoice(invoice.id)}>Open invoice</Button></TableCell>
+                  </TableRow>
+                ))}
+                {!completedProjectRows.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No project renewals were completed in the selected lookback period.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       <ConfirmActionDialog
         open={Boolean(pendingProjectReminder)}
         onOpenChange={(open) => {
@@ -601,6 +705,39 @@ export default function FinanceRenewalBillingWorkspace({
             toast.error(error instanceof Error ? error.message : 'Unable to send project renewal reminder');
           } finally {
             setProjectReminderBusy(false);
+          }
+        }}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(pendingProjectCompletion)}
+        onOpenChange={(open) => {
+          if (!open) setPendingProjectCompletion(null);
+        }}
+        title="Complete paid project renewal?"
+        description={
+          pendingProjectCompletion
+            ? 'This will advance ' + pendingProjectCompletion.project + ' for ' + pendingProjectCompletion.customer +
+              ' from renewal cycle ' + new Date(pendingProjectCompletion.cycleDate + 'T00:00:00Z').toLocaleDateString() +
+              '. This does not charge the customer again.'
+            : 'Complete this paid project renewal.'
+        }
+        confirmLabel="Complete renewal"
+        tone="default"
+        onConfirm={async () => {
+          if (!pendingProjectCompletion) return;
+          try {
+            const response = await fetch(
+              '/api/admin/finance/invoices/' + encodeURIComponent(pendingProjectCompletion.invoiceId) + '/complete-project-renewal',
+              { method: 'POST' },
+            );
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) throw new Error(payload?.error || 'Unable to complete project renewal');
+            toast.success(payload?.data?.alreadyCompleted ? 'Project renewal was already completed' : 'Project renewal completed');
+            setPendingProjectCompletion(null);
+            onRefresh();
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Unable to complete project renewal');
           }
         }}
       />
