@@ -464,22 +464,43 @@ export default function AdminSupportDesk() {
     }
   };
 
-  const uploadAttachment = async (file: File | null) => {
-    if (!selected || !file) return;
+  const uploadAttachments = async (selectedFiles: FileList | File[]) => {
+    if (!selected) return;
+    const files = Array.from(selectedFiles).slice(0, 5);
+    if (!files.length) return;
+    if (selectedFiles.length > 5) {
+      toast.message('Only the first 5 files will be uploaded in this batch.');
+    }
+
     setAttachmentUploading(true);
+    let uploaded = 0;
+    const failed: string[] = [];
     try {
-      const form = new FormData();
-      form.set('file', file);
-      const response = await fetch('/api/admin/support-tickets/' + encodeURIComponent(selected.id) + '/attachments', {
-        method: 'POST',
-        body: form,
-      });
-      const payload = await readJsonResponse(response);
-      if (!response.ok) throw new Error(payload?.error || 'Unable to upload attachment');
-      toast.success('Evidence attached to ticket');
-      await refreshSelected();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to upload attachment');
+      for (const file of files) {
+        try {
+          const form = new FormData();
+          form.set('file', file);
+          const response = await fetch('/api/admin/support-tickets/' + encodeURIComponent(selected.id) + '/attachments', {
+            method: 'POST',
+            body: form,
+          });
+          const payload = await readJsonResponse(response);
+          if (!response.ok) throw new Error(payload?.error || 'Unable to upload attachment');
+          uploaded += 1;
+        } catch {
+          failed.push(file.name);
+        }
+      }
+
+      if (uploaded) {
+        toast.success(uploaded + ' support file' + (uploaded === 1 ? '' : 's') + ' attached');
+        await refreshSelected();
+      }
+      if (failed.length) {
+        toast.error(failed.length + ' file' + (failed.length === 1 ? '' : 's') + ' could not be uploaded', {
+          description: failed.slice(0, 3).join(', ') + (failed.length > 3 ? '…' : ''),
+        });
+      }
     } finally {
       setAttachmentUploading(false);
     }
@@ -833,19 +854,20 @@ export default function AdminSupportDesk() {
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h3 className="flex items-center gap-2 text-sm font-semibold"><Paperclip className="size-4 text-amber-600" /> Evidence & attachments</h3>
-                        <p className="mt-1 text-xs text-muted-foreground">Private ticket files. JPG, PNG, WebP or PDF, max 10MB.</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Private ticket files. Select up to 5 at once · JPG, PNG, WebP or PDF · max 10MB each.</p>
                       </div>
                       <label className="inline-flex cursor-pointer items-center rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold transition hover:bg-muted">
                         {attachmentUploading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Upload className="mr-2 size-4" />}
                         Add evidence
                         <input
                           type="file"
+                          multiple
                           accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
                           className="sr-only"
                           disabled={attachmentUploading}
                           onChange={(event) => {
-                            const file = event.target.files?.[0] || null;
-                            void uploadAttachment(file);
+                            const files = event.currentTarget.files;
+                            if (files) void uploadAttachments(files);
                             event.currentTarget.value = '';
                           }}
                         />
