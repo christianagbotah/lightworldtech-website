@@ -41,6 +41,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import { hasAdminPermission } from '@/lib/admin-permissions';
+import { readJsonResponse } from '@/lib/client-api';
 
 const stages = [
   { id: 'new', label: 'New' },
@@ -227,7 +228,7 @@ export default function AdminCRM() {
 
       const response = await fetch('/api/admin/leads?' + params.toString(), { cache: 'no-store' });
       if (!response.ok) throw new Error('Could not load CRM');
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       setLeads(payload.data || []);
       setSummary(payload.summary || null);
     } catch (error) {
@@ -385,7 +386,7 @@ export default function AdminCRM() {
   const refreshSelected = async (leadId: string) => {
     const response = await fetch('/api/admin/leads/' + leadId, { cache: 'no-store' });
     if (!response.ok) throw new Error('Could not refresh lead');
-    const payload = await response.json();
+    const payload = await readJsonResponse<any>(response, 'Invalid server response');
     setSelected(payload.data);
   };
 
@@ -398,7 +399,7 @@ export default function AdminCRM() {
         body: JSON.stringify(update),
       });
       if (!response.ok) throw new Error('Could not update lead');
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (selected?.id === lead.id) setSelected(payload.data);
       if (refresh) await fetchLeads();
       return payload.data as Lead;
@@ -448,7 +449,7 @@ export default function AdminCRM() {
         body: JSON.stringify({ leadId: lead.id }),
       });
       if (!response.ok) throw new Error('Could not open proposal workspace');
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (payload?.data?.id) {
         sessionStorage.setItem('lw-open-proposal-id', String(payload.data.id));
       }

@@ -37,6 +37,7 @@ import {
 import { toast } from 'sonner';
 import AdminMediaField from '@/components/admin/AdminMediaField';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { readJsonResponse } from '@/lib/client-api';
 
 interface Service {
   id: string;
@@ -74,7 +75,7 @@ export default function AdminServices() {
     try {
       const res = await fetch('/api/services');
       if (!res.ok) throw new Error('Failed to fetch');
-      const payload = await res.json();
+      const payload = await readJsonResponse<any>(res, 'Invalid server response');
       setServices(payload.data || []);
     } catch {
       toast.error('Failed to load services');
@@ -134,7 +135,7 @@ export default function AdminServices() {
         : await fetch('/api/services', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await readJsonResponse<any>(res, 'Invalid server response');
         throw new Error(data.error || 'Failed to save');
       }
 

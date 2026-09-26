@@ -32,6 +32,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
+import { readJsonResponse } from '@/lib/client-api';
 
 type PortalUser = {
   id: string; name: string; email: string; role: string; active: boolean;
@@ -190,7 +191,7 @@ export default function AdminClients() {
         return;
       }
       if (!response.ok) throw new Error('Could not load executive client portfolio');
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       setPortfolio({
         summary: payload.summary,
         byCurrency: payload.byCurrency || [],
@@ -211,7 +212,7 @@ export default function AdminClients() {
     try {
       const response = await fetch('/api/admin/clients', { cache: 'no-store' });
       if (!response.ok) throw new Error('Could not load client portal organizations');
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       const items: Organization[] = payload.data || [];
       setOrganizations(items);
       if (!selectedId && items.length) setSelectedId(items[0].id);
@@ -275,7 +276,7 @@ export default function AdminClients() {
       const response = await fetch('/api/admin/client-users/' + id, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not update portal user');
       if (payload?.activationUrl) {
         setActivationLinks((current) => ({ ...current, [id]: String(payload.activationUrl) }));
@@ -307,7 +308,7 @@ export default function AdminClients() {
       const response = await fetch('/api/admin/clients', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orgForm),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not create client organization');
       setOrgForm({ name: '', primaryContactName: '', primaryEmail: '', primaryPhone: '' });
       setSelectedId(payload.data.id);
@@ -326,7 +327,7 @@ export default function AdminClients() {
       const response = await fetch('/api/admin/clients/' + selected.id + '/users', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userForm),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not create portal user');
       setUserForm({ name: '', email: '', role: 'client_admin' });
       if (payload?.activationUrl && payload?.data?.id) {
@@ -366,7 +367,7 @@ export default function AdminClients() {
           renewalNotes: projectForm.renewalNotes,
         }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not create client project');
       setProjectForm({
         name: '',
@@ -430,7 +431,7 @@ export default function AdminClients() {
           dueDate: milestoneForm.dueDate ? new Date(milestoneForm.dueDate).toISOString() : null,
         }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not create milestone');
       setMilestoneForm({ projectId: milestoneForm.projectId, title: '', dueDate: '' });
       await Promise.all([fetchOrganizations(), fetchPortfolio()]);
@@ -471,7 +472,7 @@ export default function AdminClients() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, visibleToClient: true }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not publish document');
       setDocumentForms((current) => ({ ...current, [projectId]: { title: '', url: '', description: '', category: 'document' } }));
       await Promise.all([fetchOrganizations(), fetchPortfolio()]);
@@ -504,7 +505,7 @@ export default function AdminClients() {
           projectId: announcementForm.projectId || null,
         }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not publish announcement');
       setAnnouncementForm({ title: '', body: '', projectId: '' });
       await Promise.all([fetchOrganizations(), fetchPortfolio()]);
@@ -541,7 +542,7 @@ export default function AdminClients() {
       const response = await fetch('/api/admin/client-tickets/' + ticketId + '/messages', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not send reply');
       setTicketReplies((current) => ({ ...current, [ticketId]: '' }));
       await Promise.all([fetchOrganizations(), fetchPortfolio()]);

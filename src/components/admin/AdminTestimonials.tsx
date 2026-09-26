@@ -37,6 +37,7 @@ import {
 import { toast } from 'sonner';
 import AdminMediaField from '@/components/admin/AdminMediaField';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { readJsonResponse } from '@/lib/client-api';
 
 interface Testimonial {
   id: string;
@@ -69,7 +70,7 @@ export default function AdminTestimonials() {
     try {
       const res = await fetch('/api/testimonials');
       if (!res.ok) throw new Error('Failed to fetch');
-      const payload = await res.json();
+      const payload = await readJsonResponse<any>(res, 'Invalid server response');
       setTestimonials(payload.data || []);
     } catch {
       toast.error('Failed to load testimonials');
@@ -106,7 +107,7 @@ export default function AdminTestimonials() {
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       if (!res.ok) {
-        const data = await res.json();
+        const data = await readJsonResponse<any>(res, 'Invalid server response');
         throw new Error(data.error || 'Failed to save');
       }
       toast.success(editing ? 'Testimonial updated' : 'Testimonial created');

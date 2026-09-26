@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { readJsonResponse } from '@/lib/client-api';
 
 interface FAQ {
   id: string;
@@ -55,7 +56,7 @@ export default function AdminFAQs() {
     try {
       const res = await fetch('/api/faqs');
       if (!res.ok) throw new Error('Failed to fetch');
-      const payload = await res.json();
+      const payload = await readJsonResponse<any>(res, 'Invalid server response');
       setFaqs(payload.data || []);
     } catch {
       toast.error('Failed to load FAQs');
@@ -89,7 +90,7 @@ export default function AdminFAQs() {
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       if (!res.ok) {
-        const data = await res.json();
+        const data = await readJsonResponse<any>(res, 'Invalid server response');
         throw new Error(data.error || 'Failed to save');
       }
       toast.success(editing ? 'FAQ updated' : 'FAQ created');

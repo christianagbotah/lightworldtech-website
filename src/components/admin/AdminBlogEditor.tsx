@@ -19,6 +19,7 @@ import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
 import AdminMediaField from '@/components/admin/AdminMediaField';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { readJsonResponse } from '@/lib/client-api';
 
 interface Category {
   id: string;
@@ -60,7 +61,7 @@ export default function AdminBlogEditor() {
   const fetchCategories = useCallback(async () => {
     try {
       const res = await fetch('/api/blog/categories');
-      if (res.ok) setCategories(await res.json());
+      if (res.ok) setCategories(await readJsonResponse<any>(res, 'Invalid server response'));
     } catch {
       // silently fail
     }
@@ -77,7 +78,7 @@ export default function AdminBlogEditor() {
       try {
         const res = await fetch(`/api/blog/${blogPostSlug}`);
         if (!res.ok) throw new Error('Post not found');
-        const payload = await res.json();
+        const payload = await readJsonResponse<any>(res, 'Invalid server response');
         const post = payload.data || payload;
         setForm({
           title: post.title || '',
@@ -134,7 +135,7 @@ export default function AdminBlogEditor() {
       }
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await readJsonResponse<any>(res, 'Invalid server response');
         throw new Error(data.error || 'Failed to save');
       }
 
