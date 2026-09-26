@@ -73,6 +73,15 @@ export type FinanceExecutiveDashboardData = {
     excludedServices: number;
     methodology: string;
   }>;
+  receivableConcentration: Record<string, {
+    customers: number;
+    topCustomerId: string;
+    topCustomer: string;
+    topBalance: string;
+    topSharePct: number;
+    top3SharePct: number;
+    methodology: string;
+  }>;
   runway: Record<string, {
     liquidity: string;
     averageMonthlyCashOut: string;
@@ -316,6 +325,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.cashPosition || {}),
       ...Object.keys(dashboard.renewalExposure || {}),
       ...Object.keys(dashboard.recurringRevenue || {}),
+      ...Object.keys(dashboard.receivableConcentration || {}),
       ...Object.keys(dashboard.runway || {}),
       ...Object.keys(dashboard.trends || {}),
     ])).sort(),
@@ -359,7 +369,7 @@ export default function FinanceExecutiveDashboard({
       ['Reporting period', dashboard.period.from + ' to ' + dashboard.period.to],
       ['Generated at', new Date().toISOString()],
       [],
-      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Payables', 'Revenue', 'Expenses', 'Net profit', 'MRR', 'ARR', 'Active recurring services', 'Excluded non-standard cycles', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
+      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Largest customer receivable share %', 'Top 3 receivable share %', 'Payables', 'Revenue', 'Expenses', 'Net profit', 'MRR', 'ARR', 'Active recurring services', 'Excluded non-standard cycles', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
     ];
 
     const codes = Array.from(new Set([
@@ -367,6 +377,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.cashPosition || {}),
       ...Object.keys(dashboard.runway || {}),
       ...Object.keys(dashboard.recurringRevenue || {}),
+      ...Object.keys(dashboard.receivableConcentration || {}),
       ...Object.keys(dashboard.renewalExposure || {}),
     ])).sort();
 
@@ -376,12 +387,15 @@ export default function FinanceExecutiveDashboard({
       const coverage = dashboard.runway[code];
       const renewals = dashboard.renewalExposure[code];
       const recurring = dashboard.recurringRevenue[code];
+      const concentration = dashboard.receivableConcentration[code];
       lines.push([
         code,
         position?.total || '0.00',
         coverage?.months || '',
         coverage?.averageMonthlyCashOut || '0.00',
         finance?.receivables || '0.00',
+        String(concentration?.topSharePct || 0),
+        String(concentration?.top3SharePct || 0),
         finance?.payables || '0.00',
         finance?.revenue || '0.00',
         finance?.expenses || '0.00',
@@ -447,6 +461,15 @@ export default function FinanceExecutiveDashboard({
     activeServices: 0,
     excludedServices: 0,
     methodology: 'No active standard recurring services are currently recorded for this currency.',
+  };
+  const concentration = dashboard.receivableConcentration[currency] || {
+    customers: 0,
+    topCustomerId: '',
+    topCustomer: '',
+    topBalance: '0',
+    topSharePct: 0,
+    top3SharePct: 0,
+    methodology: 'No open customer receivables are currently recorded for this currency.',
   };
   const runway = dashboard.runway[currency] || {
     liquidity: cash.total,
@@ -539,7 +562,7 @@ export default function FinanceExecutiveDashboard({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-9">
         <KpiCard
           label="Available liquidity"
           value={money(cash.total, currency)}
@@ -564,6 +587,13 @@ export default function FinanceExecutiveDashboard({
           detail={dashboard.counts.customersWithDebt + ' customers · ' + money(overdueReceivables, currency) + ' overdue'}
           Icon={UsersRound}
           onClick={onCollections}
+        />
+        <KpiCard
+          label="Customer concentration"
+          value={concentration.topSharePct.toFixed(1) + '%'}
+          detail={concentration.topCustomer ? concentration.topCustomer + ' · top 3 = ' + concentration.top3SharePct.toFixed(1) + '% of ' + currency + ' receivables' : concentration.methodology}
+          Icon={UsersRound}
+          onClick={() => concentration.topCustomerId ? onOpenCustomer(concentration.topCustomerId) : onCollections()}
         />
         <KpiCard
           label="Payables"
