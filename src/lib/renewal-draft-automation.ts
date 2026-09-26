@@ -190,7 +190,7 @@ export async function createDueProjectRenewalInvoiceDrafts() {
       skipped += 1;
       continue;
     }
-    const renewalDate =? renewalDate;
+    const renewalDate = project.nextRenewalDate;
 
     const daysUntilRenewal = Math.ceil(
       (renewalDate.getTime() - now.getTime()) / 86400000,
@@ -225,7 +225,7 @@ export async function createDueProjectRenewalInvoiceDrafts() {
       const fallbackDueDate = new Date(issueDate.getTime() + dueDays * 86400000);
       const dueDate =
         renewalDate.getTime() >= issueDate.getTime()
-          ?? renewalDate
+          ? renewalDate
           : fallbackDueDate;
       const invoiceNumber = await nextInvoiceNumber(issueDate);
       const amount = new Prisma.Decimal(project.renewalAmount).toDecimalPlaces(2);
