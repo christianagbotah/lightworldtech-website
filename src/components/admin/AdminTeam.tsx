@@ -37,6 +37,7 @@ import {
 import { toast } from 'sonner';
 import AdminMediaField from '@/components/admin/AdminMediaField';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { readJsonResponse } from '@/lib/client-api';
 
 interface TeamMember {
   id: string;
@@ -70,7 +71,7 @@ export default function AdminTeam() {
     try {
       const res = await fetch('/api/team');
       if (!res.ok) throw new Error('Failed to fetch');
-      const payload = await res.json();
+      const payload = await readJsonResponse<any>(res, 'Invalid server response');
       setMembers(payload.data || []);
     } catch {
       toast.error('Failed to load team members');
@@ -108,7 +109,7 @@ export default function AdminTeam() {
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       if (!res.ok) {
-        const data = await res.json();
+        const data = await readJsonResponse<any>(res, 'Invalid server response');
         throw new Error(data.error || 'Failed to save');
       }
       toast.success(editing ? 'Member updated' : 'Member created');
