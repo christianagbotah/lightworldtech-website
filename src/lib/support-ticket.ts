@@ -260,7 +260,7 @@ export async function notifySupportDesk(input: {
   message: string;
   priority: string;
   category: string;
-  kind: 'created' | 'client_reply';
+  kind: 'created' | 'client_reply' | 'reopened';
 }) {
   const target = getMailTransportStatus().replyTo;
   try {
@@ -268,7 +268,11 @@ export async function notifySupportDesk(input: {
       to: target,
       subject:
         '[' + input.ticketNumber + '] ' +
-        (input.kind === 'created' ? 'New support ticket: ' : 'Client reply: ') +
+        (input.kind === 'created'
+          ? 'New support ticket: '
+          : input.kind === 'reopened'
+            ? 'Ticket reopened: '
+            : 'Client reply: ') +
         input.subject,
       text:
         input.organizationName + '\n' +

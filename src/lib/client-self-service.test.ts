@@ -53,6 +53,23 @@ describe('client self-service profile and security', () => {
     expect(ticketApi).toContain('supportSla');
   });
 
+  test('clients can reopen a closed support ticket without losing its history', () => {
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+    const reopen = source('src/app/api/client/tickets/[id]/reopen/route.ts');
+    const support = source('src/lib/support-ticket.ts');
+
+    expect(portal).toContain('Reopen ticket');
+    expect(portal).toContain("fetch('/api/client/tickets/' + ticketId + '/reopen'");
+    expect(reopen).toContain("ticket.status !== 'closed'");
+    expect(reopen).toContain("status: 'open'");
+    expect(reopen).toContain('supportSla(priority, now)');
+    expect(reopen).toContain("type: 'ticket_reopened'");
+    expect(reopen).toContain('resolvedAt: null');
+    expect(reopen).toContain('escalatedAt: null');
+    expect(reopen).toContain("kind: 'reopened'");
+    expect(support).toContain("'reopened'");
+  });
+
   test('client portal exposes responsive profile and password controls', () => {
     const portal = source('src/components/client/ClientPortalPage.tsx');
 
