@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
     const warningHorizon = new Date(now.getTime() + warningMinutes * 60_000);
     const agreementHorizon = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
     const obligationHorizon = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const personalObligationHorizon = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const [
       unreadTickets,
       slaBreached,
@@ -80,6 +81,8 @@ export async function GET(request: NextRequest) {
       rejectedAgreementApprovals,
       overdueAgreementObligations,
       agreementObligationsDue30,
+      myOverdueAgreementObligations,
+      myAgreementObligationsDue7,
     ] = await Promise.all([
       db.clientSupportTicket.count({
         where: { unreadByAdmin: true },
@@ -139,6 +142,22 @@ export async function GET(request: NextRequest) {
           dueDate: { gte: now, lte: obligationHorizon },
         },
       }),
+      db.clientAgreementObligation.count({
+        where: {
+          ownerAdminId: admin.id,
+          status: { notIn: ['completed', 'waived'] },
+          dueDate: { lt: now },
+          agreement: { status: { notIn: ['terminated', 'superseded'] } },
+        },
+      }),
+      db.clientAgreementObligation.count({
+        where: {
+          ownerAdminId: admin.id,
+          status: { notIn: ['completed', 'waived'] },
+          dueDate: { gte: now, lte: personalObligationHorizon },
+          agreement: { status: { notIn: ['terminated', 'superseded'] } },
+        },
+      }),
     ]);
 
     const agreementsInNoticeWindow = activeAgreementExpiries.filter((agreement) => {
@@ -147,14 +166,36 @@ export async function GET(request: NextRequest) {
       return daysRemaining >= 0 && daysRemaining <= agreement.renewalNoticeDays;
     }).length;
 
+    if (myOverdueAgreementObligations > 0) {
+      notices.push({
+        id: 'my-agreement-obligations-overdue',
+        severity: 'critical',
+        title: 'Your agreement obligations are overdue',
+        message: myOverdueAgreementObligations + ' obligation' + (myOverdueAgreementObligations === 1 ? ' assigned to you is' : 's assigned to you are') + ' past due.',
+        count: myOverdueAgreementObligations,
+        action: 'admin-clients-obligations-mine',
+      });
+    }
+
+    if (myAgreementObligationsDue7 > 0) {
+      notices.push({
+        id: 'my-agreement-obligations-due-7',
+        severity: 'warning',
+        title: 'Your agreement obligations due this week',
+        message: myAgreementObligationsDue7 + ' obligation' + (myAgreementObligationsDue7 === 1 ? ' assigned to you is' : 's assigned to you are') + ' due within 7 days.',
+        count: myAgreementObligationsDue7,
+        action: 'admin-clients-obligations-mine',
+      });
+    }
+
     if (overdueAgreementObligations > 0) {
       notices.push({
         id: 'client-agreement-obligations-overdue',
         severity: 'critical',
-        title: 'Agreement obligations overdue',
+        title: 'Team agreement obligations overdue',
         message: overdueAgreementObligations + ' active agreement obligation' + (overdueAgreementObligations === 1 ? ' is' : 's are') + ' past the recorded due date and require action.',
         count: overdueAgreementObligations,
-        action: 'admin-clients-agreements',
+        action: 'admin-clients-obligations-overdue',
       });
     }
 
@@ -162,10 +203,10 @@ export async function GET(request: NextRequest) {
       notices.push({
         id: 'client-agreement-obligations-due-30',
         severity: 'warning',
-        title: 'Agreement obligations due soon',
+        title: 'Team agreement obligations due soon',
         message: agreementObligationsDue30 + ' active agreement obligation' + (agreementObligationsDue30 === 1 ? ' is' : 's are') + ' due within 30 days.',
         count: agreementObligationsDue30,
-        action: 'admin-clients-agreements',
+        action: 'admin-clients-obligations-due',
       });
     }
 

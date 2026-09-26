@@ -361,15 +361,20 @@ export default function AdminClients() {
     if (!organizations.length || typeof window === 'undefined') return;
     const requestedOrganizationId = sessionStorage.getItem('lw-client-organization-id') || '';
     const requestedAction = sessionStorage.getItem('lw-client-action') || '';
-    if (!requestedOrganizationId && !requestedAction) return;
+    const requestedObligationScope = sessionStorage.getItem('lw-client-obligation-scope') || '';
+    if (!requestedOrganizationId && !requestedAction && !requestedObligationScope) return;
 
     sessionStorage.removeItem('lw-client-organization-id');
     sessionStorage.removeItem('lw-client-action');
+    sessionStorage.removeItem('lw-client-obligation-scope');
 
     if (requestedOrganizationId && organizations.some((organization) => organization.id === requestedOrganizationId)) {
       setSelectedId(requestedOrganizationId);
     }
     if (requestedAction) setPendingClientAction(requestedAction);
+    if (['mine', 'unassigned', 'overdue', 'due_30', 'all'].includes(requestedObligationScope)) {
+      void fetchObligationQueue(requestedObligationScope as ObligationQueueState['scope']);
+    }
   }, [organizations]);
 
   useEffect(() => {
@@ -380,6 +385,8 @@ export default function AdminClients() {
         document.getElementById('client-new-project-name')?.focus();
       } else if (pendingClientAction === 'agreements') {
         document.getElementById('client-agreements')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (pendingClientAction === 'obligations') {
+        document.getElementById('client-obligation-queue')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
       setPendingClientAction('');
     }, 0);
@@ -1068,7 +1075,7 @@ export default function AdminClients() {
         })}
       </div>
 
-      <Card className="border-border/60">
+      <Card id="client-obligation-queue" className="scroll-mt-28 border-border/60">
         <CardHeader className="pb-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>

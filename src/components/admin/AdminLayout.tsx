@@ -217,6 +217,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       navigate('admin-support');
       return;
     }
+    if (
+      action === 'admin-clients-obligations-mine' ||
+      action === 'admin-clients-obligations-overdue' ||
+      action === 'admin-clients-obligations-due'
+    ) {
+      const scope =
+        action === 'admin-clients-obligations-overdue'
+          ? 'overdue'
+          : action === 'admin-clients-obligations-due'
+            ? 'due_30'
+            : 'mine';
+      sessionStorage.setItem('lw-client-action', 'obligations');
+      sessionStorage.setItem('lw-client-obligation-scope', scope);
+      navigate('admin-clients');
+      return;
+    }
     if (action === 'admin-clients-agreements') {
       sessionStorage.setItem('lw-client-action', 'agreements');
       navigate('admin-clients');
