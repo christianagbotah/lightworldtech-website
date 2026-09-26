@@ -92,6 +92,8 @@ type PortfolioIntelligence = {
     stable: number;
     overdueInvoices: number;
     renewalsDue30: number;
+    expiredAgreements: number;
+    agreementsInNoticeWindow: number;
     atRiskProjects: number;
     budgetPressure: number;
     overBudget: number;
@@ -108,7 +110,7 @@ type PortfolioIntelligence = {
     id: string;
     organizationId: string;
     organizationName: string;
-    type: 'collections' | 'renewals' | 'support' | 'projects' | 'budget';
+    type: 'collections' | 'renewals' | 'agreements' | 'support' | 'projects' | 'budget';
     severity: 'high' | 'medium';
     title: string;
     detail: string;
@@ -134,6 +136,8 @@ type PortfolioIntelligence = {
       overdueInvoices: number;
       expiredServices: number;
       renewalsDue30: number;
+      expiredAgreements: number;
+      agreementsInNoticeWindow: number;
       budgetPressure: number;
       overBudget: number;
     };
@@ -298,9 +302,11 @@ export default function AdminClients() {
     const target =
       action.type === 'support'
         ? 'client-support'
-        : action.type === 'projects' || action.type === 'budget'
-          ? 'client-projects'
-          : 'client-overview';
+        : action.type === 'agreements'
+          ? 'client-agreements'
+          : action.type === 'projects' || action.type === 'budget'
+            ? 'client-projects'
+            : 'client-overview';
     window.setTimeout(() => {
       document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 0);
@@ -337,6 +343,8 @@ export default function AdminClients() {
         'Risk score',
         'Overdue invoices',
         'Renewals due 30d',
+        'Expired agreements',
+        'Agreements in notice window',
         'At-risk projects',
         'Budget pressure',
         'Over budget',
@@ -351,6 +359,8 @@ export default function AdminClients() {
         String(row.riskScore),
         String(row.metrics.overdueInvoices),
         String(row.metrics.renewalsDue30),
+        String(row.metrics.expiredAgreements),
+        String(row.metrics.agreementsInNoticeWindow),
         String(row.metrics.atRiskProjects),
         String(row.metrics.budgetPressure),
         String(row.metrics.overBudget),
@@ -833,13 +843,14 @@ export default function AdminClients() {
               </div>
             ) : portfolio ? (
               <>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
                   {[
                     { label: 'Intervention', value: portfolio.summary.interventionRequired, icon: AlertTriangle, tone: 'text-rose-600 bg-rose-500/10' },
                     { label: 'Attention', value: portfolio.summary.attention, icon: Activity, tone: 'text-amber-600 bg-amber-500/10' },
                     { label: 'Stable', value: portfolio.summary.stable, icon: Building2, tone: 'text-emerald-600 bg-emerald-500/10' },
                     { label: 'Overdue invoices', value: portfolio.summary.overdueInvoices, icon: CircleDollarSign, tone: 'text-rose-600 bg-rose-500/10' },
                     { label: 'Renewals ≤30d', value: portfolio.summary.renewalsDue30, icon: CalendarClock, tone: 'text-violet-600 bg-violet-500/10' },
+                    { label: 'Agreement exceptions', value: portfolio.summary.expiredAgreements + portfolio.summary.agreementsInNoticeWindow, icon: FileText, tone: 'text-amber-600 bg-amber-500/10' },
                   ].map((item) => {
                     const Icon = item.icon;
                     return (
@@ -908,7 +919,7 @@ export default function AdminClients() {
                               </Badge>
                             </div>
                             <p className="mt-1 text-[10px] text-muted-foreground">
-                              {row.metrics.overdueInvoices} overdue · {row.metrics.renewalsDue30} renewals · {row.metrics.atRiskProjects} delivery risk · {row.metrics.budgetPressure} budget pressure · {row.metrics.urgentTickets + row.metrics.slaBreaches} support pressure
+                              {row.metrics.overdueInvoices} overdue · {row.metrics.renewalsDue30} renewals · {row.metrics.expiredAgreements + row.metrics.agreementsInNoticeWindow} agreement exceptions · {row.metrics.atRiskProjects} delivery risk · {row.metrics.budgetPressure} budget pressure · {row.metrics.urgentTickets + row.metrics.slaBreaches} support pressure
                             </p>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
@@ -965,14 +976,16 @@ export default function AdminClients() {
                     ))}
                     {!portfolio.actionQueue.length && (
                       <div className="px-4 py-8 text-center text-xs text-muted-foreground">
-                        No commercial, support, delivery or budget exception currently requires action.
+                        No commercial, agreement, support, delivery or budget exception currently requires action.
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-8">
                   {[
+                    ['Expired agreements', portfolio.summary.expiredAgreements],
+                    ['Notice-window agreements', portfolio.summary.agreementsInNoticeWindow],
                     ['At-risk projects', portfolio.summary.atRiskProjects],
                     ['Budget pressure', portfolio.summary.budgetPressure],
                     ['Over budget', portfolio.summary.overBudget],

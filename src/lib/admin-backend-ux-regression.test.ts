@@ -458,8 +458,14 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('openPortfolioAction');
     expect(clients).toContain("import { useAppStore } from '@/lib/store';");
     expect(portfolio).toContain('const actionQueue = rows');
-    expect(portfolio).toContain("'collections' | 'renewals' | 'support' | 'projects' | 'budget'");
+    expect(portfolio).toContain("'collections' | 'renewals' | 'agreements' | 'support' | 'projects' | 'budget'");
     expect(portfolio).toContain('Correct project budget overrun');
+    expect(portfolio).toContain('agreementsInNoticeWindow');
+    expect(portfolio).toContain('expiredAgreements');
+    expect(portfolio).toContain('Review expired agreements');
+    expect(clients).toContain('Agreement exceptions');
+    expect(clients).toContain("action.type === 'agreements'");
+    expect(clients).toContain("'client-agreements'");
     expect(clients).toContain('Currency exposure');
     expect(clients).toContain('portfolio-intelligence');
     expect(clients).toContain('setSelectedId(row.id)');

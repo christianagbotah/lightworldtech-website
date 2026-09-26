@@ -70,6 +70,14 @@ export async function GET(request: NextRequest) {
           budgetAmount: true,
         },
       },
+      agreements: {
+        select: {
+          id: true,
+          status: true,
+          expiryDate: true,
+          renewalNoticeDays: true,
+        },
+      },
       tickets: {
         where: { status: { notIn: ['resolved', 'closed'] } },
         select: {
@@ -146,6 +154,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    let expiredAgreements = 0;
+    let agreementsInNoticeWindow = 0;
+    for (const agreement of organization.agreements) {
+      if (agreement.status !== 'active' || !agreement.expiryDate) continue;
+      if (agreement.expiryDate < now) {
+        expiredAgreements += 1;
+        continue;
+      }
+      const daysRemaining = Math.ceil((agreement.expiryDate.getTime() - now.getTime()) / 86_400_000);
+      if (daysRemaining <= agreement.renewalNoticeDays) agreementsInNoticeWindow += 1;
+    }
+
     const projectCosts = new Map<string, Prisma.Decimal>();
     for (const expense of organization.expenses) {
       if (!expense.projectId) continue;
@@ -179,8 +199,9 @@ export async function GET(request: NextRequest) {
     if (urgentTickets) riskScore += 3;
     if (slaBreaches) riskScore += 3;
     if (overBudget) riskScore += 3;
+    if (expiredAgreements) riskScore += 3;
     if (atRiskProjects) riskScore += 1;
-    if (renewalsDue30 || projectRenewals30) riskScore += 1;
+    if (renewalsDue30 || projectRenewals30 || agreementsInNoticeWindow) riskScore += 1;
     if (budgetPressure && !overBudget) riskScore += 1;
 
     const posture = riskScore >= 3 ? 'intervention_required' : riskScore > 0 ? 'attention' : 'stable';
@@ -205,6 +226,8 @@ export async function GET(request: NextRequest) {
         overdueInvoices,
         expiredServices,
         renewalsDue30: renewalsDue30 + projectRenewals30,
+        expiredAgreements,
+        agreementsInNoticeWindow,
         budgetPressure,
         overBudget,
       },
@@ -226,7 +249,7 @@ export async function GET(request: NextRequest) {
         id: string;
         organizationId: string;
         organizationName: string;
-        type: 'collections' | 'renewals' | 'support' | 'projects' | 'budget';
+        type: 'collections' | 'renewals' | 'agreements' | 'support' | 'projects' | 'budget';
         severity: 'high' | 'medium';
         title: string;
         detail: string;
@@ -264,6 +287,27 @@ export async function GET(request: NextRequest) {
             (row.metrics.renewalsDue30 === 1 ? '' : 's') +
             ' due within 30 days.',
           score: row.riskScore + (row.metrics.expiredServices > 0 ? 7 : 3),
+        });
+      }
+
+      if (row.metrics.expiredAgreements > 0 || row.metrics.agreementsInNoticeWindow > 0) {
+        actions.push({
+          id: row.id + ':agreements',
+          organizationId: row.id,
+          organizationName: row.name,
+          type: 'agreements',
+          severity: row.metrics.expiredAgreements > 0 ? 'high' : 'medium',
+          title: row.metrics.expiredAgreements > 0 ? 'Review expired agreements' : 'Act within agreement notice window',
+          detail:
+            row.metrics.expiredAgreements +
+            ' expired active agreement' +
+            (row.metrics.expiredAgreements === 1 ? '' : 's') +
+            ' · ' +
+            row.metrics.agreementsInNoticeWindow +
+            ' agreement' +
+            (row.metrics.agreementsInNoticeWindow === 1 ? '' : 's') +
+            ' inside the recorded notice window.',
+          score: row.riskScore + (row.metrics.expiredAgreements > 0 ? 7 : 3),
         });
       }
 
@@ -339,6 +383,8 @@ export async function GET(request: NextRequest) {
     stable: rows.filter((row) => row.posture === 'stable').length,
     overdueInvoices: rows.reduce((sum, row) => sum + row.metrics.overdueInvoices, 0),
     renewalsDue30: rows.reduce((sum, row) => sum + row.metrics.renewalsDue30, 0),
+    expiredAgreements: rows.reduce((sum, row) => sum + row.metrics.expiredAgreements, 0),
+    agreementsInNoticeWindow: rows.reduce((sum, row) => sum + row.metrics.agreementsInNoticeWindow, 0),
     atRiskProjects: rows.reduce((sum, row) => sum + row.metrics.atRiskProjects, 0),
     budgetPressure: rows.reduce((sum, row) => sum + row.metrics.budgetPressure, 0),
     overBudget: rows.reduce((sum, row) => sum + row.metrics.overBudget, 0),
@@ -358,6 +404,6 @@ export async function GET(request: NextRequest) {
         overdueReceivables: values.overdueReceivables.toFixed(2),
         renewals30: values.renewals30.toFixed(2),
       })),
-    methodology: 'Portfolio posture is deterministic. High-severity exceptions include overdue receivables, expired services, urgent/SLA-breached support and over-budget projects. Currency values are never converted.',
+    methodology: 'Portfolio posture is deterministic. High-severity exceptions include overdue receivables, expired services, expired active agreements, urgent/SLA-breached support and over-budget projects. Agreement notice windows use each agreement’s configured notice days. Currency values are never converted.',
   });
 }
