@@ -299,6 +299,57 @@ export async function GET(request: NextRequest) {
 
   const debtors = allDebtors.slice(0, 500);
 
+  const receivableConcentrationRaw = new Map<string, Map<string, {
+    name: string;
+    balance: Prisma.Decimal;
+  }>>();
+  for (const debtor of allDebtors) {
+    if (!receivableConcentrationRaw.has(debtor.currency)) {
+      receivableConcentrationRaw.set(debtor.currency, new Map());
+    }
+    const customers = receivableConcentrationRaw.get(debtor.currency)!;
+    const current = customers.get(debtor.organizationId) || {
+      name: debtor.customer,
+      balance: new Prisma.Decimal(0),
+    };
+    current.balance = current.balance.plus(debtor.balance);
+    customers.set(debtor.organizationId, current);
+  }
+
+  const receivableConcentration = Object.fromEntries(
+    [...receivableConcentrationRaw.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([currency, customers]) => {
+        const ranked = [...customers.entries()]
+          .map(([organizationId, value]) => ({
+            organizationId,
+            name: value.name,
+            balance: value.balance,
+          }))
+          .sort((a, b) => b.balance.comparedTo(a.balance));
+        const total = ranked.reduce(
+          (sum, item) => sum.plus(item.balance),
+          new Prisma.Decimal(0),
+        );
+        const top = ranked[0] || null;
+        const top3 = ranked.slice(0, 3).reduce(
+          (sum, item) => sum.plus(item.balance),
+          new Prisma.Decimal(0),
+        );
+        const percent = (value: Prisma.Decimal) =>
+          total.gt(0) ? Number(value.div(total).mul(100).toFixed(1)) : 0;
+        return [currency, {
+          customers: ranked.length,
+          topCustomerId: top?.organizationId || '',
+          topCustomer: top?.name || '',
+          topBalance: top?.balance.toFixed(2) || '0.00',
+          topSharePct: top ? percent(top.balance) : 0,
+          top3SharePct: percent(top3),
+          methodology: 'Share of current open receivables by customer within the same currency. No FX conversion is applied.',
+        }];
+      }),
+  );
+
   const allCreditors = bills
     .map((bill) => {
       const balance = invoiceBalance(bill.total, bill.allocations);
@@ -646,6 +697,7 @@ export async function GET(request: NextRequest) {
       cashPosition,
       renewalExposure,
       recurringRevenue,
+      receivableConcentration,
       runway,
       collections: {
         followUpDue: followUpDueInvoices.size,
