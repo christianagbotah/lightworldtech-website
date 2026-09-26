@@ -85,7 +85,7 @@ const navItems = [
 ];
 
 type AdminSearchResult = {
-  kind: 'client' | 'project' | 'invoice' | 'payment' | 'support' | 'lead' | 'proposal' | 'message';
+  kind: 'client' | 'project' | 'agreement' | 'invoice' | 'payment' | 'support' | 'lead' | 'proposal' | 'message';
   id: string;
   title: string;
   subtitle: string;
@@ -217,6 +217,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       navigate('admin-support');
       return;
     }
+    if (action === 'admin-clients-agreements') {
+      sessionStorage.setItem('lw-client-action', 'agreements');
+      navigate('admin-clients');
+      return;
+    }
     if (action === 'admin-clients') {
       navigate('admin-clients');
       return;
@@ -253,6 +258,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       sessionStorage.setItem('lw-finance-section', 'customers');
       sessionStorage.setItem('lw-finance-project-id', result.id);
       navigate('admin-finance');
+    } else if (result.kind === 'agreement') {
+      sessionStorage.setItem('lw-client-organization-id', result.id);
+      sessionStorage.setItem('lw-client-action', 'agreements');
+      navigate('admin-clients');
     } else if (result.kind === 'invoice') {
       sessionStorage.setItem('lw-finance-section', 'customers');
       sessionStorage.setItem('lw-finance-record-type', 'invoice');
@@ -600,7 +609,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <CommandInput
           value={commandQuery}
           onValueChange={setCommandQuery}
-          placeholder="Search workspaces, clients, projects, invoices, payments, proposals, tickets, leads or messages…"
+          placeholder="Search workspaces, clients, projects, agreements, invoices, payments, proposals, tickets, leads or messages…"
         />
         <CommandList className="max-h-[420px]">
           <CommandEmpty>{searchLoading ? 'Searching operational records…' : 'No matching workspace or operational record.'}</CommandEmpty>
@@ -614,6 +623,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                   {result.kind === 'client' ? <Building2 className="size-4" /> :
                    result.kind === 'project' ? <FolderOpen className="size-4" /> :
+                   result.kind === 'agreement' ? <FileSignature className="size-4" /> :
                    result.kind === 'invoice' || result.kind === 'payment' ? <Landmark className="size-4" /> :
                    result.kind === 'support' ? <LifeBuoy className="size-4" /> :
                    result.kind === 'lead' ? <GitBranch className="size-4" /> :

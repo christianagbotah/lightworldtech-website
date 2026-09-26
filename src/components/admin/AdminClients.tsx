@@ -270,10 +270,14 @@ export default function AdminClients() {
   }, [organizations]);
 
   useEffect(() => {
-    if (pendingClientAction !== 'new-project' || !selected) return;
+    if (!pendingClientAction || !selected) return;
     const id = window.setTimeout(() => {
-      document.getElementById('client-new-project')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      document.getElementById('client-new-project-name')?.focus();
+      if (pendingClientAction === 'new-project') {
+        document.getElementById('client-new-project')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('client-new-project-name')?.focus();
+      } else if (pendingClientAction === 'agreements') {
+        document.getElementById('client-agreements')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
       setPendingClientAction('');
     }, 0);
     return () => window.clearTimeout(id);
@@ -993,8 +997,7 @@ export default function AdminClients() {
       )}
 
       <Card className="border-border/60">
-        <CardHeader><CardTitle className="text-base">Add client organization</CardTitle></CardHeader>
-        <CardContent>
+        <CardHeader><CardTitle className="text-base">Add client organization</CardTitle></CardHeader>        <CardContent>
           <form onSubmit={createOrganization} className="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(180px,1.2fr)_minmax(160px,1fr)_minmax(200px,1.2fr)_minmax(150px,1fr)_auto] lg:items-center">
             <Input required placeholder="Organization name" value={orgForm.name} onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })} />
             <Input placeholder="Primary contact" value={orgForm.primaryContactName} onChange={(e) => setOrgForm({ ...orgForm, primaryContactName: e.target.value })} />

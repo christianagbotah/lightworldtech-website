@@ -860,7 +860,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain("sessionStorage.setItem('lw-client-action', 'new-project')");
     expect(clientCommercial).toContain("sessionStorage.setItem('lw-sms-recipient'");
     expect(clients).toContain("sessionStorage.getItem('lw-client-action')");
-    expect(clients).toContain("pendingClientAction !== 'new-project'");
+    expect(clients).toContain("pendingClientAction === 'new-project'");
     expect(clients).toContain('client-new-project-name');
     expect(clientCommercialApi).toContain('nextCollectionInvoice');
     expect(clientCommercialApi).toContain('collectionTarget');
@@ -869,7 +869,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientCommercial).toContain("sessionStorage.setItem('lw-client-action', 'new-project')");
     expect(clientCommercial).toContain("sessionStorage.setItem('lw-sms-recipient'");
     expect(clients).toContain("sessionStorage.getItem('lw-client-action')");
-    expect(clients).toContain("pendingClientAction !== 'new-project'");
+    expect(clients).toContain("pendingClientAction === 'new-project'");
     expect(clients).toContain('client-new-project-name');
     expect(clientCommercial).toContain('Direct profitability');
     expect(clientCommercial).toContain('Project profitability & completion forecast');
@@ -997,8 +997,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(financeMeta).toContain('renewalNoticeDays: true');
     expect(financeMeta).toContain('renewalAmount: project.renewalAmount.toFixed(2)');
     expect(projectRenewalReminder).toContain("'finance.manage'");
-    expect(projectRenewalReminder).toContain("'communications.manage'");
-    expect(projectRenewalReminder).toContain("'project_renewal'");
+    expect(projectRenewalReminder).toContain("'communications.manage'");    expect(projectRenewalReminder).toContain("'project_renewal'");
     expect(projectRenewalReminder).toContain("'project_expired'");
     expect(projectRenewalReminder).toContain('12 * 60 * 60 * 1000');
     expect(projectRenewalReminder).toContain("'admin.project_renewal_reminder_sent'");
@@ -1648,6 +1647,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const layout = source('src/components/admin/AdminLayout.tsx');
     const search = source('src/app/api/admin/search/route.ts');
     const finance = source('src/components/admin/AdminFinance.tsx');
+    const clients = source('src/components/admin/AdminClients.tsx');
     const crm = source('src/components/admin/AdminCRM.tsx');
     const support = source('src/components/admin/AdminSupportDesk.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
@@ -1657,6 +1657,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(search).toContain("hasAdminPermission(actor.role, actor.permissions, 'crm.manage')");
     expect(search).toContain('db.clientOrganization.findMany');
     expect(search).toContain('db.clientProject.findMany');
+    expect(search).toContain('db.clientAgreement.findMany');
     expect(search).toContain('db.clientInvoice.findMany');
     expect(search).toContain('db.clientPayment.findMany');
     expect(search).toContain('db.clientSupportTicket.findMany');
@@ -1666,6 +1667,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("fetch('/api/admin/search?q='");
     expect(layout).toContain('Operational records');
     expect(layout).toContain("sessionStorage.setItem('lw-client-organization-id'");
+    expect(layout).toContain("sessionStorage.setItem('lw-client-action', 'agreements')");
+    expect(clients).toContain("pendingClientAction === 'agreements'");
+    expect(clients).toContain("document.getElementById('client-agreements')");
     expect(layout).toContain("sessionStorage.setItem('lw-finance-project-id'");
     expect(layout).toContain("sessionStorage.setItem('lw-finance-record-type', 'invoice')");
     expect(layout).toContain("sessionStorage.setItem('lw-finance-record-type', 'receipt')");
@@ -1677,6 +1681,19 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(crm).toContain("sessionStorage.getItem('lw-open-lead-id')");
     expect(support).toContain("sessionStorage.getItem('lw-support-ticket-id')");
     expect(messages).toContain("sessionStorage.getItem('lw-open-message-id')");
+  });
+
+  test('surfaces agreement expiry and notice-window exceptions to operators', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(notifications).toContain('db.clientAgreement.findMany');
+    expect(notifications).toContain('renewalNoticeDays');
+    expect(notifications).toContain('Agreement notice window open');
+    expect(notifications).toContain('Active agreements past expiry');
+    expect(notifications).toContain("action: 'admin-clients-agreements'");
+    expect(layout).toContain("action === 'admin-clients-agreements'");
+    expect(layout).toContain("sessionStorage.setItem('lw-client-action', 'agreements')");
   });
 
   test('keeps dashboard and governance tables exportable', () => {
@@ -1979,8 +1996,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'suppliers')");
   });
 
-  test('uses one resilient JSON parser across core admin workspaces', () => {
-    const helper = source('src/lib/client-api.ts');
+  test('uses one resilient JSON parser across core admin workspaces', () => {    const helper = source('src/lib/client-api.ts');
     const layout = source('src/components/admin/AdminLayout.tsx');
     const sms = source('src/components/admin/AdminSms.tsx');
     const media = source('src/components/admin/AdminMedia.tsx');

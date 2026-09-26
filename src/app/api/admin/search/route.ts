@@ -6,7 +6,7 @@ import { hasAdminPermission } from '@/lib/admin-permissions';
 export const runtime = 'nodejs';
 
 type SearchResult = {
-  kind: 'client' | 'project' | 'invoice' | 'payment' | 'support' | 'lead' | 'proposal' | 'message';
+  kind: 'client' | 'project' | 'agreement' | 'invoice' | 'payment' | 'support' | 'lead' | 'proposal' | 'message';
   id: string;
   title: string;
   subtitle: string;
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const canFinance = hasAdminPermission(actor.role, actor.permissions, 'finance.manage');
   const canCrm = hasAdminPermission(actor.role, actor.permissions, 'crm.manage');
 
-  const [clients, projects, invoices, payments, tickets, leads, proposals, messages] = await Promise.all([
+  const [clients, projects, agreements, invoices, payments, tickets, leads, proposals, messages] = await Promise.all([
     canClients
       ? db.clientOrganization.findMany({
           where: {
@@ -67,6 +67,31 @@ export async function GET(request: NextRequest) {
             status: true,
             health: true,
             organization: { select: { name: true } },
+          },
+        })
+      : Promise.resolve([]),
+    canClients
+      ? db.clientAgreement.findMany({
+          where: {
+            OR: [
+              { title: { contains: q, mode: 'insensitive' } },
+              { referenceNumber: { contains: q, mode: 'insensitive' } },
+              { owner: { contains: q, mode: 'insensitive' } },
+              { notes: { contains: q, mode: 'insensitive' } },
+              { organization: { name: { contains: q, mode: 'insensitive' } } },
+              { project: { name: { contains: q, mode: 'insensitive' } } },
+            ],
+          },
+          orderBy: { updatedAt: 'desc' },
+          take: 6,
+          select: {
+            id: true,
+            title: true,
+            agreementType: true,
+            status: true,
+            referenceNumber: true,
+            organization: { select: { id: true, name: true } },
+            project: { select: { name: true } },
           },
         })
       : Promise.resolve([]),
@@ -223,6 +248,18 @@ export async function GET(request: NextRequest) {
       id: project.id,
       title: project.name + ' · ' + project.organization.name,
       subtitle: 'Project · ' + project.status.replaceAll('_', ' ') + ' · ' + project.health.replaceAll('_', ' '),
+      workspace: 'admin-clients' as const,
+    })),
+    ...agreements.map((agreement) => ({
+      kind: 'agreement' as const,
+      id: agreement.organization.id,
+      title: agreement.title + ' · ' + agreement.organization.name,
+      subtitle:
+        agreement.agreementType.replaceAll('_', ' ') +
+        ' · ' +
+        agreement.status.replaceAll('_', ' ') +
+        (agreement.referenceNumber ? ' · ' + agreement.referenceNumber : '') +
+        (agreement.project?.name ? ' · ' + agreement.project.name : ''),
       workspace: 'admin-clients' as const,
     })),
     ...invoices.map((invoice) => ({
