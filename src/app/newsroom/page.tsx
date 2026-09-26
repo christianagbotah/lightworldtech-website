@@ -26,7 +26,7 @@ import {
   getLatestPublishedPosts,
   getSiteSettings,
 } from '@/lib/site-content-server';
-import { companyProfile } from '@/lib/company-profile';
+import { companyProfile, isSafePublicSourceUrl } from '@/lib/company-profile';
 import { buildPageMetadata, buildSeoConfig } from '@/lib/seo-config';
 
 export const dynamic = 'force-dynamic';
@@ -54,8 +54,10 @@ export default async function NewsroomPage() {
     getLatestPublishedPosts(3),
   ]);
 
-  const recognition = contentJson(settings, 'about_recognition', defaultRecognition);
-  const coverage = contentJson(settings, 'about_coverage', defaultCoverage);
+  const recognition = contentJson(settings, 'about_recognition', defaultRecognition)
+    .filter((item) => item && item.title && item.publisher && isSafePublicSourceUrl(item.href));
+  const coverage = contentJson(settings, 'about_coverage', defaultCoverage)
+    .filter((item) => item && item.title && item.publisher && isSafePublicSourceUrl(item.href));
   const companyName = contentText(settings, 'company_name', companyProfile.name);
   const tagline = contentText(settings, 'company_tagline', companyProfile.tagline);
   const email = contentText(settings, 'newsroom_media_email', companyProfile.email);
@@ -157,7 +159,7 @@ export default async function NewsroomPage() {
                 {recognition.map((item) => (
                   <a
                     key={String(item.year) + String(item.title)}
-                    href={String(item.href || '#')}
+                    href={String(item.href)}
                     target="_blank"
                     rel="noreferrer"
                     className="group flex items-start justify-between gap-5 rounded-2xl border border-slate-200/70 p-4 transition hover:border-amber-300 hover:bg-amber-50/40 dark:border-white/[0.07] dark:hover:bg-white/[0.03]"
