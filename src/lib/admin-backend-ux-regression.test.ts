@@ -1627,6 +1627,23 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(newsletter).toContain('exportFileName="lightworld-newsletter-deliveries"');
   });
 
+  test('adds transparent CRM execution and conversion metrics', () => {
+    const route = source('src/app/api/admin/leads/route.ts');
+    const crm = source('src/components/admin/AdminCRM.tsx');
+
+    expect(route).toContain('winRatePct');
+    expect(route).toContain('avgOpenAgeDays');
+    expect(route).toContain('oldestOpenAgeDays');
+    expect(route).toContain('followUpCoveragePct');
+    expect(route).toContain('staleOpen');
+    expect(route).toContain('unassignedOpen');
+    expect(route).toContain('Win rate uses only won/lost decisions.');
+    expect(crm).toContain('Pipeline discipline & conversion');
+    expect(crm).toContain('Follow-up coverage');
+    expect(crm).toContain('Dormant ');
+    expect(crm).toContain('Unassigned');
+  });
+
   test('supports audited enterprise exports and bounded message bulk actions', () => {
     const crm = source('src/components/admin/AdminCRM.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');

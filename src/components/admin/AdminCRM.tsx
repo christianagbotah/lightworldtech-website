@@ -122,6 +122,19 @@ type LeadSummary = {
   actionGaps: number;
   valuedOpportunities: number;
   overdueFollowUps: number;
+  execution: {
+    decided: number;
+    won: number;
+    lost: number;
+    winRatePct: number | null;
+    avgOpenAgeDays: number | null;
+    oldestOpenAgeDays: number | null;
+    followUpCoveragePct: number | null;
+    staleOpen: number;
+    unassignedOpen: number;
+    staleAfterDays: number;
+    methodology: string;
+  };
   pipelineByCurrency: Array<{
     currency: string;
     opportunities: number;
@@ -639,6 +652,37 @@ export default function AdminCRM() {
           </CardContent>
         </Card>
       </div>
+
+      {summary?.execution && (
+        <Card className="border-border/60">
+          <CardContent className="p-5">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-300">Sales execution</p>
+                <h2 className="mt-1 text-lg font-semibold">Pipeline discipline & conversion</h2>
+                <p className="mt-1 max-w-4xl text-xs leading-5 text-muted-foreground">{summary.execution.methodology}</p>
+              </div>
+              <Badge variant="secondary">{summary.execution.decided} decided opportunit{summary.execution.decided === 1 ? 'y' : 'ies'}</Badge>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+              {[
+                ['Win rate', summary.execution.winRatePct === null ? '—' : summary.execution.winRatePct.toFixed(1) + '%', summary.execution.won + ' won · ' + summary.execution.lost + ' lost'],
+                ['Avg open age', summary.execution.avgOpenAgeDays === null ? '—' : summary.execution.avgOpenAgeDays.toFixed(1) + 'd', 'Oldest ' + (summary.execution.oldestOpenAgeDays === null ? '—' : summary.execution.oldestOpenAgeDays.toFixed(1) + 'd')],
+                ['Follow-up coverage', summary.execution.followUpCoveragePct === null ? '—' : summary.execution.followUpCoveragePct.toFixed(1) + '%', 'Open leads with a scheduled follow-up'],
+                ['Dormant ' + summary.execution.staleAfterDays + 'd+', String(summary.execution.staleOpen), 'Open opportunities without a recent CRM update'],
+                ['Unassigned', String(summary.execution.unassignedOpen), 'Open opportunities without an owner'],
+                ['Action gaps', String(summary.actionGaps), 'Open opportunities without a recorded next action'],
+              ].map(([label, value, detail]) => (
+                <div key={String(label)} className="rounded-xl border border-border/60 bg-muted/20 p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{String(label)}</p>
+                  <p className="mt-1.5 text-xl font-bold tabular-nums">{String(value)}</p>
+                  <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{String(detail)}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="rounded-2xl border border-border/60 bg-card p-4">
         <div className="grid min-w-0 gap-3 md:grid-cols-12 md:items-center">
