@@ -3,6 +3,7 @@ import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { db } from '@/lib/db';
 import { invoiceBalance } from '@/lib/finance';
+import { createDueRenewalInvoiceDrafts } from '@/lib/renewal-draft-automation';
 import {
   hubtelConfiguration,
   normalizePhone,
@@ -764,6 +765,7 @@ export async function dispatchDueSms() {
   const renewalQueue = await queueDueServiceRenewalReminders();
   const projectRenewalQueue = await queueDueProjectRenewalReminders();
   const collectionQueue = await queueDueCollectionReminders();
+  const renewalDraftQueue = await createDueRenewalInvoiceDrafts();
   if (!hubtelConfiguration().sms) {
     return {
       configured: false,
@@ -773,6 +775,7 @@ export async function dispatchDueSms() {
       renewalQueue,
       projectRenewalQueue,
       collectionQueue,
+      renewalDraftQueue,
     };
   }
 
@@ -830,5 +833,6 @@ export async function dispatchDueSms() {
     renewalQueue,
     projectRenewalQueue,
     collectionQueue,
+    renewalDraftQueue,
   };
 }
