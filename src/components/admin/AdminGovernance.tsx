@@ -12,6 +12,8 @@ import {
   UserCog,
   Users,
   ShieldAlert,
+  Download,
+  Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -143,6 +145,12 @@ export default function AdminGovernance() {
   const [createForm, setCreateForm] = useState<AdminForm>(blankCreate);
   const [editing, setEditing] = useState<AdminAccount | null>(null);
   const [editForm, setEditForm] = useState<AdminForm>(blankCreate);
+  const [auditQuery, setAuditQuery] = useState('');
+  const [auditAction, setAuditAction] = useState('');
+  const [auditEntity, setAuditEntity] = useState('');
+  const [auditFrom, setAuditFrom] = useState('');
+  const [auditTo, setAuditTo] = useState('');
+  const [auditExporting, setAuditExporting] = useState(false);
 
   const load = useCallback(async (quiet = false) => {
     if (quiet) setRefreshing(true);
@@ -273,7 +281,59 @@ export default function AdminGovernance() {
     }
   };
 
-  const visibleAudit = useMemo(() => data?.auditLogs || [], [data]);
+  const visibleAudit = useMemo(() => {
+    const query = auditQuery.trim().toLowerCase();
+    const action = auditAction.trim().toLowerCase();
+    const entity = auditEntity.trim().toLowerCase();
+    const from = auditFrom ? new Date(auditFrom + 'T00:00:00') : null;
+    const to = auditTo ? new Date(auditTo + 'T23:59:59.999') : null;
+
+    return (data?.auditLogs || []).filter((entry) => {
+      const createdAt = new Date(entry.createdAt);
+      if (query && ![entry.adminName, entry.adminEmail, entry.entityId, entry.details].join(' ').toLowerCase().includes(query)) return false;
+      if (action && !entry.action.toLowerCase().includes(action)) return false;
+      if (entity && !entry.entity.toLowerCase().includes(entity)) return false;
+      if (from && createdAt < from) return false;
+      if (to && createdAt > to) return false;
+      return true;
+    });
+  }, [data, auditQuery, auditAction, auditEntity, auditFrom, auditTo]);
+
+  const exportAudit = async () => {
+    setAuditExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (auditQuery.trim()) params.set('actor', auditQuery.trim());
+      if (auditAction.trim()) params.set('action', auditAction.trim());
+      if (auditEntity.trim()) params.set('entity', auditEntity.trim());
+      if (auditFrom) params.set('from', auditFrom);
+      if (auditTo) params.set('to', auditTo);
+
+      const response = await fetch('/api/admin/governance/audit-export?' + params.toString(), { cache: 'no-store' });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error || 'Failed to export governance audit trail');
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get('Content-Disposition') || '';
+      const filename = disposition.match(/filename="([^"]+)"/i)?.[1] || 'lightworld-governance-audit.csv';
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Governance audit export downloaded');
+      await load(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to export governance audit trail');
+    } finally {
+      setAuditExporting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -427,15 +487,34 @@ export default function AdminGovernance() {
       </Card>
 
       <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Activity className="size-4" />
-            Governance audit trail
-          </CardTitle>
+        <CardHeader className="gap-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Activity className="size-4" />
+                Governance audit trail
+              </CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">Filter the recent view or export up to 5,000 matching governance events for compliance review.</p>
+            </div>
+            <Button variant="outline" onClick={() => void exportAudit()} disabled={auditExporting}>
+              {auditExporting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+              Export audit CSV
+            </Button>
+          </div>
+          <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_minmax(160px,.7fr)_minmax(150px,.6fr)_150px_150px]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={auditQuery} onChange={(event) => setAuditQuery(event.target.value)} placeholder="Actor, email, target or details" className="pl-9" />
+            </div>
+            <Input value={auditAction} onChange={(event) => setAuditAction(event.target.value)} placeholder="Action contains…" />
+            <Input value={auditEntity} onChange={(event) => setAuditEntity(event.target.value)} placeholder="Entity contains…" />
+            <Input type="date" value={auditFrom} onChange={(event) => setAuditFrom(event.target.value)} aria-label="Audit from date" />
+            <Input type="date" value={auditTo} onChange={(event) => setAuditTo(event.target.value)} aria-label="Audit to date" />
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="max-h-[520px] max-w-full overflow-auto">
-            <Table>
+            <Table exportFileName="lightworld-governance-visible-audit">
               <TableHeader>
                 <TableRow>
                   <TableHead>Action</TableHead>
