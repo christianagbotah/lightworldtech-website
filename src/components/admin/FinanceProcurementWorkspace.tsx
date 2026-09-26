@@ -62,6 +62,11 @@ type PurchaseOrder = {
   project: Project | null;
   request: ({ id: string; requestNumber: string; title: string; lines: RequestLine[] }) | null;
   receipts: PurchaseReceipt[];
+  bill: { id: string; payableNumber: string; status: string } | null;
+};
+type ProcurementException = {
+  id: string; type: 'approval_aging' | 'delivery_overdue' | 'awaiting_bill';
+  severity: 'high' | 'medium'; title: string; reference: string; detail: string;
 };
 type ProcurementData = {
   canApprove: boolean;
@@ -70,6 +75,15 @@ type ProcurementData = {
   orders: PurchaseOrder[];
   vendors: Vendor[];
   projects: Project[];
+  summary: {
+    awaitingApproval: number;
+    agedApprovals: number;
+    overdueOrders: number;
+    partialReceipts: number;
+    awaitingBill: number;
+  };
+  exceptions: ProcurementException[];
+  methodology: string;
 };
 
 const emptyLine = () => ({ description: '', quantity: '1', unitPrice: '' });
@@ -269,6 +283,9 @@ export default function FinanceProcurementWorkspace({
     issued: data.orders.filter((item) => item.status === 'issued').length,
     received: data.orders.filter((item) => item.status === 'received').length,
   };
+  const isOverdue = (item: PurchaseOrder) =>
+    ['issued', 'partially_received'].includes(item.status)
+    && Boolean(item.expectedDate && new Date(item.expectedDate).getTime() < Date.now());
 
   return (
     <div className="space-y-5">
@@ -282,21 +299,45 @@ export default function FinanceProcurementWorkspace({
         <Button variant="outline" onClick={() => void load()} disabled={loading}><RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />Refresh</Button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {[
-          { label: 'Awaiting approval', value: summary.submitted, Icon: ClipboardList },
-          { label: 'Approved to order', value: summary.approved, Icon: CheckCircle2 },
-          { label: 'POs in transit', value: data.orders.filter((item) => ['issued', 'partially_received'].includes(item.status)).length, Icon: ShoppingCart },
-          { label: 'Received / bill next', value: summary.received, Icon: PackageCheck },
-        ].map(({ label, value, Icon }) => (
+          { label: 'Awaiting approval', value: data.summary.awaitingApproval, detail: data.summary.agedApprovals + ' aged >48h', Icon: ClipboardList },
+          { label: 'Approved to order', value: summary.approved, detail: 'Ready for PO issue', Icon: CheckCircle2 },
+          { label: 'POs in transit', value: data.orders.filter((item) => ['issued', 'partially_received'].includes(item.status)).length, detail: data.summary.overdueOrders + ' overdue', Icon: ShoppingCart },
+          { label: 'Partial receipts', value: data.summary.partialReceipts, detail: 'Still open', Icon: PackageCheck },
+          { label: 'Received / AP next', value: data.summary.awaitingBill, detail: 'Awaiting matched bill', Icon: PackageCheck },
+        ].map(({ label, value, detail, Icon }) => (
           <Card key={label} className="border-border/60">
-            <CardContent className="flex items-center justify-between p-4">
-              <div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold">{value}</p></div>
+            <CardContent className="flex items-center justify-between gap-3 p-4">
+              <div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold">{value}</p><p className="mt-1 text-[10px] text-muted-foreground">{detail}</p></div>
               <Icon className="size-5 text-amber-600" />
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {data.exceptions.length > 0 && (
+        <Card className="border-border/60">
+          <CardHeader>
+            <CardTitle className="text-base">Procurement exception queue</CardTitle>
+            <p className="text-xs text-muted-foreground">{data.methodology}</p>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {data.exceptions.slice(0, 12).map((item) => (
+              <div key={item.id} className="flex flex-col gap-2 rounded-xl border border-border/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className={item.severity === 'high' ? 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200' : 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'}>{item.severity}</Badge>
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    <span className="text-xs text-muted-foreground">{item.reference}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-border/60">
         <CardHeader><CardTitle className="text-base">New purchase requisition</CardTitle></CardHeader>
@@ -378,7 +419,7 @@ export default function FinanceProcurementWorkspace({
                 <TableRow key={item.id}>
                   <TableCell><p className="font-medium">{item.poNumber}</p><p className="text-xs text-muted-foreground">{new Date(item.issueDate).toLocaleDateString()} · {item.issuedBy}</p></TableCell>
                   <TableCell><p>{item.vendor.name}</p><p className="text-xs text-muted-foreground">{item.request ? item.request.requestNumber + ' · ' + item.request.title : 'Direct PO'}</p></TableCell>
-                  <TableCell>{item.expectedDate ? new Date(item.expectedDate).toLocaleDateString() : 'Not specified'}</TableCell>
+                  <TableCell><div className="space-y-1"><span>{item.expectedDate ? new Date(item.expectedDate).toLocaleDateString() : 'Not specified'}</span>{isOverdue(item) && <Badge className="ml-2 border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">Overdue</Badge>}</div></TableCell>
                   <TableCell><Badge className={tone(item.status)}>{pretty(item.status)}</Badge></TableCell>
                   <TableCell className="text-right font-semibold">{money(item.total, item.currency)}</TableCell>
                   <TableCell className="min-w-[360px]">
