@@ -358,7 +358,8 @@ export async function GET(request: NextRequest) {
       process.env.AUTO_PROJECT_RENEWAL_SMS === 'true' ||
       process.env.AUTO_COLLECTION_REMINDER_SMS === 'true' ||
       process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true' ||
-      process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true';
+      process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true' ||
+      process.env.AUTO_PROJECT_RENEWAL_DRAFT_INVOICES === 'true';
     const runtimeMaxAgeMinutes = Math.max(
       2,
       Math.min(60, Number(process.env.AUTOMATION_RUNTIME_MAX_AGE_MINUTES || 5) || 5),
