@@ -397,6 +397,21 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("sessionStorage.setItem('lw-support-sla-filter', 'at_risk')");
   });
 
+  test('measures support backlog age and reopen incidence', () => {
+    const api = source('src/app/api/admin/support-tickets/route.ts');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+
+    expect(api).toContain("where: { type: 'ticket_reopened' }");
+    expect(api).toContain('avgOpenAgeMinutes');
+    expect(api).toContain('oldestOpenAgeMinutes');
+    expect(api).toContain('reopenedTickets');
+    expect(api).toContain('reopenIncidencePct');
+    expect(api).toContain('not a defect attribution metric');
+    expect(support).toContain('Avg open age');
+    expect(support).toContain('Reopen incidence');
+    expect(support).toContain('oldestOpenAgeMinutes');
+  });
+
   test('supports real Support Desk agents, bounded bulk actions, exports and SLA escalation', () => {
     const support = source('src/components/admin/AdminSupportDesk.tsx');
     const agents = source('src/app/api/admin/support-agents/route.ts');
