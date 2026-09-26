@@ -24,15 +24,15 @@ model SiteSetting {
 
 // Navigation menu items
 model NavItem {
-  id     String @id @default(cuid())
-  label  String
-  href   String @default("/")
-  order  Int    @default(0)
-  target String @default("_self") // _self, _blank
-  active Boolean @default(true)
+  id       String  @id @default(cuid())
+  label    String
+  href     String  @default("/")
+  order    Int     @default(0)
+  target   String  @default("_self") // _self, _blank
+  active   Boolean @default(true)
   parentId String?
 
-  parent NavItem? @relation("NavSubItems", fields: [parentId], references: [id])
+  parent   NavItem?  @relation("NavSubItems", fields: [parentId], references: [id])
   children NavItem[] @relation("NavSubItems")
 
   createdAt DateTime @default(now())
@@ -41,15 +41,15 @@ model NavItem {
 
 // Services offered
 model Service {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
-  slug        String   @unique
+  slug        String  @unique
   description String
-  icon        String   @default("")
-  image       String   @default("")
-  features    String   @default("[]") // JSON array of feature strings
-  order       Int      @default(0)
-  active      Boolean  @default(true)
+  icon        String  @default("")
+  image       String  @default("")
+  features    String  @default("[]") // JSON array of feature strings
+  order       Int     @default(0)
+  active      Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -57,16 +57,16 @@ model Service {
 
 // Team members
 model TeamMember {
-  id        String @id @default(cuid())
-  name      String
-  role      String
-  bio       String  @default("")
-  image     String  @default("")
-  email     String  @default("")
-  linkedin  String  @default("")
-  twitter   String  @default("")
-  order     Int     @default(0)
-  active    Boolean @default(true)
+  id       String  @id @default(cuid())
+  name     String
+  role     String
+  bio      String  @default("")
+  image    String  @default("")
+  email    String  @default("")
+  linkedin String  @default("")
+  twitter  String  @default("")
+  order    Int     @default(0)
+  active   Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -74,15 +74,15 @@ model TeamMember {
 
 // Testimonials
 model Testimonial {
-  id       String @id @default(cuid())
-  name     String
-  company  String  @default("")
-  role     String  @default("")
-  content  String
-  image    String  @default("")
-  rating   Int     @default(5)
-  active   Boolean @default(true)
-  order    Int     @default(0)
+  id      String  @id @default(cuid())
+  name    String
+  company String  @default("")
+  role    String  @default("")
+  content String
+  image   String  @default("")
+  rating  Int     @default(5)
+  active  Boolean @default(true)
+  order   Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -90,9 +90,9 @@ model Testimonial {
 
 // Blog categories
 model BlogCategory {
-  id    String     @id @default(cuid())
-  name  String
-  slug  String     @unique
+  id          String @id @default(cuid())
+  name        String
+  slug        String @unique
   description String @default("")
 
   posts BlogPost[]
@@ -103,19 +103,19 @@ model BlogCategory {
 
 // Blog posts
 model BlogPost {
-  id          String        @id @default(cuid())
-  title       String
-  slug        String        @unique
-  excerpt     String        @default("")
-  content     String        @default("")
-  coverImage  String        @default("")
-  author      String        @default("Lightworld Technologies")
-  published   Boolean       @default(false)
-  featured    Boolean       @default(false)
-  readTime    Int           @default(5)
+  id         String  @id @default(cuid())
+  title      String
+  slug       String  @unique
+  excerpt    String  @default("")
+  content    String  @default("")
+  coverImage String  @default("")
+  author     String  @default("Lightworld Technologies")
+  published  Boolean @default(false)
+  featured   Boolean @default(false)
+  readTime   Int     @default(5)
 
-  categoryId  String?
-  category    BlogCategory? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  category   BlogCategory? @relation(fields: [categoryId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -123,16 +123,16 @@ model BlogPost {
 
 // Portfolio projects
 model PortfolioProject {
-  id          String  @id @default(cuid())
-  title       String
-  description String  @default("")
-  image       String  @default("")
-  url         String  @default("")
-  category    String  @default("")
-  technologies String @default("[]") // JSON array
-  featured    Boolean @default(false)
-  active      Boolean @default(true)
-  order       Int     @default(0)
+  id           String  @id @default(cuid())
+  title        String
+  description  String  @default("")
+  image        String  @default("")
+  url          String  @default("")
+  category     String  @default("")
+  technologies String  @default("[]") // JSON array
+  featured     Boolean @default(false)
+  active       Boolean @default(true)
+  order        Int     @default(0)
 
   caseStudyPublished         Boolean   @default(false)
   caseStudySlug              String?   @unique
@@ -149,11 +149,11 @@ model PortfolioProject {
 
 // Client logos / partners
 model Client {
-  id     String @id @default(cuid())
+  id     String  @id @default(cuid())
   name   String
-  logo   String @default("")
-  url    String @default("")
-  order  Int    @default(0)
+  logo   String  @default("")
+  url    String  @default("")
+  order  Int     @default(0)
   active Boolean @default(true)
 
   createdAt DateTime @default(now())
@@ -162,11 +162,11 @@ model Client {
 
 // Contact form submissions
 model ContactMessage {
-  id      String   @id @default(cuid())
+  id      String                @id @default(cuid())
   name    String
   email   String
-  phone   String   @default("")
-  subject String   @default("")
+  phone   String                @default("")
+  subject String                @default("")
   message String
   read    Boolean               @default(false)
   lead    Lead?
@@ -225,19 +225,18 @@ model NewsletterDelivery {
   @@index([subscriberId, createdAt])
 }
 
-
 model NewsletterCampaign {
-  id         String                       @id @default(cuid())
-  title      String
-  subject    String
-  preheader  String                       @default("")
-  body       String
-  ctaLabel   String                       @default("")
-  ctaUrl     String                       @default("")
-  status     String                       @default("draft")
+  id          String                       @id @default(cuid())
+  title       String
+  subject     String
+  preheader   String                       @default("")
+  body        String
+  ctaLabel    String                       @default("")
+  ctaUrl      String                       @default("")
+  status      String                       @default("draft")
   scheduledAt DateTime?
-  sentAt     DateTime?
-  deliveries NewsletterCampaignDelivery[]
+  sentAt      DateTime?
+  deliveries  NewsletterCampaignDelivery[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -269,10 +268,10 @@ model NewsletterCampaignDelivery {
 
 // FAQ items
 model FAQ {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   question String
   answer   String
-  order    Int    @default(0)
+  order    Int     @default(0)
   active   Boolean @default(true)
 
   createdAt DateTime @default(now())
@@ -281,11 +280,11 @@ model FAQ {
 
 // Development process steps (from services page)
 model ProcessStep {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String
-  icon        String @default("")
-  order       Int    @default(0)
+  icon        String  @default("")
+  order       Int     @default(0)
   active      Boolean @default(true)
 
   createdAt DateTime @default(now())
@@ -294,49 +293,49 @@ model ProcessStep {
 
 // Admin user for CMS
 model Admin {
-  id        String          @id @default(cuid())
-  email     String          @unique
-  password  String
-  name      String          @default("")
-  role      String          @default("admin")
-  active        Boolean         @default(true)
-  recoveryEmail String          @default("")
-  lastLogin     DateTime?
-  authVersion       Int             @default(0)
-  permissions       String          @default("[]")
-  totpSecret        String          @default("")
-  totpEnabled       Boolean         @default(false)
-  totpRecoveryCodes String          @default("[]")
-  auditLogs   AdminAuditLog[]
-  resetTokens AdminPasswordResetToken[]
+  id                String                    @id @default(cuid())
+  email             String                    @unique
+  password          String
+  name              String                    @default("")
+  role              String                    @default("admin")
+  active            Boolean                   @default(true)
+  recoveryEmail     String                    @default("")
+  lastLogin         DateTime?
+  authVersion       Int                       @default(0)
+  permissions       String                    @default("[]")
+  totpSecret        String                    @default("")
+  totpEnabled       Boolean                   @default(false)
+  totpRecoveryCodes String                    @default("[]")
+  auditLogs         AdminAuditLog[]
+  resetTokens       AdminPasswordResetToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model AdminPasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   adminId   String
-  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  tokenHash String   @unique
+  admin     Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([adminId, createdAt])
   @@index([expiresAt])
 }
 
 model AdminAuditLog {
-  id         String @id @default(cuid())
+  id         String   @id @default(cuid())
   adminId    String?
-  admin      Admin? @relation(fields: [adminId], references: [id], onDelete: SetNull)
-  adminEmail String @default("")
-  adminName  String @default("")
+  admin      Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  adminEmail String   @default("")
+  adminName  String   @default("")
   action     String
-  entity     String @default("")
-  entityId   String @default("")
-  details    String @default("{}")
+  entity     String   @default("")
+  entityId   String   @default("")
+  details    String   @default("{}")
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
@@ -344,7 +343,6 @@ model AdminAuditLog {
   @@index([action, createdAt])
   @@index([entity, entityId])
 }
-
 
 // Privacy-conscious first-party product analytics.
 // Deliberately stores no raw IP address, email address, or user-agent fingerprint.
@@ -362,7 +360,6 @@ model AnalyticsEvent {
   @@index([sessionId, createdAt])
   @@index([path, createdAt])
 }
-
 
 // Corporate CRM record linked one-to-one with a website enquiry.
 // Kept separate from ContactMessage so the original inbox remains intact.
@@ -406,38 +403,37 @@ model Lead {
 }
 
 model LeadNote {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   leadId    String
-  lead      Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   note      String
-  author    String @default("Admin")
+  author    String   @default("Admin")
   createdAt DateTime @default(now())
 
   @@index([leadId, createdAt])
 }
 
-
 // Human-reviewed proposal / discovery workspace linked one-to-one with a CRM lead.
 model Proposal {
-  id               String   @id @default(cuid())
-  leadId           String   @unique
-  lead             Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  status           String   @default("draft")
+  id               String         @id @default(cuid())
+  leadId           String         @unique
+  lead             Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  status           String         @default("draft")
   title            String
-  executiveSummary String   @default("")
-  solution         String   @default("")
-  scope            String   @default("")
-  deliverables     String   @default("[]")
-  assumptions      String   @default("[]")
-  timeline         String   @default("")
-  commercialNotes  String   @default("")
-  nextSteps        String   @default("")
-  version          Int      @default(1)
-  approvedBy       String   @default("")
+  executiveSummary String         @default("")
+  solution         String         @default("")
+  scope            String         @default("")
+  deliverables     String         @default("[]")
+  assumptions      String         @default("[]")
+  timeline         String         @default("")
+  commercialNotes  String         @default("")
+  nextSteps        String         @default("")
+  version          Int            @default(1)
+  approvedBy       String         @default("")
   approvedAt       DateTime?
   sentAt           DateTime?
   lastGeneratedAt  DateTime?
-  clientProject     ClientProject?
+  clientProject    ClientProject?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -445,51 +441,51 @@ model Proposal {
   @@index([status, updatedAt])
 }
 
-
 // Secure client portal models. Empty by default; admins create real organizations/accounts.
 model ClientOrganization {
-  id                 String             @id @default(cuid())
-  name               String
-  status             String             @default("active")
-  primaryContactName String             @default("")
-  primaryEmail       String             @default("")
-  primaryPhone       String             @default("")
-  users              ClientPortalUser[]
-  projects           ClientProject[]
-  tickets            ClientSupportTicket[]
-  announcements      ClientAnnouncement[]
-  services           ClientServiceAccount[]
-  invoices           ClientInvoice[]
-  payments           ClientPayment[]
-  paymentIntents     HubtelPaymentIntent[]
-  creditNotes        FinanceCreditNote[]
-  refunds            FinanceCustomerRefund[]
+  id                   String                      @id @default(cuid())
+  name                 String
+  status               String                      @default("active")
+  primaryContactName   String                      @default("")
+  primaryEmail         String                      @default("")
+  primaryPhone         String                      @default("")
+  users                ClientPortalUser[]
+  projects             ClientProject[]
+  tickets              ClientSupportTicket[]
+  announcements        ClientAnnouncement[]
+  services             ClientServiceAccount[]
+  invoices             ClientInvoice[]
+  payments             ClientPayment[]
+  paymentIntents       HubtelPaymentIntent[]
+  creditNotes          FinanceCreditNote[]
+  refunds              FinanceCustomerRefund[]
   collectionActivities FinanceCollectionActivity[]
-  expenses           FinanceExpense[]
+  expenses             FinanceExpense[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  agreements         ClientAgreement[]
 
   @@index([status, updatedAt])
   @@index([name])
 }
 
 model ClientPortalUser {
-  id             String             @id @default(cuid())
-  organizationId String
-  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  email          String             @unique
+  id              String                     @id @default(cuid())
+  organizationId  String
+  organization    ClientOrganization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email           String                     @unique
   password        String
   name            String
-  role            String             @default("client_admin")
-  active          Boolean            @default(true)
+  role            String                     @default("client_admin")
+  active          Boolean                    @default(true)
   lastLogin       DateTime?
-  inviteTokenHash String              @default("")
+  inviteTokenHash String                     @default("")
   inviteExpiresAt DateTime?
-  mustSetPassword Boolean             @default(true)
-  authVersion     Int                 @default(0)
+  mustSetPassword Boolean                    @default(true)
+  authVersion     Int                        @default(0)
   resetTokens     ClientPasswordResetToken[]
-  tickets         ClientSupportTicket[] @relation("ClientTicketCreator")
+  tickets         ClientSupportTicket[]      @relation("ClientTicketCreator")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -511,36 +507,37 @@ model ClientPasswordResetToken {
 }
 
 model ClientProject {
-  id             String             @id @default(cuid())
-  organizationId String
-  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  proposalId     String?            @unique
-  proposal       Proposal?          @relation(fields: [proposalId], references: [id], onDelete: SetNull)
-  name           String
-  summary        String             @default("")
-  status         String             @default("planned")
-  health         String             @default("on_track")
-  progress       Int                @default(0)
-  manager        String             @default("")
+  id                String                 @id @default(cuid())
+  organizationId    String
+  organization      ClientOrganization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  proposalId        String?                @unique
+  proposal          Proposal?              @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  name              String
+  summary           String                 @default("")
+  status            String                 @default("planned")
+  health            String                 @default("on_track")
+  progress          Int                    @default(0)
+  manager           String                 @default("")
   startDate         DateTime?
   targetDate        DateTime?
   expiryDate        DateTime?
   nextRenewalDate   DateTime?
-  renewalCycle      String             @default("annual")
-  renewalCurrency   String             @default("GHS")
-  renewalAmount     Decimal            @default(0) @db.Decimal(18, 2)
-  budgetCurrency    String             @default("GHS")
-  budgetAmount      Decimal            @default(0) @db.Decimal(18, 2)
-  autoRenew         Boolean            @default(false)
-  renewalNoticeDays Int                @default(30)
-  renewalNotes      String             @default("")
+  renewalCycle      String                 @default("annual")
+  renewalCurrency   String                 @default("GHS")
+  renewalAmount     Decimal                @default(0) @db.Decimal(18, 2)
+  budgetCurrency    String                 @default("GHS")
+  budgetAmount      Decimal                @default(0) @db.Decimal(18, 2)
+  autoRenew         Boolean                @default(false)
+  renewalNoticeDays Int                    @default(30)
+  renewalNotes      String                 @default("")
   milestones        ClientMilestone[]
-  documents      ClientDocument[]
-  announcements  ClientAnnouncement[]
-  tickets        ClientSupportTicket[]
-  services       ClientServiceAccount[]
-  invoices       ClientInvoice[]
-  expenses       FinanceExpense[]
+  documents         ClientDocument[]
+  announcements     ClientAnnouncement[]
+  tickets           ClientSupportTicket[]
+  services          ClientServiceAccount[]
+  invoices          ClientInvoice[]
+  expenses          FinanceExpense[]
+  agreements        ClientAgreement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -549,6 +546,34 @@ model ClientProject {
   @@index([targetDate])
   @@index([expiryDate])
   @@index([nextRenewalDate])
+}
+
+model ClientAgreement {
+  id                String             @id @default(cuid())
+  organizationId    String
+  organization      ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId         String?
+  project           ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title             String
+  agreementType     String             @default("contract")
+  status            String             @default("draft")
+  referenceNumber   String             @default("")
+  currency          String             @default("GHS")
+  contractValue     Decimal            @default(0) @db.Decimal(18, 2)
+  effectiveDate     DateTime?
+  expiryDate        DateTime?
+  renewalNoticeDays Int                @default(30)
+  owner             String             @default("")
+  documentUrl       String             @default("")
+  notes             String             @default("")
+  signedAt          DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@index([projectId])
+  @@index([expiryDate])
 }
 
 model ClientMilestone {
@@ -570,30 +595,30 @@ model ClientMilestone {
 }
 
 model ClientSupportTicket {
-  id                 String              @id @default(cuid())
-  ticketNumber       String              @unique
+  id                 String                     @id @default(cuid())
+  ticketNumber       String                     @unique
   organizationId     String
-  organization       ClientOrganization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization       ClientOrganization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   projectId          String?
-  project            ClientProject?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project            ClientProject?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
   createdById        String
-  createdBy          ClientPortalUser    @relation("ClientTicketCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy          ClientPortalUser           @relation("ClientTicketCreator", fields: [createdById], references: [id], onDelete: Cascade)
   subject            String
   message            String
-  category           String              @default("general")
-  status             String              @default("open")
-  priority           String              @default("normal")
-  assignedTo         String              @default("")
+  category           String                     @default("general")
+  status             String                     @default("open")
+  priority           String                     @default("normal")
+  assignedTo         String                     @default("")
   firstResponseDueAt DateTime?
   resolutionDueAt    DateTime?
   firstRespondedAt   DateTime?
   resolvedAt         DateTime?
   escalatedAt        DateTime?
-  lastActivityAt     DateTime            @default(now())
-  unreadByAdmin      Boolean             @default(true)
-  unreadByClient     Boolean             @default(false)
+  lastActivityAt     DateTime                   @default(now())
+  unreadByAdmin      Boolean                    @default(true)
+  unreadByClient     Boolean                    @default(false)
   clientRating       Int?
-  clientFeedback     String              @default("")
+  clientFeedback     String                     @default("")
   ratedAt            DateTime?
   messages           ClientTicketMessage[]
   internalNotes      ClientTicketInternalNote[]
@@ -612,7 +637,6 @@ model ClientSupportTicket {
   @@index([resolutionDueAt])
   @@index([lastActivityAt])
 }
-
 
 model ClientDocument {
   id              String        @id @default(cuid())
@@ -689,27 +713,27 @@ model ClientTicketEvent {
 }
 
 model ClientServiceAccount {
-  id                 String             @id @default(cuid())
-  organizationId     String
-  organization       ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  projectId          String?
-  project            ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  name               String
-  serviceType        String             @default("managed_service")
-  planName           String             @default("")
-  status             String             @default("active")
-  billingCycle       String             @default("annual")
-  currency           String             @default("GHS")
-  recurringAmount    Decimal            @default(0) @db.Decimal(18, 2)
-  startDate          DateTime
-  expiryDate         DateTime?
-  nextDueDate        DateTime?
-  autoRenew          Boolean            @default(false)
-  renewalNoticeDays  Int                @default(30)
-  notes              String             @default("")
-  changes            ClientServiceChange[]
-  invoices           ClientInvoice[]
-  expenses           FinanceExpense[]
+  id                String                @id @default(cuid())
+  organizationId    String
+  organization      ClientOrganization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId         String?
+  project           ClientProject?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  name              String
+  serviceType       String                @default("managed_service")
+  planName          String                @default("")
+  status            String                @default("active")
+  billingCycle      String                @default("annual")
+  currency          String                @default("GHS")
+  recurringAmount   Decimal               @default(0) @db.Decimal(18, 2)
+  startDate         DateTime
+  expiryDate        DateTime?
+  nextDueDate       DateTime?
+  autoRenew         Boolean               @default(false)
+  renewalNoticeDays Int                   @default(30)
+  notes             String                @default("")
+  changes           ClientServiceChange[]
+  invoices          ClientInvoice[]
+  expenses          FinanceExpense[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -721,24 +745,24 @@ model ClientServiceAccount {
 }
 
 model ClientServiceChange {
-  id             String               @id @default(cuid())
-  serviceId      String
-  service        ClientServiceAccount @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  changeType     String
-  previousPlan   String               @default("")
-  newPlan        String               @default("")
-  previousAmount Decimal?             @db.Decimal(18, 2)
-  newAmount      Decimal?             @db.Decimal(18, 2)
-  effectiveAt        DateTime
-  sourceInvoiceId     String?   @unique
+  id                  String               @id @default(cuid())
+  serviceId           String
+  service             ClientServiceAccount @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  changeType          String
+  previousPlan        String               @default("")
+  newPlan             String               @default("")
+  previousAmount      Decimal?             @db.Decimal(18, 2)
+  newAmount           Decimal?             @db.Decimal(18, 2)
+  effectiveAt         DateTime
+  sourceInvoiceId     String?              @unique
   previousExpiryDate  DateTime?
   newExpiryDate       DateTime?
   previousNextDueDate DateTime?
   newNextDueDate      DateTime?
-  previousStatus      String    @default("")
-  newStatus           String    @default("")
+  previousStatus      String               @default("")
+  newStatus           String               @default("")
   notes               String               @default("")
-  changedBy      String               @default("Admin")
+  changedBy           String               @default("Admin")
 
   createdAt DateTime @default(now())
 
@@ -747,39 +771,39 @@ model ClientServiceChange {
 }
 
 model ClientInvoice {
-  id             String             @id @default(cuid())
-  invoiceNumber  String             @unique
-  organizationId String
-  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  serviceId      String?
-  service        ClientServiceAccount? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  projectId      String?
-  project        ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  status         String             @default("draft")
-  currency       String             @default("GHS")
-  issueDate      DateTime
-  dueDate        DateTime
-  renewalForDate     DateTime?
-  renewalCompletedAt DateTime?
-  renewalCompletedBy String             @default("")
-  subtotal            Decimal            @db.Decimal(18, 2)
-  discount       Decimal            @default(0) @db.Decimal(18, 2)
-  tax            Decimal            @default(0) @db.Decimal(18, 2)
-  taxTreatment   String             @default("legacy")
-  taxableAmount  Decimal            @default(0) @db.Decimal(18, 2)
-  vatRate        Decimal            @default(0) @db.Decimal(5, 2)
-  vatAmount      Decimal            @default(0) @db.Decimal(18, 2)
-  nhilRate       Decimal            @default(0) @db.Decimal(5, 2)
-  nhilAmount     Decimal            @default(0) @db.Decimal(18, 2)
-  getfundRate    Decimal            @default(0) @db.Decimal(5, 2)
-  getfundAmount  Decimal            @default(0) @db.Decimal(18, 2)
-  total          Decimal            @db.Decimal(18, 2)
-  notes          String             @default("")
-  createdBy      String             @default("Admin")
-  lines          ClientInvoiceLine[]
-  allocations    ClientPaymentAllocation[]
-  paymentIntents  HubtelPaymentIntent[]
-  creditNotes     FinanceCreditNote[]
+  id                   String                      @id @default(cuid())
+  invoiceNumber        String                      @unique
+  organizationId       String
+  organization         ClientOrganization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  serviceId            String?
+  service              ClientServiceAccount?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  projectId            String?
+  project              ClientProject?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  status               String                      @default("draft")
+  currency             String                      @default("GHS")
+  issueDate            DateTime
+  dueDate              DateTime
+  renewalForDate       DateTime?
+  renewalCompletedAt   DateTime?
+  renewalCompletedBy   String                      @default("")
+  subtotal             Decimal                     @db.Decimal(18, 2)
+  discount             Decimal                     @default(0) @db.Decimal(18, 2)
+  tax                  Decimal                     @default(0) @db.Decimal(18, 2)
+  taxTreatment         String                      @default("legacy")
+  taxableAmount        Decimal                     @default(0) @db.Decimal(18, 2)
+  vatRate              Decimal                     @default(0) @db.Decimal(5, 2)
+  vatAmount            Decimal                     @default(0) @db.Decimal(18, 2)
+  nhilRate             Decimal                     @default(0) @db.Decimal(5, 2)
+  nhilAmount           Decimal                     @default(0) @db.Decimal(18, 2)
+  getfundRate          Decimal                     @default(0) @db.Decimal(5, 2)
+  getfundAmount        Decimal                     @default(0) @db.Decimal(18, 2)
+  total                Decimal                     @db.Decimal(18, 2)
+  notes                String                      @default("")
+  createdBy            String                      @default("Admin")
+  lines                ClientInvoiceLine[]
+  allocations          ClientPaymentAllocation[]
+  paymentIntents       HubtelPaymentIntent[]
+  creditNotes          FinanceCreditNote[]
   collectionActivities FinanceCollectionActivity[]
   accessLinks          InvoiceAccessLink[]
 
@@ -833,26 +857,26 @@ model ClientInvoiceLine {
 }
 
 model ClientPayment {
-  id             String             @id @default(cuid())
-  paymentNumber  String             @unique
-  organizationId String
-  organization   ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  currency       String             @default("GHS")
-  amount         Decimal            @db.Decimal(18, 2)
-  paidAt         DateTime
-  method            String             @default("bank_transfer")
-  reference         String             @default("")
-  source            String             @default("manual")
-  providerReference String             @default("")
-  notes             String             @default("")
-  receivedBy                 String             @default("Admin")
-  customerNotificationStatus  String             @default("pending")
+  id                              String                    @id @default(cuid())
+  paymentNumber                   String                    @unique
+  organizationId                  String
+  organization                    ClientOrganization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  currency                        String                    @default("GHS")
+  amount                          Decimal                   @db.Decimal(18, 2)
+  paidAt                          DateTime
+  method                          String                    @default("bank_transfer")
+  reference                       String                    @default("")
+  source                          String                    @default("manual")
+  providerReference               String                    @default("")
+  notes                           String                    @default("")
+  receivedBy                      String                    @default("Admin")
+  customerNotificationStatus      String                    @default("pending")
   customerNotificationAttemptedAt DateTime?
   customerNotificationCompletedAt DateTime?
-  customerNotificationChannels String             @default("")
-  customerNotificationError    String             @default("")
-  allocations                  ClientPaymentAllocation[]
-  hubtelIntent      HubtelPaymentIntent?
+  customerNotificationChannels    String                    @default("")
+  customerNotificationError       String                    @default("")
+  allocations                     ClientPaymentAllocation[]
+  hubtelIntent                    HubtelPaymentIntent?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -933,16 +957,16 @@ model HubtelPaymentIntent {
 }
 
 model SmsTemplate {
-  id          String        @id @default(cuid())
-  name        String
-  key         String        @unique
-  category    String        @default("general")
-  body        String
-  variables   String        @default("[]")
-  active      Boolean       @default(true)
-  system      Boolean       @default(false)
-  campaigns   SmsCampaign[]
-  messages    SmsMessage[]
+  id        String        @id @default(cuid())
+  name      String
+  key       String        @unique
+  category  String        @default("general")
+  body      String
+  variables String        @default("[]")
+  active    Boolean       @default(true)
+  system    Boolean       @default(false)
+  campaigns SmsCampaign[]
+  messages  SmsMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -979,16 +1003,16 @@ model SmsCampaign {
 }
 
 model SmsCampaignRecipient {
-  id        String      @id @default(cuid())
+  id         String      @id @default(cuid())
   campaignId String
-  campaign  SmsCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  phone     String
-  name      String      @default("")
-  variables String      @default("{}")
-  status    String      @default("pending")
-  attempts  Int         @default(0)
-  error     String      @default("")
-  sentAt    DateTime?
+  campaign   SmsCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  phone      String
+  name       String      @default("")
+  variables  String      @default("{}")
+  status     String      @default("pending")
+  attempts   Int         @default(0)
+  error      String      @default("")
+  sentAt     DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1027,16 +1051,16 @@ model SmsMessage {
 }
 
 model FinanceVendor {
-  id        String              @id @default(cuid())
-  name      String
-  email     String              @default("")
-  phone     String              @default("")
-  taxId     String              @default("")
-  active    Boolean             @default(true)
-  notes     String              @default("")
-  bills     FinanceVendorBill[]
-  payments  FinanceVendorPayment[]
-  expenses  FinanceExpense[]
+  id       String                 @id @default(cuid())
+  name     String
+  email    String                 @default("")
+  phone    String                 @default("")
+  taxId    String                 @default("")
+  active   Boolean                @default(true)
+  notes    String                 @default("")
+  bills    FinanceVendorBill[]
+  payments FinanceVendorPayment[]
+  expenses FinanceExpense[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1046,28 +1070,28 @@ model FinanceVendor {
 }
 
 model FinanceVendorBill {
-  id             String              @id @default(cuid())
-  payableNumber  String              @unique
-  vendorId       String
-  vendor         FinanceVendor       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
-  vendorReference String             @default("")
-  category       String              @default("operating_expense")
-  status         String              @default("unpaid")
-  currency       String              @default("GHS")
-  issueDate      DateTime
-  dueDate        DateTime
-  taxTreatment   String              @default("legacy")
-  taxRecoverable Boolean             @default(true)
-  taxableAmount  Decimal             @default(0) @db.Decimal(18, 2)
-  vatRate        Decimal             @default(0) @db.Decimal(5, 2)
-  vatAmount      Decimal             @default(0) @db.Decimal(18, 2)
-  nhilRate       Decimal             @default(0) @db.Decimal(5, 2)
-  nhilAmount     Decimal             @default(0) @db.Decimal(18, 2)
-  getfundRate    Decimal             @default(0) @db.Decimal(5, 2)
-  getfundAmount  Decimal             @default(0) @db.Decimal(18, 2)
-  total          Decimal             @db.Decimal(18, 2)
-  notes          String              @default("")
-  allocations    FinanceVendorPaymentAllocation[]
+  id              String                           @id @default(cuid())
+  payableNumber   String                           @unique
+  vendorId        String
+  vendor          FinanceVendor                    @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  vendorReference String                           @default("")
+  category        String                           @default("operating_expense")
+  status          String                           @default("unpaid")
+  currency        String                           @default("GHS")
+  issueDate       DateTime
+  dueDate         DateTime
+  taxTreatment    String                           @default("legacy")
+  taxRecoverable  Boolean                          @default(true)
+  taxableAmount   Decimal                          @default(0) @db.Decimal(18, 2)
+  vatRate         Decimal                          @default(0) @db.Decimal(5, 2)
+  vatAmount       Decimal                          @default(0) @db.Decimal(18, 2)
+  nhilRate        Decimal                          @default(0) @db.Decimal(5, 2)
+  nhilAmount      Decimal                          @default(0) @db.Decimal(18, 2)
+  getfundRate     Decimal                          @default(0) @db.Decimal(5, 2)
+  getfundAmount   Decimal                          @default(0) @db.Decimal(18, 2)
+  total           Decimal                          @db.Decimal(18, 2)
+  notes           String                           @default("")
+  allocations     FinanceVendorPaymentAllocation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1078,17 +1102,17 @@ model FinanceVendorBill {
 }
 
 model FinanceVendorPayment {
-  id            String              @id @default(cuid())
-  paymentNumber String              @unique
+  id            String                           @id @default(cuid())
+  paymentNumber String                           @unique
   vendorId      String
-  vendor        FinanceVendor       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
-  currency      String              @default("GHS")
-  amount        Decimal             @db.Decimal(18, 2)
+  vendor        FinanceVendor                    @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  currency      String                           @default("GHS")
+  amount        Decimal                          @db.Decimal(18, 2)
   paidAt        DateTime
-  method        String              @default("bank_transfer")
-  reference     String              @default("")
-  notes         String              @default("")
-  paidBy        String              @default("Admin")
+  method        String                           @default("bank_transfer")
+  reference     String                           @default("")
+  notes         String                           @default("")
+  paidBy        String                           @default("Admin")
   allocations   FinanceVendorPaymentAllocation[]
 
   createdAt DateTime @default(now())
@@ -1123,16 +1147,16 @@ model FinanceExpense {
   project        ClientProject?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
   serviceId      String?
   service        ClientServiceAccount? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  category      String         @default("operating_expense")
-  description   String
-  currency      String         @default("GHS")
-  amount        Decimal        @db.Decimal(18, 2)
-  incurredAt    DateTime
-  paidAt        DateTime?
-  method        String         @default("")
-  reference     String         @default("")
-  notes         String         @default("")
-  recordedBy    String         @default("Admin")
+  category       String                @default("operating_expense")
+  description    String
+  currency       String                @default("GHS")
+  amount         Decimal               @db.Decimal(18, 2)
+  incurredAt     DateTime
+  paidAt         DateTime?
+  method         String                @default("")
+  reference      String                @default("")
+  notes          String                @default("")
+  recordedBy     String                @default("Admin")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1183,13 +1207,13 @@ model FinanceAccount {
 }
 
 model FinanceAccountingPeriod {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   startDate DateTime
   endDate   DateTime
-  status    String   @default("open")
+  status    String    @default("open")
   closedAt  DateTime?
-  closedBy  String   @default("")
+  closedBy  String    @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1199,42 +1223,42 @@ model FinanceAccountingPeriod {
 }
 
 model FinanceApprovalPolicy {
-  id                    String   @id
-  enabled               Boolean  @default(false)
-  requireSecondApprover Boolean  @default(true)
-  updatedBy             String   @default("")
+  id                    String  @id
+  enabled               Boolean @default(false)
+  requireSecondApprover Boolean @default(true)
+  updatedBy             String  @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model FinanceOutflowApproval {
-  id                 String   @id @default(cuid())
-  requestNumber      String   @unique
+  id                 String    @id @default(cuid())
+  requestNumber      String    @unique
   outflowType        String
-  status             String   @default("pending")
-  counterpartyId     String   @default("")
-  counterpartyName   String   @default("")
-  sourceId           String   @default("")
-  sourceReference    String   @default("")
-  currency           String   @default("GHS")
-  amount             Decimal  @db.Decimal(18, 2)
+  status             String    @default("pending")
+  counterpartyId     String    @default("")
+  counterpartyName   String    @default("")
+  sourceId           String    @default("")
+  sourceReference    String    @default("")
+  currency           String    @default("GHS")
+  amount             Decimal   @db.Decimal(18, 2)
   effectiveDate      DateTime
-  method             String   @default("bank_transfer")
-  reference          String   @default("")
-  reason             String   @default("")
-  allocationsJson    String   @default("[]")
+  method             String    @default("bank_transfer")
+  reference          String    @default("")
+  reason             String    @default("")
+  allocationsJson    String    @default("[]")
   requestedByAdminId String
-  requestedByName    String   @default("")
-  requestedByEmail   String   @default("")
-  requestedAt        DateTime @default(now())
-  decidedByAdminId   String   @default("")
-  decidedByName      String   @default("")
-  decidedByEmail     String   @default("")
+  requestedByName    String    @default("")
+  requestedByEmail   String    @default("")
+  requestedAt        DateTime  @default(now())
+  decidedByAdminId   String    @default("")
+  decidedByName      String    @default("")
+  decidedByEmail     String    @default("")
   decidedAt          DateTime?
-  decisionNotes      String   @default("")
-  resultId           String   @default("")
-  resultNumber       String   @default("")
+  decisionNotes      String    @default("")
+  resultId           String    @default("")
+  resultNumber       String    @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1247,15 +1271,15 @@ model FinanceOutflowApproval {
 }
 
 model FinanceMonthClose {
-  id        String   @id @default(cuid())
-  monthStart DateTime @unique
+  id         String    @id @default(cuid())
+  monthStart DateTime  @unique
   monthEnd   DateTime
-  status     String   @default("open")
+  status     String    @default("open")
   closedAt   DateTime?
-  closedBy   String   @default("")
+  closedBy   String    @default("")
   reopenedAt DateTime?
-  reopenedBy String   @default("")
-  notes      String   @default("")
+  reopenedBy String    @default("")
+  notes      String    @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1304,24 +1328,24 @@ model FinanceJournalLine {
 }
 
 model FinanceCreditNote {
-  id               String             @id @default(cuid())
-  creditNoteNumber String             @unique
+  id               String                  @id @default(cuid())
+  creditNoteNumber String                  @unique
   organizationId   String
-  organization     ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization     ClientOrganization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   invoiceId        String
-  invoice          ClientInvoice      @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
-  currency         String             @default("GHS")
+  invoice          ClientInvoice           @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  currency         String                  @default("GHS")
   issueDate        DateTime
   reason           String
-  subtotal         Decimal            @db.Decimal(18, 2)
-  tax              Decimal            @default(0) @db.Decimal(18, 2)
-  vatAmount        Decimal            @default(0) @db.Decimal(18, 2)
-  nhilAmount       Decimal            @default(0) @db.Decimal(18, 2)
-  getfundAmount    Decimal            @default(0) @db.Decimal(18, 2)
-  total            Decimal            @db.Decimal(18, 2)
-  appliedAmount    Decimal            @default(0) @db.Decimal(18, 2)
-  status           String             @default("posted")
-  createdBy        String             @default("Admin")
+  subtotal         Decimal                 @db.Decimal(18, 2)
+  tax              Decimal                 @default(0) @db.Decimal(18, 2)
+  vatAmount        Decimal                 @default(0) @db.Decimal(18, 2)
+  nhilAmount       Decimal                 @default(0) @db.Decimal(18, 2)
+  getfundAmount    Decimal                 @default(0) @db.Decimal(18, 2)
+  total            Decimal                 @db.Decimal(18, 2)
+  appliedAmount    Decimal                 @default(0) @db.Decimal(18, 2)
+  status           String                  @default("posted")
+  createdBy        String                  @default("Admin")
   refunds          FinanceCustomerRefund[]
 
   createdAt DateTime @default(now())
@@ -1411,7 +1435,7 @@ model ClientAnnouncement {
   title          String
   body           String
   active         Boolean            @default(true)
-  publishAt      DateTime            @default(now())
+  publishAt      DateTime           @default(now())
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1420,17 +1444,16 @@ model ClientAnnouncement {
   @@index([projectId, active, publishAt])
 }
 
-
 model AutomationRuntimeState {
-  id                  String   @id
-  status              String   @default("unknown")
+  id                  String    @id
+  status              String    @default("unknown")
   lastStartedAt       DateTime?
   lastCompletedAt     DateTime?
   lastSuccessAt       DateTime?
-  durationMs          Int      @default(0)
-  consecutiveFailures Int      @default(0)
-  lastError           String   @default("")
-  resultJson          String   @default("{}")
+  durationMs          Int       @default(0)
+  consecutiveFailures Int       @default(0)
+  lastError           String    @default("")
+  resultJson          String    @default("{}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

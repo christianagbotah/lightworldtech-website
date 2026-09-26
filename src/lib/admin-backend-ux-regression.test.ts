@@ -222,7 +222,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const clientPortal = source('src/components/client/ClientPortalPage.tsx');
     const layout = source('src/components/admin/AdminLayout.tsx');
 
-    expect(schema).toContain('ticketNumber       String              @unique');
+    expect(schema).toMatch(/ticketNumber\s+String\s+@unique/);
     expect(schema).toContain('firstResponseDueAt DateTime?');
     expect(schema).toContain('internalNotes      ClientTicketInternalNote[]');
     expect(schema).toContain('model ClientTicketInternalNote');
@@ -2102,5 +2102,22 @@ describe('admin backend and responsive UX regression coverage', () => {
       expect(value).toContain('const adminRequest = await isAdminRequest(request)');
       expect(value).toContain('active: true');
     }
+  });
+
+  test('governs customer contracts and statements of work as first-class commercial records', () => {
+    const schema = source('prisma/schema.prisma');
+    const clientsApi = source('src/app/api/admin/clients/route.ts');
+    const createAgreement = source('src/app/api/admin/clients/[id]/agreements/route.ts');
+    const updateAgreement = source('src/app/api/admin/client-agreements/[id]/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(schema).toContain('model ClientAgreement');
+    expect(schema).toContain('renewalNoticeDays');
+    expect(clientsApi).toContain('agreements: {');
+    expect(createAgreement).toContain('Selected project does not belong to this client');
+    expect(updateAgreement).toContain('db.clientAgreement.update');
+    expect(clients).toContain('Agreements & SOW register');
+    expect(clients).toContain('Notice window open');
+    expect(clients).toContain("fetch('/api/admin/clients/' + selected.id + '/agreements'");
   });
 });

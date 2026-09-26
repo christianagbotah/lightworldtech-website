@@ -61,6 +61,12 @@ type Project = {
   renewalNoticeDays: number; renewalNotes: string;
   milestones: Milestone[]; documents: DocumentItem[]; announcements: Announcement[];
 };
+type Agreement = {
+  id: string; title: string; agreementType: string; status: string; referenceNumber: string;
+  projectId: string | null; currency: string; contractValue: string; effectiveDate: string | null;
+  expiryDate: string | null; renewalNoticeDays: number; owner: string; documentUrl: string;
+  notes: string; signedAt: string | null; project: { id: string; name: string } | null;
+};
 type TicketMessage = {
   id: string; authorType: string; authorName: string; message: string; createdAt: string;
 };
@@ -73,7 +79,7 @@ type Ticket = {
 type Organization = {
   id: string; name: string; status: string; primaryContactName: string;
   primaryEmail: string; primaryPhone: string; users: PortalUser[];
-  projects: Project[]; tickets: Ticket[]; announcements: Announcement[];
+  projects: Project[]; tickets: Ticket[]; announcements: Announcement[]; agreements: Agreement[];
   _count: { users: number; projects: number; tickets: number };
 };
 
@@ -190,6 +196,11 @@ export default function AdminClients() {
     renewalNotes: '',
   });
   const [milestoneForm, setMilestoneForm] = useState({ projectId: '', title: '', dueDate: '' });
+  const [agreementForm, setAgreementForm] = useState({
+    title: '', agreementType: 'contract', status: 'draft', referenceNumber: '', projectId: '',
+    currency: 'GHS', contractValue: '', effectiveDate: '', expiryDate: '', renewalNoticeDays: '30',
+    owner: '', documentUrl: '', notes: '', signedAt: '',
+  });
   const [documentForms, setDocumentForms] = useState<Record<string, { title: string; url: string; description: string; category: string }>>({});
   const [announcementForm, setAnnouncementForm] = useState({ title: '', body: '', projectId: '' });
   const [ticketReplies, setTicketReplies] = useState<Record<string, string>>({});
@@ -514,6 +525,51 @@ export default function AdminClients() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not create client project');
     } finally { setSaving(false); }
+  };
+
+  const createAgreement = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selected) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/clients/' + selected.id + '/agreements', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...agreementForm,
+          projectId: agreementForm.projectId || null,
+          contractValue: Number(agreementForm.contractValue || 0),
+          renewalNoticeDays: Number(agreementForm.renewalNoticeDays || 30),
+          effectiveDate: agreementForm.effectiveDate ? new Date(agreementForm.effectiveDate).toISOString() : null,
+          expiryDate: agreementForm.expiryDate ? new Date(agreementForm.expiryDate).toISOString() : null,
+          signedAt: agreementForm.signedAt ? new Date(agreementForm.signedAt).toISOString() : null,
+        }),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not create agreement');
+      setAgreementForm({
+        title: '', agreementType: 'contract', status: 'draft', referenceNumber: '', projectId: '',
+        currency: 'GHS', contractValue: '', effectiveDate: '', expiryDate: '', renewalNoticeDays: '30',
+        owner: '', documentUrl: '', notes: '', signedAt: '',
+      });
+      await fetchOrganizations();
+      toast.success('Agreement registered');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not create agreement');
+    } finally { setSaving(false); }
+  };
+
+  const patchAgreement = async (agreementId: string, update: Record<string, unknown>) => {
+    try {
+      const response = await fetch('/api/admin/client-agreements/' + agreementId, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not update agreement');
+      await fetchOrganizations();
+      toast.success('Agreement updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update agreement');
+    }
   };
 
   const patchProject = async (projectId: string, update: Record<string, unknown>) => {
@@ -993,6 +1049,7 @@ export default function AdminClients() {
                   ['Overview', 'client-overview'],
                   ['Portal users', 'client-portal-users'],
                   ['Commercial', 'client-commercial'],
+                  ['Agreements', 'client-agreements'],
                   ['Communications', 'client-communications'],
                   ['Projects & documents', 'client-projects'],
                   ['Support', 'client-support'],
@@ -1171,6 +1228,54 @@ export default function AdminClients() {
                 organizationName={selected.name}
               />
             </div>
+
+            <Card id="client-agreements" className="scroll-mt-28 border-border/60">
+              <CardHeader>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base"><FileText className="size-4 text-amber-600" /> Agreements & SOW register</CardTitle>
+                    <p className="mt-1 text-xs text-muted-foreground">Track contracts, statements of work and expiry obligations separately from invoices and project dates.</p>
+                  </div>
+                  <Badge variant="outline">{selected.agreements.filter((item) => item.status === 'active').length} active</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]">
+                <form onSubmit={createAgreement} className="space-y-3 rounded-2xl border border-border/60 p-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div><Label>Agreement title</Label><Input required value={agreementForm.title} onChange={(e) => setAgreementForm({ ...agreementForm, title: e.target.value })} placeholder="Managed services agreement" /></div>
+                    <div><Label>Reference number</Label><Input value={agreementForm.referenceNumber} onChange={(e) => setAgreementForm({ ...agreementForm, referenceNumber: e.target.value })} placeholder="LWT-CTR-2026-001" /></div>
+                    <div><Label>Agreement type</Label><select value={agreementForm.agreementType} onChange={(e) => setAgreementForm({ ...agreementForm, agreementType: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="contract">Contract</option><option value="statement_of_work">Statement of work</option><option value="service_agreement">Service agreement</option><option value="nda">NDA</option><option value="license">License</option><option value="other">Other</option></select></div>
+                    <div><Label>Status</Label><select value={agreementForm.status} onChange={(e) => setAgreementForm({ ...agreementForm, status: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="draft">Draft</option><option value="active">Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select></div>
+                    <div><Label>Linked project</Label><select value={agreementForm.projectId} onChange={(e) => setAgreementForm({ ...agreementForm, projectId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Organization level</option>{selected.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></div>
+                    <div><Label>Agreement owner</Label><Input value={agreementForm.owner} onChange={(e) => setAgreementForm({ ...agreementForm, owner: e.target.value })} placeholder="Account / project owner" /></div>
+                    <div className="grid grid-cols-[1fr_92px] gap-2"><div><Label>Contract value</Label><Input type="number" min="0" step="0.01" value={agreementForm.contractValue} onChange={(e) => setAgreementForm({ ...agreementForm, contractValue: e.target.value })} /></div><div><Label>Currency</Label><Input maxLength={3} value={agreementForm.currency} onChange={(e) => setAgreementForm({ ...agreementForm, currency: e.target.value.toUpperCase() })} /></div></div>
+                    <div><Label>Renewal notice days</Label><Input type="number" min="0" max="365" value={agreementForm.renewalNoticeDays} onChange={(e) => setAgreementForm({ ...agreementForm, renewalNoticeDays: e.target.value })} /></div>
+                    <div><Label>Effective date</Label><Input type="date" value={agreementForm.effectiveDate} onChange={(e) => setAgreementForm({ ...agreementForm, effectiveDate: e.target.value })} /></div>
+                    <div><Label>Signed date</Label><Input type="date" value={agreementForm.signedAt} onChange={(e) => setAgreementForm({ ...agreementForm, signedAt: e.target.value })} /></div>
+                    <div><Label>Expiry date</Label><Input type="date" value={agreementForm.expiryDate} onChange={(e) => setAgreementForm({ ...agreementForm, expiryDate: e.target.value })} /></div>
+                    <div><Label>Document URL</Label><Input type="url" value={agreementForm.documentUrl} onChange={(e) => setAgreementForm({ ...agreementForm, documentUrl: e.target.value })} placeholder="https://..." /></div>
+                  </div>
+                  <div><Label>Commercial / legal notes</Label><Textarea rows={3} value={agreementForm.notes} onChange={(e) => setAgreementForm({ ...agreementForm, notes: e.target.value })} placeholder="Termination, notice, renewal or special delivery terms…" /></div>
+                  <Button disabled={saving}><Plus className="mr-2 size-4" /> Register agreement</Button>
+                </form>
+                <div className="space-y-3">
+                  {selected.agreements.map((agreement) => {
+                    const daysToExpiry = agreement.expiryDate ? Math.ceil((new Date(agreement.expiryDate).getTime() - Date.now()) / 86400000) : null;
+                    const noticeDue = daysToExpiry !== null && daysToExpiry <= agreement.renewalNoticeDays && daysToExpiry >= 0;
+                    return <div key={agreement.id} className="rounded-2xl border border-border/60 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0"><p className="text-sm font-semibold">{agreement.title}</p><p className="mt-1 text-xs text-muted-foreground">{pretty(agreement.agreementType)}{agreement.referenceNumber ? ' · ' + agreement.referenceNumber : ''}{agreement.project?.name ? ' · ' + agreement.project.name : ''}</p></div>
+                        <div className="flex flex-wrap gap-1"><Badge variant="outline">{pretty(agreement.status)}</Badge>{noticeDue && <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Notice window open</Badge>}{daysToExpiry !== null && daysToExpiry < 0 && <Badge className="bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200">Expired</Badge>}</div>
+                      </div>
+                      <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 xl:grid-cols-3"><p><span className="text-muted-foreground">Value:</span> {money(agreement.contractValue, agreement.currency)}</p><p><span className="text-muted-foreground">Owner:</span> {agreement.owner || 'Unassigned'}</p><p><span className="text-muted-foreground">Signed:</span> {agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'Not recorded'}</p><p><span className="text-muted-foreground">Effective:</span> {agreement.effectiveDate ? new Date(agreement.effectiveDate).toLocaleDateString() : 'Not set'}</p><p><span className="text-muted-foreground">Expiry:</span> {agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString() : 'Open-ended'}</p><p><span className="text-muted-foreground">Notice:</span> {agreement.renewalNoticeDays} days</p></div>
+                      {agreement.notes && <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{agreement.notes}</p>}
+                      <div className="mt-3 flex flex-wrap gap-2"><select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active">Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>{agreement.documentUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(agreement.documentUrl, '_blank', 'noopener,noreferrer')}><FileText className="mr-2 size-3.5" /> Open document</Button>}</div>
+                    </div>;
+                  })}
+                  {!selected.agreements.length && <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">No contracts or statements of work registered for this client yet.</p>}
+                </div>
+              </CardContent>
+            </Card>
 
             <Card id="client-communications" className="scroll-mt-28 border-border/60">
               <CardHeader>
