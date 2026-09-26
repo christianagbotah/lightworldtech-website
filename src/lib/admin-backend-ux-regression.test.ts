@@ -470,6 +470,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(bulk).toContain("'admin.finance_collection_bulk_sms_scheduled'");
   });
 
+  test('normalizes recurring service revenue into MRR and ARR without guessing custom cycles', () => {
+    const api = source('src/app/api/admin/finance/dashboard/route.ts');
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(api).toContain('recurringRevenueRaw');
+    expect(api).toContain("service.billingCycle === 'quarterly'");
+    expect(api).toContain("service.billingCycle === 'semiannual'");
+    expect(api).toContain("service.billingCycle === 'annual'");
+    expect(api).toContain('One-time and custom cycles are excluded rather than estimated');
+    expect(dashboard).toContain('Recurring revenue');
+    expect(dashboard).toContain("'MRR'");
+    expect(dashboard).toContain("'ARR'");
+  });
+
   test('adds per-currency historical cash runway without FX assumptions', () => {
     const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
     const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
