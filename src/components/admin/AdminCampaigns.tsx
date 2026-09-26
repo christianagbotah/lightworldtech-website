@@ -14,6 +14,7 @@ import {
   Send,
   ShieldCheck,
   Users,
+  CalendarClock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +50,7 @@ interface CampaignSummary {
   ctaLabel: string;
   ctaUrl: string;
   status: 'draft' | 'ready' | 'sending' | 'sent';
+  scheduledAt: string | null;
   sentAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -126,6 +128,8 @@ export default function AdminCampaigns() {
   const [sending, setSending] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testEmail, setTestEmail] = useState('');
+  const [scheduleAt, setScheduleAt] = useState('');
+  const [scheduling, setScheduling] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createForm, setCreateForm] = useState<CampaignForm>(blankForm);
@@ -155,6 +159,13 @@ export default function AdminCampaigns() {
       if (!response.ok) throw new Error(payload?.error || 'Failed to load campaign');
       setDetail(payload.data);
       setForm(formFromCampaign(payload.data.campaign));
+      if (payload.data.campaign.scheduledAt) {
+        const scheduled = new Date(payload.data.campaign.scheduledAt);
+        const local = new Date(scheduled.getTime() - scheduled.getTimezoneOffset() * 60000);
+        setScheduleAt(local.toISOString().slice(0, 16));
+      } else {
+        setScheduleAt('');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load campaign');
       setDetail(null);
@@ -250,6 +261,31 @@ export default function AdminCampaigns() {
     }
   };
 
+  const updateSchedule = async (clear = false) => {
+    if (!selectedId || !selected || selected.status !== 'ready') return;
+    if (!clear && !scheduleAt) {
+      toast.error('Choose a delivery date and time');
+      return;
+    }
+    setScheduling(true);
+    try {
+      const scheduledAt = clear ? null : new Date(scheduleAt).toISOString();
+      const response = await fetch('/api/admin/newsletter/campaigns/' + encodeURIComponent(selectedId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scheduledAt }),
+      });
+      const payload = await readJsonResponse(response);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to update campaign schedule');
+      toast.success(clear ? 'Campaign schedule removed' : 'Campaign delivery scheduled');
+      await Promise.all([loadCampaigns(), loadDetail(selectedId)]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update campaign schedule');
+    } finally {
+      setScheduling(false);
+    }
+  };
+
   const sendBatch = async () => {
     if (!selectedId || !selected) return;
     setSending(true);
@@ -332,6 +368,7 @@ export default function AdminCampaigns() {
                 </div>
                 <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">{campaign.subject}</p>
                 <p className="mt-2 text-[10px] text-muted-foreground">
+                  {campaign.scheduledAt ? 'Scheduled ' + new Date(campaign.scheduledAt).toLocaleString() + ' · ' : ''}
                   Updated {new Date(campaign.updatedAt).toLocaleString()}
                 </p>
               </button>
@@ -473,20 +510,69 @@ export default function AdminCampaigns() {
                     <p className="text-xs text-muted-foreground">Test messages do not change subscriber preferences or campaign status.</p>
                   </div>
 
+                  <div className="space-y-2 rounded-xl border border-border/60 p-4">
+                    <div className="flex items-center gap-2">
+                      <CalendarClock className="size-4 text-amber-600" />
+                      <Label>Scheduled delivery</Label>
+                    </div>
+                    <Input
+                      type="datetime-local"
+                      value={scheduleAt}
+                      onChange={(event) => setScheduleAt(event.target.value)}
+                      min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+                      disabled={selected?.status !== 'ready' || scheduling}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void updateSchedule(false)}
+                        disabled={selected?.status !== 'ready' || scheduling || !scheduleAt || dirty}
+                      >
+                        {scheduling && <Loader2 className="mr-2 size-3.5 animate-spin" />}
+                        {selected?.scheduledAt ? 'Update schedule' : 'Schedule approved campaign'}
+                      </Button>
+                      {selected?.scheduledAt && selected.status === 'ready' && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => void updateSchedule(true)}
+                          disabled={scheduling}
+                        >
+                          Remove schedule
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Scheduling is available only after the campaign is marked Ready. The protected dispatcher sends bounded batches automatically.
+                    </p>
+                  </div>
+
                   <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-200">
                     <div className="flex gap-2">
                       <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-                      <span>Live delivery is enabled only after the campaign is marked Ready. Each click processes at most 10 active subscribers and safely retries failed recipients.</span>
+                      <span>Live delivery is enabled only after the campaign is marked Ready. Manual sends and scheduled delivery process at most 10 active subscribers per batch and safely retry failed recipients.</span>
                     </div>
                   </div>
 
                   <Button
                     className="w-full"
-                    disabled={sending || !['ready', 'sending'].includes(selected?.status || '') || dirty}
+                    disabled={
+                      sending ||
+                      !['ready', 'sending'].includes(selected?.status || '') ||
+                      dirty ||
+                      Boolean(selected?.scheduledAt && selected.status === 'ready' && new Date(selected.scheduledAt).getTime() > Date.now())
+                    }
                     onClick={() => void sendBatch()}
                   >
                     {sending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Send className="mr-2 size-4" />}
-                    {selected?.status === 'sending' ? 'Send next batch' : 'Start live delivery'}
+                    {selected?.status === 'sending'
+                      ? 'Send next batch'
+                      : selected?.scheduledAt && new Date(selected.scheduledAt).getTime() > Date.now()
+                        ? 'Scheduled for ' + new Date(selected.scheduledAt).toLocaleString()
+                        : 'Start live delivery'}
                   </Button>
                 </CardContent>
               </Card>
