@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { postCustomerPaymentJournal } from '@/lib/finance-ledger';
+import { notifyCustomerPaymentReceived } from '@/lib/payment-notification';
 import {
   invoiceBalance,
   invoiceStatusFromBalance,
@@ -215,5 +216,13 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ success: true, data: serializePayment(payment) }, { status: 201 });
+  const notification = await notifyCustomerPaymentReceived(payment.id).catch(() => null);
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      ...serializePayment(payment),
+      customerNotificationStatus: notification?.status || payment.customerNotificationStatus,
+    },
+  }, { status: 201 });
 }

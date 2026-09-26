@@ -246,6 +246,27 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(details).not.toContain('<Table hideExport');
   });
 
+  test('sends idempotent customer payment confirmations for manual and Hubtel receipts', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260926123500_payment_customer_notifications/migration.sql');
+    const notification = source('src/lib/payment-notification.ts');
+    const manualPayments = source('src/app/api/admin/finance/payments/route.ts');
+    const hubtelPayment = source('src/lib/hubtel-payment.ts');
+
+    expect(schema).toContain('customerNotificationStatus');
+    expect(schema).toContain('customerNotificationChannels');
+    expect(migration).toContain('customerNotificationStatus');
+    expect(notification).toContain('pg_advisory_xact_lock');
+    expect(notification).toContain("key: 'payment_received'");
+    expect(notification).toContain("createdBy: 'System payment confirmation'");
+    expect(notification).toContain("customerNotificationStatus: 'sending'");
+    expect(notification).toContain("'partial'");
+    expect(notification).toContain("'skipped'");
+    expect(notification).toContain('sendTransactionalMail');
+    expect(manualPayments).toContain('notifyCustomerPaymentReceived(payment.id)');
+    expect(hubtelPayment).toContain('notifyCustomerPaymentReceived');
+  });
+
   test('gives clients secure printable invoice and receipt documents', () => {
     const portal = source('src/components/client/ClientPortalPage.tsx');
     const invoiceDocument = source('src/app/api/client/invoices/[id]/document/route.ts');

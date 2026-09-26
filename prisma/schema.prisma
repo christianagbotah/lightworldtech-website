@@ -843,8 +843,13 @@ model ClientPayment {
   source            String             @default("manual")
   providerReference String             @default("")
   notes             String             @default("")
-  receivedBy        String             @default("Admin")
-  allocations       ClientPaymentAllocation[]
+  receivedBy                 String             @default("Admin")
+  customerNotificationStatus  String             @default("pending")
+  customerNotificationAttemptedAt DateTime?
+  customerNotificationCompletedAt DateTime?
+  customerNotificationChannels String             @default("")
+  customerNotificationError    String             @default("")
+  allocations                  ClientPaymentAllocation[]
   hubtelIntent      HubtelPaymentIntent?
 
   createdAt DateTime @default(now())
