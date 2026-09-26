@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
+import { requireJson } from '@/lib/http-response';
 
 const productDirections = [
   {
@@ -105,8 +106,7 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Unable to subscribe');
+      const payload = await requireJson<any>(response, 'Unable to subscribe');
       setSubscribed(true);
       setEmail('');
       toast.success('Product updates enabled.', {
