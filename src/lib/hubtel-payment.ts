@@ -3,6 +3,7 @@ import 'server-only';
 import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { checkHubtelPaymentStatus } from '@/lib/hubtel';
+import { notifyCustomerPaymentReceived } from '@/lib/payment-notification';
 import {
   invoiceBalance,
   invoiceStatusFromBalance,
@@ -21,6 +22,7 @@ export async function finalizeHubtelPayment(clientReference: string, hubtelTrans
   });
   if (!intent) throw new Error('Hubtel payment reference was not found');
   if (intent.recordedPayment) {
+    await notifyCustomerPaymentReceived(intent.recordedPayment.id).catch(() => null);
     return {
       intent,
       payment: intent.recordedPayment,
@@ -188,6 +190,10 @@ export async function finalizeHubtelPayment(clientReference: string, hubtelTrans
 
     return { intent: updatedIntent, payment, alreadyRecorded: false };
   });
+
+  if (result.payment) {
+    await notifyCustomerPaymentReceived(result.payment.id).catch(() => null);
+  }
 
   return {
     ...result,
