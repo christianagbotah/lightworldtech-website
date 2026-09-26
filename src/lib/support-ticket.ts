@@ -14,25 +14,8 @@ export const SUPPORT_TICKET_CATEGORIES = [
 ] as const;
 
 export type SupportTicketCategory = (typeof SUPPORT_TICKET_CATEGORIES)[number];
-export type SupportTicketPriority = 'low' | 'normal' | 'high';
-
-const SLA_HOURS: Record<SupportTicketPriority, { firstResponse: number; resolution: number }> = {
-  high: { firstResponse: 2, resolution: 24 },
-  normal: { firstResponse: 8, resolution: 72 },
-  low: { firstResponse: 24, resolution: 120 },
-};
-
-function addHours(date: Date, hours: number): Date {
-  return new Date(date.getTime() + hours * 60 * 60 * 1000);
-}
-
-export function supportSla(priority: SupportTicketPriority, createdAt = new Date()) {
-  const policy = SLA_HOURS[priority];
-  return {
-    firstResponseDueAt: addHours(createdAt, policy.firstResponse),
-    resolutionDueAt: addHours(createdAt, policy.resolution),
-  };
-}
+export { supportSla, supportSlaState } from '@/lib/support-sla';
+export type { SupportTicketPriority } from '@/lib/support-sla';
 
 export async function reconcileSupportEscalations(now = new Date()): Promise<number> {
   const breached = await db.clientSupportTicket.findMany({
