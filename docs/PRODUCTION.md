@@ -594,3 +594,10 @@ COLLECTION_REMINDER_EMAIL_MIN_DAYS_OVERDUE=1
 ```
 
 Email collection reminders are opt-in, bounded to 50 per run, require the configured transactional mail transport, defer invoices covered by a current promise-to-pay, and use PostgreSQL advisory locking plus recent collection activity to prevent duplicate sends inside the configured interval. Successes and failures are recorded in `FinanceCollectionActivity` for auditability. Email reminders do not modify invoice, payment or ledger state.
+
+
+### Customer payment confirmations
+
+Every successfully recorded customer receipt can trigger a best-effort acknowledgement through the configured transactional email transport and Hubtel SMS. The workflow applies to both administrator-recorded receipts and verified Hubtel payments.
+
+Notification state is stored directly on `ClientPayment` and claimed under a PostgreSQL advisory lock, so repeated Hubtel callbacks or status checks cannot send duplicate confirmations. Email and SMS are attempted independently; the stored status is `sent`, `partial`, `failed` or `skipped`. Notification failure never rolls back or changes the accounting receipt, invoice allocation, or ledger posting.
