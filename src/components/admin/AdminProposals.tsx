@@ -33,6 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/lib/store';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
+import { readJsonResponse } from '@/lib/client-api';
 
 type ProposalStatus = 'draft' | 'review' | 'ready' | 'sent' | 'accepted' | 'declined';
 
@@ -172,7 +173,10 @@ export default function AdminProposals() {
 
       if (!proposalsRes.ok || !leadsRes.ok) throw new Error('Could not load proposal workspace');
 
-      const [proposalPayload, leadPayload] = await Promise.all([proposalsRes.json(), leadsRes.json()]);
+      const [proposalPayload, leadPayload] = await Promise.all([
+        readJsonResponse<any>(proposalsRes, 'Could not load proposals'),
+        readJsonResponse<any>(leadsRes, 'Could not load proposal leads'),
+      ]);
       const nextProposals: Proposal[] = proposalPayload.data || [];
       const nextLeads: Lead[] = leadPayload.data || [];
 
@@ -215,8 +219,7 @@ export default function AdminProposals() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leadId }),
       });
-      if (!response.ok) throw new Error('Could not create proposal draft');
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Could not create proposal draft');
       setLeadId('');
       await fetchData();
       setSelected(payload.data);
@@ -237,8 +240,7 @@ export default function AdminProposals() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(update),
       });
-      if (!response.ok) throw new Error('Could not update proposal');
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Could not update proposal');
       setSelected(payload.data);
       await fetchData();
       if (success) toast.success(success);
@@ -292,8 +294,7 @@ export default function AdminProposals() {
           renewalNoticeDays: Number(conversionForm.renewalNoticeDays || 30),
         }),
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Unable to create client workspace');
+      const payload = await readJsonResponse<any>(response, 'Unable to create client workspace');
 
       const project = payload?.data?.project;
       const organization = payload?.data?.organization;
