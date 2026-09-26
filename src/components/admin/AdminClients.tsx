@@ -104,6 +104,8 @@ type PortfolioIntelligence = {
     renewalsDue30: number;
     expiredAgreements: number;
     agreementsInNoticeWindow: number;
+    pendingAgreementApprovals: number;
+    rejectedAgreementApprovals: number;
     atRiskProjects: number;
     budgetPressure: number;
     overBudget: number;
@@ -148,6 +150,8 @@ type PortfolioIntelligence = {
       renewalsDue30: number;
       expiredAgreements: number;
       agreementsInNoticeWindow: number;
+      pendingAgreementApprovals: number;
+      rejectedAgreementApprovals: number;
       budgetPressure: number;
       overBudget: number;
     };
@@ -357,6 +361,8 @@ export default function AdminClients() {
         'Renewals due 30d',
         'Expired agreements',
         'Agreements in notice window',
+        'Pending agreement approvals',
+        'Rejected agreement approvals',
         'At-risk projects',
         'Budget pressure',
         'Over budget',
@@ -373,6 +379,8 @@ export default function AdminClients() {
         String(row.metrics.renewalsDue30),
         String(row.metrics.expiredAgreements),
         String(row.metrics.agreementsInNoticeWindow),
+        String(row.metrics.pendingAgreementApprovals),
+        String(row.metrics.rejectedAgreementApprovals),
         String(row.metrics.atRiskProjects),
         String(row.metrics.budgetPressure),
         String(row.metrics.overBudget),
@@ -1067,10 +1075,12 @@ export default function AdminClients() {
                   </div>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-8">
+                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-10">
                   {[
                     ['Expired agreements', portfolio.summary.expiredAgreements],
                     ['Notice-window agreements', portfolio.summary.agreementsInNoticeWindow],
+                    ['Pending approvals', portfolio.summary.pendingAgreementApprovals],
+                    ['Rejected approvals', portfolio.summary.rejectedAgreementApprovals],
                     ['At-risk projects', portfolio.summary.atRiskProjects],
                     ['Budget pressure', portfolio.summary.budgetPressure],
                     ['Over budget', portfolio.summary.overBudget],
