@@ -2300,4 +2300,23 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientPortal).toContain("['Agreements', '#agreements']");
     expect(clientPortal).toContain("href={'/api/agreement-attachments/' + attachment.id}");
   });
+
+  test('requires evidence and independent review before closing agreement obligations', () => {
+    const schema = source('prisma/schema.prisma');
+    const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(schema).toContain('completionSubmittedAt');
+    expect(schema).toContain('completionSubmittedByAdminId');
+    expect(schema).toContain('reviewedByAdminId');
+    expect(schema).toContain('reviewNotes');
+    expect(updateApi).toContain('Completion evidence is required before review');
+    expect(updateApi).toContain('Completion must be reviewed by a different authorized operator');
+    expect(updateApi).toContain("status: 'pending_review'");
+    expect(updateApi).toContain("reviewAction === 'approve'");
+    expect(updateApi).toContain("reviewAction === 'reject'");
+    expect(clients).toContain('Submit completion for review');
+    expect(clients).toContain('Approve completion');
+    expect(clients).toContain('Reject completion');
+  });
 });
