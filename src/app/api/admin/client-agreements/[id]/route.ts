@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { ClientAgreement } from '@prisma/client';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { isAdminRequest } from '@/lib/admin-auth';
+import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
+import { hasAdminPermission } from '@/lib/admin-permissions';
 import { normalizeCurrency } from '@/lib/finance';
 
 const updateSchema = z.object({
@@ -21,15 +23,38 @@ const updateSchema = z.object({
   signedAt: z.string().datetime().nullable().optional(),
 });
 
+function snapshot(agreement: ClientAgreement) {
+  return {
+    title: agreement.title,
+    agreementType: agreement.agreementType,
+    status: agreement.status,
+    referenceNumber: agreement.referenceNumber,
+    projectId: agreement.projectId,
+    currency: agreement.currency,
+    contractValue: agreement.contractValue.toString(),
+    effectiveDate: agreement.effectiveDate?.toISOString() || null,
+    expiryDate: agreement.expiryDate?.toISOString() || null,
+    renewalNoticeDays: agreement.renewalNoticeDays,
+    owner: agreement.owner,
+    documentUrl: agreement.documentUrl,
+    notes: agreement.notes,
+    signedAt: agreement.signedAt?.toISOString() || null,
+  };
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const actor = await getActiveAdminContext(request);
+  if (!actor || !hasAdminPermission(actor.role, actor.permissions, 'clients.manage')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   const { id } = await params;
   const parsed = updateSchema.safeParse(await request.json());
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: 'Invalid agreement update', details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const existing = await db.clientAgreement.findUnique({ where: { id }, select: { id: true, organizationId: true } });
+  const existing = await db.clientAgreement.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
 
   if (parsed.data.projectId) {
@@ -49,6 +74,36 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     ...(parsed.data.signedAt !== undefined ? { signedAt: parsed.data.signedAt ? new Date(parsed.data.signedAt) : null } : {}),
   };
 
-  const agreement = await db.clientAgreement.update({ where: { id }, data });
+  const beforeState = snapshot(existing);
+  const agreement = await db.$transaction(async (tx) => {
+    const updated = await tx.clientAgreement.update({ where: { id }, data });
+    const afterState = snapshot(updated);
+    const fields = Object.keys(afterState).filter(
+      (key) => JSON.stringify(beforeState[key as keyof typeof beforeState]) !== JSON.stringify(afterState[key as keyof typeof afterState]),
+    );
+
+    if (fields.length) {
+      await tx.clientAgreementChange.create({
+        data: {
+          agreementId: id,
+          changedBy: actor.name || actor.email,
+          changeType: parsed.data.status && parsed.data.status !== existing.status ? 'status_change' : 'update',
+          fields: fields.join(','),
+          beforeState,
+          afterState,
+        },
+      });
+    }
+    return updated;
+  });
+
+  await recordAdminAudit({
+    admin: actor,
+    action: 'admin.client_agreement_updated',
+    entity: 'ClientAgreement',
+    entityId: agreement.id,
+    details: { organizationId: agreement.organizationId, fields: Object.keys(parsed.data) },
+  });
+
   return NextResponse.json({ success: true, data: agreement });
 }

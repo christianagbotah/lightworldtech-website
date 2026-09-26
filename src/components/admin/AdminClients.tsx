@@ -65,12 +65,16 @@ type AgreementAttachment = {
   id: string; originalName: string; mimeType: string; sizeBytes: number;
   uploadedBy: string; visibleToClient: boolean; createdAt: string;
 };
+type AgreementChange = {
+  id: string; changedBy: string; changeType: string; fields: string;
+  beforeState: Record<string, unknown>; afterState: Record<string, unknown>; createdAt: string;
+};
 type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
   projectId: string | null; currency: string; contractValue: string; effectiveDate: string | null;
   expiryDate: string | null; renewalNoticeDays: number; owner: string; documentUrl: string;
   notes: string; signedAt: string | null; project: { id: string; name: string } | null;
-  attachments: AgreementAttachment[];
+  attachments: AgreementAttachment[]; changes: AgreementChange[];
 };
 type TicketMessage = {
   id: string; authorType: string; authorName: string; message: string; createdAt: string;
@@ -1400,6 +1404,24 @@ export default function AdminClients() {
                             </div>
                           ))}
                           {!agreement.attachments.length && <p className="text-[11px] text-muted-foreground">No managed agreement PDFs uploaded yet.</p>}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Agreement change history</p>
+                        <div className="mt-2 space-y-2">
+                          {agreement.changes.slice(0, 5).map((change) => (
+                            <div key={change.id} className="rounded-lg border border-border/60 bg-background p-2.5">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <p className="text-xs font-medium">{pretty(change.changeType)}</p>
+                                <p className="text-[10px] text-muted-foreground">{new Date(change.createdAt).toLocaleString()}</p>
+                              </div>
+                              <p className="mt-1 text-[10px] text-muted-foreground">
+                                {change.changedBy || 'Admin'} · {change.fields ? change.fields.split(',').map(pretty).join(', ') : 'No material fields changed'}
+                              </p>
+                            </div>
+                          ))}
+                          {!agreement.changes.length && <p className="text-[11px] text-muted-foreground">No recorded agreement changes yet.</p>}
                         </div>
                       </div>
 

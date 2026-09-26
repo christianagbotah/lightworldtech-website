@@ -573,6 +573,7 @@ model ClientAgreement {
   notes             String             @default("")
   signedAt          DateTime?
   attachments       ClientAgreementAttachment[]
+  changes           ClientAgreementChange[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -580,6 +581,21 @@ model ClientAgreement {
   @@index([organizationId, status])
   @@index([projectId])
   @@index([expiryDate])
+}
+
+model ClientAgreementChange {
+  id          String          @id @default(cuid())
+  agreementId String
+  agreement   ClientAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  changedBy   String          @default("Admin")
+  changeType  String          @default("update")
+  fields      String          @default("")
+  beforeState Json
+  afterState  Json
+
+  createdAt DateTime @default(now())
+
+  @@index([agreementId, createdAt])
 }
 
 model ClientAgreementAttachment {
