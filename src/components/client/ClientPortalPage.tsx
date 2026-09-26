@@ -255,6 +255,25 @@ type Announcement = {
   createdAt: string;
 };
 
+type ClientAgreement = {
+  id: string;
+  title: string;
+  agreementType: string;
+  status: string;
+  referenceNumber: string;
+  effectiveDate: string | null;
+  expiryDate: string | null;
+  signedAt: string | null;
+  project: { id: string; name: string } | null;
+  attachments: Array<{
+    id: string;
+    originalName: string;
+    mimeType: string;
+    sizeBytes: number;
+    createdAt: string;
+  }>;
+};
+
 type PortalData = {
   user: { name: string; email: string; role: string };
   organization: {
@@ -267,6 +286,7 @@ type PortalData = {
   projects: Project[];
   tickets: Ticket[];
   announcements: Announcement[];
+  agreements: ClientAgreement[];
   account: AccountData;
 };
 
@@ -1163,6 +1183,7 @@ export default function ClientPortalPage() {
           {[
             ['Overview', '#overview'],
             ['Billing', '#billing'],
+            ['Agreements', '#agreements'],
             ['Projects', '#projects'],
             ['Support', '#support'],
           ].map(([label, href]) => (
@@ -1520,6 +1541,77 @@ export default function ClientPortalPage() {
               </div>
             </CardContent>
           </Card>
+        </section>
+
+        <section id="agreements" className="mt-8 scroll-mt-32">
+          <div className="flex items-center gap-2">
+            <FileText className="size-5 text-amber-600" />
+            <div>
+              <h2 className="text-xl font-semibold tracking-[-0.02em]">Agreements & signed documents</h2>
+              <p className="mt-1 text-xs text-slate-500 dark:text-white/35">
+                Only documents explicitly shared with your organization by Lightworld appear here.
+              </p>
+            </div>
+          </div>
+
+          {data?.agreements.length ? (
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              {data.agreements.map((agreement) => (
+                <Card key={agreement.id} className="border-slate-200/70 dark:border-white/[0.07] dark:bg-white/[0.025]">
+                  <CardContent className="p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold">{agreement.title}</p>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-white/35">
+                          {statusLabel(agreement.agreementType)}
+                          {agreement.referenceNumber ? ' · ' + agreement.referenceNumber : ''}
+                          {agreement.project?.name ? ' · ' + agreement.project.name : ''}
+                        </p>
+                      </div>
+                      <Badge className={accountStatusClass(agreement.status)}>{statusLabel(agreement.status)}</Badge>
+                    </div>
+
+                    <div className="mt-4 grid gap-2 text-xs sm:grid-cols-3">
+                      <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]">
+                        <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400">Signed</p>
+                        <p className="mt-1 font-semibold">{agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'Not recorded'}</p>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]">
+                        <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400">Effective</p>
+                        <p className="mt-1 font-semibold">{agreement.effectiveDate ? new Date(agreement.effectiveDate).toLocaleDateString() : 'Not set'}</p>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]">
+                        <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400">Expiry</p>
+                        <p className="mt-1 font-semibold">{agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString() : 'Open-ended'}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      {agreement.attachments.map((attachment) => (
+                        <div key={attachment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/70 p-3 dark:border-white/[0.07]">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-medium">{attachment.originalName}</p>
+                            <p className="mt-1 text-[10px] text-slate-400">{(attachment.sizeBytes / 1024 / 1024).toFixed(2)} MB · shared {new Date(attachment.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <Button asChild type="button" size="sm" variant="outline">
+                            <a href={'/api/agreement-attachments/' + attachment.id} target="_blank" rel="noreferrer">
+                              <Download className="mr-1.5 size-3.5" /> Download
+                            </a>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="mt-4 border-dashed border-slate-300 dark:border-white/10">
+              <CardContent className="p-5 text-sm text-slate-500 dark:text-white/35">
+                No agreement documents have been shared with your organization yet.
+              </CardContent>
+            </Card>
+          )}
         </section>
 
         <section id="projects" className="mt-8 scroll-mt-32">
