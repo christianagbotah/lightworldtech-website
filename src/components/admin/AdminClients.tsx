@@ -95,6 +95,16 @@ type PortfolioIntelligence = {
     renewals30: string;
   }>;
   methodology: string;
+  actionQueue: Array<{
+    id: string;
+    organizationId: string;
+    organizationName: string;
+    type: 'collections' | 'renewals' | 'support' | 'projects' | 'budget';
+    severity: 'high' | 'medium';
+    title: string;
+    detail: string;
+    score: number;
+  }>;
   data: Array<{
     id: string;
     name: string;
@@ -196,6 +206,7 @@ export default function AdminClients() {
         summary: payload.summary,
         byCurrency: payload.byCurrency || [],
         methodology: payload.methodology || '',
+        actionQueue: payload.actionQueue || [],
         data: payload.data || [],
       });
       setPortfolioForbidden(false);
@@ -251,6 +262,29 @@ export default function AdminClients() {
     }, 0);
     return () => window.clearTimeout(id);
   }, [pendingClientAction, selected?.id]);
+
+  const openPortfolioAction = (action: PortfolioIntelligence['actionQueue'][number]) => {
+    if (action.type === 'collections' || action.type === 'renewals') {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('lw-finance-section', action.type);
+        sessionStorage.setItem('lw-finance-organization-id', action.organizationId);
+        sessionStorage.setItem('lw-finance-customer-name', action.organizationName);
+      }
+      useAppStore.getState().navigate('admin-finance');
+      return;
+    }
+
+    setSelectedId(action.organizationId);
+    const target =
+      action.type === 'support'
+        ? 'client-support'
+        : action.type === 'projects' || action.type === 'budget'
+          ? 'client-projects'
+          : 'client-overview';
+    window.setTimeout(() => {
+      document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  };
 
   const counts = useMemo(() => ({
     organizations: organizations.length,
@@ -732,6 +766,52 @@ export default function AdminClients() {
                       ))}
                       {!portfolio.data.length && <div className="px-4 py-6 text-xs text-muted-foreground">No client organizations are available for portfolio analysis.</div>}
                     </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/60">
+                  <div className="flex flex-col gap-2 border-b border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">Priority action queue</p>
+                      <p className="text-[11px] text-muted-foreground">Cross-customer work ordered by severity and exception score. Open an item to continue in the correct operational workspace.</p>
+                    </div>
+                    <Badge variant="outline">{portfolio.actionQueue.length} action{portfolio.actionQueue.length === 1 ? '' : 's'}</Badge>
+                  </div>
+                  <div className="max-h-[460px] divide-y divide-border/60 overflow-y-auto">
+                    {portfolio.actionQueue.slice(0, 40).map((action) => (
+                      <button
+                        key={action.id}
+                        type="button"
+                        onClick={() => openPortfolioAction(action)}
+                        className="grid w-full gap-3 px-4 py-3 text-left transition hover:bg-muted/30 md:grid-cols-[minmax(0,1fr)_auto]"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-xs font-semibold">{action.organizationName}</p>
+                            <Badge
+                              variant="outline"
+                              className={action.severity === 'high'
+                                ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300'
+                                : 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300'}
+                            >
+                              {pretty(action.severity)}
+                            </Badge>
+                            <Badge variant="secondary">{pretty(action.type)}</Badge>
+                          </div>
+                          <p className="mt-1 text-xs font-medium">{action.title}</p>
+                          <p className="mt-1 text-[10px] leading-5 text-muted-foreground">{action.detail}</p>
+                        </div>
+                        <div className="flex items-center gap-2 self-center text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                          Open action
+                          <Send className="size-3.5" />
+                        </div>
+                      </button>
+                    ))}
+                    {!portfolio.actionQueue.length && (
+                      <div className="px-4 py-8 text-center text-xs text-muted-foreground">
+                        No commercial, support, delivery or budget exception currently requires action.
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -220,6 +220,117 @@ export async function GET(request: NextRequest) {
 
   rows.sort((a, b) => b.riskScore - a.riskScore || a.name.localeCompare(b.name));
 
+  const actionQueue = rows
+    .flatMap((row) => {
+      const actions: Array<{
+        id: string;
+        organizationId: string;
+        organizationName: string;
+        type: 'collections' | 'renewals' | 'support' | 'projects' | 'budget';
+        severity: 'high' | 'medium';
+        title: string;
+        detail: string;
+        score: number;
+      }> = [];
+
+      if (row.metrics.overdueInvoices > 0) {
+        actions.push({
+          id: row.id + ':collections',
+          organizationId: row.id,
+          organizationName: row.name,
+          type: 'collections',
+          severity: 'high',
+          title: 'Collect overdue receivables',
+          detail: row.metrics.overdueInvoices + ' overdue invoice' + (row.metrics.overdueInvoices === 1 ? '' : 's') + ' require collection action.',
+          score: row.riskScore + 8,
+        });
+      }
+
+      if (row.metrics.expiredServices > 0 || row.metrics.renewalsDue30 > 0) {
+        actions.push({
+          id: row.id + ':renewals',
+          organizationId: row.id,
+          organizationName: row.name,
+          type: 'renewals',
+          severity: row.metrics.expiredServices > 0 ? 'high' : 'medium',
+          title: row.metrics.expiredServices > 0 ? 'Resolve expired services' : 'Prepare upcoming renewals',
+          detail:
+            row.metrics.expiredServices +
+            ' expired service' +
+            (row.metrics.expiredServices === 1 ? '' : 's') +
+            ' · ' +
+            row.metrics.renewalsDue30 +
+            ' renewal' +
+            (row.metrics.renewalsDue30 === 1 ? '' : 's') +
+            ' due within 30 days.',
+          score: row.riskScore + (row.metrics.expiredServices > 0 ? 7 : 3),
+        });
+      }
+
+      if (row.metrics.slaBreaches > 0 || row.metrics.urgentTickets > 0) {
+        actions.push({
+          id: row.id + ':support',
+          organizationId: row.id,
+          organizationName: row.name,
+          type: 'support',
+          severity: row.metrics.slaBreaches > 0 ? 'high' : 'medium',
+          title: row.metrics.slaBreaches > 0 ? 'Recover breached support SLA' : 'Resolve urgent support cases',
+          detail:
+            row.metrics.slaBreaches +
+            ' SLA breach' +
+            (row.metrics.slaBreaches === 1 ? '' : 'es') +
+            ' · ' +
+            row.metrics.urgentTickets +
+            ' urgent/high-priority ticket' +
+            (row.metrics.urgentTickets === 1 ? '' : 's') +
+            '.',
+          score: row.riskScore + (row.metrics.slaBreaches > 0 ? 7 : 5),
+        });
+      }
+
+      if (row.metrics.atRiskProjects > 0) {
+        actions.push({
+          id: row.id + ':projects',
+          organizationId: row.id,
+          organizationName: row.name,
+          type: 'projects',
+          severity: 'medium',
+          title: 'Review delivery risk',
+          detail: row.metrics.atRiskProjects + ' active project' + (row.metrics.atRiskProjects === 1 ? ' is' : 's are') + ' not currently on track.',
+          score: row.riskScore + 3,
+        });
+      }
+
+      if (row.metrics.overBudget > 0 || row.metrics.budgetPressure > 0) {
+        actions.push({
+          id: row.id + ':budget',
+          organizationId: row.id,
+          organizationName: row.name,
+          type: 'budget',
+          severity: row.metrics.overBudget > 0 ? 'high' : 'medium',
+          title: row.metrics.overBudget > 0 ? 'Correct project budget overrun' : 'Review project budget pressure',
+          detail:
+            row.metrics.overBudget +
+            ' over-budget project' +
+            (row.metrics.overBudget === 1 ? '' : 's') +
+            ' · ' +
+            row.metrics.budgetPressure +
+            ' project' +
+            (row.metrics.budgetPressure === 1 ? '' : 's') +
+            ' at or above the pressure threshold.',
+          score: row.riskScore + (row.metrics.overBudget > 0 ? 6 : 2),
+        });
+      }
+
+      return actions;
+    })
+    .sort((a, b) =>
+      (a.severity === b.severity ? 0 : a.severity === 'high' ? -1 : 1)
+      || b.score - a.score
+      || a.organizationName.localeCompare(b.organizationName)
+    )
+    .slice(0, 100);
+
   const summary = {
     organizations: rows.length,
     activeOrganizations: rows.filter((row) => row.status === 'active').length,
@@ -238,6 +349,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     success: true,
     data: rows,
+    actionQueue,
     summary,
     byCurrency: [...portfolioCurrencies.entries()]
       .sort(([a], [b]) => a.localeCompare(b))

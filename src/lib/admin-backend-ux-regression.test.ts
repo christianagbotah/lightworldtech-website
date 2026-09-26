@@ -411,6 +411,11 @@ describe('admin backend and responsive UX regression coverage', () => {
 
     expect(clients).toContain('Executive client portfolio');
     expect(clients).toContain('Accounts by management priority');
+    expect(clients).toContain('Priority action queue');
+    expect(clients).toContain('openPortfolioAction');
+    expect(portfolio).toContain('const actionQueue = rows');
+    expect(portfolio).toContain("'collections' | 'renewals' | 'support' | 'projects' | 'budget'");
+    expect(portfolio).toContain('Correct project budget overrun');
     expect(clients).toContain('Currency exposure');
     expect(clients).toContain('portfolio-intelligence');
     expect(clients).toContain('setSelectedId(row.id)');
