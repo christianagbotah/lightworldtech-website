@@ -508,6 +508,74 @@ export default function AdminDashboard() {
             })}
           </div>
 
+
+          {portfolio.data.some((item) => item.posture !== 'stable') && (
+            <Card className="mt-4 border-border/60">
+              <CardHeader className="pb-3">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle className="text-base">Management priority accounts</CardTitle>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Highest-risk client accounts first, with the operational reasons behind the priority.
+                    </p>
+                  </div>
+                  <Badge variant="outline">
+                    {portfolio.data.filter((item) => item.posture !== 'stable').length} active exception(s)
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {portfolio.data
+                  .filter((item) => item.posture !== 'stable')
+                  .slice(0, 5)
+                  .map((item) => {
+                    const reasons = [
+                      item.metrics.overdueInvoices ? item.metrics.overdueInvoices + ' overdue invoice(s)' : '',
+                      item.metrics.expiredServices ? item.metrics.expiredServices + ' expired service(s)' : '',
+                      item.metrics.renewalsDue30 ? item.metrics.renewalsDue30 + ' renewal(s) due' : '',
+                      item.metrics.atRiskProjects ? item.metrics.atRiskProjects + ' project risk(s)' : '',
+                      item.metrics.slaBreaches ? item.metrics.slaBreaches + ' SLA breach(es)' : '',
+                      item.metrics.urgentTickets ? item.metrics.urgentTickets + ' urgent ticket(s)' : '',
+                      item.metrics.overBudget ? item.metrics.overBudget + ' over-budget project(s)' : '',
+                      !item.metrics.overBudget && item.metrics.budgetPressure ? item.metrics.budgetPressure + ' budget-pressure project(s)' : '',
+                    ].filter(Boolean);
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => openClientAccount(item.id)}
+                        className="flex w-full flex-col gap-3 rounded-xl border border-border/60 px-4 py-3 text-left transition hover:border-amber-300 hover:bg-amber-50/40 dark:hover:bg-amber-950/10 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-semibold">{item.name}</p>
+                            <Badge
+                              variant="outline"
+                              className={
+                                item.posture === 'intervention_required'
+                                  ? 'border-rose-300 text-rose-700 dark:text-rose-300'
+                                  : 'border-amber-300 text-amber-700 dark:text-amber-300'
+                              }
+                            >
+                              {item.posture === 'intervention_required' ? 'Intervention' : 'Attention'}
+                            </Badge>
+                          </div>
+                          <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-muted-foreground">
+                            {reasons.length ? reasons.join(' · ') : 'Account requires management review'}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                          <span>Open Customer 360</span>
+                          <ArrowUpRight className="size-3.5" />
+                        </div>
+                      </button>
+                    );
+                  })}
+              </CardContent>
+            </Card>
+          )}
+
           {portfolio.summary.overBudget > 0 || portfolio.summary.budgetPressure > 0 ? (
             <button type="button" onClick={() => openClientAccount()} className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-left text-xs text-amber-950 transition hover:bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/15 dark:text-amber-100">
               <span>
