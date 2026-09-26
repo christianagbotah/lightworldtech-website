@@ -1724,6 +1724,21 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain('Assistant Helpful');
   });
 
+  test('consolidates production readiness inside Settings', () => {
+    const settings = source('src/components/admin/AdminSettings.tsx');
+
+    expect(settings).toContain('Production readiness');
+    expect(settings).toContain("fetchJson<{ data: HealthData }>('/api/admin/health'");
+    expect(settings).toContain("'/api/admin/operations/backup-status'");
+    expect(settings).toContain('Hubtel SMS');
+    expect(settings).toContain('Hubtel OTP');
+    expect(settings).toContain('Hubtel payments');
+    expect(settings).toContain('Automation dispatcher');
+    expect(settings).toContain('Automation runtime');
+    expect(settings).toContain('Backup artifacts');
+    expect(settings).toContain("navigate('admin-sms')");
+  });
+
   test('supports dashboard drill-downs and a real authenticated health signal', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');

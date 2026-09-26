@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Save, Loader2, CheckCircle2, AlertTriangle, ExternalLink, Search } from 'lucide-react';
+import { Save, Loader2, CheckCircle2, AlertTriangle, ExternalLink, Search, RefreshCw, Database, Mail, MessageSquareText, KeyRound, CreditCard, HardDrive, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,8 +11,59 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { fetchJson } from '@/lib/client-api';
+import { useAppStore } from '@/lib/store';
 
 type SettingsData = Record<string, string>;
+
+type HealthData = {
+  status: 'healthy' | 'attention';
+  checkedAt: string;
+  database: { status: 'healthy' | 'unhealthy'; latencyMs: number; message?: string };
+  mail: { status: 'healthy' | 'attention'; mode: string; configured: boolean; warning: string };
+  communications: {
+    status: 'healthy' | 'attention';
+    smsConfigured: boolean;
+    otpConfigured: boolean;
+    paymentsConfigured: boolean;
+    dispatcherConfigured: boolean;
+    automationEnabled: boolean;
+    automation: {
+      serviceRenewals: boolean;
+      projectRenewals: boolean;
+      collections: boolean;
+      collectionEmail: boolean;
+      renewalDrafts: boolean;
+      projectRenewalDrafts: boolean;
+    };
+    runtime: {
+      status: string;
+      lastSuccessAt: string | null;
+      lastCompletedAt: string | null;
+      durationMs: number;
+      consecutiveFailures: number;
+      ageMinutes: number | null;
+      maxAgeMinutes: number;
+    };
+    warning: string;
+  };
+};
+
+type BackupArtifact = {
+  timestamp: string;
+  sizeBytes: number;
+  ageHours: number;
+  freshness: 'fresh' | 'stale';
+};
+
+type BackupData = {
+  status: 'healthy' | 'attention' | 'missing';
+  database: BackupArtifact | null;
+  uploads: BackupArtifact | null;
+  checkedAt: string;
+  restoreVerification: { status: 'not_verified'; message: string };
+};
+
 
 interface SettingsGroup {
   id: string;
@@ -148,9 +199,34 @@ const settingsGroups: SettingsGroup[] = [
 ];
 
 export default function AdminSettings() {
+  const { adminRole, navigate } = useAppStore();
   const [settings, setSettings] = useState<SettingsData>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [health, setHealth] = useState<HealthData | null>(null);
+  const [backup, setBackup] = useState<BackupData | null>(null);
+  const [readinessLoading, setReadinessLoading] = useState(true);
+  const [readinessError, setReadinessError] = useState('');
+
+
+  const fetchReadiness = useCallback(async () => {
+    setReadinessLoading(true);
+    setReadinessError('');
+    try {
+      const [healthPayload, backupPayload] = await Promise.all([
+        fetchJson<{ data: HealthData }>('/api/admin/health', { cache: 'no-store' }, 'Unable to load system health'),
+        adminRole === 'super_admin'
+          ? fetchJson<{ data: BackupData }>('/api/admin/operations/backup-status', { cache: 'no-store' }, 'Unable to load backup readiness')
+          : Promise.resolve(null),
+      ]);
+      setHealth(healthPayload.data);
+      setBackup(backupPayload?.data || null);
+    } catch (error) {
+      setReadinessError(error instanceof Error ? error.message : 'Unable to load production readiness');
+    } finally {
+      setReadinessLoading(false);
+    }
+  }, [adminRole]);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -164,7 +240,7 @@ export default function AdminSettings() {
     }
   }, []);
 
-  useEffect(() => { fetchSettings(); }, [fetchSettings]);
+  useEffect(() => { void Promise.all([fetchSettings(), fetchReadiness()]); }, [fetchSettings, fetchReadiness]);
 
   const updateField = (key: string, value: string) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -219,6 +295,150 @@ export default function AdminSettings() {
       />
 
       <div className="space-y-6">
+
+      <Card className="border-border/60">
+        <CardHeader className="gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="text-lg">Production readiness</CardTitle>
+            <CardDescription className="mt-1">
+              Live server-side checks for the systems behind customer communication, payments, automation and recovery.
+            </CardDescription>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => void fetchReadiness()} disabled={readinessLoading}>
+            <RefreshCw className={readinessLoading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />
+            Refresh status
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {readinessError && (
+            <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-100">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <span>{readinessError}</span>
+            </div>
+          )}
+
+          {readinessLoading && !health ? (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {Array.from({ length: adminRole === 'super_admin' ? 8 : 7 }).map((_, index) => (
+                <Skeleton key={index} className="h-28 rounded-xl" />
+              ))}
+            </div>
+          ) : health ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  {
+                    label: 'Database',
+                    value: health.database.status === 'healthy' ? health.database.latencyMs + ' ms' : 'Unavailable',
+                    ready: health.database.status === 'healthy',
+                    detail: health.database.message || 'PostgreSQL connectivity',
+                    icon: Database,
+                  },
+                  {
+                    label: 'Outbound mail',
+                    value: health.mail.configured ? health.mail.mode : 'Not configured',
+                    ready: health.mail.configured,
+                    detail: health.mail.warning || 'Transactional email ready',
+                    icon: Mail,
+                  },
+                  {
+                    label: 'Hubtel SMS',
+                    value: health.communications.smsConfigured ? 'Configured' : 'Not configured',
+                    ready: health.communications.smsConfigured,
+                    detail: 'Single, campaign and automated SMS',
+                    icon: MessageSquareText,
+                  },
+                  {
+                    label: 'Hubtel OTP',
+                    value: health.communications.otpConfigured ? 'Configured' : 'Not configured',
+                    ready: health.communications.otpConfigured,
+                    detail: 'OTP send and verification endpoints',
+                    icon: KeyRound,
+                  },
+                  {
+                    label: 'Hubtel payments',
+                    value: health.communications.paymentsConfigured ? 'Configured' : 'Not configured',
+                    ready: health.communications.paymentsConfigured,
+                    detail: 'Checkout and verified transaction status',
+                    icon: CreditCard,
+                  },
+                  {
+                    label: 'Automation dispatcher',
+                    value: health.communications.dispatcherConfigured ? 'Configured' : 'Not configured',
+                    ready: health.communications.dispatcherConfigured,
+                    detail: health.communications.automationEnabled ? 'Protected scheduler required by enabled automations' : 'No automation currently enabled',
+                    icon: Activity,
+                  },
+                  {
+                    label: 'Automation runtime',
+                    value:
+                      health.communications.runtime.status === 'healthy'
+                        ? 'Healthy'
+                        : health.communications.runtime.status.replaceAll('_', ' '),
+                    ready:
+                      !health.communications.automationEnabled ||
+                      (health.communications.runtime.status === 'healthy' &&
+                        health.communications.runtime.ageMinutes !== null &&
+                        health.communications.runtime.ageMinutes <= health.communications.runtime.maxAgeMinutes),
+                    detail: health.communications.runtime.lastSuccessAt
+                      ? 'Last success ' + new Date(health.communications.runtime.lastSuccessAt).toLocaleString()
+                      : 'No successful dispatcher run recorded',
+                    icon: RefreshCw,
+                  },
+                  ...(adminRole === 'super_admin'
+                    ? [{
+                        label: 'Backup artifacts',
+                        value: backup?.status === 'healthy' ? 'Fresh' : backup?.status === 'attention' ? 'Needs attention' : 'Missing',
+                        ready: backup?.status === 'healthy',
+                        detail: backup?.database && backup?.uploads
+                          ? 'DB ' + backup.database.ageHours + 'h · uploads ' + backup.uploads.ageHours + 'h'
+                          : 'Database and uploads backups are both required',
+                        icon: HardDrive,
+                      }]
+                    : []),
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <span className={'flex size-9 items-center justify-center rounded-lg ' + (item.ready ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300')}>
+                          <Icon className="size-4" />
+                        </span>
+                        {item.ready ? (
+                          <CheckCircle2 className="size-4 text-emerald-600" aria-label="Ready" />
+                        ) : (
+                          <AlertTriangle className="size-4 text-amber-600" aria-label="Needs attention" />
+                        )}
+                      </div>
+                      <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{item.label}</p>
+                      <p className="mt-1 text-sm font-semibold">{item.value}</p>
+                      <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{item.detail}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-background p-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold">
+                    Overall production signal: {health.status === 'healthy' ? 'Healthy' : 'Needs attention'}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {health.communications.warning || 'Database, mail and enabled automation dependencies are currently reporting healthy.'}
+                    {adminRole === 'super_admin' && backup?.restoreVerification?.message
+                      ? ' ' + backup.restoreVerification.message
+                      : ''}
+                  </p>
+                </div>
+                <Button type="button" variant="outline" onClick={() => navigate('admin-sms')}>
+                  Open SMS & automation
+                </Button>
+              </div>
+            </>
+          ) : null}
+        </CardContent>
+      </Card>
+
         {settingsGroups.map((group) => (
           <Card key={group.id} className="border-border/50">
             <CardHeader className="pb-4">
