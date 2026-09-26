@@ -470,12 +470,25 @@ export default function AdminFinance() {
     setDeepLinkProjectId(sessionStorage.getItem('lw-finance-project-id') || '');
     setDeepLinkServiceId(sessionStorage.getItem('lw-finance-service-id') || '');
     setDeepLinkAction(sessionStorage.getItem('lw-finance-action') || '');
+    const requestedRecordType = sessionStorage.getItem('lw-finance-record-type') || '';
+    const requestedRecordId = sessionStorage.getItem('lw-finance-record-id') || '';
+    if (
+      requestedRecordId &&
+      ['invoice', 'receipt', 'bill', 'expense'].includes(requestedRecordType)
+    ) {
+      setFinanceRecord({
+        type: requestedRecordType as NonNullable<FinanceRecordSelection>['type'],
+        id: requestedRecordId,
+      });
+    }
     sessionStorage.removeItem('lw-finance-section');
     sessionStorage.removeItem('lw-finance-organization-id');
     sessionStorage.removeItem('lw-finance-customer-name');
     sessionStorage.removeItem('lw-finance-project-id');
     sessionStorage.removeItem('lw-finance-service-id');
     sessionStorage.removeItem('lw-finance-action');
+    sessionStorage.removeItem('lw-finance-record-type');
+    sessionStorage.removeItem('lw-finance-record-id');
   }, []);
 
   useEffect(() => {
