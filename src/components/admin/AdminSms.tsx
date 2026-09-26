@@ -9,6 +9,7 @@ import {
   FileText,
   KeyRound,
   Loader2,
+  Mail,
   MessageSquareText,
   Plus,
   RefreshCw,
