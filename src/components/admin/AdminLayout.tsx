@@ -132,6 +132,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [adminTab]);
 
   useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') void loadNotifications();
+    };
+    const intervalId = window.setInterval(refresh, 60_000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
+
+  useEffect(() => {
     setSidebarCollapsed(window.localStorage.getItem('lw-admin-sidebar-collapsed') === '1');
   }, []);
 

@@ -1224,6 +1224,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain("sessionStorage.setItem('lw-client-organization-id', organizationId)");
   });
 
+  test('keeps executive priorities and operational alerts live', () => {
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(dashboard).toContain('Management priority accounts');
+    expect(dashboard).toContain('Open Customer 360');
+    expect(dashboard).toContain("item.metrics.overdueInvoices");
+    expect(dashboard).toContain("item.metrics.slaBreaches");
+    expect(dashboard).toContain("item.metrics.overBudget");
+    expect(layout).toContain('window.setInterval(refresh, 60_000)');
+    expect(layout).toContain("document.addEventListener('visibilitychange', refresh)");
+    expect(layout).toContain("document.visibilityState === 'visible'");
+  });
+
   test('keeps public product cards aligned and the preloader rings continuously animated', () => {
     const products = source('src/components/pages/ProductsPage.tsx');
     const preloader = source('src/components/ui/preloader.tsx');
