@@ -518,6 +518,11 @@ SERVICE_RENEWAL_SMS_BATCH_SIZE=10
 # Project-level renewal reminders are separately opt-in.
 AUTO_PROJECT_RENEWAL_SMS=true
 
+# Draft-only renewal billing automation is separately opt-in.
+AUTO_RENEWAL_DRAFT_INVOICES=true
+RENEWAL_DRAFT_INVOICE_BATCH_SIZE=10
+RENEWAL_DRAFT_INVOICE_DUE_DAYS=7
+
 # Overdue invoice reminders are separately opt-in and bounded.
 AUTO_COLLECTION_REMINDER_SMS=true
 COLLECTION_REMINDER_SMS_BATCH_SIZE=10
@@ -566,3 +571,12 @@ Set `CONTACT_NOTIFICATION_EMAIL` to the internal mailbox that should receive imm
 ```bash
 CONTACT_NOTIFICATION_EMAIL=mail@lightworldtech.com
 ```
+
+
+### Automated renewal invoice drafts
+
+When `AUTO_RENEWAL_DRAFT_INVOICES=true`, the protected scheduler may prepare draft invoices for service accounts that are explicitly marked `autoRenew=true`, have a positive recurring amount, and are inside their configured renewal-notice window. Creation is bounded by `RENEWAL_DRAFT_INVOICE_BATCH_SIZE` and the same service/renewal-date duplicate guard used by manual renewal billing.
+
+These invoices are **drafts only**. Automation never issues or emails them, never posts an accounting journal, never charges Hubtel, never changes a service renewal date, and never completes a renewal cycle. The generated draft uses the recurring service amount and deliberately sets tax treatment to `none` with a visible note requiring finance staff to confirm tax, scope, pricing and due date before issue. A system audit event is recorded for every generated draft.
+
+`RENEWAL_DRAFT_INVOICE_DUE_DAYS` is used only when the recorded renewal date is already in the past; otherwise the draft due date is the recorded renewal date.
