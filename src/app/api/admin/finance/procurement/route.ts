@@ -110,6 +110,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        bill: { select: { id: true, payableNumber: true, status: true } },
       },
     }),
     db.financeVendor.findMany({
@@ -125,6 +126,43 @@ export async function GET(request: NextRequest) {
     }),
   ]);
 
+  const now = new Date();
+  const approvalAgingCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+  const agedApprovals = requests.filter((item) => item.status === 'submitted' && item.submittedAt < approvalAgingCutoff);
+  const overdueOrders = orders.filter((item) =>
+    ['issued', 'partially_received'].includes(item.status)
+    && Boolean(item.expectedDate && item.expectedDate < now),
+  );
+  const partialReceipts = orders.filter((item) => item.status === 'partially_received');
+  const awaitingBill = orders.filter((item) => ['received', 'closed'].includes(item.status) && !item.bill);
+
+  const exceptions = [
+    ...agedApprovals.map((item) => ({
+      id: 'approval:' + item.id,
+      type: 'approval_aging',
+      severity: 'medium',
+      title: 'Requisition awaiting approval',
+      reference: item.requestNumber,
+      detail: item.title + ' · submitted ' + item.submittedAt.toISOString(),
+    })),
+    ...overdueOrders.map((item) => ({
+      id: 'overdue:' + item.id,
+      type: 'delivery_overdue',
+      severity: 'high',
+      title: item.status === 'partially_received' ? 'Partial PO is overdue' : 'PO delivery is overdue',
+      reference: item.poNumber,
+      detail: item.vendor.name + ' · expected ' + item.expectedDate!.toISOString(),
+    })),
+    ...awaitingBill.map((item) => ({
+      id: 'bill:' + item.id,
+      type: 'awaiting_bill',
+      severity: 'medium',
+      title: 'Received PO awaiting supplier bill',
+      reference: item.poNumber,
+      detail: item.vendor.name + ' · ' + item.currency + ' ' + item.total.toFixed(2),
+    })),
+  ].sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'high' ? -1 : 1) || a.reference.localeCompare(b.reference)).slice(0, 100);
+
   return NextResponse.json({
     success: true,
     data: {
@@ -134,6 +172,15 @@ export async function GET(request: NextRequest) {
       orders: orders.map(serializeOrder),
       vendors,
       projects,
+      summary: {
+        awaitingApproval: requests.filter((item) => item.status === 'submitted').length,
+        agedApprovals: agedApprovals.length,
+        overdueOrders: overdueOrders.length,
+        partialReceipts: partialReceipts.length,
+        awaitingBill: awaitingBill.length,
+      },
+      exceptions,
+      methodology: 'Procurement exceptions are deterministic: approval aging starts after 48 hours, delivery overdue uses the recorded PO expected date, partial receipts remain open until ordered quantities are fully received, and received/closed POs remain in Accounts Payable follow-up until a matched supplier bill exists.',
     },
   });
 }
