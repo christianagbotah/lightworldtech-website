@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 import { serviceSearchHref } from '@/lib/service-search-content';
 import { companyProfile, isSafePublicSourceUrl } from '@/lib/company-profile';
+import { readJsonSafely } from '@/lib/http-response';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -305,7 +306,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
 
   useEffect(() => {
     fetch('/api/services?active=true')
-      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((response) => response.ok ? readJsonSafely<any>(response) : Promise.reject())
       .then((payload) => {
         const managed = Array.isArray(payload?.data) ? payload.data : [];
         if (!managed.length) return;
@@ -354,7 +355,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
       .catch(() => {});
 
     fetch('/api/portfolio?active=true')
-      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((response) => response.ok ? readJsonSafely<any>(response) : Promise.reject())
       .then((payload) => {
         const managed = Array.isArray(payload?.data) ? payload.data : [];
         if (!managed.length) return;
