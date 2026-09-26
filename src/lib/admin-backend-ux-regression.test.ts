@@ -1224,6 +1224,22 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain("sessionStorage.setItem('lw-client-organization-id', organizationId)");
   });
 
+  test('keeps public product cards aligned and the preloader rings continuously animated', () => {
+    const products = source('src/components/pages/ProductsPage.tsx');
+    const preloader = source('src/components/ui/preloader.tsx');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(products).toContain('grid-rows-[58px_minmax(96px,1fr)_auto]');
+    expect(products).toContain("alt={product.title + ' product direction'}");
+    expect(preloader).toContain('Continuous rotating border accents');
+    expect(preloader).toContain("duration: 1.8, repeat: Infinity, ease: 'linear'");
+    expect(preloader).toContain("duration: 2.7, repeat: Infinity, ease: 'linear'");
+    expect(dashboard).toContain("WELCOME BACK, {(adminName || 'Admin').toUpperCase()}");
+    expect(notifications).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0)');
+    expect(notifications).toContain('past the due date with an outstanding balance');
+  });
+
   test('routes finance notifications directly to operational exception queues', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
     const layout = source('src/components/admin/AdminLayout.tsx');
