@@ -49,10 +49,10 @@ export default function ClientResetPasswordPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword: password }),
       });
-      const data = await response.json();
+      const data = await readJsonSafely<any>(response);
 
-      if (!response.ok || !data.success) {
-        setError(data.error || 'Unable to reset the password.');
+      if (!response.ok || !data?.success) {
+        setError(data?.error || 'Unable to reset the password.');
         return;
       }
 
