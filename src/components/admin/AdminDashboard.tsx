@@ -90,7 +90,16 @@ interface HealthData {
     paymentsConfigured: boolean;
     dispatcherConfigured: boolean;
     automationEnabled: boolean;
-    automation: { serviceRenewals: boolean; projectRenewals: boolean; collections: boolean; renewalDrafts: boolean };
+    automation: { serviceRenewals: boolean; projectRenewals: boolean; collections: boolean; collectionEmail: boolean; renewalDrafts: boolean };
+    runtime: {
+      status: string;
+      lastSuccessAt: string | null;
+      lastCompletedAt: string | null;
+      durationMs: number;
+      consecutiveFailures: number;
+      ageMinutes: number | null;
+      maxAgeMinutes: number;
+    };
     warning: string;
   };
 }
@@ -442,7 +451,7 @@ export default function AdminDashboard() {
                 {health?.status === 'healthy' ? 'Systems operational' : 'System attention needed'}
               </span>
               <span className="block text-[10px] text-amber-50/80">
-                DB {health?.database.latencyMs ?? '—'}ms · Mail {health?.mail.configured ? 'ready' : 'check'} · SMS {health?.communications?.smsConfigured ? (health.communications.dispatcherConfigured ? 'ready' : 'manual') : 'off'}
+                DB {health?.database.latencyMs ?? '—'}ms · Mail {health?.mail.configured ? 'ready' : 'check'} · Automation {health?.communications?.automationEnabled ? (health.communications.status === 'healthy' ? 'live' : 'check') : 'off'}
               </span>
             </div>
             <ArrowUpRight className="size-3.5 text-white/70" />
