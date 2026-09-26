@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Save, Loader2, CheckCircle2, AlertTriangle, ExternalLink, Search, RefreshCw, Database, Mail, MessageSquareText, KeyRound, CreditCard, HardDrive, Activity } from 'lucide-react';
+import { Save, Loader2, CheckCircle2, AlertTriangle, ExternalLink, Search, RefreshCw, Database, Mail, MessageSquareText, KeyRound, CreditCard, HardDrive, Activity, GitCommitHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -54,6 +54,17 @@ type BackupArtifact = {
   sizeBytes: number;
   ageHours: number;
   freshness: 'fresh' | 'stale';
+};
+
+type ReleaseStatus = {
+  releaseSha: string | null;
+  shortSha: string | null;
+  artifactTimestamp: string | null;
+  startedAt: string;
+  uptimeSeconds: number;
+  nodeVersion: string;
+  environment: string;
+  provenance: 'verified_artifact' | 'unavailable';
 };
 
 type BackupData = {
@@ -205,6 +216,7 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState<string | null>(null);
   const [health, setHealth] = useState<HealthData | null>(null);
   const [backup, setBackup] = useState<BackupData | null>(null);
+  const [release, setRelease] = useState<ReleaseStatus | null>(null);
   const [readinessLoading, setReadinessLoading] = useState(true);
   const [readinessError, setReadinessError] = useState('');
 
@@ -213,14 +225,16 @@ export default function AdminSettings() {
     setReadinessLoading(true);
     setReadinessError('');
     try {
-      const [healthPayload, backupPayload] = await Promise.all([
+      const [healthPayload, backupPayload, releasePayload] = await Promise.all([
         fetchJson<{ data: HealthData }>('/api/admin/health', { cache: 'no-store' }, 'Unable to load system health'),
         adminRole === 'super_admin'
           ? fetchJson<{ data: BackupData }>('/api/admin/operations/backup-status', { cache: 'no-store' }, 'Unable to load backup readiness')
           : Promise.resolve(null),
+        fetchJson<{ data: ReleaseStatus }>('/api/admin/operations/release-status', { cache: 'no-store' }, 'Unable to load release provenance'),
       ]);
       setHealth(healthPayload.data);
       setBackup(backupPayload?.data || null);
+      setRelease(releasePayload.data);
     } catch (error) {
       setReadinessError(error instanceof Error ? error.message : 'Unable to load production readiness');
     } finally {
@@ -319,7 +333,7 @@ export default function AdminSettings() {
 
           {readinessLoading && !health ? (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {Array.from({ length: adminRole === 'super_admin' ? 8 : 7 }).map((_, index) => (
+              {Array.from({ length: adminRole === 'super_admin' ? 9 : 8 }).map((_, index) => (
                 <Skeleton key={index} className="h-28 rounded-xl" />
               ))}
             </div>
@@ -327,6 +341,15 @@ export default function AdminSettings() {
             <>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
+                  {
+                    label: 'Deployed release',
+                    value: release?.shortSha || 'Unknown',
+                    ready: release?.provenance === 'verified_artifact',
+                    detail: release?.artifactTimestamp
+                      ? 'Artifact ' + new Date(release.artifactTimestamp).toLocaleString()
+                      : 'RELEASE_SHA is not available in this runtime',
+                    icon: GitCommitHorizontal,
+                  },
                   {
                     label: 'Database',
                     value: health.database.status === 'healthy' ? health.database.latencyMs + ' ms' : 'Unavailable',
@@ -423,6 +446,11 @@ export default function AdminSettings() {
                   <p className="text-sm font-semibold">
                     Overall production signal: {health.status === 'healthy' ? 'Healthy' : 'Needs attention'}
                   </p>
+                  {release && (
+                    <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                      Runtime started {new Date(release.startedAt).toLocaleString()} · {release.nodeVersion} · {release.environment}
+                    </p>
+                  )}
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     {health.communications.warning || 'Database, mail and enabled automation dependencies are currently reporting healthy.'}
                     {adminRole === 'super_admin' && backup?.restoreVerification?.message
