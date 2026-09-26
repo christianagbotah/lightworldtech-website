@@ -387,7 +387,7 @@ export default function ClientPortalPage() {
     } else if (paymentState === 'success' && reference) {
       try {
         const response = await fetch('/api/client/payments/hubtel/status?reference=' + encodeURIComponent(reference), { cache: 'no-store' });
-        const payload = await response.json();
+        const payload = await response.json().catch(() => null);
         if (!response.ok) throw new Error(payload?.error || 'Unable to verify payment');
         if (payload?.data?.paid) {
           toast.success('Payment verified and your account has been updated');
@@ -416,7 +416,7 @@ export default function ClientPortalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ invoiceId }),
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || 'Unable to start Hubtel payment');
       if (!payload?.data?.checkoutUrl) throw new Error('Hubtel did not return a checkout URL');
       window.location.assign(String(payload.data.checkoutUrl));
@@ -435,7 +435,7 @@ export default function ClientPortalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(login),
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || 'Unable to sign in');
       setSignedIn(true);
       const loaded = await loadPortal();
@@ -461,7 +461,7 @@ export default function ClientPortalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: login.email }),
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || 'Unable to request a password reset');
       setResetMessage(
         payload?.message ||
@@ -489,7 +489,7 @@ export default function ClientPortalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || 'Unable to update profile');
       await loadPortal();
       toast.success('Profile updated');
@@ -521,7 +521,7 @@ export default function ClientPortalPage() {
           newPassword: passwordForm.newPassword,
         }),
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || 'Unable to change password');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       toast.success(payload?.message || 'Password changed');
@@ -663,7 +663,7 @@ export default function ClientPortalPage() {
           projectId: ticket.projectId || null,
         }),
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || 'Unable to create ticket');
       setTicket({ subject: '', message: '', priority: 'normal', category: 'general', projectId: '' });
       await loadPortal();
@@ -688,7 +688,7 @@ export default function ClientPortalPage() {
           feedback: draft.feedback.trim(),
         }),
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || 'Unable to submit satisfaction feedback');
       await loadPortal();
       toast.success('Thank you for rating Lightworld support');
@@ -709,7 +709,7 @@ export default function ClientPortalPage() {
         method: 'POST',
         body: form,
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || 'Unable to upload attachment');
       await loadPortal();
       toast.success('Attachment added to support ticket');
@@ -730,7 +730,7 @@ export default function ClientPortalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message }),
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || 'Unable to send reply');
       setReplies((current) => ({ ...current, [ticketId]: '' }));
       await loadPortal();
