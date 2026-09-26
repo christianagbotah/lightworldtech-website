@@ -246,6 +246,17 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(details).not.toContain('<Table hideExport');
   });
 
+  test('provides searchable self-service help alongside the client portal', () => {
+    const page = source('src/app/client/page.tsx');
+    const knowledge = source('src/components/client/ClientKnowledgeWidget.tsx');
+
+    expect(page).toContain('ClientKnowledgeWidget');
+    expect(knowledge).toContain("fetch('/api/faqs?active=true'");
+    expect(knowledge).toContain('Client help & knowledge');
+    expect(knowledge).toContain('Search client help');
+    expect(knowledge).toContain('account-specific help');
+  });
+
   test('supports real Support Desk agents, bounded bulk actions, exports and SLA escalation', () => {
     const support = source('src/components/admin/AdminSupportDesk.tsx');
     const agents = source('src/app/api/admin/support-agents/route.ts');
