@@ -55,6 +55,13 @@ export async function GET(request: NextRequest) {
           batchSize: Math.max(1, Math.min(50, Number(process.env.RENEWAL_DRAFT_INVOICE_BATCH_SIZE || 10) || 10)),
           dueDays: Math.max(0, Math.min(60, Number(process.env.RENEWAL_DRAFT_INVOICE_DUE_DAYS || 7) || 7)),
         },
+        collectionEmail: {
+          enabled: process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true',
+          configured: getMailTransportStatus().configured,
+          batchSize: Math.max(1, Math.min(50, Number(process.env.COLLECTION_REMINDER_EMAIL_BATCH_SIZE || 10) || 10)),
+          intervalDays: Math.max(1, Math.min(30, Number(process.env.COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS || 7) || 7)),
+          minDaysOverdue: Math.max(1, Math.min(365, Number(process.env.COLLECTION_REMINDER_EMAIL_MIN_DAYS_OVERDUE || 1) || 1)),
+        },
         collections: {
           enabled: process.env.AUTO_COLLECTION_REMINDER_SMS === 'true',
           batchSize: Math.max(1, Math.min(50, Number(process.env.COLLECTION_REMINDER_SMS_BATCH_SIZE || 10) || 10)),
