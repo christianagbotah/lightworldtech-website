@@ -694,17 +694,27 @@ export async function queueDueCollectionReminders() {
       paymentLink,
     });
 
-    const duplicate = await db.smsMessage.findFirst({
-      where: {
-        recipient,
-        templateId: template.id,
-        content,
-        status: { in: ['queued', 'scheduled', 'sent', 'delivered'] },
-        createdAt: { gte: duplicateCutoff },
-      },
-      select: { id: true },
-    });
-    if (duplicate) {
+    const [duplicateMessage, recentInvoiceReminder] = await Promise.all([
+      db.smsMessage.findFirst({
+        where: {
+          recipient,
+          templateId: template.id,
+          content,
+          status: { in: ['queued', 'scheduled', 'sent', 'delivered'] },
+          createdAt: { gte: duplicateCutoff },
+        },
+        select: { id: true },
+      }),
+      db.financeCollectionActivity.findFirst({
+        where: {
+          invoiceId: invoice.id,
+          type: 'sms_reminder_scheduled',
+          createdAt: { gte: duplicateCutoff },
+        },
+        select: { id: true },
+      }),
+    ]);
+    if (duplicateMessage || recentInvoiceReminder) {
       skipped += 1;
       continue;
     }
