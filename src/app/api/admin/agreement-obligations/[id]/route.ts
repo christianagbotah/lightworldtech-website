@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
-import { hasAdminPermission } from '@/lib/admin-permissions';
+import { hasAdminPermission, normalizeAdminPermissions } from '@/lib/admin-permissions';
 
 const updateSchema = z.object({
   title: z.string().trim().min(2).max(260).optional(),
   category: z.enum(['general', 'delivery', 'payment', 'support', 'security', 'compliance', 'renewal', 'reporting', 'other']).optional(),
   owner: z.string().trim().max(180).optional(),
+  ownerAdminId: z.string().trim().nullable().optional(),
   dueDate: z.string().datetime().nullable().optional(),
   status: z.enum(['open', 'in_progress', 'completed', 'waived']).optional(),
   notes: z.string().trim().max(8000).optional(),
@@ -39,6 +40,34 @@ export async function PATCH(
   if (!existing) {
     return NextResponse.json({ success: false, error: 'Agreement obligation not found' }, { status: 404 });
   }
+  let ownerAssignment: { ownerAdminId: string | null; owner: string } | null = null;
+  if (parsed.data.ownerAdminId !== undefined) {
+    if (parsed.data.ownerAdminId) {
+      const ownerAdmin = await db.admin.findFirst({
+        where: { id: parsed.data.ownerAdminId, active: true },
+        select: { id: true, name: true, email: true, role: true, permissions: true },
+      });
+      if (
+        !ownerAdmin ||
+        (
+          ownerAdmin.role !== 'super_admin' &&
+          !normalizeAdminPermissions(ownerAdmin.permissions).includes('clients.manage')
+        )
+      ) {
+        return NextResponse.json({ success: false, error: 'Selected obligation owner is not an active client operator' }, { status: 400 });
+      }
+      ownerAssignment = {
+        ownerAdminId: ownerAdmin.id,
+        owner: ownerAdmin.name || ownerAdmin.email,
+      };
+    } else {
+      ownerAssignment = {
+        ownerAdminId: null,
+        owner: parsed.data.owner ?? existing.owner,
+      };
+    }
+  }
+
   const completing = parsed.data.status === 'completed';
   const reopening = parsed.data.status && parsed.data.status !== 'completed';
 
@@ -46,6 +75,7 @@ export async function PATCH(
     where: { id },
     data: {
       ...parsed.data,
+      ...(ownerAssignment || {}),
       ...(parsed.data.dueDate !== undefined
         ? { dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null }
         : {}),
@@ -67,6 +97,8 @@ export async function PATCH(
       agreementTitle: existing.agreement.title,
       obligationId: obligation.id,
       fields: Object.keys(parsed.data),
+      ownerAdminId: obligation.ownerAdminId,
+      owner: obligation.owner,
       status: obligation.status,
     },
   });

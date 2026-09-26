@@ -48,7 +48,10 @@ export async function GET(request: NextRequest) {
           },
           attachments: { orderBy: { createdAt: 'desc' } },
           changes: { orderBy: { createdAt: 'desc' }, take: 50 },
-          obligations: { orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }] },
+          obligations: {
+            include: { ownerAdmin: { select: { id: true, name: true, email: true, role: true } } },
+            orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
+          },
         },
         orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
       },

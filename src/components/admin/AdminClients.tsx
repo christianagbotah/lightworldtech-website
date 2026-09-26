@@ -73,8 +73,12 @@ type AgreementChange = {
   id: string; changedBy: string; changeType: string; fields: string;
   beforeState: Record<string, unknown>; afterState: Record<string, unknown>; createdAt: string;
 };
+type ObligationOwner = {
+  id: string; name: string; email: string; role: string; lastLogin: string | null;
+};
 type AgreementObligation = {
-  id: string; title: string; category: string; owner: string; dueDate: string | null;
+  id: string; title: string; category: string; owner: string; ownerAdminId: string | null;
+  ownerAdmin: { id: string; name: string; email: string; role: string } | null; dueDate: string | null;
   status: string; notes: string; evidenceUrl: string; completedAt: string | null;
   completedBy: string; createdAt: string; updatedAt: string;
 };
@@ -209,8 +213,9 @@ export default function AdminClients() {
   const [agreementUploadingId, setAgreementUploadingId] = useState('');
   const [agreementApprovalNotes, setAgreementApprovalNotes] = useState<Record<string, string>>({});
   const [agreementObligationForms, setAgreementObligationForms] = useState<Record<string, {
-    title: string; category: string; owner: string; dueDate: string; notes: string; evidenceUrl: string;
+    title: string; category: string; owner: string; ownerAdminId: string; dueDate: string; notes: string; evidenceUrl: string;
   }>>({});
+  const [obligationOwners, setObligationOwners] = useState<ObligationOwner[]>([]);
   const [activationLinks, setActivationLinks] = useState<Record<string, string>>({});
   const [pendingClientAction, setPendingClientAction] = useState('');
 
@@ -270,6 +275,17 @@ export default function AdminClients() {
     }
   };
 
+  const fetchObligationOwners = async () => {
+    try {
+      const response = await fetch('/api/admin/client-operators', { cache: 'no-store' });
+      if (!response.ok) return;
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      setObligationOwners(payload.data || []);
+    } catch {
+      setObligationOwners([]);
+    }
+  };
+
   const fetchOrganizations = async () => {
     setLoading(true);
     setLoadError('');
@@ -289,7 +305,7 @@ export default function AdminClients() {
     }
   };
 
-  useEffect(() => { void Promise.all([fetchOrganizations(), fetchPortfolio()]); }, []);
+  useEffect(() => { void Promise.all([fetchOrganizations(), fetchPortfolio(), fetchObligationOwners()]); }, []);
 
   useEffect(() => {
     if (!organizations.length || typeof window === 'undefined') return;
@@ -637,7 +653,7 @@ export default function AdminClients() {
   const createAgreementObligation = async (event: FormEvent, agreementId: string) => {
     event.preventDefault();
     const form = agreementObligationForms[agreementId] || {
-      title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '',
+      title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '',
     };
     if (!form.title.trim()) return;
     setSaving(true);
@@ -647,6 +663,7 @@ export default function AdminClients() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          ownerAdminId: form.ownerAdminId || null,
           dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : null,
         }),
       });
@@ -654,7 +671,7 @@ export default function AdminClients() {
       if (!response.ok) throw new Error(payload?.error || 'Could not create agreement obligation');
       setAgreementObligationForms((current) => ({
         ...current,
-        [agreementId]: { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' },
+        [agreementId]: { title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '' },
       }));
       await fetchOrganizations();
       toast.success('Agreement obligation added');
@@ -1597,7 +1614,7 @@ export default function AdminClients() {
                                   <div className="min-w-0">
                                     <p className="text-xs font-semibold">{obligation.title}</p>
                                     <p className="mt-1 text-[10px] text-muted-foreground">
-                                      {pretty(obligation.category)} · {obligation.owner || 'Unassigned'}
+                                      {pretty(obligation.category)} · {obligation.ownerAdmin?.name || obligation.owner || 'Unassigned'}
                                       {obligation.dueDate ? ' · due ' + new Date(obligation.dueDate).toLocaleDateString() : ' · no due date'}
                                     </p>
                                   </div>
@@ -1618,6 +1635,17 @@ export default function AdminClients() {
                                     <option value="completed">Completed</option>
                                     <option value="waived">Waived</option>
                                   </select>
+                                  <select
+                                    value={obligation.ownerAdminId || ''}
+                                    onChange={(event) => void patchAgreementObligation(obligation.id, { ownerAdminId: event.target.value || null })}
+                                    className="h-8 max-w-[220px] rounded-lg border border-input bg-background px-2 text-[11px]"
+                                    aria-label={'Assign staff owner for ' + obligation.title}
+                                  >
+                                    <option value="">No staff owner</option>
+                                    {obligationOwners.map((owner) => (
+                                      <option key={owner.id} value={owner.id}>{owner.name || owner.email}</option>
+                                    ))}
+                                  </select>
                                   {obligation.evidenceUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(obligation.evidenceUrl, '_blank', 'noopener,noreferrer')}>Evidence</Button>}
                                 </div>
                               </div>
@@ -1636,25 +1664,39 @@ export default function AdminClients() {
                               value={agreementObligationForms[agreement.id]?.title || ''}
                               onChange={(event) => setAgreementObligationForms((current) => ({
                                 ...current,
-                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), title: event.target.value },
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '' }), title: event.target.value },
                               }))}
                             />
                             <select
                               value={agreementObligationForms[agreement.id]?.category || 'general'}
                               onChange={(event) => setAgreementObligationForms((current) => ({
                                 ...current,
-                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), category: event.target.value },
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '' }), category: event.target.value },
                               }))}
                               className="h-10 rounded-xl border border-input bg-background px-3 text-sm"
                             >
                               <option value="general">General</option><option value="delivery">Delivery</option><option value="payment">Payment</option><option value="support">Support</option><option value="security">Security</option><option value="compliance">Compliance</option><option value="renewal">Renewal</option><option value="reporting">Reporting</option><option value="other">Other</option>
                             </select>
+                            <select
+                              value={agreementObligationForms[agreement.id]?.ownerAdminId || ''}
+                              onChange={(event) => setAgreementObligationForms((current) => ({
+                                ...current,
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '' }), ownerAdminId: event.target.value },
+                              }))}
+                              className="h-10 rounded-xl border border-input bg-background px-3 text-sm"
+                              aria-label="Accountable Lightworld owner"
+                            >
+                              <option value="">No internal staff owner</option>
+                              {obligationOwners.map((owner) => (
+                                <option key={owner.id} value={owner.id}>{owner.name || owner.email}</option>
+                              ))}
+                            </select>
                             <Input
-                              placeholder="Owner"
+                              placeholder="External / fallback owner"
                               value={agreementObligationForms[agreement.id]?.owner || ''}
                               onChange={(event) => setAgreementObligationForms((current) => ({
                                 ...current,
-                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), owner: event.target.value },
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '' }), owner: event.target.value },
                               }))}
                             />
                             <Input
@@ -1662,7 +1704,7 @@ export default function AdminClients() {
                               value={agreementObligationForms[agreement.id]?.dueDate || ''}
                               onChange={(event) => setAgreementObligationForms((current) => ({
                                 ...current,
-                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), dueDate: event.target.value },
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '' }), dueDate: event.target.value },
                               }))}
                             />
                           </div>
@@ -1672,7 +1714,7 @@ export default function AdminClients() {
                             value={agreementObligationForms[agreement.id]?.notes || ''}
                             onChange={(event) => setAgreementObligationForms((current) => ({
                               ...current,
-                              [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), notes: event.target.value },
+                              [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '' }), notes: event.target.value },
                             }))}
                           />
                           <Input
@@ -1681,7 +1723,7 @@ export default function AdminClients() {
                             value={agreementObligationForms[agreement.id]?.evidenceUrl || ''}
                             onChange={(event) => setAgreementObligationForms((current) => ({
                               ...current,
-                              [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', dueDate: '', notes: '', evidenceUrl: '' }), evidenceUrl: event.target.value },
+                              [agreement.id]: { ...(current[agreement.id] || { title: '', category: 'general', owner: '', ownerAdminId: '', dueDate: '', notes: '', evidenceUrl: '' }), evidenceUrl: event.target.value },
                             }))}
                           />
                           <Button disabled={saving} type="submit" size="sm" variant="outline"><Plus className="mr-1 size-3.5" /> Add obligation</Button>
