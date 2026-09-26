@@ -1644,6 +1644,16 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(crm).toContain('Unassigned');
   });
 
+  test('keeps dashboard and governance tables exportable', () => {
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const governance = source('src/components/admin/AdminGovernance.tsx');
+
+    expect(dashboard).toContain('exportFileName="lightworld-dashboard-recent-blog-posts"');
+    expect(dashboard).toContain('exportFileName="lightworld-dashboard-recent-messages"');
+    expect(governance).toContain('exportFileName="lightworld-admin-accounts"');
+    expect(governance).toContain('exportFileName="lightworld-governance-visible-audit"');
+  });
+
   test('supports audited enterprise exports and bounded message bulk actions', () => {
     const crm = source('src/components/admin/AdminCRM.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
