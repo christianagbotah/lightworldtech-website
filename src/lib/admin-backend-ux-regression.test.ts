@@ -1738,6 +1738,15 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(settings).toContain('Runtime started');
   });
 
+  test('keeps Admin Settings resilient to invalid gateway responses', () => {
+    const settings = source('src/components/admin/AdminSettings.tsx');
+
+    expect(settings).toContain("fetchJson<SettingsData>('/api/settings'");
+    expect(settings).toContain("fetchJson('/api/settings'");
+    expect(settings).not.toContain('setSettings(await res.json())');
+    expect(settings).not.toContain("if (!res.ok) throw new Error('Failed to fetch')");
+  });
+
   test('consolidates production readiness inside Settings', () => {
     const settings = source('src/components/admin/AdminSettings.tsx');
 
