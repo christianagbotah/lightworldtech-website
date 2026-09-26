@@ -1399,6 +1399,24 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('Prepared from the project renewal workflow');
   });
 
+  test('excludes selection and action controls from admin CSV exports', () => {
+    const files = [
+      'src/components/admin/AdminBlog.tsx',
+      'src/components/admin/AdminTeam.tsx',
+      'src/components/admin/AdminServices.tsx',
+      'src/components/admin/AdminPortfolio.tsx',
+      'src/components/admin/AdminTestimonials.tsx',
+      'src/components/admin/AdminNewsletter.tsx',
+    ];
+    for (const file of files) {
+      expect(source(file)).toContain('data-export-ignore');
+    }
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    expect(messages).toContain('<TableHead data-export-ignore');
+    expect(messages).toContain('<TableCell data-export-ignore');
+    expect(messages).toContain('data-export-ignore className="text-right"');
+  });
+
   test('provides export controls across remaining admin data tables', () => {
     expect(source('src/components/admin/AdminBlog.tsx')).toContain('exportFileName="lightworld-blog-posts"');
     expect(source('src/components/admin/AdminTeam.tsx')).toContain('exportFileName="lightworld-team-members"');
