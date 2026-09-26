@@ -26,6 +26,7 @@ import {
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
+import { readJsonSafely } from '@/lib/http-response';
 import { z } from 'zod';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -113,9 +114,9 @@ function ReviewFormModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
         body: JSON.stringify(result.data),
       });
 
-      const data = await response.json();
+      const data = await readJsonSafely<any>(response);
 
-      if (data.success) {
+      if (response.ok && data?.success) {
         setSubmitted(true);
         toast.success('Thank you for your review! Your feedback is invaluable to us.');
         setTimeout(() => {

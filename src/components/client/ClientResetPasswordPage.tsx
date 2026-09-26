@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { readJsonSafely } from '@/lib/http-response';
 
 export default function ClientResetPasswordPage() {
   const [token, setToken] = useState('');
@@ -49,10 +50,10 @@ export default function ClientResetPasswordPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword: password }),
       });
-      const data = await response.json();
+      const data = await readJsonSafely<any>(response);
 
-      if (!response.ok || !data.success) {
-        setError(data.error || 'Unable to reset the password.');
+      if (!response.ok || !data?.success) {
+        setError(data?.error || 'Unable to reset the password.');
         return;
       }
 
