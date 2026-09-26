@@ -486,6 +486,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(bulk).toContain("'admin.finance_collection_bulk_sms_scheduled'");
   });
 
+  test('measures per-currency customer receivable concentration without FX assumptions', () => {
+    const api = source('src/app/api/admin/finance/dashboard/route.ts');
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(api).toContain('receivableConcentrationRaw');
+    expect(api).toContain('topSharePct');
+    expect(api).toContain('top3SharePct');
+    expect(api).toContain('No FX conversion is applied');
+    expect(dashboard).toContain('Customer concentration');
+    expect(dashboard).toContain('Largest customer receivable share %');
+  });
+
   test('normalizes recurring service revenue into MRR and ARR without guessing custom cycles', () => {
     const api = source('src/app/api/admin/finance/dashboard/route.ts');
     const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
