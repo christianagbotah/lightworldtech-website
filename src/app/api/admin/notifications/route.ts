@@ -211,6 +211,27 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    const renewalCompletionCandidates = await db.clientInvoice.findMany({
+      where: {
+        status: { notIn: ['draft', 'void'] },
+        renewalForDate: { not: null },
+        renewalCompletedAt: null,
+        OR: [
+          { serviceId: { not: null } },
+          { projectId: { not: null } },
+        ],
+      },
+      select: {
+        total: true,
+        allocations: { select: { amount: true } },
+        creditNotes: { where: { status: 'posted' }, select: { appliedAmount: true } },
+      },
+      take: 3000,
+    });
+    const paidRenewalsAwaitingCompletion = renewalCompletionCandidates.filter(
+      (invoice) => invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).eq(0),
+    ).length;
+
     const overdueInvoiceCount = overdueInvoices.filter(
       (invoice) => invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0),
     ).length;
@@ -243,6 +264,21 @@ export async function GET(request: NextRequest) {
       const days = Math.ceil((project.nextRenewalDate.getTime() - now.getTime()) / 86400000);
       return days <= project.renewalNoticeDays;
     }).length;
+
+    if (paidRenewalsAwaitingCompletion > 0) {
+      notices.push({
+        id: 'finance-paid-renewals-awaiting-completion',
+        severity: 'warning',
+        title: 'Paid renewals awaiting completion',
+        message:
+          paidRenewalsAwaitingCompletion +
+          ' fully paid renewal invoice' +
+          (paidRenewalsAwaitingCompletion === 1 ? ' is' : 's are') +
+          ' waiting for Finance to advance the service or project renewal cycle.',
+        count: paidRenewalsAwaitingCompletion,
+        action: 'admin-finance-renewals',
+      });
+    }
 
     if (overdueInvoiceCount > 0) {
       notices.push({
