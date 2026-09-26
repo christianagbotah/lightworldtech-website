@@ -1224,6 +1224,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain("sessionStorage.setItem('lw-client-organization-id', organizationId)");
   });
 
+  test('includes Hubtel automation readiness in authenticated operational health', () => {
+    const health = source('src/app/api/admin/health/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(health).toContain('hubtelConfiguration');
+    expect(health).toContain('AUTO_SERVICE_RENEWAL_SMS');
+    expect(health).toContain('AUTO_PROJECT_RENEWAL_SMS');
+    expect(health).toContain('AUTO_COLLECTION_REMINDER_SMS');
+    expect(health).toContain('dispatcherConfigured');
+    expect(health).toContain('automationHealthy');
+    expect(dashboard).toContain('communications: {');
+    expect(dashboard).toContain("SMS {health?.communications?.smsConfigured");
+  });
+
   test('suppresses stale collection alerts after invoice settlement', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
 
