@@ -1224,6 +1224,21 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain("sessionStorage.setItem('lw-client-organization-id', organizationId)");
   });
 
+  test('adds permission-scoped business activity to the main dashboard', () => {
+    const activity = source('src/app/api/admin/activity/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(activity).toContain("hasAdminPermission(admin.role, admin.permissions, 'finance.manage')");
+    expect(activity).toContain("hasAdminPermission(admin.role, admin.permissions, 'clients.manage')");
+    expect(activity).toContain('db.clientPayment.findMany');
+    expect(activity).toContain('db.clientInvoice.findMany');
+    expect(activity).toContain('db.financeCollectionActivity.findMany');
+    expect(activity).toContain('db.clientSupportTicket.findMany');
+    expect(dashboard).toContain("fetch('/api/admin/activity'");
+    expect(dashboard).toContain("sessionStorage.setItem('lw-support-ticket-id', activity.targetId)");
+    expect(dashboard).toContain("activity.type === 'collection' ? 'collections' : 'customers'");
+  });
+
   test('includes Hubtel automation readiness in authenticated operational health', () => {
     const health = source('src/app/api/admin/health/route.ts');
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
