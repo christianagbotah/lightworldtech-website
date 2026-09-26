@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
   if (canFinance) {
     const now = new Date();
     const renewalWindow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-    const [overdueInvoices, overdueBills, renewalCandidates, projectRenewalCandidates, expiredServices, collectionFollowUps, brokenPromises] = await Promise.all([
+    const [overdueInvoices, overdueBills, renewalCandidates, projectRenewalCandidates, expiredServices, collectionInvoices] = await Promise.all([
       db.clientInvoice.findMany({
         where: {
           dueDate: { lt: now },
@@ -163,24 +163,55 @@ export async function GET(request: NextRequest) {
           expiryDate: { lt: now },
         },
       }),
-      db.financeCollectionActivity.count({
+      db.clientInvoice.findMany({
         where: {
-          nextFollowUpAt: { lt: now },
-          completedAt: null,
+          status: { notIn: ['draft', 'void'] },
+          collectionActivities: {
+            some: {
+              completedAt: null,
+              OR: [
+                { nextFollowUpAt: { lt: now } },
+                { type: 'promise_to_pay', promisedDate: { lt: now } },
+              ],
+            },
+          },
         },
-      }),
-      db.financeCollectionActivity.count({
-        where: {
-          type: 'promise_to_pay',
-          promisedDate: { lt: now },
-          completedAt: null,
+        select: {
+          total: true,
+          allocations: { select: { amount: true } },
+          creditNotes: { where: { status: 'posted' }, select: { appliedAmount: true } },
+          collectionActivities: {
+            where: { completedAt: null },
+            orderBy: { createdAt: 'desc' },
+            select: {
+              type: true,
+              nextFollowUpAt: true,
+              promisedDate: true,
+            },
+          },
         },
+        take: 3000,
       }),
     ]);
 
     const overdueInvoiceCount = overdueInvoices.filter(
       (invoice) => invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0),
     ).length;
+
+    const liveCollectionInvoices = collectionInvoices.filter(
+      (invoice) => invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0),
+    );
+    const collectionFollowUps = liveCollectionInvoices.filter(
+      (invoice) => invoice.collectionActivities.some(
+        (activity) => activity.nextFollowUpAt && activity.nextFollowUpAt.getTime() < now.getTime(),
+      ),
+    ).length;
+    const brokenPromises = liveCollectionInvoices.filter((invoice) => {
+      const latestPromise = invoice.collectionActivities.find(
+        (activity) => activity.type === 'promise_to_pay' && activity.promisedDate,
+      );
+      return Boolean(latestPromise?.promisedDate && latestPromise.promisedDate.getTime() < now.getTime());
+    }).length;
 
     const renewalsDue = renewalCandidates.filter((service) => {
       if (!service.expiryDate) return false;
