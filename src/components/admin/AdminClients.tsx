@@ -63,7 +63,7 @@ type Project = {
 };
 type AgreementAttachment = {
   id: string; originalName: string; mimeType: string; sizeBytes: number;
-  uploadedBy: string; createdAt: string;
+  uploadedBy: string; visibleToClient: boolean; createdAt: string;
 };
 type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
@@ -614,6 +614,22 @@ export default function AdminClients() {
       toast.error(error instanceof Error ? error.message : 'Could not upload agreement file');
     } finally {
       setAgreementUploadingId('');
+    }
+  };
+
+  const setAgreementAttachmentVisibility = async (attachmentId: string, visibleToClient: boolean) => {
+    try {
+      const response = await fetch('/api/agreement-attachments/' + attachmentId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visibleToClient }),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not update agreement file visibility');
+      await fetchOrganizations();
+      toast.success(visibleToClient ? 'Agreement PDF shared with client' : 'Agreement PDF made internal');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update agreement file visibility');
     }
   };
 
@@ -1360,7 +1376,15 @@ export default function AdminClients() {
                                   {(attachment.sizeBytes / 1024 / 1024).toFixed(2)} MB · uploaded by {attachment.uploadedBy} · {new Date(attachment.createdAt).toLocaleString()}
                                 </p>
                               </div>
-                              <div className="flex gap-1">
+                              <div className="flex flex-wrap gap-1">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={attachment.visibleToClient ? 'default' : 'outline'}
+                                  onClick={() => void setAgreementAttachmentVisibility(attachment.id, !attachment.visibleToClient)}
+                                >
+                                  {attachment.visibleToClient ? 'Shared with client' : 'Internal only'}
+                                </Button>
                                 <Button type="button" size="sm" variant="outline" onClick={() => window.open('/api/agreement-attachments/' + attachment.id, '_blank', 'noopener,noreferrer')}>
                                   <Download className="mr-1 size-3.5" /> Download
                                 </Button>

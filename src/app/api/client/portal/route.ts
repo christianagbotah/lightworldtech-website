@@ -62,6 +62,34 @@ export async function GET(request: NextRequest) {
             publishAt: true, createdAt: true,
           },
         },
+        agreements: {
+          where: {
+            attachments: { some: { visibleToClient: true } },
+          },
+          orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
+          select: {
+            id: true,
+            title: true,
+            agreementType: true,
+            status: true,
+            referenceNumber: true,
+            effectiveDate: true,
+            expiryDate: true,
+            signedAt: true,
+            project: { select: { id: true, name: true } },
+            attachments: {
+              where: { visibleToClient: true },
+              orderBy: { createdAt: 'desc' },
+              select: {
+                id: true,
+                originalName: true,
+                mimeType: true,
+                sizeBytes: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
         services: {
           orderBy: [{ nextDueDate: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
           include: {
@@ -317,6 +345,7 @@ export async function GET(request: NextRequest) {
         })),
         tickets: organization.tickets,
         announcements: organization.announcements,
+        agreements: organization.agreements,
         account: {
           summary: accountSummary,
           services,
