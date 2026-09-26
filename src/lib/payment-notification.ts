@@ -58,7 +58,14 @@ export async function notifyCustomerPaymentReceived(paymentId: string) {
       },
     });
     if (!current) return false;
-    if (['sent', 'partial', 'skipped', 'sending'].includes(current.customerNotificationStatus)) {
+    if (['sent', 'partial', 'skipped'].includes(current.customerNotificationStatus)) {
+      return false;
+    }
+    if (
+      current.customerNotificationStatus === 'sending' &&
+      current.customerNotificationAttemptedAt &&
+      current.customerNotificationAttemptedAt.getTime() > Date.now() - 10 * 60 * 1000
+    ) {
       return false;
     }
 
