@@ -428,7 +428,7 @@ export default function AdminGovernance() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="max-w-full overflow-x-auto">
-            <Table>
+            <Table exportFileName="lightworld-admin-accounts">
               <TableHeader>
                 <TableRow>
                   <TableHead>Administrator</TableHead>

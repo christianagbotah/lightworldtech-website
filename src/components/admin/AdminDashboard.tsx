@@ -893,7 +893,7 @@ export default function AdminDashboard() {
             {recentPosts.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground text-sm">No posts yet</div>
             ) : (
-              <Table>
+              <Table exportFileName="lightworld-dashboard-recent-blog-posts">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-xs">Title</TableHead>
@@ -937,7 +937,7 @@ export default function AdminDashboard() {
             {recentMessages.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground text-sm">No messages yet</div>
             ) : (
-              <Table>
+              <Table exportFileName="lightworld-dashboard-recent-messages">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-xs">Name</TableHead>
