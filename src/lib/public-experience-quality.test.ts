@@ -7,6 +7,18 @@ function source(relativePath: string): string {
 }
 
 describe('public experience quality', () => {
+  test('filters malformed public authority links before rendering recognition or coverage', () => {
+    const profile = source('src/lib/company-profile.ts');
+    const home = source('src/components/pages/HomePage.tsx');
+    const newsroom = source('src/app/newsroom/page.tsx');
+
+    expect(profile).toContain('export function isSafePublicSourceUrl');
+    expect(profile).toContain("url.protocol === 'https:'");
+    expect(home).toContain('isSafePublicSourceUrl(item.href)');
+    expect(newsroom).toContain('isSafePublicSourceUrl(item.href)');
+    expect(newsroom).not.toContain("href={String(item.href || '#')}");
+  });
+
   test('global motion preferences are respected by Framer Motion and CSS', () => {
     const layout = source('src/app/layout.tsx');
     const provider = source('src/components/providers/MotionPreferenceProvider.tsx');
