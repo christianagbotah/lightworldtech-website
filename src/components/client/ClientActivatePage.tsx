@@ -34,7 +34,7 @@ export default function ClientActivatePage({ token }: { token: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password }),
       });
-      const payload = await response.json();
+      const payload = await readJsonSafely<any>(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to activate account');
       setDone(true);
       setPassword('');
