@@ -246,6 +246,26 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(details).not.toContain('<Table hideExport');
   });
 
+  test('gives clients secure printable invoice and receipt documents', () => {
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+    const invoiceDocument = source('src/app/api/client/invoices/[id]/document/route.ts');
+    const receiptDocument = source('src/app/api/client/payments/[id]/receipt/route.ts');
+
+    expect(portal).toContain("/api/client/invoices/");
+    expect(portal).toContain("/document");
+    expect(portal).toContain("/api/client/payments/");
+    expect(portal).toContain("/receipt");
+    expect(portal).toContain('View / print');
+    expect(invoiceDocument).toContain('getActiveClientContext');
+    expect(invoiceDocument).toContain('organizationId: context.user.organizationId');
+    expect(invoiceDocument).toContain("status: { notIn: ['draft', 'void'] }");
+    expect(invoiceDocument).toContain('Print / Save PDF');
+    expect(invoiceDocument).toContain("Cache-Control': 'private, no-store");
+    expect(receiptDocument).toContain('getActiveClientContext');
+    expect(receiptDocument).toContain('organizationId: context.user.organizationId');
+    expect(receiptDocument).toContain('Print / Save PDF');
+  });
+
   test('provides searchable self-service help alongside the client portal', () => {
     const page = source('src/app/client/page.tsx');
     const knowledge = source('src/components/client/ClientKnowledgeWidget.tsx');
