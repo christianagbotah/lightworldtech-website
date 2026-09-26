@@ -498,6 +498,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain('Largest customer receivable share %');
   });
 
+  test('reports renewal workflow completion without presenting it as retention', () => {
+    const api = source('src/app/api/admin/finance/dashboard/route.ts');
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(api).toContain('renewalPerformance');
+    expect(api).toContain('completedDueInPeriod');
+    expect(api).toContain('overdueOpenRenewals');
+    expect(api).toContain('This is not a customer-retention rate');
+    expect(dashboard).toContain('Renewal workflow performance');
+    expect(dashboard).toContain('Renewal workflow completion %');
+  });
+
   test('normalizes recurring service revenue into MRR and ARR without guessing custom cycles', () => {
     const api = source('src/app/api/admin/finance/dashboard/route.ts');
     const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
