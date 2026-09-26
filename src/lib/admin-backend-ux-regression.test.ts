@@ -1224,6 +1224,16 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain("sessionStorage.setItem('lw-client-organization-id', organizationId)");
   });
 
+  test('suppresses stale collection alerts after invoice settlement', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('liveCollectionInvoices');
+    expect(notifications).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0)');
+    expect(notifications).toContain('invoice.collectionActivities.some');
+    expect(notifications).toContain("activity.type === 'promise_to_pay'");
+    expect(notifications).toContain('latestPromise?.promisedDate');
+  });
+
   test('keeps executive priorities and operational alerts live', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const layout = source('src/components/admin/AdminLayout.tsx');
