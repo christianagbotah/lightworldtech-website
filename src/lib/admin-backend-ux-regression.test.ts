@@ -1731,7 +1731,8 @@ describe('admin backend and responsive UX regression coverage', () => {
 
     expect(schema).toContain('model ClientAgreementObligation');
     expect(schema).toContain('obligations       ClientAgreementObligation[]');
-    expect(clientsApi).toContain('obligations: { orderBy:');
+    expect(clientsApi).toContain('obligations: {');
+    expect(clientsApi).toContain("orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }]");
     expect(createApi).toContain("'admin.client_agreement_obligation_created'");
     expect(updateApi).toContain("'admin.client_agreement_obligation_updated'");
     expect(updateApi).toContain("completedAt: new Date()");
