@@ -374,32 +374,6 @@ export async function queueDueServiceRenewalReminders() {
       continue;
     }
 
-    const existingHold = invoice.collectionActivities.find(
-      (activity) => activity.type === 'automation_hold' && !activity.completedAt,
-    );
-    const automatedCycles = automatedCollectionCycleCount(invoice.collectionActivities);
-    if (existingHold || automatedCycles >= maxAutomatedCycles) {
-      manualReviewRequired += 1;
-      if (!existingHold) {
-        await db.financeCollectionActivity.create({
-          data: {
-            organizationId: invoice.organizationId,
-            invoiceId: invoice.id,
-            type: 'automation_hold',
-            note:
-              'Automatic collection outreach paused after ' +
-              automatedCycles +
-              ' reminder cycle' +
-              (automatedCycles === 1 ? '' : 's') +
-              '. Human review is required before further customer contact.',
-            nextFollowUpAt: now,
-            createdBy: 'System collections scheduler',
-          },
-        });
-      }
-      continue;
-    }
-
     let recipient = '';
     try {
       recipient = normalizePhone(service.organization.primaryPhone);
@@ -1005,6 +979,32 @@ export async function queueDueCollectionReminders() {
     );
     if (latestPromise?.promisedDate && latestPromise.promisedDate.getTime() >= now.getTime()) {
       promisesDeferred += 1;
+      continue;
+    }
+
+    const existingHold = invoice.collectionActivities.find(
+      (activity) => activity.type === 'automation_hold' && !activity.completedAt,
+    );
+    const automatedCycles = automatedCollectionCycleCount(invoice.collectionActivities);
+    if (existingHold || automatedCycles >= maxAutomatedCycles) {
+      manualReviewRequired += 1;
+      if (!existingHold) {
+        await db.financeCollectionActivity.create({
+          data: {
+            organizationId: invoice.organizationId,
+            invoiceId: invoice.id,
+            type: 'automation_hold',
+            note:
+              'Automatic collection outreach paused after ' +
+              automatedCycles +
+              ' reminder cycle' +
+              (automatedCycles === 1 ? '' : 's') +
+              '. Human review is required before further customer contact.',
+            nextFollowUpAt: now,
+            createdBy: 'System collections scheduler',
+          },
+        });
+      }
       continue;
     }
 
