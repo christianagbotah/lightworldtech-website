@@ -456,6 +456,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain('lightworld-finance-management-');
   });
 
+  test('supports bounded bulk Hubtel reminders from collections', () => {
+    const workspace = source('src/components/admin/FinanceCollectionsWorkspace.tsx');
+    const bulk = source('src/app/api/admin/finance/collections/bulk-reminders/route.ts');
+
+    expect(workspace).toContain('Send selected reminders');
+    expect(workspace).toContain('maximum 25 per action');
+    expect(workspace).toContain('/api/admin/finance/collections/bulk-reminders');
+    expect(bulk).toContain('.max(25)');
+    expect(bulk).toContain('promise_to_pay');
+    expect(bulk).toContain("createdAt: { gte: duplicateCutoff }");
+    expect(bulk).toContain("type: 'sms_reminder_scheduled'");
+    expect(bulk).toContain("'admin.finance_collection_bulk_sms_scheduled'");
+  });
+
   test('adds per-currency historical cash runway without FX assumptions', () => {
     const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
     const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');

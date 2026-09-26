@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
@@ -149,6 +150,8 @@ export default function FinanceCollectionsWorkspace({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [completingId, setCompletingId] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkSending, setBulkSending] = useState(false);
   const [form, setForm] = useState({
     type: 'call',
     note: '',
@@ -166,6 +169,7 @@ export default function FinanceCollectionsWorkspace({
       if (state !== 'all') params.set('state', state);
       const result = await request<CollectionsData>('/api/admin/finance/collections?' + params.toString());
       setData(result);
+      setSelectedIds((current) => new Set([...current].filter((id) => result.items.some((item) => item.id === id))));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to load collection queue');
     } finally {
@@ -185,6 +189,65 @@ export default function FinanceCollectionsWorkspace({
   const totals = useMemo(() => Object.entries(data?.summary.totalsByCurrency || {}), [data]);
   const totalText = (key: 'outstanding' | 'overdue' | 'promised') =>
     totals.length ? totals.map(([currency, item]) => money(item[key], currency)).join(' · ') : '—';
+
+  const eligibleForBulkReminder = (item: CollectionItem) =>
+    item.daysOverdue > 0 &&
+    Boolean(item.phone) &&
+    Number(item.balance) > 0 &&
+    !(item.latestPromise?.promisedDate && new Date(item.latestPromise.promisedDate).getTime() >= Date.now());
+
+  const selectableItems = (data?.items || []).filter(eligibleForBulkReminder);
+  const allSelectableSelected = selectableItems.length > 0 && selectableItems.every((item) => selectedIds.has(item.id));
+
+  const toggleBulkItem = (id: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else if (next.size < 25) next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllSelectable = () => {
+    setSelectedIds((current) => {
+      if (allSelectableSelected) return new Set();
+      return new Set(selectableItems.slice(0, 25).map((item) => item.id));
+    });
+  };
+
+  const sendBulkReminders = async () => {
+    const invoiceIds = [...selectedIds].slice(0, 25);
+    if (!invoiceIds.length) return;
+    setBulkSending(true);
+    try {
+      const result = await request<{
+        queued: number;
+        duplicate: number;
+        activePromise: number;
+        invalid: number;
+        failed: number;
+      }>('/api/admin/finance/collections/bulk-reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoiceIds }),
+      });
+      toast.success(
+        result.queued +
+        ' payment reminder' +
+        (result.queued === 1 ? '' : 's') +
+        ' scheduled' +
+        (result.duplicate ? ' · ' + result.duplicate + ' duplicate(s) skipped' : '') +
+        (result.activePromise ? ' · ' + result.activePromise + ' active promise(s) deferred' : ''),
+      );
+      if (result.failed) toast.error(result.failed + ' selected reminder(s) could not be scheduled');
+      setSelectedIds(new Set());
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to schedule selected reminders');
+    } finally {
+      setBulkSending(false);
+    }
+  };
 
   const openActivity = (item: CollectionItem) => {
     setSelected(item);
@@ -281,6 +344,26 @@ export default function FinanceCollectionsWorkspace({
               Refresh
             </Button>
           </div>
+          <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{selectedIds.size}</span> selected for Hubtel payment reminder
+              <span className="ml-1">· maximum 25 per action · active promises and recent duplicates are protected</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" variant="outline" onClick={toggleAllSelectable} disabled={!selectableItems.length || bulkSending}>
+                {allSelectableSelected ? 'Clear selection' : 'Select eligible'}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void sendBulkReminders()}
+                disabled={!selectedIds.size || bulkSending || !data?.smsConfigured || !data?.canSendCommunications}
+              >
+                {bulkSending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Send className="mr-2 size-4" />}
+                Send selected reminders
+              </Button>
+            </div>
+          </div>
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_190px]">
             <Input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Search customer, invoice, service, phone or email" />
             <select value={bucket} onChange={(event) => setBucket(event.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
@@ -306,6 +389,13 @@ export default function FinanceCollectionsWorkspace({
             <Table exportFileName="lightworld-receivables-collection-queue" className="min-w-[1120px]">
               <TableHeader>
                 <TableRow>
+                  <TableHead data-export-ignore className="w-10">
+                    <Checkbox
+                      checked={allSelectableSelected}
+                      onCheckedChange={toggleAllSelectable}
+                      aria-label="Select all eligible overdue invoices"
+                    />
+                  </TableHead>
                   <TableHead>Customer / invoice</TableHead>
                   <TableHead>Service</TableHead>
                   <TableHead>Age</TableHead>
@@ -318,6 +408,14 @@ export default function FinanceCollectionsWorkspace({
               <TableBody>
                 {data?.items.map((item) => (
                   <TableRow key={item.id}>
+                    <TableCell data-export-ignore>
+                      <Checkbox
+                        checked={selectedIds.has(item.id)}
+                        disabled={!eligibleForBulkReminder(item)}
+                        onCheckedChange={() => toggleBulkItem(item.id)}
+                        aria-label={'Select ' + item.invoiceNumber + ' for payment reminder'}
+                      />
+                    </TableCell>
                     <TableCell>
                       <button type="button" onClick={() => onOpenCustomer(item.organizationId)} className="text-left font-medium hover:underline">
                         {item.customer}
@@ -378,7 +476,7 @@ export default function FinanceCollectionsWorkspace({
                   </TableRow>
                 ))}
                 {!loading && !data?.items.length && (
-                  <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No outstanding invoices match these filters.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No outstanding invoices match these filters.</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
