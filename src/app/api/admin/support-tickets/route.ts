@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
     const sla = searchParams.get('sla')?.trim();
     const limit = Math.min(200, Math.max(1, Number(searchParams.get('limit') || 100)));
     const now = new Date();
+    const configuredWarningMinutes = Number(process.env.SUPPORT_SLA_WARNING_MINUTES || 60);
+    const warningMinutes = Math.max(5, Math.min(1440, Number.isFinite(configuredWarningMinutes) ? configuredWarningMinutes : 60));
+    const warningHorizon = new Date(now.getTime() + warningMinutes * 60_000);
 
     const where: Prisma.ClientSupportTicketWhereInput = {};
     if (status && status !== 'all') where.status = status;
@@ -32,6 +35,18 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { firstRespondedAt: null, firstResponseDueAt: { lt: now } },
         { status: { notIn: ['resolved', 'closed'] }, resolutionDueAt: { lt: now } },
+      ];
+    } else if (sla === 'at_risk') {
+      where.OR = [
+        {
+          firstRespondedAt: null,
+          firstResponseDueAt: { gte: now, lte: warningHorizon },
+          status: { notIn: ['resolved', 'closed'] },
+        },
+        {
+          resolutionDueAt: { gte: now, lte: warningHorizon },
+          status: { notIn: ['resolved', 'closed'] },
+        },
       ];
     }
     if (q) {
@@ -58,9 +73,17 @@ export async function GET(request: NextRequest) {
       ],
     };
 
+    const atRiskWhere: Prisma.ClientSupportTicketWhereInput = {
+      status: { notIn: ['resolved', 'closed'] },
+      OR: [
+        { firstRespondedAt: null, firstResponseDueAt: { gte: now, lte: warningHorizon } },
+        { resolutionDueAt: { gte: now, lte: warningHorizon } },
+      ],
+    };
+
     const performanceSince = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-    const [tickets, total, open, unread, highPriority, breached, awaitingClient, performanceTickets] = await Promise.all([
+    const [tickets, total, open, unread, highPriority, breached, atRisk, awaitingClient, performanceTickets] = await Promise.all([
       db.clientSupportTicket.findMany({
         where,
         take: limit,
@@ -79,6 +102,7 @@ export async function GET(request: NextRequest) {
         where: { priority: 'high', status: { notIn: ['resolved', 'closed'] } },
       }),
       db.clientSupportTicket.count({ where: breachWhere }),
+      db.clientSupportTicket.count({ where: atRiskWhere }),
       db.clientSupportTicket.count({ where: { status: 'awaiting_client' } }),
       db.clientSupportTicket.findMany({
         where: { createdAt: { gte: performanceSince } },
@@ -159,6 +183,7 @@ export async function GET(request: NextRequest) {
         unread,
         highPriority,
         breached,
+        atRisk,
         awaitingClient,
         performance: {
           windowDays: 90,
@@ -172,6 +197,7 @@ export async function GET(request: NextRequest) {
       },
       filters: {
         limit,
+        slaWarningMinutes: warningMinutes,
       },
     });
   } catch (error) {
