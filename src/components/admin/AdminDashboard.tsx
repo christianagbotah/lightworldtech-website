@@ -157,7 +157,14 @@ interface BackupData {
   uploads: BackupArtifact | null;
   checkedAt: string;
   restoreVerification: {
-    status: 'not_verified';
+    status: 'verified' | 'stale' | 'failed' | 'not_verified';
+    verifiedAt: string | null;
+    ageHours: number | null;
+    databaseArtifact: string;
+    uploadsArtifact: string;
+    publicTableCount: number | null;
+    uploadArchiveEntries: number | null;
+    method: string;
     message: string;
   };
 }
@@ -724,9 +731,9 @@ export default function AdminDashboard() {
                   <p className="text-sm font-semibold">Recovery readiness</p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     {backup?.status === 'healthy'
-                      ? 'Fresh database and uploads backup artifacts detected.'
+                      ? 'Fresh backups and a recent isolated restore rehearsal are verified.'
                       : backup
-                        ? 'Backup freshness needs attention.'
+                        ? 'Backup or restore verification needs attention.'
                         : 'Backup status could not be confirmed.'}
                   </p>
                 </div>
@@ -1053,14 +1060,33 @@ export default function AdminDashboard() {
             })}
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/20">
-            <p className="flex items-center gap-2 text-sm font-semibold text-amber-900 dark:text-amber-200">
-              <ShieldAlert className="size-4" /> Restore verification
+          <div className={
+            'rounded-2xl border p-4 ' +
+            (backup?.restoreVerification.status === 'verified'
+              ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/20'
+              : 'border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20')
+          }>
+            <p className={
+              'flex items-center gap-2 text-sm font-semibold ' +
+              (backup?.restoreVerification.status === 'verified'
+                ? 'text-emerald-900 dark:text-emerald-200'
+                : 'text-amber-900 dark:text-amber-200')
+            }>
+              {backup?.restoreVerification.status === 'verified'
+                ? <CheckCircle2 className="size-4" />
+                : <ShieldAlert className="size-4" />}
+              Restore verification
             </p>
-            <p className="mt-2 text-xs leading-5 text-amber-900/75 dark:text-amber-200/70">
-              {backup?.restoreVerification.message ||
-                'Backup artifacts are checked for presence and freshness only. A successful restore rehearsal has not been verified by this panel.'}
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              {backup?.restoreVerification.message || 'No restore verification result is available.'}
             </p>
+            {backup?.restoreVerification.verifiedAt && (
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+                <span>Verified {new Date(backup.restoreVerification.verifiedAt).toLocaleString()}</span>
+                {backup.restoreVerification.publicTableCount !== null && <span>{backup.restoreVerification.publicTableCount} public tables restored</span>}
+                {backup.restoreVerification.uploadArchiveEntries !== null && <span>{backup.restoreVerification.uploadArchiveEntries} upload archive entries checked</span>}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
