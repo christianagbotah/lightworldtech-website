@@ -1756,6 +1756,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain('Renewal invoice drafts awaiting review');
   });
 
+  test('surfaces automation communication failures to operators', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('AUTO_SERVICE_RENEWAL_EMAIL');
+    expect(notifications).toContain('AUTO_PROJECT_RENEWAL_EMAIL');
+    expect(notifications).toContain('AUTO_NEWSLETTER_CAMPAIGN_DISPATCH');
+    expect(notifications).toContain("'sms-delivery-failures'");
+    expect(notifications).toContain("'renewal-email-failures'");
+    expect(notifications).toContain("'collection-email-failures'");
+    expect(notifications).toContain("'system.service_renewal_email_failed'");
+    expect(notifications).toContain("'system.project_renewal_email_failed'");
+    expect(notifications).toContain("type: 'email_reminder_failed'");
+  });
+
   test('routes finance notifications directly to operational exception queues', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
     const layout = source('src/components/admin/AdminLayout.tsx');
