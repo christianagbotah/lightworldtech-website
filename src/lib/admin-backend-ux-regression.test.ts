@@ -1093,6 +1093,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const callback = source('src/app/api/payments/hubtel/callback/route.ts');
     const sms = source('src/lib/sms.ts');
     const smsAdmin = source('src/components/admin/AdminSms.tsx');
+    const smsOverview = source('src/app/api/admin/sms/overview/route.ts');
     const portal = source('src/components/client/ClientPortalPage.tsx');
     const layout = source('src/components/admin/AdminLayout.tsx');
 
@@ -1129,6 +1130,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(smsAdmin).toContain('SMS, campaigns, scheduling & OTP');
     expect(smsAdmin).toContain('Reusable SMS templates');
     expect(smsAdmin).toContain('Scheduled campaigns');
+    expect(smsAdmin).toContain('Communication automation readiness');
+    expect(smsAdmin).toContain('Dispatcher ready');
+    expect(smsAdmin).toContain('Overdue collections');
+    expect(smsOverview).toContain('dispatcherConfigured');
+    expect(smsOverview).toContain('AUTO_COLLECTION_REMINDER_SMS');
+    expect(smsOverview).toContain('COLLECTION_REMINDER_SMS_INTERVAL_DAYS');
     expect(smsAdmin).toContain("sessionStorage.getItem('lw-sms-recipient')");
     expect(smsAdmin).toContain('lw-single-sms-recipient');
     expect(smsAdmin).toContain('lw-single-sms-content');
