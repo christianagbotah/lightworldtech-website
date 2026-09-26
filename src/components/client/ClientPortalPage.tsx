@@ -526,7 +526,7 @@ export default function ClientPortalPage() {
     setServiceRequest({
       open: true,
       serviceId: service.id,
-      action: service.status === 'expired' ? 'renewal' : 'renewal',
+      action: 'renewal',
       requestedPlan: service.planName || '',
       notes: '',
     });
