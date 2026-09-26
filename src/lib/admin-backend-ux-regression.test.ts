@@ -300,6 +300,22 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(portfolio).toContain('Currency values are never converted');
   });
 
+  test('prepares bounded duplicate-safe renewal invoice drafts without issuing them', () => {
+    const automation = source('src/lib/renewal-draft-automation.ts');
+    const dispatcher = source('src/lib/sms.ts');
+
+    expect(automation).toContain("AUTO_RENEWAL_DRAFT_INVOICES === 'true'");
+    expect(automation).toContain('RENEWAL_DRAFT_INVOICE_BATCH_SIZE');
+    expect(automation).toContain('autoRenew: true');
+    expect(automation).toContain("status: 'draft'");
+    expect(automation).toContain("taxTreatment: 'none'");
+    expect(automation).toContain('human finance review');
+    expect(automation).toContain('pg_advisory_xact_lock');
+    expect(automation).toContain('renewalForDate: renewalDate');
+    expect(automation).toContain("'system.finance_renewal_draft_created'");
+    expect(dispatcher).toContain('renewalDraftQueue');
+  });
+
   test('implements customer accounts billing debtors creditors cashflow and management P&L', () => {
     const schema = source('prisma/schema.prisma');
     const permissions = source('src/lib/admin-permissions.ts');
@@ -1149,6 +1165,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).toContain("createdBy: 'System collections scheduler'");
     expect(sms).toContain("type: 'sms_reminder_scheduled'");
     expect(sms).toContain('promisesDeferred');
+    expect(sms).toContain('createDueRenewalInvoiceDrafts');
+    expect(smsOverview).toContain('AUTO_RENEWAL_DRAFT_INVOICES');
+    expect(smsOverview).toContain('RENEWAL_DRAFT_INVOICE_BATCH_SIZE');
     expect(smsAdmin).toContain('SMS, campaigns, scheduling & OTP');
     expect(smsAdmin).toContain('Reusable SMS templates');
     expect(smsAdmin).toContain('Scheduled campaigns');
