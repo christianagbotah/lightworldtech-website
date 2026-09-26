@@ -58,28 +58,6 @@ export async function reconcileSupportEscalations(now = new Date()): Promise<num
   return breached.length;
 }
 
-export function supportSlaState(ticket: {
-  status: string;
-  firstResponseDueAt: Date | null;
-  resolutionDueAt: Date | null;
-  firstRespondedAt: Date | null;
-  resolvedAt: Date | null;
-}, now = new Date()) {
-  const closed = ticket.status === 'closed' || ticket.status === 'resolved';
-  const firstResponseBreached =
-    !ticket.firstRespondedAt &&
-    Boolean(ticket.firstResponseDueAt && ticket.firstResponseDueAt.getTime() < now.getTime());
-  const resolutionBreached =
-    !closed &&
-    Boolean(ticket.resolutionDueAt && ticket.resolutionDueAt.getTime() < now.getTime());
-
-  return {
-    firstResponseBreached,
-    resolutionBreached,
-    breached: firstResponseBreached || resolutionBreached,
-  };
-}
-
 export async function nextSupportTicketNumber(now = new Date()): Promise<string> {
   const rows = await db.$queryRaw<Array<{ value: bigint }>>`
     SELECT nextval('"client_support_ticket_number_seq"') AS value
