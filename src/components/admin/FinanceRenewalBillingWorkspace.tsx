@@ -166,7 +166,9 @@ export default function FinanceRenewalBillingWorkspace({
         state: !billingDate
           ? 'schedule_missing'
           : invoice
-            ? invoice.renewalCompletedAt
+            ? invoice.status === 'draft'
+              ? 'draft_review'
+              : invoice.renewalCompletedAt
               ? 'renewal_completed'
               : invoice.derivedStatus === 'paid'
                 ? ['custom', 'one_time'].includes(service.billingCycle)
@@ -213,7 +215,14 @@ export default function FinanceRenewalBillingWorkspace({
             : days !== null && days <= project.renewalNoticeDays
               ? 'notice_window'
               : 'scheduled';
-      return { project, renewalDate, days, insideWindow, state, invoice };
+      return {
+        project,
+        renewalDate,
+        days,
+        insideWindow,
+        state: invoice?.status === 'draft' ? 'draft_review' : state,
+        invoice,
+      };
     })
     .filter((row) => row.insideWindow || ['schedule_missing', 'amount_missing'].includes(row.state))
     .sort((a, b) => {
@@ -245,6 +254,9 @@ export default function FinanceRenewalBillingWorkspace({
     : '—';
   const dueCount = rows.filter((row) => ['ready', 'overdue_unbilled'].includes(row.state)).length;
   const readyToCompleteCount = rows.filter((row) => row.state === 'paid_ready_to_complete').length;
+  const draftReviewCount =
+    rows.filter((row) => row.state === 'draft_review').length +
+    projectRows.filter((row) => row.state === 'draft_review').length;
   const missingCount = rows.filter((row) => ['schedule_missing', 'amount_missing'].includes(row.state)).length;
   const filteredServiceIds = new Set(filteredServices.map((service) => service.id));
   const completedSince = new Date(now.getTime() - windowDays * 86400000);
@@ -269,6 +281,7 @@ export default function FinanceRenewalBillingWorkspace({
     if (state === 'renewal_completed') return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
     if (state === 'paid_ready_to_complete') return 'border-0 bg-teal-100 text-teal-800 dark:bg-teal-950/40 dark:text-teal-200';
     if (state === 'paid_manual_completion') return 'border-0 bg-violet-100 text-violet-800 dark:bg-violet-950/40 dark:text-violet-200';
+    if (state === 'draft_review') return 'border-0 bg-violet-100 text-violet-800 dark:bg-violet-950/40 dark:text-violet-200';
     if (state === 'billed') return 'border-0 bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200';
     if (state === 'overdue_unbilled' || state === 'overdue') return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
     if (state === 'notice_window') return 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200';
@@ -279,10 +292,11 @@ export default function FinanceRenewalBillingWorkspace({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         {[
           ['Renewals to bill', String(dueCount), CalendarClock],
           ['Unbilled value', unbilledValue, FileText],
+          ['Drafts to review', String(draftReviewCount), FileText],
           ['Paid to complete', String(readyToCompleteCount), CheckCircle2],
           ['Completed', String(completedCount), BadgeCheck],
           ['Needs setup', String(missingCount), Settings2],
