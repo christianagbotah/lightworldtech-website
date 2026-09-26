@@ -1444,7 +1444,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(renewals).toContain('Drafts to review');
     expect(renewals).toContain('draftReviewCount');
     expect(renewals).toContain("invoice.status === 'draft'");
-    expect(renewals).toContain("invoice?.status === 'draft'");
+    expect(renewals).toContain("const invoiceState = invoice");
+    expect(renewals).toContain("projectRows.filter((row) => row.state === 'draft_review')");
   });
 
   test('completes fully paid project renewals idempotently and advances project dates', () => {
@@ -1672,7 +1673,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(health).toContain('dispatcherConfigured');
     expect(health).toContain('automationHealthy');
     expect(dashboard).toContain('communications: {');
-    expect(dashboard).toContain("SMS {health?.communications?.smsConfigured");
+    expect(dashboard).toContain("Automation {health?.communications?.automationEnabled");
+    expect(dashboard).toContain("health.communications.status === 'healthy'");
   });
 
   test('counts only genuinely unpaid overdue supplier bills', () => {
@@ -1726,7 +1728,8 @@ describe('admin backend and responsive UX regression coverage', () => {
   test('surfaces automated renewal drafts for mandatory human finance review', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
 
-    expect(notifications).toContain("createdBy: 'System renewal draft scheduler'");
+    expect(notifications).toContain("'System renewal draft scheduler'");
+    expect(notifications).toContain("'System project renewal draft scheduler'");
     expect(notifications).toContain('Renewal invoice drafts awaiting review');
     expect(notifications).toContain("action: 'admin-finance-renewals'");
   });
@@ -1828,8 +1831,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(analyticsApi).toContain("'assistant_feedback'");
     expect(floating).toContain('Was this helpful?');
     expect(floating).toContain("trackEvent('assistant_feedback'");
-    expect(floating).toContain("rating: 'helpful'");
-    expect(floating).toContain("rating: 'not_helpful'");
+    expect(floating).toContain("handleAssistantFeedback(msg.id, 'helpful')");
+    expect(floating).toContain("handleAssistantFeedback(msg.id, 'not_helpful')");
+    expect(floating).toContain('messageId: messageId.slice(0, 80)');
     expect(adminAnalytics).toContain('assistantHelpfulnessRate');
     expect(adminAnalytics).toContain('assistantHelpful');
     expect(adminAnalytics).toContain('assistantNotHelpful');
