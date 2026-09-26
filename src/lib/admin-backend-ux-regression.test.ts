@@ -1782,7 +1782,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(queueApi).toContain("normalizeAdminPermissions(admin.permissions).includes('clients.manage')");
     expect(queueApi).toContain("team,");
     expect(clients).toContain('Agreement obligation work queue');
-    expect(clients).toContain("fetch('/api/admin/agreement-obligations/queue?scope='");
+    expect(clients).toContain("new URLSearchParams({ scope })");
+    expect(clients).toContain("fetch('/api/admin/agreement-obligations/queue?' + query.toString()");
     expect(clients).toContain('Mine for your workload');
     expect(clients).toContain('No open obligations match this workload view.');
     expect(clients).toContain("fetchObligationQueue('owner', member.id)");
