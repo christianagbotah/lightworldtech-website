@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
   if (canFinance) {
     const now = new Date();
     const renewalWindow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-    const [overdueInvoices, overdueBills, renewalCandidates, projectRenewalCandidates, expiredServices, collectionInvoices] = await Promise.all([
+    const [overdueInvoices, overdueBills, renewalCandidates, projectRenewalCandidates, expiredServices, collectionInvoices, renewalDrafts] = await Promise.all([
       db.clientInvoice.findMany({
         where: {
           dueDate: { lt: now },
@@ -196,6 +196,18 @@ export async function GET(request: NextRequest) {
           },
         },
         take: 3000,
+      }),
+      db.clientInvoice.count({
+        where: {
+          status: 'draft',
+          renewalForDate: { not: null },
+          createdBy: {
+            in: [
+              'System renewal draft scheduler',
+              'System project renewal draft scheduler',
+            ],
+          },
+        },
       }),
     ]);
 
