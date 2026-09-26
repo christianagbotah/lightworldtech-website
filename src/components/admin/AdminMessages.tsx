@@ -36,6 +36,7 @@ import {
 import { toast } from 'sonner';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { useAppStore } from '@/lib/store';
+import { readJsonResponse } from '@/lib/client-api';
 
 interface ContactMessage {
   id: string;
@@ -146,7 +147,7 @@ export default function AdminMessages() {
     try {
       const res = await fetch('/api/contact?limit=100', { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to fetch');
-      const payload = await res.json();
+      const payload = await readJsonResponse<any>(res, 'Invalid server response');
       const nextMessages = Array.isArray(payload) ? payload : (payload.data || []);
       setMessages(nextMessages);
       setTotalMessages(Number(payload?.pagination?.total ?? nextMessages.length));
@@ -355,7 +356,7 @@ export default function AdminMessages() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids, read }),
       });
-      const payload = await response.json();
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Unable to update selected messages');
 
       setSelectedIds(new Set());
