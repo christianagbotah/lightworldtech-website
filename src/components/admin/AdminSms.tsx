@@ -1,5 +1,6 @@
 'use client';
 
+import { readJsonResponse } from '@/lib/client-api';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   CalendarClock,
@@ -151,7 +152,7 @@ function segmentEstimate(content: string) {
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: 'no-store', ...init });
-  const payload = await response.json();
+  const payload = await readJsonResponse(response);
   if (!response.ok) throw new Error(payload?.error || 'Request failed');
   return payload.data;
 }
