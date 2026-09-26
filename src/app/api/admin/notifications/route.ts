@@ -68,7 +68,8 @@ export async function GET(request: NextRequest) {
     const configuredWarningMinutes = Number(process.env.SUPPORT_SLA_WARNING_MINUTES || 60);
     const warningMinutes = Math.max(5, Math.min(1440, Number.isFinite(configuredWarningMinutes) ? configuredWarningMinutes : 60));
     const warningHorizon = new Date(now.getTime() + warningMinutes * 60_000);
-    const [unreadTickets, slaBreached, slaAtRisk] = await Promise.all([
+    const agreementHorizon = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+    const [unreadTickets, slaBreached, slaAtRisk, activeAgreementExpiries, expiredActiveAgreements] = await Promise.all([
       db.clientSupportTicket.count({
         where: { unreadByAdmin: true },
       }),
@@ -89,8 +90,49 @@ export async function GET(request: NextRequest) {
           ],
         },
       }),
+      db.clientAgreement.findMany({
+        where: {
+          status: 'active',
+          expiryDate: { gte: now, lte: agreementHorizon },
+        },
+        select: { expiryDate: true, renewalNoticeDays: true },
+        take: 2000,
+      }),
+      db.clientAgreement.count({
+        where: {
+          status: 'active',
+          expiryDate: { lt: now },
+        },
+      }),
     ]);
 
+    const agreementsInNoticeWindow = activeAgreementExpiries.filter((agreement) => {
+      if (!agreement.expiryDate) return false;
+      const daysRemaining = Math.ceil((agreement.expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+      return daysRemaining >= 0 && daysRemaining <= agreement.renewalNoticeDays;
+    }).length;
+
+    if (expiredActiveAgreements > 0) {
+      notices.push({
+        id: 'client-agreements-expired',
+        severity: 'critical',
+        title: 'Active agreements past expiry',
+        message: expiredActiveAgreements + ' active agreement' + (expiredActiveAgreements === 1 ? ' has' : 's have') + ' passed the recorded expiry date and need review.',
+        count: expiredActiveAgreements,
+        action: 'admin-clients-agreements',
+      });
+    }
+
+    if (agreementsInNoticeWindow > 0) {
+      notices.push({
+        id: 'client-agreements-notice-window',
+        severity: 'warning',
+        title: 'Agreement notice window open',
+        message: agreementsInNoticeWindow + ' active agreement' + (agreementsInNoticeWindow === 1 ? ' is' : 's are') + ' inside the recorded renewal or termination notice window.',
+        count: agreementsInNoticeWindow,
+        action: 'admin-clients-agreements',
+      });
+    }
 
     if (slaAtRisk > 0) {
       notices.push({
