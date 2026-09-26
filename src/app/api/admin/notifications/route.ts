@@ -134,11 +134,16 @@ export async function GET(request: NextRequest) {
         },
         take: 3000,
       }),
-      db.financeVendorBill.count({
+      db.financeVendorBill.findMany({
         where: {
           dueDate: { lt: now },
-          status: { notIn: ['void', 'paid'] },
+          status: { not: 'void' },
         },
+        select: {
+          total: true,
+          allocations: { select: { amount: true } },
+        },
+        take: 3000,
       }),
       db.clientServiceAccount.findMany({
         where: {
@@ -197,6 +202,9 @@ export async function GET(request: NextRequest) {
     const overdueInvoiceCount = overdueInvoices.filter(
       (invoice) => invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0),
     ).length;
+    const overdueBillCount = overdueBills.filter(
+      (bill) => invoiceBalance(bill.total, bill.allocations).gt(0),
+    ).length;
 
     const liveCollectionInvoices = collectionInvoices.filter(
       (invoice) => invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0),
@@ -235,13 +243,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    if (overdueBills > 0) {
+    if (overdueBillCount > 0) {
       notices.push({
         id: 'finance-overdue-bills',
         severity: 'warning',
         title: 'Supplier bills overdue',
-        message: overdueBills + ' supplier bill' + (overdueBills === 1 ? ' is' : 's are') + ' past the due date.',
-        count: overdueBills,
+        message: overdueBillCount + ' supplier bill' + (overdueBillCount === 1 ? ' is' : 's are') + ' past the due date with an outstanding balance.',
+        count: overdueBillCount,
         action: 'admin-finance-suppliers',
       });
     }
