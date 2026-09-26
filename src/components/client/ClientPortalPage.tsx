@@ -80,6 +80,15 @@ type Project = {
   renewalAmount: string;
   autoRenew: boolean;
   renewalNoticeDays: number;
+  payableInvoice: {
+    id: string;
+    invoiceNumber: string;
+    currency: string;
+    balance: string;
+    dueDate: string;
+    derivedStatus: string;
+    renewalForDate: string | null;
+  } | null;
   milestones: Milestone[];
   documents: DocumentItem[];
 };
@@ -170,6 +179,7 @@ type AccountInvoice = {
   currency: string;
   issueDate: string;
   dueDate: string;
+  renewalForDate: string | null;
   subtotal: string;
   discount: string;
   tax: string;
@@ -1323,7 +1333,7 @@ export default function ClientPortalPage() {
                 <div className="max-w-full overflow-x-auto">
                   <Table className="min-w-[920px]" exportFileName="lightworld-client-invoices">
                     <thead className="border-y border-slate-200/70 bg-slate-50 text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:border-white/[0.07] dark:bg-white/[0.025]">
-                      <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Service</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Due</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Paid</th><th className="px-4 py-3 text-right">Credits</th><th className="px-4 py-3 text-right">Balance</th><th data-export-ignore className="px-4 py-3 text-right">Actions</th></tr>
+                      <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Service / project</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Due</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Paid</th><th className="px-4 py-3 text-right">Credits</th><th className="px-4 py-3 text-right">Balance</th><th data-export-ignore className="px-4 py-3 text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                       {data?.account.invoices.map((invoice) => (
@@ -1358,7 +1368,14 @@ export default function ClientPortalPage() {
                               </details>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-xs">{invoice.service?.name || 'General account'}</td>
+                          <td className="px-4 py-3 text-xs">
+                            <p className="font-medium">{invoice.service?.name || invoice.project?.name || 'General account'}</p>
+                            {invoice.renewalForDate && (
+                              <p className="mt-1 text-[10px] text-amber-700 dark:text-amber-300">
+                                Renewal cycle · {new Date(invoice.renewalForDate).toLocaleDateString()}
+                              </p>
+                            )}
+                          </td>
                           <td className="px-4 py-3"><Badge className={accountStatusClass(invoice.derivedStatus)}>{statusLabel(invoice.derivedStatus)}</Badge></td>
                           <td className="px-4 py-3 text-xs">{new Date(invoice.dueDate).toLocaleDateString()}</td>
                           <td className="px-4 py-3 text-right">{accountMoney(invoice.total, invoice.currency)}</td>
@@ -1508,6 +1525,45 @@ export default function ClientPortalPage() {
                             <p className="mt-3 text-[10px] leading-5 text-slate-500 dark:text-white/35">
                               Auto-renew records the intended renewal workflow; it does not automatically charge your account. Issued invoices and available payment options appear in Billing.
                             </p>
+                            {project.payableInvoice ? (
+                              <div className="mt-4 rounded-xl border border-amber-200/80 bg-white/75 p-3 dark:border-amber-900/40 dark:bg-black/10">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                  <div className="min-w-0">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-700 dark:text-amber-300">Project payment due</p>
+                                    <p className="mt-1 text-sm font-semibold">
+                                      {accountMoney(project.payableInvoice.balance, project.payableInvoice.currency)}
+                                    </p>
+                                    <p className="mt-1 text-[10px] text-slate-500 dark:text-white/35">
+                                      {project.payableInvoice.invoiceNumber} · due {new Date(project.payableInvoice.dueDate).toLocaleDateString()}
+                                      {project.payableInvoice.renewalForDate
+                                        ? ' · renewal ' + new Date(project.payableInvoice.renewalForDate).toLocaleDateString()
+                                        : ''}
+                                    </p>
+                                  </div>
+                                  {project.payableInvoice.currency === 'GHS' && data.account.onlinePaymentsAvailable ? (
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      className="w-full bg-amber-600 text-white hover:bg-amber-700 sm:w-auto"
+                                      disabled={paymentStartingId === project.payableInvoice.id}
+                                      onClick={() => void payInvoice(project.payableInvoice!.id)}
+                                    >
+                                      {paymentStartingId === project.payableInvoice.id
+                                        ? <Loader2 className="mr-2 size-3.5 animate-spin" />
+                                        : <WalletCards className="mr-2 size-3.5" />}
+                                      Pay project with Hubtel
+                                    </Button>
+                                  ) : project.payableInvoice.currency === 'GHS' ? (
+                                    <span className="text-[10px] text-slate-500 dark:text-white/35">Online payment setup pending</span>
+                                  ) : (
+                                    <span className="text-[10px] text-slate-500 dark:text-white/35">Online checkout currently supports GHS invoices</span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="mt-3 text-[10px] text-slate-500 dark:text-white/35">No outstanding invoice for this project.</p>
+                            )}
+
                           </div>
                         )}
 
