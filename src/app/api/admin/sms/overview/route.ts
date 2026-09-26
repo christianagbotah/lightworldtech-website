@@ -86,6 +86,12 @@ export async function GET(request: NextRequest) {
           batchSize: Math.max(1, Math.min(50, Number(process.env.PROJECT_RENEWAL_DRAFT_INVOICE_BATCH_SIZE || 10) || 10)),
           dueDays: Math.max(0, Math.min(60, Number(process.env.PROJECT_RENEWAL_DRAFT_INVOICE_DUE_DAYS || 7) || 7)),
         },
+        newsletterCampaigns: {
+          enabled: process.env.AUTO_NEWSLETTER_CAMPAIGN_DISPATCH === 'true',
+          configured: getMailTransportStatus().configured,
+          batchSize: Math.max(1, Math.min(10, Number(process.env.NEWSLETTER_CAMPAIGN_BATCH_SIZE || 10) || 10)),
+          campaignsPerRun: Math.max(1, Math.min(4, Number(process.env.NEWSLETTER_CAMPAIGNS_PER_RUN || 2) || 2)),
+        },
         collectionEmail: {
           enabled: process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true',
           configured: getMailTransportStatus().configured,
