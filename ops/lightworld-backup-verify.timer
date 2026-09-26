@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly Lightworld isolated backup restore rehearsal
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00 UTC
+Persistent=true
+AccuracySec=15min
+RandomizedDelaySec=5min
+Unit=lightworld-backup-verify.service
+[Install]
+WantedBy=timers.target
