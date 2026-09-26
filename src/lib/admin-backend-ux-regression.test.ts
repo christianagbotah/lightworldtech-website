@@ -1653,6 +1653,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain("action: 'admin-sms'");
   });
 
+  test('treats project renewal drafting as dispatcher-backed automation for stale-run alerts', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    expect(notifications).toContain("AUTO_PROJECT_RENEWAL_DRAFT_INVOICES === 'true'");
+    expect(notifications).toContain("'automation-runtime-health'");
+  });
+
   test('counts service and project renewal drafts before raising finance review alerts', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
     expect(notifications).toContain('collectionInvoices, renewalDrafts');
