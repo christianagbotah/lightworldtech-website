@@ -37,10 +37,15 @@ export async function GET(request: NextRequest) {
     serviceRenewals: process.env.AUTO_SERVICE_RENEWAL_SMS === 'true',
     projectRenewals: process.env.AUTO_PROJECT_RENEWAL_SMS === 'true',
     collections: process.env.AUTO_COLLECTION_REMINDER_SMS === 'true',
+    renewalDrafts: process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true',
   };
-  const automationEnabled = automation.serviceRenewals || automation.projectRenewals || automation.collections;
+  const smsAutomationEnabled =
+    automation.serviceRenewals || automation.projectRenewals || automation.collections;
+  const automationEnabled = smsAutomationEnabled || automation.renewalDrafts;
   const dispatcherConfigured = Boolean((process.env.SMS_CRON_SECRET || '').trim());
-  const automationHealthy = !automationEnabled || (hubtel.sms && dispatcherConfigured);
+  const automationHealthy =
+    (!automationEnabled || dispatcherConfigured) &&
+    (!smsAutomationEnabled || hubtel.sms);
   const overall =
     database.status === 'healthy' && mailHealthy && automationHealthy
       ? 'healthy'
@@ -69,9 +74,9 @@ export async function GET(request: NextRequest) {
           automation,
           warning: automationHealthy
             ? ''
-            : !hubtel.sms
-              ? 'SMS automation is enabled but Hubtel SMS is not configured.'
-              : 'SMS automation is enabled but the protected scheduler secret is not configured.',
+            : !dispatcherConfigured
+              ? 'Automation is enabled but the protected scheduler secret is not configured.'
+              : 'SMS automation is enabled but Hubtel SMS is not configured.',
         },
       },
     },
