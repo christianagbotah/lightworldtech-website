@@ -19,6 +19,7 @@ const schema = z.object({
   taxTreatment: z.enum(['none', 'standard', 'zero', 'exempt']).default('none'),
   taxRecoverable: z.boolean().default(true),
   notes: z.string().trim().max(8000).default(''),
+  purchaseOrderId: z.string().trim().nullable().optional(),
 }).refine((value) => value.dueDate.getTime() >= value.issueDate.getTime(), {
   message: 'Due date cannot be earlier than issue date',
   path: ['dueDate'],
@@ -67,6 +68,7 @@ export async function GET(request: NextRequest) {
     orderBy: [{ dueDate: 'asc' }, { issueDate: 'desc' }],
     include: {
       vendor: { select: { id: true, name: true } },
+      purchaseOrder: { select: { id: true, poNumber: true, status: true, total: true } },
       allocations: {
         include: {
           payment: { select: { id: true, paymentNumber: true, amount: true, paidAt: true, method: true, reference: true } },
@@ -92,6 +94,41 @@ export async function POST(request: NextRequest) {
   const taxableAmount = new Prisma.Decimal(
     parsed.data.taxableAmount ?? parsed.data.total ?? 0,
   ).toDecimalPlaces(2);
+  const currency = normalizeCurrency(parsed.data.currency);
+
+  let matchedPurchaseOrder: Awaited<ReturnType<typeof db.financePurchaseOrder.findUnique>> = null;
+  if (parsed.data.purchaseOrderId) {
+    matchedPurchaseOrder = await db.financePurchaseOrder.findUnique({
+      where: { id: parsed.data.purchaseOrderId },
+    });
+    if (!matchedPurchaseOrder) {
+      return NextResponse.json({ success: false, error: 'Purchase order not found' }, { status: 404 });
+    }
+    if (!['received', 'closed'].includes(matchedPurchaseOrder.status)) {
+      return NextResponse.json({ success: false, error: 'Purchase order must be received before a supplier bill can be matched' }, { status: 409 });
+    }
+    if (matchedPurchaseOrder.vendorId !== parsed.data.vendorId) {
+      return NextResponse.json({ success: false, error: 'Supplier bill vendor does not match the purchase order supplier' }, { status: 409 });
+    }
+    if (matchedPurchaseOrder.currency !== currency) {
+      return NextResponse.json({ success: false, error: 'Supplier bill currency does not match the purchase order currency' }, { status: 409 });
+    }
+    if (matchedPurchaseOrder.total.minus(taxableAmount).abs().gt('0.01')) {
+      return NextResponse.json({
+        success: false,
+        error: 'Supplier bill net amount does not match the purchase order commitment',
+        purchaseOrderAmount: matchedPurchaseOrder.total.toFixed(2),
+        billTaxableAmount: taxableAmount.toFixed(2),
+      }, { status: 409 });
+    }
+    const existingBill = await db.financeVendorBill.findUnique({
+      where: { purchaseOrderId: matchedPurchaseOrder.id },
+      select: { id: true, payableNumber: true },
+    });
+    if (existingBill) {
+      return NextResponse.json({ success: false, error: 'This purchase order is already matched to supplier bill ' + existingBill.payableNumber }, { status: 409 });
+    }
+  }
 
   let taxProfile: Awaited<ReturnType<typeof db.financeTaxProfile.findUnique>> = null;
   if (parsed.data.taxTreatment === 'standard') {
@@ -131,7 +168,6 @@ export async function POST(request: NextRequest) {
     total,
   } = taxResult;
   const payableNumber = await nextPayableNumber(parsed.data.issueDate);
-  const currency = normalizeCurrency(parsed.data.currency);
   const bill = await db.$transaction(async (tx) => {
     const created = await tx.financeVendorBill.create({
       data: {
@@ -153,9 +189,14 @@ export async function POST(request: NextRequest) {
         getfundAmount,
         total,
         notes: parsed.data.notes,
+        purchaseOrderId: matchedPurchaseOrder?.id || null,
         status: 'unpaid',
       },
-      include: { vendor: { select: { id: true, name: true } }, allocations: true },
+      include: {
+        vendor: { select: { id: true, name: true } },
+        purchaseOrder: { select: { id: true, poNumber: true, status: true, total: true } },
+        allocations: true,
+      },
     });
 
     await postVendorBillJournal(tx, {
@@ -192,6 +233,7 @@ export async function POST(request: NextRequest) {
       vatAmount: bill.vatAmount.toFixed(2),
       nhilAmount: bill.nhilAmount.toFixed(2),
       getfundAmount: bill.getfundAmount.toFixed(2),
+      purchaseOrderId: bill.purchaseOrderId,
     },
   });
   return NextResponse.json({ success: true, data: serialize(bill) }, { status: 201 });
