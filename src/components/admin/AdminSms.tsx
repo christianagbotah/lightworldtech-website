@@ -102,6 +102,7 @@ type SmsOverview = {
     serviceRenewals: { enabled: boolean; batchSize: number };
     projectRenewals: { enabled: boolean; batchSize: number };
     renewalDrafts: { enabled: boolean; batchSize: number; dueDays: number };
+    collectionEmail: { enabled: boolean; configured: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
     collections: { enabled: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
   };
   activeClients: number;
@@ -561,6 +562,19 @@ export default function AdminSms() {
                 Icon: FileText,
               },
               {
+                label: 'Collection email',
+                enabled: data.automation.collectionEmail.enabled,
+                readyOverride: data.automation.collectionEmail.configured,
+                detail:
+                  'From ' +
+                  data.automation.collectionEmail.minDaysOverdue +
+                  ' day(s) overdue · repeat guard ' +
+                  data.automation.collectionEmail.intervalDays +
+                  ' day(s) · batch ' +
+                  data.automation.collectionEmail.batchSize,
+                Icon: Send,
+              },
+              {
                 label: 'Overdue collections',
                 enabled: data.automation.collections.enabled,
                 detail:
@@ -572,8 +586,9 @@ export default function AdminSms() {
                   data.automation.collections.batchSize,
                 Icon: RefreshCw,
               },
-            ].map(({ label, enabled, detail, Icon }) => {
-              const ready = enabled && data.automation.dispatcherConfigured && data.configuration.sms;
+            ].map(({ label, enabled, detail, Icon, readyOverride }) => {
+              const channelReady = readyOverride === undefined ? data.configuration.sms : readyOverride;
+              const ready = enabled && data.automation.dispatcherConfigured && channelReady;
               return (
                 <div key={label} className="rounded-xl border border-border/60 bg-muted/20 p-4">
                   <div className="flex items-start justify-between gap-3">
