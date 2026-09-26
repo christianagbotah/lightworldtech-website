@@ -1412,3 +1412,19 @@ model ClientAnnouncement {
   @@index([organizationId, active, publishAt])
   @@index([projectId, active, publishAt])
 }
+
+
+model AutomationRuntimeState {
+  id                  String   @id
+  status              String   @default("unknown")
+  lastStartedAt       DateTime?
+  lastCompletedAt     DateTime?
+  lastSuccessAt       DateTime?
+  durationMs          Int      @default(0)
+  consecutiveFailures Int      @default(0)
+  lastError           String   @default("")
+  resultJson          String   @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

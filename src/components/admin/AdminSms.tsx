@@ -99,6 +99,16 @@ type SmsOverview = {
   };
   automation: {
     dispatcherConfigured: boolean;
+    runtime: {
+      status: string;
+      lastStartedAt: string | null;
+      lastCompletedAt: string | null;
+      lastSuccessAt: string | null;
+      durationMs: number;
+      consecutiveFailures: number;
+      lastError: string;
+      result: Record<string, unknown>;
+    } | null;
     serviceRenewals: { enabled: boolean; batchSize: number };
     projectRenewals: { enabled: boolean; batchSize: number };
     renewalDrafts: { enabled: boolean; batchSize: number; dueDays: number };
@@ -529,9 +539,40 @@ export default function AdminSms() {
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
                 Live configuration for the protected scheduler. Secrets remain server-only; this view exposes status and safe operating limits only.
               </p>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                <span>
+                  Last successful run: {data.automation.runtime?.lastSuccessAt
+                    ? new Date(data.automation.runtime.lastSuccessAt).toLocaleString()
+                    : 'Not recorded yet'}
+                </span>
+                <span>Duration: {data.automation.runtime?.durationMs ? data.automation.runtime.durationMs + ' ms' : '—'}</span>
+                <span>Consecutive failures: {data.automation.runtime?.consecutiveFailures || 0}</span>
+              </div>
+              {data.automation.runtime?.lastError ? (
+                <p className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-200">
+                  Last dispatcher error: {data.automation.runtime.lastError}
+                </p>
+              ) : null}
             </div>
-            <Badge variant="outline" className={data.automation.dispatcherConfigured ? 'w-fit border-emerald-300 text-emerald-700 dark:text-emerald-300' : 'w-fit border-amber-300 text-amber-700 dark:text-amber-300'}>
-              {data.automation.dispatcherConfigured ? 'Dispatcher ready' : 'Dispatcher secret missing'}
+            <Badge
+              variant="outline"
+              className={
+                data.automation.runtime?.status === 'failed'
+                  ? 'w-fit border-rose-300 text-rose-700 dark:text-rose-300'
+                  : data.automation.runtime?.status === 'healthy'
+                    ? 'w-fit border-emerald-300 text-emerald-700 dark:text-emerald-300'
+                    : data.automation.dispatcherConfigured
+                      ? 'w-fit border-sky-300 text-sky-700 dark:text-sky-300'
+                      : 'w-fit border-amber-300 text-amber-700 dark:text-amber-300'
+              }
+            >
+              {data.automation.runtime?.status === 'failed'
+                ? 'Dispatcher failing'
+                : data.automation.runtime?.status === 'healthy'
+                  ? 'Dispatcher healthy'
+                  : data.automation.dispatcherConfigured
+                    ? 'Dispatcher ready'
+                    : 'Dispatcher secret missing'}
             </Badge>
           </div>
         </CardHeader>

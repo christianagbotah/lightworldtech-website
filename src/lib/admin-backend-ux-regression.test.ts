@@ -1241,6 +1241,29 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("label: 'SMS & OTP'");
   });
 
+  test('persists communications automation runtime health without unbounded run logs', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260926122500_automation_runtime_state/migration.sql');
+    const dispatcher = source('src/app/api/internal/sms/dispatch/route.ts');
+    const overview = source('src/app/api/admin/sms/overview/route.ts');
+    const smsAdmin = source('src/components/admin/AdminSms.tsx');
+
+    expect(schema).toContain('model AutomationRuntimeState');
+    expect(schema).toContain('consecutiveFailures');
+    expect(migration).toContain('CREATE TABLE "AutomationRuntimeState"');
+    expect(dispatcher).toContain("runtimeId = 'communications-dispatcher'");
+    expect(dispatcher).toContain("status: 'running'");
+    expect(dispatcher).toContain("status: 'healthy'");
+    expect(dispatcher).toContain("status: 'failed'");
+    expect(dispatcher).toContain('consecutiveFailures: { increment: 1 }');
+    expect(dispatcher).toContain('resultJson');
+    expect(overview).toContain("id: 'communications-dispatcher'");
+    expect(overview).toContain('lastSuccessAt');
+    expect(smsAdmin).toContain('Last successful run');
+    expect(smsAdmin).toContain('Consecutive failures');
+    expect(smsAdmin).toContain('Dispatcher healthy');
+  });
+
   test('supports filtered super-admin governance audit exports', () => {
     const governance = source('src/components/admin/AdminGovernance.tsx');
     const auditExport = source('src/app/api/admin/governance/audit-export/route.ts');
