@@ -1,5 +1,6 @@
 'use client';
 
+import { readJsonResponse } from '@/lib/client-api';
 import { useEffect, useState } from 'react';
 import {
   Check,
@@ -61,7 +62,7 @@ export default function AdminSecurityDialog({
     setLoading(true);
     try {
       const response = await fetch('/api/admin/security/totp', { cache: 'no-store' });
-      const payload = await response.json();
+      const payload = await readJsonResponse(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to load security settings');
       setStatus(payload.data);
     } catch (error) {
@@ -87,7 +88,7 @@ export default function AdminSecurityDialog({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    const payload = await response.json();
+    const payload = await readJsonResponse(response);
     if (!response.ok) throw new Error(payload?.error || 'Security update failed');
     return payload.data;
   };
