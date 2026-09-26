@@ -176,6 +176,10 @@ interface AnalyticsData {
   pageViews: number;
   assistantMessages: number;
   projectScopes: number;
+  assistantHelpful: number;
+  assistantNotHelpful: number;
+  assistantFeedbackTotal: number;
+  assistantHelpfulnessRate: number | null;
   contactSubmits: number;
   topPages: Array<{ path: string; views: number }>;
   topReferrers: Array<{ referrer: string; events: number }>;
@@ -466,11 +470,18 @@ export default function AdminDashboard() {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">First-party analytics · last 30 days</p>
           <span className="text-[10px] text-muted-foreground">Only visitors who allow Analytics are counted</span>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Unique Sessions', value: analytics?.uniqueSessions || 0, icon: Users, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
           { label: 'Page Views', value: analytics?.pageViews || 0, icon: Eye, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
           { label: 'Assistant Messages', value: analytics?.assistantMessages || 0, icon: MessageSquare, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          {
+            label: 'Assistant Helpful',
+            value: analytics?.assistantHelpfulnessRate == null ? '—' : analytics.assistantHelpfulnessRate + '%',
+            icon: CheckCircle2,
+            color: 'text-emerald-700 dark:text-emerald-300',
+            bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+          },
           { label: 'Contact Submissions', value: analytics?.contactSubmits || 0, icon: Mail, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
         ].map((item, i) => {
           const Icon = item.icon;
