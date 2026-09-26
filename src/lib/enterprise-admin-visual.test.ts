@@ -33,7 +33,7 @@ describe('enterprise admin visual system', () => {
 
     expect(dashboard).toContain("adminPermissions, adminName");
     expect(dashboard).toContain("from-slate-950 via-amber-900 to-amber-600");
-    expect(dashboard).toContain("Welcome back, {adminName || 'Admin'}");
+    expect(dashboard).toContain("WELCOME BACK, {(adminName || 'Admin').toUpperCase()}");
     expect(dashboard).not.toContain("bg-sky-100");
     expect(dashboard).not.toContain("bg-violet-100");
     expect(dashboard).toContain("health?.status === 'healthy' ? 'bg-emerald-300'");
