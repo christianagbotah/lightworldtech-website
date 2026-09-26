@@ -1736,8 +1736,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(createApi).toContain("'admin.client_agreement_obligation_created'");
     expect(updateApi).toContain("'admin.client_agreement_obligation_updated'");
     expect(updateApi).toContain("completedAt: new Date()");
-    expect(notifications).toContain('Agreement obligations overdue');
-    expect(notifications).toContain('Agreement obligations due soon');
+    expect(notifications).toContain('Team agreement obligations overdue');
+    expect(notifications).toContain('Team agreement obligations due soon');
     expect(portfolioApi).toContain('overdueAgreementObligations');
     expect(portfolioApi).toContain('agreementObligationsDue30');
     expect(portfolioApi).toContain('Resolve overdue agreement obligations');
