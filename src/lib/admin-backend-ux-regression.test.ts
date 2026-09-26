@@ -2135,10 +2135,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     const attachmentAccess = source('src/app/api/agreement-attachments/[id]/route.ts');
     const attachmentSecurity = source('src/lib/agreement-attachment.ts');
     const clients = source('src/components/admin/AdminClients.tsx');
+    const clientPortalApi = source('src/app/api/client/portal/route.ts');
+    const clientPortal = source('src/components/client/ClientPortalPage.tsx');
 
     expect(schema).toContain('model ClientAgreement');
     expect(schema).toContain('model ClientAgreementAttachment');
     expect(schema).toContain('renewalNoticeDays');
+    expect(schema).toContain('visibleToClient Boolean');
     expect(clientsApi).toContain('agreements: {');
     expect(clientsApi).toContain('attachments: { orderBy:');
     expect(createAgreement).toContain('Selected project does not belong to this client');
@@ -2150,6 +2153,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(attachmentAccess).toContain('isSafeAgreementAttachmentStorageName');
     expect(attachmentAccess).toContain('admin.client_agreement_attachment_downloaded');
     expect(attachmentAccess).toContain('admin.client_agreement_attachment_deleted');
+    expect(attachmentAccess).toContain('admin.client_agreement_attachment_visibility_changed');
+    expect(attachmentAccess).toContain('getActiveClientContext');
+    expect(attachmentAccess).toContain('client.user.organizationId !== attachment.agreement.organizationId');
+    expect(attachmentAccess).toContain('!attachment.visibleToClient');
     expect(attachmentSecurity).toContain("String.fromCharCode(...bytes.slice(0, 5)) === '%PDF-'");
     expect(clients).toContain('Agreements & SOW register');
     expect(clients).toContain('Secure document vault');
@@ -2158,5 +2165,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain("fetch('/api/admin/clients/' + selected.id + '/agreements'");
     expect(clients).toContain("fetch('/api/admin/client-agreements/' + agreementId + '/attachments'");
     expect(clients).toContain("fetch('/api/agreement-attachments/' + attachmentId");
+    expect(clients).toContain('Shared with client');
+    expect(clients).toContain('Internal only');
+    expect(clientPortalApi).toContain('attachments: { some: { visibleToClient: true } }');
+    expect(clientPortalApi).toContain('where: { visibleToClient: true }');
+    expect(clientPortalApi).toContain('agreements: organization.agreements');
+    expect(clientPortal).toContain('Agreements & signed documents');
+    expect(clientPortal).toContain("['Agreements', '#agreements']");
+    expect(clientPortal).toContain("href={'/api/agreement-attachments/' + attachment.id}");
   });
 });
