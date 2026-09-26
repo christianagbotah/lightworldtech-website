@@ -116,6 +116,7 @@ type SmsOverview = {
     projectRenewalEmail: { enabled: boolean; configured: boolean; batchSize: number };
     renewalDrafts: { enabled: boolean; batchSize: number; dueDays: number };
     projectRenewalDrafts: { enabled: boolean; batchSize: number; dueDays: number };
+    newsletterCampaigns: { enabled: boolean; configured: boolean; batchSize: number; campaignsPerRun: number };
     collectionEmail: { enabled: boolean; configured: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
     collections: { enabled: boolean; batchSize: number; intervalDays: number; minDaysOverdue: number };
   };
@@ -630,6 +631,18 @@ export default function AdminSms() {
                   data.automation.projectRenewalDrafts.dueDays +
                   ' day(s)',
                 Icon: FileText,
+              },
+              {
+                label: 'Scheduled newsletters',
+                enabled: data.automation.newsletterCampaigns.enabled,
+                readyOverride: data.automation.newsletterCampaigns.configured,
+                detail:
+                  'Approved campaigns only · batch ' +
+                  data.automation.newsletterCampaigns.batchSize +
+                  ' · up to ' +
+                  data.automation.newsletterCampaigns.campaignsPerRun +
+                  ' campaign(s) per scheduler run',
+                Icon: Mail,
               },
               {
                 label: 'Collection email',
