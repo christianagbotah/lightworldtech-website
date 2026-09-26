@@ -12,6 +12,7 @@ import {
   TrendingUp,
   UsersRound,
   WalletCards,
+  Timer,
 } from 'lucide-react';
 import {
   Bar,
@@ -63,6 +64,14 @@ export type FinanceExecutiveDashboardData = {
     amount: string;
     count: number;
     overdueCount: number;
+  }>;
+  runway: Record<string, {
+    liquidity: string;
+    averageMonthlyCashOut: string;
+    months: string | null;
+    sampleMonths: number;
+    status: 'unavailable' | 'under_1' | 'under_3' | 'under_6' | 'six_plus';
+    methodology: string;
   }>;
   collections: {
     followUpDue: number;
@@ -298,6 +307,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.byCurrency || {}),
       ...Object.keys(dashboard.cashPosition || {}),
       ...Object.keys(dashboard.renewalExposure || {}),
+      ...Object.keys(dashboard.runway || {}),
       ...Object.keys(dashboard.trends || {}),
     ])).sort(),
     [dashboard],
@@ -353,6 +363,14 @@ export default function FinanceExecutiveDashboard({
     amount: '0',
     count: 0,
     overdueCount: 0,
+  };
+  const runway = dashboard.runway[currency] || {
+    liquidity: cash.total,
+    averageMonthlyCashOut: '0',
+    months: null,
+    sampleMonths: 0,
+    status: 'unavailable' as const,
+    methodology: 'Historical cash-out coverage is unavailable until cash-out activity has been recorded.',
   };
   const trend = (dashboard.trends[currency] || []).map((item) => ({
     ...item,
@@ -433,12 +451,23 @@ export default function FinanceExecutiveDashboard({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
         <KpiCard
           label="Available liquidity"
           value={money(cash.total, currency)}
           detail={'Ledger cash + bank + MoMo as of today'}
           Icon={Landmark}
+          onClick={onCashbook}
+        />
+        <KpiCard
+          label="Cash runway"
+          value={runway.months ? Number(runway.months).toFixed(1) + ' mo' : '—'}
+          detail={
+            runway.sampleMonths
+              ? money(runway.averageMonthlyCashOut, currency) + ' avg monthly cash out · ' + runway.sampleMonths + ' month sample'
+              : 'Needs recorded cash-out history'
+          }
+          Icon={Timer}
           onClick={onCashbook}
         />
         <KpiCard

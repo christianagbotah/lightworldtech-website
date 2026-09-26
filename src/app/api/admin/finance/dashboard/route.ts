@@ -509,6 +509,50 @@ export async function GET(request: NextRequest) {
     }),
   );
 
+  const currentPeriod = monthKey(now);
+  const runway = Object.fromEntries(
+    [...currencies].sort().map((currency) => {
+      const liquidity = cashPositionRaw[currency]
+        ? cashPositionRaw[currency].cash
+            .plus(cashPositionRaw[currency].bank)
+            .plus(cashPositionRaw[currency].mobileMoney)
+        : new Prisma.Decimal(0);
+      const series = (trends[currency] || []) as Array<{ period: string; cashOut: string }>;
+      let samples = series
+        .filter((item) => item.period !== currentPeriod && Number(item.cashOut) > 0)
+        .slice(-3);
+      if (!samples.length) {
+        samples = series.filter((item) => Number(item.cashOut) > 0).slice(-3);
+      }
+      const averageMonthlyCashOut = samples.length
+        ? samples.reduce((sum, item) => sum.plus(item.cashOut), new Prisma.Decimal(0)).div(samples.length)
+        : new Prisma.Decimal(0);
+      const months = averageMonthlyCashOut.gt(0)
+        ? liquidity.div(averageMonthlyCashOut)
+        : null;
+      const numericMonths = months ? Number(months.toFixed(2)) : null;
+      const status =
+        numericMonths === null
+          ? 'unavailable'
+          : numericMonths < 1
+            ? 'under_1'
+            : numericMonths < 3
+              ? 'under_3'
+              : numericMonths < 6
+                ? 'under_6'
+                : 'six_plus';
+
+      return [currency, {
+        liquidity: liquidity.toFixed(2),
+        averageMonthlyCashOut: averageMonthlyCashOut.toFixed(2),
+        months: months ? months.toFixed(2) : null,
+        sampleMonths: samples.length,
+        status,
+        methodology: 'Historical cash-out coverage: current posted liquidity divided by average monthly cash out from up to three recent months with cash out. Future collections and currency conversion are excluded.',
+      }];
+    }),
+  );
+
   const serviceAlerts = services.map((service) => {
     const expiryDays = service.expiryDate
       ? Math.ceil((service.expiryDate.getTime() - now.getTime()) / 86400000)
@@ -550,6 +594,7 @@ export async function GET(request: NextRequest) {
       byCurrency,
       cashPosition,
       renewalExposure,
+      runway,
       collections: {
         followUpDue: followUpDueInvoices.size,
         brokenPromises,
