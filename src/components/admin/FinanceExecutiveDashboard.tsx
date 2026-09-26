@@ -13,6 +13,7 @@ import {
   UsersRound,
   WalletCards,
   Timer,
+  Download,
 } from 'lucide-react';
 import {
   Bar,
@@ -343,6 +344,68 @@ export default function FinanceExecutiveDashboard({
     }
   };
 
+  const downloadManagementPack = () => {
+    const quote = (value: unknown) => '"' + String(value ?? '').replaceAll('"', '""') + '"';
+    const lines: string[][] = [
+      ['Lightworld Technologies Ltd', 'Executive finance management snapshot'],
+      ['Reporting period', dashboard.period.from + ' to ' + dashboard.period.to],
+      ['Generated at', new Date().toISOString()],
+      [],
+      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Payables', 'Revenue', 'Expenses', 'Net profit', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
+    ];
+
+    const codes = Array.from(new Set([
+      ...Object.keys(dashboard.byCurrency || {}),
+      ...Object.keys(dashboard.cashPosition || {}),
+      ...Object.keys(dashboard.runway || {}),
+      ...Object.keys(dashboard.renewalExposure || {}),
+    ])).sort();
+
+    for (const code of codes) {
+      const finance = dashboard.byCurrency[code];
+      const position = dashboard.cashPosition[code];
+      const coverage = dashboard.runway[code];
+      const renewals = dashboard.renewalExposure[code];
+      lines.push([
+        code,
+        position?.total || '0.00',
+        coverage?.months || '',
+        coverage?.averageMonthlyCashOut || '0.00',
+        finance?.receivables || '0.00',
+        finance?.payables || '0.00',
+        finance?.revenue || '0.00',
+        finance?.expenses || '0.00',
+        finance?.netProfit || '0.00',
+        renewals?.amount || '0.00',
+        String(renewals?.count || 0),
+        String(renewals?.overdueCount || 0),
+      ]);
+    }
+
+    lines.push(
+      [],
+      ['Collections control'],
+      ['Follow-ups due', String(dashboard.collections.followUpDue)],
+      ['Broken promises', String(dashboard.collections.brokenPromises)],
+      ['Active promises', String(dashboard.collections.activePromises)],
+      ['Overdue invoices', String(dashboard.collections.overdueInvoices)],
+      [],
+      ['Control note', 'Currencies remain separate. Cash runway is historical coverage only and excludes future collections and FX conversion.'],
+    );
+
+    const csv = lines.map((row) => row.map(quote).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'lightworld-finance-management-' + dashboard.period.to.slice(0, 10) + '.csv';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    toast.success('Executive finance management snapshot downloaded');
+  };
+
   const totals = dashboard.byCurrency[currency] || {
     receivables: '0',
     payables: '0',
@@ -443,6 +506,10 @@ export default function FinanceExecutiveDashboard({
                 </Button>
               ))}
             </div>
+            <Button type="button" variant="outline" onClick={downloadManagementPack}>
+              <Download className="mr-2 size-4" />
+              Download management pack
+            </Button>
             <Button type="button" variant="outline" onClick={() => void refresh()} disabled={loading}>
               <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />
               Refresh
