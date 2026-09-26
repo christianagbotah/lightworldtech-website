@@ -185,10 +185,15 @@ export async function createDueProjectRenewalInvoiceDrafts() {
   let skipped = 0;
 
   for (const project of projects) {
-    if (created >= batchSize || !project.nextRenewalDate) break;
+    if (created >= batchSize) break;
+    if (!project.nextRenewalDate) {
+      skipped += 1;
+      continue;
+    }
+    const renewalDate =? renewalDate;
 
     const daysUntilRenewal = Math.ceil(
-      (project.nextRenewalDate.getTime() - now.getTime()) / 86400000,
+      (renewalDate.getTime() - now.getTime()) / 86400000,
     );
     if (daysUntilRenewal > project.renewalNoticeDays) continue;
 
@@ -199,7 +204,7 @@ export async function createDueProjectRenewalInvoiceDrafts() {
         'lightworld-auto-project-renewal-draft:' +
         project.id +
         ':' +
-        project.nextRenewalDate!.toISOString().slice(0, 10);
+        renewalDate.toISOString().slice(0, 10);
 
       await tx.$queryRawUnsafe(
         'SELECT pg_advisory_xact_lock(hashtext($1))',
@@ -209,7 +214,7 @@ export async function createDueProjectRenewalInvoiceDrafts() {
       const duplicate = await tx.clientInvoice.findFirst({
         where: {
           projectId: project.id,
-          renewalForDate: project.nextRenewalDate,
+          renewalForDate: renewalDate,
           status: { not: 'void' },
         },
         select: { id: true },
@@ -219,8 +224,8 @@ export async function createDueProjectRenewalInvoiceDrafts() {
       const issueDate = new Date();
       const fallbackDueDate = new Date(issueDate.getTime() + dueDays * 86400000);
       const dueDate =
-        project.nextRenewalDate.getTime() >= issueDate.getTime()
-          ? project.nextRenewalDate
+        renewalDate.getTime() >= issueDate.getTime()
+          ?? renewalDate
           : fallbackDueDate;
       const invoiceNumber = await nextInvoiceNumber(issueDate);
       const amount = new Prisma.Decimal(project.renewalAmount).toDecimalPlaces(2);
@@ -235,7 +240,7 @@ export async function createDueProjectRenewalInvoiceDrafts() {
           currency: project.renewalCurrency,
           issueDate,
           dueDate,
-          renewalForDate: project.nextRenewalDate,
+          renewalForDate: renewalDate,
           subtotal: amount,
           discount: new Prisma.Decimal(0),
           taxTreatment: 'none',
@@ -281,7 +286,7 @@ export async function createDueProjectRenewalInvoiceDrafts() {
             organizationName: project.organization.name,
             projectId: project.id,
             projectName: project.name,
-            renewalForDate: project.nextRenewalDate!.toISOString(),
+            renewalForDate: renewalDate.toISOString(),
             amount: amount.toFixed(2),
             currency: project.renewalCurrency,
           }),
