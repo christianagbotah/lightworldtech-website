@@ -1234,6 +1234,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).toContain('duplicateMessage || recentInvoiceReminder');
   });
 
+  test('shows project expiry and renewal terms in the client portal', () => {
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(portal).toContain('Project commercial schedule');
+    expect(portal).toContain('project.expiryDate');
+    expect(portal).toContain('project.nextRenewalDate');
+    expect(portal).toContain('project.renewalCycle');
+    expect(portal).toContain('project.renewalAmount');
+    expect(portal).toContain('project.renewalCurrency');
+    expect(portal).toContain('Auto-renew records the intended renewal workflow');
+  });
+
   test('adds permission-scoped business activity to the main dashboard', () => {
     const activity = source('src/app/api/admin/activity/route.ts');
     const dashboard = source('src/components/admin/AdminDashboard.tsx');

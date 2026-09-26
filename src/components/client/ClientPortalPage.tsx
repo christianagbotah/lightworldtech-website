@@ -72,6 +72,13 @@ type Project = {
   manager: string;
   startDate: string | null;
   targetDate: string | null;
+  expiryDate: string | null;
+  nextRenewalDate: string | null;
+  renewalCycle: string;
+  renewalCurrency: string;
+  renewalAmount: string;
+  autoRenew: boolean;
+  renewalNoticeDays: number;
   milestones: Milestone[];
   documents: DocumentItem[];
 };
@@ -1276,6 +1283,48 @@ export default function ClientPortalPage() {
                           {project.manager && <p>Lightworld lead: <span className="font-medium text-foreground">{project.manager}</span></p>}
                           {project.targetDate && <p className="flex items-center gap-2"><CalendarDays className="size-3.5" /> Target: {new Date(project.targetDate).toLocaleDateString()}</p>}
                         </div>
+
+                        {(project.expiryDate || project.nextRenewalDate || Number(project.renewalAmount) > 0) && (
+                          <div className="mt-5 rounded-2xl border border-amber-200/70 bg-amber-50/60 p-4 dark:border-amber-900/35 dark:bg-amber-950/10">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-300">Project commercial schedule</p>
+                              {project.autoRenew && (
+                                <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300">
+                                  Auto-renew enabled
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                              <div>
+                                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400">Project expiry</p>
+                                <p className="mt-1 text-sm font-semibold">
+                                  {project.expiryDate ? new Date(project.expiryDate).toLocaleDateString() : 'Not set'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400">Next renewal</p>
+                                <p className="mt-1 text-sm font-semibold">
+                                  {project.nextRenewalDate ? new Date(project.nextRenewalDate).toLocaleDateString() : 'Not scheduled'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400">Renewal cycle</p>
+                                <p className="mt-1 text-sm font-semibold">{statusLabel(project.renewalCycle || 'annual')}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400">Renewal amount</p>
+                                <p className="mt-1 text-sm font-semibold">
+                                  {Number(project.renewalAmount) > 0
+                                    ? accountMoney(project.renewalAmount, project.renewalCurrency)
+                                    : 'To be confirmed'}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="mt-3 text-[10px] leading-5 text-slate-500 dark:text-white/35">
+                              Auto-renew records the intended renewal workflow; it does not automatically charge your account. Issued invoices and available payment options appear in Billing.
+                            </p>
+                          </div>
+                        )}
 
                         <div className="mt-6 border-t border-slate-200/70 pt-5 dark:border-white/[0.07]">
                           <div className="flex items-center gap-2"><FileText className="size-4 text-amber-600" /><p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">Documents</p></div>
