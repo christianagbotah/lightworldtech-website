@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { supportSla, supportSlaState } from './support-ticket';
+import { supportSla, supportSlaState } from './support-sla';
 
 describe('enterprise support ticket SLA', () => {
   const openedAt = new Date('2026-09-21T08:00:00.000Z');
