@@ -24,6 +24,15 @@ function safeVariables(value: string): Record<string, string | number> {
   }
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function reference(prefix = 'SMS'): string {
   return prefix + '-' + Date.now().toString(36).toUpperCase() + '-' + randomUUID().slice(0, 8).toUpperCase();
 }
@@ -916,7 +925,7 @@ export async function sendDueCollectionEmailReminders() {
       '<div style="padding:32px;border:1px solid #e2e8f0;border-radius:24px">' +
       '<p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#b7791f;font-weight:700;margin:0 0 18px">Lightworld Technologies</p>' +
       '<h1 style="font-size:24px;margin:0 0 18px">Payment reminder</h1>' +
-      '<p>Hello ' + customerName.replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char] || char)) + ',</p>' +
+      '<p>Hello ' + escapeHtml(customerName) + ',</p>' +
       '<p>Invoice <strong>' + invoice.invoiceNumber + '</strong> has an outstanding balance of <strong>' + amount + '</strong>.</p>' +
       '<p><strong>Due date:</strong> ' + dueDate + '</p>' +
       '<p><a href="' + paymentLink + '" style="display:inline-block;padding:11px 16px;border-radius:10px;background:#b7791f;color:#fff;text-decoration:none;font-weight:700">Open client account</a></p>' +
