@@ -1993,7 +1993,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(settings).toContain('Hubtel payments');
     expect(settings).toContain('Automation dispatcher');
     expect(settings).toContain('Automation runtime');
-    expect(settings).toContain('Backup artifacts');
+    expect(settings).toContain('Backup & recovery');
     expect(settings).toContain("navigate('admin-sms')");
   });
 
