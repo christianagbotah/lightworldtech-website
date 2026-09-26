@@ -1241,6 +1241,21 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("label: 'SMS & OTP'");
   });
 
+  test('uses recent successful dispatcher runs in overall system health', () => {
+    const health = source('src/app/api/admin/health/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(health).toContain("id: 'communications-dispatcher'");
+    expect(health).toContain('AUTOMATION_RUNTIME_MAX_AGE_MINUTES');
+    expect(health).toContain('lastSuccessAgeMinutes');
+    expect(health).toContain("runtimeState.status === 'healthy'");
+    expect(health).toContain('runtimeHealthy');
+    expect(health).toContain('collectionEmail');
+    expect(health).toContain('no recent successful dispatcher run');
+    expect(dashboard).toContain('Automation {health?.communications?.automationEnabled');
+    expect(dashboard).toContain("collectionEmail: boolean");
+  });
+
   test('persists communications automation runtime health without unbounded run logs', () => {
     const schema = source('prisma/schema.prisma');
     const migration = source('prisma/migrations/20260926122500_automation_runtime_state/migration.sql');
