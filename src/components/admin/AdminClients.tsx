@@ -8,6 +8,7 @@ import {
   CalendarClock,
   CircleDollarSign,
   Copy,
+  Download,
   FileText,
   FolderKanban,
   KeyRound,
@@ -16,6 +17,7 @@ import {
   Megaphone,
   Plus,
   RefreshCw,
+  Search,
   Send,
   Trash2,
   Users,
@@ -159,6 +161,8 @@ export default function AdminClients() {
   const [portfolioLoading, setPortfolioLoading] = useState(true);
   const [portfolioForbidden, setPortfolioForbidden] = useState(false);
   const [selectedId, setSelectedId] = useState('');
+  const [organizationQuery, setOrganizationQuery] = useState('');
+  const [organizationStatus, setOrganizationStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -284,6 +288,90 @@ export default function AdminClients() {
     window.setTimeout(() => {
       document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 0);
+  };
+
+  const filteredOrganizations = useMemo(() => {
+    const needle = organizationQuery.trim().toLowerCase();
+    return organizations.filter((organization) => {
+      if (organizationStatus !== 'all' && organization.status !== organizationStatus) return false;
+      if (!needle) return true;
+      return [
+        organization.name,
+        organization.primaryContactName,
+        organization.primaryEmail,
+        organization.primaryPhone,
+      ].some((value) => value.toLowerCase().includes(needle));
+    });
+  }, [organizations, organizationQuery, organizationStatus]);
+
+  const exportPortfolio = () => {
+    if (!portfolio) {
+      toast.error('Executive client portfolio is not available for export');
+      return;
+    }
+    const quote = (value: unknown) => '"' + String(value ?? '').replaceAll('"', '""') + '"';
+    const lines: string[][] = [
+      ['Lightworld Technologies Ltd', 'Executive client portfolio'],
+      ['Generated at', new Date().toISOString()],
+      [],
+      [
+        'Organization',
+        'Status',
+        'Management posture',
+        'Risk score',
+        'Overdue invoices',
+        'Renewals due 30d',
+        'At-risk projects',
+        'Budget pressure',
+        'Over budget',
+        'Urgent support',
+        'SLA breaches',
+        'Currency exposure',
+      ],
+      ...portfolio.data.map((row) => [
+        row.name,
+        row.status,
+        row.posture,
+        String(row.riskScore),
+        String(row.metrics.overdueInvoices),
+        String(row.metrics.renewalsDue30),
+        String(row.metrics.atRiskProjects),
+        String(row.metrics.budgetPressure),
+        String(row.metrics.overBudget),
+        String(row.metrics.urgentTickets),
+        String(row.metrics.slaBreaches),
+        row.exposure.map((item) =>
+          item.currency +
+          ': overdue ' +
+          item.overdueReceivables +
+          ', renewals ' +
+          item.renewals30
+        ).join(' | '),
+      ]),
+      [],
+      ['Priority action queue'],
+      ['Organization', 'Severity', 'Action type', 'Action', 'Detail'],
+      ...portfolio.actionQueue.map((action) => [
+        action.organizationName,
+        action.severity,
+        action.type,
+        action.title,
+        action.detail,
+      ]),
+      [],
+      ['Methodology', portfolio.methodology],
+    ];
+    const csv = lines.map((row) => row.map(quote).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'lightworld-client-portfolio-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    toast.success('Executive client portfolio downloaded');
   };
 
   const counts = useMemo(() => ({
@@ -615,9 +703,16 @@ export default function AdminClients() {
         title="Client organizations & delivery visibility"
         description="Provision only real client organizations. Portal users see projects, milestones and support requests scoped to their organization."
         actions={
-          <Button variant="outline" onClick={() => void Promise.all([fetchOrganizations(), fetchPortfolio()])} disabled={loading}>
-            <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} /> Refresh
-          </Button>
+          <>
+            {!portfolioForbidden && (
+              <Button variant="outline" onClick={exportPortfolio} disabled={!portfolio}>
+                <Download className="mr-2 size-4" /> Export portfolio
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => void Promise.all([fetchOrganizations(), fetchPortfolio()])} disabled={loading}>
+              <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} /> Refresh
+            </Button>
+          </>
         }
       />
 
@@ -855,14 +950,37 @@ export default function AdminClients() {
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
         <Card className="border-border/60">
-          <CardHeader><CardTitle className="text-base">Organizations</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {organizations.length ? organizations.map((item) => (
+          <CardHeader className="space-y-3">
+            <CardTitle className="text-base">Organizations</CardTitle>
+            <div className="space-y-2">
+              <label className="relative block">
+                <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={organizationQuery}
+                  onChange={(event) => setOrganizationQuery(event.target.value)}
+                  placeholder="Search clients"
+                  className="h-9 pl-9 text-xs"
+                />
+              </label>
+              <select
+                aria-label="Filter client organizations by status"
+                value={organizationStatus}
+                onChange={(event) => setOrganizationStatus(event.target.value)}
+                className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs"
+              >
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </CardHeader>
+          <CardContent className="max-h-[680px] space-y-2 overflow-y-auto">
+            {filteredOrganizations.length ? filteredOrganizations.map((item) => (
               <button key={item.id} type="button" aria-pressed={selected?.id === item.id} onClick={() => setSelectedId(item.id)} className={(selected?.id === item.id ? 'border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/[0.08] ' : 'border-border/60 ') + 'w-full rounded-xl border p-3 text-left transition'}>
                 <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{item.name}</span><Badge variant="outline">{item.status}</Badge></div>
                 <p className="mt-1 text-[10px] text-muted-foreground">{item._count.users} users · {item._count.projects} projects</p>
               </button>
-            )) : <p className="text-sm text-muted-foreground">No client organizations yet.</p>}
+            )) : <p className="text-sm text-muted-foreground">{organizations.length ? 'No client organizations match this search.' : 'No client organizations yet.'}</p>}
           </CardContent>
         </Card>
 
