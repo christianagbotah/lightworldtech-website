@@ -90,7 +90,7 @@ interface HealthData {
     paymentsConfigured: boolean;
     dispatcherConfigured: boolean;
     automationEnabled: boolean;
-    automation: { serviceRenewals: boolean; projectRenewals: boolean; collections: boolean };
+    automation: { serviceRenewals: boolean; projectRenewals: boolean; collections: boolean; renewalDrafts: boolean };
     warning: string;
   };
 }
