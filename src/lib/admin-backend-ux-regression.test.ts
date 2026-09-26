@@ -1724,6 +1724,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain('Assistant Helpful');
   });
 
+  test('exposes authenticated deployment provenance to administrators', () => {
+    const route = source('src/app/api/admin/operations/release-status/route.ts');
+    const settings = source('src/components/admin/AdminSettings.tsx');
+
+    expect(route).toContain('getActiveAdminContext(request)');
+    expect(route).toContain("path.join(process.cwd(), 'RELEASE_SHA')");
+    expect(route).toContain('/^[a-f0-9]{40}$/');
+    expect(route).toContain("provenance: sha ? 'verified_artifact' : 'unavailable'");
+    expect(route).toContain("'Cache-Control': 'private, no-store, max-age=0'");
+    expect(settings).toContain("fetchJson<{ data: ReleaseStatus }>('/api/admin/operations/release-status'");
+    expect(settings).toContain('Deployed release');
+    expect(settings).toContain('Runtime started');
+  });
+
   test('consolidates production readiness inside Settings', () => {
     const settings = source('src/components/admin/AdminSettings.tsx');
 
