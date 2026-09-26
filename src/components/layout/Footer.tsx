@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 import { trackEvent } from '@/lib/analytics-client';
+import { requireJson } from '@/lib/http-response';
 import { normalizeNavigationLinks, safeNavigationHref } from '@/lib/navigation-content';
 import { companyProfile } from '@/lib/company-profile';
 
@@ -128,8 +129,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
         body: JSON.stringify({ email: email.trim() }),
       });
 
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Subscription request failed');
+      const payload = await requireJson<any>(response, 'Subscription request failed');
       setEmail('');
       trackEvent('newsletter_subscribe');
       toast.success('You’re on the list.', {
