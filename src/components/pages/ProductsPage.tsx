@@ -158,7 +158,7 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
                 <div className="relative aspect-[16/9] shrink-0 overflow-hidden bg-slate-100 dark:bg-white/[0.03]">
                   <Image
                     src={product.image}
-                    alt=""
+                    alt={product.title + ' product direction'}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover transition duration-700 group-hover:scale-[1.035]"
@@ -169,12 +169,12 @@ export default function ProductsPage({ settings = {} }: { settings?: SiteSetting
                   </div>
                   <span className="absolute right-4 top-4 rounded-full border border-white/15 bg-slate-950/45 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/80 backdrop-blur-lg">{product.stage}</span>
                 </div>
-                <div className="flex flex-1 flex-col p-6">
-                  <div className="min-h-[58px]">
-                    <h2 className="text-xl font-semibold leading-7 tracking-tight">{product.title}</h2>
+                <div className="grid flex-1 grid-rows-[58px_minmax(96px,1fr)_auto] p-6">
+                  <div className="flex items-start">
+                    <h2 className="line-clamp-2 text-xl font-semibold leading-7 tracking-tight">{product.title}</h2>
                   </div>
-                  <p className="mt-2 min-h-[72px] text-sm leading-6 text-slate-500 dark:text-white/36">{product.text}</p>
-                  <div className="mt-auto flex flex-wrap gap-1.5 pt-5">
+                  <p className="pt-2 text-sm leading-6 text-slate-500 dark:text-white/36">{product.text}</p>
+                  <div className="flex flex-wrap content-end gap-1.5 pt-5">
                     {product.features.map((feature) => (
                       <span key={feature} className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-500 dark:bg-white/[0.04] dark:text-white/28">{feature}</span>
                     ))}
