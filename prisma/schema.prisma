@@ -1295,6 +1295,7 @@ model FinancePurchaseRequestLine {
   quantity    Decimal                @db.Decimal(12, 3)
   unitPrice   Decimal                @db.Decimal(18, 2)
   amount      Decimal                @db.Decimal(18, 2)
+  receiptLines FinancePurchaseReceiptLine[]
 
   createdAt DateTime @default(now())
 
@@ -1322,6 +1323,7 @@ model FinancePurchaseOrder {
   closedAt     DateTime?
   closedBy     String                 @default("")
   bill         FinanceVendorBill?
+  receipts     FinancePurchaseReceipt[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1329,6 +1331,36 @@ model FinancePurchaseOrder {
   @@index([vendorId, status])
   @@index([projectId, status])
   @@index([status, expectedDate])
+}
+
+model FinancePurchaseReceipt {
+  id          String                     @id @default(cuid())
+  receiptNumber String                   @unique
+  purchaseOrderId String
+  purchaseOrder FinancePurchaseOrder     @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  notes       String                     @default("")
+  receivedByAdminId String
+  receivedByName String                  @default("")
+  receivedAt  DateTime                   @default(now())
+  lines       FinancePurchaseReceiptLine[]
+
+  createdAt DateTime @default(now())
+
+  @@index([purchaseOrderId, receivedAt])
+}
+
+model FinancePurchaseReceiptLine {
+  id            String                     @id @default(cuid())
+  receiptId     String
+  receipt       FinancePurchaseReceipt     @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  requestLineId String
+  requestLine   FinancePurchaseRequestLine @relation(fields: [requestLineId], references: [id], onDelete: Restrict)
+  quantity      Decimal                    @db.Decimal(12, 3)
+
+  createdAt DateTime @default(now())
+
+  @@index([receiptId])
+  @@index([requestLineId])
 }
 
 model FinanceTaxProfile {

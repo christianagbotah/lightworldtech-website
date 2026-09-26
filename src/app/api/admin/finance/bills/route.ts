@@ -107,6 +107,10 @@ export async function POST(request: NextRequest) {
     if (!['received', 'closed'].includes(matchedPurchaseOrder.status)) {
       return NextResponse.json({ success: false, error: 'Purchase order must be received before a supplier bill can be matched' }, { status: 409 });
     }
+    const receiptCount = await db.financePurchaseReceipt.count({ where: { purchaseOrderId: matchedPurchaseOrder.id } });
+    if (!receiptCount) {
+      return NextResponse.json({ success: false, error: 'Purchase order has no line-level receipt evidence for three-way matching' }, { status: 409 });
+    }
     if (matchedPurchaseOrder.vendorId !== parsed.data.vendorId) {
       return NextResponse.json({ success: false, error: 'Supplier bill vendor does not match the purchase order supplier' }, { status: 409 });
     }

@@ -138,17 +138,16 @@ export async function PATCH(
   if (!order) return NextResponse.json({ success: false, error: 'Purchase order not found' }, { status: 404 });
 
   if (action === 'receive') {
-    if (order.status !== 'issued') return NextResponse.json({ success: false, error: 'Only issued purchase orders can be received' }, { status: 409 });
-    const updated = await db.financePurchaseOrder.update({
-      where: { id },
-      data: { status: 'received', receivedAt: new Date(), receivedBy: actor.name || actor.email },
-    });
-    await recordAdminAudit({ admin: actor, action: 'admin.finance_purchase_order_received', entity: 'FinancePurchaseOrder', entityId: id, details: { poNumber: order.poNumber } });
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json({
+      success: false,
+      error: 'Record line-level receipt quantities from the procurement workspace. Direct full-receipt confirmation is disabled.',
+    }, { status: 409 });
   }
 
   if (action === 'close') {
-    if (order.status !== 'received') return NextResponse.json({ success: false, error: 'Only received purchase orders can be closed' }, { status: 409 });
+    if (order.status !== 'received') return NextResponse.json({ success: false, error: 'Only fully received purchase orders can be closed' }, { status: 409 });
+    const receiptCount = await db.financePurchaseReceipt.count({ where: { purchaseOrderId: order.id } });
+    if (!receiptCount) return NextResponse.json({ success: false, error: 'A purchase receipt is required before closing the purchase order' }, { status: 409 });
     const updated = await db.financePurchaseOrder.update({
       where: { id },
       data: { status: 'closed', closedAt: new Date(), closedBy: actor.name || actor.email },

@@ -44,7 +44,28 @@ function serializeRequest(item: any) {
 }
 
 function serializeOrder(item: any) {
-  return { ...item, total: item.total.toFixed(2) };
+  return {
+    ...item,
+    total: item.total.toFixed(2),
+    request: item.request
+      ? {
+          ...item.request,
+          lines: item.request.lines.map((line: any) => ({
+            ...line,
+            quantity: line.quantity.toFixed(3),
+            unitPrice: line.unitPrice.toFixed(2),
+            amount: line.amount.toFixed(2),
+          })),
+        }
+      : null,
+    receipts: item.receipts.map((receipt: any) => ({
+      ...receipt,
+      lines: receipt.lines.map((line: any) => ({
+        ...line,
+        quantity: line.quantity.toFixed(3),
+      })),
+    })),
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -70,7 +91,25 @@ export async function GET(request: NextRequest) {
       include: {
         vendor: { select: { id: true, name: true } },
         project: { select: { id: true, name: true, organization: { select: { id: true, name: true } } } },
-        request: { select: { id: true, requestNumber: true, title: true } },
+        request: {
+          select: {
+            id: true,
+            requestNumber: true,
+            title: true,
+            lines: {
+              orderBy: { createdAt: 'asc' },
+              select: { id: true, description: true, quantity: true, unitPrice: true, amount: true },
+            },
+          },
+        },
+        receipts: {
+          orderBy: { receivedAt: 'desc' },
+          include: {
+            lines: {
+              select: { id: true, requestLineId: true, quantity: true },
+            },
+          },
+        },
       },
     }),
     db.financeVendor.findMany({

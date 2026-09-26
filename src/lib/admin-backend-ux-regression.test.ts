@@ -2355,12 +2355,15 @@ describe('admin backend and responsive UX regression coverage', () => {
     const schema = source('prisma/schema.prisma');
     const procurementApi = source('src/app/api/admin/finance/procurement/route.ts');
     const procurementActionApi = source('src/app/api/admin/finance/procurement/[id]/route.ts');
+    const procurementReceiptApi = source('src/app/api/admin/finance/procurement/[id]/receipts/route.ts');
     const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
     const finance = source('src/components/admin/AdminFinance.tsx');
 
     expect(schema).toContain('model FinancePurchaseRequest');
     expect(schema).toContain('model FinancePurchaseRequestLine');
     expect(schema).toContain('model FinancePurchaseOrder');
+    expect(schema).toContain('model FinancePurchaseReceipt');
+    expect(schema).toContain('model FinancePurchaseReceiptLine');
     expect(schema).toContain('purchaseRequests FinancePurchaseRequest[]');
     expect(schema).toContain('purchaseOrders   FinancePurchaseOrder[]');
     expect(procurementApi).toContain("'finance.manage'");
@@ -2370,11 +2373,16 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(procurementActionApi).toContain('A requisition must be approved by a different finance operator');
     expect(procurementActionApi).toContain('admin.finance_purchase_request_approved');
     expect(procurementActionApi).toContain('admin.finance_purchase_order_issued');
-    expect(procurementActionApi).toContain('admin.finance_purchase_order_received');
+    expect(procurementActionApi).toContain('Direct full-receipt confirmation is disabled');
+    expect(procurementReceiptApi).toContain('admin.finance_purchase_receipt_recorded');
+    expect(procurementReceiptApi).toContain("status: 'partially_received'");
+    expect(procurementReceiptApi).toContain("status: 'received'");
+    expect(procurementReceiptApi).toContain('Received quantity exceeds the purchase order quantity');
     expect(procurement).toContain('Procurement control');
     expect(procurement).toContain('Submit for approval');
     expect(procurement).toContain('Issue purchase order');
-    expect(procurement).toContain('Confirm received');
+    expect(procurement).toContain('Record receipt');
+    expect(procurement).toContain('Goods / service receipt quantities');
     expect(procurement).toContain('lightworld-purchase-requisitions');
     expect(procurement).toContain('lightworld-purchase-orders');
     expect(finance).toContain("['procurement', 'Procurement']");
@@ -2390,6 +2398,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(schema).toContain('purchaseOrderId String?');
     expect(schema).toContain('bill         FinanceVendorBill?');
     expect(billsApi).toContain('Purchase order must be received before a supplier bill can be matched');
+    expect(billsApi).toContain('Purchase order has no line-level receipt evidence for three-way matching');
     expect(billsApi).toContain('Supplier bill vendor does not match the purchase order supplier');
     expect(billsApi).toContain('Supplier bill currency does not match the purchase order currency');
     expect(billsApi).toContain('Supplier bill net amount does not match the purchase order commitment');

@@ -37,6 +37,11 @@ type PurchaseRequest = {
   lines: RequestLine[];
   purchaseOrder: { id: string; poNumber: string; status: string; total: string } | null;
 };
+type PurchaseReceiptLine = { id: string; requestLineId: string; quantity: string };
+type PurchaseReceipt = {
+  id: string; receiptNumber: string; notes: string; receivedAt: string;
+  receivedByName: string; lines: PurchaseReceiptLine[];
+};
 type PurchaseOrder = {
   id: string;
   poNumber: string;
@@ -55,7 +60,8 @@ type PurchaseOrder = {
   closedAt: string | null;
   vendor: { id: string; name: string };
   project: Project | null;
-  request: { id: string; requestNumber: string; title: string } | null;
+  request: ({ id: string; requestNumber: string; title: string; lines: RequestLine[] }) | null;
+  receipts: PurchaseReceipt[];
 };
 type ProcurementData = {
   canApprove: boolean;
@@ -84,7 +90,7 @@ function pretty(value: string) {
 function tone(status: string) {
   if (['approved', 'received', 'closed'].includes(status)) return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
   if (['rejected', 'cancelled'].includes(status)) return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
-  if (['submitted', 'issued'].includes(status)) return 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200';
+  if (['submitted', 'issued', 'partially_received'].includes(status)) return 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200';
   return '';
 }
 
@@ -107,6 +113,9 @@ export default function FinanceProcurementWorkspace({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
+  const [receiptDrafts, setReceiptDrafts] = useState<Record<string, Record<string, string>>>({});
+  const [receiptNotes, setReceiptNotes] = useState<Record<string, string>>({});
+  const [receivingOrderId, setReceivingOrderId] = useState('');
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -197,6 +206,53 @@ export default function FinanceProcurementWorkspace({
     }
   };
 
+  const receivedQuantity = (order: PurchaseOrder, requestLineId: string) =>
+    order.receipts.reduce(
+      (sum, receipt) => sum + receipt.lines.filter((line) => line.requestLineId === requestLineId).reduce((lineSum, line) => lineSum + Number(line.quantity || 0), 0),
+      0,
+    );
+
+  const openReceipt = (order: PurchaseOrder) => {
+    if (!order.request) return;
+    const draft: Record<string, string> = {};
+    for (const line of order.request.lines) {
+      const remaining = Math.max(0, Number(line.quantity) - receivedQuantity(order, line.id));
+      draft[line.id] = remaining > 0 ? remaining.toFixed(3) : '';
+    }
+    setReceiptDrafts((current) => ({ ...current, [order.id]: draft }));
+    setReceivingOrderId(order.id);
+  };
+
+  const submitReceipt = async (order: PurchaseOrder) => {
+    if (!order.request) return;
+    const draft = receiptDrafts[order.id] || {};
+    const lines = order.request.lines
+      .map((line) => ({ requestLineId: line.id, quantity: Number(draft[line.id] || 0) }))
+      .filter((line) => line.quantity > 0);
+    if (!lines.length) {
+      toast.error('Enter at least one received quantity');
+      return;
+    }
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/finance/procurement/' + order.id + '/receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: receiptNotes[order.id] || '', lines }),
+      });
+      const payload = await readJson(response);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to record purchase receipt');
+      toast.success(payload?.data?.fullyReceived ? 'Purchase order fully received' : 'Partial purchase receipt recorded');
+      setReceivingOrderId('');
+      setReceiptNotes((current) => ({ ...current, [order.id]: '' }));
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to record purchase receipt');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!data) {
     return (
       <Card className="border-border/60">
@@ -220,7 +276,7 @@ export default function FinanceProcurementWorkspace({
         <div>
           <h2 className="text-lg font-semibold">Procurement control</h2>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Submit purchase requisitions, enforce maker-checker approval, issue supplier POs and confirm receipt before finance records the supplier bill.
+            Submit purchase requisitions, enforce maker-checker approval, issue supplier POs, record line-level GRNs and match only fully received commitments to supplier bills.
           </p>
         </div>
         <Button variant="outline" onClick={() => void load()} disabled={loading}><RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />Refresh</Button>
@@ -230,7 +286,7 @@ export default function FinanceProcurementWorkspace({
         {[
           { label: 'Awaiting approval', value: summary.submitted, Icon: ClipboardList },
           { label: 'Approved to order', value: summary.approved, Icon: CheckCircle2 },
-          { label: 'POs in transit', value: summary.issued, Icon: ShoppingCart },
+          { label: 'POs in transit', value: data.orders.filter((item) => ['issued', 'partially_received'].includes(item.status)).length, Icon: ShoppingCart },
           { label: 'Received / bill next', value: summary.received, Icon: PackageCheck },
         ].map(({ label, value, Icon }) => (
           <Card key={label} className="border-border/60">
@@ -325,12 +381,58 @@ export default function FinanceProcurementWorkspace({
                   <TableCell>{item.expectedDate ? new Date(item.expectedDate).toLocaleDateString() : 'Not specified'}</TableCell>
                   <TableCell><Badge className={tone(item.status)}>{pretty(item.status)}</Badge></TableCell>
                   <TableCell className="text-right font-semibold">{money(item.total, item.currency)}</TableCell>
-                  <TableCell>
-                    {item.status === 'issued' && <Button size="sm" variant="outline" disabled={saving} onClick={() => void action(item.id, 'receive')}><PackageCheck className="mr-1 size-3.5" />Confirm received</Button>}
-                    {item.status === 'received' && <div className="space-y-2"><p className="text-xs text-muted-foreground">Received by {item.receivedBy || 'Finance'}{item.receivedAt ? ' · ' + new Date(item.receivedAt).toLocaleString() : ''}</p><Button size="sm" variant="outline" disabled={saving} onClick={() => void action(item.id, 'close')}>Close PO</Button></div>}
+                  <TableCell className="min-w-[360px]">
+                    {['issued', 'partially_received'].includes(item.status) && item.request && (
+                      <div className="space-y-2">
+                        {receivingOrderId !== item.id ? (
+                          <Button size="sm" variant="outline" disabled={saving} onClick={() => openReceipt(item)}>
+                            <PackageCheck className="mr-1 size-3.5" /> Record receipt
+                          </Button>
+                        ) : (
+                          <div className="space-y-3 rounded-xl border border-border/60 p-3">
+                            <p className="text-xs font-semibold">Goods / service receipt quantities</p>
+                            {item.request.lines.map((line) => {
+                              const received = receivedQuantity(item, line.id);
+                              const remaining = Math.max(0, Number(line.quantity) - received);
+                              return (
+                                <div key={line.id} className="grid gap-2 text-xs sm:grid-cols-[minmax(160px,1fr)_70px_70px_90px] sm:items-center">
+                                  <span className="font-medium">{line.description}</span>
+                                  <span className="text-muted-foreground">PO {Number(line.quantity).toFixed(3)}</span>
+                                  <span className="text-muted-foreground">Rec {received.toFixed(3)}</span>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max={remaining}
+                                    step="0.001"
+                                    value={receiptDrafts[item.id]?.[line.id] || ''}
+                                    onChange={(event) => setReceiptDrafts((current) => ({
+                                      ...current,
+                                      [item.id]: { ...(current[item.id] || {}), [line.id]: event.target.value },
+                                    }))}
+                                    className="h-8 text-xs"
+                                  />
+                                </div>
+                              );
+                            })}
+                            <Textarea
+                              rows={2}
+                              value={receiptNotes[item.id] || ''}
+                              onChange={(event) => setReceiptNotes((current) => ({ ...current, [item.id]: event.target.value }))}
+                              placeholder="Delivery note, condition, shortages or service acceptance notes…"
+                            />
+                            <div className="flex flex-wrap gap-2">
+                              <Button size="sm" disabled={saving} onClick={() => void submitReceipt(item)}>Save receipt</Button>
+                              <Button size="sm" variant="outline" disabled={saving} onClick={() => setReceivingOrderId('')}>Cancel</Button>
+                            </div>
+                          </div>
+                        )}
+                        {item.receipts.length > 0 && <p className="text-xs text-muted-foreground">{item.receipts.length} receipt{item.receipts.length === 1 ? '' : 's'} recorded · {item.receipts[0].receiptNumber}</p>}
+                      </div>
+                    )}
+                    {item.status === 'received' && <div className="space-y-2"><p className="text-xs text-muted-foreground">Fully received by {item.receivedBy || 'Finance'}{item.receivedAt ? ' · ' + new Date(item.receivedAt).toLocaleString() : ''} · {item.receipts.length} GRN{item.receipts.length === 1 ? '' : 's'}</p><Button size="sm" variant="outline" disabled={saving} onClick={() => void action(item.id, 'close')}>Close PO</Button></div>}
                     {['received', 'closed'].includes(item.status) && (
                       <div className="space-y-2">
-                        {item.status === 'closed' && <p className="text-xs text-muted-foreground">PO closed and ready for Accounts Payable matching.</p>}
+                        {item.status === 'closed' && <p className="text-xs text-muted-foreground">PO closed with receipt evidence and ready for Accounts Payable matching.</p>}
                         {onPrepareBill && <Button size="sm" onClick={() => onPrepareBill(item)}>Prepare matched bill</Button>}
                       </div>
                     )}
