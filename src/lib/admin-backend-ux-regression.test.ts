@@ -1224,6 +1224,16 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain("sessionStorage.setItem('lw-client-organization-id', organizationId)");
   });
 
+  test('enforces automated collection reminder intervals per invoice', () => {
+    const sms = source('src/lib/sms.ts');
+
+    expect(sms).toContain('recentInvoiceReminder');
+    expect(sms).toContain("invoiceId: invoice.id");
+    expect(sms).toContain("type: 'sms_reminder_scheduled'");
+    expect(sms).toContain('createdAt: { gte: duplicateCutoff }');
+    expect(sms).toContain('duplicateMessage || recentInvoiceReminder');
+  });
+
   test('adds permission-scoped business activity to the main dashboard', () => {
     const activity = source('src/app/api/admin/activity/route.ts');
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
