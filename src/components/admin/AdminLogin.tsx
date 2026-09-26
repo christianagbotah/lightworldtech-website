@@ -10,6 +10,18 @@ import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
 
+async function readAuthPayload(response: Response) {
+  const raw = await response.text();
+  if (!raw.trim()) {
+    throw new Error('The authentication service returned an empty response');
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error('The authentication service returned an invalid response');
+  }
+}
+
 export default function AdminLogin() {
   const { navigate, loginAdmin } = useAppStore();
   const [email, setEmail] = useState('');
@@ -40,7 +52,7 @@ export default function AdminLogin() {
         }),
       });
 
-      const data = await res.json();
+      const data = await readAuthPayload(res);
 
       if (res.ok && data.success) {
         loginAdmin(data.data.name || 'Admin', data.data.role || 'admin', Array.isArray(data.data.permissions) ? data.data.permissions : []);
@@ -61,9 +73,10 @@ export default function AdminLogin() {
 
       setError(data.error || (totpRequired ? 'Invalid two-factor authentication code' : 'Invalid email or password'));
       toast.error('Login failed', { description: data.error || 'Unable to sign in' });
-    } catch {
-      setError('Network error. Please try again.');
-      toast.error('Network error', { description: 'Please check your connection.' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Network error. Please try again.';
+      setError(message);
+      toast.error('Login failed', { description: message });
     } finally {
       setLoading(false);
     }
@@ -81,15 +94,16 @@ export default function AdminLogin() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
+      const data = await readAuthPayload(res);
       const message =
         data.message ||
         'If an active administrator uses that email, a password reset link has been sent.';
       setResetMessage(message);
       toast.success('Reset request received', { description: message });
-    } catch {
-      setError('Unable to request a password reset right now.');
-      toast.error('Reset request failed');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to request a password reset right now.';
+      setError(message);
+      toast.error('Reset request failed', { description: message });
     } finally {
       setResetLoading(false);
     }
