@@ -242,6 +242,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("label: 'Support Desk'");
   });
 
+  test('supports bounded multi-file evidence selection on both support surfaces', () => {
+    const client = source('src/components/client/ClientPortalPage.tsx');
+    const admin = source('src/components/admin/AdminSupportDesk.tsx');
+
+    expect(client).toContain('uploadTicketAttachments');
+    expect(client).toContain('Array.from(selectedFiles).slice(0, 5)');
+    expect(client).toContain('multiple');
+    expect(client).toContain('Select up to 5 files at once');
+    expect(admin).toContain('uploadAttachments');
+    expect(admin).toContain('Array.from(selectedFiles).slice(0, 5)');
+    expect(admin).toContain('multiple');
+    expect(admin).toContain('Select up to 5 at once');
+  });
+
   test('keeps support evidence private and records a ticket activity timeline', () => {
     const schema = source('prisma/schema.prisma');
     const clientUpload = source('src/app/api/client/tickets/[id]/attachments/route.ts');
