@@ -82,6 +82,14 @@ export type FinanceExecutiveDashboardData = {
     top3SharePct: number;
     methodology: string;
   }>;
+  renewalPerformance: {
+    dueInPeriod: number;
+    completedDueInPeriod: number;
+    completedInPeriod: number;
+    overdueOpen: number;
+    completionRatePct: number | null;
+    methodology: string;
+  };
   runway: Record<string, {
     liquidity: string;
     averageMonthlyCashOut: string;
@@ -412,6 +420,13 @@ export default function FinanceExecutiveDashboard({
 
     lines.push(
       [],
+      ['Renewal workflow'],
+      ['Due in selected period', String(dashboard.renewalPerformance.dueInPeriod)],
+      ['Completed from due set', String(dashboard.renewalPerformance.completedDueInPeriod)],
+      ['Completed during period', String(dashboard.renewalPerformance.completedInPeriod)],
+      ['Overdue open renewals', String(dashboard.renewalPerformance.overdueOpen)],
+      ['Renewal workflow completion %', dashboard.renewalPerformance.completionRatePct === null ? '' : String(dashboard.renewalPerformance.completionRatePct)],
+      [],
       ['Collections control'],
       ['Follow-ups due', String(dashboard.collections.followUpDue)],
       ['Broken promises', String(dashboard.collections.brokenPromises)],
@@ -631,6 +646,29 @@ export default function FinanceExecutiveDashboard({
           onClick={onCollections}
         />
       </div>
+
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CalendarClock className="size-4 text-amber-600" />
+            Renewal workflow performance
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">{dashboard.renewalPerformance.methodology}</p>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            ['Due in period', dashboard.renewalPerformance.dueInPeriod],
+            ['Completed from due set', dashboard.renewalPerformance.completedDueInPeriod],
+            ['Overdue open', dashboard.renewalPerformance.overdueOpen],
+            ['Completion rate', dashboard.renewalPerformance.completionRatePct === null ? '—' : dashboard.renewalPerformance.completionRatePct.toFixed(1) + '%'],
+          ].map(([label, value]) => (
+            <button key={String(label)} type="button" onClick={onRenewals} className="rounded-xl border border-border/60 p-4 text-left transition hover:bg-muted/40">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{String(label)}</p>
+              <p className="mt-2 text-xl font-bold">{String(value)}</p>
+            </button>
+          ))}
+        </CardContent>
+      </Card>
 
       <FinanceExecutiveActionCenter
         collections={dashboard.collections}
