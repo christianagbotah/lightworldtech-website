@@ -554,7 +554,18 @@ export default function AdminSms() {
                 </p>
               ) : null}
             </div>
-            <Badge variant="outline" className={data.automation.dispatcherConfigured ? 'w-fit border-emerald-300 text-emerald-700 dark:text-emerald-300' : 'w-fit border-amber-300 text-amber-700 dark:text-amber-300'}>
+            <Badge
+              variant="outline"
+              className={
+                data.automation.runtime?.status === 'failed'
+                  ? 'w-fit border-rose-300 text-rose-700 dark:text-rose-300'
+                  : data.automation.runtime?.status === 'healthy'
+                    ? 'w-fit border-emerald-300 text-emerald-700 dark:text-emerald-300'
+                    : data.automation.dispatcherConfigured
+                      ? 'w-fit border-sky-300 text-sky-700 dark:text-sky-300'
+                      : 'w-fit border-amber-300 text-amber-700 dark:text-amber-300'
+              }
+            >
               {data.automation.runtime?.status === 'failed'
                 ? 'Dispatcher failing'
                 : data.automation.runtime?.status === 'healthy'
