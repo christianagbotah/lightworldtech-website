@@ -7,6 +7,40 @@ function source(relativePath: string): string {
 }
 
 describe('admin backend and responsive UX regression coverage', () => {
+  test('hardens remaining legacy admin workspaces against malformed JSON responses', () => {
+    const resilient = [
+      'src/components/admin/AdminBlog.tsx',
+      'src/components/admin/AdminBlogEditor.tsx',
+      'src/components/admin/AdminFAQs.tsx',
+      'src/components/admin/AdminTeam.tsx',
+      'src/components/admin/AdminServices.tsx',
+      'src/components/admin/AdminTestimonials.tsx',
+      'src/components/admin/AdminPortfolio.tsx',
+      'src/components/admin/AdminMessages.tsx',
+      'src/components/admin/AdminCRM.tsx',
+      'src/components/admin/AdminClients.tsx',
+      'src/components/admin/AdminProposals.tsx',
+    ];
+
+    for (const path of resilient) {
+      const value = source(path);
+      expect(value).toContain('readJsonResponse');
+      expect(value).not.toContain('await res.json()');
+    }
+
+    const proposals = source('src/components/admin/AdminProposals.tsx');
+    expect(proposals).not.toContain('proposalsRes.json()');
+    expect(proposals).not.toContain('leadsRes.json()');
+
+    const login = source('src/components/admin/AdminLogin.tsx');
+    expect(login).toContain('async function readAuthPayload');
+    expect(login).toContain('const raw = await response.text()');
+    expect(login).toContain('The authentication service returned an invalid response');
+    expect(login).not.toContain('await res.json()');
+    expect(login).toContain('requiresTotp');
+  });
+
+
   test('keeps the fixed-sidebar admin shell inside the viewport', () => {
     const layout = source('src/components/admin/AdminLayout.tsx');
 
