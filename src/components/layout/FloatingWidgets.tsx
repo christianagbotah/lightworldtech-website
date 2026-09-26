@@ -13,6 +13,8 @@ import {
   Shield,
   Cookie,
   Plus,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +24,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { readJsonResponse } from '@/lib/client-api';
 import { trackEvent } from '@/lib/analytics-client';
 import { contentText, type SiteSettings } from '@/lib/site-content';
 import { safeNavigationHref } from '@/lib/navigation-content';
@@ -265,6 +268,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
   const [isTyping, setIsTyping] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [assistantState, setAssistantState] = useState<ProjectScopeState | null>(null);
+  const [assistantFeedback, setAssistantFeedback] = useState<Record<string, 'helpful' | 'not_helpful'>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -381,6 +385,16 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
     window.dispatchEvent(new Event('lw-open-cookie-settings'));
   };
 
+  const handleAssistantFeedback = (messageId: string, rating: 'helpful' | 'not_helpful') => {
+    setAssistantFeedback((current) => ({ ...current, [messageId]: rating }));
+    trackEvent('assistant_feedback', {
+      metadata: {
+        rating,
+        messageId: messageId.slice(0, 80),
+      },
+    });
+  };
+
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim()) return;
@@ -422,7 +436,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
             })),
           }),
         });
-        const payload = await response.json();
+        const payload = await readJsonResponse<any>(response, 'Assistant request failed');
         if (payload?.reply) replyText = String(payload.reply);
 
         let nextState = assistantState;
@@ -576,6 +590,41 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                       >
                         {msg.text}
                       </div>
+
+                      {msg.sender === 'bot' && msg.id !== 'welcome' && (
+                        <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500">
+                          <span>Was this helpful?</span>
+                          <button
+                            type="button"
+                            onClick={() => handleAssistantFeedback(msg.id, 'helpful')}
+                            disabled={Boolean(assistantFeedback[msg.id])}
+                            aria-label="Mark assistant answer as helpful"
+                            className={cn(
+                              'inline-flex size-7 items-center justify-center rounded-full border transition',
+                              assistantFeedback[msg.id] === 'helpful'
+                                ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700/50 dark:bg-emerald-950/30 dark:text-emerald-300'
+                                : 'border-slate-200 bg-white text-slate-400 hover:border-emerald-300 hover:text-emerald-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800',
+                            )}
+                          >
+                            <ThumbsUp className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAssistantFeedback(msg.id, 'not_helpful')}
+                            disabled={Boolean(assistantFeedback[msg.id])}
+                            aria-label="Mark assistant answer as not helpful"
+                            className={cn(
+                              'inline-flex size-7 items-center justify-center rounded-full border transition',
+                              assistantFeedback[msg.id] === 'not_helpful'
+                                ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-300'
+                                : 'border-slate-200 bg-white text-slate-400 hover:border-amber-300 hover:text-amber-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800',
+                            )}
+                          >
+                            <ThumbsDown className="size-3.5" />
+                          </button>
+                          {assistantFeedback[msg.id] && <span className="ml-1">Thanks for the feedback.</span>}
+                        </div>
+                      )}
 
                       {msg.sender === 'bot' && msg.suggestions && msg.suggestions.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
