@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { hubtelConfiguration, smsSegmentEstimate } from '@/lib/hubtel';
+import { getMailTransportStatus } from '@/lib/mail';
 
 export async function GET(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
