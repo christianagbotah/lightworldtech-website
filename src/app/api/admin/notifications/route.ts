@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
       agreementObligationsDue30,
       myOverdueAgreementObligations,
       myAgreementObligationsDue7,
+      pendingObligationCompletionReviews,
     ] = await Promise.all([
       db.clientSupportTicket.count({
         where: { unreadByAdmin: true },
@@ -158,6 +159,12 @@ export async function GET(request: NextRequest) {
           agreement: { status: { notIn: ['terminated', 'superseded'] } },
         },
       }),
+      db.clientAgreementObligation.count({
+        where: {
+          status: 'pending_review',
+          agreement: { status: { notIn: ['terminated', 'superseded'] } },
+        },
+      }),
     ]);
 
     const agreementsInNoticeWindow = activeAgreementExpiries.filter((agreement) => {
@@ -165,6 +172,17 @@ export async function GET(request: NextRequest) {
       const daysRemaining = Math.ceil((agreement.expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
       return daysRemaining >= 0 && daysRemaining <= agreement.renewalNoticeDays;
     }).length;
+
+    if (pendingObligationCompletionReviews > 0) {
+      notices.push({
+        id: 'agreement-obligation-completion-reviews',
+        severity: 'warning',
+        title: 'Agreement completion reviews waiting',
+        message: pendingObligationCompletionReviews + ' obligation completion' + (pendingObligationCompletionReviews === 1 ? ' is' : 's are') + ' waiting for independent review.',
+        count: pendingObligationCompletionReviews,
+        action: 'admin-clients-obligations-review',
+      });
+    }
 
     if (myOverdueAgreementObligations > 0) {
       notices.push({

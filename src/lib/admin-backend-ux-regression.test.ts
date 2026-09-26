@@ -1808,6 +1808,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain('Team agreement obligations overdue');
     expect(notifications).toContain("action: 'admin-clients-obligations-overdue'");
     expect(notifications).toContain("action: 'admin-clients-obligations-due'");
+    expect(notifications).toContain('pendingObligationCompletionReviews');
+    expect(notifications).toContain('Agreement completion reviews waiting');
+    expect(notifications).toContain("action: 'admin-clients-obligations-review'");
+    expect(layout).toContain("action === 'admin-clients-obligations-review'");
+    expect(layout).toContain("? 'pending_review'");
+    expect(clients).toContain("'pending_review', 'all'");
     expect(layout).toContain("sessionStorage.setItem('lw-client-obligation-scope', scope)");
     expect(layout).toContain("sessionStorage.setItem('lw-client-action', 'obligations')");
     expect(clients).toContain("sessionStorage.getItem('lw-client-obligation-scope')");

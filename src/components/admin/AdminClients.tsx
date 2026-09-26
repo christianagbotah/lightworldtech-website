@@ -376,7 +376,7 @@ export default function AdminClients() {
       setSelectedId(requestedOrganizationId);
     }
     if (requestedAction) setPendingClientAction(requestedAction);
-    if (['mine', 'unassigned', 'overdue', 'due_30', 'all'].includes(requestedObligationScope)) {
+    if (['mine', 'unassigned', 'overdue', 'due_30', 'pending_review', 'all'].includes(requestedObligationScope)) {
       void fetchObligationQueue(requestedObligationScope as ObligationQueueState['scope']);
     }
   }, [organizations]);
