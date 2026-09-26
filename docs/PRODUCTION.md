@@ -523,6 +523,11 @@ AUTO_RENEWAL_DRAFT_INVOICES=true
 RENEWAL_DRAFT_INVOICE_BATCH_SIZE=10
 RENEWAL_DRAFT_INVOICE_DUE_DAYS=7
 
+# Project renewal draft invoices are separately opt-in.
+AUTO_PROJECT_RENEWAL_DRAFT_INVOICES=true
+PROJECT_RENEWAL_DRAFT_INVOICE_BATCH_SIZE=10
+PROJECT_RENEWAL_DRAFT_INVOICE_DUE_DAYS=7
+
 # Overdue invoice reminders are separately opt-in and bounded.
 AUTO_COLLECTION_REMINDER_SMS=true
 COLLECTION_REMINDER_SMS_BATCH_SIZE=10
@@ -601,3 +606,12 @@ Email collection reminders are opt-in, bounded to 50 per run, require the config
 Every successfully recorded customer receipt can trigger a best-effort acknowledgement through the configured transactional email transport and Hubtel SMS. The workflow applies to both administrator-recorded receipts and verified Hubtel payments.
 
 Notification state is stored directly on `ClientPayment` and claimed under a PostgreSQL advisory lock, so repeated Hubtel callbacks or status checks cannot send duplicate confirmations. Email and SMS are attempted independently; the stored status is `sent`, `partial`, `failed` or `skipped`. Notification failure never rolls back or changes the accounting receipt, invoice allocation, or ledger posting.
+
+
+### Automated project renewal invoice drafts
+
+When `AUTO_PROJECT_RENEWAL_DRAFT_INVOICES=true`, the protected dispatcher may prepare draft invoices for client projects that are explicitly marked `autoRenew=true`, have a positive renewal amount, have a next renewal date, and are inside their configured renewal-notice window. Creation is bounded by `PROJECT_RENEWAL_DRAFT_INVOICE_BATCH_SIZE` and uses a PostgreSQL advisory lock plus the project/renewal-date duplicate guard.
+
+Project renewal invoices are **drafts only**. They are never issued, emailed, posted to the accounting ledger, charged through Hubtel, or used to advance project dates automatically. Finance staff must review the project scope, tax treatment, renewal amount and due date before issue. Every generated draft records a system audit event.
+
+The Finance → Renewals queue also allows a finance user to prepare the same project renewal invoice manually. If an invoice already exists for the project and renewal cycle, the queue opens that invoice instead of offering another preparation action.
