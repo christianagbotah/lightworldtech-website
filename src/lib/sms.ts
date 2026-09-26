@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from '@/lib/db';
 import { invoiceBalance } from '@/lib/finance';
 import { createDueRenewalInvoiceDrafts } from '@/lib/renewal-draft-automation';
+import { getMailTransportStatus, sanitizeMailError, sendTransactionalMail } from '@/lib/mail';
 import {
   hubtelConfiguration,
   normalizePhone,
@@ -21,6 +22,15 @@ function safeVariables(value: string): Record<string, string | number> {
   } catch {
     return {};
   }
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function reference(prefix = 'SMS'): string {
@@ -761,11 +771,216 @@ export async function queueDueCollectionReminders() {
   };
 }
 
+
+export async function sendDueCollectionEmailReminders() {
+  const enabled = process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true';
+  const mail = getMailTransportStatus();
+  if (!enabled || !mail.configured) {
+    return {
+      enabled,
+      configured: mail.configured,
+      considered: 0,
+      sent: 0,
+      skipped: 0,
+      failed: 0,
+      promisesDeferred: 0,
+      missingEmail: 0,
+    };
+  }
+
+  const now = new Date();
+  const configuredBatch = Number(process.env.COLLECTION_REMINDER_EMAIL_BATCH_SIZE || 10);
+  const batchSize = Math.max(1, Math.min(50, Number.isFinite(configuredBatch) ? configuredBatch : 10));
+  const configuredIntervalDays = Number(process.env.COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS || 7);
+  const intervalDays = Math.max(1, Math.min(30, Number.isFinite(configuredIntervalDays) ? configuredIntervalDays : 7));
+  const configuredMinDays = Number(process.env.COLLECTION_REMINDER_EMAIL_MIN_DAYS_OVERDUE || 1);
+  const minDaysOverdue = Math.max(1, Math.min(365, Number.isFinite(configuredMinDays) ? configuredMinDays : 1));
+  const duplicateCutoff = new Date(now.getTime() - intervalDays * 86400000);
+
+  const invoices = await db.clientInvoice.findMany({
+    where: {
+      status: { notIn: ['draft', 'void', 'paid'] },
+      dueDate: { lt: now },
+    },
+    include: {
+      organization: {
+        select: {
+          id: true,
+          name: true,
+          primaryContactName: true,
+          primaryEmail: true,
+        },
+      },
+      allocations: true,
+      creditNotes: { where: { status: 'posted' } },
+      collectionActivities: {
+        where: { type: 'promise_to_pay', promisedDate: { not: null } },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      },
+    },
+    orderBy: [{ dueDate: 'asc' }, { issueDate: 'asc' }],
+    take: 500,
+  });
+
+  let considered = 0;
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+  let promisesDeferred = 0;
+  let missingEmail = 0;
+
+  for (const invoice of invoices) {
+    if (sent >= batchSize) break;
+
+    const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
+    if (balance.lte(0)) {
+      skipped += 1;
+      continue;
+    }
+
+    const daysOverdue = Math.floor((now.getTime() - invoice.dueDate.getTime()) / 86400000);
+    if (daysOverdue < minDaysOverdue) continue;
+    considered += 1;
+
+    const latestPromise = invoice.collectionActivities[0];
+    if (latestPromise?.promisedDate && latestPromise.promisedDate.getTime() >= now.getTime()) {
+      promisesDeferred += 1;
+      continue;
+    }
+
+    const recipient = invoice.organization.primaryEmail.trim().toLowerCase();
+    if (!recipient) {
+      missingEmail += 1;
+      continue;
+    }
+
+    const claim = await db.$transaction(async (tx) => {
+      const lockKey = 'lightworld-auto-collection-email:' + invoice.id;
+      await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))', lockKey);
+
+      const duplicate = await tx.financeCollectionActivity.findFirst({
+        where: {
+          invoiceId: invoice.id,
+          type: { in: ['email_reminder', 'email_reminder_sending', 'email_reminder_scheduled'] },
+          createdAt: { gte: duplicateCutoff },
+        },
+        select: { id: true },
+      });
+      if (duplicate) return null;
+
+      return tx.financeCollectionActivity.create({
+        data: {
+          organizationId: invoice.organizationId,
+          invoiceId: invoice.id,
+          type: 'email_reminder_sending',
+          note:
+            'Automatic payment reminder email prepared for ' +
+            invoice.invoiceNumber +
+            ' at ' +
+            daysOverdue +
+            ' day' +
+            (daysOverdue === 1 ? '' : 's') +
+            ' overdue.',
+          createdBy: 'System collections email scheduler',
+        },
+      });
+    });
+
+    if (!claim) {
+      skipped += 1;
+      continue;
+    }
+
+    const amount = new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: invoice.currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(balance));
+    const dueDate = new Intl.DateTimeFormat('en-GH', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Africa/Accra',
+    }).format(invoice.dueDate);
+    const customerName = invoice.organization.primaryContactName || invoice.organization.name;
+    const origin =
+      (process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://lightworldtech.com')
+        .trim()
+        .replace(/\/$/, '');
+    const paymentLink = origin + '/client#billing';
+    const subject = 'Payment reminder · ' + invoice.invoiceNumber;
+    const text =
+      'Hello ' + customerName + ',\n\n' +
+      'This is a payment reminder for invoice ' + invoice.invoiceNumber + '.\n' +
+      'Outstanding balance: ' + amount + '\n' +
+      'Due date: ' + dueDate + '\n\n' +
+      'Review your account and payment options in the Lightworld Client Portal:\n' +
+      paymentLink + '\n\n' +
+      'If payment has already been made, please disregard this reminder or contact Lightworld with the payment reference.\n\n' +
+      'Regards,\nLightworld Technologies Ltd';
+    const html =
+      '<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#0f172a;line-height:1.65">' +
+      '<div style="padding:32px;border:1px solid #e2e8f0;border-radius:24px">' +
+      '<p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#b7791f;font-weight:700;margin:0 0 18px">Lightworld Technologies</p>' +
+      '<h1 style="font-size:24px;margin:0 0 18px">Payment reminder</h1>' +
+      '<p>Hello ' + escapeHtml(customerName) + ',</p>' +
+      '<p>Invoice <strong>' + invoice.invoiceNumber + '</strong> has an outstanding balance of <strong>' + amount + '</strong>.</p>' +
+      '<p><strong>Due date:</strong> ' + dueDate + '</p>' +
+      '<p><a href="' + paymentLink + '" style="display:inline-block;padding:11px 16px;border-radius:10px;background:#b7791f;color:#fff;text-decoration:none;font-weight:700">Open client account</a></p>' +
+      '<p style="font-size:13px;color:#64748b">If payment has already been made, please disregard this reminder or contact Lightworld with the payment reference.</p>' +
+      '<p style="margin-top:24px">Regards,<br><strong>Lightworld Technologies Ltd</strong></p>' +
+      '</div></div>';
+
+    try {
+      const result = await sendTransactionalMail({ to: recipient, subject, text, html });
+      await db.financeCollectionActivity.update({
+        where: { id: claim.id },
+        data: {
+          type: 'email_reminder',
+          note:
+            'Automatic payment reminder emailed to ' +
+            recipient +
+            ' via ' +
+            result.transport +
+            ' for ' +
+            invoice.invoiceNumber +
+            '.',
+        },
+      });
+      sent += 1;
+    } catch (error) {
+      const safeError = sanitizeMailError(error);
+      await db.financeCollectionActivity.update({
+        where: { id: claim.id },
+        data: {
+          type: 'email_reminder_failed',
+          note: 'Automatic payment reminder email failed: ' + safeError,
+        },
+      }).catch(() => null);
+      failed += 1;
+    }
+  }
+
+  return {
+    enabled: true,
+    configured: true,
+    considered,
+    sent,
+    skipped,
+    failed,
+    promisesDeferred,
+    missingEmail,
+  };
+}
+
 export async function dispatchDueSms() {
   const renewalQueue = await queueDueServiceRenewalReminders();
   const projectRenewalQueue = await queueDueProjectRenewalReminders();
   const collectionQueue = await queueDueCollectionReminders();
   const renewalDraftQueue = await createDueRenewalInvoiceDrafts();
+  const collectionEmailQueue = await sendDueCollectionEmailReminders();
   if (!hubtelConfiguration().sms) {
     return {
       configured: false,
@@ -776,6 +991,7 @@ export async function dispatchDueSms() {
       projectRenewalQueue,
       collectionQueue,
       renewalDraftQueue,
+      collectionEmailQueue,
     };
   }
 
@@ -834,5 +1050,6 @@ export async function dispatchDueSms() {
     projectRenewalQueue,
     collectionQueue,
     renewalDraftQueue,
+    collectionEmailQueue,
   };
 }

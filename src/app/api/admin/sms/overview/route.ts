@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { hubtelConfiguration, smsSegmentEstimate } from '@/lib/hubtel';
+import { getMailTransportStatus } from '@/lib/mail';
 
 export async function GET(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
@@ -54,6 +55,13 @@ export async function GET(request: NextRequest) {
           enabled: process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true',
           batchSize: Math.max(1, Math.min(50, Number(process.env.RENEWAL_DRAFT_INVOICE_BATCH_SIZE || 10) || 10)),
           dueDays: Math.max(0, Math.min(60, Number(process.env.RENEWAL_DRAFT_INVOICE_DUE_DAYS || 7) || 7)),
+        },
+        collectionEmail: {
+          enabled: process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true',
+          configured: getMailTransportStatus().configured,
+          batchSize: Math.max(1, Math.min(50, Number(process.env.COLLECTION_REMINDER_EMAIL_BATCH_SIZE || 10) || 10)),
+          intervalDays: Math.max(1, Math.min(30, Number(process.env.COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS || 7) || 7)),
+          minDaysOverdue: Math.max(1, Math.min(365, Number(process.env.COLLECTION_REMINDER_EMAIL_MIN_DAYS_OVERDUE || 1) || 1)),
         },
         collections: {
           enabled: process.env.AUTO_COLLECTION_REMINDER_SMS === 'true',
