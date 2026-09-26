@@ -1210,6 +1210,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(governance).toContain('Force this administrator to sign in again');
   });
 
+  test('surfaces executive client exceptions on the main dashboard', () => {
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(dashboard).toContain("hasAdminPermission(adminRole, adminPermissions, 'finance.manage')");
+    expect(dashboard).toContain("fetch('/api/admin/clients/portfolio-intelligence'");
+    expect(dashboard).toContain('Executive exceptions');
+    expect(dashboard).toContain('Accounts needing intervention');
+    expect(dashboard).toContain('Overdue invoices');
+    expect(dashboard).toContain('Renewals due in 30 days');
+    expect(dashboard).toContain('Operational risk');
+    expect(dashboard).toContain("sessionStorage.setItem('lw-finance-section', section)");
+    expect(dashboard).toContain("sessionStorage.setItem('lw-client-organization-id', organizationId)");
+  });
+
   test('supports dashboard drill-downs and a real authenticated health signal', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
