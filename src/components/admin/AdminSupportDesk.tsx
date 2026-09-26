@@ -141,6 +141,7 @@ type Summary = {
   unread: number;
   highPriority: number;
   breached: number;
+  atRisk: number;
   awaitingClient: number;
   performance: {
     windowDays: number;
@@ -214,6 +215,7 @@ export default function AdminSupportDesk() {
     unread: 0,
     highPriority: 0,
     breached: 0,
+    atRisk: 0,
     awaitingClient: 0,
     performance: {
       windowDays: 90,
@@ -276,6 +278,7 @@ export default function AdminSupportDesk() {
         unread: 0,
         highPriority: 0,
         breached: 0,
+        atRisk: 0,
         awaitingClient: 0,
         performance: {
           windowDays: 90,
@@ -311,6 +314,13 @@ export default function AdminSupportDesk() {
   }, [params.toString()]);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const requestedSla = sessionStorage.getItem('lw-support-sla-filter');
+      if (requestedSla === 'at_risk' || requestedSla === 'breached') {
+        setSla(requestedSla);
+        sessionStorage.removeItem('lw-support-sla-filter');
+      }
+    }
     fetch('/api/admin/support-agents', { cache: 'no-store' })
       .then(async (response) => {
         const payload = await readJsonResponse(response);
@@ -541,6 +551,7 @@ export default function AdminSupportDesk() {
     { label: 'Unread', value: summary.unread, icon: BellRing, action: () => resetFilters() },
     { label: 'High priority', value: summary.highPriority, icon: AlertTriangle, action: () => { setPriority('high'); setSla('all'); } },
     { label: 'SLA breached', value: summary.breached, icon: ShieldAlert, action: () => setSla('breached') },
+    { label: 'SLA at risk', value: summary.atRisk, icon: CalendarClock, action: () => setSla('at_risk') },
     { label: 'Awaiting client', value: summary.awaitingClient, icon: Clock3, action: () => { setStatus('awaiting_client'); setSla('all'); } },
   ];
 
@@ -572,7 +583,7 @@ export default function AdminSupportDesk() {
         />
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         {kpis.map((item) => {
           const Icon = item.icon;
           return (
@@ -652,6 +663,7 @@ export default function AdminSupportDesk() {
         </select>
         <select aria-label="Filter support tickets by SLA state" value={sla} onChange={(event) => setSla(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
           <option value="all">All SLA states</option>
+          <option value="at_risk">SLA at risk</option>
           <option value="breached">SLA breached</option>
         </select>
         <select aria-label="Filter support tickets by assignee" value={assignedToFilter} onChange={(event) => setAssignedToFilter(event.target.value)} className="h-10 rounded-xl border border-input bg-background px-3.5 text-sm transition hover:border-amber-300/60 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/15">
