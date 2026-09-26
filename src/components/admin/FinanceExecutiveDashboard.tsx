@@ -531,8 +531,8 @@ export default function FinanceExecutiveDashboard({
           value={runway.months ? Number(runway.months).toFixed(1) + ' mo' : '—'}
           detail={
             runway.sampleMonths
-              ? money(runway.averageMonthlyCashOut, currency) + ' avg monthly cash out · ' + runway.sampleMonths + ' month sample'
-              : 'Needs recorded cash-out history'
+              ? money(runway.averageMonthlyCashOut, currency) + ' avg monthly cash out · ' + runway.sampleMonths + ' month sample · ' + runway.methodology
+              : runway.methodology
           }
           Icon={Timer}
           onClick={onCashbook}
