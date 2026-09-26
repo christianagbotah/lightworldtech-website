@@ -220,14 +220,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (
       action === 'admin-clients-obligations-mine' ||
       action === 'admin-clients-obligations-overdue' ||
-      action === 'admin-clients-obligations-due'
+      action === 'admin-clients-obligations-due' ||
+      action === 'admin-clients-obligations-review'
     ) {
       const scope =
         action === 'admin-clients-obligations-overdue'
           ? 'overdue'
           : action === 'admin-clients-obligations-due'
             ? 'due_30'
-            : 'mine';
+            : action === 'admin-clients-obligations-review'
+              ? 'pending_review'
+              : 'mine';
       sessionStorage.setItem('lw-client-action', 'obligations');
       sessionStorage.setItem('lw-client-obligation-scope', scope);
       navigate('admin-clients');
