@@ -2140,12 +2140,18 @@ describe('admin backend and responsive UX regression coverage', () => {
 
     expect(schema).toContain('model ClientAgreement');
     expect(schema).toContain('model ClientAgreementAttachment');
+    expect(schema).toContain('model ClientAgreementChange');
+    expect(schema).toContain('beforeState Json');
+    expect(schema).toContain('afterState  Json');
     expect(schema).toContain('renewalNoticeDays');
     expect(schema).toContain('visibleToClient Boolean');
     expect(clientsApi).toContain('agreements: {');
     expect(clientsApi).toContain('attachments: { orderBy:');
+    expect(clientsApi).toContain('changes: { orderBy:');
     expect(createAgreement).toContain('Selected project does not belong to this client');
-    expect(updateAgreement).toContain('db.clientAgreement.update');
+    expect(updateAgreement).toContain('db.$transaction');
+    expect(updateAgreement).toContain('tx.clientAgreementChange.create');
+    expect(updateAgreement).toContain('admin.client_agreement_updated');
     expect(attachmentUpload).toContain('MAX_AGREEMENT_ATTACHMENT_BYTES');
     expect(attachmentUpload).toContain('detectAgreementAttachment');
     expect(attachmentUpload).toContain("'clients.manage'");
@@ -2167,6 +2173,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain("fetch('/api/agreement-attachments/' + attachmentId");
     expect(clients).toContain('Shared with client');
     expect(clients).toContain('Internal only');
+    expect(clients).toContain('Agreement change history');
+    expect(clients).toContain('change.fields.split');
     expect(clientPortalApi).toContain('attachments: { some: { visibleToClient: true } }');
     expect(clientPortalApi).toContain('where: { visibleToClient: true }');
     expect(clientPortalApi).toContain('agreements: organization.agreements');
