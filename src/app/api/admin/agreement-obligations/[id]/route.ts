@@ -11,6 +11,8 @@ const updateSchema = z.object({
   ownerAdminId: z.string().trim().nullable().optional(),
   dueDate: z.string().datetime().nullable().optional(),
   status: z.enum(['open', 'in_progress', 'completed', 'waived']).optional(),
+  reviewAction: z.enum(['approve', 'reject']).optional(),
+  reviewNotes: z.string().trim().max(4000).optional(),
   notes: z.string().trim().max(8000).optional(),
   evidenceUrl: z.string().trim().url().or(z.literal('')).optional(),
 });
@@ -68,22 +70,76 @@ export async function PATCH(
     }
   }
 
-  const completing = parsed.data.status === 'completed';
-  const reopening = parsed.data.status && parsed.data.status !== 'completed';
+  const reviewAction = parsed.data.reviewAction;
+  if (reviewAction) {
+    if (existing.status !== 'pending_review') {
+      return NextResponse.json({ success: false, error: 'Only obligations pending review can be reviewed' }, { status: 409 });
+    }
+    if (existing.completionSubmittedByAdminId && existing.completionSubmittedByAdminId === actor.id) {
+      return NextResponse.json({ success: false, error: 'Completion must be reviewed by a different authorized operator' }, { status: 409 });
+    }
+  }
+
+  const submittedEvidence = parsed.data.evidenceUrl ?? existing.evidenceUrl;
+  const submittingCompletion = parsed.data.status === 'completed' && !reviewAction;
+  if (submittingCompletion && !submittedEvidence) {
+    return NextResponse.json({ success: false, error: 'Completion evidence is required before review' }, { status: 400 });
+  }
+
+  const reopening = parsed.data.status && !['completed', 'pending_review'].includes(parsed.data.status);
 
   const obligation = await db.clientAgreementObligation.update({
     where: { id },
     data: {
-      ...parsed.data,
+      ...Object.fromEntries(Object.entries(parsed.data).filter(([key]) => key !== 'reviewAction')),
       ...(ownerAssignment || {}),
       ...(parsed.data.dueDate !== undefined
         ? { dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null }
         : {}),
-      ...(completing
-        ? { completedAt: new Date(), completedBy: actor.name || actor.email }
-        : reopening
-          ? { completedAt: null, completedBy: '' }
+      ...(submittingCompletion
+        ? {
+            status: 'pending_review',
+            completionSubmittedAt: new Date(),
+            completionSubmittedByAdminId: actor.id,
+            completionSubmittedBy: actor.name || actor.email,
+            completedAt: null,
+            completedBy: '',
+            reviewedAt: null,
+            reviewedByAdminId: null,
+            reviewedBy: '',
+            reviewNotes: '',
+          }
+        : {}),
+      ...(reviewAction === 'approve'
+        ? {
+            status: 'completed',
+            completedAt: new Date(),
+            completedBy: existing.completionSubmittedBy || actor.name || actor.email,
+            reviewedAt: new Date(),
+            reviewedByAdminId: actor.id,
+            reviewedBy: actor.name || actor.email,
+            reviewNotes: parsed.data.reviewNotes || '',
+          }
+        : reviewAction === 'reject'
+          ? {
+              status: 'in_progress',
+              completedAt: null,
+              completedBy: '',
+              reviewedAt: new Date(),
+              reviewedByAdminId: actor.id,
+              reviewedBy: actor.name || actor.email,
+              reviewNotes: parsed.data.reviewNotes || '',
+            }
           : {}),
+      ...(reopening
+        ? {
+            completedAt: null,
+            completedBy: '',
+            completionSubmittedAt: null,
+            completionSubmittedByAdminId: null,
+            completionSubmittedBy: '',
+          }
+        : {}),
     },
   });
 
@@ -100,6 +156,7 @@ export async function PATCH(
       ownerAdminId: obligation.ownerAdminId,
       owner: obligation.owner,
       status: obligation.status,
+      reviewAction: reviewAction || null,
     },
   });
 
