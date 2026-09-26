@@ -237,7 +237,7 @@ function RelatedRecords({
     <Card className="min-w-0 border-border/60">
       <CardHeader className="pb-3"><CardTitle className="text-base">Related account activity</CardTitle></CardHeader>
       <CardContent className="p-0">
-        <Table hideExport className="min-w-[620px]">
+        <Table exportFileName="lightworld-finance-record-activity" className="min-w-[620px]">
           <TableHeader>
             <TableRow>
               <TableHead>Reference</TableHead>
@@ -604,7 +604,7 @@ export default function FinanceRecordDetailsDialog({
               <Card className="min-w-0 border-border/60">
                 <CardHeader className="pb-3"><CardTitle className="text-base">Line items</CardTitle></CardHeader>
                 <CardContent className="p-0">
-                  <Table hideExport className="min-w-[660px]">
+                  <Table exportFileName="lightworld-finance-record-lines" className="min-w-[660px]">
                     <TableHeader><TableRow><TableHead>Description</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">Unit price</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {data.invoice.lines.map((line: any) => (
