@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { getBlogCoverImage } from '@/lib/blog-visuals';
 import { contentText, type SiteSettings } from '@/lib/site-content';
+import { readJsonSafely } from '@/lib/http-response';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
 import {
   ArrowRight,
@@ -54,7 +55,7 @@ export default function BlogPage({ initialPosts, settings = {} }: { initialPosts
     fetch('/api/blog?published=true&limit=50')
       .then((response) => {
         if (!response.ok) throw new Error('Unable to load insights');
-        return response.json();
+        return readJsonSafely<any>(response);
       })
       .then((payload) => {
         const items = Array.isArray(payload?.data) ? payload.data : [];
