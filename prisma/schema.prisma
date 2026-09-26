@@ -309,6 +309,7 @@ model Admin {
   totpRecoveryCodes String          @default("[]")
   auditLogs   AdminAuditLog[]
   resetTokens AdminPasswordResetToken[]
+  agreementObligations ClientAgreementObligation[] @relation("AgreementObligationOwner")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -610,6 +611,8 @@ model ClientAgreementObligation {
   title       String
   category    String          @default("general")
   owner       String          @default("")
+  ownerAdminId String?
+  ownerAdmin   Admin?         @relation("AgreementObligationOwner", fields: [ownerAdminId], references: [id], onDelete: SetNull)
   dueDate     DateTime?
   status      String          @default("open")
   notes       String          @default("")
@@ -621,6 +624,7 @@ model ClientAgreementObligation {
   updatedAt DateTime @updatedAt
 
   @@index([agreementId, status])
+  @@index([ownerAdminId, status])
   @@index([dueDate])
 }
 

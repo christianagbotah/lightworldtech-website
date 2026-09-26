@@ -1731,7 +1731,8 @@ describe('admin backend and responsive UX regression coverage', () => {
 
     expect(schema).toContain('model ClientAgreementObligation');
     expect(schema).toContain('obligations       ClientAgreementObligation[]');
-    expect(clientsApi).toContain('obligations: { orderBy:');
+    expect(clientsApi).toContain('obligations: {');
+    expect(clientsApi).toContain("orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }]");
     expect(createApi).toContain("'admin.client_agreement_obligation_created'");
     expect(updateApi).toContain("'admin.client_agreement_obligation_updated'");
     expect(updateApi).toContain("completedAt: new Date()");
@@ -1744,6 +1745,27 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('Add obligation');
     expect(clients).toContain('Overdue agreement obligations');
     expect(clients).toContain('Agreement obligations due 30d');
+  });
+
+  test('assigns agreement obligations to accountable client operators', () => {
+    const schema = source('prisma/schema.prisma');
+    const clientsApi = source('src/app/api/admin/clients/route.ts');
+    const operatorsApi = source('src/app/api/admin/client-operators/route.ts');
+    const createApi = source('src/app/api/admin/client-agreements/[id]/obligations/route.ts');
+    const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(schema).toContain('ownerAdminId String?');
+    expect(schema).toContain('AgreementObligationOwner');
+    expect(operatorsApi).toContain("normalizeAdminPermissions(admin.permissions).includes('clients.manage')");
+    expect(createApi).toContain('Selected obligation owner is not an active client operator');
+    expect(createApi).toContain('ownerAdminId: ownerAdmin?.id || null');
+    expect(updateApi).toContain('ownerAssignment');
+    expect(clientsApi).toContain('ownerAdmin: { select: { id: true, name: true, email: true, role: true } }');
+    expect(clients).toContain("fetch('/api/admin/client-operators'");
+    expect(clients).toContain('Accountable Lightworld owner');
+    expect(clients).toContain('External / fallback owner');
+    expect(clients).toContain('No staff owner');
   });
 
   test('preserves proposal to project to agreement commercial lineage', () => {
