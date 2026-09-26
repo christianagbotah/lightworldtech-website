@@ -421,6 +421,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain('await reconcileSupportEscalations()');
   });
 
+  test('keeps the client portfolio searchable and exportable at management scale', () => {
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(clients).toContain('Export portfolio');
+    expect(clients).toContain('lightworld-client-portfolio-');
+    expect(clients).toContain('Priority action queue');
+    expect(clients).toContain('organizationQuery');
+    expect(clients).toContain('organizationStatus');
+    expect(clients).toContain('Filter client organizations by status');
+    expect(clients).toContain('No client organizations match this search.');
+  });
+
   test('provides a finance-authorized cross-customer executive portfolio cockpit', () => {
     const clients = source('src/components/admin/AdminClients.tsx');
     const portfolio = source('src/app/api/admin/clients/portfolio-intelligence/route.ts');
