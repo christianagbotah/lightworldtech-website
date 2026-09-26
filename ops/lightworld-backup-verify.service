@@ -1,0 +1,11 @@
+[Unit]
+Description=Lightworld isolated backup restore rehearsal
+After=lightworld-backup-postgresql.service lightworld-backup-uploads.service
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/home/lightworld/shared/lightworldtech/ops/verify-backup-restore.sh
+Nice=15
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
