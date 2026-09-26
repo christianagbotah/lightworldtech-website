@@ -246,6 +246,24 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(details).not.toContain('<Table hideExport');
   });
 
+  test('surfaces and retries failed customer payment confirmation channels', () => {
+    const notification = source('src/lib/payment-notification.ts');
+    const retry = source('src/app/api/admin/finance/payments/[id]/notification/route.ts');
+    const commercial = source('src/components/admin/ClientCommercialAccount.tsx');
+    const notices = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notification).toContain('retryFailedChannels');
+    expect(notification).toContain("previousSuccesses.has('email')");
+    expect(notification).toContain("previousSuccesses.has('sms')");
+    expect(retry).toContain("'admin.finance_payment_confirmation_retried'");
+    expect(retry).toContain("['failed', 'partial']");
+    expect(commercial).toContain('Retry confirmation');
+    expect(commercial).toContain('/notification');
+    expect(commercial).toContain('customerNotificationChannels');
+    expect(notices).toContain("id: 'payment-confirmation-failures'");
+    expect(notices).toContain('Payment confirmations need attention');
+  });
+
   test('uses the approved support SMS template for best-effort client updates', () => {
     const support = source('src/lib/support-ticket.ts');
     const reply = source('src/app/api/admin/client-tickets/[id]/messages/route.ts');

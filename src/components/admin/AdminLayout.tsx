@@ -167,6 +167,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, []);
 
   const handleNoticeAction = (action: string) => {
+    if (action === 'admin-clients') {
+      navigate('admin-clients');
+      return;
+    }
     if (action === 'admin-finance-collections') {
       sessionStorage.setItem('lw-finance-section', 'collections');
       navigate('admin-finance');

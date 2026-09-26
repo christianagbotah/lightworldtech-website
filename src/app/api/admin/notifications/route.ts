@@ -321,6 +321,25 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  if (canFinance) {
+    const confirmationIssues = await db.clientPayment.count({
+      where: {
+        customerNotificationStatus: { in: ['failed', 'partial'] },
+        createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      },
+    });
+    if (confirmationIssues > 0) {
+      notices.push({
+        id: 'payment-confirmation-failures',
+        severity: 'warning',
+        title: 'Payment confirmations need attention',
+        message: confirmationIssues + ' recent customer payment confirmation' + (confirmationIssues === 1 ? ' has' : 's have') + ' a failed delivery channel.',
+        count: confirmationIssues,
+        action: 'admin-clients',
+      });
+    }
+  }
+
   if (canComms) {
     const automationEnabled =
       process.env.AUTO_SERVICE_RENEWAL_SMS === 'true' ||
