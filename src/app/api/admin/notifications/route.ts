@@ -358,6 +358,9 @@ export async function GET(request: NextRequest) {
       process.env.AUTO_PROJECT_RENEWAL_SMS === 'true' ||
       process.env.AUTO_COLLECTION_REMINDER_SMS === 'true' ||
       process.env.AUTO_COLLECTION_REMINDER_EMAIL === 'true' ||
+      process.env.AUTO_SERVICE_RENEWAL_EMAIL === 'true' ||
+      process.env.AUTO_PROJECT_RENEWAL_EMAIL === 'true' ||
+      process.env.AUTO_NEWSLETTER_CAMPAIGN_DISPATCH === 'true' ||
       process.env.AUTO_RENEWAL_DRAFT_INVOICES === 'true' ||
       process.env.AUTO_PROJECT_RENEWAL_DRAFT_INVOICES === 'true';
     const runtimeMaxAgeMinutes = Math.max(
@@ -389,6 +392,67 @@ export async function GET(request: NextRequest) {
           : 'Automation is enabled but no recent successful dispatcher run is recorded.',
         count: Math.max(1, runtime?.consecutiveFailures || 0),
         action: 'admin-sms',
+      });
+    }
+
+
+    const failureWindow = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const [failedSmsMessages, renewalEmailFailures, collectionEmailFailures] = await Promise.all([
+      db.smsMessage.count({
+        where: {
+          status: 'failed',
+          updatedAt: { gte: failureWindow },
+        },
+      }),
+      db.adminAuditLog.count({
+        where: {
+          action: {
+            in: [
+              'system.service_renewal_email_failed',
+              'system.project_renewal_email_failed',
+            ],
+          },
+          createdAt: { gte: failureWindow },
+        },
+      }),
+      db.financeCollectionActivity.count({
+        where: {
+          type: 'email_reminder_failed',
+          createdAt: { gte: failureWindow },
+        },
+      }),
+    ]);
+
+    if (failedSmsMessages > 0) {
+      notices.push({
+        id: 'sms-delivery-failures',
+        severity: 'warning',
+        title: 'SMS delivery failures',
+        message: failedSmsMessages + ' SMS message' + (failedSmsMessages === 1 ? ' has' : 's have') + ' failed in the last 7 days and should be reviewed.',
+        count: failedSmsMessages,
+        action: 'admin-sms',
+      });
+    }
+
+    if (renewalEmailFailures > 0) {
+      notices.push({
+        id: 'renewal-email-failures',
+        severity: 'warning',
+        title: 'Renewal email failures',
+        message: renewalEmailFailures + ' automated service/project renewal email' + (renewalEmailFailures === 1 ? ' failed' : 's failed') + ' in the last 7 days.',
+        count: renewalEmailFailures,
+        action: 'admin-sms',
+      });
+    }
+
+    if (collectionEmailFailures > 0) {
+      notices.push({
+        id: 'collection-email-failures',
+        severity: 'warning',
+        title: 'Collection email failures',
+        message: collectionEmailFailures + ' automated collection email' + (collectionEmailFailures === 1 ? ' failed' : 's failed') + ' in the last 7 days.',
+        count: collectionEmailFailures,
+        action: 'admin-finance-collections',
       });
     }
 
