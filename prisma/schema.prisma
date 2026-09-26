@@ -1175,6 +1175,8 @@ model FinanceVendorBill {
   getfundAmount  Decimal             @default(0) @db.Decimal(18, 2)
   total          Decimal             @db.Decimal(18, 2)
   notes          String              @default("")
+  purchaseOrderId String?             @unique
+  purchaseOrder   FinancePurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
   allocations    FinanceVendorPaymentAllocation[]
 
   createdAt DateTime @default(now())
@@ -1319,6 +1321,7 @@ model FinancePurchaseOrder {
   receivedBy   String                 @default("")
   closedAt     DateTime?
   closedBy     String                 @default("")
+  bill         FinanceVendorBill?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
