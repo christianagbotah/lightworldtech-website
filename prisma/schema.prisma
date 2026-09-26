@@ -626,6 +626,9 @@ model ClientAgreementObligation {
   reviewedByAdminId String?
   reviewedBy String           @default("")
   reviewNotes String           @default("")
+  waiverReason String           @default("")
+  waivedAt DateTime?
+  waivedBy String               @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

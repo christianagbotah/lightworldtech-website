@@ -1,0 +1,4 @@
+ALTER TABLE "ClientAgreementObligation"
+ADD COLUMN "waiverReason" TEXT NOT NULL DEFAULT '',
+ADD COLUMN "waivedAt" TIMESTAMP(3),
+ADD COLUMN "waivedBy" TEXT NOT NULL DEFAULT '';

@@ -1821,6 +1821,29 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('id="client-obligation-queue"');
   });
 
+  test('requires reasoned waiver and rejection governance for agreement obligations', () => {
+    const schema = source('prisma/schema.prisma');
+    const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(schema).toContain('waiverReason String');
+    expect(schema).toContain('waivedAt DateTime?');
+    expect(schema).toContain('waivedBy String');
+    expect(updateApi).toContain('A rejection reason is required');
+    expect(updateApi).toContain('A waiver reason is required');
+    expect(updateApi).toContain("status: 'waived'");
+    expect(updateApi).toContain('waivedAt: new Date()');
+    expect(updateApi).toContain("waiverReason: ''");
+    expect(clients).toContain('Waiver reason');
+    expect(clients).toContain('Rejection reason');
+    expect(clients).toContain('Waive with reason');
+    expect(clients).toContain('rejectObligationCompletion');
+    expect(clients).toContain('waiveAgreementObligation');
+    expect(clients).toContain('Waived by');
+    expect(clients).not.toContain("reviewNotes: 'Returned for correction.'");
+    expect(clients).not.toContain("reviewNotes: 'Returned for correction from review queue.'");
+  });
+
   test('preserves proposal to project to agreement commercial lineage', () => {
     const clientsApi = source('src/app/api/admin/clients/route.ts');
     const clients = source('src/components/admin/AdminClients.tsx');
