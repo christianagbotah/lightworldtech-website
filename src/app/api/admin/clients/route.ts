@@ -37,7 +37,10 @@ export async function GET(request: NextRequest) {
         take: 50,
       },
       agreements: {
-        include: { project: { select: { id: true, name: true } } },
+        include: {
+          project: { select: { id: true, name: true } },
+          attachments: { orderBy: { createdAt: 'desc' } },
+        },
         orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
       },
       _count: { select: { users: true, projects: true, tickets: true } },
