@@ -1152,7 +1152,7 @@ export default function ClientPortalPage() {
                 <div className="max-w-full overflow-x-auto">
                   <Table className="min-w-[920px]" exportFileName="lightworld-client-invoices">
                     <thead className="border-y border-slate-200/70 bg-slate-50 text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:border-white/[0.07] dark:bg-white/[0.025]">
-                      <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Service</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Due</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Paid</th><th className="px-4 py-3 text-right">Credits</th><th className="px-4 py-3 text-right">Balance</th><th data-export-ignore className="px-4 py-3 text-right">Payment</th></tr>
+                      <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Service</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Due</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Paid</th><th className="px-4 py-3 text-right">Credits</th><th className="px-4 py-3 text-right">Balance</th><th data-export-ignore className="px-4 py-3 text-right">Actions</th></tr>
                     </thead>
                     <tbody>
                       {data?.account.invoices.map((invoice) => (
@@ -1195,24 +1195,30 @@ export default function ClientPortalPage() {
                           <td className="px-4 py-3 text-right">{Number(invoice.creditedAmount) ? accountMoney(invoice.creditedAmount, invoice.currency) : '—'}</td>
                           <td className="px-4 py-3 text-right font-semibold">{accountMoney(invoice.balance, invoice.currency)}</td>
                           <td data-export-ignore className="px-4 py-3 text-right">
-                            {Number(invoice.balance) > 0 && invoice.currency === 'GHS' && data.account.onlinePaymentsAvailable ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                className="bg-amber-600 text-white hover:bg-amber-700"
-                                disabled={paymentStartingId === invoice.id}
-                                onClick={() => void payInvoice(invoice.id)}
-                              >
-                                {paymentStartingId === invoice.id ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <WalletCards className="mr-2 size-3.5" />}
-                                Pay with Hubtel
+                            <div className="flex flex-wrap justify-end gap-2">
+                              <Button asChild type="button" size="sm" variant="outline">
+                                <a href={'/api/client/invoices/' + encodeURIComponent(invoice.id) + '/document'} target="_blank" rel="noreferrer">
+                                  <FileText className="mr-1.5 size-3.5" />
+                                  View / print
+                                </a>
                               </Button>
-                            ) : invoice.derivedStatus === 'paid' ? (
-                              <Badge className={accountStatusClass('paid')}>Paid</Badge>
-                            ) : Number(invoice.balance) > 0 && invoice.currency === 'GHS' ? (
-                              <span className="text-[10px] text-slate-400">Online payment setup pending</span>
-                            ) : (
-                              <span className="text-xs text-slate-400">—</span>
-                            )}
+                              {Number(invoice.balance) > 0 && invoice.currency === 'GHS' && data.account.onlinePaymentsAvailable ? (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className="bg-amber-600 text-white hover:bg-amber-700"
+                                  disabled={paymentStartingId === invoice.id}
+                                  onClick={() => void payInvoice(invoice.id)}
+                                >
+                                  {paymentStartingId === invoice.id ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <WalletCards className="mr-2 size-3.5" />}
+                                  Pay with Hubtel
+                                </Button>
+                              ) : invoice.derivedStatus === 'paid' ? (
+                                <Badge className={accountStatusClass('paid')}>Paid</Badge>
+                              ) : Number(invoice.balance) > 0 && invoice.currency === 'GHS' ? (
+                                <span className="self-center text-[10px] text-slate-400">Online payment setup pending</span>
+                              ) : null}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1230,7 +1236,7 @@ export default function ClientPortalPage() {
               <div className="max-w-full overflow-x-auto">
                 <Table className="min-w-[640px]" exportFileName="lightworld-client-receipts">
                   <thead className="border-y border-slate-200/70 bg-slate-50 text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:border-white/[0.07] dark:bg-white/[0.025]">
-                    <tr><th className="px-4 py-3">Receipt</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Method</th><th className="px-4 py-3">Reference</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-right">Unapplied receipt</th></tr>
+                    <tr><th className="px-4 py-3">Receipt</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Method</th><th className="px-4 py-3">Reference</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-right">Unapplied receipt</th><th data-export-ignore className="px-4 py-3 text-right">Document</th></tr>
                   </thead>
                   <tbody>
                     {data?.account.payments.map((payment) => (
@@ -1241,9 +1247,17 @@ export default function ClientPortalPage() {
                         <td className="px-4 py-3 text-xs text-slate-500 dark:text-white/35">{payment.reference || '—'}</td>
                         <td className="px-4 py-3 text-right font-semibold">{accountMoney(payment.amount, payment.currency)}</td>
                         <td className="px-4 py-3 text-right">{accountMoney(payment.unallocatedAmount, payment.currency)}</td>
+                        <td data-export-ignore className="px-4 py-3 text-right">
+                          <Button asChild type="button" size="sm" variant="outline">
+                            <a href={'/api/client/payments/' + encodeURIComponent(payment.id) + '/receipt'} target="_blank" rel="noreferrer">
+                              <ReceiptText className="mr-1.5 size-3.5" />
+                              View / print
+                            </a>
+                          </Button>
+                        </td>
                       </tr>
                     ))}
-                    {!data?.account.payments.length && <tr><td colSpan={6} className="px-4 py-8 text-center text-xs text-slate-400">No payments recorded yet.</td></tr>}
+                    {!data?.account.payments.length && <tr><td colSpan={7} className="px-4 py-8 text-center text-xs text-slate-400">No payments recorded yet.</td></tr>}
                   </tbody>
                 </Table>
               </div>
