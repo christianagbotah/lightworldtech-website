@@ -1,0 +1,10 @@
+[Unit]
+Description=Lightworld uploads backup
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/home/lightworld/shared/lightworldtech/ops/backup-uploads.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

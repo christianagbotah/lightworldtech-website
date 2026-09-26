@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Lightworld PostgreSQL backup
+[Timer]
+OnCalendar=*-*-* 02:43:00 UTC
+Persistent=true
+AccuracySec=5min
+RandomizedDelaySec=2min
+Unit=lightworld-backup-postgresql.service
+[Install]
+WantedBy=timers.target

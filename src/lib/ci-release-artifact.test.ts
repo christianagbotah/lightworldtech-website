@@ -49,10 +49,21 @@ describe('CI-built release artifacts', () => {
     expect(prepare).toContain('chmod 0640');
   });
 
-  test('production ops installer publishes the artifact deployer', () => {
+  test('production ops installer publishes deploy and recovery operations', () => {
     const installer = source('ops/install-production-ops.sh');
+    const postgresTimer = source('ops/lightworld-backup-postgresql.timer');
+    const uploadsTimer = source('ops/lightworld-backup-uploads.timer');
+    const verifyTimer = source('ops/lightworld-backup-verify.timer');
 
     expect(installer).toContain('deploy-release-artifact.sh');
+    expect(installer).toContain('backup-postgresql.sh');
+    expect(installer).toContain('backup-uploads.sh');
+    expect(installer).toContain('verify-backup-restore.sh');
+    expect(installer).toContain('lightworld-backup-verify.timer');
+    expect(installer).toContain('systemctl enable --now lightworld-backup-postgresql.timer');
+    expect(postgresTimer).toContain('02:43:00 UTC');
+    expect(uploadsTimer).toContain('03:03:00 UTC');
+    expect(verifyTimer).toContain('Sun *-*-* 04:00:00 UTC');
   });
 
   test('artifact runtime is candidate-smoked before upload', () => {

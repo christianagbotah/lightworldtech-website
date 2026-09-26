@@ -1646,17 +1646,29 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(permissions).toContain("pathname.startsWith('/api/admin/messages')");
   });
 
-  test('shows read-only super-admin backup readiness without claiming restore success', () => {
+  test('reports nested backups and evidence-backed isolated restore verification', () => {
     const route = source('src/app/api/admin/operations/backup-status/route.ts');
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const settings = source('src/components/admin/AdminSettings.tsx');
+    const postgresBackup = source('ops/backup-postgresql.sh');
+    const uploadsBackup = source('ops/backup-uploads.sh');
+    const restore = source('ops/verify-backup-restore.sh');
 
     expect(route).toContain('getSuperAdminContext(request)');
-    expect(route).toContain("LIGHTWORLD_BACKUP_DIR");
-    expect(route).toContain("restoreVerification");
-    expect(route).toContain("status: 'not_verified'");
-    expect(dashboard).toContain('Recovery readiness');
-    expect(dashboard).toContain("adminRole === 'super_admin'");
-    expect(dashboard).toContain('successful restore rehearsal has not been verified');
+    expect(route).toContain("path.join(directory, 'postgresql')");
+    expect(route).toContain("path.join(directory, 'uploads')");
+    expect(route).toContain("'restore-verification.json'");
+    expect(route).toContain("status: stale ? 'stale' : 'verified'");
+    expect(postgresBackup).toContain('chown root:"$APP_GROUP" "$FINAL"');
+    expect(postgresBackup).toContain('chmod 0640 "$FINAL"');
+    expect(uploadsBackup).toContain('chmod 0640 "$FINAL"');
+    expect(restore).toContain('lightworld_restore_verify');
+    expect(restore).toContain('--no-owner --no-privileges --exit-on-error');
+    expect(restore).toContain("SELECT count(*) FROM pg_tables WHERE schemaname='public'");
+    expect(restore).toContain('isolated_ephemeral_postgresql_restore');
+    expect(dashboard).toContain('Fresh backups and a recent isolated restore rehearsal are verified.');
+    expect(dashboard).toContain('public tables restored');
+    expect(settings).toContain("label: 'Backup & recovery'");
   });
 
   test('implements administrator TOTP MFA end to end', () => {
@@ -1981,7 +1993,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(settings).toContain('Hubtel payments');
     expect(settings).toContain('Automation dispatcher');
     expect(settings).toContain('Automation runtime');
-    expect(settings).toContain('Backup artifacts');
+    expect(settings).toContain('Backup & recovery');
     expect(settings).toContain("navigate('admin-sms')");
   });
 

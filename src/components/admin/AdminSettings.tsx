@@ -50,6 +50,7 @@ type HealthData = {
 };
 
 type BackupArtifact = {
+  filename: string;
   timestamp: string;
   sizeBytes: number;
   ageHours: number;
@@ -72,7 +73,17 @@ type BackupData = {
   database: BackupArtifact | null;
   uploads: BackupArtifact | null;
   checkedAt: string;
-  restoreVerification: { status: 'not_verified'; message: string };
+  restoreVerification: {
+    status: 'verified' | 'stale' | 'failed' | 'not_verified';
+    verifiedAt: string | null;
+    ageHours: number | null;
+    databaseArtifact: string;
+    uploadsArtifact: string;
+    publicTableCount: number | null;
+    uploadArchiveEntries: number | null;
+    method: string;
+    message: string;
+  };
 };
 
 
@@ -407,12 +418,15 @@ export default function AdminSettings() {
                   },
                   ...(adminRole === 'super_admin'
                     ? [{
-                        label: 'Backup artifacts',
-                        value: backup?.status === 'healthy' ? 'Fresh' : backup?.status === 'attention' ? 'Needs attention' : 'Missing',
+                        label: 'Backup & recovery',
+                        value: backup?.status === 'healthy' ? 'Verified' : backup?.status === 'attention' ? 'Needs attention' : 'Missing',
                         ready: backup?.status === 'healthy',
                         detail: backup?.database && backup?.uploads
-                          ? 'DB ' + backup.database.ageHours + 'h · uploads ' + backup.uploads.ageHours + 'h'
-                          : 'Database and uploads backups are both required',
+                          ? 'DB ' + backup.database.ageHours + 'h · uploads ' + backup.uploads.ageHours + 'h · restore ' +
+                            (backup.restoreVerification.status === 'verified'
+                              ? (backup.restoreVerification.ageHours ?? 0) + 'h ago'
+                              : backup.restoreVerification.status.replaceAll('_', ' '))
+                          : 'Fresh database, uploads and a recent restore rehearsal are required',
                         icon: HardDrive,
                       }]
                     : []),
