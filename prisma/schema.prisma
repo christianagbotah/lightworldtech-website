@@ -589,12 +589,14 @@ model ClientAgreementAttachment {
   originalName String
   storageName  String          @unique
   mimeType     String
-  sizeBytes    Int
-  uploadedBy   String          @default("Admin")
+  sizeBytes       Int
+  uploadedBy      String          @default("Admin")
+  visibleToClient Boolean         @default(false)
 
   createdAt DateTime @default(now())
 
   @@index([agreementId, createdAt])
+  @@index([agreementId, visibleToClient, createdAt])
 }
 
 model ClientMilestone {
