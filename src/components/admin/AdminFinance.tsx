@@ -27,6 +27,7 @@ import FinanceAccountingWorkspace, { type FinanceAccountingView } from '@/compon
 import FinanceExecutiveDashboard, { type FinanceExecutiveDashboardData } from '@/components/admin/FinanceExecutiveDashboard';
 import FinanceCollectionsWorkspace from '@/components/admin/FinanceCollectionsWorkspace';
 import FinanceRenewalBillingWorkspace from '@/components/admin/FinanceRenewalBillingWorkspace';
+import FinanceProcurementWorkspace from '@/components/admin/FinanceProcurementWorkspace';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -358,7 +359,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 
 export default function AdminFinance() {
   const { navigate } = useAppStore();
-  const [section, setSection] = useState<'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'accounting'>('overview');
+  const [section, setSection] = useState<'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'procurement' | 'accounting'>('overview');
   const [accountingView, setAccountingView] = useState<FinanceAccountingView>('trial-balance');
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1015,6 +1016,7 @@ export default function AdminFinance() {
           ['renewals', 'Renewals'],
           ['collections', 'Collections'],
           ['suppliers', 'Suppliers & expenses'],
+          ['procurement', 'Procurement'],
           ['accounting', 'Accounting'],
         ].map(([value, label]) => (
           <Button
@@ -1069,6 +1071,8 @@ export default function AdminFinance() {
           }}
         />
       )}
+
+      {section === 'procurement' && <FinanceProcurementWorkspace />}
 
       {section === 'customers' && (
         <div className="space-y-5">
