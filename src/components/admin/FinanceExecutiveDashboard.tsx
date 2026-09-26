@@ -66,6 +66,13 @@ export type FinanceExecutiveDashboardData = {
     count: number;
     overdueCount: number;
   }>;
+  recurringRevenue: Record<string, {
+    mrr: string;
+    arr: string;
+    activeServices: number;
+    excludedServices: number;
+    methodology: string;
+  }>;
   runway: Record<string, {
     liquidity: string;
     averageMonthlyCashOut: string;
@@ -308,6 +315,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.byCurrency || {}),
       ...Object.keys(dashboard.cashPosition || {}),
       ...Object.keys(dashboard.renewalExposure || {}),
+      ...Object.keys(dashboard.recurringRevenue || {}),
       ...Object.keys(dashboard.runway || {}),
       ...Object.keys(dashboard.trends || {}),
     ])).sort(),
@@ -351,13 +359,14 @@ export default function FinanceExecutiveDashboard({
       ['Reporting period', dashboard.period.from + ' to ' + dashboard.period.to],
       ['Generated at', new Date().toISOString()],
       [],
-      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Payables', 'Revenue', 'Expenses', 'Net profit', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
+      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Payables', 'Revenue', 'Expenses', 'Net profit', 'MRR', 'ARR', 'Active recurring services', 'Excluded non-standard cycles', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
     ];
 
     const codes = Array.from(new Set([
       ...Object.keys(dashboard.byCurrency || {}),
       ...Object.keys(dashboard.cashPosition || {}),
       ...Object.keys(dashboard.runway || {}),
+      ...Object.keys(dashboard.recurringRevenue || {}),
       ...Object.keys(dashboard.renewalExposure || {}),
     ])).sort();
 
@@ -366,6 +375,7 @@ export default function FinanceExecutiveDashboard({
       const position = dashboard.cashPosition[code];
       const coverage = dashboard.runway[code];
       const renewals = dashboard.renewalExposure[code];
+      const recurring = dashboard.recurringRevenue[code];
       lines.push([
         code,
         position?.total || '0.00',
@@ -376,6 +386,10 @@ export default function FinanceExecutiveDashboard({
         finance?.revenue || '0.00',
         finance?.expenses || '0.00',
         finance?.netProfit || '0.00',
+        recurring?.mrr || '0.00',
+        recurring?.arr || '0.00',
+        String(recurring?.activeServices || 0),
+        String(recurring?.excludedServices || 0),
         renewals?.amount || '0.00',
         String(renewals?.count || 0),
         String(renewals?.overdueCount || 0),
@@ -426,6 +440,13 @@ export default function FinanceExecutiveDashboard({
     amount: '0',
     count: 0,
     overdueCount: 0,
+  };
+  const recurring = dashboard.recurringRevenue[currency] || {
+    mrr: '0',
+    arr: '0',
+    activeServices: 0,
+    excludedServices: 0,
+    methodology: 'No active standard recurring services are currently recorded for this currency.',
   };
   const runway = dashboard.runway[currency] || {
     liquidity: cash.total,
@@ -518,7 +539,7 @@ export default function FinanceExecutiveDashboard({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
         <KpiCard
           label="Available liquidity"
           value={money(cash.total, currency)}
@@ -557,6 +578,13 @@ export default function FinanceExecutiveDashboard({
           detail={(Number.isFinite(profitMargin) ? profitMargin.toFixed(1) : '0.0') + '% margin for selected period'}
           Icon={TrendingUp}
           onClick={onStatements}
+        />
+        <KpiCard
+          label="Recurring revenue"
+          value={money(recurring.mrr, currency) + ' MRR'}
+          detail={money(recurring.arr, currency) + ' ARR · ' + recurring.activeServices + ' active recurring service' + (recurring.activeServices === 1 ? '' : 's') + (recurring.excludedServices ? ' · ' + recurring.excludedServices + ' custom/one-time excluded' : '')}
+          Icon={CircleDollarSign}
+          onClick={onRenewals}
         />
         <KpiCard
           label="Renewal exposure"
