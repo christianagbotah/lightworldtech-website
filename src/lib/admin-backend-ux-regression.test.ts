@@ -2351,6 +2351,36 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clientPortal).toContain("href={'/api/agreement-attachments/' + attachment.id}");
   });
 
+  test('governs procurement from requisition approval through PO receipt', () => {
+    const schema = source('prisma/schema.prisma');
+    const procurementApi = source('src/app/api/admin/finance/procurement/route.ts');
+    const procurementActionApi = source('src/app/api/admin/finance/procurement/[id]/route.ts');
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('model FinancePurchaseRequest');
+    expect(schema).toContain('model FinancePurchaseRequestLine');
+    expect(schema).toContain('model FinancePurchaseOrder');
+    expect(schema).toContain('purchaseRequests FinancePurchaseRequest[]');
+    expect(schema).toContain('purchaseOrders   FinancePurchaseOrder[]');
+    expect(procurementApi).toContain("'finance.manage'");
+    expect(procurementApi).toContain('admin.finance_purchase_request_submitted');
+    expect(procurementApi).toContain('estimatedAmount');
+    expect(procurementActionApi).toContain("'finance.approve'");
+    expect(procurementActionApi).toContain('A requisition must be approved by a different finance operator');
+    expect(procurementActionApi).toContain('admin.finance_purchase_request_approved');
+    expect(procurementActionApi).toContain('admin.finance_purchase_order_issued');
+    expect(procurementActionApi).toContain('admin.finance_purchase_order_received');
+    expect(procurement).toContain('Procurement control');
+    expect(procurement).toContain('Submit for approval');
+    expect(procurement).toContain('Issue purchase order');
+    expect(procurement).toContain('Confirm received');
+    expect(procurement).toContain('lightworld-purchase-requisitions');
+    expect(procurement).toContain('lightworld-purchase-orders');
+    expect(finance).toContain("['procurement', 'Procurement']");
+    expect(finance).toContain('<FinanceProcurementWorkspace />');
+  });
+
   test('requires evidence and independent review before closing agreement obligations', () => {
     const schema = source('prisma/schema.prisma');
     const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
