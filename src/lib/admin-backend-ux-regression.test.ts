@@ -316,6 +316,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dispatcher).toContain('renewalDraftQueue');
   });
 
+  test('adds per-currency historical cash runway without FX assumptions', () => {
+    const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(dashboardApi).toContain('const runway = Object.fromEntries');
+    expect(dashboardApi).toContain('averageMonthlyCashOut');
+    expect(dashboardApi).toContain('sampleMonths');
+    expect(dashboardApi).toContain('Historical cash-out coverage');
+    expect(dashboardApi).toContain('Future collections and currency conversion are excluded');
+    expect(dashboard).toContain('Cash runway');
+    expect(dashboard).toContain('avg monthly cash out');
+    expect(dashboard).toContain('runway.methodology');
+  });
+
   test('implements customer accounts billing debtors creditors cashflow and management P&L', () => {
     const schema = source('prisma/schema.prisma');
     const permissions = source('src/lib/admin-permissions.ts');
