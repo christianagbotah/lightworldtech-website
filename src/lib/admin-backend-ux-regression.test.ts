@@ -2378,7 +2378,25 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(procurement).toContain('lightworld-purchase-requisitions');
     expect(procurement).toContain('lightworld-purchase-orders');
     expect(finance).toContain("['procurement', 'Procurement']");
-    expect(finance).toContain('<FinanceProcurementWorkspace />');
+    expect(finance).toContain('FinanceProcurementWorkspace');
+  });
+
+  test('matches received purchase orders to supplier bills before posting', () => {
+    const schema = source('prisma/schema.prisma');
+    const billsApi = source('src/app/api/admin/finance/bills/route.ts');
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('purchaseOrderId String?');
+    expect(schema).toContain('bill         FinanceVendorBill?');
+    expect(billsApi).toContain('Purchase order must be received before a supplier bill can be matched');
+    expect(billsApi).toContain('Supplier bill vendor does not match the purchase order supplier');
+    expect(billsApi).toContain('Supplier bill currency does not match the purchase order currency');
+    expect(billsApi).toContain('Supplier bill net amount does not match the purchase order commitment');
+    expect(billsApi).toContain('purchaseOrderId: matchedPurchaseOrder?.id || null');
+    expect(procurement).toContain('Prepare matched bill');
+    expect(finance).toContain('Matched to a received purchase order');
+    expect(finance).toContain('purchaseOrderId: order.id');
   });
 
   test('requires evidence and independent review before closing agreement obligations', () => {
