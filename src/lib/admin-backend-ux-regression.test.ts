@@ -1512,6 +1512,17 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain("action: 'admin-finance-renewals'");
   });
 
+  test('notifies communications admins when automation runtime is failed or stale', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain("id: 'communications-dispatcher'");
+    expect(notifications).toContain('AUTOMATION_RUNTIME_MAX_AGE_MINUTES');
+    expect(notifications).toContain("id: 'automation-runtime-health'");
+    expect(notifications).toContain('Automation dispatcher failed');
+    expect(notifications).toContain('Automation dispatcher stale');
+    expect(notifications).toContain("action: 'admin-sms'");
+  });
+
   test('routes finance notifications directly to operational exception queues', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
     const layout = source('src/components/admin/AdminLayout.tsx');
