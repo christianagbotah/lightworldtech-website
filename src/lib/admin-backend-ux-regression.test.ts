@@ -1772,12 +1772,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     const queueApi = source('src/app/api/admin/agreement-obligations/queue/route.ts');
     const clients = source('src/components/admin/AdminClients.tsx');
 
-    expect(queueApi).toContain("const scopes = new Set(['all', 'mine', 'unassigned', 'overdue', 'due_30', 'owner'])");
+    expect(queueApi).toContain("const scopes = new Set(['all', 'mine', 'unassigned', 'overdue', 'due_30', 'pending_review', 'owner'])");
     expect(queueApi).toContain("ownerAdminId: actor.id");
     expect(queueApi).toContain("ownerAdminId: null");
     expect(queueApi).toContain("dueDate: { lt: now }");
     expect(queueApi).toContain("dueDate: { gte: now, lte: horizon30 }");
-    expect(queueApi).toContain("summary: { total, mine, unassigned, overdue, due30 }");
+    expect(queueApi).toContain("summary: { total, mine, unassigned, overdue, due30, pendingReview }");
     expect(queueApi).toContain("db.clientAgreementObligation.groupBy");
     expect(queueApi).toContain("normalizeAdminPermissions(admin.permissions).includes('clients.manage')");
     expect(queueApi).toContain("team,");
@@ -2339,5 +2339,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('Submit completion for review');
     expect(clients).toContain('Approve completion');
     expect(clients).toContain('Reject completion');
+    expect(clients).toContain("['pending_review', 'Pending review'");
+    expect(clients).toContain("item.completionSubmittedByAdminId !== obligationQueue.actor?.id");
+    const queueApi = source('src/app/api/admin/agreement-obligations/queue/route.ts');
+    expect(queueApi).toContain("'pending_review'");
+    expect(queueApi).toContain('pendingReview');
+    expect(queueApi).toContain('completionSubmittedByAdminId');
   });
 });

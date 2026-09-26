@@ -87,7 +87,8 @@ type AgreementObligation = {
 };
 type ObligationQueueItem = {
   id: string; title: string; category: string; status: string; owner: string; ownerAdminId: string | null;
-  dueDate: string | null; notes: string; updatedAt: string;
+  dueDate: string | null; notes: string; evidenceUrl: string; completionSubmittedAt: string | null;
+  completionSubmittedByAdminId: string | null; completionSubmittedBy: string; updatedAt: string;
   ownerAdmin: { id: string; name: string; email: string } | null;
   agreement: {
     id: string; title: string; referenceNumber: string;
@@ -96,10 +97,10 @@ type ObligationQueueItem = {
   };
 };
 type ObligationQueueState = {
-  scope: 'all' | 'mine' | 'unassigned' | 'overdue' | 'due_30' | 'owner';
+  scope: 'all' | 'mine' | 'unassigned' | 'overdue' | 'due_30' | 'pending_review' | 'owner';
   ownerId: string;
   actor: { id: string; name: string; email: string } | null;
-  summary: { total: number; mine: number; unassigned: number; overdue: number; due30: number };
+  summary: { total: number; mine: number; unassigned: number; overdue: number; due30: number; pendingReview: number };
   team: Array<{ id: string; name: string; email: string; total: number; overdue: number; due30: number }>;
   data: ObligationQueueItem[];
 };
@@ -241,7 +242,7 @@ export default function AdminClients() {
     scope: 'mine',
     ownerId: '',
     actor: null,
-    summary: { total: 0, mine: 0, unassigned: 0, overdue: 0, due30: 0 },
+    summary: { total: 0, mine: 0, unassigned: 0, overdue: 0, due30: 0, pendingReview: 0 },
     team: [],
     data: [],
   });
@@ -1100,6 +1101,7 @@ export default function AdminClients() {
               ['unassigned', 'Unassigned', obligationQueue.summary.unassigned],
               ['overdue', 'Overdue', obligationQueue.summary.overdue],
               ['due_30', 'Due ≤30d', obligationQueue.summary.due30],
+              ['pending_review', 'Pending review', obligationQueue.summary.pendingReview],
               ['all', 'All open', obligationQueue.summary.total],
             ].map(([scope, label, count]) => (
               <Button
@@ -1159,6 +1161,9 @@ export default function AdminClients() {
                       </p>
                       <p className="mt-1 text-[10px] text-muted-foreground">
                         {item.dueDate ? 'Due ' + new Date(item.dueDate).toLocaleDateString() : 'No due date'}
+                        {item.status === 'pending_review' && item.completionSubmittedAt
+                          ? ' · submitted by ' + (item.completionSubmittedBy || 'Unknown') + ' on ' + new Date(item.completionSubmittedAt).toLocaleDateString()
+                          : ''}
                       </p>
                     </div>
                     <div className="grid gap-2 sm:grid-cols-[minmax(130px,1fr)_130px_auto]">
@@ -1184,9 +1189,20 @@ export default function AdminClients() {
                         {item.status === 'pending_review' && <option value="pending_review" disabled>Pending review</option>}
                         <option value="waived">Waived</option>
                       </select>
-                      <Button type="button" size="sm" variant="outline" onClick={() => openObligationQueueItem(item)}>
-                        Open agreement
-                      </Button>
+                      <div className="flex flex-wrap gap-1">
+                        {item.status === 'pending_review' && item.evidenceUrl && (
+                          <Button type="button" size="sm" variant="outline" onClick={() => window.open(item.evidenceUrl, '_blank', 'noopener,noreferrer')}>Evidence</Button>
+                        )}
+                        {item.status === 'pending_review' && item.completionSubmittedByAdminId !== obligationQueue.actor?.id && (
+                          <>
+                            <Button type="button" size="sm" variant="outline" onClick={() => void patchAgreementObligation(item.id, { reviewAction: 'approve' })}>Approve</Button>
+                            <Button type="button" size="sm" variant="outline" onClick={() => void patchAgreementObligation(item.id, { reviewAction: 'reject', reviewNotes: 'Returned for correction from review queue.' })}>Reject</Button>
+                          </>
+                        )}
+                        <Button type="button" size="sm" variant="outline" onClick={() => openObligationQueueItem(item)}>
+                          Open agreement
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
