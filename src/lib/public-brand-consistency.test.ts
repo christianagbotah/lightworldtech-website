@@ -80,4 +80,26 @@ describe('public corporate brand consistency', () => {
     expect(widgets).toContain('bg-amber-600');
     expect(widgets).toContain('hover:bg-amber-600 hover:border-amber-500');
   });
+  test('supports safe installable PWA behavior without caching secure workspaces', () => {
+    const manifest = source('src/app/manifest.ts');
+    const layout = source('src/app/layout.tsx');
+    const registrar = source('src/components/providers/PwaRegistrar.tsx');
+    const worker = source('public/sw.js');
+    const offline = source('src/app/offline/page.tsx');
+
+    expect(manifest).toContain("display: 'standalone'");
+    expect(manifest).toContain("scope: '/'");
+    expect(manifest).toContain("categories: ['business', 'productivity', 'technology']");
+    expect(layout).toContain('<PwaRegistrar />');
+    expect(registrar).toContain("navigator.serviceWorker");
+    expect(registrar).toContain("register('/sw.js', { scope: '/' })");
+    expect(worker).toContain("'/api/'");
+    expect(worker).toContain("'/admin'");
+    expect(worker).toContain("'/client'");
+    expect(worker).toContain("'/invoice'");
+    expect(worker).toContain("request.mode !== 'navigate'");
+    expect(worker).toContain("fetch(request).catch");
+    expect(offline).toContain('Secure admin, client, invoice and payment areas are intentionally never served from offline cache.');
+  });
+
 });

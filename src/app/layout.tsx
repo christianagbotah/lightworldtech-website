@@ -5,6 +5,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import MotionPreferenceProvider from '@/components/providers/MotionPreferenceProvider';
+import PwaRegistrar from '@/components/providers/PwaRegistrar';
 import SeoStructuredData from '@/components/layout/SeoStructuredData';
 import { getSeoConfig } from '@/lib/seo-config';
 
@@ -132,6 +133,7 @@ export default function RootLayout({
               <SeoStructuredData />
             </Suspense>
             {children}
+            <PwaRegistrar />
             <Toaster position="top-right" richColors closeButton />
           </MotionPreferenceProvider>
         </ThemeProvider>
