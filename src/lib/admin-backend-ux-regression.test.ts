@@ -1720,6 +1720,32 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('Rejected agreement approvals');
   });
 
+  test('tracks agreement obligations as accountable operational commitments', () => {
+    const schema = source('prisma/schema.prisma');
+    const clientsApi = source('src/app/api/admin/clients/route.ts');
+    const createApi = source('src/app/api/admin/client-agreements/[id]/obligations/route.ts');
+    const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const portfolioApi = source('src/app/api/admin/clients/portfolio-intelligence/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(schema).toContain('model ClientAgreementObligation');
+    expect(schema).toContain('obligations       ClientAgreementObligation[]');
+    expect(clientsApi).toContain('obligations: { orderBy:');
+    expect(createApi).toContain("'admin.client_agreement_obligation_created'");
+    expect(updateApi).toContain("'admin.client_agreement_obligation_updated'");
+    expect(updateApi).toContain("completedAt: new Date()");
+    expect(notifications).toContain('Agreement obligations overdue');
+    expect(notifications).toContain('Agreement obligations due soon');
+    expect(portfolioApi).toContain('overdueAgreementObligations');
+    expect(portfolioApi).toContain('agreementObligationsDue30');
+    expect(portfolioApi).toContain('Resolve overdue agreement obligations');
+    expect(clients).toContain('Agreement obligations');
+    expect(clients).toContain('Add obligation');
+    expect(clients).toContain('Overdue agreement obligations');
+    expect(clients).toContain('Agreement obligations due 30d');
+  });
+
   test('keeps dashboard and governance tables exportable', () => {
     const dashboard = source('src/components/admin/AdminDashboard.tsx');
     const governance = source('src/components/admin/AdminGovernance.tsx');
