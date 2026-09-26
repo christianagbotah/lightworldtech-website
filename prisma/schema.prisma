@@ -466,6 +466,7 @@ model ClientOrganization {
   refunds            FinanceCustomerRefund[]
   collectionActivities FinanceCollectionActivity[]
   expenses           FinanceExpense[]
+  agreements         ClientAgreement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -541,6 +542,7 @@ model ClientProject {
   services       ClientServiceAccount[]
   invoices       ClientInvoice[]
   expenses       FinanceExpense[]
+  agreements     ClientAgreement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -549,6 +551,34 @@ model ClientProject {
   @@index([targetDate])
   @@index([expiryDate])
   @@index([nextRenewalDate])
+}
+
+model ClientAgreement {
+  id                String             @id @default(cuid())
+  organizationId    String
+  organization      ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId         String?
+  project           ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title             String
+  agreementType     String             @default("contract")
+  status            String             @default("draft")
+  referenceNumber   String             @default("")
+  currency          String             @default("GHS")
+  contractValue     Decimal            @default(0) @db.Decimal(18, 2)
+  effectiveDate     DateTime?
+  expiryDate        DateTime?
+  renewalNoticeDays Int                @default(30)
+  owner             String             @default("")
+  documentUrl       String             @default("")
+  notes             String             @default("")
+  signedAt          DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@index([projectId])
+  @@index([expiryDate])
 }
 
 model ClientMilestone {
