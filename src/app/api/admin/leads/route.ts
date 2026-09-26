@@ -72,6 +72,9 @@ export async function GET(request: NextRequest) {
         expectedRevenue: true,
         probability: true,
         nextAction: true,
+        assignedTo: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -84,6 +87,28 @@ export async function GET(request: NextRequest) {
     const overdueFollowUps = openLeads.filter(
       (lead) => lead.nextFollowUp && lead.nextFollowUp < now,
     ).length;
+
+    const wonCount = all.filter((lead) => lead.status === 'won').length;
+    const lostCount = all.filter((lead) => lead.status === 'lost').length;
+    const decidedCount = wonCount + lostCount;
+    const winRatePct = decidedCount
+      ? Math.round((wonCount / decidedCount) * 1000) / 10
+      : null;
+    const openAgesDays = openLeads.map((lead) =>
+      Math.max(0, now.getTime() - lead.createdAt.getTime()) / 86_400_000,
+    );
+    const avgOpenAgeDays = openAgesDays.length
+      ? Math.round((openAgesDays.reduce((sum, value) => sum + value, 0) / openAgesDays.length) * 10) / 10
+      : null;
+    const oldestOpenAgeDays = openAgesDays.length
+      ? Math.round(Math.max(...openAgesDays) * 10) / 10
+      : null;
+    const followUpCoveragePct = openLeads.length
+      ? Math.round((openLeads.filter((lead) => Boolean(lead.nextFollowUp)).length / openLeads.length) * 1000) / 10
+      : null;
+    const staleCutoff = new Date(now.getTime() - 14 * 86_400_000);
+    const staleOpen = openLeads.filter((lead) => lead.updatedAt < staleCutoff).length;
+    const unassignedOpen = openLeads.filter((lead) => !lead.assignedTo.trim()).length;
 
     const pipeline = new Map<string, { currency: string; opportunities: number; expectedRevenue: number; weightedRevenue: number }>();
     for (const lead of openLeads) {
@@ -143,6 +168,19 @@ export async function GET(request: NextRequest) {
         actionGaps: openLeads.filter((lead) => !lead.nextAction.trim()).length,
         valuedOpportunities: openLeads.filter((lead) => Number(lead.expectedRevenue.toString()) > 0).length,
         overdueFollowUps,
+        execution: {
+          decided: decidedCount,
+          won: wonCount,
+          lost: lostCount,
+          winRatePct,
+          avgOpenAgeDays,
+          oldestOpenAgeDays,
+          followUpCoveragePct,
+          staleOpen,
+          unassignedOpen,
+          staleAfterDays: 14,
+          methodology: 'Win rate uses only won/lost decisions. Lead age uses currently open opportunities. Follow-up coverage is the share of open opportunities with a scheduled next follow-up. Dormant means no CRM update for at least 14 days.',
+        },
         pipelineByCurrency: Array.from(pipeline.values()).sort((a, b) => b.expectedRevenue - a.expectedRevenue),
         countries: countBy(openLeads.map((lead) => lead.countryRegion)),
         industries: countBy(openLeads.map((lead) => lead.industry)),
