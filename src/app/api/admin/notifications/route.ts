@@ -65,7 +65,10 @@ export async function GET(request: NextRequest) {
   if (canClients) {
     await reconcileSupportEscalations();
     const now = new Date();
-    const [unreadTickets, slaBreached] = await Promise.all([
+    const configuredWarningMinutes = Number(process.env.SUPPORT_SLA_WARNING_MINUTES || 60);
+    const warningMinutes = Math.max(5, Math.min(1440, Number.isFinite(configuredWarningMinutes) ? configuredWarningMinutes : 60));
+    const warningHorizon = new Date(now.getTime() + warningMinutes * 60_000);
+    const [unreadTickets, slaBreached, slaAtRisk] = await Promise.all([
       db.clientSupportTicket.count({
         where: { unreadByAdmin: true },
       }),
@@ -77,7 +80,28 @@ export async function GET(request: NextRequest) {
           ],
         },
       }),
+      db.clientSupportTicket.count({
+        where: {
+          status: { notIn: ['resolved', 'closed'] },
+          OR: [
+            { firstRespondedAt: null, firstResponseDueAt: { gte: now, lte: warningHorizon } },
+            { resolutionDueAt: { gte: now, lte: warningHorizon } },
+          ],
+        },
+      }),
     ]);
+
+
+    if (slaAtRisk > 0) {
+      notices.push({
+        id: 'support-sla-at-risk',
+        severity: 'warning',
+        title: 'Support SLA approaching deadline',
+        message: slaAtRisk + ' support ticket' + (slaAtRisk === 1 ? ' is' : 's are') + ' within ' + warningMinutes + ' minutes of an SLA deadline.',
+        count: slaAtRisk,
+        action: 'admin-support-at-risk',
+      });
+    }
 
     if (slaBreached > 0) {
       notices.push({
