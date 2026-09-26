@@ -1157,6 +1157,20 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(layout).toContain("label: 'SMS & OTP'");
   });
 
+  test('supports filtered super-admin governance audit exports', () => {
+    const governance = source('src/components/admin/AdminGovernance.tsx');
+    const auditExport = source('src/app/api/admin/governance/audit-export/route.ts');
+
+    expect(governance).toContain('Export audit CSV');
+    expect(governance).toContain('/api/admin/governance/audit-export?');
+    expect(governance).toContain('exportFileName="lightworld-governance-visible-audit"');
+    expect(auditExport).toContain('getSuperAdminContext');
+    expect(auditExport).toContain('take: 5000');
+    expect(auditExport).toContain("'admin.governance_audit_exported'");
+    expect(auditExport).toContain("'Content-Type': 'text/csv; charset=utf-8'");
+    expect(auditExport).toContain("'Cache-Control': 'private, no-store, max-age=0'");
+  });
+
   test('supports audited enterprise exports and bounded message bulk actions', () => {
     const crm = source('src/components/admin/AdminCRM.tsx');
     const messages = source('src/components/admin/AdminMessages.tsx');
