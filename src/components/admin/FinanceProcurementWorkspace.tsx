@@ -90,7 +90,7 @@ function pretty(value: string) {
 function tone(status: string) {
   if (['approved', 'received', 'closed'].includes(status)) return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
   if (['rejected', 'cancelled'].includes(status)) return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
-  if (['submitted', 'issued'].includes(status)) return 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200';
+  if (['submitted', 'issued', 'partially_received'].includes(status)) return 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200';
   return '';
 }
 
