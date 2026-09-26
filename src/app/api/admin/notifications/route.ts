@@ -265,6 +265,17 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    if (renewalDrafts > 0) {
+      notices.push({
+        id: 'finance-renewal-drafts',
+        severity: 'info',
+        title: 'Renewal invoice drafts awaiting review',
+        message: renewalDrafts + ' automatically prepared renewal invoice draft' + (renewalDrafts === 1 ? ' is' : 's are') + ' waiting for finance review before issue.',
+        count: renewalDrafts,
+        action: 'admin-finance-renewals',
+      });
+    }
+
     if (projectRenewalsDue > 0) {
       notices.push({
         id: 'finance-project-renewals',
