@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { getMailTransportStatus } from '@/lib/mail';
+import { hubtelConfiguration } from '@/lib/hubtel';
 
 export const runtime = 'nodejs';
 
@@ -31,7 +32,19 @@ export async function GET(request: NextRequest) {
 
   const mail = getMailTransportStatus();
   const mailHealthy = mail.configured;
-  const overall = database.status === 'healthy' && mailHealthy ? 'healthy' : 'attention';
+  const hubtel = hubtelConfiguration();
+  const automation = {
+    serviceRenewals: process.env.AUTO_SERVICE_RENEWAL_SMS === 'true',
+    projectRenewals: process.env.AUTO_PROJECT_RENEWAL_SMS === 'true',
+    collections: process.env.AUTO_COLLECTION_REMINDER_SMS === 'true',
+  };
+  const automationEnabled = automation.serviceRenewals || automation.projectRenewals || automation.collections;
+  const dispatcherConfigured = Boolean((process.env.SMS_CRON_SECRET || '').trim());
+  const automationHealthy = !automationEnabled || (hubtel.sms && dispatcherConfigured);
+  const overall =
+    database.status === 'healthy' && mailHealthy && automationHealthy
+      ? 'healthy'
+      : 'attention';
 
   return NextResponse.json(
     {
@@ -45,6 +58,20 @@ export async function GET(request: NextRequest) {
           mode: mail.mode,
           configured: mail.configured,
           warning: mail.warning || '',
+        },
+        communications: {
+          status: automationHealthy ? 'healthy' : 'attention',
+          smsConfigured: hubtel.sms,
+          otpConfigured: hubtel.otp,
+          paymentsConfigured: hubtel.payments,
+          dispatcherConfigured,
+          automationEnabled,
+          automation,
+          warning: automationHealthy
+            ? ''
+            : !hubtel.sms
+              ? 'SMS automation is enabled but Hubtel SMS is not configured.'
+              : 'SMS automation is enabled but the protected scheduler secret is not configured.',
         },
       },
     },
