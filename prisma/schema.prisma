@@ -235,6 +235,7 @@ model NewsletterCampaign {
   ctaLabel   String                       @default("")
   ctaUrl     String                       @default("")
   status     String                       @default("draft")
+  scheduledAt DateTime?
   sentAt     DateTime?
   deliveries NewsletterCampaignDelivery[]
 
@@ -242,6 +243,7 @@ model NewsletterCampaign {
   updatedAt DateTime @updatedAt
 
   @@index([status, updatedAt])
+  @@index([status, scheduledAt])
 }
 
 model NewsletterCampaignDelivery {

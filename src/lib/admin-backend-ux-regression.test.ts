@@ -1225,6 +1225,34 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(portal).toContain('Payment / receipt history');
   });
 
+  test('supports human-approved scheduled newsletter delivery in bounded batches', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260926141500_newsletter_campaign_scheduling/migration.sql');
+    const campaignApi = source('src/app/api/admin/newsletter/campaigns/[id]/route.ts');
+    const sendApi = source('src/app/api/admin/newsletter/campaigns/[id]/send/route.ts');
+    const dispatcher = source('src/lib/newsletter-dispatch.ts');
+    const internalDispatcher = source('src/app/api/internal/sms/dispatch/route.ts');
+    const campaigns = source('src/components/admin/AdminCampaigns.tsx');
+    const overview = source('src/app/api/admin/sms/overview/route.ts');
+    const health = source('src/app/api/admin/health/route.ts');
+
+    expect(schema).toContain('scheduledAt DateTime?');
+    expect(migration).toContain('NewsletterCampaign_status_scheduledAt_idx');
+    expect(campaignApi).toContain('Mark the campaign Ready before scheduling delivery');
+    expect(campaignApi).toContain('Scheduled delivery time must be in the future');
+    expect(sendApi).toContain('dispatchNewsletterCampaignBatch');
+    expect(dispatcher).toContain('AUTO_NEWSLETTER_CAMPAIGN_DISPATCH');
+    expect(dispatcher).toContain('NEWSLETTER_CAMPAIGN_BATCH_SIZE');
+    expect(dispatcher).toContain('NEWSLETTER_CAMPAIGNS_PER_RUN');
+    expect(dispatcher).toContain("status: { in: ['ready', 'sending'] }");
+    expect(internalDispatcher).toContain('dispatchDueNewsletterCampaigns');
+    expect(campaigns).toContain('Schedule approved campaign');
+    expect(campaigns).toContain('Remove schedule');
+    expect(campaigns).toContain('protected dispatcher sends bounded batches automatically');
+    expect(overview).toContain('newsletterCampaigns');
+    expect(health).toContain('newsletterCampaigns');
+  });
+
   test('adds responsive operational filters to Messages and Newsletter', () => {
     const messages = source('src/components/admin/AdminMessages.tsx');
     const newsletter = source('src/components/admin/AdminNewsletter.tsx');

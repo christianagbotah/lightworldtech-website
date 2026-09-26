@@ -14,6 +14,7 @@ const updateSchema = z.object({
     'CTA URL must use http or https',
   ),
   status: z.enum(['draft', 'ready']).optional(),
+  scheduledAt: z.coerce.date().nullable().optional(),
 });
 
 export async function GET(
@@ -111,9 +112,27 @@ export async function PATCH(
       }
     }
 
+    if (parsed.data.scheduledAt) {
+      if (next.status !== 'ready') {
+        return NextResponse.json(
+          { success: false, error: 'Mark the campaign Ready before scheduling delivery' },
+          { status: 409 },
+        );
+      }
+      if (parsed.data.scheduledAt.getTime() <= Date.now()) {
+        return NextResponse.json(
+          { success: false, error: 'Scheduled delivery time must be in the future' },
+          { status: 400 },
+        );
+      }
+    }
+
     const campaign = await db.newsletterCampaign.update({
       where: { id },
-      data: parsed.data,
+      data: {
+        ...parsed.data,
+        ...(parsed.data.status === 'draft' ? { scheduledAt: null } : {}),
+      },
     });
 
     return NextResponse.json({ success: true, data: campaign });

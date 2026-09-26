@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dispatchDueSms } from '@/lib/sms';
 import { db } from '@/lib/db';
+import { dispatchDueNewsletterCampaigns } from '@/lib/newsletter-dispatch';
 
 export async function POST(request: NextRequest) {
   const expected = process.env.SMS_CRON_SECRET || '';
@@ -28,7 +29,9 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    const result = await dispatchDueSms();
+    const smsResult = await dispatchDueSms();
+    const newsletterCampaigns = await dispatchDueNewsletterCampaigns();
+    const result = { ...smsResult, newsletterCampaigns };
     const completedAt = new Date();
     const durationMs = Math.max(0, Date.now() - startedMs);
     const resultJson = JSON.stringify(result).slice(0, 12000);
