@@ -194,7 +194,7 @@ export default async function NewsroomPage() {
                 {coverage.map((item) => (
                   <a
                     key={String(item.publisher) + String(item.title)}
-                    href={String(item.href || '#')}
+                    href={String(item.href)}
                     target="_blank"
                     rel="noreferrer"
                     className="group flex items-center justify-between gap-5 rounded-[24px] border border-slate-200/70 bg-[#f7f9f8] p-5 transition hover:border-emerald-300 dark:border-white/[0.07] dark:bg-white/[0.025]"
