@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ClientPortalPage from '@/components/client/ClientPortalPage';
+import ClientKnowledgeWidget from '@/components/client/ClientKnowledgeWidget';
 
 export const metadata: Metadata = {
   title: 'Client Portal',
@@ -8,5 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default function ClientPage() {
-  return <ClientPortalPage />;
+  return (
+    <>
+      <ClientPortalPage />
+      <ClientKnowledgeWidget />
+    </>
+  );
 }
