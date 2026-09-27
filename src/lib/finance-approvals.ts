@@ -277,6 +277,29 @@ export async function executeOutflowApproval(
         },
       });
 
+      const treasuryLines = await tx.financeTreasuryPaymentRunLine.findMany({
+        where: { approvalId: approval.id },
+        select: { runId: true },
+        distinct: ['runId'],
+      });
+      if (treasuryLines.length) {
+        await tx.financeTreasuryPaymentRunLine.updateMany({
+          where: { approvalId: approval.id },
+          data: { status: 'executed', paymentId: created.id },
+        });
+        for (const item of treasuryLines) {
+          const remaining = await tx.financeTreasuryPaymentRunLine.count({
+            where: { runId: item.runId, status: { not: 'executed' } },
+          });
+          if (remaining === 0) {
+            await tx.financeTreasuryPaymentRun.update({
+              where: { id: item.runId },
+              data: { status: 'executed' },
+            });
+          }
+        }
+      }
+
       return {
         outflowType: approval.outflowType,
         resultId: created.id,

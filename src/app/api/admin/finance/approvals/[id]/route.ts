@@ -57,6 +57,22 @@ export async function PATCH(
       },
     });
 
+    const treasuryLines = await db.financeTreasuryPaymentRunLine.findMany({
+      where: { approvalId: id },
+      select: { runId: true },
+      distinct: ['runId'],
+    });
+    if (treasuryLines.length) {
+      await db.financeTreasuryPaymentRunLine.updateMany({
+        where: { approvalId: id },
+        data: { status: 'cancelled' },
+      });
+      await db.financeTreasuryPaymentRun.updateMany({
+        where: { id: { in: treasuryLines.map((item) => item.runId) } },
+        data: { status: 'needs_attention' },
+      });
+    }
+
     await recordAdminAudit({
       admin: actor,
       action: 'admin.finance_outflow_approval_cancelled',
@@ -93,6 +109,22 @@ export async function PATCH(
         decisionNotes: parsed.data.notes || 'Rejected',
       },
     });
+
+    const treasuryLines = await db.financeTreasuryPaymentRunLine.findMany({
+      where: { approvalId: id },
+      select: { runId: true },
+      distinct: ['runId'],
+    });
+    if (treasuryLines.length) {
+      await db.financeTreasuryPaymentRunLine.updateMany({
+        where: { approvalId: id },
+        data: { status: 'rejected' },
+      });
+      await db.financeTreasuryPaymentRun.updateMany({
+        where: { id: { in: treasuryLines.map((item) => item.runId) } },
+        data: { status: 'needs_attention' },
+      });
+    }
 
     await recordAdminAudit({
       admin: actor,

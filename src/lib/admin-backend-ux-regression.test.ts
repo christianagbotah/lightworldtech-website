@@ -2563,6 +2563,40 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('No open supplier bills match the selected aging/due filters.');
   });
 
+  test('adds governed treasury payment runs without bypassing maker-checker or posted cash controls', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927183500_treasury_payment_runs/migration.sql');
+    const finance = source('src/lib/finance.ts');
+    const treasuryRoute = source('src/app/api/admin/finance/treasury-runs/route.ts');
+    const submitRoute = source('src/app/api/admin/finance/treasury-runs/[id]/submit/route.ts');
+    const approvalLib = source('src/lib/finance-approvals.ts');
+    const approvalRoute = source('src/app/api/admin/finance/approvals/[id]/route.ts');
+    const treasuryUi = source('src/components/admin/FinanceTreasuryWorkspace.tsx');
+    const adminFinance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('model FinanceTreasuryPaymentRun');
+    expect(schema).toContain('model FinanceTreasuryPaymentRunLine');
+    expect(migration).toContain('finance_treasury_run_number_seq');
+    expect(migration).toContain("CHECK (\"status\" IN ('draft','submitted','executed','needs_attention','cancelled'))");
+    expect(finance).toContain("formatNumber('TRY'");
+    expect(treasuryRoute).toContain("status: { in: ['draft', 'submitted'] }");
+    expect(treasuryRoute).toContain('attachments: { some: {} }');
+    expect(treasuryRoute).toContain('parseApprovalAllocations');
+    expect(submitRoute).toContain('Enable finance maker-checker approval before submitting a treasury payment run');
+    expect(submitRoute).toContain('createOutflowApproval(actor');
+    expect(submitRoute).toContain("status: 'submitted'");
+    expect(approvalLib).toContain("data: { status: 'executed', paymentId: created.id }");
+    expect(approvalLib).toContain("data: { status: 'executed' }");
+    expect(approvalRoute).toContain("data: { status: 'needs_attention' }");
+    expect(treasuryUi).toContain('Planning reservation only. Posted cash remains unchanged until supplier-payment approval executes.');
+    expect(treasuryUi).toContain('Open maker-checker approvals');
+    expect(treasuryUi).toContain('Submit treasury payment run?');
+    expect(treasuryUi).not.toContain('window.confirm');
+    expect(adminFinance).toContain("['treasury', 'Treasury']");
+    expect(adminFinance).toContain('<FinanceTreasuryWorkspace');
+  });
+
+
   test('adds conservative 13-week treasury cash visibility without treating overdue receivables as cash', () => {
     const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
     const executive = source('src/components/admin/FinanceExecutiveDashboard.tsx');

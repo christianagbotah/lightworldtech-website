@@ -29,6 +29,7 @@ import FinanceExecutiveDashboard, { type FinanceExecutiveDashboardData } from '@
 import FinanceCollectionsWorkspace from '@/components/admin/FinanceCollectionsWorkspace';
 import FinanceRenewalBillingWorkspace from '@/components/admin/FinanceRenewalBillingWorkspace';
 import FinanceProcurementWorkspace from '@/components/admin/FinanceProcurementWorkspace';
+import FinanceTreasuryWorkspace from '@/components/admin/FinanceTreasuryWorkspace';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -412,7 +413,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 
 export default function AdminFinance() {
   const { navigate } = useAppStore();
-  const [section, setSection] = useState<'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'procurement' | 'accounting'>('overview');
+  const [section, setSection] = useState<'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'treasury' | 'procurement' | 'accounting'>('overview');
   const [accountingView, setAccountingView] = useState<FinanceAccountingView>('trial-balance');
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -523,8 +524,8 @@ export default function AdminFinance() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const requestedSection = sessionStorage.getItem('lw-finance-section') || '';
-    if (['overview', 'customers', 'renewals', 'collections', 'suppliers', 'accounting'].includes(requestedSection)) {
-      setSection(requestedSection as 'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'accounting');
+    if (['overview', 'customers', 'renewals', 'collections', 'suppliers', 'treasury', 'accounting'].includes(requestedSection)) {
+      setSection(requestedSection as 'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'treasury' | 'accounting');
     }
     setDeepLinkOrganizationId(sessionStorage.getItem('lw-finance-organization-id') || '');
     setDeepLinkCustomerName(sessionStorage.getItem('lw-finance-customer-name') || '');
@@ -1231,6 +1232,7 @@ export default function AdminFinance() {
           ['renewals', 'Renewals'],
           ['collections', 'Collections'],
           ['suppliers', 'Suppliers & expenses'],
+          ['treasury', 'Treasury'],
           ['procurement', 'Procurement'],
           ['accounting', 'Accounting'],
         ].map(([value, label]) => (
@@ -1467,6 +1469,16 @@ export default function AdminFinance() {
             onFinanceChanged={load}
           />
         </div>
+      )}
+
+      {section === 'treasury' && (
+        <FinanceTreasuryWorkspace
+          vendors={data.vendors.map((vendor) => ({ id: vendor.id, name: vendor.name }))}
+          onApprovals={() => {
+            setAccountingView('approvals');
+            setSection('accounting');
+          }}
+        />
       )}
 
       {section === 'suppliers' && (

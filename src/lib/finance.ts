@@ -92,6 +92,7 @@ async function nextSequence(sequence: string): Promise<number> {
     'finance_customer_refund_number_seq',
     'finance_reconciliation_batch_seq',
     'finance_outflow_approval_number_seq',
+    'finance_treasury_run_number_seq',
   ]);
   if (!safe.has(sequence)) throw new Error('Unsupported finance number sequence');
 
@@ -145,6 +146,10 @@ export async function nextOutflowApprovalNumber(now = new Date()): Promise<strin
 
 export async function nextReconciliationBatchNumber(now = new Date()): Promise<string> {
   return formatNumber('REC', await nextSequence('finance_reconciliation_batch_seq'), now);
+}
+
+export async function nextTreasuryRunNumber(now = new Date()): Promise<string> {
+  return formatNumber('TRY', await nextSequence('finance_treasury_run_number_seq'), now);
 }
 
 export function accountNormalSide(type: string): 'debit' | 'credit' {
