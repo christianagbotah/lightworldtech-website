@@ -67,22 +67,22 @@ describe('public experience quality', () => {
     expect(portal).toContain('response.json().catch(() => null)');
   });
 
-  test('public routes show a lightweight loader and above-fold heroes do not wait for hydration to become visible', () => {
+  test('uses one branded public loader and keeps above-fold heroes visible before hydration', () => {
     const loading = source('src/app/loading.tsx');
+    const shell = source('src/components/layout/PublicShell.tsx');
+    const preloader = source('src/components/ui/preloader.tsx');
     const layout = source('src/app/layout.tsx');
     const seoIsland = source('src/components/layout/SeoStructuredData.tsx');
     const globalPage = source('src/components/pages/GlobalPage.tsx');
     const home = source('src/components/pages/HomePage.tsx');
     const pageHero = source('src/components/ui/page-hero.tsx');
 
-    expect(loading).toContain('Preparing your experience');
-    expect(loading).toContain('role="status"');
-    expect(loading).toContain('Lightworld Technologies');
-    expect(loading).toContain('fixed inset-0');
-    expect(loading).toContain('z-[120]');
-    expect(loading).toContain('animate-[spin_1.35s_linear_infinite]');
-    expect(loading).toContain('animate-[spin_2.1s_linear_infinite_reverse]');
-    expect(loading).toContain('motion-reduce:animate-none');
+    expect(loading).toContain('return null;');
+    expect(loading).not.toContain('fixed inset-0');
+    expect(loading).not.toContain('Preparing your experience');
+    expect(shell).toContain('<Preloader />');
+    expect(preloader).toContain('aria-label="Loading website"');
+    expect(preloader).toContain('{progress}');
     expect(layout).toContain('<Suspense fallback={null}>');
     expect(layout).toContain('<SeoStructuredData />');
     expect(layout).not.toContain('export default async function RootLayout');
