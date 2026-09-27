@@ -2423,6 +2423,19 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('purchaseOrderId: order.id');
   });
 
+  test('routes procurement exceptions into the finance notification centre', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(notifications).toContain('procurementApprovalCutoff');
+    expect(notifications).toContain('Procurement deliveries overdue');
+    expect(notifications).toContain('Procurement approvals aging');
+    expect(notifications).toContain('Received POs awaiting supplier bills');
+    expect(notifications).toContain("action: 'admin-finance-procurement'");
+    expect(layout).toContain("action === 'admin-finance-procurement'");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'procurement')");
+  });
+
   test('requires evidence and independent review before closing agreement obligations', () => {
     const schema = source('prisma/schema.prisma');
     const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
