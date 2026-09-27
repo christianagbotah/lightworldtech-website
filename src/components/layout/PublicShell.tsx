@@ -5,6 +5,7 @@ import FloatingWidgets from '@/components/layout/FloatingWidgets';
 import CookieConsent from '@/components/layout/CookieConsent';
 import ScrollProgress from '@/components/ui/scroll-progress';
 import CommandPalette from '@/components/ui/command-palette';
+import Preloader from '@/components/ui/preloader';
 import { getSiteSettings } from '@/lib/site-content-server';
 import type { SiteSettings } from '@/lib/site-content';
 import AnalyticsTracker from '@/components/analytics/AnalyticsTracker';
@@ -20,6 +21,7 @@ export default async function PublicShell({
 
   return (
     <div className="lw-corporate-brand min-h-screen bg-background text-foreground">
+      <Preloader />
       <AnalyticsTracker />
       <ScrollProgress />
       <Header settings={resolvedSettings} />

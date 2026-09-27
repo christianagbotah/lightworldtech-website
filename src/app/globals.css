@@ -1293,10 +1293,11 @@ body {
   isolation: isolate;
   overflow: hidden;
   background-image:
-    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  background-position: center top;
+    linear-gradient(to right, rgba(15, 23, 42, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.055) 1px, transparent 1px);
+  background-size: 46px 46px;
+  background-position: 0 0;
+  animation: lw-hero-grid-flow 18s linear infinite;
 }
 
 .lw-hero-grid::before,
@@ -1307,24 +1308,38 @@ body {
   z-index: 0;
 }
 
+/* Visible enterprise radar/circuit graphic shared by every existing page hero. */
 .lw-hero-grid::before {
-  width: min(54vw, 760px);
+  width: clamp(310px, 43vw, 650px);
   aspect-ratio: 1;
-  right: -12%;
-  top: -55%;
+  right: clamp(-190px, -8vw, -55px);
+  top: 50%;
   border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.20);
   background:
-    radial-gradient(circle at 35% 35%, rgba(52, 211, 153, 0.18), transparent 42%),
-    radial-gradient(circle at 70% 60%, rgba(251, 191, 36, 0.12), transparent 44%);
-  filter: blur(8px);
-  animation: lw-hero-drift 12s ease-in-out infinite alternate;
+    radial-gradient(circle at 22% 28%, rgba(16, 185, 129, .95) 0 3px, transparent 4px),
+    radial-gradient(circle at 73% 22%, rgba(245, 158, 11, .95) 0 3px, transparent 4px),
+    radial-gradient(circle at 82% 66%, rgba(16, 185, 129, .85) 0 3px, transparent 4px),
+    radial-gradient(circle at 34% 78%, rgba(245, 158, 11, .90) 0 3px, transparent 4px),
+    radial-gradient(circle at center, transparent 0 17%, rgba(245,158,11,.18) 17.4% 17.9%, transparent 18.4% 32%, rgba(16,185,129,.17) 32.4% 32.9%, transparent 33.4% 48%, rgba(245,158,11,.12) 48.4% 48.9%, transparent 49.4% 63%, rgba(16,185,129,.10) 63.4% 63.9%, transparent 64.4%),
+    conic-gradient(from 12deg, transparent 0 7%, rgba(245,158,11,.20) 8% 8.8%, transparent 9.6% 21%, rgba(16,185,129,.20) 22% 22.8%, transparent 23.6% 39%, rgba(245,158,11,.17) 40% 40.8%, transparent 41.6% 63%, rgba(16,185,129,.18) 64% 64.8%, transparent 65.6% 82%, rgba(245,158,11,.16) 83% 83.8%, transparent 84.6%);
+  box-shadow:
+    0 0 0 22px rgba(16,185,129,.025),
+    0 0 80px rgba(16,185,129,.10),
+    inset 0 0 70px rgba(245,158,11,.055);
+  opacity: .88;
+  animation: lw-hero-radar 20s linear infinite;
 }
 
+/* Moving light beam makes the motion obvious even on heroes with a CMS image. */
 .lw-hero-grid::after {
-  inset: 0;
-  background: linear-gradient(112deg, transparent 20%, rgba(52, 211, 153, 0.045) 44%, rgba(251, 191, 36, 0.035) 52%, transparent 72%);
-  background-size: 220% 100%;
-  animation: lw-hero-scan 14s ease-in-out infinite;
+  inset: -30% -40%;
+  background:
+    linear-gradient(104deg, transparent 34%, rgba(16,185,129,.02) 43%, rgba(255,255,255,.16) 49%, rgba(245,158,11,.10) 52%, transparent 60%),
+    radial-gradient(circle at 76% 50%, rgba(245,158,11,.07), transparent 24%);
+  transform: translate3d(-36%, 0, 0) skewX(-10deg);
+  animation: lw-hero-beam 9s ease-in-out infinite;
+  mix-blend-mode: screen;
 }
 
 .lw-hero-grid > :not(.absolute) {
@@ -1334,24 +1349,50 @@ body {
 
 .dark .lw-hero-grid {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
 }
 
 .dark .lw-hero-grid::before {
-  background:
-    radial-gradient(circle at 35% 35%, rgba(52, 211, 153, 0.12), transparent 42%),
-    radial-gradient(circle at 70% 60%, rgba(251, 191, 36, 0.08), transparent 44%);
+  border-color: rgba(251,191,36,.24);
+  opacity: .82;
+  box-shadow:
+    0 0 0 22px rgba(52,211,153,.025),
+    0 0 88px rgba(52,211,153,.12),
+    inset 0 0 72px rgba(251,191,36,.07);
 }
 
-@keyframes lw-hero-drift {
-  0% { transform: translate3d(0, 0, 0) scale(0.94) rotate(-6deg); }
-  100% { transform: translate3d(-12%, 18%, 0) scale(1.08) rotate(7deg); }
+@keyframes lw-hero-grid-flow {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 46px 0, 0 46px; }
 }
 
-@keyframes lw-hero-scan {
-  0%, 100% { background-position: 130% 0; opacity: 0.5; }
-  50% { background-position: -40% 0; opacity: 1; }
+@keyframes lw-hero-radar {
+  0% { transform: translate3d(0, -50%, 0) rotate(0deg) scale(.96); }
+  50% { transform: translate3d(-3%, -48%, 0) rotate(180deg) scale(1.035); }
+  100% { transform: translate3d(0, -50%, 0) rotate(360deg) scale(.96); }
+}
+
+@keyframes lw-hero-beam {
+  0%, 12% { transform: translate3d(-38%, 0, 0) skewX(-10deg); opacity: .15; }
+  48%, 62% { transform: translate3d(28%, 0, 0) skewX(-10deg); opacity: .9; }
+  100% { transform: translate3d(48%, 0, 0) skewX(-10deg); opacity: .16; }
+}
+
+@media (max-width: 767px) {
+  .lw-hero-grid::before {
+    width: 390px;
+    right: -215px;
+    opacity: .68;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lw-hero-grid,
+  .lw-hero-grid::before,
+  .lw-hero-grid::after {
+    animation: none !important;
+  }
 }
 
 .lw-dot-grid {
