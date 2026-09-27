@@ -7,7 +7,8 @@ import { isBalancedJournal, normalizeCurrency } from '@/lib/finance';
 type Tx = Prisma.TransactionClient;
 
 type LedgerLineInput = {
-  systemKey: string;
+  systemKey?: string;
+  accountId?: string;
   description?: string;
   debit?: Prisma.Decimal | string | number;
   credit?: Prisma.Decimal | string | number;
@@ -96,6 +97,32 @@ async function resolveAccounts(tx: Tx, keys: string[]) {
   return map;
 }
 
+
+async function resolveExplicitAccounts(tx: Tx, ids: string[]) {
+  const uniqueIds = [...new Set(ids)];
+  if (!uniqueIds.length) return new Map<string, { id: string; code: string; name: string }>();
+
+  const accounts = await tx.financeAccount.findMany({
+    where: { id: { in: uniqueIds } },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      active: true,
+      allowPosting: true,
+    },
+  });
+  const map = new Map(accounts.map((account) => [account.id, account]));
+  for (const id of uniqueIds) {
+    const account = map.get(id);
+    if (!account) throw new Error('Selected ledger account no longer exists');
+    if (!account.active || !account.allowPosting) {
+      throw new Error('Posting is disabled for selected ledger account ' + account.code + ' · ' + account.name);
+    }
+  }
+  return map;
+}
+
 export function cashSystemKey(method: string): string {
   if (method === 'cash') return 'cash';
   if (method === 'mobile_money') return 'mobile_money';
@@ -170,8 +197,21 @@ export async function postSourceJournal(
   if (prepared.length < 2 || !isBalancedJournal(prepared)) {
     throw new Error('Automatic journal is not balanced');
   }
+  for (const line of prepared) {
+    const selectors = Number(Boolean(line.systemKey)) + Number(Boolean(line.accountId));
+    if (selectors !== 1) {
+      throw new Error('Each automatic journal line must resolve to exactly one ledger account');
+    }
+  }
 
-  const accounts = await resolveAccounts(tx, prepared.map((line) => line.systemKey));
+  const systemKeys = prepared
+    .map((line) => line.systemKey)
+    .filter((value): value is string => Boolean(value));
+  const explicitAccountIds = prepared
+    .map((line) => line.accountId)
+    .filter((value): value is string => Boolean(value));
+  const accounts = await resolveAccounts(tx, systemKeys);
+  const explicitAccounts = await resolveExplicitAccounts(tx, explicitAccountIds);
   const journalNumber = await nextJournalNumber(tx, input.entryDate);
 
   return tx.financeJournalEntry.create({
@@ -188,7 +228,9 @@ export async function postSourceJournal(
       postedBy: input.postedBy,
       lines: {
         create: prepared.map((line) => ({
-          accountId: accounts.get(line.systemKey)!.id,
+          accountId: line.accountId
+            ? explicitAccounts.get(line.accountId)!.id
+            : accounts.get(line.systemKey!)!.id,
           description: line.description || input.description,
           debit: line.debit,
           credit: line.credit,
@@ -440,6 +482,7 @@ export async function postVendorPaymentJournal(tx: Tx, input: {
   amount: Prisma.Decimal;
   allocatedAmount: Prisma.Decimal;
   method: string;
+  sourceAccountId?: string;
   postedBy: string;
 }) {
   const unallocated = Prisma.Decimal.max(
@@ -466,7 +509,8 @@ export async function postVendorPaymentJournal(tx: Tx, input: {
         debit: unallocated,
       },
       {
-        systemKey: cashSystemKey(input.method),
+        systemKey: input.sourceAccountId ? undefined : cashSystemKey(input.method),
+        accountId: input.sourceAccountId || undefined,
         description: 'Payment from ' + input.method.replaceAll('_', ' '),
         credit: input.amount,
       },
@@ -642,4 +686,3 @@ export async function postCustomerRefundJournal(tx: Tx, input: {
     ],
   });
 }
-

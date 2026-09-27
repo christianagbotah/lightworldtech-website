@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
     orderBy: [{ paidAt: 'desc' }, { createdAt: 'desc' }],
     include: {
       vendor: { select: { id: true, name: true } },
+      sourceAccount: { select: { id: true, code: true, name: true } },
       allocations: { include: { bill: { select: { id: true, payableNumber: true, total: true, dueDate: true, status: true } } } },
       attachments: { orderBy: { createdAt: 'desc' } },
     },

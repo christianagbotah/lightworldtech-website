@@ -1149,6 +1149,7 @@ model FinanceVendor {
   notes     String              @default("")
   bills     FinanceVendorBill[]
   payments  FinanceVendorPayment[]
+  treasuryPlans FinanceTreasuryPaymentPlan[]
   expenses  FinanceExpense[]
   purchaseRequests FinancePurchaseRequest[]
   purchaseOrders   FinancePurchaseOrder[]
@@ -1216,6 +1217,8 @@ model FinanceVendorPayment {
   paymentNumber String              @unique
   vendorId      String
   vendor        FinanceVendor       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  sourceAccountId String?
+  sourceAccount FinanceAccount?     @relation("VendorPaymentSourceAccount", fields: [sourceAccountId], references: [id], onDelete: SetNull)
   currency      String              @default("GHS")
   amount        Decimal             @db.Decimal(18, 2)
   paidAt        DateTime
@@ -1230,6 +1233,7 @@ model FinanceVendorPayment {
   updatedAt DateTime @updatedAt
 
   @@index([vendorId, paidAt])
+  @@index([sourceAccountId, paidAt])
   @@index([paidAt])
 }
 
@@ -1260,6 +1264,50 @@ model FinanceVendorPaymentAllocation {
 
   @@unique([paymentId, billId])
   @@index([billId])
+}
+
+model FinanceTreasuryPaymentPlan {
+  id                 String         @id @default(cuid())
+  planNumber         String         @unique
+  vendorId           String
+  vendor             FinanceVendor  @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  sourceAccountId    String
+  sourceAccount      FinanceAccount @relation("TreasuryPaymentPlanSourceAccount", fields: [sourceAccountId], references: [id], onDelete: Restrict)
+  currency           String         @default("GHS")
+  amount             Decimal        @db.Decimal(18, 2)
+  scheduledFor       DateTime
+  method             String         @default("bank_transfer")
+  reference          String         @default("")
+  notes              String         @default("")
+  allocationsJson    String         @default("[]")
+  status             String         @default("draft")
+  approvalId         String         @default("")
+  requestedByAdminId String         @default("")
+  requestedByName    String         @default("")
+  requestedByEmail   String         @default("")
+  submittedAt        DateTime?
+  approvedByAdminId  String         @default("")
+  approvedByName     String         @default("")
+  approvedByEmail    String         @default("")
+  approvedAt         DateTime?
+  decisionNotes      String         @default("")
+  executedByAdminId  String         @default("")
+  executedByName     String         @default("")
+  executedAt         DateTime?
+  resultPaymentId    String         @default("")
+  resultPaymentNumber String        @default("")
+  createdByAdminId   String
+  createdByName      String         @default("")
+  createdByEmail     String         @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, scheduledFor])
+  @@index([vendorId, status, scheduledFor])
+  @@index([sourceAccountId, status, scheduledFor])
+  @@index([approvalId])
+  @@index([createdByAdminId, status])
 }
 
 model FinanceExpense {
@@ -1480,6 +1528,8 @@ model FinanceAccount {
   parent       FinanceAccount?      @relation("FinanceAccountHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children     FinanceAccount[]     @relation("FinanceAccountHierarchy")
   journalLines FinanceJournalLine[]
+  vendorPayments FinanceVendorPayment[] @relation("VendorPaymentSourceAccount")
+  treasuryPaymentPlans FinanceTreasuryPaymentPlan[] @relation("TreasuryPaymentPlanSourceAccount")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

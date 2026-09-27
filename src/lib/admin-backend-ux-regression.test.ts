@@ -2563,6 +2563,62 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('No open supplier bills match the selected aging/due filters.');
   });
 
+
+  test('adds governed treasury payment planning without posting cash before explicit execution', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927175500_treasury_payment_execution/migration.sql');
+    const treasuryLib = source('src/lib/finance-treasury.ts');
+    const treasuryApi = source('src/app/api/admin/finance/treasury/payment-plans/route.ts');
+    const treasuryActionApi = source('src/app/api/admin/finance/treasury/payment-plans/[id]/route.ts');
+    const approvalLib = source('src/lib/finance-approvals.ts');
+    const approvalApi = source('src/app/api/admin/finance/approvals/[id]/route.ts');
+    const ledger = source('src/lib/finance-ledger.ts');
+    const workspace = source('src/components/admin/FinanceTreasuryWorkspace.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+    const approvals = source('src/components/admin/FinanceOutflowApprovals.tsx');
+
+    expect(schema).toContain('model FinanceTreasuryPaymentPlan');
+    expect(schema).toContain('sourceAccountId    String');
+    expect(schema).toContain('resultPaymentNumber String');
+    expect(schema).toContain('treasuryPaymentPlans FinanceTreasuryPaymentPlan[]');
+    expect(migration).toContain('finance_treasury_plan_number_seq');
+    expect(migration).toContain('CREATE TABLE IF NOT EXISTS "FinanceTreasuryPaymentPlan"');
+    expect(migration).toContain('FinanceVendorPayment_sourceAccountId_fkey');
+
+    expect(treasuryApi).toContain("status: 'draft'");
+    expect(treasuryApi).toContain('approvedCommitments');
+    expect(treasuryApi).toContain('availableAfterApproved');
+    expect(treasuryActionApi).toContain("outflowType: 'treasury_vendor_payment'");
+    expect(treasuryActionApi).toContain("action: z.enum(['submit', 'cancel', 'execute'])");
+    expect(treasuryActionApi).toContain('Treasury maker-checker requires at least two active administrators');
+    expect(treasuryActionApi).toContain('Payment or bank reference is required before executing a non-cash treasury plan');
+
+    expect(approvalLib).toContain("approval.outflowType === 'treasury_vendor_payment'");
+    expect(approvalLib).toContain('approveTreasuryPlanFromApproval');
+    expect(treasuryLib).toContain("status: 'approved'");
+    expect(treasuryLib).toContain("if (plan.status !== 'approved')");
+    expect(treasuryLib).toContain('Insufficient posted liquidity in ');
+    expect(treasuryLib).toContain('financeVendorPayment.create');
+    expect(treasuryLib).toContain('postVendorPaymentJournal');
+    expect(treasuryLib).toContain("status: 'executed'");
+    expect(approvalApi).toContain("approval.outflowType === 'treasury_vendor_payment'");
+
+    expect(ledger).toContain('accountId?: string');
+    expect(ledger).toContain('resolveExplicitAccounts');
+    expect(ledger).toContain('sourceAccountId?: string');
+    expect(ledger).toContain('accountId: input.sourceAccountId || undefined');
+
+    expect(workspace).toContain('Planning does not change posted cash.');
+    expect(workspace).toContain('Liquidity & approved commitments');
+    expect(workspace).toContain('New payment plan');
+    expect(workspace).toContain('Review approvals');
+    expect(workspace).toContain('Execute');
+    expect(finance).toContain("['treasury', 'Treasury']");
+    expect(finance).toContain('<FinanceTreasuryWorkspace');
+    expect(approvals).toContain("'treasury_vendor_payment'");
+    expect(approvals).toContain('post cash only when an authorized user explicitly executes the approved plan');
+  });
+
   test('adds conservative 13-week treasury cash visibility without treating overdue receivables as cash', () => {
     const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
     const executive = source('src/components/admin/FinanceExecutiveDashboard.tsx');

@@ -29,6 +29,7 @@ import FinanceExecutiveDashboard, { type FinanceExecutiveDashboardData } from '@
 import FinanceCollectionsWorkspace from '@/components/admin/FinanceCollectionsWorkspace';
 import FinanceRenewalBillingWorkspace from '@/components/admin/FinanceRenewalBillingWorkspace';
 import FinanceProcurementWorkspace from '@/components/admin/FinanceProcurementWorkspace';
+import FinanceTreasuryWorkspace from '@/components/admin/FinanceTreasuryWorkspace';
 import OperationalLoadError from '@/components/admin/OperationalLoadError';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -218,6 +219,7 @@ type SupplierPayment = {
   method: string;
   reference: string;
   vendor: { id: string; name: string };
+  sourceAccount?: { id: string; code: string; name: string } | null;
   attachments: BillAttachment[];
 };
 
@@ -412,7 +414,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 
 export default function AdminFinance() {
   const { navigate } = useAppStore();
-  const [section, setSection] = useState<'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'procurement' | 'accounting'>('overview');
+  const [section, setSection] = useState<'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'treasury' | 'procurement' | 'accounting'>('overview');
   const [accountingView, setAccountingView] = useState<FinanceAccountingView>('trial-balance');
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -523,8 +525,8 @@ export default function AdminFinance() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const requestedSection = sessionStorage.getItem('lw-finance-section') || '';
-    if (['overview', 'customers', 'renewals', 'collections', 'suppliers', 'accounting'].includes(requestedSection)) {
-      setSection(requestedSection as 'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'accounting');
+    if (['overview', 'customers', 'renewals', 'collections', 'suppliers', 'treasury', 'procurement', 'accounting'].includes(requestedSection)) {
+      setSection(requestedSection as 'overview' | 'customers' | 'renewals' | 'collections' | 'suppliers' | 'treasury' | 'procurement' | 'accounting');
     }
     setDeepLinkOrganizationId(sessionStorage.getItem('lw-finance-organization-id') || '');
     setDeepLinkCustomerName(sessionStorage.getItem('lw-finance-customer-name') || '');
@@ -1207,7 +1209,7 @@ export default function AdminFinance() {
       <AdminPageHeader
         eyebrow="Finance & Accounts"
         title="Customer accounts and management finance"
-        description="Track services, renewals, invoices, receipts, debtors, suppliers, payables, expenses, cashflow and management profit/loss."
+        description="Track services, renewals, invoices, receipts, debtors, suppliers, payables, treasury execution, expenses, cashflow and management profit/loss."
         actions={
           <Button variant="outline" onClick={() => void load()} disabled={loading}>
             <RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} /> Refresh
@@ -1231,6 +1233,7 @@ export default function AdminFinance() {
           ['renewals', 'Renewals'],
           ['collections', 'Collections'],
           ['suppliers', 'Suppliers & expenses'],
+          ['treasury', 'Treasury'],
           ['procurement', 'Procurement'],
           ['accounting', 'Accounting'],
         ].map(([value, label]) => (
@@ -1284,6 +1287,18 @@ export default function AdminFinance() {
             setAccountingView('close');
             setSection('accounting');
           }}
+        />
+      )}
+
+      {section === 'treasury' && (
+        <FinanceTreasuryWorkspace
+          vendors={data.vendors}
+          bills={data.bills}
+          onOpenApprovals={() => {
+            setAccountingView('approvals');
+            setSection('accounting');
+          }}
+          onRefreshFinance={() => load()}
         />
       )}
 
@@ -1474,7 +1489,8 @@ export default function AdminFinance() {
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => setDialog('vendor')}><Plus className="mr-2 size-4" /> Add supplier</Button>
             <Button variant="outline" onClick={() => setDialog('bill')}><ReceiptText className="mr-2 size-4" /> Record bill</Button>
-            <Button variant="outline" onClick={() => setDialog('supplier-payment')}><ArrowUpRight className="mr-2 size-4" /> Pay supplier</Button>
+            <Button variant="outline" onClick={() => setDialog('supplier-payment')}><ArrowUpRight className="mr-2 size-4" /> Pay supplier now</Button>
+            <Button variant="outline" onClick={() => setSection('treasury')}><CalendarClock className="mr-2 size-4" /> Treasury plan</Button>
             <Button variant="outline" onClick={() => setDialog('expense')}><CircleDollarSign className="mr-2 size-4" /> Record expense</Button>
           </div>
 
@@ -1805,6 +1821,7 @@ export default function AdminFinance() {
                         <TableCell className="text-xs">
                           {new Date(item.paidAt).toLocaleDateString()}
                           <p className="text-[10px] text-muted-foreground">{pretty(item.method)}</p>
+                          {item.sourceAccount && <p className="text-[10px] text-muted-foreground">{item.sourceAccount.code} · {item.sourceAccount.name}</p>}
                         </TableCell>
                         <TableCell className="max-w-[180px] truncate text-xs">{item.reference || '—'}</TableCell>
                         <TableCell className="text-right font-semibold">{money(item.amount, item.currency)}</TableCell>

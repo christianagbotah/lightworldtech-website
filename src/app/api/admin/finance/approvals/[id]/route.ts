@@ -45,16 +45,29 @@ export async function PATCH(
       );
     }
 
-    const updated = await db.financeOutflowApproval.update({
-      where: { id },
-      data: {
-        status: 'cancelled',
-        decidedByAdminId: actor.id,
-        decidedByName: actor.name || 'Admin',
-        decidedByEmail: actor.email,
-        decidedAt: new Date(),
-        decisionNotes: parsed.data.notes || 'Cancelled before approval',
-      },
+    const now = new Date();
+    const updated = await db.$transaction(async (tx) => {
+      const decided = await tx.financeOutflowApproval.update({
+        where: { id },
+        data: {
+          status: 'cancelled',
+          decidedByAdminId: actor.id,
+          decidedByName: actor.name || 'Admin',
+          decidedByEmail: actor.email,
+          decidedAt: now,
+          decisionNotes: parsed.data.notes || 'Cancelled before approval',
+        },
+      });
+      if (approval.outflowType === 'treasury_vendor_payment') {
+        await tx.financeTreasuryPaymentPlan.updateMany({
+          where: { id: approval.sourceId, status: 'pending_approval' },
+          data: {
+            status: 'cancelled',
+            decisionNotes: parsed.data.notes || 'Approval request cancelled',
+          },
+        });
+      }
+      return decided;
     });
 
     await recordAdminAudit({
@@ -82,16 +95,29 @@ export async function PATCH(
   }
 
   if (parsed.data.action === 'reject') {
-    const updated = await db.financeOutflowApproval.update({
-      where: { id },
-      data: {
-        status: 'rejected',
-        decidedByAdminId: actor.id,
-        decidedByName: actor.name || 'Admin',
-        decidedByEmail: actor.email,
-        decidedAt: new Date(),
-        decisionNotes: parsed.data.notes || 'Rejected',
-      },
+    const now = new Date();
+    const updated = await db.$transaction(async (tx) => {
+      const decided = await tx.financeOutflowApproval.update({
+        where: { id },
+        data: {
+          status: 'rejected',
+          decidedByAdminId: actor.id,
+          decidedByName: actor.name || 'Admin',
+          decidedByEmail: actor.email,
+          decidedAt: now,
+          decisionNotes: parsed.data.notes || 'Rejected',
+        },
+      });
+      if (approval.outflowType === 'treasury_vendor_payment') {
+        await tx.financeTreasuryPaymentPlan.updateMany({
+          where: { id: approval.sourceId, status: 'pending_approval' },
+          data: {
+            status: 'rejected',
+            decisionNotes: parsed.data.notes || 'Treasury plan rejected',
+          },
+        });
+      }
+      return decided;
     });
 
     await recordAdminAudit({
