@@ -2499,6 +2499,28 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(approvals).toContain('uploadApprovalProof');
   });
 
+  test('exports supplier account statements for vendor reconciliation', () => {
+    const statement = source('src/lib/supplier-statement.ts');
+    const statementApi = source('src/app/api/admin/finance/vendors/[id]/statement/route.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(statement).toContain('buildSupplierAccountStatement');
+    expect(statement).toContain("type: 'Supplier Bill'");
+    expect(statement).toContain("type: 'Supplier Payment'");
+    expect(statement).toContain('Opening balances');
+    expect(statement).toContain('Closing balances');
+    expect(statement).toContain('Running payable');
+    expect(statement).toContain('vendorBillStatusFromBalance');
+    expect(statementApi).toContain('admin.finance_supplier_account_statement_downloaded');
+    expect(statementApi).toContain('Statement start date cannot be after end date');
+    expect(statementApi).toContain("'Content-Type': 'text/csv; charset=utf-8'");
+    expect(finance).toContain('Supplier account statements');
+    expect(finance).toContain('Download statement');
+    expect(finance).toContain('downloadSupplierStatement');
+    expect(finance).toContain('supplierStatementFrom');
+    expect(finance).toContain('supplierStatementTo');
+  });
+
   test('alerts finance when non-cash supplier payment proof is missing', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
 
