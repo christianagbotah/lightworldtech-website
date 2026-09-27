@@ -2427,6 +2427,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     const schema = source('prisma/schema.prisma');
     const quoteApi = source('src/app/api/admin/finance/procurement/[id]/quotes/route.ts');
     const actionApi = source('src/app/api/admin/finance/procurement/[id]/route.ts');
+    const evidenceUploadApi = source('src/app/api/admin/finance/procurement/quotes/[id]/attachment/route.ts');
+    const evidenceDownloadApi = source('src/app/api/admin/finance/procurement/quote-attachments/[id]/route.ts');
+    const procurementAttachment = source('src/lib/procurement-attachment.ts');
     const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
 
     expect(schema).toContain('model FinanceSupplierQuote');
@@ -2441,11 +2444,22 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(quoteApi).toContain('admin.finance_supplier_quote_recorded');
     expect(quoteApi).toContain('admin.finance_supplier_quote_selected');
     expect(actionApi).toContain('Select the winning supplier quote before issuing the purchase order');
+    expect(actionApi).toContain('Attach the selected supplier quotation PDF before issuing the purchase order');
     expect(actionApi).toContain('selectedQuote?.total || item.estimatedAmount');
+    expect(schema).toContain('model FinanceSupplierQuoteAttachment');
+    expect(evidenceUploadApi).toContain('admin.finance_supplier_quote_attachment_added');
+    expect(evidenceUploadApi).toContain('Quotation file content does not match its declared type');
+    expect(evidenceDownloadApi).toContain('Cache-Control');
+    expect(evidenceDownloadApi).toContain('X-Content-Type-Options');
+    expect(procurementAttachment).toContain('MAX_PROCUREMENT_ATTACHMENT_BYTES');
+    expect(procurementAttachment).toContain("join(uploadStorageDirectory(), 'procurement')");
     expect(procurement).toContain('Compare supplier quotes');
     expect(procurement).toContain('Record quote');
     expect(procurement).toContain('Award rationale — required for single-source or higher-priced selection');
     expect(procurement).toContain('Award rationale:');
+    expect(procurement).toContain('Quotation evidence');
+    expect(procurement).toContain('Attach PDF');
+    expect(procurement).toContain('Attach the selected supplier quotation PDF before PO issue.');
     expect(procurement).toContain('Select the winning supplier quote before PO issue');
   });
 
