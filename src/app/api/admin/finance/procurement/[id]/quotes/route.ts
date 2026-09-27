@@ -166,7 +166,6 @@ export async function PATCH(
       where: { id: requisition.id },
       data: {
         vendorId: quote.vendorId,
-        estimatedAmount: quote.total,
       },
     }),
   ]);
@@ -185,6 +184,11 @@ export async function PATCH(
       singleSourceAward,
       higherPricedAward,
       lowestValidTotal: lowestValidTotal.toFixed(2),
+      requisitionEstimate: requisition.estimatedAmount.toFixed(2),
+      awardVariance: quote.total.minus(requisition.estimatedAmount).toFixed(2),
+      awardVariancePercent: requisition.estimatedAmount.gt(0)
+        ? quote.total.minus(requisition.estimatedAmount).div(requisition.estimatedAmount).mul(100).toFixed(2)
+        : null,
       selectionReason: parsed.data.selectionReason,
     },
   });
