@@ -2543,7 +2543,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(schema).toContain('creditHoldReason');
     expect(migration).toContain('ADD COLUMN "creditLimit" DECIMAL(18,2)');
     expect(creditPolicy).toContain("'finance.manage'");
-    expect(creditPolicy).toContain("'admin.client_credit_policy_updated'");
+    expect(creditPolicy).toContain("'admin.client_credit_policy_approval_requested'");
+    expect(creditPolicy).toContain("'admin.client_credit_terms_updated'");
     expect(creditPolicy).toContain('A credit hold requires a reason');
     expect(invoices).toContain("parsed.data.status === 'issued'");
     expect(invoices).toContain("'lightworld-credit-control:' + organization.id + ':' + currency");
@@ -2598,19 +2599,29 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain("action: 'admin-clients'");
   });
 
-  test('requires finance approval authority for sensitive customer credit changes', () => {
+  test('uses maker-checker approval for sensitive customer credit policy changes', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927052000_credit_policy_approval_workflow/migration.sql');
     const creditPolicy = source('src/app/api/admin/clients/[id]/credit-policy/route.ts');
+    const decision = source('src/app/api/admin/finance/credit-approvals/[id]/route.ts');
     const commercialApi = source('src/app/api/admin/clients/[id]/commercial/route.ts');
     const commercial = source('src/components/admin/ClientCommercialAccount.tsx');
 
-    expect(creditPolicy).toContain('const sensitiveCreditChanged');
-    expect(creditPolicy).toContain("'finance.approve'");
-    expect(creditPolicy).toContain('Finance approval permission is required to change a credit limit or hold');
-    expect(creditPolicy).toContain('sensitiveCreditChanged,');
-    expect(commercialApi).toContain('canApproveCredit: hasAdminPermission');
-    expect(commercialApi).toContain("'finance.approve'");
-    expect(commercial).toContain('Credit-limit, currency and hold changes require Finance approval authority.');
-    expect(commercial).toContain('disabled={!data?.creditPolicyPermissions.canApproveCredit}');
+    expect(schema).toContain('model FinanceCreditPolicyApproval');
+    expect(migration).toContain('CREATE TABLE "FinanceCreditPolicyApproval"');
+    expect(creditPolicy).toContain('financeCreditPolicyApproval.findFirst');
+    expect(creditPolicy).toContain('financeCreditPolicyApproval.create');
+    expect(creditPolicy).toContain('approvalRequired: true');
+    expect(creditPolicy).toContain('admin.client_credit_policy_approval_requested');
+    expect(decision).toContain("'finance.approve'");
+    expect(decision).toContain('Maker-checker prevents you from approving your own credit policy request');
+    expect(decision).toContain('financeCreditPolicyApproval.update');
+    expect(decision).toContain('admin.client_credit_policy_approval_approved');
+    expect(commercialApi).toContain('financeCreditPolicyApproval.findMany');
+    expect(commercialApi).toContain('currentAdminId: actor.id');
+    expect(commercial).toContain('Pending credit approvals');
+    expect(commercial).toContain('Approve & apply');
+    expect(commercial).toContain('independent maker–checker approval');
   });
 
 });
