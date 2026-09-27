@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
     where: status && ['pending', 'approved', 'rejected', 'cancelled'].includes(status)
       ? { status }
       : undefined,
+    include: {
+      attachments: { orderBy: { createdAt: 'desc' } },
+    },
     orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
     take: 1000,
   });
