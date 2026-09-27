@@ -17,7 +17,7 @@ const createSchema = z.object({
 
 const selectSchema = z.object({
   quoteId: z.string().trim().min(1),
-  notes: z.string().trim().max(4000).optional().default(''),
+  selectionReason: z.string().trim().max(4000).optional().default(''),
 });
 
 export async function POST(
@@ -81,6 +81,10 @@ export async function POST(
       vendorId: quote.vendorId,
       currency: quote.currency,
       total: quote.total.toFixed(2),
+      singleSourceAward,
+      higherPricedAward,
+      lowestValidTotal: lowestValidTotal.toFixed(2),
+      selectionReason: parsed.data.selectionReason,
     },
   });
 
@@ -121,8 +125,25 @@ export async function PATCH(
 
   const quote = requisition.supplierQuotes.find((item) => item.id === parsed.data.quoteId);
   if (!quote) return NextResponse.json({ success: false, error: 'Supplier quote does not belong to this requisition' }, { status: 404 });
-  if (quote.validUntil && quote.validUntil < new Date()) {
+  const now = new Date();
+  if (quote.validUntil && quote.validUntil < now) {
     return NextResponse.json({ success: false, error: 'Expired supplier quotes cannot be selected' }, { status: 409 });
+  }
+
+  const validQuotes = requisition.supplierQuotes.filter((item) => !item.validUntil || item.validUntil >= now);
+  const lowestValidTotal = validQuotes.reduce(
+    (lowest, item) => item.total.lt(lowest) ? item.total : lowest,
+    validQuotes[0]?.total || quote.total,
+  );
+  const singleSourceAward = validQuotes.length < 2;
+  const higherPricedAward = quote.total.gt(lowestValidTotal);
+  if ((singleSourceAward || higherPricedAward) && parsed.data.selectionReason.length < 8) {
+    return NextResponse.json({
+      success: false,
+      error: singleSourceAward
+        ? 'Single-source supplier awards require a written justification'
+        : 'Selecting a higher-priced supplier quote requires a written justification',
+    }, { status: 409 });
   }
 
   await db.$transaction([
@@ -142,7 +163,7 @@ export async function PATCH(
         selectedAt: new Date(),
         selectedById: actor.id,
         selectedByName: actor.name || actor.email,
-        notes: parsed.data.notes || quote.notes,
+        selectionReason: parsed.data.selectionReason,
       },
     }),
     db.financePurchaseRequest.update({
