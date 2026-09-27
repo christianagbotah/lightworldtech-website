@@ -10,7 +10,9 @@ import Image from 'next/image';
 const RING_RADIUS = 62;
 const RING_STROKE = 3.5;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-const MIN_DURATION = 2000; // ms – ensures the animation always plays fully
+const MIN_VISIBLE_MS = 700;
+const PRELOAD_CEILING = 96;
+const COMPLETE_DURATION_MS = 360;
 
 // 8 orbiting particle specs (angle offset, orbit radius, size, delay)
 const PARTICLES = [
@@ -29,14 +31,21 @@ const PARTICLES = [
 /* ------------------------------------------------------------------ */
 function usePreloaderState() {
   const initialized = useRef(false);
+  const progressRef = useRef(0);
   const [visible, setVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [exiting, setExiting] = useState(false);
 
+  const commitProgress = useCallback((value: number) => {
+    const next = Math.max(progressRef.current, Math.min(100, Math.round(value)));
+    if (next === progressRef.current) return;
+    progressRef.current = next;
+    setProgress(next);
+  }, []);
+
   const hide = useCallback(() => {
     setExiting(true);
-    // Wait for exit animation (~800 ms) then unmount
-    setTimeout(() => {
+    window.setTimeout(() => {
       setVisible(false);
       try { sessionStorage.setItem('lw-preloader-shown', 'true'); } catch {}
     }, 800);
@@ -46,7 +55,6 @@ function usePreloaderState() {
     if (initialized.current) return;
     initialized.current = true;
 
-    // If already shown this session, skip immediately
     const alreadyShown = sessionStorage.getItem('lw-preloader-shown');
     if (alreadyShown) {
       const id = requestAnimationFrame(() => setVisible(false));
@@ -54,34 +62,59 @@ function usePreloaderState() {
     }
 
     const startTime = performance.now();
-    let rafId: number;
+    let rafId = 0;
+    let pageReady = document.readyState === 'complete';
+    let completionStartedAt: number | null = null;
+    let completionStart = 0;
+    let exitTimer: number | null = null;
+
+    const markPageReady = () => {
+      pageReady = true;
+    };
+
+    if (!pageReady) {
+      window.addEventListener('load', markPageReady, { once: true });
+    }
 
     const tick = (now: number) => {
       const elapsed = now - startTime;
 
-      // Use a smooth easeOut curve so it feels natural
-      const linear = Math.min(elapsed / MIN_DURATION, 1);
-      const eased = 1 - Math.pow(1 - linear, 3); // easeOutCubic
-      const pct = Math.round(eased * 100);
+      // Keep making visible progress while browser resources are loading, but
+      // reserve the final few percent until the actual load event has fired.
+      if (!pageReady || elapsed < MIN_VISIBLE_MS) {
+        const simulated = PRELOAD_CEILING * (1 - Math.exp(-elapsed / 1800));
+        commitProgress(simulated);
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
 
-      setProgress(pct);
+      // Once the page is ready, finish smoothly from the currently displayed
+      // value rather than jumping or sitting at a fixed midpoint.
+      if (completionStartedAt === null) {
+        completionStartedAt = now;
+        completionStart = progressRef.current;
+      }
+
+      const linear = Math.min((now - completionStartedAt) / COMPLETE_DURATION_MS, 1);
+      const eased = 1 - Math.pow(1 - linear, 3);
+      commitProgress(completionStart + (100 - completionStart) * eased);
 
       if (linear < 1) {
         rafId = requestAnimationFrame(tick);
       } else {
-        // Wait for page load to also be ready before exiting
-        if (document.readyState === 'complete') {
-          // Small extra pause so the user sees 100 %
-          setTimeout(hide, 300);
-        } else {
-          window.addEventListener('load', () => setTimeout(hide, 300), { once: true });
-        }
+        commitProgress(100);
+        exitTimer = window.setTimeout(hide, 180);
       }
     };
 
     rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
-  }, [hide]);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (exitTimer !== null) window.clearTimeout(exitTimer);
+      window.removeEventListener('load', markPageReady);
+    };
+  }, [commitProgress, hide]);
 
   return { visible, progress, exiting };
 }
@@ -338,6 +371,24 @@ export default function Preloader() {
               {progress}
               <span className="text-lg text-slate-400 dark:text-slate-500">%</span>
             </motion.div>
+
+            {/* Visible linear progress — mirrors the ring and never sits at a fixed midpoint. */}
+            <div
+              className="mt-3 h-1 w-44 overflow-hidden rounded-full bg-slate-200/90 dark:bg-slate-700/70"
+              role="progressbar"
+              aria-label="Loading website"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress}
+            >
+              <div
+                className="h-full origin-left rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-amber-500 will-change-transform"
+                style={{
+                  transform: `scaleX(${progress / 100})`,
+                  transition: 'transform 120ms linear',
+                }}
+              />
+            </div>
 
             {/* Company name */}
             <motion.h2
