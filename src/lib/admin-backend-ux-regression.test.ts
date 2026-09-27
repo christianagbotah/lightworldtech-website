@@ -2526,4 +2526,34 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(procurement).toContain('This baseline is preserved after sourcing');
   });
 
+  test('governs customer credit limits and blocks over-limit invoice issuance', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927045500_customer_credit_control/migration.sql');
+    const creditPolicy = source('src/app/api/admin/clients/[id]/credit-policy/route.ts');
+    const invoices = source('src/app/api/admin/finance/invoices/route.ts');
+    const commercialApi = source('src/app/api/admin/clients/[id]/commercial/route.ts');
+    const commercial = source('src/components/admin/ClientCommercialAccount.tsx');
+
+    expect(schema).toContain('paymentTermsDays');
+    expect(schema).toContain('creditLimitCurrency');
+    expect(schema).toContain('creditLimit        Decimal');
+    expect(schema).toContain('creditHold         Boolean');
+    expect(schema).toContain('creditHoldReason');
+    expect(migration).toContain('ADD COLUMN "creditLimit" DECIMAL(18,2)');
+    expect(creditPolicy).toContain("'finance.manage'");
+    expect(creditPolicy).toContain("'admin.client_credit_policy_updated'");
+    expect(creditPolicy).toContain('A credit hold requires a reason');
+    expect(invoices).toContain("parsed.data.status === 'issued'");
+    expect(invoices).toContain("'lightworld-credit-control:' + organization.id + ':' + currency");
+    expect(invoices).toContain('invoiceBalance(row.total, row.allocations, row.creditNotes)');
+    expect(invoices).toContain('projected.gt(organization.creditLimit)');
+    expect(invoices).toContain("'admin.finance_invoice_credit_blocked'");
+    expect(commercialApi).toContain('creditLimit: organization.creditLimit.toFixed(2)');
+    expect(commercial).toContain('Credit control');
+    expect(commercial).toContain('Draft invoices remain available for review');
+    expect(commercial).toContain("'/api/admin/clients/' + encodeURIComponent(organizationId) + '/credit-policy'");
+    expect(commercial).toContain('Current {creditPolicy.creditLimitCurrency');
+    expect(commercial).toContain('Save credit policy');
+  });
+
 });
