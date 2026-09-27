@@ -546,7 +546,6 @@ model ClientProject {
   agreements     ClientAgreement[]
   purchaseRequests FinancePurchaseRequest[]
   purchaseOrders   FinancePurchaseOrder[]
-  supplierQuotes    FinanceSupplierQuote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1146,6 +1145,7 @@ model FinanceVendor {
   expenses  FinanceExpense[]
   purchaseRequests FinancePurchaseRequest[]
   purchaseOrders   FinancePurchaseOrder[]
+  supplierQuotes   FinanceSupplierQuote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
