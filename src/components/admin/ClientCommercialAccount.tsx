@@ -124,6 +124,11 @@ type CommercialData = {
     primaryContactName: string;
     primaryEmail: string;
     primaryPhone: string;
+    paymentTermsDays: number;
+    creditLimitCurrency: string;
+    creditLimit: string;
+    creditHold: boolean;
+    creditHoldReason: string;
   };
   customer360: {
     activeProjects: number;
@@ -406,6 +411,13 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
   const [pendingProjectReminderId, setPendingProjectReminderId] = useState('');
   const [reminderBusy, setReminderBusy] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [creditPolicy, setCreditPolicy] = useState({
+    paymentTermsDays: '30',
+    creditLimitCurrency: 'GHS',
+    creditLimit: '0',
+    creditHold: false,
+    creditHoldReason: '',
+  });
   const [paymentForm, setPaymentForm] = useState({
     currency: 'GHS',
     amount: '',
@@ -433,7 +445,15 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
         return;
       }
       if (!response.ok) throw new Error(payload?.error || 'Unable to load client account');
-      setData(payload.data as CommercialData);
+      const nextData = payload.data as CommercialData;
+      setData(nextData);
+      setCreditPolicy({
+        paymentTermsDays: String(nextData.organization.paymentTermsDays ?? 30),
+        creditLimitCurrency: nextData.organization.creditLimitCurrency || 'GHS',
+        creditLimit: nextData.organization.creditLimit || '0',
+        creditHold: Boolean(nextData.organization.creditHold),
+        creditHoldReason: nextData.organization.creditHoldReason || '',
+      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to load client account');
     } finally {
@@ -584,6 +604,36 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
       toast.error(error instanceof Error ? error.message : 'Unable to send customer reminder');
     } finally {
       setReminderBusy(false);
+    }
+  };
+
+  const saveCreditPolicy = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch(
+        '/api/admin/clients/' + encodeURIComponent(organizationId) + '/credit-policy',
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentTermsDays: Number(creditPolicy.paymentTermsDays || 0),
+            creditLimitCurrency: creditPolicy.creditLimitCurrency,
+            creditLimit: Number(creditPolicy.creditLimit || 0),
+            creditHold: creditPolicy.creditHold,
+            creditHoldReason: creditPolicy.creditHoldReason,
+          }),
+        },
+      );
+      const raw = await response.text();
+      let payload: any = null;
+      try { payload = raw ? JSON.parse(raw) : null; } catch {}
+      if (!response.ok) throw new Error(payload?.error || 'Unable to update customer credit policy');
+      toast.success('Customer credit policy updated');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update customer credit policy');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -798,6 +848,59 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   <span><span className="block text-xs font-semibold">Project renewal reminder</span><span className="block text-[10px] font-normal text-muted-foreground">{data?.customer360.nextProjectRenewal ? data.customer360.nextProjectRenewal.projectName : 'No project renewal due'}</span></span>
                 </Button>
               </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+              <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold">Credit control</p>
+                    {data?.organization.creditHold ? (
+                      <Badge className="border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">On credit hold</Badge>
+                    ) : (
+                      <Badge variant="outline">Credit active</Badge>
+                    )}
+                  </div>
+                  <p className="mt-1 max-w-3xl text-xs leading-5 text-muted-foreground">
+                    Set payment terms and a same-currency exposure ceiling. A limit of 0 disables the monetary limit. Draft invoices remain available for review, while issued invoices are blocked when the account is on hold or the projected outstanding balance would exceed the configured limit.
+                  </p>
+                </div>
+                <div className="text-right text-xs text-muted-foreground">
+                  <p>Current {creditPolicy.creditLimitCurrency || 'GHS'} outstanding</p>
+                  <p className="mt-1 text-base font-bold text-foreground">
+                    {money(data?.byCurrency?.[creditPolicy.creditLimitCurrency]?.outstanding || 0, creditPolicy.creditLimitCurrency || 'GHS')}
+                  </p>
+                  {Number(creditPolicy.creditLimit || 0) > 0 && (
+                    <p className="mt-1">
+                      Headroom {money(
+                        Math.max(0, Number(creditPolicy.creditLimit || 0) - Number(data?.byCurrency?.[creditPolicy.creditLimitCurrency]?.outstanding || 0)),
+                        creditPolicy.creditLimitCurrency || 'GHS',
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div><Label>Payment terms (days)</Label><Input type="number" min="0" max="365" value={creditPolicy.paymentTermsDays} onChange={(event) => setCreditPolicy((current) => ({ ...current, paymentTermsDays: event.target.value }))} /></div>
+                <div className="grid grid-cols-[1fr_92px] gap-2">
+                  <div><Label>Credit limit</Label><Input type="number" min="0" step="0.01" value={creditPolicy.creditLimit} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimit: event.target.value }))} /></div>
+                  <div><Label>Currency</Label><Input maxLength={3} value={creditPolicy.creditLimitCurrency} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimitCurrency: event.target.value.toUpperCase() }))} /></div>
+                </div>
+                <label className="flex min-h-10 items-center gap-2 self-end rounded-md border border-input bg-background px-3 text-sm">
+                  <input type="checkbox" checked={creditPolicy.creditHold} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHold: event.target.checked }))} />
+                  Place account on credit hold
+                </label>
+                <Button type="button" className="self-end" disabled={saving} onClick={() => void saveCreditPolicy()}>
+                  {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <WalletCards className="mr-2 size-4" />}
+                  Save credit policy
+                </Button>
+              </div>
+              {creditPolicy.creditHold && (
+                <div className="mt-3">
+                  <Label>Credit hold reason</Label>
+                  <Textarea rows={2} value={creditPolicy.creditHoldReason} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHoldReason: event.target.value }))} placeholder="Reason for stopping new issued credit…" />
+                </div>
+              )}
             </div>
 
             <div className="rounded-2xl border border-indigo-200/70 bg-gradient-to-br from-indigo-500/[0.07] via-background to-background dark:border-indigo-900/40">
