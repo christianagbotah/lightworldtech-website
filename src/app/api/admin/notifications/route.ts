@@ -483,6 +483,10 @@ export async function GET(request: NextRequest) {
       return outstanding.gte(account.creditLimit.mul(0.9));
     }).length;
 
+    const pendingCreditPolicyApprovals = await db.financeCreditPolicyApproval.count({
+      where: { status: 'pending' },
+    });
+
     const procurementApprovalCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
     const [agedProcurementApprovals, overdueProcurementOrders, receivedOrdersAwaitingBill] = await Promise.all([
       db.financePurchaseRequest.count({
@@ -530,6 +534,17 @@ export async function GET(request: NextRequest) {
       const days = Math.ceil((project.nextRenewalDate.getTime() - now.getTime()) / 86400000);
       return days <= project.renewalNoticeDays;
     }).length;
+
+    if (pendingCreditPolicyApprovals > 0) {
+      notices.push({
+        id: 'finance-credit-policy-approvals',
+        severity: 'warning',
+        title: 'Customer credit changes awaiting approval',
+        message: pendingCreditPolicyApprovals + ' sensitive customer credit policy request' + (pendingCreditPolicyApprovals === 1 ? ' is' : 's are') + ' waiting for independent finance review.',
+        count: pendingCreditPolicyApprovals,
+        action: 'admin-clients',
+      });
+    }
 
     if (creditHoldCount > 0) {
       notices.push({

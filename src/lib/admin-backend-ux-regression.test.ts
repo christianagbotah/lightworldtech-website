@@ -2597,6 +2597,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain("id: 'finance-customer-credit-holds'");
     expect(notifications).toContain("id: 'finance-customer-credit-critical'");
     expect(notifications).toContain("action: 'admin-clients'");
+    expect(notifications).toContain('financeCreditPolicyApproval.count');
+    expect(notifications).toContain("'finance-credit-policy-approvals'");
+    expect(notifications).toContain('Customer credit changes awaiting approval');
   });
 
   test('uses maker-checker approval for sensitive customer credit policy changes', () => {
