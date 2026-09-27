@@ -2569,4 +2569,21 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('Draft invoices remain available for review.');
   });
 
+  test('surfaces cross-client credit exposure in the executive portfolio', () => {
+    const portfolioApi = source('src/app/api/admin/clients/portfolio-intelligence/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(portfolioApi).toContain('creditLimitCurrency: true');
+    expect(portfolioApi).toContain('const outstandingByCurrency = new Map<string, Prisma.Decimal>()');
+    expect(portfolioApi).toContain('creditUtilizationPercent');
+    expect(portfolioApi).toContain('creditHolds: rows.reduce');
+    expect(portfolioApi).toContain("id: row.id + ':credit'");
+    expect(portfolioApi).toContain('Resolve customer credit hold');
+    expect(portfolioApi).toContain('Reduce critical credit exposure');
+    expect(clients).toContain("{ label: 'Credit holds'");
+    expect(clients).toContain("{ label: 'Credit ≥75%'");
+    expect(clients).toContain("'Credit utilization %'");
+    expect(clients).toContain("row.creditPolicy.utilizationPercent + '% credit used'");
+  });
+
 });
