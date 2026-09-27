@@ -2084,9 +2084,27 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(preloader).toContain('Continuous rotating border accents');
     expect(preloader).toContain("duration: 1.8, repeat: Infinity, ease: 'linear'");
     expect(preloader).toContain("duration: 2.7, repeat: Infinity, ease: 'linear'");
+    expect(preloader).toContain('const PRELOAD_CEILING = 96');
+    expect(preloader).toContain("document.readyState === 'complete'");
+    expect(preloader).toContain('commitProgress(completionStart + (100 - completionStart) * eased)');
+    expect(preloader).toContain('aria-label="Loading website"');
+    expect(preloader).toContain('scaleX(${progress / 100})');
     expect(dashboard).toContain("WELCOME BACK, {(adminName || 'Admin').toUpperCase()}");
     expect(notifications).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0)');
     expect(notifications).toContain('past the due date with an outstanding balance');
+  });
+
+  test('gives every shared public page hero restrained enterprise motion graphics', () => {
+    const pageHero = source('src/components/ui/page-hero.tsx');
+
+    expect(pageHero).toContain('useReducedMotion');
+    expect(pageHero).toContain('EnterpriseMotionGraphic');
+    expect(pageHero).toContain('Travelling light beam');
+    expect(pageHero).toContain('Enterprise network / circuit visual');
+    expect(pageHero).toContain('strokeDashoffset: [0, -36]');
+    expect(pageHero).toContain("duration: 34, repeat: Infinity, ease: 'linear'");
+    expect(pageHero).toContain('motion-reduce:animate-none');
+    expect(pageHero).toContain('aria-hidden="true"');
   });
 
   test('surfaces automated renewal drafts for mandatory human finance review', () => {
