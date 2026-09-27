@@ -2086,7 +2086,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(preloader).toContain("duration: 2.7, repeat: Infinity, ease: 'linear'");
     expect(preloader).toContain('const PRELOAD_CEILING = 96');
     expect(preloader).toContain("document.readyState === 'complete'");
-    expect(preloader).toContain('commitProgress(completionStart + (100 - completionStart) * eased)');
+    expect(preloader).toContain('commit(completionStart + (100 - completionStart) * eased)');
     expect(preloader).toContain('aria-label="Loading website"');
     expect(preloader).toContain('scaleX(${progress / 100})');
     expect(dashboard).toContain("WELCOME BACK, {(adminName || 'Admin').toUpperCase()}");
@@ -2104,7 +2104,12 @@ describe('admin backend and responsive UX regression coverage', () => {
 
     expect(shell).toContain("import Preloader from '@/components/ui/preloader'");
     expect(shell).toContain('<Preloader />');
-    expect(preloader).toContain('let hasShownInDocument = false');
+    expect(preloader).toContain('const pathname = usePathname()');
+    expect(preloader).toContain("document.addEventListener('click', onClick, true)");
+    expect(preloader).toContain("window.addEventListener('popstate', onPopState)");
+    expect(preloader).toContain('startCycle(false, ROUTE_MIN_VISIBLE_MS)');
+    expect(preloader).toContain('markReady()');
+    expect(preloader).not.toContain('hasShownInDocument');
     expect(preloader).not.toContain("sessionStorage.getItem('lw-preloader-shown')");
     expect(preloader).toContain('{progress}');
     expect(preloader).toContain('scaleX(${progress / 100})');

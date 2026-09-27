@@ -83,6 +83,10 @@ describe('public experience quality', () => {
     expect(shell).toContain('<Preloader />');
     expect(preloader).toContain('aria-label="Loading website"');
     expect(preloader).toContain('{progress}');
+    expect(preloader).toContain('usePathname');
+    expect(preloader).toContain('ROUTE_MIN_VISIBLE_MS');
+    expect(preloader).toContain("target.closest<HTMLAnchorElement>('a[href]')");
+    expect(preloader).toContain("nextUrl.pathname === currentUrl.pathname");
     expect(layout).toContain('<Suspense fallback={null}>');
     expect(layout).toContain('<SeoStructuredData />');
     expect(layout).not.toContain('export default async function RootLayout');
