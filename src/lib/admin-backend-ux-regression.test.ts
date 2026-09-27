@@ -2532,6 +2532,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('payableAgingBucket');
     expect(finance).toContain('supplierAgingFilter');
     expect(finance).toContain('supplierBillsByAging');
+    expect(finance).toContain('supplierAgingByCurrency');
+    expect(finance).toContain('Supplier payables aging');
+    expect(finance).toContain('Amounts are never converted or combined across currencies.');
+    expect(finance).toContain('lightworld-supplier-payables-aging');
     expect(finance).toContain('Filter supplier bills by aging band');
     expect(finance).toContain('Current / not due');
     expect(finance).toContain('1–30 days overdue');
