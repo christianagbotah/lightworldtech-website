@@ -2511,4 +2511,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(procurement).not.toContain('<Label>Supplier</Label><select required');
   });
 
+  test('preserves procurement planning estimates and shows award variance', () => {
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+    const quoteSelection = source('src/app/api/admin/finance/procurement/[id]/quotes/route.ts');
+
+    expect(quoteSelection).toContain('requisitionEstimate: requisition.estimatedAmount.toFixed(2)');
+    expect(quoteSelection).toContain('awardVariance: quote.total.minus(requisition.estimatedAmount).toFixed(2)');
+    expect(quoteSelection).not.toContain('estimatedAmount: quote.total');
+    expect(procurement).toContain('Estimate / award');
+    expect(procurement).toContain('Planning baseline');
+    expect(procurement).toContain('Saving ');
+    expect(procurement).toContain('Over estimate ');
+    expect(procurement).toContain('This baseline is preserved after sourcing');
+  });
+
 });
