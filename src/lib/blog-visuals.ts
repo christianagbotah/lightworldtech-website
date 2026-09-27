@@ -1,5 +1,5 @@
 const visualsBySlug: Record<string, string> = {
-  'production-ready-business-software-checklist': '/images/portfolio/erp-system.png',
+  'production-ready-business-software-checklist': '/images/hero-slide-5.png',
   'mobile-first-digital-products-africa': '/images/hero-slide-4.png',
   'when-to-build-custom-business-software': '/images/services-showcase.png',
   'practical-ai-automation-business': '/images/hero-slide-2.png',
@@ -8,8 +8,8 @@ const visualsBySlug: Record<string, string> = {
 const categoryVisuals: Record<string, string> = {
   technology: '/images/hero-slide-2.png',
   'web-development': '/images/hero-slide-2.png',
-  business: '/images/portfolio/erp-system.png',
-  design: '/images/process-workflow.png',
+  business: '/images/hero-slide-5.png',
+  design: '/images/hero-slide-3.png',
   'mobile-apps': '/images/hero-slide-4.png',
 };
 
