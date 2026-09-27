@@ -255,6 +255,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       navigate('admin-finance');
       return;
     }
+    if (action === 'admin-finance-procurement') {
+      sessionStorage.setItem('lw-finance-section', 'procurement');
+      navigate('admin-finance');
+      return;
+    }
     if (action === 'admin-finance-suppliers') {
       sessionStorage.setItem('lw-finance-section', 'suppliers');
       navigate('admin-finance');
