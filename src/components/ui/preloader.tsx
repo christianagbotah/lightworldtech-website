@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -10,13 +11,11 @@ import Image from 'next/image';
 const RING_RADIUS = 62;
 const RING_STROKE = 3.5;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-const MIN_VISIBLE_MS = 700;
+const INITIAL_MIN_VISIBLE_MS = 700;
+const ROUTE_MIN_VISIBLE_MS = 420;
 const PRELOAD_CEILING = 96;
-const COMPLETE_DURATION_MS = 460;
-
-// Module lifetime matches the current browser document. This lets a hard refresh
-// show the branded loader again without replaying it on every client-side route change.
-let hasShownInDocument = false;
+const COMPLETE_DURATION_MS = 360;
+const NAVIGATION_WATCHDOG_MS = 10_000;
 
 // 8 orbiting particle specs (angle offset, orbit radius, size, delay)
 const PARTICLES = [
@@ -34,65 +33,67 @@ const PARTICLES = [
 /*  Custom hook – progress state + auto-hide                           */
 /* ------------------------------------------------------------------ */
 function usePreloaderState() {
-  const initialized = useRef(false);
+  const pathname = usePathname();
   const progressRef = useRef(0);
+  const cycleIdRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const finishTimerRef = useRef<number | null>(null);
+  const hideTimerRef = useRef<number | null>(null);
+  const watchdogRef = useRef<number | null>(null);
+  const readyRef = useRef(false);
+  const previousPathRef = useRef<string | null>(null);
+  const navigationStartedRef = useRef(false);
   const [visible, setVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [exiting, setExiting] = useState(false);
 
-  const commitProgress = useCallback((value: number) => {
-    const next = Math.max(progressRef.current, Math.min(100, Math.round(value)));
-    if (next === progressRef.current) return;
-    progressRef.current = next;
-    setProgress(next);
+  const clearCycleTimers = useCallback(() => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    if (finishTimerRef.current !== null) window.clearTimeout(finishTimerRef.current);
+    if (hideTimerRef.current !== null) window.clearTimeout(hideTimerRef.current);
+    if (watchdogRef.current !== null) window.clearTimeout(watchdogRef.current);
+    rafRef.current = null;
+    finishTimerRef.current = null;
+    hideTimerRef.current = null;
+    watchdogRef.current = null;
   }, []);
 
-  const hide = useCallback(() => {
-    setExiting(true);
-    window.setTimeout(() => {
-      setVisible(false);
-    }, 800);
+  const markReady = useCallback(() => {
+    readyRef.current = true;
   }, []);
 
-  useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+  const startCycle = useCallback((readyInitially: boolean, minimumVisibleMs: number) => {
+    clearCycleTimers();
+    const cycleId = ++cycleIdRef.current;
+    const startedAt = performance.now();
+    readyRef.current = readyInitially;
+    progressRef.current = 0;
+    setProgress(0);
+    setExiting(false);
+    setVisible(true);
 
-    if (hasShownInDocument) {
-      const id = requestAnimationFrame(() => setVisible(false));
-      return () => cancelAnimationFrame(id);
-    }
-    hasShownInDocument = true;
-
-    const startTime = performance.now();
-    let rafId = 0;
-    let pageReady = document.readyState === 'complete';
-    let completionStartedAt: number | null = null;
-    let completionStart = 0;
-    let exitTimer: number | null = null;
-
-    const markPageReady = () => {
-      pageReady = true;
+    const commit = (value: number) => {
+      if (cycleId !== cycleIdRef.current) return;
+      const next = Math.max(progressRef.current, Math.min(100, Math.round(value)));
+      if (next === progressRef.current) return;
+      progressRef.current = next;
+      setProgress(next);
     };
 
-    if (!pageReady) {
-      window.addEventListener('load', markPageReady, { once: true });
-    }
+    let completionStartedAt: number | null = null;
+    let completionStart = 0;
 
     const tick = (now: number) => {
-      const elapsed = now - startTime;
+      if (cycleId !== cycleIdRef.current) return;
+      const elapsed = now - startedAt;
 
-      // Keep making visible progress while browser resources are loading, but
-      // reserve the final few percent until the actual load event has fired.
-      if (!pageReady || elapsed < MIN_VISIBLE_MS) {
-        const simulated = PRELOAD_CEILING * (1 - Math.exp(-elapsed / 1800));
-        commitProgress(simulated);
-        rafId = requestAnimationFrame(tick);
+      if (!readyRef.current || elapsed < minimumVisibleMs) {
+        const simulated = PRELOAD_CEILING * (1 - Math.exp(-elapsed / 1250));
+        commit(simulated);
+        rafRef.current = requestAnimationFrame(tick);
         return;
       }
 
-      // Once the page is ready, finish smoothly from the currently displayed
-      // value rather than jumping or sitting at a fixed midpoint.
       if (completionStartedAt === null) {
         completionStartedAt = now;
         completionStart = progressRef.current;
@@ -100,24 +101,113 @@ function usePreloaderState() {
 
       const linear = Math.min((now - completionStartedAt) / COMPLETE_DURATION_MS, 1);
       const eased = 1 - Math.pow(1 - linear, 3);
-      commitProgress(completionStart + (100 - completionStart) * eased);
+      commit(completionStart + (100 - completionStart) * eased);
 
       if (linear < 1) {
-        rafId = requestAnimationFrame(tick);
-      } else {
-        commitProgress(100);
-        exitTimer = window.setTimeout(hide, 180);
+        rafRef.current = requestAnimationFrame(tick);
+        return;
       }
+
+      commit(100);
+      finishTimerRef.current = window.setTimeout(() => {
+        if (cycleId !== cycleIdRef.current) return;
+        setExiting(true);
+        hideTimerRef.current = window.setTimeout(() => {
+          if (cycleId === cycleIdRef.current) setVisible(false);
+        }, 800);
+      }, 120);
     };
 
-    rafId = requestAnimationFrame(tick);
+    rafRef.current = requestAnimationFrame(tick);
+
+    // If a client navigation is cancelled or intercepted, never leave the
+    // full-screen preloader stranded. The watchdog simply lets it complete.
+    watchdogRef.current = window.setTimeout(() => {
+      if (cycleId === cycleIdRef.current) readyRef.current = true;
+    }, NAVIGATION_WATCHDOG_MS);
+  }, [clearCycleTimers]);
+
+  // Initial document load and every completed Next.js pathname transition.
+  useEffect(() => {
+    let scheduledRaf: number | null = null;
+    const onLoad = () => markReady();
+
+    if (previousPathRef.current === null) {
+      previousPathRef.current = pathname;
+      scheduledRaf = requestAnimationFrame(() => {
+        const pageReady = document.readyState === 'complete';
+        startCycle(pageReady, INITIAL_MIN_VISIBLE_MS);
+        if (!pageReady) window.addEventListener('load', onLoad, { once: true });
+      });
+      return () => {
+        if (scheduledRaf !== null) cancelAnimationFrame(scheduledRaf);
+        window.removeEventListener('load', onLoad);
+      };
+    }
+
+    if (previousPathRef.current !== pathname) {
+      previousPathRef.current = pathname;
+      if (navigationStartedRef.current) {
+        navigationStartedRef.current = false;
+        markReady();
+      } else {
+        // Covers programmatic router.push/replace calls that did not originate
+        // from a normal anchor click. Defer the visual replay one frame so the
+        // newly committed route can paint before the loader cycle starts.
+        scheduledRaf = requestAnimationFrame(() => startCycle(true, ROUTE_MIN_VISIBLE_MS));
+      }
+    }
 
     return () => {
-      cancelAnimationFrame(rafId);
-      if (exitTimer !== null) window.clearTimeout(exitTimer);
-      window.removeEventListener('load', markPageReady);
+      if (scheduledRaf !== null) cancelAnimationFrame(scheduledRaf);
+      window.removeEventListener('load', onLoad);
     };
-  }, [commitProgress, hide]);
+  }, [markReady, pathname, startCycle]);
+
+  // Start the same single branded loader as soon as an internal page link is
+  // activated. Hash-only jumps, downloads, modified clicks and external links
+  // are intentionally ignored.
+  useEffect(() => {
+    const beginNavigation = () => {
+      navigationStartedRef.current = true;
+      startCycle(false, ROUTE_MIN_VISIBLE_MS);
+    };
+
+    const onClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest<HTMLAnchorElement>('a[href]');
+      if (!anchor || anchor.hasAttribute('download')) return;
+      if (anchor.target && anchor.target !== '_self') return;
+
+      const rawHref = anchor.getAttribute('href');
+      if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('mailto:') || rawHref.startsWith('tel:') || rawHref.startsWith('javascript:')) return;
+
+      let nextUrl: URL;
+      try {
+        nextUrl = new URL(anchor.href, window.location.href);
+      } catch {
+        return;
+      }
+
+      if (nextUrl.origin !== window.location.origin) return;
+      const currentUrl = new URL(window.location.href);
+      if (nextUrl.pathname === currentUrl.pathname && nextUrl.search === currentUrl.search) return;
+
+      beginNavigation();
+    };
+
+    const onPopState = () => beginNavigation();
+
+    document.addEventListener('click', onClick, true);
+    window.addEventListener('popstate', onPopState);
+    return () => {
+      document.removeEventListener('click', onClick, true);
+      window.removeEventListener('popstate', onPopState);
+      clearCycleTimers();
+    };
+  }, [clearCycleTimers, startCycle]);
 
   return { visible, progress, exiting };
 }
