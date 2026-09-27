@@ -599,6 +599,30 @@ export default function AdminFinance() {
     [data?.bills, supplierAgingFilter],
   );
 
+  const supplierAgingByCurrency = useMemo(() => {
+    const buckets = new Map<string, {
+      current: number; currentCount: number;
+      '1_30': number; '1_30Count': number;
+      '31_60': number; '31_60Count': number;
+      '61_90': number; '61_90Count': number;
+      '90_plus': number; '90_plusCount': number;
+    }>();
+    for (const bill of data?.bills || []) {
+      const bucket = payableAgingBucket(bill.dueDate, bill.balance);
+      if (bucket === 'paid') continue;
+      const currency = bill.currency.trim().toUpperCase() || 'UNSPECIFIED';
+      const row = buckets.get(currency) || {
+        current: 0, currentCount: 0, '1_30': 0, '1_30Count': 0,
+        '31_60': 0, '31_60Count': 0, '61_90': 0, '61_90Count': 0,
+        '90_plus': 0, '90_plusCount': 0,
+      };
+      row[bucket] += Number(bill.balance || 0);
+      row[(bucket + 'Count') as 'currentCount' | '1_30Count' | '31_60Count' | '61_90Count' | '90_plusCount'] += 1;
+      buckets.set(currency, row);
+    }
+    return [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [data?.bills]);
+
   const scopedCustomerServices = useMemo(
     () => (data?.services || []).filter((item) =>
       (!deepLinkOrganizationId || item.organizationId === deepLinkOrganizationId) &&
@@ -1439,6 +1463,58 @@ export default function AdminFinance() {
                       </TableRow>
                     ))}
                     {!data.vendors.length && <TableRow><TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No active suppliers are available.</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="min-w-0 border-border/60">
+            <CardHeader>
+              <CardTitle className="text-base">Supplier payables aging</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">Open creditor balances are shown by currency and due-age band. Amounts are never converted or combined across currencies.</p>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-w-full overflow-x-auto">
+                <Table exportFileName="lightworld-supplier-payables-aging">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Currency</TableHead>
+                      <TableHead className="text-right">Current</TableHead>
+                      <TableHead className="text-right">1–30 days</TableHead>
+                      <TableHead className="text-right">31–60 days</TableHead>
+                      <TableHead className="text-right">61–90 days</TableHead>
+                      <TableHead className="text-right">90+ days</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {supplierAgingByCurrency.map(([currency, row]) => (
+                      <TableRow key={currency}>
+                        <TableCell className="font-semibold">{currency}</TableCell>
+                        {([
+                          ['current', row.current, row.currentCount],
+                          ['1_30', row['1_30'], row['1_30Count']],
+                          ['31_60', row['31_60'], row['31_60Count']],
+                          ['61_90', row['61_90'], row['61_90Count']],
+                          ['90_plus', row['90_plus'], row['90_plusCount']],
+                        ] as const).map(([bucket, amount, count]) => (
+                          <TableCell key={bucket} className="text-right">
+                            <button
+                              type="button"
+                              className="rounded-md px-2 py-1 text-right transition hover:bg-muted"
+                              onClick={() => setSupplierAgingFilter(bucket)}
+                              title={'Filter ' + count + ' open bill' + (count === 1 ? '' : 's') + ' in this aging band'}
+                            >
+                              <span className="block font-semibold">{money(amount, currency)}</span>
+                              <span className="block text-[10px] text-muted-foreground">{count} bill{count === 1 ? '' : 's'}</span>
+                            </button>
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                    {!supplierAgingByCurrency.length && (
+                      <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No open supplier payables to age.</TableCell></TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
