@@ -89,7 +89,10 @@ export async function GET(request: NextRequest) {
         purchaseOrder: { select: { id: true, poNumber: true, status: true, total: true } },
         supplierQuotes: {
           orderBy: [{ selected: 'desc' }, { createdAt: 'desc' }],
-          include: { vendor: { select: { id: true, name: true } } },
+          include: {
+            vendor: { select: { id: true, name: true } },
+            attachments: { orderBy: { createdAt: 'desc' } },
+          },
         },
       },
     }),

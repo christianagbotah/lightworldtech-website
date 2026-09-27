@@ -15,11 +15,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 type Vendor = { id: string; name: string; email: string; phone: string };
 type Project = { id: string; name: string; organization: { id: string; name: string } };
 type RequestLine = { id: string; description: string; quantity: string; unitPrice: string; amount: string };
+type SupplierQuoteAttachment = {
+  id: string; originalName: string; mimeType: string; sizeBytes: number; uploadedByName: string; createdAt: string;
+};
 type SupplierQuote = {
   id: string; vendorId: string; quoteReference: string; currency: string; total: string;
   leadTimeDays: number | null; validUntil: string | null; notes: string; selected: boolean;
   selectedAt: string | null; selectedByName: string; selectionReason: string; createdByName: string;
-  vendor: { id: string; name: string };
+  vendor: { id: string; name: string }; attachments: SupplierQuoteAttachment[];
 };
 type PurchaseRequest = {
   id: string;
@@ -147,6 +150,7 @@ export default function FinanceProcurementWorkspace({
     vendorId: string; quoteReference: string; total: string; leadTimeDays: string; validUntil: string; notes: string;
   }>>({});
   const [quoteSelectionReasons, setQuoteSelectionReasons] = useState<Record<string, string>>({});
+  const [quoteEvidenceFiles, setQuoteEvidenceFiles] = useState<Record<string, File | null>>({});
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, Record<string, string>>>({});
   const [receiptNotes, setReceiptNotes] = useState<Record<string, string>>({});
   const [receivingOrderId, setReceivingOrderId] = useState('');
@@ -266,6 +270,32 @@ export default function FinanceProcurementWorkspace({
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to select supplier quote');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const uploadQuoteEvidence = async (quoteId: string) => {
+    const file = quoteEvidenceFiles[quoteId];
+    if (!file) {
+      toast.error('Choose a supplier quotation PDF');
+      return;
+    }
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/admin/finance/procurement/quotes/' + quoteId + '/attachment', {
+        method: 'POST',
+        body: formData,
+      });
+      const payload = await readJson(response);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to upload supplier quotation evidence');
+      setQuoteEvidenceFiles((current) => ({ ...current, [quoteId]: null }));
+      toast.success('Supplier quotation PDF attached');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to upload supplier quotation evidence');
     } finally {
       setSaving(false);
     }
@@ -540,6 +570,31 @@ export default function FinanceProcurementWorkspace({
                                     </div>
                                     {quote.notes && <p className="mt-1 text-[10px] text-muted-foreground">{quote.notes}</p>}
                                     {quote.selected && quote.selectionReason && <p className="mt-1 text-[10px] font-medium text-emerald-800 dark:text-emerald-200">Award rationale: {quote.selectionReason}</p>}
+                                    <div className="mt-2 space-y-2 rounded-lg bg-muted/30 p-2">
+                                      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Quotation evidence</p>
+                                      {quote.attachments.map((attachment) => (
+                                        <button
+                                          key={attachment.id}
+                                          type="button"
+                                          className="block text-left text-[10px] font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-300"
+                                          onClick={() => window.open('/api/admin/finance/procurement/quote-attachments/' + attachment.id, '_blank', 'noopener,noreferrer')}
+                                        >
+                                          {attachment.originalName} · {(attachment.sizeBytes / 1024).toFixed(0)} KB
+                                        </button>
+                                      ))}
+                                      {!quote.attachments.length && <p className="text-[10px] text-muted-foreground">No quotation PDF attached yet.</p>}
+                                      <div className="flex flex-col gap-2 sm:flex-row">
+                                        <Input
+                                          type="file"
+                                          accept="application/pdf,.pdf"
+                                          className="h-9 text-xs"
+                                          onChange={(e) => setQuoteEvidenceFiles((current) => ({ ...current, [quote.id]: e.target.files?.[0] || null }))}
+                                        />
+                                        <Button type="button" size="sm" variant="outline" disabled={saving || !quoteEvidenceFiles[quote.id]} onClick={() => void uploadQuoteEvidence(quote.id)}>
+                                          Attach PDF
+                                        </Button>
+                                      </div>
+                                    </div>
                                     {!quote.selected && item.status === 'approved' && data.canApprove && item.requestedByAdminId !== data.currentAdminId && (
                                       <Input
                                         className="mt-2 h-8 text-xs"
@@ -556,8 +611,9 @@ export default function FinanceProcurementWorkspace({
                           )}
                         </div>
                       )}
-                      {item.status === 'approved' && <Button size="sm" disabled={saving || !item.vendorId || (item.supplierQuotes.length > 0 && !item.supplierQuotes.some((quote) => quote.selected))} onClick={() => void action(item.id, 'convert')}>Issue purchase order</Button>}
+                      {item.status === 'approved' && <Button size="sm" disabled={saving || !item.vendorId || (item.supplierQuotes.length > 0 && !item.supplierQuotes.some((quote) => quote.selected && quote.attachments.length > 0))} onClick={() => void action(item.id, 'convert')}>Issue purchase order</Button>}
                       {item.status === 'approved' && item.supplierQuotes.length > 0 && !item.supplierQuotes.some((quote) => quote.selected) && <p className="text-xs text-muted-foreground">Select the winning supplier quote before PO issue.</p>}
+                      {item.status === 'approved' && item.supplierQuotes.some((quote) => quote.selected && quote.attachments.length === 0) && <p className="text-xs text-muted-foreground">Attach the selected supplier quotation PDF before PO issue.</p>}
                       {item.purchaseOrder && <p className="text-xs text-muted-foreground">PO: {item.purchaseOrder.poNumber} · {pretty(item.purchaseOrder.status)}</p>}
                       {item.decidedAt && <p className="text-xs text-muted-foreground">Decision: {item.decidedByName || 'Finance'} · {new Date(item.decidedAt).toLocaleString()}{item.decisionNotes ? ' · ' + item.decisionNotes : ''}</p>}
                     </div>

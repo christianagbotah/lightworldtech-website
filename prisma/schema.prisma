@@ -1321,6 +1321,7 @@ model FinanceSupplierQuote {
   selectedById   String                 @default("")
   selectedByName String                 @default("")
   selectionReason String                @default("")
+  attachments    FinanceSupplierQuoteAttachment[]
   createdById    String
   createdByName  String                 @default("")
 
@@ -1330,6 +1331,22 @@ model FinanceSupplierQuote {
   @@index([requestId, selected])
   @@index([vendorId, createdAt])
   @@index([validUntil])
+}
+
+model FinanceSupplierQuoteAttachment {
+  id           String               @id @default(cuid())
+  quoteId      String
+  quote        FinanceSupplierQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  originalName String
+  storageName  String               @unique
+  mimeType     String
+  sizeBytes    Int
+  uploadedById String               @default("")
+  uploadedByName String             @default("")
+
+  createdAt DateTime @default(now())
+
+  @@index([quoteId, createdAt])
 }
 
 model FinancePurchaseOrder {
