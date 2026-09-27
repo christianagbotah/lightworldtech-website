@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   const [pendingApprovals, reservedRunLines] = await Promise.all([
     db.financeOutflowApproval.findMany({
-      where: { outflowType: 'vendor_payment', status: 'pending', currency },
+      where: { outflowType: 'vendor_payment', status: { in: ['pending', 'scheduled'] }, currency },
       select: { allocationsJson: true },
     }),
     db.financeTreasuryPaymentRunLine.findMany({

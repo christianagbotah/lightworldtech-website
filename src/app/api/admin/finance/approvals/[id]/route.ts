@@ -6,11 +6,12 @@ import { hasAdminPermission } from '@/lib/admin-permissions';
 import {
   canApproveFinanceOutflow,
   executeOutflowApproval,
+  isFutureFinanceDate,
   serializeOutflowApproval,
 } from '@/lib/finance-approvals';
 
 const schema = z.object({
-  action: z.enum(['approve', 'reject', 'cancel']),
+  action: z.enum(['approve', 'reject', 'cancel', 'execute']),
   notes: z.string().trim().max(4000).default(''),
 });
 
@@ -33,8 +34,41 @@ export async function PATCH(
   if (!approval) {
     return NextResponse.json({ success: false, error: 'Approval request not found' }, { status: 404 });
   }
-  if (approval.status !== 'pending') {
+  const isScheduledExecution = parsed.data.action === 'execute' && approval.status === 'scheduled';
+  if (approval.status !== 'pending' && !isScheduledExecution) {
     return NextResponse.json({ success: false, error: 'Approval request has already been decided' }, { status: 409 });
+  }
+
+  if (parsed.data.action === 'execute') {
+    if (!canApproveFinanceOutflow(actor)) {
+      return NextResponse.json({ success: false, error: 'Finance approval permission is required' }, { status: 403 });
+    }
+    if (approval.requestedByAdminId === actor.id) {
+      return NextResponse.json({ success: false, error: 'Maker-checker prevents the requester from executing their own scheduled outflow' }, { status: 409 });
+    }
+    if (isFutureFinanceDate(approval.effectiveDate)) {
+      return NextResponse.json({ success: false, error: 'Scheduled outflow cannot execute before its effective date' }, { status: 409 });
+    }
+    try {
+      const result = await executeOutflowApproval(id, actor, parsed.data.notes, { allowScheduled: true });
+      await recordAdminAudit({
+        admin: actor,
+        action: 'admin.finance_scheduled_outflow_executed',
+        entity: 'FinanceOutflowApproval',
+        entityId: id,
+        details: {
+          requestNumber: approval.requestNumber,
+          outflowType: approval.outflowType,
+          amount: approval.amount.toFixed(2),
+          currency: approval.currency,
+          resultId: result.resultId,
+          resultNumber: result.resultNumber,
+        },
+      });
+      return NextResponse.json({ success: true, scheduledExecution: true, data: result });
+    } catch (error) {
+      return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Unable to execute scheduled outflow' }, { status: 409 });
+    }
   }
 
   if (parsed.data.action === 'cancel') {
@@ -140,6 +174,40 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, data: serializeOutflowApproval(updated) });
+  }
+
+  if (parsed.data.action === 'approve' && isFutureFinanceDate(approval.effectiveDate)) {
+    if (approval.outflowType === 'vendor_payment' && approval.method !== 'cash') {
+      const proofCount = await db.financeOutflowApprovalAttachment.count({ where: { approvalId: approval.id } });
+      if (!proofCount) {
+        return NextResponse.json({ success: false, error: 'Payment proof is required before a non-cash supplier payment can be scheduled' }, { status: 409 });
+      }
+    }
+    const updated = await db.financeOutflowApproval.update({
+      where: { id },
+      data: {
+        status: 'scheduled',
+        decidedByAdminId: actor.id,
+        decidedByName: actor.name || 'Admin',
+        decidedByEmail: actor.email,
+        decidedAt: new Date(),
+        decisionNotes: parsed.data.notes || 'Approved for scheduled execution',
+      },
+    });
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_outflow_scheduled',
+      entity: 'FinanceOutflowApproval',
+      entityId: id,
+      details: {
+        requestNumber: approval.requestNumber,
+        outflowType: approval.outflowType,
+        amount: approval.amount.toFixed(2),
+        currency: approval.currency,
+        effectiveDate: approval.effectiveDate.toISOString(),
+      },
+    });
+    return NextResponse.json({ success: true, scheduled: true, data: serializeOutflowApproval(updated) });
   }
 
   try {
