@@ -2500,4 +2500,15 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(queueApi).toContain('pendingReview');
     expect(queueApi).toContain('completionSubmittedByAdminId');
   });
+  test('keeps purchase requisitions supplier-neutral until sourcing', () => {
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+    const procurementApi = source('src/app/api/admin/finance/procurement/route.ts');
+
+    expect(procurementApi).toContain('vendorId: z.string().trim().nullable().optional()');
+    expect(procurement).toContain('Preferred supplier (optional)');
+    expect(procurement).toContain('Source after approval');
+    expect(procurement).toContain('the awarded supplier is determined through the quotation workflow');
+    expect(procurement).not.toContain('<Label>Supplier</Label><select required');
+  });
+
 });
