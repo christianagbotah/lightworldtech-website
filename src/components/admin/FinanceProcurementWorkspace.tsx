@@ -611,8 +611,9 @@ export default function FinanceProcurementWorkspace({
                           )}
                         </div>
                       )}
-                      {item.status === 'approved' && <Button size="sm" disabled={saving || !item.vendorId || (item.supplierQuotes.length > 0 && !item.supplierQuotes.some((quote) => quote.selected))} onClick={() => void action(item.id, 'convert')}>Issue purchase order</Button>}
+                      {item.status === 'approved' && <Button size="sm" disabled={saving || !item.vendorId || (item.supplierQuotes.length > 0 && !item.supplierQuotes.some((quote) => quote.selected && quote.attachments.length > 0))} onClick={() => void action(item.id, 'convert')}>Issue purchase order</Button>}
                       {item.status === 'approved' && item.supplierQuotes.length > 0 && !item.supplierQuotes.some((quote) => quote.selected) && <p className="text-xs text-muted-foreground">Select the winning supplier quote before PO issue.</p>}
+                      {item.status === 'approved' && item.supplierQuotes.some((quote) => quote.selected && quote.attachments.length === 0) && <p className="text-xs text-muted-foreground">Attach the selected supplier quotation PDF before PO issue.</p>}
                       {item.purchaseOrder && <p className="text-xs text-muted-foreground">PO: {item.purchaseOrder.poNumber} · {pretty(item.purchaseOrder.status)}</p>}
                       {item.decidedAt && <p className="text-xs text-muted-foreground">Decision: {item.decidedByName || 'Finance'} · {new Date(item.decidedAt).toLocaleString()}{item.decisionNotes ? ' · ' + item.decisionNotes : ''}</p>}
                     </div>
