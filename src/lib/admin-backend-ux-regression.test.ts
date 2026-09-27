@@ -760,6 +760,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(executiveFinance).toContain('Performance trend');
     expect(executiveFinance).toContain('Cashflow trend');
     expect(executiveFinance).toContain('Receivables health');
+    expect(executiveFinance).toContain('Supplier payables aging');
+    expect(executiveFinance).toContain('Current payables');
+    expect(executiveFinance).toContain('Overdue payables');
+    expect(executiveFinance).toContain('dashboard.aging.creditors');
+    expect(executiveFinance).toContain('creditorAging.map');
     expect(executiveFinance).toContain('Largest customer balances');
     expect(executiveFinance).toContain('Largest supplier balances');
     expect(executiveFinance).toContain('Renewal action centre');

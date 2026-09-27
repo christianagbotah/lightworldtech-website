@@ -531,10 +531,18 @@ export default function FinanceExecutiveDashboard({
     bucket,
     value: Number(dashboard.aging.debtors[bucket]?.[currency] || 0),
   }));
+  const creditorAging = ['current', '1_30', '31_60', '61_90', '90_plus'].map((bucket) => ({
+    bucket,
+    value: Number(dashboard.aging.creditors[bucket]?.[currency] || 0),
+  }));
   const overdueReceivables = debtAging
     .filter((item) => item.bucket !== 'current')
     .reduce((sum, item) => sum + item.value, 0);
   const currentReceivables = debtAging.find((item) => item.bucket === 'current')?.value || 0;
+  const overduePayables = creditorAging
+    .filter((item) => item.bucket !== 'current')
+    .reduce((sum, item) => sum + item.value, 0);
+  const currentPayables = creditorAging.find((item) => item.bucket === 'current')?.value || 0;
   const profitMargin = Number(totals.revenue) > 0
     ? (Number(totals.netProfit) / Number(totals.revenue)) * 100
     : 0;
@@ -883,6 +891,45 @@ export default function FinanceExecutiveDashboard({
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-border/60">
+        <CardHeader className="flex-row items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Supplier payables aging · {currency}</CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">Age profile of open supplier obligations, kept separate by currency for payment planning.</p>
+          </div>
+          <Button type="button" size="sm" variant="outline" onClick={onSuppliers}>Open suppliers</Button>
+        </CardHeader>
+        <CardContent className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-1">
+            <button type="button" onClick={onSuppliers} className="rounded-xl border border-border/60 p-3 text-left hover:bg-muted/40">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Current payables</p>
+              <p className="mt-1 font-bold">{money(currentPayables, currency)}</p>
+            </button>
+            <button type="button" onClick={onSuppliers} className="rounded-xl border border-border/60 p-3 text-left hover:bg-muted/40">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Overdue payables</p>
+              <p className="mt-1 font-bold text-rose-700 dark:text-rose-300">{money(overduePayables, currency)}</p>
+            </button>
+          </div>
+          <div className="space-y-2.5">
+            {creditorAging.map((item) => {
+              const total = Math.max(1, Number(totals.payables));
+              const width = Math.min(100, Math.max(0, (item.value / total) * 100));
+              return (
+                <button type="button" onClick={onSuppliers} key={item.bucket} className="block w-full text-left">
+                  <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+                    <span>{item.bucket === 'current' ? 'Current' : item.bucket.replace('_', '–') + ' days'}</span>
+                    <strong>{money(item.value, currency)}</strong>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-amber-500" style={{ width: width + '%' }} />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-5 xl:grid-cols-2">
         <Card className="min-w-0 border-border/60">
