@@ -68,6 +68,13 @@ type ProcurementException = {
   id: string; type: 'approval_aging' | 'delivery_overdue' | 'awaiting_bill';
   severity: 'high' | 'medium'; title: string; reference: string; detail: string;
 };
+type SupplierPerformance = {
+  vendorId: string; vendorName: string; orders: number; receivedOrders: number;
+  onTimeMeasuredOrders: number; onTimeOrders: number; onTimeRate: number | null;
+  averageDeliveryDays: number | null; overdueOpenOrders: number; partialOpenOrders: number;
+  awaitingBillOrders: number;
+  commitmentsByCurrency: Array<{ currency: string; amount: string }>;
+};
 type ProcurementData = {
   canApprove: boolean;
   currentAdminId: string;
@@ -83,6 +90,7 @@ type ProcurementData = {
     awaitingBill: number;
   };
   exceptions: ProcurementException[];
+  supplierPerformance: SupplierPerformance[];
   methodology: string;
 };
 
@@ -338,6 +346,46 @@ export default function FinanceProcurementWorkspace({
           </CardContent>
         </Card>
       )}
+
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="text-base">Supplier delivery performance</CardTitle>
+          <p className="text-xs text-muted-foreground">On-time rate is measured only where the PO has an expected date. Currency commitments are kept separate and are not converted.</p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-supplier-procurement-performance" className="min-w-[980px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead className="text-right">POs</TableHead>
+                  <TableHead className="text-right">On-time</TableHead>
+                  <TableHead className="text-right">Avg delivery</TableHead>
+                  <TableHead className="text-right">Overdue open</TableHead>
+                  <TableHead className="text-right">Partial open</TableHead>
+                  <TableHead className="text-right">Awaiting bill</TableHead>
+                  <TableHead>Commitments</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.supplierPerformance.map((supplier) => (
+                  <TableRow key={supplier.vendorId}>
+                    <TableCell><p className="font-medium">{supplier.vendorName}</p><p className="text-xs text-muted-foreground">{supplier.receivedOrders} received</p></TableCell>
+                    <TableCell className="text-right">{supplier.orders}</TableCell>
+                    <TableCell className="text-right">{supplier.onTimeRate === null ? 'Not measured' : supplier.onTimeRate.toFixed(1) + '%'}{supplier.onTimeMeasuredOrders > 0 && <p className="text-[10px] text-muted-foreground">{supplier.onTimeOrders}/{supplier.onTimeMeasuredOrders}</p>}</TableCell>
+                    <TableCell className="text-right">{supplier.averageDeliveryDays === null ? '—' : supplier.averageDeliveryDays.toFixed(1) + ' days'}</TableCell>
+                    <TableCell className="text-right">{supplier.overdueOpenOrders}</TableCell>
+                    <TableCell className="text-right">{supplier.partialOpenOrders}</TableCell>
+                    <TableCell className="text-right">{supplier.awaitingBillOrders}</TableCell>
+                    <TableCell>{supplier.commitmentsByCurrency.length ? supplier.commitmentsByCurrency.map((item) => item.currency + ' ' + Number(item.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })).join(' · ') : 'No PO commitments'}</TableCell>
+                  </TableRow>
+                ))}
+                {!data.supplierPerformance.length && <TableRow><TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No supplier procurement history yet.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-border/60">
         <CardHeader><CardTitle className="text-base">New purchase requisition</CardTitle></CardHeader>

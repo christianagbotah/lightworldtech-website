@@ -136,6 +136,42 @@ export async function GET(request: NextRequest) {
   const partialReceipts = orders.filter((item) => item.status === 'partially_received');
   const awaitingBill = orders.filter((item) => ['received', 'closed'].includes(item.status) && !item.bill);
 
+  const supplierPerformance = vendors.map((vendor) => {
+    const vendorOrders = orders.filter((order) => order.vendorId === vendor.id && order.status !== 'cancelled');
+    const completed = vendorOrders.filter((order) => Boolean(order.receivedAt));
+    const datedCompleted = completed.filter((order) => Boolean(order.expectedDate));
+    const onTime = datedCompleted.filter((order) => order.receivedAt! <= order.expectedDate!).length;
+    const deliveryDays = completed.map((order) =>
+      Math.max(0, (order.receivedAt!.getTime() - order.issueDate.getTime()) / 86_400_000),
+    );
+    const commitments = new Map<string, number>();
+    for (const order of vendorOrders) {
+      const code = order.currency.toUpperCase();
+      commitments.set(code, (commitments.get(code) || 0) + Number(order.total));
+    }
+    return {
+      vendorId: vendor.id,
+      vendorName: vendor.name,
+      orders: vendorOrders.length,
+      receivedOrders: completed.length,
+      onTimeMeasuredOrders: datedCompleted.length,
+      onTimeOrders: onTime,
+      onTimeRate: datedCompleted.length ? Math.round((onTime / datedCompleted.length) * 1000) / 10 : null,
+      averageDeliveryDays: deliveryDays.length
+        ? Math.round((deliveryDays.reduce((sum, value) => sum + value, 0) / deliveryDays.length) * 10) / 10
+        : null,
+      overdueOpenOrders: vendorOrders.filter((order) =>
+        ['issued', 'partially_received'].includes(order.status)
+        && Boolean(order.expectedDate && order.expectedDate < now),
+      ).length,
+      partialOpenOrders: vendorOrders.filter((order) => order.status === 'partially_received').length,
+      awaitingBillOrders: vendorOrders.filter((order) => ['received', 'closed'].includes(order.status) && !order.bill).length,
+      commitmentsByCurrency: [...commitments.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([currency, amount]) => ({ currency, amount: amount.toFixed(2) })),
+    };
+  });
+
   const exceptions = [
     ...agedApprovals.map((item) => ({
       id: 'approval:' + item.id,
@@ -180,6 +216,7 @@ export async function GET(request: NextRequest) {
         awaitingBill: awaitingBill.length,
       },
       exceptions,
+      supplierPerformance,
       methodology: 'Procurement exceptions are deterministic: approval aging starts after 48 hours, delivery overdue uses the recorded PO expected date, partial receipts remain open until ordered quantities are fully received, and received/closed POs remain in Accounts Payable follow-up until a matched supplier bill exists.',
     },
   });

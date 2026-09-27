@@ -2393,6 +2393,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(procurement).toContain('aged >48h');
     expect(procurement).toContain('Awaiting matched bill');
     expect(procurement).toContain('Overdue');
+    expect(procurementApi).toContain('supplierPerformance');
+    expect(procurementApi).toContain('onTimeRate');
+    expect(procurementApi).toContain('averageDeliveryDays');
+    expect(procurementApi).toContain('commitmentsByCurrency');
+    expect(procurement).toContain('Supplier delivery performance');
+    expect(procurement).toContain('lightworld-supplier-procurement-performance');
+    expect(procurement).toContain('On-time rate is measured only where the PO has an expected date');
     expect(finance).toContain("['procurement', 'Procurement']");
     expect(finance).toContain('FinanceProcurementWorkspace');
   });
