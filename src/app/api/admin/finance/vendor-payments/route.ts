@@ -80,7 +80,10 @@ export async function POST(request: NextRequest) {
   const bills = parsed.data.allocations.length
     ? await db.financeVendorBill.findMany({
         where: { id: { in: parsed.data.allocations.map((item) => item.billId) }, vendorId: parsed.data.vendorId },
-        include: { allocations: true },
+        include: {
+          allocations: true,
+          attachments: { select: { id: true }, take: 1 },
+        },
       })
     : [];
   if (bills.length !== parsed.data.allocations.length) {
@@ -91,6 +94,17 @@ export async function POST(request: NextRequest) {
     const bill = bills.find((item) => item.id === allocation.billId)!;
     if (bill.currency !== currency) return NextResponse.json({ success: false, error: 'Supplier payment and bill currencies must match' }, { status: 400 });
     if (bill.status === 'void') return NextResponse.json({ success: false, error: 'Payments cannot be allocated to void bills' }, { status: 409 });
+    if (!bill.attachments.length) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Supplier invoice evidence is required before payment can be allocated to ' + bill.payableNumber,
+          billId: bill.id,
+          payableNumber: bill.payableNumber,
+        },
+        { status: 409 },
+      );
+    }
     const pendingApprovals = await db.financeOutflowApproval.findMany({
       where: {
         outflowType: 'vendor_payment',
