@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
@@ -477,7 +478,7 @@ export async function GET(request: NextRequest) {
         .filter((invoice) => invoice.currency.trim().toUpperCase() === currency)
         .reduce(
           (sum, invoice) => sum.plus(invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes)),
-          new (account.creditLimit.constructor as typeof account.creditLimit.constructor)(0) as typeof account.creditLimit,
+          new Prisma.Decimal(0),
         );
       return outstanding.gte(account.creditLimit.mul(0.9));
     }).length;
