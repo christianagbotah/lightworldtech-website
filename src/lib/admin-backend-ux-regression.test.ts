@@ -2551,6 +2551,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(invoices).toContain('projected.gt(organization.creditLimit)');
     expect(invoices).toContain("'admin.finance_invoice_credit_blocked'");
     expect(commercialApi).toContain('creditLimit: organization.creditLimit.toFixed(2)');
+    expect(commercialApi).toContain("key: 'credit_hold'");
+    expect(commercialApi).toContain("key: 'credit_limit_critical'");
+    expect(commercialApi).toContain("key: 'credit_limit_watch'");
+    expect(commercialApi).toContain('creditUtilizationPercent');
+    expect(commercialApi).toContain('Resolve customer credit hold');
     expect(financeMeta).toContain('paymentTermsDays: true');
     expect(financeMeta).toContain('creditLimit: organization.creditLimit.toFixed(2)');
     expect(commercial).toContain('Credit control');
