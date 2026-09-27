@@ -12,7 +12,11 @@ const RING_STROKE = 3.5;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 const MIN_VISIBLE_MS = 700;
 const PRELOAD_CEILING = 96;
-const COMPLETE_DURATION_MS = 360;
+const COMPLETE_DURATION_MS = 460;
+
+// Module lifetime matches the current browser document. This lets a hard refresh
+// show the branded loader again without replaying it on every client-side route change.
+let hasShownInDocument = false;
 
 // 8 orbiting particle specs (angle offset, orbit radius, size, delay)
 const PARTICLES = [
@@ -47,7 +51,6 @@ function usePreloaderState() {
     setExiting(true);
     window.setTimeout(() => {
       setVisible(false);
-      try { sessionStorage.setItem('lw-preloader-shown', 'true'); } catch {}
     }, 800);
   }, []);
 
@@ -55,11 +58,11 @@ function usePreloaderState() {
     if (initialized.current) return;
     initialized.current = true;
 
-    const alreadyShown = sessionStorage.getItem('lw-preloader-shown');
-    if (alreadyShown) {
+    if (hasShownInDocument) {
       const id = requestAnimationFrame(() => setVisible(false));
       return () => cancelAnimationFrame(id);
     }
+    hasShownInDocument = true;
 
     const startTime = performance.now();
     let rafId = 0;

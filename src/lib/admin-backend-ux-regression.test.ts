@@ -2094,17 +2094,28 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain('past the due date with an outstanding balance');
   });
 
-  test('gives every shared public page hero restrained enterprise motion graphics', () => {
-    const pageHero = source('src/components/ui/page-hero.tsx');
+  test('mounts the real public preloader and gives existing page heroes visible shared motion graphics', () => {
+    const shell = source('src/components/layout/PublicShell.tsx');
+    const preloader = source('src/components/ui/preloader.tsx');
+    const styles = source('src/app/globals.css');
+    const about = source('src/components/pages/AboutPage.tsx');
+    const services = source('src/components/pages/ServicesPage.tsx');
+    const products = source('src/components/pages/ProductsPage.tsx');
 
-    expect(pageHero).toContain('useReducedMotion');
-    expect(pageHero).toContain('EnterpriseMotionGraphic');
-    expect(pageHero).toContain('Travelling light beam');
-    expect(pageHero).toContain('Enterprise network / circuit visual');
-    expect(pageHero).toContain('strokeDashoffset: [0, -36]');
-    expect(pageHero).toContain("duration: 34, repeat: Infinity, ease: 'linear'");
-    expect(pageHero).toContain('motion-reduce:animate-none');
-    expect(pageHero).toContain('aria-hidden="true"');
+    expect(shell).toContain("import Preloader from '@/components/ui/preloader'");
+    expect(shell).toContain('<Preloader />');
+    expect(preloader).toContain('let hasShownInDocument = false');
+    expect(preloader).not.toContain("sessionStorage.getItem('lw-preloader-shown')");
+    expect(preloader).toContain('{progress}');
+    expect(preloader).toContain('scaleX(${progress / 100})');
+    expect(styles).toContain('animation: lw-hero-grid-flow 18s linear infinite');
+    expect(styles).toContain('animation: lw-hero-radar 20s linear infinite');
+    expect(styles).toContain('animation: lw-hero-beam 9s ease-in-out infinite');
+    expect(styles).toContain('@keyframes lw-hero-radar');
+    expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
+    expect(about).toContain('lw-hero-grid');
+    expect(services).toContain('lw-hero-grid');
+    expect(products).toContain('lw-hero-grid');
   });
 
   test('surfaces automated renewal drafts for mandatory human finance review', () => {
