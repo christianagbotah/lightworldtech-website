@@ -235,13 +235,25 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
                       <ArrowUpRight className="mt-1 size-4 shrink-0 text-slate-300 dark:text-white/15" />
                     )}
                   </div>
-                  {project.tags.length > 0 && (
-                    <div className="mt-5 flex flex-wrap gap-1.5">
-                      {project.tags.map((tag) => (
-                        <span key={tag} className="rounded-full border border-slate-200/80 px-2.5 py-1 text-[10px] font-medium text-slate-400 dark:border-white/[0.07] dark:text-white/25">{tag}</span>
-                      ))}
-                    </div>
-                  )}
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                    {project.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {project.tags.map((tag) => (
+                          <span key={tag} className="rounded-full border border-slate-200/80 px-2.5 py-1 text-[10px] font-medium text-slate-400 dark:border-white/[0.07] dark:text-white/25">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                    {project.clientUrl && project.clientUrl !== '#' && (
+                      <a
+                        href={project.clientUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 transition hover:text-emerald-600 dark:text-emerald-300 dark:hover:text-emerald-200"
+                      >
+                        Visit live site <ArrowUpRight className="size-3.5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               </motion.article>
             ))}
