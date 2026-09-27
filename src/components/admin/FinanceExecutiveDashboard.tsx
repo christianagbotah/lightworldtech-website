@@ -106,6 +106,31 @@ export type FinanceExecutiveDashboardData = {
     status: 'unavailable' | 'under_1' | 'under_3' | 'under_6' | 'six_plus';
     methodology: string;
   }>;
+  treasuryForecast: Record<string, {
+    openingLiquidity: string;
+    overdueReceivablesExcluded: string;
+    overdueReceivablesCount: number;
+    overduePayablesImmediate: string;
+    overduePayablesCount: number;
+    scheduledReceivables13Weeks: string;
+    futurePayables13Weeks: string;
+    committedPayables13Weeks: string;
+    projectedClosingLiquidity: string;
+    lowestProjectedLiquidity: string;
+    firstNegativeDate: string | null;
+    weeks: Array<{
+      week: number;
+      startDate: string;
+      endDate: string;
+      scheduledReceivables: string;
+      receivablesCount: number;
+      committedPayables: string;
+      payablesCount: number;
+      netDueMovement: string;
+      projectedLiquidity: string;
+    }>;
+    methodology: string;
+  }>;
   payablesSchedule: Record<string, {
     overdue: { amount: string; count: number };
     next_7: { amount: string; count: number };
@@ -359,6 +384,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.collectionHealth || {}),
       ...Object.keys(dashboard.runway || {}),
       ...Object.keys(dashboard.payablesSchedule || {}),
+      ...Object.keys(dashboard.treasuryForecast || {}),
       ...Object.keys(dashboard.trends || {}),
     ])).sort(),
     [dashboard],
@@ -401,7 +427,7 @@ export default function FinanceExecutiveDashboard({
       ['Reporting period', dashboard.period.from + ' to ' + dashboard.period.to],
       ['Generated at', new Date().toISOString()],
       [],
-      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Receivable days proxy', 'Overdue receivable share %', '61+ day share %', 'Collection coverage %', 'Largest customer receivable share %', 'Top 3 receivable share %', 'Payables', 'AP overdue', 'AP due next 30 days', 'AP due next 90 days', 'Revenue', 'Expenses', 'Net profit', 'MRR', 'ARR', 'Active recurring services', 'Excluded non-standard cycles', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
+      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Receivable days proxy', 'Overdue receivable share %', '61+ day share %', 'Collection coverage %', 'Largest customer receivable share %', 'Top 3 receivable share %', 'Payables', 'AP overdue', 'AP due next 30 days', 'AP due next 90 days', '13-week contractual AR', '13-week committed AP', '13-week projected closing liquidity', '13-week lowest projected liquidity', 'First projected negative date', 'Revenue', 'Expenses', 'Net profit', 'MRR', 'ARR', 'Active recurring services', 'Excluded non-standard cycles', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
     ];
 
     const codes = Array.from(new Set([
@@ -413,6 +439,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.collectionHealth || {}),
       ...Object.keys(dashboard.renewalExposure || {}),
       ...Object.keys(dashboard.payablesSchedule || {}),
+      ...Object.keys(dashboard.treasuryForecast || {}),
     ])).sort();
 
     for (const code of codes) {
@@ -424,6 +451,7 @@ export default function FinanceExecutiveDashboard({
       const concentration = dashboard.receivableConcentration[code];
       const collectionHealth = dashboard.collectionHealth[code];
       const payablePlan = dashboard.payablesSchedule?.[code];
+      const treasury = dashboard.treasuryForecast?.[code];
       lines.push([
         code,
         position?.total || '0.00',
@@ -440,6 +468,11 @@ export default function FinanceExecutiveDashboard({
         payablePlan?.overdue.amount || '0.00',
         payablePlan?.dueWithin30 || '0.00',
         payablePlan?.dueWithin90 || '0.00',
+        treasury?.scheduledReceivables13Weeks || '0.00',
+        treasury?.committedPayables13Weeks || '0.00',
+        treasury?.projectedClosingLiquidity || '0.00',
+        treasury?.lowestProjectedLiquidity || '0.00',
+        treasury?.firstNegativeDate || '',
         finance?.revenue || '0.00',
         finance?.expenses || '0.00',
         finance?.netProfit || '0.00',
@@ -468,7 +501,7 @@ export default function FinanceExecutiveDashboard({
       ['Active promises', String(dashboard.collections.activePromises)],
       ['Overdue invoices', String(dashboard.collections.overdueInvoices)],
       [],
-      ['Control note', 'Currencies remain separate. Cash runway is historical coverage only; the AP due schedule uses committed open supplier bills only and excludes unbilled purchase orders, forecast expenses, future collections and FX conversion.'],
+      ['Control note', 'Currencies remain separate. Cash runway is historical coverage only. The AP due schedule uses committed open supplier bills. The 13-week treasury scenario assumes future open invoices collect on contractual due dates, excludes overdue receivables from projected inflows, immediately recognizes overdue supplier bills, and excludes future sales, unbilled procurement, forecast expenses and FX conversion.'],
     );
 
     const csv = lines.map((row) => row.map(quote).join(',')).join('\n');
@@ -536,6 +569,21 @@ export default function FinanceExecutiveDashboard({
     sampleMonths: 0,
     status: 'unavailable' as const,
     methodology: 'Historical cash-out coverage is unavailable until cash-out activity has been recorded.',
+  };
+  const treasury = dashboard.treasuryForecast?.[currency] || {
+    openingLiquidity: cash.total,
+    overdueReceivablesExcluded: '0',
+    overdueReceivablesCount: 0,
+    overduePayablesImmediate: '0',
+    overduePayablesCount: 0,
+    scheduledReceivables13Weeks: '0',
+    futurePayables13Weeks: '0',
+    committedPayables13Weeks: '0',
+    projectedClosingLiquidity: cash.total,
+    lowestProjectedLiquidity: cash.total,
+    firstNegativeDate: null,
+    weeks: [],
+    methodology: '13-week cash visibility becomes available from posted liquidity plus open customer and supplier due dates.',
   };
   const payablePlan = dashboard.payablesSchedule?.[currency] || {
     overdue: { amount: '0', count: 0 },
@@ -934,6 +982,81 @@ export default function FinanceExecutiveDashboard({
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="text-base">13-week treasury cash visibility · {currency}</CardTitle>
+          <p className="mt-1 text-xs text-muted-foreground">A contractual due-date scenario built from posted liquidity, open customer invoices and committed supplier bills.</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+            <div className="rounded-xl border border-border/60 p-3">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Opening liquidity</p>
+              <p className="mt-1 font-bold">{money(treasury.openingLiquidity, currency)}</p>
+            </div>
+            <div className="rounded-xl border border-border/60 p-3">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Overdue AP pressure</p>
+              <p className="mt-1 font-bold text-rose-700 dark:text-rose-300">{money(treasury.overduePayablesImmediate, currency)}</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">{treasury.overduePayablesCount} overdue bill{treasury.overduePayablesCount === 1 ? '' : 's'}</p>
+            </div>
+            <div className="rounded-xl border border-border/60 p-3">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Contractual AR · 13 weeks</p>
+              <p className="mt-1 font-bold">{money(treasury.scheduledReceivables13Weeks, currency)}</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">{money(treasury.overdueReceivablesExcluded, currency)} overdue AR excluded</p>
+            </div>
+            <div className="rounded-xl border border-border/60 p-3">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Committed AP · 13 weeks</p>
+              <p className="mt-1 font-bold">{money(treasury.committedPayables13Weeks, currency)}</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">Includes overdue supplier bills</p>
+            </div>
+            <div className="rounded-xl border border-border/60 p-3">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Projected closing scenario</p>
+              <p className={Number(treasury.projectedClosingLiquidity) < 0 ? 'mt-1 font-bold text-rose-700 dark:text-rose-300' : 'mt-1 font-bold'}>{money(treasury.projectedClosingLiquidity, currency)}</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">If future open AR collects on due dates</p>
+            </div>
+            <div className="rounded-xl border border-border/60 p-3">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Lowest projected point</p>
+              <p className={Number(treasury.lowestProjectedLiquidity) < 0 ? 'mt-1 font-bold text-rose-700 dark:text-rose-300' : 'mt-1 font-bold'}>{money(treasury.lowestProjectedLiquidity, currency)}</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">{treasury.firstNegativeDate ? 'First below zero: ' + new Date(treasury.firstNegativeDate + 'T00:00:00Z').toLocaleDateString() : 'No negative point in current scenario'}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 max-w-full overflow-x-auto rounded-xl border border-border/60">
+            <Table exportFileName="lightworld-13-week-treasury-visibility" className="min-w-[820px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Week</TableHead>
+                  <TableHead>Date window</TableHead>
+                  <TableHead className="text-right">Contractual AR</TableHead>
+                  <TableHead className="text-right">Committed AP</TableHead>
+                  <TableHead className="text-right">Net due movement</TableHead>
+                  <TableHead className="text-right">Projected liquidity</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {treasury.weeks.map((week) => (
+                  <TableRow key={week.week}>
+                    <TableCell className="font-semibold">Week {week.week}</TableCell>
+                    <TableCell className="text-xs">{new Date(week.startDate + 'T00:00:00Z').toLocaleDateString()} – {new Date(week.endDate + 'T00:00:00Z').toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">
+                      <span className="block font-medium">{money(week.scheduledReceivables, currency)}</span>
+                      <span className="block text-[10px] text-muted-foreground">{week.receivablesCount} invoice{week.receivablesCount === 1 ? '' : 's'}</span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className="block font-medium">{money(week.committedPayables, currency)}</span>
+                      <span className="block text-[10px] text-muted-foreground">{week.payablesCount} bill{week.payablesCount === 1 ? '' : 's'}</span>
+                    </TableCell>
+                    <TableCell className={Number(week.netDueMovement) < 0 ? 'text-right font-semibold text-rose-700 dark:text-rose-300' : 'text-right font-semibold'}>{money(week.netDueMovement, currency)}</TableCell>
+                    <TableCell className={Number(week.projectedLiquidity) < 0 ? 'text-right font-bold text-rose-700 dark:text-rose-300' : 'text-right font-bold'}>{money(week.projectedLiquidity, currency)}</TableCell>
+                  </TableRow>
+                ))}
+                {!treasury.weeks.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No treasury due-date schedule is available for this currency yet.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </div>
+          <p className="mt-3 text-[11px] leading-5 text-muted-foreground">{treasury.methodology}</p>
+        </CardContent>
+      </Card>
 
       <Card className="border-border/60">
         <CardHeader className="flex-row items-center justify-between gap-3">

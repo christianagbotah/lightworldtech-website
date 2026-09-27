@@ -2545,6 +2545,22 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('No open supplier bills match the selected aging/due filters.');
   });
 
+  test('adds conservative 13-week treasury cash visibility without treating overdue receivables as cash', () => {
+    const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
+    const executive = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(dashboardApi).toContain('TREASURY_WEEKS = 13');
+    expect(dashboardApi).toContain('overdueReceivablesExcluded');
+    expect(dashboardApi).toContain('openingLiquidity.minus(raw.overduePayables)');
+    expect(dashboardApi).toContain('scheduledReceivables13Weeks');
+    expect(dashboardApi).toContain('committedPayables13Weeks');
+    expect(dashboardApi).toContain('This is cash visibility, not a guarantee of collections.');
+    expect(executive).toContain('13-week treasury cash visibility');
+    expect(executive).toContain('lightworld-13-week-treasury-visibility');
+    expect(executive).toContain('First projected negative date');
+    expect(executive).toContain('overdue AR excluded');
+  });
+
   test('adds a committed supplier cash requirement schedule with due-window drill-downs', () => {
     const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
     const executive = source('src/components/admin/FinanceExecutiveDashboard.tsx');
