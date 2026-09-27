@@ -2542,7 +2542,23 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('31–60 days overdue');
     expect(finance).toContain('61–90 days overdue');
     expect(finance).toContain('90+ days overdue');
-    expect(finance).toContain('No open supplier bills match this aging band.');
+    expect(finance).toContain('No open supplier bills match the selected aging/due filters.');
+  });
+
+  test('adds a committed supplier cash requirement schedule with due-window drill-downs', () => {
+    const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
+    const executive = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(dashboardApi).toContain('payablesScheduleBucket');
+    expect(dashboardApi).toContain('Committed supplier cash requirement based only on current open bill balances and contractual due dates.');
+    expect(dashboardApi).toContain('dueWithin30');
+    expect(dashboardApi).toContain('dueWithin90');
+    expect(executive).toContain('Committed supplier cash schedule');
+    expect(executive).toContain('AP due next 30 days');
+    expect(finance).toContain('lightworld-supplier-cash-schedule');
+    expect(finance).toContain('supplierDueFilter');
+    expect(finance).toContain('Filter supplier bills by due window');
   });
 
   test('applies supplier payment-term defaults with audited due-date overrides', () => {

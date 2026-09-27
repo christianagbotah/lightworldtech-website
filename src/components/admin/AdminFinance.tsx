@@ -304,6 +304,25 @@ function payableAgingBucket(dueDate: string, balance: string | number): 'current
   return '90_plus';
 }
 
+type SupplierDueFilter = 'all' | 'overdue' | 'next_7' | 'days_8_14' | 'days_15_30' | 'days_31_60' | 'days_61_90' | 'days_90_plus';
+
+function payableDueBucket(dueDate: string, balance: string | number): Exclude<SupplierDueFilter, 'all'> | 'paid' {
+  if (Number(balance || 0) <= 0) return 'paid';
+  const date = new Date(dueDate);
+  if (!Number.isFinite(date.getTime())) return 'days_90_plus';
+  const now = new Date();
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const due = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  const daysUntilDue = Math.round((due - start) / 86400000);
+  if (daysUntilDue < 0) return 'overdue';
+  if (daysUntilDue <= 7) return 'next_7';
+  if (daysUntilDue <= 14) return 'days_8_14';
+  if (daysUntilDue <= 30) return 'days_15_30';
+  if (daysUntilDue <= 60) return 'days_31_60';
+  if (daysUntilDue <= 90) return 'days_61_90';
+  return 'days_90_plus';
+}
+
 function money(value: string | number, currency = 'GHS'): string {
   const amount = Number(value || 0);
   try {
@@ -448,6 +467,7 @@ export default function AdminFinance() {
   const [supplierStatementFrom, setSupplierStatementFrom] = useState('');
   const [supplierStatementTo, setSupplierStatementTo] = useState(today());
   const [supplierAgingFilter, setSupplierAgingFilter] = useState<'all' | 'current' | '1_30' | '31_60' | '61_90' | '90_plus'>('all');
+  const [supplierDueFilter, setSupplierDueFilter] = useState<SupplierDueFilter>('all');
   const [supplierPaymentForm, setSupplierPaymentForm] = useState({
     vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
     method: 'bank_transfer', reference: '', notes: '',
@@ -598,10 +618,13 @@ export default function AdminFinance() {
 
   const supplierBillsByAging = useMemo(
     () => (data?.bills || []).filter((bill) => {
-      const bucket = payableAgingBucket(bill.dueDate, bill.balance);
-      return bucket !== 'paid' && (supplierAgingFilter === 'all' || bucket === supplierAgingFilter);
+      const agingBucket = payableAgingBucket(bill.dueDate, bill.balance);
+      const dueBucket = payableDueBucket(bill.dueDate, bill.balance);
+      return agingBucket !== 'paid'
+        && (supplierAgingFilter === 'all' || agingBucket === supplierAgingFilter)
+        && (supplierDueFilter === 'all' || dueBucket === supplierDueFilter);
     }),
-    [data?.bills, supplierAgingFilter],
+    [data?.bills, supplierAgingFilter, supplierDueFilter],
   );
 
   const supplierAgingByCurrency = useMemo(() => {
@@ -1513,6 +1536,55 @@ export default function AdminFinance() {
 
           <Card className="min-w-0 border-border/60">
             <CardHeader>
+              <CardTitle className="text-base">Committed supplier cash schedule</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">Upcoming cash requirements from open supplier bills only. Overdue and future due windows are kept separate by currency.</p>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-w-full overflow-x-auto">
+                <Table exportFileName="lightworld-supplier-cash-schedule">
+                  <TableHeader><TableRow>
+                    <TableHead>Currency</TableHead>
+                    <TableHead className="text-right">Overdue</TableHead>
+                    <TableHead className="text-right">0–7 days</TableHead>
+                    <TableHead className="text-right">8–14 days</TableHead>
+                    <TableHead className="text-right">15–30 days</TableHead>
+                    <TableHead className="text-right">31–60 days</TableHead>
+                    <TableHead className="text-right">61–90 days</TableHead>
+                    <TableHead className="text-right">90+ days</TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {Object.entries(data.dashboard.payablesSchedule || {}).map(([currency, plan]) => (
+                      <TableRow key={currency}>
+                        <TableCell className="font-semibold">{currency}</TableCell>
+                        {([
+                          ['overdue', plan.overdue],
+                          ['next_7', plan.next_7],
+                          ['days_8_14', plan.days_8_14],
+                          ['days_15_30', plan.days_15_30],
+                          ['days_31_60', plan.days_31_60],
+                          ['days_61_90', plan.days_61_90],
+                          ['days_90_plus', plan.days_90_plus],
+                        ] as const).map(([bucket, entry]) => (
+                          <TableCell key={bucket} className="text-right">
+                            <button type="button" className="rounded-md px-2 py-1 text-right transition hover:bg-muted"
+                              onClick={() => { setSupplierAgingFilter('all'); setSupplierDueFilter(bucket); }}
+                              title={'Filter ' + entry.count + ' open bill' + (entry.count === 1 ? '' : 's') + ' in this due window'}>
+                              <span className={bucket === 'overdue' ? 'block font-semibold text-rose-700 dark:text-rose-300' : 'block font-semibold'}>{money(entry.amount, currency)}</span>
+                              <span className="block text-[10px] text-muted-foreground">{entry.count} bill{entry.count === 1 ? '' : 's'}</span>
+                            </button>
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                    {!Object.keys(data.dashboard.payablesSchedule || {}).length && <TableRow><TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No committed supplier cash requirements are recorded.</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="min-w-0 border-border/60">
+            <CardHeader>
               <CardTitle className="text-base">Supplier payables aging</CardTitle>
               <p className="mt-1 text-xs text-muted-foreground">Open creditor balances are shown by currency and due-age band. Amounts are never converted or combined across currencies.</p>
             </CardHeader>
@@ -1544,7 +1616,7 @@ export default function AdminFinance() {
                             <button
                               type="button"
                               className="rounded-md px-2 py-1 text-right transition hover:bg-muted"
-                              onClick={() => setSupplierAgingFilter(bucket)}
+                              onClick={() => { setSupplierDueFilter('all'); setSupplierAgingFilter(bucket); }}
                               title={'Filter ' + count + ' open bill' + (count === 1 ? '' : 's') + ' in this aging band'}
                             >
                               <span className="block font-semibold">{money(amount, currency)}</span>
@@ -1566,26 +1638,28 @@ export default function AdminFinance() {
           <div className="grid gap-5 xl:grid-cols-2">
             <Card className="min-w-0 border-border/60">
               <CardHeader>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                   <div>
                     <CardTitle className="text-base">Supplier bills / creditors</CardTitle>
-                    <p className="mt-1 text-xs text-muted-foreground">Filter open supplier obligations by aging band to prioritize creditor payments.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Filter obligations by overdue age and/or contractual due window for payment planning.</p>
                   </div>
-                  <div className="min-w-[180px]">
-                    <Label>Aging band</Label>
-                    <select
-                      aria-label="Filter supplier bills by aging band"
-                      value={supplierAgingFilter}
-                      onChange={(event) => setSupplierAgingFilter(event.target.value as typeof supplierAgingFilter)}
-                      className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                    >
-                      <option value="all">All open payables</option>
-                      <option value="current">Current / not due</option>
-                      <option value="1_30">1–30 days overdue</option>
-                      <option value="31_60">31–60 days overdue</option>
-                      <option value="61_90">61–90 days overdue</option>
-                      <option value="90_plus">90+ days overdue</option>
-                    </select>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="min-w-[170px]">
+                      <Label>Aging band</Label>
+                      <select aria-label="Filter supplier bills by aging band" value={supplierAgingFilter}
+                        onChange={(event) => setSupplierAgingFilter(event.target.value as typeof supplierAgingFilter)}
+                        className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="all">All aging bands</option><option value="current">Current / not due</option><option value="1_30">1–30 days overdue</option><option value="31_60">31–60 days overdue</option><option value="61_90">61–90 days overdue</option><option value="90_plus">90+ days overdue</option>
+                      </select>
+                    </div>
+                    <div className="min-w-[170px]">
+                      <Label>Due window</Label>
+                      <select aria-label="Filter supplier bills by due window" value={supplierDueFilter}
+                        onChange={(event) => setSupplierDueFilter(event.target.value as SupplierDueFilter)}
+                        className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="all">All due windows</option><option value="overdue">Overdue</option><option value="next_7">0–7 days</option><option value="days_8_14">8–14 days</option><option value="days_15_30">15–30 days</option><option value="days_31_60">31–60 days</option><option value="days_61_90">61–90 days</option><option value="days_90_plus">90+ days</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -1665,7 +1739,7 @@ export default function AdminFinance() {
                         <TableCell className="text-right font-semibold">{money(item.balance, item.currency)}</TableCell>
                       </TableRow>
                     ))}
-                    {!supplierBillsByAging.length && <TableRow><TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">{data.bills.length ? 'No open supplier bills match this aging band.' : 'No supplier bills recorded yet.'}</TableCell></TableRow>}
+                    {!supplierBillsByAging.length && <TableRow><TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">{data.bills.length ? 'No open supplier bills match the selected aging/due filters.' : 'No supplier bills recorded yet.'}</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </div></CardContent>

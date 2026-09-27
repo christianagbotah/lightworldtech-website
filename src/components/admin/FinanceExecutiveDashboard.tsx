@@ -106,6 +106,20 @@ export type FinanceExecutiveDashboardData = {
     status: 'unavailable' | 'under_1' | 'under_3' | 'under_6' | 'six_plus';
     methodology: string;
   }>;
+  payablesSchedule: Record<string, {
+    overdue: { amount: string; count: number };
+    next_7: { amount: string; count: number };
+    days_8_14: { amount: string; count: number };
+    days_15_30: { amount: string; count: number };
+    days_31_60: { amount: string; count: number };
+    days_61_90: { amount: string; count: number };
+    days_90_plus: { amount: string; count: number };
+    dueWithin30: string;
+    dueWithin30Count: number;
+    dueWithin90: string;
+    dueWithin90Count: number;
+    methodology: string;
+  }>;
   collections: {
     followUpDue: number;
     brokenPromises: number;
@@ -344,6 +358,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.receivableConcentration || {}),
       ...Object.keys(dashboard.collectionHealth || {}),
       ...Object.keys(dashboard.runway || {}),
+      ...Object.keys(dashboard.payablesSchedule || {}),
       ...Object.keys(dashboard.trends || {}),
     ])).sort(),
     [dashboard],
@@ -386,7 +401,7 @@ export default function FinanceExecutiveDashboard({
       ['Reporting period', dashboard.period.from + ' to ' + dashboard.period.to],
       ['Generated at', new Date().toISOString()],
       [],
-      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Receivable days proxy', 'Overdue receivable share %', '61+ day share %', 'Collection coverage %', 'Largest customer receivable share %', 'Top 3 receivable share %', 'Payables', 'Revenue', 'Expenses', 'Net profit', 'MRR', 'ARR', 'Active recurring services', 'Excluded non-standard cycles', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
+      ['Currency', 'Liquidity', 'Cash runway months', 'Avg monthly cash out', 'Receivables', 'Receivable days proxy', 'Overdue receivable share %', '61+ day share %', 'Collection coverage %', 'Largest customer receivable share %', 'Top 3 receivable share %', 'Payables', 'AP overdue', 'AP due next 30 days', 'AP due next 90 days', 'Revenue', 'Expenses', 'Net profit', 'MRR', 'ARR', 'Active recurring services', 'Excluded non-standard cycles', 'Renewal exposure', 'Renewal cycles', 'Overdue renewal cycles'],
     ];
 
     const codes = Array.from(new Set([
@@ -397,6 +412,7 @@ export default function FinanceExecutiveDashboard({
       ...Object.keys(dashboard.receivableConcentration || {}),
       ...Object.keys(dashboard.collectionHealth || {}),
       ...Object.keys(dashboard.renewalExposure || {}),
+      ...Object.keys(dashboard.payablesSchedule || {}),
     ])).sort();
 
     for (const code of codes) {
@@ -407,6 +423,7 @@ export default function FinanceExecutiveDashboard({
       const recurring = dashboard.recurringRevenue[code];
       const concentration = dashboard.receivableConcentration[code];
       const collectionHealth = dashboard.collectionHealth[code];
+      const payablePlan = dashboard.payablesSchedule?.[code];
       lines.push([
         code,
         position?.total || '0.00',
@@ -420,6 +437,9 @@ export default function FinanceExecutiveDashboard({
         String(concentration?.topSharePct || 0),
         String(concentration?.top3SharePct || 0),
         finance?.payables || '0.00',
+        payablePlan?.overdue.amount || '0.00',
+        payablePlan?.dueWithin30 || '0.00',
+        payablePlan?.dueWithin90 || '0.00',
         finance?.revenue || '0.00',
         finance?.expenses || '0.00',
         finance?.netProfit || '0.00',
@@ -448,7 +468,7 @@ export default function FinanceExecutiveDashboard({
       ['Active promises', String(dashboard.collections.activePromises)],
       ['Overdue invoices', String(dashboard.collections.overdueInvoices)],
       [],
-      ['Control note', 'Currencies remain separate. Cash runway is historical coverage only and excludes future collections and FX conversion.'],
+      ['Control note', 'Currencies remain separate. Cash runway is historical coverage only; the AP due schedule uses committed open supplier bills only and excludes unbilled purchase orders, forecast expenses, future collections and FX conversion.'],
     );
 
     const csv = lines.map((row) => row.map(quote).join(',')).join('\n');
@@ -517,6 +537,29 @@ export default function FinanceExecutiveDashboard({
     status: 'unavailable' as const,
     methodology: 'Historical cash-out coverage is unavailable until cash-out activity has been recorded.',
   };
+  const payablePlan = dashboard.payablesSchedule?.[currency] || {
+    overdue: { amount: '0', count: 0 },
+    next_7: { amount: '0', count: 0 },
+    days_8_14: { amount: '0', count: 0 },
+    days_15_30: { amount: '0', count: 0 },
+    days_31_60: { amount: '0', count: 0 },
+    days_61_90: { amount: '0', count: 0 },
+    days_90_plus: { amount: '0', count: 0 },
+    dueWithin30: '0',
+    dueWithin30Count: 0,
+    dueWithin90: '0',
+    dueWithin90Count: 0,
+    methodology: 'Committed supplier cash requirement becomes available when open supplier bills have due dates.',
+  };
+  const payablePlanBuckets = [
+    ['Overdue', payablePlan.overdue],
+    ['0–7 days', payablePlan.next_7],
+    ['8–14 days', payablePlan.days_8_14],
+    ['15–30 days', payablePlan.days_15_30],
+    ['31–60 days', payablePlan.days_31_60],
+    ['61–90 days', payablePlan.days_61_90],
+    ['90+ days', payablePlan.days_90_plus],
+  ] as const;
   const trend = (dashboard.trends[currency] || []).map((item) => ({
     ...item,
     revenue: Number(item.revenue),
@@ -644,7 +687,7 @@ export default function FinanceExecutiveDashboard({
         <KpiCard
           label="Payables"
           value={money(totals.payables, currency)}
-          detail={dashboard.counts.creditors + ' suppliers with outstanding balances'}
+          detail={money(payablePlan.dueWithin30, currency) + ' due next 30 days · ' + money(payablePlan.overdue.amount, currency) + ' overdue'}
           Icon={Building2}
           onClick={onSuppliers}
         />
@@ -891,6 +934,32 @@ export default function FinanceExecutiveDashboard({
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-border/60">
+        <CardHeader className="flex-row items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Committed supplier cash schedule · {currency}</CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">When current open supplier bills will require cash, based on their recorded due dates.</p>
+          </div>
+          <Button type="button" size="sm" variant="outline" onClick={onSuppliers}>Open suppliers</Button>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+            {payablePlanBuckets.map(([label, bucket]) => (
+              <button key={label} type="button" onClick={onSuppliers} className="rounded-xl border border-border/60 p-3 text-left transition hover:bg-muted/40">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+                <p className={label === 'Overdue' ? 'mt-1 font-bold text-rose-700 dark:text-rose-300' : 'mt-1 font-bold'}>{money(bucket.amount, currency)}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">{bucket.count} bill{bucket.count === 1 ? '' : 's'}</p>
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 grid gap-3 rounded-xl bg-muted/40 p-3 text-xs sm:grid-cols-2">
+            <div className="flex justify-between gap-3"><span className="text-muted-foreground">Due within 30 days</span><strong>{money(payablePlan.dueWithin30, currency)} · {payablePlan.dueWithin30Count} bills</strong></div>
+            <div className="flex justify-between gap-3"><span className="text-muted-foreground">Due within 90 days</span><strong>{money(payablePlan.dueWithin90, currency)} · {payablePlan.dueWithin90Count} bills</strong></div>
+          </div>
+          <p className="mt-3 text-[11px] leading-5 text-muted-foreground">{payablePlan.methodology}</p>
+        </CardContent>
+      </Card>
 
       <Card className="border-border/60">
         <CardHeader className="flex-row items-center justify-between gap-3">
