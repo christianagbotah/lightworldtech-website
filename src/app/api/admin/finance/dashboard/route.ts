@@ -24,6 +24,28 @@ function ageBucket(dueDate: Date, now: Date): 'current' | '1_30' | '31_60' | '61
   return '90_plus';
 }
 
+type PayablesScheduleBucket =
+  | 'overdue'
+  | 'next_7'
+  | 'days_8_14'
+  | 'days_15_30'
+  | 'days_31_60'
+  | 'days_61_90'
+  | 'days_90_plus';
+
+function payablesScheduleBucket(dueDate: Date, now: Date): PayablesScheduleBucket {
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const due = Date.UTC(dueDate.getUTCFullYear(), dueDate.getUTCMonth(), dueDate.getUTCDate());
+  const daysUntilDue = Math.round((due - start) / 86400000);
+  if (daysUntilDue < 0) return 'overdue';
+  if (daysUntilDue <= 7) return 'next_7';
+  if (daysUntilDue <= 14) return 'days_8_14';
+  if (daysUntilDue <= 30) return 'days_15_30';
+  if (daysUntilDue <= 60) return 'days_31_60';
+  if (daysUntilDue <= 90) return 'days_61_90';
+  return 'days_90_plus';
+}
+
 function parseDateBoundary(value: string | null, fallback: Date, endOfDay = false): Date {
   if (!value) return fallback;
   return new Date(
@@ -222,6 +244,7 @@ export async function GET(request: NextRequest) {
   const accrualExpenses: Totals = {};
   const agedDebtors: Record<string, Totals> = { current: {}, '1_30': {}, '31_60': {}, '61_90': {}, '90_plus': {} };
   const agedCreditors: Record<string, Totals> = { current: {}, '1_30': {}, '31_60': {}, '61_90': {}, '90_plus': {} };
+  const payablesScheduleRaw: Record<string, Record<PayablesScheduleBucket, { amount: Prisma.Decimal; count: number }>> = {};
   const cashPositionRaw: Record<string, {
     cash: Prisma.Decimal;
     bank: Prisma.Decimal;
@@ -363,6 +386,23 @@ export async function GET(request: NextRequest) {
       if (balance.gt(0)) {
         add(payables, bill.currency, balance);
         add(agedCreditors[ageBucket(bill.dueDate, now)], bill.currency, balance);
+
+        const currency = bill.currency.trim().toUpperCase() || 'UNSPECIFIED';
+        if (!payablesScheduleRaw[currency]) {
+          payablesScheduleRaw[currency] = {
+            overdue: { amount: new Prisma.Decimal(0), count: 0 },
+            next_7: { amount: new Prisma.Decimal(0), count: 0 },
+            days_8_14: { amount: new Prisma.Decimal(0), count: 0 },
+            days_15_30: { amount: new Prisma.Decimal(0), count: 0 },
+            days_31_60: { amount: new Prisma.Decimal(0), count: 0 },
+            days_61_90: { amount: new Prisma.Decimal(0), count: 0 },
+            days_90_plus: { amount: new Prisma.Decimal(0), count: 0 },
+          };
+        }
+        const scheduleBucket = payablesScheduleBucket(bill.dueDate, now);
+        payablesScheduleRaw[currency][scheduleBucket].amount =
+          payablesScheduleRaw[currency][scheduleBucket].amount.plus(balance);
+        payablesScheduleRaw[currency][scheduleBucket].count += 1;
       }
       if (bill.issueDate >= from && bill.issueDate <= to) {
         add(accrualExpenses, bill.currency, supplierExpenseBase(bill));
@@ -385,6 +425,33 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => Number(b.balance) - Number(a.balance));
 
   const creditors = allCreditors.slice(0, 500);
+
+  const payablesSchedule = Object.fromEntries(
+    Object.entries(payablesScheduleRaw)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([currency, buckets]) => {
+        const dueWithin30 = buckets.next_7.amount
+          .plus(buckets.days_8_14.amount)
+          .plus(buckets.days_15_30.amount);
+        const dueWithin90 = dueWithin30
+          .plus(buckets.days_31_60.amount)
+          .plus(buckets.days_61_90.amount);
+        return [currency, {
+          overdue: { amount: buckets.overdue.amount.toFixed(2), count: buckets.overdue.count },
+          next_7: { amount: buckets.next_7.amount.toFixed(2), count: buckets.next_7.count },
+          days_8_14: { amount: buckets.days_8_14.amount.toFixed(2), count: buckets.days_8_14.count },
+          days_15_30: { amount: buckets.days_15_30.amount.toFixed(2), count: buckets.days_15_30.count },
+          days_31_60: { amount: buckets.days_31_60.amount.toFixed(2), count: buckets.days_31_60.count },
+          days_61_90: { amount: buckets.days_61_90.amount.toFixed(2), count: buckets.days_61_90.count },
+          days_90_plus: { amount: buckets.days_90_plus.amount.toFixed(2), count: buckets.days_90_plus.count },
+          dueWithin30: dueWithin30.toFixed(2),
+          dueWithin30Count: buckets.next_7.count + buckets.days_8_14.count + buckets.days_15_30.count,
+          dueWithin90: dueWithin90.toFixed(2),
+          dueWithin90Count: buckets.next_7.count + buckets.days_8_14.count + buckets.days_15_30.count + buckets.days_31_60.count + buckets.days_61_90.count,
+          methodology: 'Committed supplier cash requirement based only on current open bill balances and contractual due dates. Overdue amounts are shown separately, currencies are never converted, and unbilled purchase orders or forecast expenses are excluded.',
+        }];
+      }),
+  );
 
   for (const payment of payments) {
     add(cashIn, payment.currency, payment.amount);
@@ -781,6 +848,7 @@ export async function GET(request: NextRequest) {
       collectionHealth,
       renewalPerformance,
       runway,
+      payablesSchedule,
       collections: {
         followUpDue: followUpDueInvoices.size,
         brokenPromises,
