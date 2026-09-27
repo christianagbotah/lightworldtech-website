@@ -2476,6 +2476,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('lightworld-supplier-payments');
   });
 
+  test('alerts finance when non-cash supplier payment proof is missing', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('supplierPaymentProofCutoff');
+    expect(notifications).toContain('financeVendorPayment.count');
+    expect(notifications).toContain("method: { not: 'cash' }");
+    expect(notifications).toContain('attachments: { none: {} }');
+    expect(notifications).toContain("'finance-supplier-payment-proof-missing'");
+    expect(notifications).toContain('Supplier payment proof missing');
+    expect(notifications).toContain("action: 'admin-finance-suppliers'");
+  });
+
   test('governs supplier quotation comparison before purchase order award', () => {
     const schema = source('prisma/schema.prisma');
     const quoteApi = source('src/app/api/admin/finance/procurement/[id]/quotes/route.ts');
