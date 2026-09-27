@@ -473,6 +473,7 @@ model ClientOrganization {
   collectionActivities FinanceCollectionActivity[]
   expenses           FinanceExpense[]
   agreements         ClientAgreement[]
+  creditPolicyApprovals FinanceCreditPolicyApproval[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1513,6 +1514,35 @@ model FinanceOutflowApproval {
   @@index([outflowType, status])
   @@index([counterpartyId, status])
   @@index([sourceId, status])
+  @@index([requestedByAdminId, status])
+}
+
+model FinanceCreditPolicyApproval {
+  id                    String             @id @default(cuid())
+  organizationId        String
+  organization          ClientOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  status                String             @default("pending")
+  paymentTermsDays      Int
+  creditLimitCurrency   String
+  creditLimit           Decimal            @db.Decimal(18, 2)
+  creditHold            Boolean
+  creditHoldReason      String             @default("")
+  previousPolicyJson    String             @default("{}")
+  requestedByAdminId    String
+  requestedByName       String             @default("")
+  requestedByEmail      String             @default("")
+  requestedAt           DateTime           @default(now())
+  decidedByAdminId      String             @default("")
+  decidedByName         String             @default("")
+  decidedByEmail        String             @default("")
+  decidedAt             DateTime?
+  decisionNotes         String             @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status, requestedAt])
+  @@index([status, requestedAt])
   @@index([requestedByAdminId, status])
 }
 

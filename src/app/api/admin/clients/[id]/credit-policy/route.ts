@@ -26,7 +26,6 @@ export async function PATCH(
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: 'Invalid credit policy', details: parsed.error.flatten() }, { status: 400 });
   }
-
   const { id } = await params;
   const existing = await db.clientOrganization.findUnique({
     where: { id },
@@ -46,35 +45,95 @@ export async function PATCH(
 
   const creditHoldReason = parsed.data.creditHold ? parsed.data.creditHoldReason : '';
   const creditLimitCurrency = normalizeCurrency(parsed.data.creditLimitCurrency || 'GHS');
+  if (parsed.data.creditHold && creditHoldReason.length < 5) {
+    return NextResponse.json({ success: false, error: 'A credit hold requires a reason' }, { status: 400 });
+  }
+
   const sensitiveCreditChanged =
     creditLimitCurrency !== existing.creditLimitCurrency ||
     !existing.creditLimit.eq(parsed.data.creditLimit) ||
     parsed.data.creditHold !== existing.creditHold ||
     creditHoldReason !== existing.creditHoldReason;
 
-  if (
-    sensitiveCreditChanged &&
-    !hasAdminPermission(actor.role, actor.permissions, 'finance.approve')
-  ) {
-    return NextResponse.json(
-      { success: false, error: 'Finance approval permission is required to change a credit limit or hold' },
-      { status: 403 },
-    );
-  }
+  if (sensitiveCreditChanged) {
+    const pending = await db.financeCreditPolicyApproval.findFirst({
+      where: { organizationId: id, status: 'pending' },
+      orderBy: { requestedAt: 'desc' },
+    });
+    if (pending) {
+      return NextResponse.json(
+        { success: false, error: 'A credit policy change is already awaiting approval', approvalId: pending.id },
+        { status: 409 },
+      );
+    }
+    const result = await db.$transaction(async (tx) => {
+      const organization = parsed.data.paymentTermsDays !== existing.paymentTermsDays
+        ? await tx.clientOrganization.update({
+            where: { id },
+            data: { paymentTermsDays: parsed.data.paymentTermsDays },
+          })
+        : existing;
 
-  if (parsed.data.creditHold && creditHoldReason.length < 5) {
-    return NextResponse.json({ success: false, error: 'A credit hold requires a reason' }, { status: 400 });
-  }
+      const approval = await tx.financeCreditPolicyApproval.create({
+        data: {
+          organizationId: id,
+          paymentTermsDays: parsed.data.paymentTermsDays,
+          creditLimitCurrency,
+          creditLimit: parsed.data.creditLimit,
+          creditHold: parsed.data.creditHold,
+          creditHoldReason,
+          previousPolicyJson: JSON.stringify({
+            paymentTermsDays: existing.paymentTermsDays,
+            creditLimitCurrency: existing.creditLimitCurrency,
+            creditLimit: existing.creditLimit.toFixed(2),
+            creditHold: existing.creditHold,
+            creditHoldReason: existing.creditHoldReason,
+          }),
+          requestedByAdminId: actor.id,
+          requestedByName: actor.name || 'Admin',
+          requestedByEmail: actor.email,
+        },
+      });
+      return { organization, approval };
+    });
 
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.client_credit_policy_approval_requested',
+      entity: 'FinanceCreditPolicyApproval',
+      entityId: result.approval.id,
+      details: {
+        organizationId: id,
+        organizationName: existing.name,
+        paymentTermsAppliedImmediately: parsed.data.paymentTermsDays !== existing.paymentTermsDays,
+        proposed: {
+          creditLimitCurrency,
+          creditLimit: Number(parsed.data.creditLimit).toFixed(2),
+          creditHold: parsed.data.creditHold,
+          creditHoldReason,
+        },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      approvalRequired: true,
+      message: 'Payment terms saved. Sensitive credit changes were submitted for independent approval.',
+      data: {
+        ...existing,
+        paymentTermsDays: parsed.data.paymentTermsDays,
+        creditLimit: existing.creditLimit.toFixed(2),
+      },
+      approval: {
+        id: result.approval.id,
+        status: result.approval.status,
+        requestedAt: result.approval.requestedAt,
+      },
+    }, { status: 202 });
+  }
   const updated = await db.clientOrganization.update({
     where: { id },
-    data: {
-      paymentTermsDays: parsed.data.paymentTermsDays,
-      creditLimitCurrency,
-      creditLimit: parsed.data.creditLimit,
-      creditHold: parsed.data.creditHold,
-      creditHoldReason,
-    },
+    data: { paymentTermsDays: parsed.data.paymentTermsDays },
     select: {
       id: true,
       name: true,
@@ -88,33 +147,18 @@ export async function PATCH(
 
   await recordAdminAudit({
     admin: actor,
-    action: 'admin.client_credit_policy_updated',
+    action: 'admin.client_credit_terms_updated',
     entity: 'ClientOrganization',
     entityId: id,
     details: {
-      before: {
-        paymentTermsDays: existing.paymentTermsDays,
-        creditLimitCurrency: existing.creditLimitCurrency,
-        creditLimit: existing.creditLimit.toFixed(2),
-        creditHold: existing.creditHold,
-        creditHoldReason: existing.creditHoldReason,
-      },
-      sensitiveCreditChanged,
-      after: {
-        paymentTermsDays: updated.paymentTermsDays,
-        creditLimitCurrency: updated.creditLimitCurrency,
-        creditLimit: updated.creditLimit.toFixed(2),
-        creditHold: updated.creditHold,
-        creditHoldReason: updated.creditHoldReason,
-      },
+      beforePaymentTermsDays: existing.paymentTermsDays,
+      afterPaymentTermsDays: updated.paymentTermsDays,
     },
   });
 
   return NextResponse.json({
     success: true,
-    data: {
-      ...updated,
-      creditLimit: updated.creditLimit.toFixed(2),
-    },
+    approvalRequired: false,
+    data: { ...updated, creditLimit: updated.creditLimit.toFixed(2) },
   });
 }

@@ -753,13 +753,24 @@ export async function GET(
       : []),
   ].slice(0, 4);
 
+  const creditPolicyApprovals = await db.financeCreditPolicyApproval.findMany({
+    where: { organizationId: id },
+    orderBy: { requestedAt: 'desc' },
+    take: 20,
+  });
+
   return NextResponse.json({
     success: true,
     data: {
       creditPolicyPermissions: {
         canManageTerms: true,
         canApproveCredit: hasAdminPermission(actor.role, actor.permissions, 'finance.approve'),
+        currentAdminId: actor.id,
       },
+      creditPolicyApprovals: creditPolicyApprovals.map((item) => ({
+        ...item,
+        creditLimit: item.creditLimit.toFixed(2),
+      })),
       organization: {
         id: organization.id,
         name: organization.name,
