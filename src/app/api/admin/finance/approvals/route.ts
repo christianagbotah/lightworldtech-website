@@ -23,7 +23,16 @@ export async function GET(request: NextRequest) {
     orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
     take: 1000,
   });
-  const policy = await getFinanceApprovalPolicy();
+  const [policy, creditApprovals] = await Promise.all([
+    getFinanceApprovalPolicy(),
+    db.financeCreditPolicyApproval.findMany({
+      include: {
+        organization: { select: { id: true, name: true } },
+      },
+      orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
+      take: 1000,
+    }),
+  ]);
 
   return NextResponse.json({
     success: true,
@@ -35,6 +44,10 @@ export async function GET(request: NextRequest) {
       canApprove: canApproveFinanceOutflow(actor),
       currentAdminId: actor.id,
       approvals: approvals.map(serializeOutflowApproval),
+      creditApprovals: creditApprovals.map((item) => ({
+        ...item,
+        creditLimit: item.creditLimit.toFixed(2),
+      })),
     },
   });
 }
