@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
     include: {
       vendor: { select: { id: true, name: true } },
       allocations: { include: { bill: { select: { id: true, payableNumber: true, total: true, dueDate: true, status: true } } } },
+      attachments: { orderBy: { createdAt: 'desc' } },
     },
     take: 1000,
   });

@@ -2452,6 +2452,30 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain("'/api/admin/finance/bill-attachments/' + attachment.id");
   });
 
+  test('stores supplier payment proof and exposes supplier payment history', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927070000_supplier_payment_evidence/migration.sql');
+    const paymentsApi = source('src/app/api/admin/finance/vendor-payments/route.ts');
+    const uploadApi = source('src/app/api/admin/finance/vendor-payments/[id]/attachments/route.ts');
+    const attachmentApi = source('src/app/api/admin/finance/vendor-payment-attachments/[id]/route.ts');
+    const attachmentLib = source('src/lib/vendor-payment-attachment.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('model FinanceVendorPaymentAttachment');
+    expect(schema).toContain('attachments   FinanceVendorPaymentAttachment[]');
+    expect(migration).toContain('CREATE TABLE "FinanceVendorPaymentAttachment"');
+    expect(paymentsApi).toContain("attachments: { orderBy: { createdAt: 'desc' } }");
+    expect(uploadApi).toContain('admin.finance_supplier_payment_attachment_added');
+    expect(uploadApi).toContain('Upload a valid PDF, JPG, PNG or WebP payment proof.');
+    expect(attachmentApi).toContain('admin.finance_supplier_payment_attachment_downloaded');
+    expect(attachmentLib).toContain("join(uploadStorageDirectory(), 'vendor-payments')");
+    expect(finance).toContain('Supplier payment history & proof');
+    expect(finance).toContain('Proof missing');
+    expect(finance).toContain('Add proof');
+    expect(finance).toContain('uploadSupplierPaymentEvidence');
+    expect(finance).toContain('lightworld-supplier-payments');
+  });
+
   test('governs supplier quotation comparison before purchase order award', () => {
     const schema = source('prisma/schema.prisma');
     const quoteApi = source('src/app/api/admin/finance/procurement/[id]/quotes/route.ts');

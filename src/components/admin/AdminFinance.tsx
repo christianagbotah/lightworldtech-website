@@ -217,6 +217,7 @@ type SupplierPayment = {
   method: string;
   reference: string;
   vendor: { id: string; name: string };
+  attachments: BillAttachment[];
 };
 
 type Expense = {
@@ -430,6 +431,7 @@ export default function AdminFinance() {
   });
   const [billEvidenceFile, setBillEvidenceFile] = useState<File | null>(null);
   const [billEvidenceFiles, setBillEvidenceFiles] = useState<Record<string, File | null>>({});
+  const [supplierPaymentEvidenceFiles, setSupplierPaymentEvidenceFiles] = useState<Record<string, File | null>>({});
   const [supplierPaymentForm, setSupplierPaymentForm] = useState({
     vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
     method: 'bank_transfer', reference: '', notes: '',
@@ -951,6 +953,30 @@ export default function AdminFinance() {
     }
   };
 
+  const uploadSupplierPaymentEvidence = async (paymentId: string) => {
+    const file = supplierPaymentEvidenceFiles[paymentId];
+    if (!file) {
+      toast.error('Choose a payment proof file');
+      return;
+    }
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await api<BillAttachment>('/api/admin/finance/vendor-payments/' + paymentId + '/attachments', {
+        method: 'POST',
+        body: formData,
+      });
+      setSupplierPaymentEvidenceFiles((current) => ({ ...current, [paymentId]: null }));
+      toast.success('Supplier payment proof attached');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to attach supplier payment proof');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const submitSupplierPayment = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
@@ -1455,6 +1481,90 @@ export default function AdminFinance() {
               </div></CardContent>
             </Card>
           </div>
+
+          <Card className="min-w-0 border-border/60">
+            <CardHeader>
+              <CardTitle className="text-base">Supplier payment history & proof</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-w-full overflow-x-auto">
+                <Table exportFileName="lightworld-supplier-payments">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Payment</TableHead>
+                      <TableHead>Supplier</TableHead>
+                      <TableHead>Date / method</TableHead>
+                      <TableHead>Reference</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Unapplied</TableHead>
+                      <TableHead>Proof</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.supplierPayments.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-mono text-xs">{item.paymentNumber}</TableCell>
+                        <TableCell className="font-medium">{item.vendor.name}</TableCell>
+                        <TableCell className="text-xs">
+                          {new Date(item.paidAt).toLocaleDateString()}
+                          <p className="text-[10px] text-muted-foreground">{pretty(item.method)}</p>
+                        </TableCell>
+                        <TableCell className="max-w-[180px] truncate text-xs">{item.reference || '—'}</TableCell>
+                        <TableCell className="text-right font-semibold">{money(item.amount, item.currency)}</TableCell>
+                        <TableCell className="text-right">{money(item.unallocatedAmount, item.currency)}</TableCell>
+                        <TableCell>
+                          <div className="min-w-[220px] space-y-2">
+                            {item.attachments.length ? (
+                              <div className="flex flex-col gap-1">
+                                {item.attachments.slice(0, 2).map((attachment) => (
+                                  <button
+                                    key={attachment.id}
+                                    type="button"
+                                    className="max-w-[190px] truncate text-left text-[10px] font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-300"
+                                    onClick={() => window.open('/api/admin/finance/vendor-payment-attachments/' + attachment.id, '_blank', 'noopener,noreferrer')}
+                                  >
+                                    {attachment.originalName}
+                                  </button>
+                                ))}
+                                {item.attachments.length > 2 && <span className="text-[10px] text-muted-foreground">+{item.attachments.length - 2} more</span>}
+                              </div>
+                            ) : (
+                              <Badge variant="outline">{item.method === 'cash' ? 'Proof optional' : 'Proof missing'}</Badge>
+                            )}
+                            <div className="flex gap-1">
+                              <Input
+                                type="file"
+                                accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp"
+                                className="h-8 max-w-[145px] text-[10px]"
+                                onChange={(event) => setSupplierPaymentEvidenceFiles((current) => ({ ...current, [item.id]: event.target.files?.[0] || null }))}
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-2 text-[10px]"
+                                disabled={saving || !supplierPaymentEvidenceFiles[item.id]}
+                                onClick={() => void uploadSupplierPaymentEvidence(item.id)}
+                              >
+                                Add proof
+                              </Button>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {!data.supplierPayments.length && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                          No supplier payments recorded yet.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
