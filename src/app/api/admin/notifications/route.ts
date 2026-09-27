@@ -483,9 +483,20 @@ export async function GET(request: NextRequest) {
       return outstanding.gte(account.creditLimit.mul(0.9));
     }).length;
 
-    const pendingCreditPolicyApprovals = await db.financeCreditPolicyApproval.count({
+    const pendingCreditPolicyApprovalRows = await db.financeCreditPolicyApproval.findMany({
       where: { status: 'pending' },
+      select: { requestedAt: true },
+      take: 1000,
     });
+    const pendingCreditPolicyApprovals = pendingCreditPolicyApprovalRows.length;
+    const creditApproval24hCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const creditApproval48hCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const agedCreditPolicyApprovals = pendingCreditPolicyApprovalRows.filter(
+      (item) => item.requestedAt < creditApproval24hCutoff,
+    ).length;
+    const overdueCreditPolicyApprovals = pendingCreditPolicyApprovalRows.filter(
+      (item) => item.requestedAt < creditApproval48hCutoff,
+    ).length;
 
     const procurementApprovalCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
     const [agedProcurementApprovals, overdueProcurementOrders, receivedOrdersAwaitingBill] = await Promise.all([
@@ -535,14 +546,32 @@ export async function GET(request: NextRequest) {
       return days <= project.renewalNoticeDays;
     }).length;
 
-    if (pendingCreditPolicyApprovals > 0) {
+    if (overdueCreditPolicyApprovals > 0) {
+      notices.push({
+        id: 'finance-credit-policy-approvals-overdue',
+        severity: 'critical',
+        title: 'Customer credit approvals overdue',
+        message: overdueCreditPolicyApprovals + ' sensitive customer credit policy request' + (overdueCreditPolicyApprovals === 1 ? ' has' : 's have') + ' been waiting more than 48 hours for independent Finance review.',
+        count: overdueCreditPolicyApprovals,
+        action: 'admin-finance-approvals',
+      });
+    } else if (agedCreditPolicyApprovals > 0) {
+      notices.push({
+        id: 'finance-credit-policy-approvals-aging',
+        severity: 'warning',
+        title: 'Customer credit approvals aging',
+        message: agedCreditPolicyApprovals + ' sensitive customer credit policy request' + (agedCreditPolicyApprovals === 1 ? ' has' : 's have') + ' been waiting more than 24 hours for independent Finance review.',
+        count: agedCreditPolicyApprovals,
+        action: 'admin-finance-approvals',
+      });
+    } else if (pendingCreditPolicyApprovals > 0) {
       notices.push({
         id: 'finance-credit-policy-approvals',
-        severity: 'warning',
+        severity: 'info',
         title: 'Customer credit changes awaiting approval',
-        message: pendingCreditPolicyApprovals + ' sensitive customer credit policy request' + (pendingCreditPolicyApprovals === 1 ? ' is' : 's are') + ' waiting for independent finance review.',
+        message: pendingCreditPolicyApprovals + ' sensitive customer credit policy request' + (pendingCreditPolicyApprovals === 1 ? ' is' : 's are') + ' waiting for independent Finance review.',
         count: pendingCreditPolicyApprovals,
-        action: 'admin-clients',
+        action: 'admin-finance-approvals',
       });
     }
 
