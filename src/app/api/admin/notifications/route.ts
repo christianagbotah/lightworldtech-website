@@ -443,6 +443,14 @@ export async function GET(request: NextRequest) {
     const overdueBillCount = overdueBills.filter(
       (bill) => invoiceBalance(bill.total, bill.allocations).gt(0),
     ).length;
+    const supplierPaymentProofCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const supplierPaymentsMissingProof = await db.financeVendorPayment.count({
+      where: {
+        method: { not: 'cash' },
+        paidAt: { lt: supplierPaymentProofCutoff },
+        attachments: { none: {} },
+      },
+    });
 
     const creditAccounts = await db.clientOrganization.findMany({
       where: {
@@ -663,6 +671,17 @@ export async function GET(request: NextRequest) {
         title: 'Supplier bills overdue',
         message: overdueBillCount + ' supplier bill' + (overdueBillCount === 1 ? ' is' : 's are') + ' past the due date with an outstanding balance.',
         count: overdueBillCount,
+        action: 'admin-finance-suppliers',
+      });
+    }
+
+    if (supplierPaymentsMissingProof > 0) {
+      notices.push({
+        id: 'finance-supplier-payment-proof-missing',
+        severity: 'warning',
+        title: 'Supplier payment proof missing',
+        message: supplierPaymentsMissingProof + ' non-cash supplier payment' + (supplierPaymentsMissingProof === 1 ? ' is' : 's are') + ' more than 24 hours old without uploaded payment proof.',
+        count: supplierPaymentsMissingProof,
         action: 'admin-finance-suppliers',
       });
     }
