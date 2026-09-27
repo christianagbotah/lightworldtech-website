@@ -62,6 +62,27 @@ type Approval = {
   allocations: Array<{ billId: string; amount: number }>;
 };
 
+type CreditApproval = {
+  id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  paymentTermsDays: number;
+  creditLimitCurrency: string;
+  creditLimit: string;
+  creditHold: boolean;
+  creditHoldReason: string;
+  requestedByAdminId: string;
+  requestedByName: string;
+  requestedByEmail: string;
+  requestedAt: string;
+  decidedByName: string;
+  decidedAt: string | null;
+  decisionNotes: string;
+  organization: {
+    id: string;
+    name: string;
+  };
+};
+
 type Inbox = {
   policy: {
     enabled: boolean;
@@ -70,6 +91,7 @@ type Inbox = {
   canApprove: boolean;
   currentAdminId: string;
   approvals: Approval[];
+  creditApprovals: CreditApproval[];
 };
 
 type Policy = {
@@ -129,6 +151,11 @@ export default function FinanceOutflowApprovals() {
     action: 'approve' | 'reject' | 'cancel';
   } | null>(null);
   const [notes, setNotes] = useState('');
+  const [creditDecision, setCreditDecision] = useState<{
+    approval: CreditApproval;
+    action: 'approve' | 'reject' | 'cancel';
+  } | null>(null);
+  const [creditNotes, setCreditNotes] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -199,9 +226,41 @@ export default function FinanceOutflowApprovals() {
     }
   };
 
+  const decideCredit = async () => {
+    if (!creditDecision) return;
+    setWorking(true);
+    try {
+      await readJson(
+        '/api/admin/finance/credit-approvals/' + encodeURIComponent(creditDecision.approval.id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: creditDecision.action, notes: creditNotes }),
+        },
+      );
+      toast.success(
+        creditDecision.action === 'approve'
+          ? 'Customer credit policy approved and applied'
+          : creditDecision.action === 'reject'
+            ? 'Customer credit policy request rejected'
+            : 'Customer credit policy request cancelled',
+      );
+      setCreditDecision(null);
+      setCreditNotes('');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to decide customer credit approval');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   const approvals = inbox?.approvals || [];
   const pending = approvals.filter((item) => item.status === 'pending');
   const history = approvals.filter((item) => item.status !== 'pending');
+  const creditApprovals = inbox?.creditApprovals || [];
+  const pendingCredit = creditApprovals.filter((item) => item.status === 'pending');
+  const creditHistory = creditApprovals.filter((item) => item.status !== 'pending');
 
   return (
     <div className="space-y-5">
@@ -262,7 +321,89 @@ export default function FinanceOutflowApprovals() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-base">Pending approvals</CardTitle>
+              <CardTitle className="text-base">Pending customer credit approvals</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Sensitive credit-limit, currency and hold changes require a different Finance approver before they take effect.
+              </p>
+            </div>
+            <Badge variant="outline">{pendingCredit.length} pending</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-pending-customer-credit-approvals" className="min-w-[980px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Requested by</TableHead>
+                  <TableHead>Requested</TableHead>
+                  <TableHead>Payment terms</TableHead>
+                  <TableHead>Credit status</TableHead>
+                  <TableHead className="text-right">Credit limit</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingCredit.map((approval) => {
+                  const mine = approval.requestedByAdminId === inbox?.currentAdminId;
+                  const canDecide = Boolean(inbox?.canApprove) && !mine;
+                  return (
+                    <TableRow key={approval.id}>
+                      <TableCell className="font-medium">{approval.organization.name}</TableCell>
+                      <TableCell>
+                        <p className="text-xs">{approval.requestedByName || 'Finance'}</p>
+                        <p className="text-[10px] text-muted-foreground">{approval.requestedByEmail}</p>
+                      </TableCell>
+                      <TableCell className="text-xs">{date(approval.requestedAt)}</TableCell>
+                      <TableCell className="text-xs">{approval.paymentTermsDays} days</TableCell>
+                      <TableCell>
+                        <Badge className={approval.creditHold ? 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200' : 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'}>
+                          {approval.creditHold ? 'Credit hold' : 'Credit active'}
+                        </Badge>
+                        {approval.creditHoldReason && <p className="mt-1 max-w-[260px] truncate text-[10px] text-muted-foreground">{approval.creditHoldReason}</p>}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">{money(approval.creditLimit, approval.creditLimitCurrency)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1.5">
+                          {canDecide && (
+                            <>
+                              <Button type="button" size="sm" onClick={() => { setCreditDecision({ approval, action: 'approve' }); setCreditNotes(''); }}>
+                                <CheckCircle2 className="mr-1.5 size-3.5" /> Approve
+                              </Button>
+                              <Button type="button" size="sm" variant="outline" onClick={() => { setCreditDecision({ approval, action: 'reject' }); setCreditNotes(''); }}>
+                                <XCircle className="mr-1.5 size-3.5" /> Reject
+                              </Button>
+                            </>
+                          )}
+                          {mine && (
+                            <Button type="button" size="sm" variant="outline" onClick={() => { setCreditDecision({ approval, action: 'cancel' }); setCreditNotes(''); }}>
+                              <Ban className="mr-1.5 size-3.5" /> Cancel
+                            </Button>
+                          )}
+                          {!mine && !canDecide && <span className="text-[10px] text-muted-foreground">Approval permission required</span>}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!pendingCredit.length && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                      No sensitive customer credit changes are waiting for approval.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base">Pending cash-out approvals</CardTitle>
               <p className="mt-1 text-xs text-muted-foreground">
                 A requester cannot approve or reject their own request. They may cancel it before another approver acts.
               </p>
@@ -402,6 +543,53 @@ export default function FinanceOutflowApprovals() {
         </CardContent>
       </Card>
 
+      <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-base">Customer credit approval history</CardTitle>
+            <Badge variant="outline">{creditHistory.length}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-customer-credit-approval-history" className="min-w-[900px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Requester</TableHead>
+                  <TableHead>Decision</TableHead>
+                  <TableHead>Credit status</TableHead>
+                  <TableHead className="text-right">Credit limit</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {creditHistory.map((approval) => (
+                  <TableRow key={approval.id}>
+                    <TableCell className="font-medium">{approval.organization.name}</TableCell>
+                    <TableCell><Badge className={statusTone(approval.status)}>{pretty(approval.status)}</Badge></TableCell>
+                    <TableCell>
+                      <p className="text-xs">{approval.requestedByName || 'Finance'}</p>
+                      <p className="text-[10px] text-muted-foreground">{date(approval.requestedAt)}</p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-xs">{approval.decidedByName || '—'}</p>
+                      <p className="text-[10px] text-muted-foreground">{date(approval.decidedAt)}</p>
+                      {approval.decisionNotes && <p className="max-w-[260px] truncate text-[10px] text-muted-foreground">{approval.decisionNotes}</p>}
+                    </TableCell>
+                    <TableCell><Badge variant="outline">{approval.creditHold ? 'Credit hold' : 'Credit active'}</Badge></TableCell>
+                    <TableCell className="text-right font-semibold">{money(approval.creditLimit, approval.creditLimitCurrency)}</TableCell>
+                  </TableRow>
+                ))}
+                {!creditHistory.length && (
+                  <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No customer credit approval history yet.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       <Dialog open={Boolean(decision)} onOpenChange={(open) => !working && !open && setDecision(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -454,6 +642,64 @@ export default function FinanceOutflowApprovals() {
               {working && <Loader2 className="mr-2 size-4 animate-spin" />}
               {decision?.action === 'approve' ? <UserCheck className="mr-2 size-4" /> : null}
               {decision?.action ? pretty(decision.action) : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(creditDecision)} onOpenChange={(open) => !working && !open && setCreditDecision(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {creditDecision?.action === 'approve'
+                ? 'Approve customer credit policy?'
+                : creditDecision?.action === 'reject'
+                  ? 'Reject customer credit policy?'
+                  : 'Cancel customer credit policy request?'}
+            </DialogTitle>
+            <DialogDescription>
+              {creditDecision?.action === 'approve'
+                ? 'Approval applies the proposed credit limit, currency and hold state to the customer account.'
+                : creditDecision?.action === 'reject'
+                  ? 'Rejection leaves the current customer credit controls unchanged and records the decision.'
+                  : 'Cancellation withdraws this pending request before another Finance approver acts.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {creditDecision && (
+            <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+              <p className="text-sm font-semibold">{creditDecision.approval.organization.name}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span>{creditDecision.approval.paymentTermsDays} day terms</span>
+                <span>·</span>
+                <span>{money(creditDecision.approval.creditLimit, creditDecision.approval.creditLimitCurrency)}</span>
+                <span>·</span>
+                <span>{creditDecision.approval.creditHold ? 'Credit hold' : 'Credit active'}</span>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <Label>Decision notes</Label>
+            <Textarea
+              rows={3}
+              value={creditNotes}
+              onChange={(event) => setCreditNotes(event.target.value)}
+              placeholder={creditDecision?.action === 'reject' ? 'Reason for rejection…' : 'Optional approval/cancellation note…'}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setCreditDecision(null)} disabled={working}>Back</Button>
+            <Button
+              type="button"
+              variant={creditDecision?.action === 'reject' || creditDecision?.action === 'cancel' ? 'outline' : 'default'}
+              onClick={() => void decideCredit()}
+              disabled={working || (creditDecision?.action === 'reject' && !creditNotes.trim())}
+            >
+              {working && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {creditDecision?.action === 'approve' ? <UserCheck className="mr-2 size-4" /> : null}
+              {creditDecision?.action ? pretty(creditDecision.action) : 'Confirm'}
             </Button>
           </DialogFooter>
         </DialogContent>
