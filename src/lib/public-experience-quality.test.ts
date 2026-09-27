@@ -222,6 +222,7 @@ describe('public experience quality', () => {
     expect(blog).toContain('aria-pressed={category === item}');
     expect(blog).toContain('min-h-10');
     expect(portfolio).toContain('aria-pressed={active === category}');
+    expect(portfolio).toContain('Visit live site');
     expect(portfolio).toContain('size-11 shrink-0');
     expect(faq).toContain('aria-label="Search frequently asked questions"');
     expect(faq).toContain('aria-live="polite"');
