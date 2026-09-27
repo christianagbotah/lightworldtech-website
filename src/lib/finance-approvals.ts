@@ -16,8 +16,9 @@ import {
   postCustomerRefundJournal,
   postVendorPaymentJournal,
 } from '@/lib/finance-ledger';
+import { approveTreasuryPlanFromApproval } from '@/lib/finance-treasury';
 
-export type OutflowType = 'vendor_payment' | 'customer_refund';
+export type OutflowType = 'vendor_payment' | 'customer_refund' | 'treasury_vendor_payment';
 
 export type VendorPaymentApprovalAllocation = {
   billId: string;
@@ -142,6 +143,10 @@ export async function executeOutflowApproval(
   }
   if (!canApproveFinanceOutflow(actor)) {
     throw new Error('Finance approval permission is required');
+  }
+
+  if (approval.outflowType === 'treasury_vendor_payment') {
+    return approveTreasuryPlanFromApproval(approval, actor, decisionNotes);
   }
 
   if (approval.outflowType === 'vendor_payment') {

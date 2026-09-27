@@ -37,7 +37,7 @@ import {
 type Approval = {
   id: string;
   requestNumber: string;
-  outflowType: 'vendor_payment' | 'customer_refund';
+  outflowType: 'vendor_payment' | 'customer_refund' | 'treasury_vendor_payment';
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   counterpartyId: string;
   counterpartyName: string;
@@ -326,7 +326,7 @@ export default function FinanceOutflowApprovals() {
                   </Badge>
                 </div>
                 <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
-                  When enabled, supplier payments and customer refunds are requested first and only post cash after approval by a different authorized administrator.
+                  Direct supplier payments and customer refunds post cash only after independent approval. Treasury plans are approved as commitments first and post cash only when an authorized user explicitly executes the approved plan.
                 </p>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Eligible approvers: <strong className="text-foreground">{policy?.eligibleApprovers ?? 0}</strong>
