@@ -2586,4 +2586,16 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain("row.creditPolicy.utilizationPercent + '% credit used'");
   });
 
+  test('notifies finance about critical customer credit exposure', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('creditLimitCurrency: true');
+    expect(notifications).toContain('const creditHoldCount');
+    expect(notifications).toContain('const criticalCreditAccounts');
+    expect(notifications).toContain('account.creditLimit.mul(0.9)');
+    expect(notifications).toContain("id: 'finance-customer-credit-holds'");
+    expect(notifications).toContain("id: 'finance-customer-credit-critical'");
+    expect(notifications).toContain("action: 'admin-clients'");
+  });
+
 });

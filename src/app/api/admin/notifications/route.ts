@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
@@ -443,6 +444,45 @@ export async function GET(request: NextRequest) {
       (bill) => invoiceBalance(bill.total, bill.allocations).gt(0),
     ).length;
 
+    const creditAccounts = await db.clientOrganization.findMany({
+      where: {
+        status: 'active',
+        OR: [
+          { creditHold: true },
+          { creditLimit: { gt: 0 } },
+        ],
+      },
+      select: {
+        id: true,
+        creditLimitCurrency: true,
+        creditLimit: true,
+        creditHold: true,
+        invoices: {
+          where: { status: { notIn: ['draft', 'void'] } },
+          select: {
+            currency: true,
+            total: true,
+            allocations: { select: { amount: true } },
+            creditNotes: { where: { status: 'posted' }, select: { appliedAmount: true } },
+          },
+        },
+      },
+      take: 2000,
+    });
+
+    const creditHoldCount = creditAccounts.filter((account) => account.creditHold).length;
+    const criticalCreditAccounts = creditAccounts.filter((account) => {
+      if (account.creditHold || account.creditLimit.lte(0)) return false;
+      const currency = account.creditLimitCurrency.trim().toUpperCase() || 'GHS';
+      const outstanding = account.invoices
+        .filter((invoice) => invoice.currency.trim().toUpperCase() === currency)
+        .reduce(
+          (sum, invoice) => sum.plus(invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes)),
+          new Prisma.Decimal(0),
+        );
+      return outstanding.gte(account.creditLimit.mul(0.9));
+    }).length;
+
     const procurementApprovalCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
     const [agedProcurementApprovals, overdueProcurementOrders, receivedOrdersAwaitingBill] = await Promise.all([
       db.financePurchaseRequest.count({
@@ -490,6 +530,28 @@ export async function GET(request: NextRequest) {
       const days = Math.ceil((project.nextRenewalDate.getTime() - now.getTime()) / 86400000);
       return days <= project.renewalNoticeDays;
     }).length;
+
+    if (creditHoldCount > 0) {
+      notices.push({
+        id: 'finance-customer-credit-holds',
+        severity: 'critical',
+        title: 'Customer accounts on credit hold',
+        message: creditHoldCount + ' active customer account' + (creditHoldCount === 1 ? ' is' : 's are') + ' on governed credit hold and cannot receive new issued invoices.',
+        count: creditHoldCount,
+        action: 'admin-clients',
+      });
+    }
+
+    if (criticalCreditAccounts > 0) {
+      notices.push({
+        id: 'finance-customer-credit-critical',
+        severity: 'critical',
+        title: 'Customer credit exposure critical',
+        message: criticalCreditAccounts + ' active customer account' + (criticalCreditAccounts === 1 ? ' is' : 's are') + ' at or above 90% of the configured same-currency credit limit.',
+        count: criticalCreditAccounts,
+        action: 'admin-clients',
+      });
+    }
 
     if (overdueProcurementOrders > 0) {
       notices.push({
