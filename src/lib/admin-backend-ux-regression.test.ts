@@ -2446,6 +2446,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(attachmentLib).toContain("join(uploadStorageDirectory(), 'vendor-bills')");
     expect(finance).toContain('Supplier invoice PDF evidence');
     expect(finance).toContain('Evidence missing');
+    expect(finance).toContain('Add PDF');
+    expect(finance).toContain('uploadBillEvidence');
     expect(finance).toContain("'/api/admin/finance/bills/' + created.id + '/attachments'");
     expect(finance).toContain("'/api/admin/finance/bill-attachments/' + attachment.id");
   });
