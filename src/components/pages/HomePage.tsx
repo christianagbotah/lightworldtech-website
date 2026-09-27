@@ -142,7 +142,7 @@ const work = [
     title: 'Enterprise operations',
     category: 'Business systems',
     description: 'Complex workflows translated into clear, role-aware operating experiences.',
-    image: '/images/portfolio/erp-system.png',
+    image: '/images/hero-slide-5.png',
   },
   {
     title: 'Digital commerce',
@@ -363,7 +363,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
           title: String(item.title || work[index]?.title || 'Project'),
           category: String(item.category || work[index]?.category || 'Digital product'),
           description: String(item.description || ''),
-          image: String(item.image || work[index]?.image || '/images/portfolio/erp-system.png'),
+          image: String(item.image || work[index]?.image || '/images/hero-slide-5.png'),
         })));
       })
       .catch(() => {});

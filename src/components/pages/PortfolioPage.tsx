@@ -39,7 +39,7 @@ const capabilityExamples: PortfolioItem[] = [
     category: 'Enterprise Software',
     tags: ['Workflow', 'RBAC', 'Reporting'],
     featured: true,
-    image: '/images/portfolio/erp-system.png',
+    image: '/images/hero-slide-5.png',
   },
   {
     id: 'example-learning',
@@ -57,7 +57,7 @@ const capabilityExamples: PortfolioItem[] = [
     category: 'Mobile',
     tags: ['iOS', 'Android', 'Offline UX'],
     featured: false,
-    image: '/images/portfolio/healthcare.png',
+    image: '/images/hero-slide-4.png',
   },
   {
     id: 'example-security',
@@ -66,7 +66,7 @@ const capabilityExamples: PortfolioItem[] = [
     category: 'Data & Operations',
     tags: ['Dashboards', 'Alerts', 'Audit'],
     featured: false,
-    image: '/images/portfolio/security.png',
+    image: '/images/hero-slide-2.png',
   },
   {
     id: 'example-marketplace',

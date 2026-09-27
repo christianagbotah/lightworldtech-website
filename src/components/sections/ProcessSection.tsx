@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Lightbulb, PenTool, Code, TestTube, Rocket, BarChart3, Wrench, MessageSquare } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import Image from 'next/image';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -86,17 +85,81 @@ export default function ProcessSection() {
               viewport={{ once: true, margin: '-80px' }}
               transition={{ duration: 0.6 }}
             >
-              <div className="rounded-2xl overflow-hidden shadow-xl">
-                <Image
-                  src="/images/process-workflow.png"
-                  alt="Our technology development process workflow"
-                  width={1152}
-                  height={864}
-                  className="w-full h-auto object-cover"
-                  priority
+              <div className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-slate-950 p-6 shadow-2xl shadow-slate-950/10 dark:border-white/[0.08] sm:p-8">
+                <div className="lw-dot-grid absolute inset-0 opacity-20" aria-hidden="true" />
+                <motion.div
+                  className="absolute -right-20 -top-20 size-64 rounded-full bg-amber-400/15 blur-3xl"
+                  animate={{ scale: [1, 1.12, 1], opacity: [0.55, 0.85, 0.55] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+                  aria-hidden="true"
                 />
+                <motion.div
+                  className="absolute -bottom-24 -left-16 size-72 rounded-full bg-emerald-400/10 blur-3xl"
+                  animate={{ x: [0, 18, 0], y: [0, -10, 0] }}
+                  transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+                  aria-hidden="true"
+                />
+
+                <div className="relative">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-300">Delivery system</p>
+                      <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">From problem to production.</h3>
+                    </div>
+                    <div className="hidden rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200 sm:block">Continuous improvement</div>
+                  </div>
+
+                  <div className="relative mt-10">
+                    <div className="absolute left-6 right-6 top-6 hidden h-px bg-gradient-to-r from-emerald-400/20 via-amber-300/80 to-emerald-400/20 sm:block" aria-hidden="true" />
+                    <div className="grid gap-4 sm:grid-cols-5">
+                      {[
+                        ['01', 'Discover', Search],
+                        ['02', 'Design', PenTool],
+                        ['03', 'Build', Code],
+                        ['04', 'Validate', TestTube],
+                        ['05', 'Launch', Rocket],
+                      ].map(([number, label, Icon], index) => {
+                        const StepIcon = Icon as React.ElementType;
+                        return (
+                          <motion.div
+                            key={String(label)}
+                            className="relative flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.045] p-3 backdrop-blur-sm sm:block sm:border-0 sm:bg-transparent sm:p-0 sm:text-center"
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.08, duration: 0.45 }}
+                          >
+                            <motion.div
+                              className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-slate-900 text-amber-300 shadow-lg shadow-black/20 sm:mx-auto"
+                              animate={{ boxShadow: ['0 0 0 rgba(251,191,36,0)', '0 0 24px rgba(251,191,36,.18)', '0 0 0 rgba(251,191,36,0)'] }}
+                              transition={{ duration: 4, repeat: Infinity, delay: index * 0.5 }}
+                            >
+                              <StepIcon className="size-5" />
+                            </motion.div>
+                            <div className="sm:mt-4">
+                              <p className="font-mono text-[9px] text-white/30">{String(number)}</p>
+                              <p className="mt-0.5 text-xs font-semibold text-white sm:text-sm">{String(label)}</p>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="mt-10 grid gap-3 sm:grid-cols-3">
+                    {[
+                      ['Security', 'Built into every stage'],
+                      ['Quality', 'Tested before release'],
+                      ['Operations', 'Measured after launch'],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-2xl border border-white/[0.07] bg-white/[0.035] p-4">
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/30">{label}</p>
+                        <p className="mt-1.5 text-xs font-medium text-white/75">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              {/* Decorative gradient accent below image */}
               <div className="mt-4 h-1.5 rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500 opacity-60" />
             </motion.div>
 
