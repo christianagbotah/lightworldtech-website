@@ -1259,7 +1259,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(approvalLib).toContain('invoiceBalance(bill.total, bill.allocations)');
     expect(approvalLib).toContain('refundableBalance');
     expect(approvalWorkspace).toContain('Maker-checker cash-out approval');
-    expect(approvalWorkspace).toContain('Pending approvals');
+    expect(approvalWorkspace).toContain('Pending cash-out approvals');
     expect(approvalWorkspace).toContain('Approval history');
     expect(approvalWorkspace).toContain('Enable maker-checker');
     expect(finance).toContain('Supplier payment submitted for approval');
@@ -2609,6 +2609,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     const decision = source('src/app/api/admin/finance/credit-approvals/[id]/route.ts');
     const commercialApi = source('src/app/api/admin/clients/[id]/commercial/route.ts');
     const commercial = source('src/components/admin/ClientCommercialAccount.tsx');
+    const approvalsApi = source('src/app/api/admin/finance/approvals/route.ts');
+    const approvalWorkspace = source('src/components/admin/FinanceOutflowApprovals.tsx');
 
     expect(schema).toContain('model FinanceCreditPolicyApproval');
     expect(migration).toContain('CREATE TABLE "FinanceCreditPolicyApproval"');
@@ -2625,6 +2627,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(commercial).toContain('Pending credit approvals');
     expect(commercial).toContain('Approve & apply');
     expect(commercial).toContain('independent maker–checker approval');
+    expect(approvalsApi).toContain('financeCreditPolicyApproval.findMany');
+    expect(approvalsApi).toContain('creditApprovals: creditApprovals.map');
+    expect(approvalWorkspace).toContain('Pending customer credit approvals');
+    expect(approvalWorkspace).toContain('Customer credit approval history');
+    expect(approvalWorkspace).toContain("'/api/admin/finance/credit-approvals/'");
   });
 
 });
