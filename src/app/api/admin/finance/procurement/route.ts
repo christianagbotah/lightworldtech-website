@@ -40,6 +40,10 @@ function serializeRequest(item: any) {
     purchaseOrder: item.purchaseOrder
       ? { ...item.purchaseOrder, total: item.purchaseOrder.total.toFixed(2) }
       : null,
+    supplierQuotes: item.supplierQuotes.map((quote: any) => ({
+      ...quote,
+      total: quote.total.toFixed(2),
+    })),
   };
 }
 
@@ -83,6 +87,10 @@ export async function GET(request: NextRequest) {
         project: { select: { id: true, name: true, organization: { select: { id: true, name: true } } } },
         lines: { orderBy: { createdAt: 'asc' } },
         purchaseOrder: { select: { id: true, poNumber: true, status: true, total: true } },
+        supplierQuotes: {
+          orderBy: [{ selected: 'desc' }, { createdAt: 'desc' }],
+          include: { vendor: { select: { id: true, name: true } } },
+        },
       },
     }),
     db.financePurchaseOrder.findMany({
@@ -275,6 +283,10 @@ export async function POST(request: NextRequest) {
       project: { select: { id: true, name: true, organization: { select: { id: true, name: true } } } },
       lines: { orderBy: { createdAt: 'asc' } },
       purchaseOrder: true,
+      supplierQuotes: {
+        orderBy: [{ selected: 'desc' }, { createdAt: 'desc' }],
+        include: { vendor: { select: { id: true, name: true } } },
+      },
     },
   });
 
