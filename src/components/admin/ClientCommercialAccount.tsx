@@ -117,6 +117,10 @@ type Payment = {
 };
 
 type CommercialData = {
+  creditPolicyPermissions: {
+    canManageTerms: boolean;
+    canApproveCredit: boolean;
+  };
   organization: {
     id: string;
     name: string;
@@ -864,6 +868,9 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                   <p className="mt-1 max-w-3xl text-xs leading-5 text-muted-foreground">
                     Set payment terms and a same-currency exposure ceiling. A limit of 0 disables the monetary limit. Draft invoices remain available for review, while issued invoices are blocked when the account is on hold or the projected outstanding balance would exceed the configured limit.
                   </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Payment terms may be maintained by Finance. Credit-limit, currency and hold changes require Finance approval authority.
+                  </p>
                 </div>
                 <div className="text-right text-xs text-muted-foreground">
                   <p>Current {creditPolicy.creditLimitCurrency || 'GHS'} outstanding</p>
@@ -883,11 +890,11 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
               <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div><Label>Payment terms (days)</Label><Input type="number" min="0" max="365" value={creditPolicy.paymentTermsDays} onChange={(event) => setCreditPolicy((current) => ({ ...current, paymentTermsDays: event.target.value }))} /></div>
                 <div className="grid grid-cols-[1fr_92px] gap-2">
-                  <div><Label>Credit limit</Label><Input type="number" min="0" step="0.01" value={creditPolicy.creditLimit} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimit: event.target.value }))} /></div>
-                  <div><Label>Currency</Label><Input maxLength={3} value={creditPolicy.creditLimitCurrency} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimitCurrency: event.target.value.toUpperCase() }))} /></div>
+                  <div><Label>Credit limit</Label><Input type="number" min="0" step="0.01" disabled={!data?.creditPolicyPermissions.canApproveCredit} value={creditPolicy.creditLimit} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimit: event.target.value }))} /></div>
+                  <div><Label>Currency</Label><Input maxLength={3} disabled={!data?.creditPolicyPermissions.canApproveCredit} value={creditPolicy.creditLimitCurrency} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimitCurrency: event.target.value.toUpperCase() }))} /></div>
                 </div>
                 <label className="flex min-h-10 items-center gap-2 self-end rounded-md border border-input bg-background px-3 text-sm">
-                  <input type="checkbox" checked={creditPolicy.creditHold} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHold: event.target.checked }))} />
+                  <input type="checkbox" disabled={!data?.creditPolicyPermissions.canApproveCredit} checked={creditPolicy.creditHold} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHold: event.target.checked }))} />
                   Place account on credit hold
                 </label>
                 <Button type="button" className="self-end" disabled={saving} onClick={() => void saveCreditPolicy()}>
@@ -898,7 +905,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
               {creditPolicy.creditHold && (
                 <div className="mt-3">
                   <Label>Credit hold reason</Label>
-                  <Textarea rows={2} value={creditPolicy.creditHoldReason} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHoldReason: event.target.value }))} placeholder="Reason for stopping new issued credit…" />
+                  <Textarea rows={2} disabled={!data?.creditPolicyPermissions.canApproveCredit} value={creditPolicy.creditHoldReason} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHoldReason: event.target.value }))} placeholder="Reason for stopping new issued credit…" />
                 </div>
               )}
             </div>

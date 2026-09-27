@@ -2598,4 +2598,19 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain("action: 'admin-clients'");
   });
 
+  test('requires finance approval authority for sensitive customer credit changes', () => {
+    const creditPolicy = source('src/app/api/admin/clients/[id]/credit-policy/route.ts');
+    const commercialApi = source('src/app/api/admin/clients/[id]/commercial/route.ts');
+    const commercial = source('src/components/admin/ClientCommercialAccount.tsx');
+
+    expect(creditPolicy).toContain('const sensitiveCreditChanged');
+    expect(creditPolicy).toContain("'finance.approve'");
+    expect(creditPolicy).toContain('Finance approval permission is required to change a credit limit or hold');
+    expect(creditPolicy).toContain('sensitiveCreditChanged,');
+    expect(commercialApi).toContain('canApproveCredit: hasAdminPermission');
+    expect(commercialApi).toContain("'finance.approve'");
+    expect(commercial).toContain('Credit-limit, currency and hold changes require Finance approval authority.');
+    expect(commercial).toContain('disabled={!data?.creditPolicyPermissions.canApproveCredit}');
+  });
+
 });

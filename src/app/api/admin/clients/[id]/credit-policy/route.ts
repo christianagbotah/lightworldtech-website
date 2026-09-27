@@ -45,6 +45,23 @@ export async function PATCH(
   }
 
   const creditHoldReason = parsed.data.creditHold ? parsed.data.creditHoldReason : '';
+  const creditLimitCurrency = normalizeCurrency(parsed.data.creditLimitCurrency || 'GHS');
+  const sensitiveCreditChanged =
+    creditLimitCurrency !== existing.creditLimitCurrency ||
+    !existing.creditLimit.eq(parsed.data.creditLimit) ||
+    parsed.data.creditHold !== existing.creditHold ||
+    creditHoldReason !== existing.creditHoldReason;
+
+  if (
+    sensitiveCreditChanged &&
+    !hasAdminPermission(actor.role, actor.permissions, 'finance.approve')
+  ) {
+    return NextResponse.json(
+      { success: false, error: 'Finance approval permission is required to change a credit limit or hold' },
+      { status: 403 },
+    );
+  }
+
   if (parsed.data.creditHold && creditHoldReason.length < 5) {
     return NextResponse.json({ success: false, error: 'A credit hold requires a reason' }, { status: 400 });
   }
@@ -53,7 +70,7 @@ export async function PATCH(
     where: { id },
     data: {
       paymentTermsDays: parsed.data.paymentTermsDays,
-      creditLimitCurrency: normalizeCurrency(parsed.data.creditLimitCurrency || 'GHS'),
+      creditLimitCurrency,
       creditLimit: parsed.data.creditLimit,
       creditHold: parsed.data.creditHold,
       creditHoldReason,
@@ -82,6 +99,7 @@ export async function PATCH(
         creditHold: existing.creditHold,
         creditHoldReason: existing.creditHoldReason,
       },
+      sensitiveCreditChanged,
       after: {
         paymentTermsDays: updated.paymentTermsDays,
         creditLimitCurrency: updated.creditLimitCurrency,
