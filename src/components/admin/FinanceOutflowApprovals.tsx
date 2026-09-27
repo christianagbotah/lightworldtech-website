@@ -493,6 +493,8 @@ export default function FinanceOutflowApprovals() {
                 {pending.map((approval) => {
                   const mine = approval.requestedByAdminId === inbox?.currentAdminId;
                   const canDecide = Boolean(inbox?.canApprove) && !mine;
+                  const proofRequired = approval.outflowType === 'vendor_payment' && approval.method !== 'cash';
+                  const proofReady = !proofRequired || approval.attachments.length > 0;
                   return (
                     <TableRow key={approval.id}>
                       <TableCell>
