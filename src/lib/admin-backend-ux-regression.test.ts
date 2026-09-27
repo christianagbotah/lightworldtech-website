@@ -2692,4 +2692,15 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(approvalWorkspace).toContain("age.hours >= 24");
   });
 
+  test('requires supplier invoice evidence before allocating a supplier payment', () => {
+    const paymentsApi = source('src/app/api/admin/finance/vendor-payments/route.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(paymentsApi).toContain('attachments: { select: { id: true }, take: 1 }');
+    expect(paymentsApi).toContain('Supplier invoice evidence is required before payment can be allocated to');
+    expect(finance).toContain('evidence verified');
+    expect(finance).toContain('evidence required');
+    expect(finance).toContain('Allocated supplier bills must have at least one uploaded invoice PDF');
+  });
+
 });
