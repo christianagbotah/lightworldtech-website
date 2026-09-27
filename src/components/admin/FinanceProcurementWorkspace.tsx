@@ -511,7 +511,7 @@ export default function FinanceProcurementWorkspace({
               ))}
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-muted/40 p-3">
-              <div><p className="text-xs text-muted-foreground">Estimated commitment</p><p className="text-lg font-bold">{money(estimatedTotal, form.currency)}</p></div>
+              <div><p className="text-xs text-muted-foreground">Planning estimate</p><p className="text-lg font-bold">{money(estimatedTotal, form.currency)}</p><p className="mt-1 text-[10px] text-muted-foreground">This baseline is preserved after sourcing so award savings or overruns remain measurable.</p></div>
               <Button type="submit" disabled={saving || estimatedTotal <= 0}>Submit for approval</Button>
             </div>
           </form>
@@ -522,7 +522,7 @@ export default function FinanceProcurementWorkspace({
         <CardHeader><CardTitle className="text-base">Purchase requisitions</CardTitle></CardHeader>
         <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
           <Table exportFileName="lightworld-purchase-requisitions" className="min-w-[1050px]">
-            <TableHeader><TableRow><TableHead>Request</TableHead><TableHead>Supplier / project</TableHead><TableHead>Needed</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Decision / actions</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Request</TableHead><TableHead>Supplier / project</TableHead><TableHead>Needed</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Estimate / award</TableHead><TableHead>Decision / actions</TableHead></TableRow></TableHeader>
             <TableBody>
               {data.requests.map((item) => (
                 <TableRow key={item.id}>
@@ -530,7 +530,24 @@ export default function FinanceProcurementWorkspace({
                   <TableCell><p>{item.vendor?.name || 'Supplier not selected'}</p><p className="text-xs text-muted-foreground">{item.project ? item.project.organization.name + ' · ' + item.project.name : 'General overhead'}</p></TableCell>
                   <TableCell>{item.neededBy ? new Date(item.neededBy).toLocaleDateString() : 'Not specified'}</TableCell>
                   <TableCell><Badge className={tone(item.status)}>{pretty(item.status)}</Badge></TableCell>
-                  <TableCell className="text-right font-semibold">{money(item.estimatedAmount, item.currency)}</TableCell>
+                  <TableCell className="text-right">
+                    <p className="font-semibold">{money(item.estimatedAmount, item.currency)}</p>
+                    {item.supplierQuotes.find((quote) => quote.selected) ? (() => {
+                      const selected = item.supplierQuotes.find((quote) => quote.selected)!;
+                      const variance = Number(selected.total) - Number(item.estimatedAmount);
+                      const variancePercent = Number(item.estimatedAmount) > 0 ? (variance / Number(item.estimatedAmount)) * 100 : null;
+                      return (
+                        <div className="mt-1 text-[10px] text-muted-foreground">
+                          <p>Award {money(selected.total, selected.currency)}</p>
+                          <p className={variance > 0 ? 'text-rose-600 dark:text-rose-300' : variance < 0 ? 'text-emerald-700 dark:text-emerald-300' : ''}>
+                            {variance === 0 ? 'On estimate' : variance < 0 ? 'Saving ' : 'Over estimate '}
+                            {variance === 0 ? '' : money(Math.abs(variance), item.currency)}
+                            {variancePercent === null || variance === 0 ? '' : ' · ' + Math.abs(variancePercent).toFixed(1) + '%'}
+                          </p>
+                        </div>
+                      );
+                    })() : <p className="mt-1 text-[10px] text-muted-foreground">Planning baseline</p>}
+                  </TableCell>
                   <TableCell>
                     <div className="min-w-[260px] space-y-2">
                       {item.status === 'submitted' && data.canApprove && item.requestedByAdminId !== data.currentAdminId && (
