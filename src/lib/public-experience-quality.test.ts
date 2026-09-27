@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 function source(relativePath: string): string {
@@ -7,6 +7,20 @@ function source(relativePath: string): string {
 }
 
 describe('public experience quality', () => {
+  test('published client portfolio images are non-empty optimized assets', () => {
+    const assets = [
+      'public/images/portfolio/clients/two-kings-freights-logistics.webp',
+      'public/images/portfolio/clients/hope-inspiring-mission.webp',
+      'public/images/portfolio/clients/cedar-integrated-security.webp',
+    ];
+
+    for (const asset of assets) {
+      const stats = statSync(join(process.cwd(), asset));
+      expect(stats.isFile()).toBe(true);
+      expect(stats.size).toBeGreaterThan(1024);
+    }
+  });
+
   test('filters malformed public authority links before rendering recognition or coverage', () => {
     const profile = source('src/lib/company-profile.ts');
     const home = source('src/components/pages/HomePage.tsx');
