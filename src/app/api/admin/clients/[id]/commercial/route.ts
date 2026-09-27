@@ -756,6 +756,10 @@ export async function GET(
   return NextResponse.json({
     success: true,
     data: {
+      creditPolicyPermissions: {
+        canManageTerms: true,
+        canApproveCredit: hasAdminPermission(actor.role, actor.permissions, 'finance.approve'),
+      },
       organization: {
         id: organization.id,
         name: organization.name,
