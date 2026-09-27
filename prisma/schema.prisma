@@ -1223,12 +1223,28 @@ model FinanceVendorPayment {
   notes         String              @default("")
   paidBy        String              @default("Admin")
   allocations   FinanceVendorPaymentAllocation[]
+  attachments   FinanceVendorPaymentAttachment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([vendorId, paidAt])
   @@index([paidAt])
+}
+
+model FinanceVendorPaymentAttachment {
+  id           String               @id @default(cuid())
+  paymentId    String
+  payment      FinanceVendorPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  originalName String
+  storageName  String               @unique
+  mimeType     String
+  sizeBytes    Int
+  uploadedBy   String               @default("Admin")
+
+  createdAt DateTime @default(now())
+
+  @@index([paymentId, createdAt])
 }
 
 model FinanceVendorPaymentAllocation {
