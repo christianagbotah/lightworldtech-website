@@ -2532,7 +2532,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     const creditPolicy = source('src/app/api/admin/clients/[id]/credit-policy/route.ts');
     const invoices = source('src/app/api/admin/finance/invoices/route.ts');
     const commercialApi = source('src/app/api/admin/clients/[id]/commercial/route.ts');
+    const financeMeta = source('src/app/api/admin/finance/meta/route.ts');
     const commercial = source('src/components/admin/ClientCommercialAccount.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
 
     expect(schema).toContain('paymentTermsDays');
     expect(schema).toContain('creditLimitCurrency');
@@ -2549,11 +2551,17 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(invoices).toContain('projected.gt(organization.creditLimit)');
     expect(invoices).toContain("'admin.finance_invoice_credit_blocked'");
     expect(commercialApi).toContain('creditLimit: organization.creditLimit.toFixed(2)');
+    expect(financeMeta).toContain('paymentTermsDays: true');
+    expect(financeMeta).toContain('creditLimit: organization.creditLimit.toFixed(2)');
     expect(commercial).toContain('Credit control');
     expect(commercial).toContain('Draft invoices remain available for review');
     expect(commercial).toContain("'/api/admin/clients/' + encodeURIComponent(organizationId) + '/credit-policy'");
     expect(commercial).toContain('Current {creditPolicy.creditLimitCurrency');
     expect(commercial).toContain('Save credit policy');
+    expect(finance).toContain('const addDays = (dateValue: string, days: number)');
+    expect(finance).toContain('organization?.paymentTermsDays ?? 30');
+    expect(finance).toContain('Payment terms <strong className="text-foreground">{organization.paymentTermsDays} days</strong>');
+    expect(finance).toContain('Draft invoices remain available for review.');
   });
 
 });
