@@ -429,6 +429,7 @@ export default function AdminFinance() {
     issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
   });
   const [billEvidenceFile, setBillEvidenceFile] = useState<File | null>(null);
+  const [billEvidenceFiles, setBillEvidenceFiles] = useState<Record<string, File | null>>({});
   const [supplierPaymentForm, setSupplierPaymentForm] = useState({
     vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
     method: 'bank_transfer', reference: '', notes: '',
@@ -926,6 +927,30 @@ export default function AdminFinance() {
     }
   };
 
+  const uploadBillEvidence = async (billId: string) => {
+    const file = billEvidenceFiles[billId];
+    if (!file) {
+      toast.error('Choose a supplier invoice PDF');
+      return;
+    }
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await api<BillAttachment>('/api/admin/finance/bills/' + billId + '/attachments', {
+        method: 'POST',
+        body: formData,
+      });
+      setBillEvidenceFiles((current) => ({ ...current, [billId]: null }));
+      toast.success('Supplier invoice evidence attached');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to attach supplier invoice evidence');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const submitSupplierPayment = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
@@ -1345,26 +1370,47 @@ export default function AdminFinance() {
                         <TableCell className="font-medium">{item.vendor.name}</TableCell>
                         <TableCell><Badge className={statusTone(item.derivedStatus)}>{pretty(item.derivedStatus)}</Badge></TableCell>
                         <TableCell>
-                          {item.attachments.length ? (
-                            <div className="flex flex-col gap-1">
-                              {item.attachments.slice(0, 2).map((attachment) => (
-                                <button
-                                  key={attachment.id}
-                                  type="button"
-                                  className="max-w-[180px] truncate text-left text-[10px] font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-300"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    window.open('/api/admin/finance/bill-attachments/' + attachment.id, '_blank', 'noopener,noreferrer');
-                                  }}
-                                >
-                                  {attachment.originalName}
-                                </button>
-                              ))}
-                              {item.attachments.length > 2 && <span className="text-[10px] text-muted-foreground">+{item.attachments.length - 2} more</span>}
+                          <div className="space-y-2" onClick={(event) => event.stopPropagation()}>
+                            {item.attachments.length ? (
+                              <div className="flex flex-col gap-1">
+                                {item.attachments.slice(0, 2).map((attachment) => (
+                                  <button
+                                    key={attachment.id}
+                                    type="button"
+                                    className="max-w-[180px] truncate text-left text-[10px] font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-300"
+                                    onClick={() => window.open('/api/admin/finance/bill-attachments/' + attachment.id, '_blank', 'noopener,noreferrer')}
+                                  >
+                                    {attachment.originalName}
+                                  </button>
+                                ))}
+                                {item.attachments.length > 2 && <span className="text-[10px] text-muted-foreground">+{item.attachments.length - 2} more</span>}
+                              </div>
+                            ) : (
+                              <Badge variant="outline">Evidence missing</Badge>
+                            )}
+                            <div className="flex min-w-[190px] gap-1">
+                              <Input
+                                type="file"
+                                accept="application/pdf,.pdf"
+                                className="h-8 max-w-[135px] text-[10px]"
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={(event) => setBillEvidenceFiles((current) => ({ ...current, [item.id]: event.target.files?.[0] || null }))}
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-2 text-[10px]"
+                                disabled={saving || !billEvidenceFiles[item.id]}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void uploadBillEvidence(item.id);
+                                }}
+                              >
+                                Add PDF
+                              </Button>
                             </div>
-                          ) : (
-                            <Badge variant="outline">Evidence missing</Badge>
-                          )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-xs">{new Date(item.dueDate).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right font-semibold">{money(item.balance, item.currency)}</TableCell>
