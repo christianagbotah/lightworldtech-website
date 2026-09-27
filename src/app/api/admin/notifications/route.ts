@@ -443,6 +443,28 @@ export async function GET(request: NextRequest) {
       (bill) => invoiceBalance(bill.total, bill.allocations).gt(0),
     ).length;
 
+    const procurementApprovalCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const [agedProcurementApprovals, overdueProcurementOrders, receivedOrdersAwaitingBill] = await Promise.all([
+      db.financePurchaseRequest.count({
+        where: {
+          status: 'submitted',
+          submittedAt: { lt: procurementApprovalCutoff },
+        },
+      }),
+      db.financePurchaseOrder.count({
+        where: {
+          status: { in: ['issued', 'partially_received'] },
+          expectedDate: { lt: now },
+        },
+      }),
+      db.financePurchaseOrder.count({
+        where: {
+          status: { in: ['received', 'closed'] },
+          bill: null,
+        },
+      }),
+    ]);
+
     const liveCollectionInvoices = collectionInvoices.filter(
       (invoice) => invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0),
     );
@@ -468,6 +490,39 @@ export async function GET(request: NextRequest) {
       const days = Math.ceil((project.nextRenewalDate.getTime() - now.getTime()) / 86400000);
       return days <= project.renewalNoticeDays;
     }).length;
+
+    if (overdueProcurementOrders > 0) {
+      notices.push({
+        id: 'finance-procurement-overdue-orders',
+        severity: 'critical',
+        title: 'Procurement deliveries overdue',
+        message: overdueProcurementOrders + ' purchase order' + (overdueProcurementOrders === 1 ? ' is' : 's are') + ' past the recorded expected date and still open.',
+        count: overdueProcurementOrders,
+        action: 'admin-finance-procurement',
+      });
+    }
+
+    if (agedProcurementApprovals > 0) {
+      notices.push({
+        id: 'finance-procurement-aged-approvals',
+        severity: 'warning',
+        title: 'Procurement approvals aging',
+        message: agedProcurementApprovals + ' purchase requisition' + (agedProcurementApprovals === 1 ? ' has' : 's have') + ' been awaiting approval for more than 48 hours.',
+        count: agedProcurementApprovals,
+        action: 'admin-finance-procurement',
+      });
+    }
+
+    if (receivedOrdersAwaitingBill > 0) {
+      notices.push({
+        id: 'finance-procurement-awaiting-bill',
+        severity: 'warning',
+        title: 'Received POs awaiting supplier bills',
+        message: receivedOrdersAwaitingBill + ' fully received or closed purchase order' + (receivedOrdersAwaitingBill === 1 ? ' is' : 's are') + ' still waiting for Accounts Payable matching.',
+        count: receivedOrdersAwaitingBill,
+        action: 'admin-finance-procurement',
+      });
+    }
 
     if (paidRenewalsAwaitingCompletion > 0) {
       notices.push({
