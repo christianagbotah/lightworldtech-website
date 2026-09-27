@@ -1,0 +1,2 @@
+ALTER TABLE "FinanceVendor"
+ADD COLUMN "paymentTermsDays" INTEGER NOT NULL DEFAULT 30;
