@@ -33,10 +33,16 @@ type PayablesScheduleBucket =
   | 'days_61_90'
   | 'days_90_plus';
 
-function payablesScheduleBucket(dueDate: Date, now: Date): PayablesScheduleBucket {
+const TREASURY_WEEKS = 13;
+
+function daysFromToday(dueDate: Date, now: Date): number {
   const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   const due = Date.UTC(dueDate.getUTCFullYear(), dueDate.getUTCMonth(), dueDate.getUTCDate());
-  const daysUntilDue = Math.round((due - start) / 86400000);
+  return Math.round((due - start) / 86400000);
+}
+
+function payablesScheduleBucket(dueDate: Date, now: Date): PayablesScheduleBucket {
+  const daysUntilDue = daysFromToday(dueDate, now);
   if (daysUntilDue < 0) return 'overdue';
   if (daysUntilDue <= 7) return 'next_7';
   if (daysUntilDue <= 14) return 'days_8_14';
@@ -245,6 +251,36 @@ export async function GET(request: NextRequest) {
   const agedDebtors: Record<string, Totals> = { current: {}, '1_30': {}, '31_60': {}, '61_90': {}, '90_plus': {} };
   const agedCreditors: Record<string, Totals> = { current: {}, '1_30': {}, '31_60': {}, '61_90': {}, '90_plus': {} };
   const payablesScheduleRaw: Record<string, Record<PayablesScheduleBucket, { amount: Prisma.Decimal; count: number }>> = {};
+  const treasuryRaw: Record<string, {
+    overdueReceivables: Prisma.Decimal;
+    overdueReceivablesCount: number;
+    overduePayables: Prisma.Decimal;
+    overduePayablesCount: number;
+    weeks: Array<{
+      receivables: Prisma.Decimal;
+      receivablesCount: number;
+      payables: Prisma.Decimal;
+      payablesCount: number;
+    }>;
+  }> = {};
+  const ensureTreasury = (currency: string) => {
+    const code = currency.trim().toUpperCase() || 'UNSPECIFIED';
+    if (!treasuryRaw[code]) {
+      treasuryRaw[code] = {
+        overdueReceivables: new Prisma.Decimal(0),
+        overdueReceivablesCount: 0,
+        overduePayables: new Prisma.Decimal(0),
+        overduePayablesCount: 0,
+        weeks: Array.from({ length: TREASURY_WEEKS }, () => ({
+          receivables: new Prisma.Decimal(0),
+          receivablesCount: 0,
+          payables: new Prisma.Decimal(0),
+          payablesCount: 0,
+        })),
+      };
+    }
+    return treasuryRaw[code];
+  };
   const cashPositionRaw: Record<string, {
     cash: Prisma.Decimal;
     bank: Prisma.Decimal;
@@ -299,6 +335,17 @@ export async function GET(request: NextRequest) {
       if (balance.gt(0)) {
         add(receivables, invoice.currency, balance);
         add(agedDebtors[ageBucket(invoice.dueDate, now)], invoice.currency, balance);
+
+        const treasury = ensureTreasury(invoice.currency);
+        const daysUntilDue = daysFromToday(invoice.dueDate, now);
+        if (daysUntilDue < 0) {
+          treasury.overdueReceivables = treasury.overdueReceivables.plus(balance);
+          treasury.overdueReceivablesCount += 1;
+        } else if (daysUntilDue < TREASURY_WEEKS * 7) {
+          const week = treasury.weeks[Math.floor(daysUntilDue / 7)];
+          week.receivables = week.receivables.plus(balance);
+          week.receivablesCount += 1;
+        }
       }
       if (invoice.issueDate >= from && invoice.issueDate <= to) {
         add(accrualRevenue, invoice.currency, earnedInvoiceRevenue(invoice));
@@ -403,6 +450,17 @@ export async function GET(request: NextRequest) {
         payablesScheduleRaw[currency][scheduleBucket].amount =
           payablesScheduleRaw[currency][scheduleBucket].amount.plus(balance);
         payablesScheduleRaw[currency][scheduleBucket].count += 1;
+
+        const treasury = ensureTreasury(bill.currency);
+        const daysUntilDue = daysFromToday(bill.dueDate, now);
+        if (daysUntilDue < 0) {
+          treasury.overduePayables = treasury.overduePayables.plus(balance);
+          treasury.overduePayablesCount += 1;
+        } else if (daysUntilDue < TREASURY_WEEKS * 7) {
+          const week = treasury.weeks[Math.floor(daysUntilDue / 7)];
+          week.payables = week.payables.plus(balance);
+          week.payablesCount += 1;
+        }
       }
       if (bill.issueDate >= from && bill.issueDate <= to) {
         add(accrualExpenses, bill.currency, supplierExpenseBase(bill));
@@ -597,6 +655,7 @@ export async function GET(request: NextRequest) {
     ...Object.keys(renewalExposureRaw),
     ...Object.keys(recurringRevenueRaw),
     ...Object.keys(promiseAmounts),
+    ...Object.keys(treasuryRaw),
     ...trendRaw.keys(),
   ]);
 
@@ -665,6 +724,85 @@ export async function GET(request: NextRequest) {
         mobileMoney: value.mobileMoney.toFixed(2),
         total: value.cash.plus(value.bank).plus(value.mobileMoney).toFixed(2),
       }]),
+  );
+
+  const treasuryForecast = Object.fromEntries(
+    [...new Set([...Object.keys(treasuryRaw), ...Object.keys(cashPositionRaw)])]
+      .sort()
+      .map((currency) => {
+        const raw = treasuryRaw[currency] || {
+          overdueReceivables: new Prisma.Decimal(0),
+          overdueReceivablesCount: 0,
+          overduePayables: new Prisma.Decimal(0),
+          overduePayablesCount: 0,
+          weeks: Array.from({ length: TREASURY_WEEKS }, () => ({
+            receivables: new Prisma.Decimal(0),
+            receivablesCount: 0,
+            payables: new Prisma.Decimal(0),
+            payablesCount: 0,
+          })),
+        };
+        const openingLiquidity = cashPositionRaw[currency]
+          ? cashPositionRaw[currency].cash
+              .plus(cashPositionRaw[currency].bank)
+              .plus(cashPositionRaw[currency].mobileMoney)
+          : new Prisma.Decimal(0);
+
+        let projectedLiquidity = openingLiquidity.minus(raw.overduePayables);
+        let lowestProjectedLiquidity = projectedLiquidity;
+        let firstNegativeDate: string | null = projectedLiquidity.lt(0)
+          ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString().slice(0, 10)
+          : null;
+        let scheduledReceivables = new Prisma.Decimal(0);
+        let futurePayables = new Prisma.Decimal(0);
+        const forecastStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+        const weeks = raw.weeks.map((bucket, index) => {
+          const startDate = new Date(forecastStart);
+          startDate.setUTCDate(startDate.getUTCDate() + index * 7);
+          const endDate = new Date(startDate);
+          endDate.setUTCDate(endDate.getUTCDate() + 6);
+
+          scheduledReceivables = scheduledReceivables.plus(bucket.receivables);
+          futurePayables = futurePayables.plus(bucket.payables);
+          const netMovement = bucket.receivables.minus(bucket.payables);
+          projectedLiquidity = projectedLiquidity.plus(netMovement);
+          if (projectedLiquidity.lt(lowestProjectedLiquidity)) {
+            lowestProjectedLiquidity = projectedLiquidity;
+          }
+          if (!firstNegativeDate && projectedLiquidity.lt(0)) {
+            firstNegativeDate = endDate.toISOString().slice(0, 10);
+          }
+
+          return {
+            week: index + 1,
+            startDate: startDate.toISOString().slice(0, 10),
+            endDate: endDate.toISOString().slice(0, 10),
+            scheduledReceivables: bucket.receivables.toFixed(2),
+            receivablesCount: bucket.receivablesCount,
+            committedPayables: bucket.payables.toFixed(2),
+            payablesCount: bucket.payablesCount,
+            netDueMovement: netMovement.toFixed(2),
+            projectedLiquidity: projectedLiquidity.toFixed(2),
+          };
+        });
+
+        return [currency, {
+          openingLiquidity: openingLiquidity.toFixed(2),
+          overdueReceivablesExcluded: raw.overdueReceivables.toFixed(2),
+          overdueReceivablesCount: raw.overdueReceivablesCount,
+          overduePayablesImmediate: raw.overduePayables.toFixed(2),
+          overduePayablesCount: raw.overduePayablesCount,
+          scheduledReceivables13Weeks: scheduledReceivables.toFixed(2),
+          futurePayables13Weeks: futurePayables.toFixed(2),
+          committedPayables13Weeks: raw.overduePayables.plus(futurePayables).toFixed(2),
+          projectedClosingLiquidity: projectedLiquidity.toFixed(2),
+          lowestProjectedLiquidity: lowestProjectedLiquidity.toFixed(2),
+          firstNegativeDate,
+          weeks,
+          methodology: 'Illustrative 13-week contractual due-date scenario. Opening posted liquidity is reduced immediately by overdue supplier bills; overdue customer receivables are disclosed but excluded from projected inflows. Future open customer invoices are assumed collected on their due dates and open supplier bills paid on their due dates. Future sales, unbilled procurement, forecast expenses and FX conversion are excluded. This is cash visibility, not a guarantee of collections.',
+        }];
+      }),
   );
 
   const renewalExposure = Object.fromEntries(
@@ -849,6 +987,7 @@ export async function GET(request: NextRequest) {
       renewalPerformance,
       runway,
       payablesSchedule,
+      treasuryForecast,
       collections: {
         followUpDue: followUpDueInvoices.size,
         brokenPromises,
