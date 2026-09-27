@@ -2385,6 +2385,14 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(procurement).toContain('Goods / service receipt quantities');
     expect(procurement).toContain('lightworld-purchase-requisitions');
     expect(procurement).toContain('lightworld-purchase-orders');
+    expect(procurementApi).toContain('approvalAgingCutoff');
+    expect(procurementApi).toContain('overdueOrders');
+    expect(procurementApi).toContain('awaitingBill');
+    expect(procurementApi).toContain('Procurement exceptions are deterministic');
+    expect(procurement).toContain('Procurement exception queue');
+    expect(procurement).toContain('aged >48h');
+    expect(procurement).toContain('Awaiting matched bill');
+    expect(procurement).toContain('Overdue');
     expect(finance).toContain("['procurement', 'Procurement']");
     expect(finance).toContain('FinanceProcurementWorkspace');
   });
