@@ -546,6 +546,7 @@ model ClientProject {
   agreements     ClientAgreement[]
   purchaseRequests FinancePurchaseRequest[]
   purchaseOrders   FinancePurchaseOrder[]
+  supplierQuotes    FinanceSupplierQuote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1278,6 +1279,7 @@ model FinancePurchaseRequest {
   convertedAt        DateTime?
   lines              FinancePurchaseRequestLine[]
   purchaseOrder      FinancePurchaseOrder?
+  supplierQuotes     FinanceSupplierQuote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1300,6 +1302,33 @@ model FinancePurchaseRequestLine {
   createdAt DateTime @default(now())
 
   @@index([requestId])
+}
+
+model FinanceSupplierQuote {
+  id             String                 @id @default(cuid())
+  requestId      String
+  request        FinancePurchaseRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  vendorId       String
+  vendor         FinanceVendor          @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  quoteReference String                 @default("")
+  currency       String                 @default("GHS")
+  total          Decimal                @db.Decimal(18, 2)
+  leadTimeDays   Int?
+  validUntil     DateTime?
+  notes          String                 @default("")
+  selected       Boolean                @default(false)
+  selectedAt     DateTime?
+  selectedById   String                 @default("")
+  selectedByName String                 @default("")
+  createdById    String
+  createdByName  String                 @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([requestId, selected])
+  @@index([vendorId, createdAt])
+  @@index([validUntil])
 }
 
 model FinancePurchaseOrder {
