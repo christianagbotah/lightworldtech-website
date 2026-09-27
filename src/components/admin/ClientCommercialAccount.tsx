@@ -120,7 +120,24 @@ type CommercialData = {
   creditPolicyPermissions: {
     canManageTerms: boolean;
     canApproveCredit: boolean;
+    currentAdminId: string;
   };
+  creditPolicyApprovals: Array<{
+    id: string;
+    status: string;
+    paymentTermsDays: number;
+    creditLimitCurrency: string;
+    creditLimit: string;
+    creditHold: boolean;
+    creditHoldReason: string;
+    requestedByAdminId: string;
+    requestedByName: string;
+    requestedByEmail: string;
+    requestedAt: string;
+    decidedByName: string;
+    decidedAt: string | null;
+    decisionNotes: string;
+  }>;
   organization: {
     id: string;
     name: string;
@@ -632,10 +649,42 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
       let payload: any = null;
       try { payload = raw ? JSON.parse(raw) : null; } catch {}
       if (!response.ok) throw new Error(payload?.error || 'Unable to update customer credit policy');
-      toast.success('Customer credit policy updated');
+      toast.success(
+        payload?.approvalRequired
+          ? 'Sensitive credit changes submitted for independent approval'
+          : 'Customer credit terms updated',
+      );
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to update customer credit policy');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const decideCreditApproval = async (approvalId: string, action: 'approve' | 'reject' | 'cancel') => {
+    setSaving(true);
+    try {
+      const response = await fetch(
+        '/api/admin/finance/credit-approvals/' + encodeURIComponent(approvalId),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, notes: '' }),
+        },
+      );
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to decide credit policy request');
+      toast.success(
+        action === 'approve'
+          ? 'Credit policy request approved and applied'
+          : action === 'reject'
+            ? 'Credit policy request rejected'
+            : 'Credit policy request cancelled',
+      );
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to decide credit policy request');
     } finally {
       setSaving(false);
     }
@@ -869,7 +918,7 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
                     Set payment terms and a same-currency exposure ceiling. A limit of 0 disables the monetary limit. Draft invoices remain available for review, while issued invoices are blocked when the account is on hold or the projected outstanding balance would exceed the configured limit.
                   </p>
                   <p className="mt-1 text-[10px] text-muted-foreground">
-                    Payment terms may be maintained by Finance. Credit-limit, currency and hold changes require Finance approval authority.
+                    Payment terms may be maintained directly by Finance. Credit-limit, currency and hold changes are submitted for independent maker–checker approval before they take effect.
                   </p>
                 </div>
                 <div className="text-right text-xs text-muted-foreground">
@@ -890,11 +939,11 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
               <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div><Label>Payment terms (days)</Label><Input type="number" min="0" max="365" value={creditPolicy.paymentTermsDays} onChange={(event) => setCreditPolicy((current) => ({ ...current, paymentTermsDays: event.target.value }))} /></div>
                 <div className="grid grid-cols-[1fr_92px] gap-2">
-                  <div><Label>Credit limit</Label><Input type="number" min="0" step="0.01" disabled={!data?.creditPolicyPermissions.canApproveCredit} value={creditPolicy.creditLimit} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimit: event.target.value }))} /></div>
-                  <div><Label>Currency</Label><Input maxLength={3} disabled={!data?.creditPolicyPermissions.canApproveCredit} value={creditPolicy.creditLimitCurrency} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimitCurrency: event.target.value.toUpperCase() }))} /></div>
+                  <div><Label>Credit limit</Label><Input type="number" min="0" step="0.01" value={creditPolicy.creditLimit} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimit: event.target.value }))} /></div>
+                  <div><Label>Currency</Label><Input maxLength={3} value={creditPolicy.creditLimitCurrency} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditLimitCurrency: event.target.value.toUpperCase() }))} /></div>
                 </div>
                 <label className="flex min-h-10 items-center gap-2 self-end rounded-md border border-input bg-background px-3 text-sm">
-                  <input type="checkbox" disabled={!data?.creditPolicyPermissions.canApproveCredit} checked={creditPolicy.creditHold} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHold: event.target.checked }))} />
+                  <input type="checkbox" checked={creditPolicy.creditHold} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHold: event.target.checked }))} />
                   Place account on credit hold
                 </label>
                 <Button type="button" className="self-end" disabled={saving} onClick={() => void saveCreditPolicy()}>
@@ -905,7 +954,39 @@ export default function ClientCommercialAccount({ organizationId, organizationNa
               {creditPolicy.creditHold && (
                 <div className="mt-3">
                   <Label>Credit hold reason</Label>
-                  <Textarea rows={2} disabled={!data?.creditPolicyPermissions.canApproveCredit} value={creditPolicy.creditHoldReason} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHoldReason: event.target.value }))} placeholder="Reason for stopping new issued credit…" />
+                  <Textarea rows={2} value={creditPolicy.creditHoldReason} onChange={(event) => setCreditPolicy((current) => ({ ...current, creditHoldReason: event.target.value }))} placeholder="Reason for stopping new issued credit…" />
+                </div>
+              )}
+
+              {(data?.creditPolicyApprovals || []).filter((item) => item.status === 'pending').length > 0 && (
+                <div className="mt-4 space-y-2 border-t border-border/60 pt-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Pending credit approvals</p>
+                  {(data?.creditPolicyApprovals || []).filter((item) => item.status === 'pending').map((item) => {
+                    const mine = item.requestedByAdminId === data?.creditPolicyPermissions.currentAdminId;
+                    return (
+                      <div key={item.id} className="rounded-xl border border-amber-200/70 bg-amber-50/40 p-3 dark:border-amber-900/30 dark:bg-amber-950/10">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <p className="text-xs font-semibold">{item.requestedByName || item.requestedByEmail || 'Finance'} requested a sensitive credit change</p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              {money(item.creditLimit, item.creditLimitCurrency)} limit · {item.creditHold ? 'credit hold' : 'credit active'} · {item.paymentTermsDays} day terms · {new Date(item.requestedAt).toLocaleString()}
+                            </p>
+                            {item.creditHoldReason && <p className="mt-1 text-[10px] text-muted-foreground">Reason: {item.creditHoldReason}</p>}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {mine ? (
+                              <Button type="button" size="sm" variant="outline" disabled={saving} onClick={() => void decideCreditApproval(item.id, 'cancel')}>Cancel request</Button>
+                            ) : data?.creditPolicyPermissions.canApproveCredit ? (
+                              <>
+                                <Button type="button" size="sm" variant="outline" disabled={saving} onClick={() => void decideCreditApproval(item.id, 'reject')}>Reject</Button>
+                                <Button type="button" size="sm" disabled={saving} onClick={() => void decideCreditApproval(item.id, 'approve')}>Approve & apply</Button>
+                              </>
+                            ) : <Badge variant="outline">Awaiting approver</Badge>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
