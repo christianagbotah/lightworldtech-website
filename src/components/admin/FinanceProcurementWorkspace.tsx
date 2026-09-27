@@ -47,7 +47,9 @@ type PurchaseRequest = {
   purchaseOrder: { id: string; poNumber: string; status: string; total: string } | null;
   supplierQuotes: SupplierQuote[];
 };
-type PurchaseReceiptLine = { id: string; requestLineId: string; quantity: string };
+type PurchaseReceiptLine = {
+  id: string; requestLineId: string; quantity: string; rejectedQuantity: string; inspectionNotes: string;
+};
 type PurchaseReceipt = {
   id: string; receiptNumber: string; notes: string; receivedAt: string;
   receivedByName: string; lines: PurchaseReceiptLine[];
@@ -81,7 +83,8 @@ type ProcurementException = {
 type SupplierPerformance = {
   vendorId: string; vendorName: string; orders: number; receivedOrders: number;
   onTimeMeasuredOrders: number; onTimeOrders: number; onTimeRate: number | null;
-  averageDeliveryDays: number | null; overdueOpenOrders: number; partialOpenOrders: number;
+  averageDeliveryDays: number | null; acceptedQuantity: string; rejectedQuantity: string;
+  qualityAcceptanceRate: number | null; overdueOpenOrders: number; partialOpenOrders: number;
   awaitingBillOrders: number;
   commitmentsByCurrency: Array<{ currency: string; amount: string }>;
 };
@@ -151,7 +154,9 @@ export default function FinanceProcurementWorkspace({
   }>>({});
   const [quoteSelectionReasons, setQuoteSelectionReasons] = useState<Record<string, string>>({});
   const [quoteEvidenceFiles, setQuoteEvidenceFiles] = useState<Record<string, File | null>>({});
-  const [receiptDrafts, setReceiptDrafts] = useState<Record<string, Record<string, string>>>({});
+  const [receiptDrafts, setReceiptDrafts] = useState<Record<string, Record<string, {
+    accepted: string; rejected: string; inspectionNotes: string;
+  }>>>({});
   const [receiptNotes, setReceiptNotes] = useState<Record<string, string>>({});
   const [receivingOrderId, setReceivingOrderId] = useState('');
   const [form, setForm] = useState({
@@ -335,10 +340,14 @@ export default function FinanceProcurementWorkspace({
 
   const openReceipt = (order: PurchaseOrder) => {
     if (!order.request) return;
-    const draft: Record<string, string> = {};
+    const draft: Record<string, { accepted: string; rejected: string; inspectionNotes: string }> = {};
     for (const line of order.request.lines) {
       const remaining = Math.max(0, Number(line.quantity) - receivedQuantity(order, line.id));
-      draft[line.id] = remaining > 0 ? remaining.toFixed(3) : '';
+      draft[line.id] = {
+        accepted: remaining > 0 ? remaining.toFixed(3) : '',
+        rejected: '',
+        inspectionNotes: '',
+      };
     }
     setReceiptDrafts((current) => ({ ...current, [order.id]: draft }));
     setReceivingOrderId(order.id);
@@ -348,10 +357,15 @@ export default function FinanceProcurementWorkspace({
     if (!order.request) return;
     const draft = receiptDrafts[order.id] || {};
     const lines = order.request.lines
-      .map((line) => ({ requestLineId: line.id, quantity: Number(draft[line.id] || 0) }))
-      .filter((line) => line.quantity > 0);
+      .map((line) => ({
+        requestLineId: line.id,
+        quantity: Number(draft[line.id]?.accepted || 0),
+        rejectedQuantity: Number(draft[line.id]?.rejected || 0),
+        inspectionNotes: draft[line.id]?.inspectionNotes || '',
+      }))
+      .filter((line) => line.quantity > 0 || line.rejectedQuantity > 0);
     if (!lines.length) {
-      toast.error('Enter at least one received quantity');
+      toast.error('Enter at least one accepted or rejected quantity');
       return;
     }
     setSaving(true);
@@ -448,8 +462,8 @@ export default function FinanceProcurementWorkspace({
 
       <Card className="border-border/60">
         <CardHeader>
-          <CardTitle className="text-base">Supplier delivery performance</CardTitle>
-          <p className="text-xs text-muted-foreground">On-time rate is measured only where the PO has an expected date. Currency commitments are kept separate and are not converted.</p>
+          <CardTitle className="text-base">Supplier delivery & quality performance</CardTitle>
+          <p className="text-xs text-muted-foreground">On-time rate uses POs with expected dates. Quality acceptance uses inspected accepted versus rejected quantities. Currency commitments remain separate and are not converted.</p>
         </CardHeader>
         <CardContent className="p-0">
           <div className="max-w-full overflow-x-auto">
@@ -460,6 +474,8 @@ export default function FinanceProcurementWorkspace({
                   <TableHead className="text-right">POs</TableHead>
                   <TableHead className="text-right">On-time</TableHead>
                   <TableHead className="text-right">Avg delivery</TableHead>
+                  <TableHead className="text-right">Quality acceptance</TableHead>
+                  <TableHead className="text-right">Rejected qty</TableHead>
                   <TableHead className="text-right">Overdue open</TableHead>
                   <TableHead className="text-right">Partial open</TableHead>
                   <TableHead className="text-right">Awaiting bill</TableHead>
@@ -473,13 +489,15 @@ export default function FinanceProcurementWorkspace({
                     <TableCell className="text-right">{supplier.orders}</TableCell>
                     <TableCell className="text-right">{supplier.onTimeRate === null ? 'Not measured' : supplier.onTimeRate.toFixed(1) + '%'}{supplier.onTimeMeasuredOrders > 0 && <p className="text-[10px] text-muted-foreground">{supplier.onTimeOrders}/{supplier.onTimeMeasuredOrders}</p>}</TableCell>
                     <TableCell className="text-right">{supplier.averageDeliveryDays === null ? '—' : supplier.averageDeliveryDays.toFixed(1) + ' days'}</TableCell>
+                    <TableCell className="text-right">{supplier.qualityAcceptanceRate === null ? 'Not measured' : supplier.qualityAcceptanceRate.toFixed(1) + '%'}{Number(supplier.acceptedQuantity) + Number(supplier.rejectedQuantity) > 0 && <p className="text-[10px] text-muted-foreground">{Number(supplier.acceptedQuantity).toFixed(3)} accepted</p>}</TableCell>
+                    <TableCell className="text-right">{Number(supplier.rejectedQuantity).toFixed(3)}</TableCell>
                     <TableCell className="text-right">{supplier.overdueOpenOrders}</TableCell>
                     <TableCell className="text-right">{supplier.partialOpenOrders}</TableCell>
                     <TableCell className="text-right">{supplier.awaitingBillOrders}</TableCell>
                     <TableCell>{supplier.commitmentsByCurrency.length ? supplier.commitmentsByCurrency.map((item) => item.currency + ' ' + Number(item.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })).join(' · ') : 'No PO commitments'}</TableCell>
                   </TableRow>
                 ))}
-                {!data.supplierPerformance.length && <TableRow><TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No supplier procurement history yet.</TableCell></TableRow>}
+                {!data.supplierPerformance.length && <TableRow><TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">No supplier procurement history yet.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
@@ -670,21 +688,67 @@ export default function FinanceProcurementWorkspace({
                               const received = receivedQuantity(item, line.id);
                               const remaining = Math.max(0, Number(line.quantity) - received);
                               return (
-                                <div key={line.id} className="grid gap-2 text-xs sm:grid-cols-[minmax(160px,1fr)_70px_70px_90px] sm:items-center">
-                                  <span className="font-medium">{line.description}</span>
-                                  <span className="text-muted-foreground">PO {Number(line.quantity).toFixed(3)}</span>
-                                  <span className="text-muted-foreground">Rec {received.toFixed(3)}</span>
+                                <div key={line.id} className="rounded-xl border border-border/50 p-2">
+                                  <div className="grid gap-2 text-xs sm:grid-cols-[minmax(160px,1fr)_70px_70px_100px_100px] sm:items-center">
+                                    <span className="font-medium">{line.description}</span>
+                                    <span className="text-muted-foreground">PO {Number(line.quantity).toFixed(3)}</span>
+                                    <span className="text-muted-foreground">Accepted {received.toFixed(3)}</span>
+                                    <div>
+                                      <span className="mb-1 block text-[10px] text-muted-foreground">Accept now</span>
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        max={remaining}
+                                        step="0.001"
+                                        value={receiptDrafts[item.id]?.[line.id]?.accepted || ''}
+                                        onChange={(event) => setReceiptDrafts((current) => ({
+                                          ...current,
+                                          [item.id]: {
+                                            ...(current[item.id] || {}),
+                                            [line.id]: {
+                                              ...(current[item.id]?.[line.id] || { accepted: '', rejected: '', inspectionNotes: '' }),
+                                              accepted: event.target.value,
+                                            },
+                                          },
+                                        }))}
+                                        className="h-8 text-xs"
+                                      />
+                                    </div>
+                                    <div>
+                                      <span className="mb-1 block text-[10px] text-muted-foreground">Reject / damaged</span>
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.001"
+                                        value={receiptDrafts[item.id]?.[line.id]?.rejected || ''}
+                                        onChange={(event) => setReceiptDrafts((current) => ({
+                                          ...current,
+                                          [item.id]: {
+                                            ...(current[item.id] || {}),
+                                            [line.id]: {
+                                              ...(current[item.id]?.[line.id] || { accepted: '', rejected: '', inspectionNotes: '' }),
+                                              rejected: event.target.value,
+                                            },
+                                          },
+                                        }))}
+                                        className="h-8 text-xs"
+                                      />
+                                    </div>
+                                  </div>
                                   <Input
-                                    type="number"
-                                    min="0"
-                                    max={remaining}
-                                    step="0.001"
-                                    value={receiptDrafts[item.id]?.[line.id] || ''}
+                                    value={receiptDrafts[item.id]?.[line.id]?.inspectionNotes || ''}
                                     onChange={(event) => setReceiptDrafts((current) => ({
                                       ...current,
-                                      [item.id]: { ...(current[item.id] || {}), [line.id]: event.target.value },
+                                      [item.id]: {
+                                        ...(current[item.id] || {}),
+                                        [line.id]: {
+                                          ...(current[item.id]?.[line.id] || { accepted: '', rejected: '', inspectionNotes: '' }),
+                                          inspectionNotes: event.target.value,
+                                        },
+                                      },
                                     }))}
-                                    className="h-8 text-xs"
+                                    placeholder="Inspection note for this line (damage, short delivery, quality issue, serial/batch note…)"
+                                    className="mt-2 h-8 text-xs"
                                   />
                                 </div>
                               );

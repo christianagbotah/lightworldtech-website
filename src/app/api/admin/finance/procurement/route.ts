@@ -67,6 +67,7 @@ function serializeOrder(item: any) {
       lines: receipt.lines.map((line: any) => ({
         ...line,
         quantity: line.quantity.toFixed(3),
+        rejectedQuantity: line.rejectedQuantity.toFixed(3),
       })),
     })),
   };
@@ -117,7 +118,13 @@ export async function GET(request: NextRequest) {
           orderBy: { receivedAt: 'desc' },
           include: {
             lines: {
-              select: { id: true, requestLineId: true, quantity: true },
+              select: {
+                id: true,
+                requestLineId: true,
+                quantity: true,
+                rejectedQuantity: true,
+                inspectionNotes: true,
+              },
             },
           },
         },
@@ -155,6 +162,13 @@ export async function GET(request: NextRequest) {
     const deliveryDays = completed.map((order) =>
       Math.max(0, (order.receivedAt!.getTime() - order.issueDate.getTime()) / 86_400_000),
     );
+    const receiptLines = vendorOrders.flatMap((order) => order.receipts.flatMap((receipt) => receipt.lines));
+    const acceptedQuantity = receiptLines.reduce((sum, line) => sum + Number(line.quantity), 0);
+    const rejectedQuantity = receiptLines.reduce((sum, line) => sum + Number(line.rejectedQuantity), 0);
+    const inspectedQuantity = acceptedQuantity + rejectedQuantity;
+    const qualityAcceptanceRate = inspectedQuantity > 0
+      ? Math.round((acceptedQuantity / inspectedQuantity) * 1000) / 10
+      : null;
     const commitments = new Map<string, number>();
     for (const order of vendorOrders) {
       const code = order.currency.toUpperCase();
@@ -171,6 +185,9 @@ export async function GET(request: NextRequest) {
       averageDeliveryDays: deliveryDays.length
         ? Math.round((deliveryDays.reduce((sum, value) => sum + value, 0) / deliveryDays.length) * 10) / 10
         : null,
+      acceptedQuantity: acceptedQuantity.toFixed(3),
+      rejectedQuantity: rejectedQuantity.toFixed(3),
+      qualityAcceptanceRate,
       overdueOpenOrders: vendorOrders.filter((order) =>
         ['issued', 'partially_received'].includes(order.status)
         && Boolean(order.expectedDate && order.expectedDate < now),

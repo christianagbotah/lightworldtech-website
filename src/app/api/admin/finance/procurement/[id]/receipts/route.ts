@@ -10,7 +10,11 @@ const schema = z.object({
   notes: z.string().trim().max(4000).optional().default(''),
   lines: z.array(z.object({
     requestLineId: z.string().trim().min(1),
-    quantity: z.coerce.number().positive().max(999999),
+    quantity: z.coerce.number().nonnegative().max(999999),
+    rejectedQuantity: z.coerce.number().nonnegative().max(999999).optional().default(0),
+    inspectionNotes: z.string().trim().max(1000).optional().default(''),
+  }).refine((line) => line.quantity + line.rejectedQuantity > 0, {
+    message: 'Enter an accepted or rejected quantity',
   })).min(1).max(100),
 });
 
@@ -67,7 +71,12 @@ export async function POST(
   }
 
   const unique = new Set<string>();
-  const receivedLines: Array<{ requestLineId: string; quantity: Prisma.Decimal }> = [];
+  const receivedLines: Array<{
+    requestLineId: string;
+    quantity: Prisma.Decimal;
+    rejectedQuantity: Prisma.Decimal;
+    inspectionNotes: string;
+  }> = [];
   for (const line of parsed.data.lines) {
     if (unique.has(line.requestLineId)) {
       return NextResponse.json({ success: false, error: 'Each purchase order line can appear only once per receipt' }, { status: 400 });
@@ -79,17 +88,23 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Receipt line does not belong to this purchase order' }, { status: 409 });
     }
     const quantity = new Prisma.Decimal(line.quantity).toDecimalPlaces(3);
+    const rejectedQuantity = new Prisma.Decimal(line.rejectedQuantity).toDecimalPlaces(3);
     const prior = alreadyReceived.get(line.requestLineId) || new Prisma.Decimal(0);
     if (prior.plus(quantity).gt(orderedQuantity)) {
       return NextResponse.json({
         success: false,
-        error: 'Received quantity exceeds the purchase order quantity',
+        error: 'Accepted quantity exceeds the remaining purchase order quantity',
         requestLineId: line.requestLineId,
         orderedQuantity: orderedQuantity.toFixed(3),
-        alreadyReceived: prior.toFixed(3),
+        alreadyAccepted: prior.toFixed(3),
       }, { status: 409 });
     }
-    receivedLines.push({ requestLineId: line.requestLineId, quantity });
+    receivedLines.push({
+      requestLineId: line.requestLineId,
+      quantity,
+      rejectedQuantity,
+      inspectionNotes: line.inspectionNotes,
+    });
   }
 
   const created = await db.$transaction(async (tx) => {
@@ -141,6 +156,8 @@ export async function POST(
       poNumber: order.poNumber,
       receiptNumber: created.receipt.receiptNumber,
       lineCount: created.receipt.lines.length,
+      acceptedQuantity: created.receipt.lines.reduce((sum, line) => sum.plus(line.quantity), new Prisma.Decimal(0)).toFixed(3),
+      rejectedQuantity: created.receipt.lines.reduce((sum, line) => sum.plus(line.rejectedQuantity), new Prisma.Decimal(0)).toFixed(3),
       fullyReceived: created.complete,
     },
   });
@@ -156,6 +173,7 @@ export async function POST(
       lines: created.receipt.lines.map((line) => ({
         ...line,
         quantity: line.quantity.toFixed(3),
+        rejectedQuantity: line.rejectedQuantity.toFixed(3),
       })),
     },
   }, { status: 201 });
