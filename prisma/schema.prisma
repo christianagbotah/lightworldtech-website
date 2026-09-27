@@ -1320,6 +1320,7 @@ model FinanceSupplierQuote {
   selectedAt     DateTime?
   selectedById   String                 @default("")
   selectedByName String                 @default("")
+  selectionReason String                @default("")
   createdById    String
   createdByName  String                 @default("")
 
