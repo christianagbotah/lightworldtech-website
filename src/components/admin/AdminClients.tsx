@@ -138,6 +138,9 @@ type PortfolioIntelligence = {
     attention: number;
     stable: number;
     overdueInvoices: number;
+    creditHolds: number;
+    creditLimitWatch: number;
+    creditLimitCritical: number;
     renewalsDue30: number;
     expiredAgreements: number;
     agreementsInNoticeWindow: number;
@@ -174,6 +177,15 @@ type PortfolioIntelligence = {
     primaryContactName: string;
     primaryEmail: string;
     primaryPhone: string;
+    creditPolicy: {
+      paymentTermsDays: number;
+      currency: string;
+      limit: string;
+      outstanding: string;
+      utilizationPercent: string | null;
+      onHold: boolean;
+      holdReason: string;
+    };
     posture: 'intervention_required' | 'attention' | 'stable';
     riskScore: number;
     metrics: {
@@ -185,6 +197,9 @@ type PortfolioIntelligence = {
       urgentTickets: number;
       slaBreaches: number;
       overdueInvoices: number;
+      creditHold: number;
+      creditLimitWatch: number;
+      creditLimitCritical: number;
       expiredServices: number;
       renewalsDue30: number;
       expiredAgreements: number;
@@ -461,6 +476,13 @@ export default function AdminClients() {
         'Management posture',
         'Risk score',
         'Overdue invoices',
+        'Credit hold',
+        'Credit limit watch',
+        'Credit limit critical',
+        'Credit utilization %',
+        'Credit currency',
+        'Credit limit',
+        'Credit outstanding',
         'Renewals due 30d',
         'Expired agreements',
         'Agreements in notice window',
@@ -481,6 +503,13 @@ export default function AdminClients() {
         row.posture,
         String(row.riskScore),
         String(row.metrics.overdueInvoices),
+        String(row.metrics.creditHold),
+        String(row.metrics.creditLimitWatch),
+        String(row.metrics.creditLimitCritical),
+        row.creditPolicy.utilizationPercent || '',
+        row.creditPolicy.currency,
+        row.creditPolicy.limit,
+        row.creditPolicy.outstanding,
         String(row.metrics.renewalsDue30),
         String(row.metrics.expiredAgreements),
         String(row.metrics.agreementsInNoticeWindow),
@@ -1262,12 +1291,14 @@ export default function AdminClients() {
               </div>
             ) : portfolio ? (
               <>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
                   {[
                     { label: 'Intervention', value: portfolio.summary.interventionRequired, icon: AlertTriangle, tone: 'text-rose-600 bg-rose-500/10' },
                     { label: 'Attention', value: portfolio.summary.attention, icon: Activity, tone: 'text-amber-600 bg-amber-500/10' },
                     { label: 'Stable', value: portfolio.summary.stable, icon: Building2, tone: 'text-emerald-600 bg-emerald-500/10' },
                     { label: 'Overdue invoices', value: portfolio.summary.overdueInvoices, icon: CircleDollarSign, tone: 'text-rose-600 bg-rose-500/10' },
+                    { label: 'Credit holds', value: portfolio.summary.creditHolds, icon: AlertTriangle, tone: 'text-rose-600 bg-rose-500/10' },
+                    { label: 'Credit ≥75%', value: portfolio.summary.creditLimitWatch, icon: CircleDollarSign, tone: 'text-amber-600 bg-amber-500/10' },
                     { label: 'Renewals ≤30d', value: portfolio.summary.renewalsDue30, icon: CalendarClock, tone: 'text-violet-600 bg-violet-500/10' },
                     { label: 'Agreement exceptions', value: portfolio.summary.expiredAgreements + portfolio.summary.agreementsInNoticeWindow + portfolio.summary.overdueAgreementObligations, icon: FileText, tone: 'text-amber-600 bg-amber-500/10' },
                   ].map((item) => {
@@ -1338,10 +1369,19 @@ export default function AdminClients() {
                               </Badge>
                             </div>
                             <p className="mt-1 text-[10px] text-muted-foreground">
-                              {row.metrics.overdueInvoices} overdue · {row.metrics.renewalsDue30} renewals · {row.metrics.expiredAgreements + row.metrics.agreementsInNoticeWindow + row.metrics.overdueAgreementObligations} agreement exceptions · {row.metrics.agreementObligationsDue30} obligations due ≤30d · {row.metrics.atRiskProjects} delivery risk · {row.metrics.budgetPressure} budget pressure · {row.metrics.urgentTickets + row.metrics.slaBreaches} support pressure
+                              {row.metrics.overdueInvoices} overdue · {row.metrics.creditHold ? 'credit hold · ' : ''}{row.creditPolicy.utilizationPercent ? row.creditPolicy.utilizationPercent + '% credit used · ' : ''}{row.metrics.renewalsDue30} renewals · {row.metrics.expiredAgreements + row.metrics.agreementsInNoticeWindow + row.metrics.overdueAgreementObligations} agreement exceptions · {row.metrics.agreementObligationsDue30} obligations due ≤30d · {row.metrics.atRiskProjects} delivery risk · {row.metrics.budgetPressure} budget pressure · {row.metrics.urgentTickets + row.metrics.slaBreaches} support pressure
                             </p>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                            {(row.creditPolicy.onHold || row.creditPolicy.utilizationPercent) && (
+                              <span className={row.creditPolicy.onHold || Number(row.creditPolicy.utilizationPercent || 0) >= 90
+                                ? 'rounded-lg border border-rose-300 bg-rose-50 px-2 py-1 text-[9px] text-rose-700 dark:border-rose-900 dark:bg-rose-950/20 dark:text-rose-300'
+                                : 'rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[9px] text-amber-700 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300'}>
+                                {row.creditPolicy.onHold
+                                  ? 'Credit hold'
+                                  : row.creditPolicy.currency + ': ' + row.creditPolicy.utilizationPercent + '% credit used'}
+                              </span>
+                            )}
                             {row.exposure.slice(0, 2).map((exposure) => (
                               <span key={exposure.currency} className="rounded-lg border border-border/60 bg-background px-2 py-1 text-[9px] text-muted-foreground">
                                 {exposure.currency}: {money(exposure.overdueReceivables, exposure.currency)} overdue
