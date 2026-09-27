@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     const pendingApprovals = await db.financeOutflowApproval.findMany({
       where: {
         outflowType: 'vendor_payment',
-        status: 'pending',
+        status: { in: ['pending', 'scheduled'] },
         counterpartyId: vendor.id,
         currency,
       },

@@ -125,17 +125,25 @@ export function parseApprovalAllocations(value: string): VendorPaymentApprovalAl
 }
 
 
+export function isFutureFinanceDate(value: Date, now = new Date()): boolean {
+  const currentDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const valueDay = Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate());
+  return valueDay > currentDay;
+}
+
 export async function executeOutflowApproval(
   approvalId: string,
   actor: ActiveAdminContext,
   decisionNotes = '',
+  options: { allowScheduled?: boolean } = {},
 ) {
   const approval = await db.financeOutflowApproval.findUnique({
     where: { id: approvalId },
     include: { attachments: { orderBy: { createdAt: 'asc' } } },
   });
   if (!approval) throw new Error('Approval request not found');
-  if (approval.status !== 'pending') throw new Error('Approval request has already been decided');
+  const executingScheduled = approval.status === 'scheduled' && options.allowScheduled === true;
+  if (approval.status !== 'pending' && !executingScheduled) throw new Error('Approval request has already been decided');
 
   if (approval.requestedByAdminId === actor.id) {
     throw new Error('Maker-checker prevents the requester from approving their own outflow');
@@ -267,11 +275,15 @@ export async function executeOutflowApproval(
         where: { id: approval.id },
         data: {
           status: 'approved',
-          decidedByAdminId: actor.id,
-          decidedByName: actor.name || 'Admin',
-          decidedByEmail: actor.email,
-          decidedAt: new Date(),
-          decisionNotes,
+          ...(executingScheduled ? {} : {
+            decidedByAdminId: actor.id,
+            decidedByName: actor.name || 'Admin',
+            decidedByEmail: actor.email,
+            decidedAt: new Date(),
+          }),
+          decisionNotes: executingScheduled
+            ? [approval.decisionNotes, decisionNotes].filter(Boolean).join(' · ')
+            : decisionNotes,
           resultId: created.id,
           resultNumber: created.paymentNumber,
         },
@@ -371,11 +383,15 @@ export async function executeOutflowApproval(
         where: { id: approval.id },
         data: {
           status: 'approved',
-          decidedByAdminId: actor.id,
-          decidedByName: actor.name || 'Admin',
-          decidedByEmail: actor.email,
-          decidedAt: new Date(),
-          decisionNotes,
+          ...(executingScheduled ? {} : {
+            decidedByAdminId: actor.id,
+            decidedByName: actor.name || 'Admin',
+            decidedByEmail: actor.email,
+            decidedAt: new Date(),
+          }),
+          decisionNotes: executingScheduled
+            ? [approval.decisionNotes, decisionNotes].filter(Boolean).join(' · ')
+            : decisionNotes,
           resultId: created.id,
           resultNumber: created.refundNumber,
         },

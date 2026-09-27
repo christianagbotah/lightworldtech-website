@@ -49,7 +49,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const pendingApprovals = await db.financeOutflowApproval.findMany({
-    where: { outflowType: 'vendor_payment', status: 'pending', currency: run.currency },
+    where: { outflowType: 'vendor_payment', status: { in: ['pending', 'scheduled'] }, currency: run.currency },
     select: { allocationsJson: true },
   });
   const reserved = new Map<string, Prisma.Decimal>();

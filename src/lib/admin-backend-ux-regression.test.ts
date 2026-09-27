@@ -2499,6 +2499,30 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('lightworld-supplier-payments');
   });
 
+  test('schedules approved future outflows without posting cash before the effective date', () => {
+    const migration = source('prisma/migrations/20260927165000_scheduled_treasury_outflows/migration.sql');
+    const approvalsApi = source('src/app/api/admin/finance/approvals/route.ts');
+    const decisionApi = source('src/app/api/admin/finance/approvals/[id]/route.ts');
+    const approvalLib = source('src/lib/finance-approvals.ts');
+    const workspace = source('src/components/admin/FinanceOutflowApprovals.tsx');
+
+    expect(migration).toContain("'scheduled'");
+    expect(approvalsApi).toContain("['pending', 'scheduled', 'approved', 'rejected', 'cancelled']");
+    expect(decisionApi).toContain("action: z.enum(['approve', 'reject', 'cancel', 'execute'])");
+    expect(decisionApi).toContain("status: 'scheduled'");
+    expect(decisionApi).toContain('Scheduled outflow cannot execute before its effective date');
+    expect(decisionApi).toContain("admin.finance_outflow_scheduled");
+    expect(decisionApi).toContain("admin.finance_scheduled_outflow_executed");
+    expect(source('src/app/api/admin/finance/treasury-runs/route.ts')).toContain("status: { in: ['pending', 'scheduled'] }");
+    expect(source('src/app/api/admin/finance/vendor-payments/route.ts')).toContain("status: { in: ['pending', 'scheduled'] }");
+    expect(approvalLib).toContain('isFutureFinanceDate');
+    expect(approvalLib).toContain("approval.status === 'scheduled' && options.allowScheduled === true");
+    expect(workspace).toContain('Scheduled treasury outflows');
+    expect(workspace).toContain('Approve & schedule');
+    expect(workspace).toContain('Execute due payment');
+    expect(workspace).toContain('It will not post cash until its effective date and explicit execution.');
+  });
+
   test('requires supplier payment proof before maker-checker approval', () => {
     const schema = source('prisma/schema.prisma');
     const migration = source('prisma/migrations/20260927071500_outflow_approval_evidence/migration.sql');

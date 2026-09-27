@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import {
   Ban,
   CheckCircle2,
+  Clock3,
   Loader2,
+  PlayCircle,
   RefreshCw,
   ShieldCheck,
   UserCheck,
@@ -38,7 +40,7 @@ type Approval = {
   id: string;
   requestNumber: string;
   outflowType: 'vendor_payment' | 'customer_refund';
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  status: 'pending' | 'scheduled' | 'approved' | 'rejected' | 'cancelled';
   counterpartyId: string;
   counterpartyName: string;
   sourceId: string;
@@ -144,6 +146,7 @@ function approvalAge(value: string) {
 }
 
 function statusTone(status: Approval['status']) {
+  if (status === 'scheduled') return 'border-0 bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-200';
   if (status === 'approved') return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
   if (status === 'rejected') return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
   if (status === 'cancelled') return 'border-0 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200';
@@ -166,12 +169,12 @@ export default function FinanceOutflowApprovals() {
   const [working, setWorking] = useState(false);
   const [decision, setDecision] = useState<{
     approval: Approval;
-    action: 'approve' | 'reject' | 'cancel';
+    action: 'approve' | 'reject' | 'cancel' | 'execute';
   } | null>(null);
   const [notes, setNotes] = useState('');
   const [creditDecision, setCreditDecision] = useState<{
     approval: CreditApproval;
-    action: 'approve' | 'reject' | 'cancel';
+    action: 'approve' | 'reject' | 'cancel' | 'execute';
   } | null>(null);
   const [creditNotes, setCreditNotes] = useState('');
   const [approvalProofFiles, setApprovalProofFiles] = useState<Record<string, File | null>>({});
@@ -251,9 +254,12 @@ export default function FinanceOutflowApprovals() {
       );
       if (decision.action === 'approve') {
         toast.success(
-          'Outflow approved' +
-          (payload?.data?.resultNumber ? ' · ' + payload.data.resultNumber : ''),
+          payload?.scheduled
+            ? 'Outflow approved and scheduled for ' + new Date(decision.approval.effectiveDate).toLocaleDateString()
+            : 'Outflow approved' + (payload?.data?.resultNumber ? ' · ' + payload.data.resultNumber : ''),
         );
+      } else if (decision.action === 'execute') {
+        toast.success('Scheduled outflow executed' + (payload?.data?.resultNumber ? ' · ' + payload.data.resultNumber : ''));
       } else if (decision.action === 'reject') {
         toast.success('Outflow request rejected');
       } else {
@@ -300,7 +306,8 @@ export default function FinanceOutflowApprovals() {
 
   const approvals = inbox?.approvals || [];
   const pending = approvals.filter((item) => item.status === 'pending');
-  const history = approvals.filter((item) => item.status !== 'pending');
+  const scheduled = approvals.filter((item) => item.status === 'scheduled');
+  const history = approvals.filter((item) => !['pending', 'scheduled'].includes(item.status));
   const creditApprovals = inbox?.creditApprovals || [];
   const pendingCredit = creditApprovals.filter((item) => item.status === 'pending');
   const creditHistory = creditApprovals.filter((item) => item.status !== 'pending');
@@ -467,7 +474,7 @@ export default function FinanceOutflowApprovals() {
             <div>
               <CardTitle className="text-base">Pending cash-out approvals</CardTitle>
               <p className="mt-1 text-xs text-muted-foreground">
-                A requester cannot approve or reject their own request. They may cancel it before another approver acts.
+                A requester cannot approve or reject their own request. Future-dated approvals are scheduled and do not post cash until their effective date.
               </p>
             </div>
             <Badge variant="outline">{pending.length} pending</Badge>
@@ -569,7 +576,8 @@ export default function FinanceOutflowApprovals() {
                                 title={!proofReady ? 'Attach payment proof before approval' : undefined}
                                 onClick={() => { setDecision({ approval, action: 'approve' }); setNotes(''); }}
                               >
-                                <CheckCircle2 className="mr-1.5 size-3.5" /> Approve
+                                <CheckCircle2 className="mr-1.5 size-3.5" />
+                                {new Date(approval.effectiveDate).getTime() > Date.now() ? 'Approve & schedule' : 'Approve'}
                               </Button>
                               <Button type="button" size="sm" variant="outline" onClick={() => { setDecision({ approval, action: 'reject' }); setNotes(''); }}>
                                 <XCircle className="mr-1.5 size-3.5" /> Reject
@@ -596,6 +604,50 @@ export default function FinanceOutflowApprovals() {
                     </TableCell>
                   </TableRow>
                 )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-sky-200/70 bg-sky-50/20 dark:border-sky-900/40 dark:bg-sky-950/10">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base"><Clock3 className="size-4 text-sky-600" /> Scheduled treasury outflows</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">Approved future-dated cash commitments remain off the posted cashbook until their effective date and explicit execution.</p>
+            </div>
+            <Badge variant="outline">{scheduled.length} scheduled</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-scheduled-treasury-outflows" className="min-w-[1080px]">
+              <TableHeader><TableRow>
+                <TableHead>Request</TableHead><TableHead>Counterparty</TableHead><TableHead>Approved by</TableHead><TableHead>Payment date</TableHead><TableHead>Method</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Execution</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {scheduled.map((approval) => {
+                  const due = new Date(approval.effectiveDate).getTime() <= Date.now();
+                  const mine = approval.requestedByAdminId === inbox?.currentAdminId;
+                  const canExecute = Boolean(inbox?.canApprove) && !mine && due;
+                  return (
+                    <TableRow key={approval.id}>
+                      <TableCell><p className="font-mono text-xs font-semibold">{approval.requestNumber}</p><Badge className={statusTone(approval.status)}>Scheduled</Badge></TableCell>
+                      <TableCell><p className="text-xs font-medium">{approval.counterpartyName}</p><p className="text-[10px] text-muted-foreground">{approval.sourceReference || pretty(approval.outflowType)}</p></TableCell>
+                      <TableCell><p className="text-xs">{approval.decidedByName || 'Finance approver'}</p><p className="text-[10px] text-muted-foreground">{date(approval.decidedAt)}</p></TableCell>
+                      <TableCell><p className="text-xs font-medium">{date(approval.effectiveDate)}</p><Badge variant="outline" className={due ? 'mt-1 border-amber-300 text-amber-700 dark:text-amber-300' : 'mt-1'}>{due ? 'Due for execution' : 'Not due yet'}</Badge></TableCell>
+                      <TableCell className="text-xs">{pretty(approval.method)}</TableCell>
+                      <TableCell className="text-right font-semibold">{money(approval.amount, approval.currency)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button type="button" size="sm" disabled={!canExecute || working} title={!due ? 'Execution unlocks on the scheduled payment date' : mine ? 'Maker-checker prevents requester execution' : !inbox?.canApprove ? 'Finance approval permission required' : undefined} onClick={() => { setDecision({ approval, action: 'execute' }); setNotes(''); }}>
+                          <PlayCircle className="mr-1.5 size-3.5" /> Execute due payment
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!scheduled.length && <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No approved future-dated outflows are waiting for their payment date.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
@@ -708,14 +760,20 @@ export default function FinanceOutflowApprovals() {
           <DialogHeader>
             <DialogTitle>
               {decision?.action === 'approve'
-                ? 'Approve cash outflow?'
+                ? (decision && new Date(decision.approval.effectiveDate).getTime() > Date.now() ? 'Approve and schedule cash outflow?' : 'Approve cash outflow?')
+                : decision?.action === 'execute'
+                  ? 'Execute scheduled cash outflow?'
                 : decision?.action === 'reject'
                   ? 'Reject cash outflow?'
                   : 'Cancel cash outflow request?'}
             </DialogTitle>
             <DialogDescription>
               {decision?.action === 'approve'
-                ? 'Approval will execute the supplier payment or customer refund, update balances and post the cash journal.'
+                ? (decision && new Date(decision.approval.effectiveDate).getTime() > Date.now()
+                    ? 'Approval will reserve this as a scheduled treasury commitment. It will not post cash until its effective date and explicit execution.'
+                    : 'Approval will execute the supplier payment or customer refund, update balances and post the cash journal.')
+                : decision?.action === 'execute'
+                  ? 'Execution will now create the payment/refund, update source balances and post the cash journal using the approved scheduled details.'
                 : decision?.action === 'reject'
                   ? 'Rejection keeps cash unchanged and records this decision in the audit history.'
                   : 'Cancellation removes this pending request before another approver acts. Cash remains unchanged.'}
