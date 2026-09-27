@@ -20,6 +20,9 @@ CREATE TABLE "FinanceSupplierQuote" (
 );
 
 CREATE INDEX "FinanceSupplierQuote_requestId_selected_idx" ON "FinanceSupplierQuote"("requestId", "selected");
+CREATE UNIQUE INDEX "FinanceSupplierQuote_one_selected_per_request"
+ON "FinanceSupplierQuote"("requestId")
+WHERE "selected" = true;
 CREATE INDEX "FinanceSupplierQuote_vendorId_createdAt_idx" ON "FinanceSupplierQuote"("vendorId", "createdAt");
 CREATE INDEX "FinanceSupplierQuote_validUntil_idx" ON "FinanceSupplierQuote"("validUntil");
 
