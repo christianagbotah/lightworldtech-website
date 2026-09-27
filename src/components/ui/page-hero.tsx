@@ -152,7 +152,6 @@ export default function PageHero({
   ];
 
   const entrance = (delay = 0) => ({
-    initial: reduceMotion ? false : { opacity: 0, y: 14 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as const },
   });
@@ -172,6 +171,7 @@ export default function PageHero({
 
       <div className="container-main relative z-10">
         <motion.nav
+          initial={false}
           {...entrance(0)}
           className="mb-6 flex items-center gap-2 text-sm text-slate-400"
           aria-label="Breadcrumb"
@@ -195,6 +195,7 @@ export default function PageHero({
 
         {badge && (
           <motion.div
+            initial={false}
             {...entrance(0.08)}
             className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-400/10 px-4 py-1.5 text-sm font-medium text-amber-200 shadow-[0_0_35px_rgba(245,158,11,.08)] backdrop-blur-sm"
           >
@@ -207,6 +208,7 @@ export default function PageHero({
         )}
 
         <motion.h1
+          initial={false}
           {...entrance(0.12)}
           className="mb-4 max-w-4xl text-4xl font-bold leading-tight tracking-tight text-white md:text-5xl lg:text-6xl"
         >
@@ -215,6 +217,7 @@ export default function PageHero({
 
         {subtitle && (
           <motion.p
+            initial={false}
             {...entrance(0.2)}
             className="max-w-2xl text-lg leading-relaxed text-slate-300 md:text-xl"
           >
@@ -223,7 +226,7 @@ export default function PageHero({
         )}
 
         {children && (
-          <motion.div {...entrance(0.28)}>
+          <motion.div initial={false} {...entrance(0.28)}>
             {children}
           </motion.div>
         )}
