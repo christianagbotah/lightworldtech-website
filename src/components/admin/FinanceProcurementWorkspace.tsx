@@ -400,7 +400,7 @@ export default function FinanceProcurementWorkspace({
         <div>
           <h2 className="text-lg font-semibold">Procurement control</h2>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Submit purchase requisitions, enforce maker-checker approval, issue supplier POs, record line-level GRNs and match only fully received commitments to supplier bills.
+            Submit purchase requisitions without forcing a supplier choice, source and compare supplier quotes independently, enforce maker-checker approval, issue supplier POs, record line-level GRNs and match only fully received commitments to supplier bills.
           </p>
         </div>
         <Button variant="outline" onClick={() => void load()} disabled={loading}><RefreshCw className={loading ? 'mr-2 size-4 animate-spin' : 'mr-2 size-4'} />Refresh</Button>
@@ -492,11 +492,11 @@ export default function FinanceProcurementWorkspace({
           <form onSubmit={submit} className="space-y-4">
             <div className="grid gap-3 lg:grid-cols-5">
               <div className="space-y-1.5 lg:col-span-2"><Label>Purpose / title</Label><Input required value={form.title} onChange={(e) => setForm((v) => ({ ...v, title: e.target.value }))} placeholder="e.g. Annual cloud infrastructure renewal" /></div>
-              <div className="space-y-1.5"><Label>Supplier</Label><select required className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.vendorId} onChange={(e) => setForm((v) => ({ ...v, vendorId: e.target.value }))}><option value="">Select supplier</option>{data.vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select></div>
+              <div className="space-y-1.5"><Label>Preferred supplier (optional)</Label><select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.vendorId} onChange={(e) => setForm((v) => ({ ...v, vendorId: e.target.value }))}><option value="">Source after approval</option>{data.vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select><p className="text-[10px] leading-4 text-muted-foreground">A requester may suggest a supplier, but the awarded supplier is determined through the quotation workflow.</p></div>
               <div className="space-y-1.5"><Label>Project attribution</Label><select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.projectId} onChange={(e) => setForm((v) => ({ ...v, projectId: e.target.value }))}><option value="">General overhead</option>{data.projects.map((project) => <option key={project.id} value={project.id}>{project.organization.name} · {project.name}</option>)}</select></div>
               <div className="space-y-1.5"><Label>Needed by</Label><Input type="date" value={form.neededBy} onChange={(e) => setForm((v) => ({ ...v, neededBy: e.target.value }))} /></div>
             </div>
-            <div className="space-y-1.5"><Label>Business justification</Label><Textarea value={form.description} onChange={(e) => setForm((v) => ({ ...v, description: e.target.value }))} placeholder="Why this purchase is required, scope and any supplier context." /></div>
+            <div className="space-y-1.5"><Label>Business justification</Label><Textarea value={form.description} onChange={(e) => setForm((v) => ({ ...v, description: e.target.value }))} placeholder="Why this purchase is required, scope, specifications and business context." /></div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2"><Label>Line items</Label><Button type="button" size="sm" variant="outline" onClick={() => setForm((v) => ({ ...v, lines: [...v.lines, emptyLine()] }))}><Plus className="mr-1 size-3.5" />Add line</Button></div>
