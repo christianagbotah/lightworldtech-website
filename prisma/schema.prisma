@@ -1187,6 +1187,7 @@ model FinanceVendorBill {
   purchaseOrder   FinancePurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
   allocations    FinanceVendorPaymentAllocation[]
   attachments    FinanceVendorBillAttachment[]
+  treasuryLines  FinanceTreasuryPaymentRunLine[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1551,6 +1552,59 @@ model FinanceOutflowApproval {
   @@index([counterpartyId, status])
   @@index([sourceId, status])
   @@index([requestedByAdminId, status])
+}
+
+
+model FinanceTreasuryPaymentRun {
+  id                 String                          @id @default(cuid())
+  runNumber          String                          @unique
+  status             String                          @default("draft")
+  currency           String                          @default("GHS")
+  plannedDate        DateTime
+  dueThrough         DateTime
+  sourceSystemKey    String
+  sourceLabel        String
+  sourceReference    String                          @default("")
+  notes              String                          @default("")
+  preparedByAdminId  String
+  preparedByName     String                          @default("")
+  preparedByEmail    String                          @default("")
+  submittedByAdminId String                          @default("")
+  submittedByName    String                          @default("")
+  submittedByEmail   String                          @default("")
+  submittedAt        DateTime?
+  lines              FinanceTreasuryPaymentRunLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, plannedDate])
+  @@index([currency, dueThrough])
+  @@index([preparedByAdminId, status])
+}
+
+model FinanceTreasuryPaymentRunLine {
+  id             String                    @id @default(cuid())
+  runId          String
+  run            FinanceTreasuryPaymentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  billId         String
+  bill           FinanceVendorBill         @relation(fields: [billId], references: [id], onDelete: Restrict)
+  vendorId       String
+  vendorName     String
+  payableNumber  String
+  dueDate        DateTime
+  amount         Decimal                   @db.Decimal(18, 2)
+  status         String                    @default("planned")
+  approvalId     String                    @default("")
+  paymentId      String                    @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([runId, billId])
+  @@index([billId, status])
+  @@index([vendorId, status])
+  @@index([approvalId])
 }
 
 model FinanceOutflowApprovalAttachment {
