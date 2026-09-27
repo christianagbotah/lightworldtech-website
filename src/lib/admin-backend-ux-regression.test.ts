@@ -2517,6 +2517,7 @@ describe('admin backend and responsive UX regression coverage', () => {
 
     expect(quoteSelection).toContain('requisitionEstimate: requisition.estimatedAmount.toFixed(2)');
     expect(quoteSelection).toContain('awardVariance: quote.total.minus(requisition.estimatedAmount).toFixed(2)');
+    expect(quoteSelection).toContain('awardVariancePercent: requisition.estimatedAmount.gt(0)');
     expect(quoteSelection).not.toContain('estimatedAmount: quote.total');
     expect(procurement).toContain('Estimate / award');
     expect(procurement).toContain('Planning baseline');
