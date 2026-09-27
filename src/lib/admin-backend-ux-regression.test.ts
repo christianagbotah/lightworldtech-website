@@ -2423,6 +2423,26 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('purchaseOrderId: order.id');
   });
 
+  test('governs supplier quotation comparison before purchase order award', () => {
+    const schema = source('prisma/schema.prisma');
+    const quoteApi = source('src/app/api/admin/finance/procurement/[id]/quotes/route.ts');
+    const actionApi = source('src/app/api/admin/finance/procurement/[id]/route.ts');
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+
+    expect(schema).toContain('model FinanceSupplierQuote');
+    expect(schema).toContain('supplierQuotes     FinanceSupplierQuote[]');
+    expect(quoteApi).toContain('Supplier quote currency must match the requisition currency');
+    expect(quoteApi).toContain('The requisition requester cannot select the winning supplier quote');
+    expect(quoteApi).toContain('Expired supplier quotes cannot be selected');
+    expect(quoteApi).toContain('admin.finance_supplier_quote_recorded');
+    expect(quoteApi).toContain('admin.finance_supplier_quote_selected');
+    expect(actionApi).toContain('Select the winning supplier quote before issuing the purchase order');
+    expect(actionApi).toContain('selectedQuote?.total || item.estimatedAmount');
+    expect(procurement).toContain('Compare supplier quotes');
+    expect(procurement).toContain('Record quote');
+    expect(procurement).toContain('Select the winning supplier quote before PO issue');
+  });
+
   test('routes procurement exceptions into the finance notification centre', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
     const layout = source('src/components/admin/AdminLayout.tsx');

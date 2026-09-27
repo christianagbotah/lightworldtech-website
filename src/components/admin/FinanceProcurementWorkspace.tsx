@@ -15,6 +15,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 type Vendor = { id: string; name: string; email: string; phone: string };
 type Project = { id: string; name: string; organization: { id: string; name: string } };
 type RequestLine = { id: string; description: string; quantity: string; unitPrice: string; amount: string };
+type SupplierQuote = {
+  id: string; vendorId: string; quoteReference: string; currency: string; total: string;
+  leadTimeDays: number | null; validUntil: string | null; notes: string; selected: boolean;
+  selectedAt: string | null; selectedByName: string; createdByName: string;
+  vendor: { id: string; name: string };
+};
 type PurchaseRequest = {
   id: string;
   requestNumber: string;
@@ -36,6 +42,7 @@ type PurchaseRequest = {
   project: Project | null;
   lines: RequestLine[];
   purchaseOrder: { id: string; poNumber: string; status: string; total: string } | null;
+  supplierQuotes: SupplierQuote[];
 };
 type PurchaseReceiptLine = { id: string; requestLineId: string; quantity: string };
 type PurchaseReceipt = {
@@ -135,6 +142,10 @@ export default function FinanceProcurementWorkspace({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
+  const [quoteRequestId, setQuoteRequestId] = useState('');
+  const [quoteDrafts, setQuoteDrafts] = useState<Record<string, {
+    vendorId: string; quoteReference: string; total: string; leadTimeDays: string; validUntil: string; notes: string;
+  }>>({});
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, Record<string, string>>>({});
   const [receiptNotes, setReceiptNotes] = useState<Record<string, string>>({});
   const [receivingOrderId, setReceivingOrderId] = useState('');
@@ -197,6 +208,62 @@ export default function FinanceProcurementWorkspace({
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to submit purchase requisition');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const quoteDraft = (requestId: string) => quoteDrafts[requestId] || {
+    vendorId: '', quoteReference: '', total: '', leadTimeDays: '', validUntil: '', notes: '',
+  };
+
+  const saveQuote = async (request: PurchaseRequest) => {
+    const draft = quoteDraft(request.id);
+    if (!draft.vendorId || Number(draft.total || 0) <= 0) {
+      toast.error('Select a supplier and enter the quoted total');
+      return;
+    }
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/finance/procurement/' + request.id + '/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vendorId: draft.vendorId,
+          quoteReference: draft.quoteReference,
+          currency: request.currency,
+          total: Number(draft.total),
+          leadTimeDays: draft.leadTimeDays ? Number(draft.leadTimeDays) : null,
+          validUntil: draft.validUntil ? new Date(draft.validUntil + 'T23:59:59Z').toISOString() : null,
+          notes: draft.notes,
+        }),
+      });
+      const payload = await readJson(response);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to record supplier quote');
+      setQuoteDrafts((current) => ({ ...current, [request.id]: { vendorId: '', quoteReference: '', total: '', leadTimeDays: '', validUntil: '', notes: '' } }));
+      toast.success('Supplier quote recorded');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to record supplier quote');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const selectQuote = async (requestId: string, quoteId: string) => {
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/finance/procurement/' + requestId + '/quotes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quoteId }),
+      });
+      const payload = await readJson(response);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to select supplier quote');
+      toast.success('Winning supplier quote selected');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to select supplier quote');
     } finally {
       setSaving(false);
     }
@@ -444,7 +511,42 @@ export default function FinanceProcurementWorkspace({
                         </>
                       )}
                       {item.status === 'submitted' && item.requestedByAdminId === data.currentAdminId && <p className="text-xs text-muted-foreground">Awaiting approval by another authorized finance operator.</p>}
-                      {item.status === 'approved' && <Button size="sm" disabled={saving || !item.vendorId} onClick={() => void action(item.id, 'convert')}>Issue purchase order</Button>}
+                      {['submitted', 'approved'].includes(item.status) && !item.purchaseOrder && (
+                        <div className="space-y-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => setQuoteRequestId((current) => current === item.id ? '' : item.id)}>
+                            Compare supplier quotes ({item.supplierQuotes.length})
+                          </Button>
+                          {quoteRequestId === item.id && (
+                            <div className="space-y-3 rounded-xl border border-border/60 p-3">
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                <select className="h-9 rounded-md border border-input bg-background px-2 text-xs" value={quoteDraft(item.id).vendorId} onChange={(e) => setQuoteDrafts((v) => ({ ...v, [item.id]: { ...quoteDraft(item.id), vendorId: e.target.value } }))}>
+                                  <option value="">Supplier</option>{data.vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
+                                </select>
+                                <Input className="h-9 text-xs" placeholder="Quote reference" value={quoteDraft(item.id).quoteReference} onChange={(e) => setQuoteDrafts((v) => ({ ...v, [item.id]: { ...quoteDraft(item.id), quoteReference: e.target.value } }))} />
+                                <Input className="h-9 text-xs" type="number" min="0.01" step="0.01" placeholder={'Quoted total (' + item.currency + ')'} value={quoteDraft(item.id).total} onChange={(e) => setQuoteDrafts((v) => ({ ...v, [item.id]: { ...quoteDraft(item.id), total: e.target.value } }))} />
+                                <Input className="h-9 text-xs" type="number" min="0" placeholder="Lead time days" value={quoteDraft(item.id).leadTimeDays} onChange={(e) => setQuoteDrafts((v) => ({ ...v, [item.id]: { ...quoteDraft(item.id), leadTimeDays: e.target.value } }))} />
+                                <div className="sm:col-span-2"><Label className="text-[10px]">Quote valid until</Label><Input className="mt-1 h-9 text-xs" type="date" value={quoteDraft(item.id).validUntil} onChange={(e) => setQuoteDrafts((v) => ({ ...v, [item.id]: { ...quoteDraft(item.id), validUntil: e.target.value } }))} /></div>
+                              </div>
+                              <Textarea rows={2} className="text-xs" placeholder="Commercial notes, warranty, payment terms or exclusions…" value={quoteDraft(item.id).notes} onChange={(e) => setQuoteDrafts((v) => ({ ...v, [item.id]: { ...quoteDraft(item.id), notes: e.target.value } }))} />
+                              <Button type="button" size="sm" disabled={saving} onClick={() => void saveQuote(item)}>Record quote</Button>
+                              <div className="space-y-2 border-t border-border/60 pt-2">
+                                {item.supplierQuotes.map((quote) => (
+                                  <div key={quote.id} className={quote.selected ? 'rounded-lg border border-emerald-300 bg-emerald-50 p-2 dark:border-emerald-900/40 dark:bg-emerald-950/20' : 'rounded-lg border border-border/60 p-2'}>
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div><p className="text-xs font-semibold">{quote.vendor.name} · {money(quote.total, quote.currency)}</p><p className="text-[10px] text-muted-foreground">{quote.quoteReference || 'No reference'} · {quote.leadTimeDays === null ? 'Lead time not set' : quote.leadTimeDays + ' days'}{quote.validUntil ? ' · valid to ' + new Date(quote.validUntil).toLocaleDateString() : ''}</p></div>
+                                      <div className="flex items-center gap-1">{quote.selected ? <Badge className="border-0 bg-emerald-100 text-emerald-800">Selected</Badge> : item.status === 'approved' && data.canApprove && item.requestedByAdminId !== data.currentAdminId ? <Button type="button" size="sm" variant="outline" disabled={saving} onClick={() => void selectQuote(item.id, quote.id)}>Select</Button> : null}</div>
+                                    </div>
+                                    {quote.notes && <p className="mt-1 text-[10px] text-muted-foreground">{quote.notes}</p>}
+                                  </div>
+                                ))}
+                                {!item.supplierQuotes.length && <p className="text-[10px] text-muted-foreground">No supplier quotes recorded yet.</p>}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {item.status === 'approved' && <Button size="sm" disabled={saving || !item.vendorId || (item.supplierQuotes.length > 0 && !item.supplierQuotes.some((quote) => quote.selected))} onClick={() => void action(item.id, 'convert')}>Issue purchase order</Button>}
+                      {item.status === 'approved' && item.supplierQuotes.length > 0 && !item.supplierQuotes.some((quote) => quote.selected) && <p className="text-xs text-muted-foreground">Select the winning supplier quote before PO issue.</p>}
                       {item.purchaseOrder && <p className="text-xs text-muted-foreground">PO: {item.purchaseOrder.poNumber} · {pretty(item.purchaseOrder.status)}</p>}
                       {item.decidedAt && <p className="text-xs text-muted-foreground">Decision: {item.decidedByName || 'Finance'} · {new Date(item.decidedAt).toLocaleString()}{item.decisionNotes ? ' · ' + item.decisionNotes : ''}</p>}
                     </div>

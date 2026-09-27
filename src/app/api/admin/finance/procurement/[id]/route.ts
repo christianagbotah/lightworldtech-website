@@ -70,7 +70,10 @@ export async function PATCH(
   if (action === 'convert') {
     const item = await db.financePurchaseRequest.findUnique({
       where: { id },
-      include: { purchaseOrder: true },
+      include: {
+        purchaseOrder: true,
+        supplierQuotes: { orderBy: { createdAt: 'desc' } },
+      },
     });
     if (!item) return NextResponse.json({ success: false, error: 'Purchase requisition not found' }, { status: 404 });
     if (item.status !== 'approved') {
@@ -80,7 +83,15 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: 'A purchase order already exists for this requisition' }, { status: 409 });
     }
 
-    const vendorId = parsed.data.vendorId || item.vendorId;
+    const selectedQuote = item.supplierQuotes.find((quote) => quote.selected);
+    if (item.supplierQuotes.length > 0 && !selectedQuote) {
+      return NextResponse.json({ success: false, error: 'Select the winning supplier quote before issuing the purchase order' }, { status: 409 });
+    }
+    if (selectedQuote?.validUntil && selectedQuote.validUntil < new Date()) {
+      return NextResponse.json({ success: false, error: 'The selected supplier quote has expired and must be reviewed' }, { status: 409 });
+    }
+
+    const vendorId = selectedQuote?.vendorId || parsed.data.vendorId || item.vendorId;
     if (!vendorId) return NextResponse.json({ success: false, error: 'Select an active supplier before issuing the purchase order' }, { status: 400 });
     const vendor = await db.financeVendor.findFirst({ where: { id: vendorId, active: true }, select: { id: true, name: true } });
     if (!vendor) return NextResponse.json({ success: false, error: 'Active supplier not found' }, { status: 400 });
@@ -93,7 +104,7 @@ export async function PATCH(
           vendorId,
           projectId: item.projectId,
           currency: item.currency,
-          total: item.estimatedAmount,
+          total: selectedQuote?.total || item.estimatedAmount,
           expectedDate: parsed.data.expectedDate ? new Date(parsed.data.expectedDate) : item.neededBy,
           status: 'issued',
           notes: parsed.data.notes,
@@ -118,6 +129,7 @@ export async function PATCH(
         vendorId,
         currency: order.currency,
         total: order.total.toFixed(2),
+        supplierQuoteId: selectedQuote?.id || null,
       },
     });
     return NextResponse.json({ success: true, data: order }, { status: 201 });
