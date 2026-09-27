@@ -11,17 +11,14 @@ import {
 
 export const runtime = 'nodejs';
 
-async function authorizedAdmin(request: NextRequest) {
-  const actor = await getActiveAdminContext(request);
-  if (!actor || !hasAdminPermission(actor.role, actor.permissions, 'finance.manage')) return null;
-  return actor;
-}
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const actor = await authorizedAdmin(request);
-  if (!actor) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+  const actor = await getActiveAdminContext(request);
+  if (!actor || !hasAdminPermission(actor.role, actor.permissions, 'finance.manage')) {
+    return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+  }
 
   const { id } = await params;
   const attachment = await db.financeVendorBillAttachment.findUnique({
@@ -64,8 +61,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const actor = await authorizedAdmin(request);
-  if (!actor) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+  const actor = await getActiveAdminContext(request);
+  if (!actor || !hasAdminPermission(actor.role, actor.permissions, 'finance.manage')) {
+    return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+  }
   const { id } = await params;
   const attachment = await db.financeVendorBillAttachment.findUnique({
     where: { id },
