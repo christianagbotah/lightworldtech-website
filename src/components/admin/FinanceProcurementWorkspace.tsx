@@ -18,7 +18,7 @@ type RequestLine = { id: string; description: string; quantity: string; unitPric
 type SupplierQuote = {
   id: string; vendorId: string; quoteReference: string; currency: string; total: string;
   leadTimeDays: number | null; validUntil: string | null; notes: string; selected: boolean;
-  selectedAt: string | null; selectedByName: string; createdByName: string;
+  selectedAt: string | null; selectedByName: string; selectionReason: string; createdByName: string;
   vendor: { id: string; name: string };
 };
 type PurchaseRequest = {
@@ -146,6 +146,7 @@ export default function FinanceProcurementWorkspace({
   const [quoteDrafts, setQuoteDrafts] = useState<Record<string, {
     vendorId: string; quoteReference: string; total: string; leadTimeDays: string; validUntil: string; notes: string;
   }>>({});
+  const [quoteSelectionReasons, setQuoteSelectionReasons] = useState<Record<string, string>>({});
   const [receiptDrafts, setReceiptDrafts] = useState<Record<string, Record<string, string>>>({});
   const [receiptNotes, setReceiptNotes] = useState<Record<string, string>>({});
   const [receivingOrderId, setReceivingOrderId] = useState('');
@@ -256,11 +257,12 @@ export default function FinanceProcurementWorkspace({
       const response = await fetch('/api/admin/finance/procurement/' + requestId + '/quotes', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quoteId }),
+        body: JSON.stringify({ quoteId, selectionReason: quoteSelectionReasons[quoteId] || '' }),
       });
       const payload = await readJson(response);
       if (!response.ok) throw new Error(payload?.error || 'Unable to select supplier quote');
       toast.success('Winning supplier quote selected');
+      setQuoteSelectionReasons((current) => ({ ...current, [quoteId]: '' }));
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to select supplier quote');
@@ -537,6 +539,15 @@ export default function FinanceProcurementWorkspace({
                                       <div className="flex items-center gap-1">{quote.selected ? <Badge className="border-0 bg-emerald-100 text-emerald-800">Selected</Badge> : item.status === 'approved' && data.canApprove && item.requestedByAdminId !== data.currentAdminId ? <Button type="button" size="sm" variant="outline" disabled={saving} onClick={() => void selectQuote(item.id, quote.id)}>Select</Button> : null}</div>
                                     </div>
                                     {quote.notes && <p className="mt-1 text-[10px] text-muted-foreground">{quote.notes}</p>}
+                                    {quote.selected && quote.selectionReason && <p className="mt-1 text-[10px] font-medium text-emerald-800 dark:text-emerald-200">Award rationale: {quote.selectionReason}</p>}
+                                    {!quote.selected && item.status === 'approved' && data.canApprove && item.requestedByAdminId !== data.currentAdminId && (
+                                      <Input
+                                        className="mt-2 h-8 text-xs"
+                                        placeholder="Award rationale — required for single-source or higher-priced selection"
+                                        value={quoteSelectionReasons[quote.id] || ''}
+                                        onChange={(e) => setQuoteSelectionReasons((current) => ({ ...current, [quote.id]: e.target.value }))}
+                                      />
+                                    )}
                                   </div>
                                 ))}
                                 {!item.supplierQuotes.length && <p className="text-[10px] text-muted-foreground">No supplier quotes recorded yet.</p>}
