@@ -2377,7 +2377,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(procurementReceiptApi).toContain('admin.finance_purchase_receipt_recorded');
     expect(procurementReceiptApi).toContain("status: 'partially_received'");
     expect(procurementReceiptApi).toContain("status: 'received'");
-    expect(procurementReceiptApi).toContain('Received quantity exceeds the purchase order quantity');
+    expect(procurementReceiptApi).toContain('Accepted quantity exceeds the remaining purchase order quantity');
     expect(procurement).toContain('Procurement control');
     expect(procurement).toContain('Submit for approval');
     expect(procurement).toContain('Issue purchase order');
@@ -2397,9 +2397,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(procurementApi).toContain('onTimeRate');
     expect(procurementApi).toContain('averageDeliveryDays');
     expect(procurementApi).toContain('commitmentsByCurrency');
-    expect(procurement).toContain('Supplier delivery performance');
+    expect(procurement).toContain('Supplier delivery & quality performance');
     expect(procurement).toContain('lightworld-supplier-procurement-performance');
-    expect(procurement).toContain('On-time rate is measured only where the PO has an expected date');
+    expect(procurement).toContain('Quality acceptance uses inspected accepted versus rejected quantities');
     expect(finance).toContain("['procurement', 'Procurement']");
     expect(finance).toContain('FinanceProcurementWorkspace');
   });
@@ -2524,6 +2524,28 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(procurement).toContain('Saving ');
     expect(procurement).toContain('Over estimate ');
     expect(procurement).toContain('This baseline is preserved after sourcing');
+  });
+
+  test('records procurement receiving quality and supplier acceptance performance', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927052000_procurement_receiving_quality/migration.sql');
+    const receipts = source('src/app/api/admin/finance/procurement/[id]/receipts/route.ts');
+    const procurementApi = source('src/app/api/admin/finance/procurement/route.ts');
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+
+    expect(schema).toContain('rejectedQuantity');
+    expect(schema).toContain('inspectionNotes');
+    expect(migration).toContain('ADD COLUMN "rejectedQuantity" DECIMAL(12,3)');
+    expect(receipts).toContain('Accepted quantity exceeds the remaining purchase order quantity');
+    expect(receipts).toContain('rejectedQuantity');
+    expect(receipts).toContain('inspectionNotes');
+    expect(procurementApi).toContain('qualityAcceptanceRate');
+    expect(procurementApi).toContain('acceptedQuantity');
+    expect(procurementApi).toContain('rejectedQuantity');
+    expect(procurement).toContain('Supplier delivery & quality performance');
+    expect(procurement).toContain('Quality acceptance');
+    expect(procurement).toContain('Reject / damaged');
+    expect(procurement).toContain('Inspection note for this line');
   });
 
   test('governs customer credit limits and blocks over-limit invoice issuance', () => {
