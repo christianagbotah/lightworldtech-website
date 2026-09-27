@@ -81,10 +81,6 @@ export async function POST(
       vendorId: quote.vendorId,
       currency: quote.currency,
       total: quote.total.toFixed(2),
-      singleSourceAward,
-      higherPricedAward,
-      lowestValidTotal: lowestValidTotal.toFixed(2),
-      selectionReason: parsed.data.selectionReason,
     },
   });
 
@@ -186,6 +182,10 @@ export async function PATCH(
       vendorId: quote.vendorId,
       currency: quote.currency,
       total: quote.total.toFixed(2),
+      singleSourceAward,
+      higherPricedAward,
+      lowestValidTotal: lowestValidTotal.toFixed(2),
+      selectionReason: parsed.data.selectionReason,
     },
   });
 
