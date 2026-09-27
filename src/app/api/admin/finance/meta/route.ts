@@ -18,6 +18,11 @@ export async function GET(request: NextRequest) {
         name: true,
         primaryContactName: true,
         primaryEmail: true,
+        paymentTermsDays: true,
+        creditLimitCurrency: true,
+        creditLimit: true,
+        creditHold: true,
+        creditHoldReason: true,
         projects: {
           orderBy: { name: 'asc' },
           select: {
@@ -60,6 +65,7 @@ export async function GET(request: NextRequest) {
     data: {
       organizations: organizations.map((organization) => ({
         ...organization,
+        creditLimit: organization.creditLimit.toFixed(2),
         projects: organization.projects.map((project) => ({
           ...project,
           renewalAmount: project.renewalAmount.toFixed(2),

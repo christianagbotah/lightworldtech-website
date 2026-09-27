@@ -455,6 +455,11 @@ model ClientOrganization {
   primaryContactName String             @default("")
   primaryEmail       String             @default("")
   primaryPhone       String             @default("")
+  paymentTermsDays   Int                @default(30)
+  creditLimitCurrency String             @default("GHS")
+  creditLimit        Decimal            @default(0) @db.Decimal(18, 2)
+  creditHold         Boolean            @default(false)
+  creditHoldReason   String             @default("")
   users              ClientPortalUser[]
   projects           ClientProject[]
   tickets            ClientSupportTicket[]
