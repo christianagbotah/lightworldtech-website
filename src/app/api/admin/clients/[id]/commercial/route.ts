@@ -45,6 +45,11 @@ export async function GET(
       primaryContactName: true,
       primaryEmail: true,
       primaryPhone: true,
+      paymentTermsDays: true,
+      creditLimitCurrency: true,
+      creditLimit: true,
+      creditHold: true,
+      creditHoldReason: true,
       users: {
         select: { email: true },
       },
