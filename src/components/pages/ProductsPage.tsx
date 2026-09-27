@@ -26,7 +26,7 @@ import { requireJson } from '@/lib/http-response';
 const productDirections = [
   {
     icon: Workflow,
-    image: '/images/portfolio/erp-system.png',
+    image: '/images/hero-slide-5.png',
     title: 'Operations platforms',
     stage: 'Product family',
     text: 'Modular systems for assets, maintenance, inventory, people, approvals and operational reporting.',
@@ -50,7 +50,7 @@ const productDirections = [
   },
   {
     icon: BarChart3,
-    image: '/images/portfolio/security.png',
+    image: '/images/hero-slide-2.png',
     title: 'Business intelligence',
     stage: 'R&D',
     text: 'Operational dashboards and reporting products that bring data from separate workflows into one decision surface.',
@@ -58,7 +58,7 @@ const productDirections = [
   },
   {
     icon: GraduationCap,
-    image: '/images/hero-slide-3.png',
+    image: '/images/hero-slide-1.png',
     title: 'Learning & skills',
     stage: 'R&D',
     text: 'Digital learning and capability-building experiences for companies, institutions and individual learners.',
@@ -66,7 +66,7 @@ const productDirections = [
   },
   {
     icon: Layers3,
-    image: '/images/process-workflow.png',
+    image: '/images/hero-slide-3.png',
     title: 'Reusable industry modules',
     stage: 'Platform',
     text: 'Reusable product building blocks that shorten delivery time while keeping room for industry-specific workflows.',
