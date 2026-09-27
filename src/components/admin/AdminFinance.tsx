@@ -8,6 +8,7 @@ import {
   Building2,
   CalendarClock,
   CircleDollarSign,
+  Download,
   FileText,
    Loader2,
   Plus,
@@ -432,6 +433,8 @@ export default function AdminFinance() {
   const [billEvidenceFile, setBillEvidenceFile] = useState<File | null>(null);
   const [billEvidenceFiles, setBillEvidenceFiles] = useState<Record<string, File | null>>({});
   const [supplierPaymentEvidenceFiles, setSupplierPaymentEvidenceFiles] = useState<Record<string, File | null>>({});
+  const [supplierStatementFrom, setSupplierStatementFrom] = useState('');
+  const [supplierStatementTo, setSupplierStatementTo] = useState(today());
   const [supplierPaymentForm, setSupplierPaymentForm] = useState({
     vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
     method: 'bank_transfer', reference: '', notes: '',
@@ -977,6 +980,18 @@ export default function AdminFinance() {
     }
   };
 
+  const downloadSupplierStatement = (vendorId: string) => {
+    const params = new URLSearchParams();
+    if (supplierStatementFrom) params.set('from', supplierStatementFrom);
+    if (supplierStatementTo) params.set('to', supplierStatementTo);
+    const query = params.toString();
+    window.open(
+      '/api/admin/finance/vendors/' + encodeURIComponent(vendorId) + '/statement' + (query ? '?' + query : ''),
+      '_blank',
+      'noopener,noreferrer',
+    );
+  };
+
   const submitSupplierPayment = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
@@ -1369,6 +1384,45 @@ export default function AdminFinance() {
             <Button variant="outline" onClick={() => setDialog('supplier-payment')}><ArrowUpRight className="mr-2 size-4" /> Pay supplier</Button>
             <Button variant="outline" onClick={() => setDialog('expense')}><CircleDollarSign className="mr-2 size-4" /> Record expense</Button>
           </div>
+
+          <Card className="min-w-0 border-border/60">
+            <CardHeader>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <CardTitle className="text-base">Supplier account statements</CardTitle>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Reconcile supplier bills and payments with opening and closing payable balances kept separate by currency.
+                  </p>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div><Label>From</Label><Input type="date" value={supplierStatementFrom} onChange={(event) => setSupplierStatementFrom(event.target.value)} /></div>
+                  <div><Label>To</Label><Input type="date" value={supplierStatementTo} onChange={(event) => setSupplierStatementTo(event.target.value)} /></div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-w-full overflow-x-auto">
+                <Table exportFileName="lightworld-supplier-directory">
+                  <TableHeader><TableRow><TableHead>Supplier</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead><TableHead className="text-right">Statement</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {data.vendors.map((vendor) => (
+                      <TableRow key={vendor.id}>
+                        <TableCell className="font-medium">{vendor.name}</TableCell>
+                        <TableCell className="text-xs">{vendor.email || '—'}</TableCell>
+                        <TableCell className="text-xs">{vendor.phone || '—'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button type="button" size="sm" variant="outline" onClick={() => downloadSupplierStatement(vendor.id)}>
+                            <Download className="mr-2 size-3.5" /> Download statement
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {!data.vendors.length && <TableRow><TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No active suppliers are available.</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="grid gap-5 xl:grid-cols-2">
             <Card className="min-w-0 border-border/60">
