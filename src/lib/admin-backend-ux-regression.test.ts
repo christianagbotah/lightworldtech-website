@@ -2423,6 +2423,33 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('purchaseOrderId: order.id');
   });
 
+  test('stores supplier invoice PDF evidence with payables', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927061000_supplier_bill_evidence/migration.sql');
+    const billsApi = source('src/app/api/admin/finance/bills/route.ts');
+    const uploadApi = source('src/app/api/admin/finance/bills/[id]/attachments/route.ts');
+    const attachmentApi = source('src/app/api/admin/finance/bill-attachments/[id]/route.ts');
+    const attachmentLib = source('src/lib/vendor-bill-attachment.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('model FinanceVendorBillAttachment');
+    expect(schema).toContain('attachments    FinanceVendorBillAttachment[]');
+    expect(migration).toContain('CREATE TABLE "FinanceVendorBillAttachment"');
+    expect(billsApi).toContain("attachments: { orderBy: { createdAt: 'desc' } }");
+    expect(uploadApi).toContain("'finance.manage'");
+    expect(uploadApi).toContain('MAX_VENDOR_BILL_ATTACHMENT_BYTES');
+    expect(uploadApi).toContain('admin.finance_supplier_bill_attachment_added');
+    expect(uploadApi).toContain('Upload a valid PDF supplier invoice.');
+    expect(attachmentApi).toContain('admin.finance_supplier_bill_attachment_downloaded');
+    expect(attachmentApi).toContain('Evidence for a paid supplier bill cannot be deleted');
+    expect(attachmentApi).toContain("'Cache-Control': 'private, no-store, max-age=0'");
+    expect(attachmentLib).toContain("join(uploadStorageDirectory(), 'vendor-bills')");
+    expect(finance).toContain('Supplier invoice PDF evidence');
+    expect(finance).toContain('Evidence missing');
+    expect(finance).toContain("'/api/admin/finance/bills/' + created.id + '/attachments'");
+    expect(finance).toContain("'/api/admin/finance/bill-attachments/' + attachment.id");
+  });
+
   test('governs supplier quotation comparison before purchase order award', () => {
     const schema = source('prisma/schema.prisma');
     const quoteApi = source('src/app/api/admin/finance/procurement/[id]/quotes/route.ts');
