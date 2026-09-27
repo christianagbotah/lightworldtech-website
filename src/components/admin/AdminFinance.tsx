@@ -292,6 +292,18 @@ function pretty(value: string): string {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function payableAgingBucket(dueDate: string, balance: string | number): 'current' | '1_30' | '31_60' | '61_90' | '90_plus' | 'paid' {
+  if (Number(balance || 0) <= 0) return 'paid';
+  const due = new Date(dueDate).getTime();
+  if (!Number.isFinite(due)) return 'current';
+  const daysOverdue = Math.floor((Date.now() - due) / 86400000);
+  if (daysOverdue <= 0) return 'current';
+  if (daysOverdue <= 30) return '1_30';
+  if (daysOverdue <= 60) return '31_60';
+  if (daysOverdue <= 90) return '61_90';
+  return '90_plus';
+}
+
 function money(value: string | number, currency = 'GHS'): string {
   const amount = Number(value || 0);
   try {
@@ -435,6 +447,7 @@ export default function AdminFinance() {
   const [supplierPaymentEvidenceFiles, setSupplierPaymentEvidenceFiles] = useState<Record<string, File | null>>({});
   const [supplierStatementFrom, setSupplierStatementFrom] = useState('');
   const [supplierStatementTo, setSupplierStatementTo] = useState(today());
+  const [supplierAgingFilter, setSupplierAgingFilter] = useState<'all' | 'current' | '1_30' | '31_60' | '61_90' | '90_plus'>('all');
   const [supplierPaymentForm, setSupplierPaymentForm] = useState({
     vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
     method: 'bank_transfer', reference: '', notes: '',
@@ -576,6 +589,14 @@ export default function AdminFinance() {
       bill.derivedStatus !== 'paid'
     ),
     [data?.bills, supplierPaymentForm.vendorId],
+  );
+
+  const supplierBillsByAging = useMemo(
+    () => (data?.bills || []).filter((bill) => {
+      const bucket = payableAgingBucket(bill.dueDate, bill.balance);
+      return bucket !== 'paid' && (supplierAgingFilter === 'all' || bucket === supplierAgingFilter);
+    }),
+    [data?.bills, supplierAgingFilter],
   );
 
   const scopedCustomerServices = useMemo(
@@ -1426,12 +1447,35 @@ export default function AdminFinance() {
 
           <div className="grid gap-5 xl:grid-cols-2">
             <Card className="min-w-0 border-border/60">
-              <CardHeader><CardTitle className="text-base">Supplier bills / creditors</CardTitle></CardHeader>
+              <CardHeader>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <CardTitle className="text-base">Supplier bills / creditors</CardTitle>
+                    <p className="mt-1 text-xs text-muted-foreground">Filter open supplier obligations by aging band to prioritize creditor payments.</p>
+                  </div>
+                  <div className="min-w-[180px]">
+                    <Label>Aging band</Label>
+                    <select
+                      aria-label="Filter supplier bills by aging band"
+                      value={supplierAgingFilter}
+                      onChange={(event) => setSupplierAgingFilter(event.target.value as typeof supplierAgingFilter)}
+                      className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="all">All open payables</option>
+                      <option value="current">Current / not due</option>
+                      <option value="1_30">1–30 days overdue</option>
+                      <option value="31_60">31–60 days overdue</option>
+                      <option value="61_90">61–90 days overdue</option>
+                      <option value="90_plus">90+ days overdue</option>
+                    </select>
+                  </div>
+                </div>
+              </CardHeader>
               <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
                 <Table exportFileName="lightworld-supplier-bills">
-                  <TableHeader><TableRow><TableHead>Bill</TableHead><TableHead>Supplier</TableHead><TableHead>Status</TableHead><TableHead>Evidence</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Bill</TableHead><TableHead>Supplier</TableHead><TableHead>Status</TableHead><TableHead>Aging</TableHead><TableHead>Evidence</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                   <TableBody>
-                    {data.bills.map((item) => (
+                    {supplierBillsByAging.map((item) => (
                       <TableRow
                         key={item.id}
                         role="button"
@@ -1449,6 +1493,13 @@ export default function AdminFinance() {
                         <TableCell className="font-mono text-xs">{item.payableNumber}</TableCell>
                         <TableCell className="font-medium">{item.vendor.name}</TableCell>
                         <TableCell><Badge className={statusTone(item.derivedStatus)}>{pretty(item.derivedStatus)}</Badge></TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {payableAgingBucket(item.dueDate, item.balance) === 'current'
+                              ? 'Current'
+                              : payableAgingBucket(item.dueDate, item.balance).replace('_', '–') + ' days'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <div className="space-y-2" onClick={(event) => event.stopPropagation()}>
                             {item.attachments.length ? (
@@ -1496,7 +1547,7 @@ export default function AdminFinance() {
                         <TableCell className="text-right font-semibold">{money(item.balance, item.currency)}</TableCell>
                       </TableRow>
                     ))}
-                    {!data.bills.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No supplier bills recorded yet.</TableCell></TableRow>}
+                    {!supplierBillsByAging.length && <TableRow><TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">{data.bills.length ? 'No open supplier bills match this aging band.' : 'No supplier bills recorded yet.'}</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </div></CardContent>

@@ -2526,6 +2526,21 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('supplierStatementTo');
   });
 
+  test('filters supplier creditors by vendor-level aging band', () => {
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(finance).toContain('payableAgingBucket');
+    expect(finance).toContain('supplierAgingFilter');
+    expect(finance).toContain('supplierBillsByAging');
+    expect(finance).toContain('Filter supplier bills by aging band');
+    expect(finance).toContain('Current / not due');
+    expect(finance).toContain('1–30 days overdue');
+    expect(finance).toContain('31–60 days overdue');
+    expect(finance).toContain('61–90 days overdue');
+    expect(finance).toContain('90+ days overdue');
+    expect(finance).toContain('No open supplier bills match this aging band.');
+  });
+
   test('alerts finance when non-cash supplier payment proof is missing', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
 
