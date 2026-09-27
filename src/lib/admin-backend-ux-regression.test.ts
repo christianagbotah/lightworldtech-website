@@ -2476,6 +2476,29 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('lightworld-supplier-payments');
   });
 
+  test('requires supplier payment proof before maker-checker approval', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927071500_outflow_approval_evidence/migration.sql');
+    const approvalsApi = source('src/app/api/admin/finance/approvals/route.ts');
+    const uploadApi = source('src/app/api/admin/finance/approvals/[id]/attachments/route.ts');
+    const downloadApi = source('src/app/api/admin/finance/approval-attachments/[id]/route.ts');
+    const approvalLib = source('src/lib/finance-approvals.ts');
+    const approvals = source('src/components/admin/FinanceOutflowApprovals.tsx');
+
+    expect(schema).toContain('model FinanceOutflowApprovalAttachment');
+    expect(schema).toContain('attachments        FinanceOutflowApprovalAttachment[]');
+    expect(migration).toContain('CREATE TABLE "FinanceOutflowApprovalAttachment"');
+    expect(approvalsApi).toContain("attachments: { orderBy: { createdAt: 'desc' } }");
+    expect(uploadApi).toContain('admin.finance_outflow_approval_attachment_added');
+    expect(downloadApi).toContain('admin.finance_outflow_approval_attachment_downloaded');
+    expect(approvalLib).toContain('Payment proof is required before a non-cash supplier payment can be approved');
+    expect(approvalLib).toContain('create: approval.attachments.map');
+    expect(approvals).toContain('Payment proof');
+    expect(approvals).toContain('Proof required');
+    expect(approvals).toContain('Attach payment proof before approval');
+    expect(approvals).toContain('uploadApprovalProof');
+  });
+
   test('alerts finance when non-cash supplier payment proof is missing', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
 
