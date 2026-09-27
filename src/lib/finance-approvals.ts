@@ -130,7 +130,10 @@ export async function executeOutflowApproval(
   actor: ActiveAdminContext,
   decisionNotes = '',
 ) {
-  const approval = await db.financeOutflowApproval.findUnique({ where: { id: approvalId } });
+  const approval = await db.financeOutflowApproval.findUnique({
+    where: { id: approvalId },
+    include: { attachments: { orderBy: { createdAt: 'asc' } } },
+  });
   if (!approval) throw new Error('Approval request not found');
   if (approval.status !== 'pending') throw new Error('Approval request has already been decided');
 
@@ -148,6 +151,9 @@ export async function executeOutflowApproval(
       select: { id: true, name: true, active: true },
     });
     if (!vendor || !vendor.active) throw new Error('Active supplier not found');
+    if (approval.method !== 'cash' && approval.attachments.length === 0) {
+      throw new Error('Payment proof is required before a non-cash supplier payment can be approved');
+    }
 
     const bills = allocations.length
       ? await db.financeVendorBill.findMany({
@@ -196,6 +202,15 @@ export async function executeOutflowApproval(
             create: allocations.map((item) => ({
               billId: item.billId,
               amount: item.amount,
+            })),
+          },
+          attachments: {
+            create: approval.attachments.map((item) => ({
+              originalName: item.originalName,
+              storageName: item.storageName,
+              mimeType: item.mimeType,
+              sizeBytes: item.sizeBytes,
+              uploadedBy: item.uploadedBy,
             })),
           },
         },

@@ -1540,6 +1540,7 @@ model FinanceOutflowApproval {
   decisionNotes      String   @default("")
   resultId           String   @default("")
   resultNumber       String   @default("")
+  attachments        FinanceOutflowApprovalAttachment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1549,6 +1550,21 @@ model FinanceOutflowApproval {
   @@index([counterpartyId, status])
   @@index([sourceId, status])
   @@index([requestedByAdminId, status])
+}
+
+model FinanceOutflowApprovalAttachment {
+  id           String                 @id @default(cuid())
+  approvalId   String
+  approval     FinanceOutflowApproval @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+  originalName String
+  storageName  String                 @unique
+  mimeType     String
+  sizeBytes    Int
+  uploadedBy   String                 @default("Admin")
+
+  createdAt DateTime @default(now())
+
+  @@index([approvalId, createdAt])
 }
 
 model FinanceCreditPolicyApproval {
