@@ -57,6 +57,11 @@ type Organization = {
   name: string;
   primaryContactName: string;
   primaryEmail: string;
+  paymentTermsDays: number;
+  creditLimitCurrency: string;
+  creditLimit: string;
+  creditHold: boolean;
+  creditHoldReason: string;
   projects: Array<{
     id: string;
     name: string;
@@ -265,6 +270,11 @@ type DialogName =
 
 const today = () => new Date().toISOString().slice(0, 10);
 const inDays = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+const addDays = (dateValue: string, days: number) => {
+  const base = new Date(dateValue + 'T12:00:00Z');
+  if (Number.isNaN(base.getTime())) return inDays(days);
+  return new Date(base.getTime() + days * 86400000).toISOString().slice(0, 10);
+};
 
 function pretty(value: string): string {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -509,6 +519,7 @@ export default function AdminFinance() {
         serviceId: '',
         projectId: '',
         renewalForDate: '',
+        dueDate: addDays(current.issueDate, organization.paymentTermsDays ?? 30),
         notes: current.notes || 'Prepared from Customer 360. Review invoice lines, tax treatment and due date before issuing.',
       }));
       setDialog('invoice');
@@ -1663,9 +1674,26 @@ export default function AdminFinance() {
         <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-y-auto">
           <DialogHeader><DialogTitle>Issue customer invoice</DialogTitle></DialogHeader>
           <form onSubmit={submitInvoice} className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2"><div><Label>Client</Label><select required value={invoiceForm.organizationId} onChange={(e) => setInvoiceForm({ ...invoiceForm, organizationId: e.target.value, serviceId: '', projectId: '', renewalForDate: '' })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, renewalForDate: '' })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
+            <div className="grid gap-3 sm:grid-cols-2"><div><Label>Client</Label><select required value={invoiceForm.organizationId} onChange={(e) => {
+              const organization = data.organizations.find((item) => item.id === e.target.value);
+              setInvoiceForm({
+                ...invoiceForm,
+                organizationId: e.target.value,
+                serviceId: '',
+                projectId: '',
+                renewalForDate: '',
+                dueDate: addDays(invoiceForm.issueDate, organization?.paymentTermsDays ?? 30),
+              });
+            }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, renewalForDate: '' })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div><Label>Issue date</Label><Input type="date" required value={invoiceForm.issueDate} onChange={(e) => setInvoiceForm({ ...invoiceForm, issueDate: e.target.value })} /></div>
+              <div><Label>Issue date</Label><Input type="date" required value={invoiceForm.issueDate} onChange={(e) => {
+                const organization = data.organizations.find((item) => item.id === invoiceForm.organizationId);
+                setInvoiceForm({
+                  ...invoiceForm,
+                  issueDate: e.target.value,
+                  dueDate: addDays(e.target.value, organization?.paymentTermsDays ?? 30),
+                });
+              }} /></div>
               <div><Label>Due date</Label><Input type="date" required value={invoiceForm.dueDate} onChange={(e) => setInvoiceForm({ ...invoiceForm, dueDate: e.target.value })} /></div>
               <div><Label>Discount</Label><Input type="number" min="0" step="0.01" value={invoiceForm.discount} onChange={(e) => setInvoiceForm({ ...invoiceForm, discount: e.target.value })} /></div>
               <div>
@@ -1684,6 +1712,23 @@ export default function AdminFinance() {
                 </select>
               </div>
             </div>
+            {invoiceForm.organizationId && (() => {
+              const organization = data.organizations.find((item) => item.id === invoiceForm.organizationId);
+              if (!organization) return null;
+              return (
+                <div className={organization.creditHold ? 'rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-200' : 'rounded-xl border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground'}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span>
+                      Payment terms <strong className="text-foreground">{organization.paymentTermsDays} days</strong>
+                      {' · '}
+                      Credit limit <strong className="text-foreground">{Number(organization.creditLimit) > 0 ? money(organization.creditLimit, organization.creditLimitCurrency) : 'Not limited'}</strong>
+                    </span>
+                    {organization.creditHold && <Badge className="border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">Credit hold</Badge>}
+                  </div>
+                  {organization.creditHold && <p className="mt-1">Issued invoices will be blocked: {organization.creditHoldReason || 'account is on credit hold'}. Draft invoices remain available for review.</p>}
+                </div>
+              );
+            })()}
             {invoiceForm.renewalForDate && (
               <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-200">
                 Renewal cycle: <strong>{new Date(invoiceForm.renewalForDate + 'T00:00:00Z').toLocaleDateString()}</strong>. The server prevents another non-void invoice for this service and renewal date.
