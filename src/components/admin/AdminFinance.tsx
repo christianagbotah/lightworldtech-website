@@ -170,6 +170,15 @@ type Receipt = {
   organization: { id: string; name: string };
 };
 
+type BillAttachment = {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedBy: string;
+  createdAt: string;
+};
+
 type Bill = {
   id: string;
   payableNumber: string;
@@ -194,6 +203,7 @@ type Bill = {
   amountPaid: string;
   balance: string;
   vendor: { id: string; name: string };
+  attachments: BillAttachment[];
 };
 
 type SupplierPayment = {
@@ -418,6 +428,8 @@ export default function AdminFinance() {
     purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
     issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
   });
+  const [billEvidenceFile, setBillEvidenceFile] = useState<File | null>(null);
+  const [billEvidenceFiles, setBillEvidenceFiles] = useState<Record<string, File | null>>({});
   const [supplierPaymentForm, setSupplierPaymentForm] = useState({
     vendorId: '', currency: 'GHS', amount: '', paidAt: today(),
     method: 'bank_transfer', reference: '', notes: '',
@@ -870,15 +882,73 @@ export default function AdminFinance() {
 
   const submitBill = async (event: FormEvent) => {
     event.preventDefault();
-    const ok = await post('/api/admin/finance/bills', {
-      ...billForm,
-      taxableAmount: Number(billForm.taxableAmount || 0),
-      taxTreatment: billForm.taxTreatment,
-    }, 'Supplier bill recorded');
-    if (ok) setBillForm({
-      purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
-      issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
-    });
+    setSaving(true);
+    try {
+      const created = await api<Bill>('/api/admin/finance/bills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...billForm,
+          taxableAmount: Number(billForm.taxableAmount || 0),
+          taxTreatment: billForm.taxTreatment,
+        }),
+      });
+
+      let evidenceUploaded = false;
+      if (billEvidenceFile) {
+        try {
+          const formData = new FormData();
+          formData.append('file', billEvidenceFile);
+          await api<BillAttachment>('/api/admin/finance/bills/' + created.id + '/attachments', {
+            method: 'POST',
+            body: formData,
+          });
+          evidenceUploaded = true;
+        } catch (error) {
+          toast.warning(
+            'Supplier bill was recorded, but the invoice PDF could not be attached. Open the bill to review and attach evidence again.',
+          );
+          console.error('Supplier bill evidence upload failed after bill creation:', error);
+        }
+      }
+
+      toast.success(evidenceUploaded ? 'Supplier bill and invoice evidence recorded' : 'Supplier bill recorded');
+      setBillForm({
+        purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
+        issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
+      });
+      setBillEvidenceFile(null);
+      setDialog(null);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to save supplier bill');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const uploadBillEvidence = async (billId: string) => {
+    const file = billEvidenceFiles[billId];
+    if (!file) {
+      toast.error('Choose a supplier invoice PDF');
+      return;
+    }
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await api<BillAttachment>('/api/admin/finance/bills/' + billId + '/attachments', {
+        method: 'POST',
+        body: formData,
+      });
+      setBillEvidenceFiles((current) => ({ ...current, [billId]: null }));
+      toast.success('Supplier invoice evidence attached');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to attach supplier invoice evidence');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const submitSupplierPayment = async (event: FormEvent) => {
@@ -1279,7 +1349,7 @@ export default function AdminFinance() {
               <CardHeader><CardTitle className="text-base">Supplier bills / creditors</CardTitle></CardHeader>
               <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
                 <Table exportFileName="lightworld-supplier-bills">
-                  <TableHeader><TableRow><TableHead>Bill</TableHead><TableHead>Supplier</TableHead><TableHead>Status</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Bill</TableHead><TableHead>Supplier</TableHead><TableHead>Status</TableHead><TableHead>Evidence</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {data.bills.map((item) => (
                       <TableRow
@@ -1299,11 +1369,54 @@ export default function AdminFinance() {
                         <TableCell className="font-mono text-xs">{item.payableNumber}</TableCell>
                         <TableCell className="font-medium">{item.vendor.name}</TableCell>
                         <TableCell><Badge className={statusTone(item.derivedStatus)}>{pretty(item.derivedStatus)}</Badge></TableCell>
+                        <TableCell>
+                          <div className="space-y-2" onClick={(event) => event.stopPropagation()}>
+                            {item.attachments.length ? (
+                              <div className="flex flex-col gap-1">
+                                {item.attachments.slice(0, 2).map((attachment) => (
+                                  <button
+                                    key={attachment.id}
+                                    type="button"
+                                    className="max-w-[180px] truncate text-left text-[10px] font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-300"
+                                    onClick={() => window.open('/api/admin/finance/bill-attachments/' + attachment.id, '_blank', 'noopener,noreferrer')}
+                                  >
+                                    {attachment.originalName}
+                                  </button>
+                                ))}
+                                {item.attachments.length > 2 && <span className="text-[10px] text-muted-foreground">+{item.attachments.length - 2} more</span>}
+                              </div>
+                            ) : (
+                              <Badge variant="outline">Evidence missing</Badge>
+                            )}
+                            <div className="flex min-w-[190px] gap-1">
+                              <Input
+                                type="file"
+                                accept="application/pdf,.pdf"
+                                className="h-8 max-w-[135px] text-[10px]"
+                                onClick={(event) => event.stopPropagation()}
+                                onChange={(event) => setBillEvidenceFiles((current) => ({ ...current, [item.id]: event.target.files?.[0] || null }))}
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-2 text-[10px]"
+                                disabled={saving || !billEvidenceFiles[item.id]}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void uploadBillEvidence(item.id);
+                                }}
+                              >
+                                Add PDF
+                              </Button>
+                            </div>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-xs">{new Date(item.dueDate).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right font-semibold">{money(item.balance, item.currency)}</TableCell>
                       </TableRow>
                     ))}
-                    {!data.bills.length && <TableRow><TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">No supplier bills recorded yet.</TableCell></TableRow>}
+                    {!data.bills.length && <TableRow><TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No supplier bills recorded yet.</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </div></CardContent>
@@ -1788,6 +1901,7 @@ export default function AdminFinance() {
           if (!open) {
             setDialog(null);
             setBillForm((current) => ({ ...current, purchaseOrderId: '' }));
+            setBillEvidenceFile(null);
           }
         }}
       >
@@ -1812,6 +1926,19 @@ export default function AdminFinance() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div><Label>Supplier invoice / reference</Label><Input value={billForm.vendorReference} onChange={(e) => setBillForm({ ...billForm, vendorReference: e.target.value })} /></div>
               <div><Label>Expense category</Label><Input required value={billForm.category} onChange={(e) => setBillForm({ ...billForm, category: e.target.value })} /></div>
+            </div>
+
+            <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+              <Label>Supplier invoice PDF evidence</Label>
+              <Input
+                type="file"
+                accept="application/pdf,.pdf"
+                className="mt-1"
+                onChange={(event) => setBillEvidenceFile(event.target.files?.[0] || null)}
+              />
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                PDF only, up to 15MB. Stored privately and linked to this payable for audit and payment review.
+              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

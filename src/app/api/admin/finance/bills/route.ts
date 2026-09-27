@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
     include: {
       vendor: { select: { id: true, name: true } },
       purchaseOrder: { select: { id: true, poNumber: true, status: true, total: true } },
+      attachments: { orderBy: { createdAt: 'desc' } },
       allocations: {
         include: {
           payment: { select: { id: true, paymentNumber: true, amount: true, paidAt: true, method: true, reference: true } },
@@ -199,6 +200,7 @@ export async function POST(request: NextRequest) {
       include: {
         vendor: { select: { id: true, name: true } },
         purchaseOrder: { select: { id: true, poNumber: true, status: true, total: true } },
+        attachments: { orderBy: { createdAt: 'desc' } },
         allocations: true,
       },
     });
