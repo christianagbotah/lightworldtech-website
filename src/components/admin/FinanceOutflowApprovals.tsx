@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -60,6 +61,14 @@ type Approval = {
   resultId: string;
   resultNumber: string;
   allocations: Array<{ billId: string; amount: number }>;
+  attachments: Array<{
+    id: string;
+    originalName: string;
+    mimeType: string;
+    sizeBytes: number;
+    uploadedBy: string;
+    createdAt: string;
+  }>;
 };
 
 type CreditApproval = {
@@ -165,6 +174,7 @@ export default function FinanceOutflowApprovals() {
     action: 'approve' | 'reject' | 'cancel';
   } | null>(null);
   const [creditNotes, setCreditNotes] = useState('');
+  const [approvalProofFiles, setApprovalProofFiles] = useState<Record<string, File | null>>({});
 
   const load = async () => {
     setLoading(true);
@@ -198,6 +208,30 @@ export default function FinanceOutflowApprovals() {
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to update approval policy');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const uploadApprovalProof = async (approvalId: string) => {
+    const file = approvalProofFiles[approvalId];
+    if (!file) {
+      toast.error('Choose a payment proof file');
+      return;
+    }
+    setWorking(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await readJson('/api/admin/finance/approvals/' + encodeURIComponent(approvalId) + '/attachments', {
+        method: 'POST',
+        body: formData,
+      });
+      setApprovalProofFiles((current) => ({ ...current, [approvalId]: null }));
+      toast.success('Payment proof added to approval request');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to upload payment proof');
     } finally {
       setWorking(false);
     }
@@ -441,7 +475,7 @@ export default function FinanceOutflowApprovals() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="max-w-full overflow-x-auto">
-            <Table exportFileName="lightworld-pending-finance-approvals" className="min-w-[1050px]">
+            <Table exportFileName="lightworld-pending-finance-approvals" className="min-w-[1280px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Request</TableHead>
@@ -450,6 +484,7 @@ export default function FinanceOutflowApprovals() {
                   <TableHead>Requested by</TableHead>
                   <TableHead>Effective date</TableHead>
                   <TableHead>Method / reference</TableHead>
+                  <TableHead>Payment proof</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
@@ -478,12 +513,60 @@ export default function FinanceOutflowApprovals() {
                         <p className="text-xs">{pretty(approval.method)}</p>
                         <p className="text-[10px] text-muted-foreground">{approval.reference || 'No reference'}</p>
                       </TableCell>
+                      <TableCell>
+                        {approval.outflowType === 'vendor_payment' ? (
+                          <div className="min-w-[210px] space-y-2">
+                            {approval.attachments.length ? (
+                              <div className="flex flex-col gap-1">
+                                {approval.attachments.slice(0, 2).map((attachment) => (
+                                  <button
+                                    key={attachment.id}
+                                    type="button"
+                                    className="max-w-[190px] truncate text-left text-[10px] font-medium text-amber-700 underline-offset-2 hover:underline dark:text-amber-300"
+                                    onClick={() => window.open('/api/admin/finance/approval-attachments/' + attachment.id, '_blank', 'noopener,noreferrer')}
+                                  >
+                                    {attachment.originalName}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <Badge variant="outline">{proofRequired ? 'Proof required' : 'Proof optional'}</Badge>
+                            )}
+                            {approval.status === 'pending' && (
+                              <div className="flex gap-1">
+                                <Input
+                                  type="file"
+                                  accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp"
+                                  className="h-8 max-w-[140px] text-[10px]"
+                                  onChange={(event) => setApprovalProofFiles((current) => ({ ...current, [approval.id]: event.target.files?.[0] || null }))}
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 px-2 text-[10px]"
+                                  disabled={working || !approvalProofFiles[approval.id]}
+                                  onClick={() => void uploadApprovalProof(approval.id)}
+                                >
+                                  Add proof
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ) : <span className="text-[10px] text-muted-foreground">Not required</span>}
+                      </TableCell>
                       <TableCell className="text-right font-semibold">{money(approval.amount, approval.currency)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1.5">
                           {canDecide && (
                             <>
-                              <Button type="button" size="sm" onClick={() => { setDecision({ approval, action: 'approve' }); setNotes(''); }}>
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={!proofReady}
+                                title={!proofReady ? 'Attach payment proof before approval' : undefined}
+                                onClick={() => { setDecision({ approval, action: 'approve' }); setNotes(''); }}
+                              >
                                 <CheckCircle2 className="mr-1.5 size-3.5" /> Approve
                               </Button>
                               <Button type="button" size="sm" variant="outline" onClick={() => { setDecision({ approval, action: 'reject' }); setNotes(''); }}>
@@ -506,7 +589,7 @@ export default function FinanceOutflowApprovals() {
                 })}
                 {!pending.length && (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
                       No supplier payments or customer refunds are waiting for approval.
                     </TableCell>
                   </TableRow>
