@@ -126,6 +126,24 @@ describe('public experience quality', () => {
     expect(contact).toContain("sessionStorage.removeItem('lw-project-brief-data')");
   });
 
+  test('public defaults do not reuse legacy foreign-language artwork outside the product grid', () => {
+    const home = source('src/components/pages/HomePage.tsx');
+    const portfolio = source('src/components/pages/PortfolioPage.tsx');
+    const process = source('src/components/sections/ProcessSection.tsx');
+    const blogVisuals = source('src/lib/blog-visuals.ts');
+
+    for (const publicSource of [home, portfolio, process, blogVisuals]) {
+      expect(publicSource).not.toContain('/images/process-workflow.png');
+    }
+    expect(home).not.toContain('/images/portfolio/erp-system.png');
+    expect(portfolio).not.toContain('/images/portfolio/erp-system.png');
+    expect(portfolio).not.toContain('/images/portfolio/healthcare.png');
+    expect(portfolio).not.toContain('/images/portfolio/security.png');
+    expect(blogVisuals).not.toContain('/images/portfolio/erp-system.png');
+    expect(process).toContain('From problem to production.');
+    expect(process).toContain('Continuous improvement');
+  });
+
   test('product cards avoid legacy foreign-language artwork and use clean enterprise visuals', () => {
     const products = source('src/components/pages/ProductsPage.tsx');
 
