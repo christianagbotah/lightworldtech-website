@@ -126,6 +126,17 @@ describe('public experience quality', () => {
     expect(contact).toContain("sessionStorage.removeItem('lw-project-brief-data')");
   });
 
+  test('product cards avoid legacy foreign-language artwork and use clean enterprise visuals', () => {
+    const products = source('src/components/pages/ProductsPage.tsx');
+
+    expect(products).not.toContain("image: '/images/portfolio/erp-system.png'");
+    expect(products).not.toContain("image: '/images/portfolio/security.png'");
+    expect(products).not.toContain("image: '/images/process-workflow.png'");
+    expect(products).toContain("image: '/images/hero-slide-5.png'");
+    expect(products).toContain("image: '/images/hero-slide-2.png'");
+    expect(products).toContain("image: '/images/hero-slide-1.png'");
+  });
+
   test('product cards use consistent visual and title alignment', () => {
     const products = source('src/components/pages/ProductsPage.tsx');
 
