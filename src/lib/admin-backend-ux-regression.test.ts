@@ -2597,9 +2597,13 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notifications).toContain("id: 'finance-customer-credit-holds'");
     expect(notifications).toContain("id: 'finance-customer-credit-critical'");
     expect(notifications).toContain("action: 'admin-clients'");
-    expect(notifications).toContain('financeCreditPolicyApproval.count');
+    expect(notifications).toContain('financeCreditPolicyApproval.findMany');
+    expect(notifications).toContain('creditApproval24hCutoff');
+    expect(notifications).toContain('creditApproval48hCutoff');
+    expect(notifications).toContain("'finance-credit-policy-approvals-overdue'");
+    expect(notifications).toContain("'finance-credit-policy-approvals-aging'");
     expect(notifications).toContain("'finance-credit-policy-approvals'");
-    expect(notifications).toContain('Customer credit changes awaiting approval');
+    expect(notifications).toContain("action: 'admin-finance-approvals'");
   });
 
   test('uses maker-checker approval for sensitive customer credit policy changes', () => {
@@ -2632,6 +2636,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(approvalWorkspace).toContain('Pending customer credit approvals');
     expect(approvalWorkspace).toContain('Customer credit approval history');
     expect(approvalWorkspace).toContain("'/api/admin/finance/credit-approvals/'");
+    expect(approvalWorkspace).toContain('function approvalAge');
+    expect(approvalWorkspace).toContain("age.hours >= 48");
+    expect(approvalWorkspace).toContain("age.hours >= 24");
   });
 
 });

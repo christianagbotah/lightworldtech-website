@@ -125,6 +125,15 @@ function pretty(value: string) {
   return value.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function approvalAge(value: string) {
+  const requested = new Date(value).getTime();
+  const hours = Math.max(0, Math.floor((Date.now() - requested) / 3_600_000));
+  return {
+    hours,
+    label: hours < 1 ? '<1h waiting' : hours < 48 ? hours + 'h waiting' : Math.floor(hours / 24) + 'd waiting',
+  };
+}
+
 function statusTone(status: Approval['status']) {
   if (status === 'approved') return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
   if (status === 'rejected') return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
@@ -354,7 +363,26 @@ export default function FinanceOutflowApprovals() {
                         <p className="text-xs">{approval.requestedByName || 'Finance'}</p>
                         <p className="text-[10px] text-muted-foreground">{approval.requestedByEmail}</p>
                       </TableCell>
-                      <TableCell className="text-xs">{date(approval.requestedAt)}</TableCell>
+                      <TableCell>
+                        <p className="text-xs">{date(approval.requestedAt)}</p>
+                        {(() => {
+                          const age = approvalAge(approval.requestedAt);
+                          return (
+                            <Badge
+                              variant="outline"
+                              className={
+                                age.hours >= 48
+                                  ? 'mt-1 border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300'
+                                  : age.hours >= 24
+                                    ? 'mt-1 border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300'
+                                    : 'mt-1'
+                              }
+                            >
+                              {age.label}
+                            </Badge>
+                          );
+                        })()}
+                      </TableCell>
                       <TableCell className="text-xs">{approval.paymentTermsDays} days</TableCell>
                       <TableCell>
                         <Badge className={approval.creditHold ? 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200' : 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'}>
