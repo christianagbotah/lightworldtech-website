@@ -1185,6 +1185,7 @@ model FinanceVendorBill {
   purchaseOrderId String?             @unique
   purchaseOrder   FinancePurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
   allocations    FinanceVendorPaymentAllocation[]
+  attachments    FinanceVendorBillAttachment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1192,6 +1193,21 @@ model FinanceVendorBill {
   @@index([vendorId, status])
   @@index([dueDate, status])
   @@index([issueDate])
+}
+
+model FinanceVendorBillAttachment {
+  id           String            @id @default(cuid())
+  billId       String
+  bill         FinanceVendorBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  originalName String
+  storageName  String            @unique
+  mimeType     String
+  sizeBytes    Int
+  uploadedBy   String            @default("Admin")
+
+  createdAt DateTime @default(now())
+
+  @@index([billId, createdAt])
 }
 
 model FinanceVendorPayment {
