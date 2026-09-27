@@ -2434,12 +2434,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(quoteApi).toContain('Supplier quote currency must match the requisition currency');
     expect(quoteApi).toContain('The requisition requester cannot select the winning supplier quote');
     expect(quoteApi).toContain('Expired supplier quotes cannot be selected');
+    expect(quoteApi).toContain('Single-source supplier awards require a written justification');
+    expect(quoteApi).toContain('Selecting a higher-priced supplier quote requires a written justification');
+    expect(quoteApi).toContain('lowestValidTotal');
+    expect(quoteApi).toContain('selectionReason');
     expect(quoteApi).toContain('admin.finance_supplier_quote_recorded');
     expect(quoteApi).toContain('admin.finance_supplier_quote_selected');
     expect(actionApi).toContain('Select the winning supplier quote before issuing the purchase order');
     expect(actionApi).toContain('selectedQuote?.total || item.estimatedAmount');
     expect(procurement).toContain('Compare supplier quotes');
     expect(procurement).toContain('Record quote');
+    expect(procurement).toContain('Award rationale — required for single-source or higher-priced selection');
+    expect(procurement).toContain('Award rationale:');
     expect(procurement).toContain('Select the winning supplier quote before PO issue');
   });
 
