@@ -72,7 +72,10 @@ export async function PATCH(
       where: { id },
       include: {
         purchaseOrder: true,
-        supplierQuotes: { orderBy: { createdAt: 'desc' } },
+        supplierQuotes: {
+          orderBy: { createdAt: 'desc' },
+          include: { attachments: { select: { id: true } } },
+        },
       },
     });
     if (!item) return NextResponse.json({ success: false, error: 'Purchase requisition not found' }, { status: 404 });
@@ -89,6 +92,9 @@ export async function PATCH(
     }
     if (selectedQuote?.validUntil && selectedQuote.validUntil < new Date()) {
       return NextResponse.json({ success: false, error: 'The selected supplier quote has expired and must be reviewed' }, { status: 409 });
+    }
+    if (selectedQuote && selectedQuote.attachments.length === 0) {
+      return NextResponse.json({ success: false, error: 'Attach the selected supplier quotation PDF before issuing the purchase order' }, { status: 409 });
     }
 
     const vendorId = selectedQuote?.vendorId || parsed.data.vendorId || item.vendorId;
