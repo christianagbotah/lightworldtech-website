@@ -489,7 +489,18 @@ export async function GET(
     && Number(row.costProgressGapPercent) >= 15
   );
 
+  const creditCurrency = organization.creditLimitCurrency.trim().toUpperCase() || 'GHS';
+  const creditOutstanding = summary.get(creditCurrency)?.outstanding || new Prisma.Decimal(0);
+  const creditUtilizationPercent = organization.creditLimit.gt(0)
+    ? creditOutstanding.div(organization.creditLimit).mul(100)
+    : null;
+  const creditLimitNear = creditUtilizationPercent !== null && creditUtilizationPercent.gte(75);
+  const creditLimitCritical = creditUtilizationPercent !== null && creditUtilizationPercent.gte(90);
+
   const riskSignals = [
+    ...(organization.creditHold ? [{ key: 'credit_hold', label: 'Customer credit hold', count: 1, severity: 'high' as const }] : []),
+    ...(creditLimitCritical ? [{ key: 'credit_limit_critical', label: 'Credit limit utilization at or above 90%', count: 1, severity: 'high' as const }] : []),
+    ...(!creditLimitCritical && creditLimitNear ? [{ key: 'credit_limit_watch', label: 'Credit limit utilization at or above 75%', count: 1, severity: 'medium' as const }] : []),
     ...(overdueInvoices.length ? [{ key: 'overdue_receivables', label: 'Overdue receivables', count: overdueInvoices.length, severity: 'high' as const }] : []),
     ...(expiredServices.length ? [{ key: 'expired_services', label: 'Expired services', count: expiredServices.length, severity: 'high' as const }] : []),
     ...(urgentTickets.length ? [{ key: 'urgent_support', label: 'Urgent support issues', count: urgentTickets.length, severity: 'high' as const }] : []),
@@ -581,6 +592,28 @@ export async function GET(
   };
 
   const executivePriorities: ExecutivePriority[] = [
+    ...(organization.creditHold
+      ? [{
+          key: 'collections' as const,
+          severity: 'high' as const,
+          label: 'Resolve customer credit hold',
+          detail: organization.creditHoldReason || 'The account is on credit hold and new issued invoices are blocked.',
+          evidence: 'Customer credit policy · governed finance control',
+        }]
+      : []),
+    ...(creditLimitNear && !organization.creditHold
+      ? [{
+          key: 'collections' as const,
+          severity: creditLimitCritical ? 'high' as const : 'medium' as const,
+          label: creditLimitCritical ? 'Reduce critical credit exposure' : 'Watch customer credit exposure',
+          detail:
+            creditCurrency + ' outstanding is ' +
+            creditOutstanding.toFixed(2) + ' against a credit limit of ' +
+            organization.creditLimit.toFixed(2) + ' (' +
+            creditUtilizationPercent!.toDecimalPlaces(1).toFixed(1) + '% utilized).',
+          evidence: 'Issued invoice balances · customer credit policy',
+        }]
+      : []),
     ...(overdueInvoices.length
       ? [{
           key: 'collections' as const,
@@ -730,6 +763,11 @@ export async function GET(
         primaryContactName: organization.primaryContactName,
         primaryEmail: organization.primaryEmail,
         primaryPhone: organization.primaryPhone,
+        paymentTermsDays: organization.paymentTermsDays,
+        creditLimitCurrency: organization.creditLimitCurrency,
+        creditLimit: organization.creditLimit.toFixed(2),
+        creditHold: organization.creditHold,
+        creditHoldReason: organization.creditHoldReason,
       },
       byCurrency: Object.fromEntries(
         [...summary.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([currency, row]) => [
@@ -753,6 +791,13 @@ export async function GET(
         expiredServices: expiredServices.length,
         projectRenewalsDue30: projectRenewalsDue30.length,
         overdueProjectRenewals: overdueProjectRenewals.length,
+        creditExposure: {
+          currency: creditCurrency,
+          limit: organization.creditLimit.toFixed(2),
+          outstanding: creditOutstanding.toFixed(2),
+          utilizationPercent: creditUtilizationPercent?.toDecimalPlaces(2).toFixed(2) ?? null,
+          onHold: organization.creditHold,
+        },
         accountHealth,
         executiveBrief,
         riskSignals,
