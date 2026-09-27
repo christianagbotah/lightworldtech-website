@@ -149,7 +149,14 @@ export async function POST(request: NextRequest) {
 
   const organization = await db.clientOrganization.findUnique({
     where: { id: parsed.data.organizationId },
-    select: { id: true },
+    select: {
+      id: true,
+      paymentTermsDays: true,
+      creditLimitCurrency: true,
+      creditLimit: true,
+      creditHold: true,
+      creditHoldReason: true,
+    },
   });
   if (!organization) return NextResponse.json({ success: false, error: 'Client organization not found' }, { status: 404 });
 
@@ -239,6 +246,63 @@ export async function POST(request: NextRequest) {
 
   const currency = normalizeCurrency(parsed.data.currency);
   const transactionResult = await db.$transaction(async (tx) => {
+    if (parsed.data.status === 'issued') {
+      if (organization.creditHold) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: {
+            type: 'credit_hold' as const,
+            message: organization.creditHoldReason || 'Customer account is on credit hold',
+            limit: organization.creditLimit.toFixed(2),
+            outstanding: null,
+            projected: null,
+            currency: organization.creditLimitCurrency,
+          },
+        };
+      }
+
+      const creditCurrency = normalizeCurrency(organization.creditLimitCurrency);
+      if (organization.creditLimit.gt(0) && currency === creditCurrency) {
+        await tx.$queryRawUnsafe(
+          'SELECT pg_advisory_xact_lock(hashtext($1))',
+          'lightworld-credit-control:' + organization.id + ':' + currency,
+        );
+
+        const openInvoices = await tx.clientInvoice.findMany({
+          where: {
+            organizationId: organization.id,
+            currency,
+            status: { notIn: ['draft', 'void'] },
+          },
+          select: {
+            total: true,
+            allocations: { select: { amount: true } },
+            creditNotes: { where: { status: 'posted' }, select: { appliedAmount: true } },
+          },
+        });
+        const outstanding = openInvoices.reduce(
+          (sum, row) => sum.plus(invoiceBalance(row.total, row.allocations, row.creditNotes)),
+          new Prisma.Decimal(0),
+        );
+        const projected = outstanding.plus(total);
+        if (projected.gt(organization.creditLimit)) {
+          return {
+            invoice: null,
+            duplicate: null,
+            creditBlocked: {
+              type: 'credit_limit' as const,
+              message: 'Issuing this invoice would exceed the customer credit limit',
+              limit: organization.creditLimit.toFixed(2),
+              outstanding: outstanding.toFixed(2),
+              projected: projected.toFixed(2),
+              currency,
+            },
+          };
+        }
+      }
+    }
+
     if (parsed.data.serviceId && parsed.data.renewalForDate) {
       const cycleKey =
         'lightworld-renewal-invoice:' +
@@ -259,7 +323,7 @@ export async function POST(request: NextRequest) {
         select: { id: true, invoiceNumber: true, status: true },
       });
       if (duplicate) {
-        return { invoice: null, duplicate };
+        return { invoice: null, duplicate, creditBlocked: null };
       }
     }
 
@@ -317,8 +381,31 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return { invoice: created, duplicate: null };
+    return { invoice: created, duplicate: null, creditBlocked: null };
   });
+
+  if (transactionResult.creditBlocked) {
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_invoice_credit_blocked',
+      entity: 'ClientOrganization',
+      entityId: organization.id,
+      details: {
+        organizationId: organization.id,
+        blockType: transactionResult.creditBlocked.type,
+        currency: transactionResult.creditBlocked.currency,
+        limit: transactionResult.creditBlocked.limit,
+        outstanding: transactionResult.creditBlocked.outstanding,
+        projected: transactionResult.creditBlocked.projected,
+        invoiceTotal: total.toFixed(2),
+      },
+    });
+    return NextResponse.json({
+      success: false,
+      error: transactionResult.creditBlocked.message,
+      creditControl: transactionResult.creditBlocked,
+    }, { status: 409 });
+  }
 
   if (transactionResult.duplicate) {
     return NextResponse.json({
