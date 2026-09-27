@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     db.financeVendor.findMany({
       where: { active: true },
       orderBy: { name: 'asc' },
-      select: { id: true, name: true, email: true, phone: true },
+      select: { id: true, name: true, email: true, phone: true, paymentTermsDays: true },
     }),
     db.financeTaxProfile.findUnique({ where: { id: 'ghana-default' } }),
   ]);

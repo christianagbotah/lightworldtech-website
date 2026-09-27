@@ -86,7 +86,7 @@ type Organization = {
   }>;
 };
 
-type Vendor = { id: string; name: string; email: string; phone: string };
+type Vendor = { id: string; name: string; email: string; phone: string; paymentTermsDays: number };
 
 type Service = {
   id: string;
@@ -437,10 +437,10 @@ export default function AdminFinance() {
     method: 'bank_transfer', reference: '', notes: '',
     allocations: [{ invoiceId: '', amount: '' }],
   });
-  const [vendorForm, setVendorForm] = useState({ name: '', email: '', phone: '', taxId: '', notes: '' });
+  const [vendorForm, setVendorForm] = useState({ name: '', email: '', phone: '', taxId: '', paymentTermsDays: '30', notes: '' });
   const [billForm, setBillForm] = useState({
     purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
-    issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
+    issueDate: today(), dueDate: inDays(30), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
   });
   const [billEvidenceFile, setBillEvidenceFile] = useState<File | null>(null);
   const [billEvidenceFiles, setBillEvidenceFiles] = useState<Record<string, File | null>>({});
@@ -590,6 +590,11 @@ export default function AdminFinance() {
     ),
     [data?.bills, supplierPaymentForm.vendorId],
   );
+
+  const selectedBillVendor = data?.vendors.find((vendor) => vendor.id === billForm.vendorId) || null;
+  const supplierDefaultDueDate = selectedBillVendor
+    ? addDays(billForm.issueDate, selectedBillVendor.paymentTermsDays ?? 30)
+    : addDays(billForm.issueDate, 30);
 
   const supplierBillsByAging = useMemo(
     () => (data?.bills || []).filter((bill) => {
@@ -926,8 +931,28 @@ export default function AdminFinance() {
 
   const submitVendor = async (event: FormEvent) => {
     event.preventDefault();
-    const ok = await post('/api/admin/finance/vendors', vendorForm, 'Supplier created');
-    if (ok) setVendorForm({ name: '', email: '', phone: '', taxId: '', notes: '' });
+    const ok = await post('/api/admin/finance/vendors', {
+      ...vendorForm,
+      paymentTermsDays: Number(vendorForm.paymentTermsDays || 0),
+    }, 'Supplier created');
+    if (ok) setVendorForm({ name: '', email: '', phone: '', taxId: '', paymentTermsDays: '30', notes: '' });
+  };
+
+  const patchVendor = async (vendorId: string, update: Record<string, unknown>) => {
+    setSaving(true);
+    try {
+      await api('/api/admin/finance/vendors/' + vendorId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update),
+      });
+      await load();
+      toast.success('Supplier terms updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update supplier terms');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const submitBill = async (event: FormEvent) => {
@@ -965,7 +990,7 @@ export default function AdminFinance() {
       toast.success(evidenceUploaded ? 'Supplier bill and invoice evidence recorded' : 'Supplier bill recorded');
       setBillForm({
         purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
-        issueDate: today(), dueDate: inDays(14), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
+        issueDate: today(), dueDate: inDays(30), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
       });
       setBillEvidenceFile(null);
       setDialog(null);
@@ -1448,13 +1473,30 @@ export default function AdminFinance() {
             <CardContent className="p-0">
               <div className="max-w-full overflow-x-auto">
                 <Table exportFileName="lightworld-supplier-directory">
-                  <TableHeader><TableRow><TableHead>Supplier</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead><TableHead className="text-right">Statement</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Supplier</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead><TableHead>Payment terms</TableHead><TableHead className="text-right">Statement</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {data.vendors.map((vendor) => (
                       <TableRow key={vendor.id}>
                         <TableCell className="font-medium">{vendor.name}</TableCell>
                         <TableCell className="text-xs">{vendor.email || '—'}</TableCell>
                         <TableCell className="text-xs">{vendor.phone || '—'}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="365"
+                              defaultValue={vendor.paymentTermsDays}
+                              className="h-8 w-20 text-xs"
+                              aria-label={'Payment terms for ' + vendor.name}
+                              onBlur={(event) => {
+                                const next = Math.min(365, Math.max(0, Number(event.target.value || 0)));
+                                if (next !== vendor.paymentTermsDays) void patchVendor(vendor.id, { paymentTermsDays: next });
+                              }}
+                            />
+                            <span className="text-xs text-muted-foreground">days</span>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <Button type="button" size="sm" variant="outline" onClick={() => downloadSupplierStatement(vendor.id)}>
                             <Download className="mr-2 size-3.5" /> Download statement
@@ -1462,7 +1504,7 @@ export default function AdminFinance() {
                         </TableCell>
                       </TableRow>
                     ))}
-                    {!data.vendors.length && <TableRow><TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No active suppliers are available.</TableCell></TableRow>}
+                    {!data.vendors.length && <TableRow><TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">No active suppliers are available.</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </div>
@@ -2183,7 +2225,7 @@ export default function AdminFinance() {
       </Dialog>
 
       <Dialog open={dialog === 'vendor'} onOpenChange={(open) => !open && setDialog(null)}>
-        <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Add supplier</DialogTitle></DialogHeader><form onSubmit={submitVendor} className="space-y-3"><Input required placeholder="Supplier name" value={vendorForm.name} onChange={(e) => setVendorForm({ ...vendorForm, name: e.target.value })} /><Input type="email" placeholder="Email" value={vendorForm.email} onChange={(e) => setVendorForm({ ...vendorForm, email: e.target.value })} /><Input placeholder="Phone" value={vendorForm.phone} onChange={(e) => setVendorForm({ ...vendorForm, phone: e.target.value })} /><Input placeholder="Tax / registration ID (optional)" value={vendorForm.taxId} onChange={(e) => setVendorForm({ ...vendorForm, taxId: e.target.value })} /><Textarea placeholder="Supplier notes" value={vendorForm.notes} onChange={(e) => setVendorForm({ ...vendorForm, notes: e.target.value })} /><DialogFooter><Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button><Button disabled={saving}>Save supplier</Button></DialogFooter></form></DialogContent>
+        <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Add supplier</DialogTitle></DialogHeader><form onSubmit={submitVendor} className="space-y-3"><Input required placeholder="Supplier name" value={vendorForm.name} onChange={(e) => setVendorForm({ ...vendorForm, name: e.target.value })} /><Input type="email" placeholder="Email" value={vendorForm.email} onChange={(e) => setVendorForm({ ...vendorForm, email: e.target.value })} /><Input placeholder="Phone" value={vendorForm.phone} onChange={(e) => setVendorForm({ ...vendorForm, phone: e.target.value })} /><Input placeholder="Tax / registration ID (optional)" value={vendorForm.taxId} onChange={(e) => setVendorForm({ ...vendorForm, taxId: e.target.value })} /><div><Label>Default payment terms (days)</Label><Input type="number" min="0" max="365" value={vendorForm.paymentTermsDays} onChange={(e) => setVendorForm({ ...vendorForm, paymentTermsDays: e.target.value })} /><p className="mt-1 text-[10px] text-muted-foreground">Used to propose supplier bill due dates. Finance may override a bill due date when the supplier invoice states different terms.</p></div><Textarea placeholder="Supplier notes" value={vendorForm.notes} onChange={(e) => setVendorForm({ ...vendorForm, notes: e.target.value })} /><DialogFooter><Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button><Button disabled={saving}>Save supplier</Button></DialogFooter></form></DialogContent>
       </Dialog>
 
       <Dialog
@@ -2208,7 +2250,14 @@ export default function AdminFinance() {
             )}
             <div>
               <Label>Supplier</Label>
-              <select required disabled={Boolean(billForm.purchaseOrderId)} value={billForm.vendorId} onChange={(e) => setBillForm({ ...billForm, vendorId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+              <select required disabled={Boolean(billForm.purchaseOrderId)} value={billForm.vendorId} onChange={(e) => {
+                const vendor = data.vendors.find((item) => item.id === e.target.value);
+                setBillForm({
+                  ...billForm,
+                  vendorId: e.target.value,
+                  dueDate: addDays(billForm.issueDate, vendor?.paymentTermsDays ?? 30),
+                });
+              }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
                 <option value="">Select supplier</option>
                 {data.vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
               </select>
@@ -2233,7 +2282,7 @@ export default function AdminFinance() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div><Label>Issue date</Label><Input required type="date" value={billForm.issueDate} onChange={(e) => setBillForm({ ...billForm, issueDate: e.target.value })} /></div>
+              <div><Label>Issue date</Label><Input required type="date" value={billForm.issueDate} onChange={(e) => setBillForm({ ...billForm, issueDate: e.target.value, dueDate: addDays(e.target.value, selectedBillVendor?.paymentTermsDays ?? 30) })} /></div>
               <div><Label>Due date</Label><Input required type="date" value={billForm.dueDate} onChange={(e) => setBillForm({ ...billForm, dueDate: e.target.value })} /></div>
               <div><Label>Net / taxable amount</Label><Input required disabled={Boolean(billForm.purchaseOrderId)} type="number" min="0.01" step="0.01" value={billForm.taxableAmount} onChange={(e) => setBillForm({ ...billForm, taxableAmount: e.target.value })} /></div>
               <div>
@@ -2248,6 +2297,15 @@ export default function AdminFinance() {
                 </select>
               </div>
             </div>
+
+            {selectedBillVendor && (
+              <div className={billForm.dueDate === supplierDefaultDueDate
+                ? 'rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-200'
+                : 'rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200'}>
+                Supplier default: <strong>{selectedBillVendor.paymentTermsDays} day terms</strong> · default due date <strong>{new Date(supplierDefaultDueDate + 'T00:00:00Z').toLocaleDateString()}</strong>.
+                {billForm.dueDate !== supplierDefaultDueDate && ' This bill due date overrides the supplier default and will be recorded in the audit trail.'}
+              </div>
+            )}
 
             {billForm.taxTreatment === 'standard' && !data.taxProfile?.enabled && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">

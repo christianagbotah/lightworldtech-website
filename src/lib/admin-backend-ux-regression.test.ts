@@ -2545,6 +2545,28 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(finance).toContain('No open supplier bills match this aging band.');
   });
 
+  test('applies supplier payment-term defaults with audited due-date overrides', () => {
+    const schema = source('prisma/schema.prisma');
+    const vendorsApi = source('src/app/api/admin/finance/vendors/route.ts');
+    const vendorUpdateApi = source('src/app/api/admin/finance/vendors/[id]/route.ts');
+    const financeMeta = source('src/app/api/admin/finance/meta/route.ts');
+    const billsApi = source('src/app/api/admin/finance/bills/route.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('paymentTermsDays Int');
+    expect(vendorsApi).toContain('paymentTermsDays');
+    expect(vendorUpdateApi).toContain('beforePaymentTermsDays');
+    expect(vendorUpdateApi).toContain('afterPaymentTermsDays');
+    expect(financeMeta).toContain('paymentTermsDays: true');
+    expect(billsApi).toContain('defaultDueDate');
+    expect(billsApi).toContain('dueDateOverride');
+    expect(billsApi).toContain('supplierPaymentTermsDays');
+    expect(finance).toContain('Default payment terms (days)');
+    expect(finance).toContain('Payment terms for ');
+    expect(finance).toContain('supplierDefaultDueDate');
+    expect(finance).toContain('This bill due date overrides the supplier default and will be recorded in the audit trail.');
+  });
+
   test('alerts finance when non-cash supplier payment proof is missing', () => {
     const notifications = source('src/app/api/admin/notifications/route.ts');
 

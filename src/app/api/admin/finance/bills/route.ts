@@ -89,8 +89,15 @@ export async function POST(request: NextRequest) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ success: false, error: 'Invalid supplier bill', details: parsed.error.flatten() }, { status: 400 });
 
-  const vendor = await db.financeVendor.findUnique({ where: { id: parsed.data.vendorId }, select: { id: true, active: true } });
+  const vendor = await db.financeVendor.findUnique({
+    where: { id: parsed.data.vendorId },
+    select: { id: true, active: true, paymentTermsDays: true },
+  });
   if (!vendor || !vendor.active) return NextResponse.json({ success: false, error: 'Active supplier not found' }, { status: 404 });
+
+  const defaultDueDate = new Date(parsed.data.issueDate);
+  defaultDueDate.setUTCDate(defaultDueDate.getUTCDate() + vendor.paymentTermsDays);
+  const dueDateOverride = parsed.data.dueDate.toISOString().slice(0, 10) !== defaultDueDate.toISOString().slice(0, 10);
 
   const taxableAmount = new Prisma.Decimal(
     parsed.data.taxableAmount ?? parsed.data.total ?? 0,
@@ -240,6 +247,9 @@ export async function POST(request: NextRequest) {
       nhilAmount: bill.nhilAmount.toFixed(2),
       getfundAmount: bill.getfundAmount.toFixed(2),
       purchaseOrderId: bill.purchaseOrderId,
+      supplierPaymentTermsDays: vendor.paymentTermsDays,
+      defaultDueDate: defaultDueDate.toISOString().slice(0, 10),
+      dueDateOverride,
     },
   });
   return NextResponse.json({ success: true, data: serialize(bill) }, { status: 201 });

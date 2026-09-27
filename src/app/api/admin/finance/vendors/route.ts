@@ -9,6 +9,7 @@ const schema = z.object({
   email: z.string().trim().email().or(z.literal('')).default(''),
   phone: z.string().trim().max(80).default(''),
   taxId: z.string().trim().max(120).default(''),
+  paymentTermsDays: z.coerce.number().int().min(0).max(365).default(30),
   notes: z.string().trim().max(8000).default(''),
 });
 

@@ -1145,6 +1145,7 @@ model FinanceVendor {
   phone     String              @default("")
   taxId     String              @default("")
   active    Boolean             @default(true)
+  paymentTermsDays Int          @default(30)
   notes     String              @default("")
   bills     FinanceVendorBill[]
   payments  FinanceVendorPayment[]
