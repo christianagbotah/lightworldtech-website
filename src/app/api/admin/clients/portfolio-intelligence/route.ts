@@ -36,6 +36,11 @@ export async function GET(request: NextRequest) {
       primaryContactName: true,
       primaryEmail: true,
       primaryPhone: true,
+      paymentTermsDays: true,
+      creditLimitCurrency: true,
+      creditLimit: true,
+      creditHold: true,
+      creditHoldReason: true,
       invoices: {
         where: { status: { notIn: ['draft', 'void'] } },
         select: {
@@ -120,8 +125,13 @@ export async function GET(request: NextRequest) {
     };
 
     let overdueInvoices = 0;
+    const outstandingByCurrency = new Map<string, Prisma.Decimal>();
     for (const invoice of organization.invoices) {
       const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
+      const currency = invoice.currency.trim().toUpperCase() || 'UNSPECIFIED';
+      if (balance.gt(0)) {
+        outstandingByCurrency.set(currency, (outstandingByCurrency.get(currency) || new Prisma.Decimal(0)).plus(balance));
+      }
       if (balance.gt(0) && invoice.dueDate < now) {
         overdueInvoices += 1;
         bucket(invoice.currency).overdueReceivables = bucket(invoice.currency).overdueReceivables.plus(balance);
@@ -210,7 +220,18 @@ export async function GET(request: NextRequest) {
       )
     ).length;
 
+    const creditCurrency = organization.creditLimitCurrency.trim().toUpperCase() || 'GHS';
+    const creditOutstanding = outstandingByCurrency.get(creditCurrency) || new Prisma.Decimal(0);
+    const creditUtilizationPercent = organization.creditLimit.gt(0)
+      ? creditOutstanding.div(organization.creditLimit).mul(100)
+      : null;
+    const creditLimitWatch = creditUtilizationPercent !== null && creditUtilizationPercent.gte(75);
+    const creditLimitCritical = creditUtilizationPercent !== null && creditUtilizationPercent.gte(90);
+
     let riskScore = 0;
+    if (organization.creditHold) riskScore += 3;
+    if (creditLimitCritical) riskScore += 3;
+    else if (creditLimitWatch) riskScore += 1;
     if (overdueInvoices) riskScore += 3;
     if (expiredServices) riskScore += 3;
     if (urgentTickets) riskScore += 3;
@@ -233,6 +254,15 @@ export async function GET(request: NextRequest) {
       primaryContactName: organization.primaryContactName,
       primaryEmail: organization.primaryEmail,
       primaryPhone: organization.primaryPhone,
+      creditPolicy: {
+        paymentTermsDays: organization.paymentTermsDays,
+        currency: creditCurrency,
+        limit: organization.creditLimit.toFixed(2),
+        outstanding: creditOutstanding.toFixed(2),
+        utilizationPercent: creditUtilizationPercent?.toDecimalPlaces(2).toFixed(2) ?? null,
+        onHold: organization.creditHold,
+        holdReason: organization.creditHoldReason,
+      },
       posture,
       riskScore,
       metrics: {
@@ -244,6 +274,9 @@ export async function GET(request: NextRequest) {
         urgentTickets,
         slaBreaches,
         overdueInvoices,
+        creditHold: organization.creditHold ? 1 : 0,
+        creditLimitWatch: creditLimitWatch ? 1 : 0,
+        creditLimitCritical: creditLimitCritical ? 1 : 0,
         expiredServices,
         renewalsDue30: renewalsDue30 + projectRenewals30,
         expiredAgreements,
@@ -279,6 +312,28 @@ export async function GET(request: NextRequest) {
         detail: string;
         score: number;
       }> = [];
+
+      if (row.metrics.creditHold > 0 || row.metrics.creditLimitWatch > 0) {
+        const critical = row.metrics.creditHold > 0 || row.metrics.creditLimitCritical > 0;
+        actions.push({
+          id: row.id + ':credit',
+          organizationId: row.id,
+          organizationName: row.name,
+          type: 'collections',
+          severity: critical ? 'high' : 'medium',
+          title: row.metrics.creditHold > 0
+            ? 'Resolve customer credit hold'
+            : row.metrics.creditLimitCritical > 0
+              ? 'Reduce critical credit exposure'
+              : 'Review customer credit exposure',
+          detail: row.creditPolicy.onHold
+            ? (row.creditPolicy.holdReason || 'New issued invoices are blocked by the customer credit policy.')
+            : row.creditPolicy.currency + ' ' + row.creditPolicy.outstanding + ' outstanding against a ' +
+              row.creditPolicy.currency + ' ' + row.creditPolicy.limit + ' limit' +
+              (row.creditPolicy.utilizationPercent ? ' · ' + row.creditPolicy.utilizationPercent + '% utilized.' : '.'),
+          score: row.riskScore + (critical ? 9 : 4),
+        });
+      }
 
       if (row.metrics.overdueInvoices > 0) {
         actions.push({
@@ -432,6 +487,9 @@ export async function GET(request: NextRequest) {
     attention: rows.filter((row) => row.posture === 'attention').length,
     stable: rows.filter((row) => row.posture === 'stable').length,
     overdueInvoices: rows.reduce((sum, row) => sum + row.metrics.overdueInvoices, 0),
+    creditHolds: rows.reduce((sum, row) => sum + row.metrics.creditHold, 0),
+    creditLimitWatch: rows.reduce((sum, row) => sum + row.metrics.creditLimitWatch, 0),
+    creditLimitCritical: rows.reduce((sum, row) => sum + row.metrics.creditLimitCritical, 0),
     renewalsDue30: rows.reduce((sum, row) => sum + row.metrics.renewalsDue30, 0),
     expiredAgreements: rows.reduce((sum, row) => sum + row.metrics.expiredAgreements, 0),
     agreementsInNoticeWindow: rows.reduce((sum, row) => sum + row.metrics.agreementsInNoticeWindow, 0),
@@ -458,6 +516,6 @@ export async function GET(request: NextRequest) {
         overdueReceivables: values.overdueReceivables.toFixed(2),
         renewals30: values.renewals30.toFixed(2),
       })),
-    methodology: 'Portfolio posture is deterministic. High-severity exceptions include overdue receivables, expired services, expired or rejected agreements, overdue agreement obligations, urgent/SLA-breached support and over-budget projects. Pending agreement approvals, near-term obligations and agreement notice windows are attention signals. Currency values are never converted.',
+    methodology: 'Portfolio posture is deterministic. Customer credit exceptions include governed credit holds and same-currency utilization at or above 75% of a configured positive credit limit. High-severity exceptions include overdue receivables, expired services, expired or rejected agreements, overdue agreement obligations, urgent/SLA-breached support and over-budget projects. Pending agreement approvals, near-term obligations and agreement notice windows are attention signals. Currency values are never converted.',
   });
 }
