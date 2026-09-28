@@ -14,10 +14,11 @@ import {
 } from '@/lib/finance';
 import {
   postCustomerRefundJournal,
+  postExpenseSettlementJournal,
   postVendorPaymentJournal,
 } from '@/lib/finance-ledger';
 
-export type OutflowType = 'vendor_payment' | 'customer_refund';
+export type OutflowType = 'vendor_payment' | 'customer_refund' | 'direct_expense_payment';
 
 export type VendorPaymentApprovalAllocation = {
   billId: string;
@@ -65,10 +66,12 @@ export function canApproveFinanceOutflow(actor: ActiveAdminContext): boolean {
 export async function createOutflowApproval(
   actor: ActiveAdminContext,
   input: CreateOutflowApprovalInput,
+  tx?: Prisma.TransactionClient,
 ) {
   const requestNumber = await nextOutflowApprovalNumber(input.effectiveDate);
+  const client = tx || db;
 
-  return db.financeOutflowApproval.create({
+  return client.financeOutflowApproval.create({
     data: {
       requestNumber,
       outflowType: input.outflowType,
@@ -316,6 +319,78 @@ export async function executeOutflowApproval(
         outflowType: approval.outflowType,
         resultId: created.id,
         resultNumber: created.paymentNumber,
+      };
+    });
+  }
+
+  if (approval.outflowType === 'direct_expense_payment') {
+    const expense = await db.financeExpense.findUnique({
+      where: { id: approval.sourceId },
+      select: {
+        id: true,
+        expenseNumber: true,
+        currency: true,
+        amount: true,
+        incurredAt: true,
+        paidAt: true,
+        method: true,
+        reference: true,
+      },
+    });
+    if (!expense) throw new Error('Direct expense not found');
+    if (expense.paidAt) throw new Error('Direct expense has already been settled');
+    if (expense.currency !== approval.currency) {
+      throw new Error('Direct expense payment currency no longer matches the expense');
+    }
+    if (!expense.amount.eq(approval.amount)) {
+      throw new Error('Direct expense payment amount no longer matches the accrued expense');
+    }
+    if (approval.effectiveDate.getTime() < expense.incurredAt.getTime()) {
+      throw new Error('Direct expense payment date cannot be earlier than the incurred date');
+    }
+
+    return db.$transaction(async (tx) => {
+      const updated = await tx.financeExpense.update({
+        where: { id: expense.id },
+        data: {
+          paidAt: approval.effectiveDate,
+          method: approval.method,
+          reference: approval.reference || expense.reference,
+        },
+      });
+
+      await postExpenseSettlementJournal(tx, {
+        expenseId: updated.id,
+        expenseNumber: updated.expenseNumber,
+        paidAt: approval.effectiveDate,
+        currency: updated.currency,
+        amount: updated.amount,
+        method: approval.method,
+        postedBy: actor.name || actor.email,
+      });
+
+      await tx.financeOutflowApproval.update({
+        where: { id: approval.id },
+        data: {
+          status: 'approved',
+          ...(executingScheduled ? {} : {
+            decidedByAdminId: actor.id,
+            decidedByName: actor.name || 'Admin',
+            decidedByEmail: actor.email,
+            decidedAt: new Date(),
+          }),
+          decisionNotes: executingScheduled
+            ? [approval.decisionNotes, decisionNotes].filter(Boolean).join(' · ')
+            : decisionNotes,
+          resultId: updated.id,
+          resultNumber: updated.expenseNumber,
+        },
+      });
+
+      return {
+        outflowType: approval.outflowType,
+        resultId: updated.id,
+        resultNumber: updated.expenseNumber,
       };
     });
   }
