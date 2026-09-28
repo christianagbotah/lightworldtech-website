@@ -98,10 +98,12 @@ export async function GET(request: NextRequest) {
         id: true,
         currency: true,
         contractValue: true,
+        contractValueBasis: true,
         invoices: {
           where: { status: { not: 'void' } },
           select: {
             status: true,
+            taxableAmount: true,
             total: true,
           },
         },
@@ -154,14 +156,22 @@ export async function GET(request: NextRequest) {
   let agreementOverbilledCount = 0;
   let agreementDraftPendingCount = 0;
   let agreementUnpreparedCount = 0;
+  let agreementBasisUnspecifiedCount = 0;
+  const agreementAttentionIds = new Set<string>();
 
   for (const agreement of agreementBillingAgreements) {
+    if (agreement.contractValueBasis === 'unspecified') {
+      agreementBasisUnspecifiedCount += 1;
+      agreementAttentionIds.add(agreement.id);
+    }
+    const comparableAmount = (invoice: { taxableAmount: Prisma.Decimal; total: Prisma.Decimal }) =>
+      agreement.contractValueBasis === 'tax_exclusive' ? invoice.taxableAmount : invoice.total;
     const issuedAmount = agreement.invoices
       .filter((invoice) => invoice.status !== 'draft')
-      .reduce((sum, invoice) => sum.plus(invoice.total), new Prisma.Decimal(0));
+      .reduce((sum, invoice) => sum.plus(comparableAmount(invoice)), new Prisma.Decimal(0));
     const draftAmount = agreement.invoices
       .filter((invoice) => invoice.status === 'draft')
-      .reduce((sum, invoice) => sum.plus(invoice.total), new Prisma.Decimal(0));
+      .reduce((sum, invoice) => sum.plus(comparableAmount(invoice)), new Prisma.Decimal(0));
     const committedAmount = issuedAmount.plus(draftAmount);
     const remainingToPrepare = Prisma.Decimal.max(
       new Prisma.Decimal(0),
@@ -174,16 +184,19 @@ export async function GET(request: NextRequest) {
 
     if (overbilledAmount.gt(0)) {
       agreementOverbilledCount += 1;
+      agreementAttentionIds.add(agreement.id);
       add(agreementOverbilledTotals, agreement.currency, overbilledAmount);
       continue;
     }
     if (draftAmount.gt(0)) {
       agreementDraftPendingCount += 1;
+      agreementAttentionIds.add(agreement.id);
       add(agreementDraftTotals, agreement.currency, draftAmount);
       continue;
     }
     if (remainingToPrepare.gt(0)) {
       agreementUnpreparedCount += 1;
+      agreementAttentionIds.add(agreement.id);
       add(agreementRemainingTotals, agreement.currency, remainingToPrepare);
     }
   }
@@ -266,10 +279,11 @@ export async function GET(request: NextRequest) {
         oldestDueDate: paidRenewals[0]?.dueDate || null,
       },
       agreementBilling: {
-        attentionCount: agreementOverbilledCount + agreementDraftPendingCount + agreementUnpreparedCount,
+        attentionCount: agreementAttentionIds.size,
         overbilledCount: agreementOverbilledCount,
         draftPendingCount: agreementDraftPendingCount,
         unpreparedCount: agreementUnpreparedCount,
+        basisUnspecifiedCount: agreementBasisUnspecifiedCount,
         remainingByCurrency: jsonTotals(agreementRemainingTotals),
         draftByCurrency: jsonTotals(agreementDraftTotals),
         overbilledByCurrency: jsonTotals(agreementOverbilledTotals),
