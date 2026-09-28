@@ -48,6 +48,9 @@ export async function GET(request: NextRequest) {
           },
           attachments: { orderBy: { createdAt: 'desc' } },
           changes: { orderBy: { createdAt: 'desc' }, take: 50 },
+          billingMilestones: {
+            orderBy: [{ order: 'asc' }, { dueDate: 'asc' }, { createdAt: 'asc' }],
+          },
           obligations: {
             include: { ownerAdmin: { select: { id: true, name: true, email: true, role: true } } },
             orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
