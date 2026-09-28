@@ -114,6 +114,13 @@ type InvoiceDraftApproval = {
   project: { id: string; name: string } | null;
   agreement: { id: string; title: string; referenceNumber: string } | null;
   billingMilestone: { id: string; title: string } | null;
+  replacementInvoice: {
+    id: string;
+    invoiceNumber: string;
+    status: string;
+    issueDate: string;
+    createdAt: string;
+  } | null;
 };
 
 type RejectedInvoiceDraft = {
@@ -622,14 +629,26 @@ export default function FinanceOutflowApprovals({
                     </TableCell>
                     <TableCell className="text-right font-semibold">{money(invoice.total, invoice.currency)}</TableCell>
                     <TableCell data-export-ignore className="text-right">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onPrepareReplacement?.(invoice.id)}
-                      >
-                        <RefreshCw className="mr-1.5 size-3.5" /> Prepare replacement
-                      </Button>
+                      {invoice.replacementInvoice ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onOpenInvoice?.(invoice.replacementInvoice!.id)}
+                        >
+                          <FileText className="mr-1.5 size-3.5" />
+                          Open {invoice.replacementInvoice.invoiceNumber}
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onPrepareReplacement?.(invoice.id)}
+                        >
+                          <RefreshCw className="mr-1.5 size-3.5" /> Prepare replacement
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
