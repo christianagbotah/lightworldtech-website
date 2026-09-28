@@ -56,10 +56,22 @@ export async function PATCH(
     );
 
     const hasLiveInvoice = existing.invoices.length > 0;
+    const nextAmount = parsed.data.amount !== undefined
+      ? new Prisma.Decimal(parsed.data.amount).toDecimalPlaces(2)
+      : existing.amount;
+    const nextDueDate = parsed.data.dueDate !== undefined
+      ? parsed.data.dueDate ? new Date(parsed.data.dueDate) : null
+      : existing.dueDate;
     const changesCommercialTerms =
-      parsed.data.title !== undefined ||
-      parsed.data.amount !== undefined ||
-      parsed.data.dueDate !== undefined;
+      (parsed.data.title !== undefined && parsed.data.title !== existing.title) ||
+      (parsed.data.amount !== undefined && !nextAmount.eq(existing.amount)) ||
+      (parsed.data.dueDate !== undefined &&
+        (nextDueDate?.getTime() ?? null) !== (existing.dueDate?.getTime() ?? null));
+    const readinessInvalidated =
+      !hasLiveInvoice &&
+      existing.readinessStatus === 'ready_to_bill' &&
+      changesCommercialTerms &&
+      parsed.data.readinessStatus === undefined;
 
     if (hasLiveInvoice && changesCommercialTerms) {
       return {
@@ -96,7 +108,7 @@ export async function PATCH(
         _sum: { amount: true },
       });
       const otherScheduled = aggregate._sum.amount || new Prisma.Decimal(0);
-      const amount = new Prisma.Decimal(parsed.data.amount).toDecimalPlaces(2);
+      const amount = nextAmount;
       const projected = otherScheduled.plus(amount);
       if (projected.gt(existing.agreement.contractValue)) {
         return {
@@ -139,10 +151,17 @@ export async function PATCH(
                 readyBy: '',
               }
             : {}),
+        ...(readinessInvalidated
+          ? {
+              readinessStatus: 'planned',
+              readyAt: null,
+              readyBy: '',
+            }
+          : {}),
       },
     });
 
-    return { milestone, agreement: existing.agreement, error: null, status: 200 };
+    return { milestone, agreement: existing.agreement, readinessInvalidated, error: null, status: 200 };
   });
 
   if (!result.milestone) {
@@ -161,6 +180,7 @@ export async function PATCH(
       organizationId: result.agreement.organizationId,
       milestoneId: result.milestone.id,
       fields: Object.keys(parsed.data),
+      readinessInvalidated: 'readinessInvalidated' in result ? result.readinessInvalidated : false,
     },
   });
 
