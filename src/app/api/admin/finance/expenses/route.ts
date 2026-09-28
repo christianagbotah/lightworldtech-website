@@ -212,10 +212,8 @@ export async function POST(request: NextRequest) {
     {
       success: true,
       pendingApproval: Boolean(approval),
-      data: {
-        expense: { ...expense, amount: expense.amount.toFixed(2) },
-        approval: approval ? serializeOutflowApproval(approval) : null,
-      },
+      approval: approval ? serializeOutflowApproval(approval) : null,
+      data: { ...expense, amount: expense.amount.toFixed(2) },
     },
     { status: approval ? 202 : 201 },
   );
