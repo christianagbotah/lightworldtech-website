@@ -34,12 +34,21 @@ export type AgreementBillingRow = {
   scheduledAmount: string;
   unscheduledAmount: string;
   billingMilestoneCount: number;
+  billedMilestoneCount: number;
+  unbilledMilestoneCount: number;
+  readyUnbilledMilestoneCount: number;
+  plannedUnbilledMilestoneCount: number;
   nextMilestone: {
     id: string;
     title: string;
     amount: string;
     dueDate: string | null;
     order: number;
+    readinessStatus: string;
+    readinessNote: string;
+    evidenceUrl: string;
+    readyAt: string | null;
+    readyBy: string;
   } | null;
   overbilledAmount: string;
   state: 'unbilled' | 'partially_billed' | 'draft_pending' | 'fully_billed' | 'overbilled';
@@ -307,12 +316,22 @@ export default function FinanceAgreementBillingControl({
                         <p className="mt-0.5 text-[10px] text-muted-foreground">
                           {money(row.scheduledAmount, row.currency)} scheduled · {money(row.unscheduledAmount, row.currency)} unscheduled
                         </p>
-                        {row.nextMilestone && (
-                          <p className="mt-1 max-w-[220px] truncate text-[10px] text-amber-700 dark:text-amber-300">
-                            Next: {row.nextMilestone.title} · {money(row.nextMilestone.amount, row.currency)}
-                            {row.nextMilestone.dueDate ? ' · ' + new Date(row.nextMilestone.dueDate).toLocaleDateString() : ''}
+                        {row.billingMilestoneCount > 0 && (
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            {row.readyUnbilledMilestoneCount} ready · {row.plannedUnbilledMilestoneCount} planned · {row.billedMilestoneCount} billed
                           </p>
                         )}
+                        {row.nextMilestone ? (
+                          <div className="mt-1 max-w-[240px] text-[10px] text-emerald-700 dark:text-emerald-300">
+                            <p className="truncate">
+                              Ready: {row.nextMilestone.title} · {money(row.nextMilestone.amount, row.currency)}
+                              {row.nextMilestone.dueDate ? ' · ' + new Date(row.nextMilestone.dueDate).toLocaleDateString() : ''}
+                            </p>
+                            {row.nextMilestone.readyBy && <p className="truncate opacity-80">Confirmed by {row.nextMilestone.readyBy}</p>}
+                          </div>
+                        ) : row.billingMilestoneCount > 0 && row.unbilledMilestoneCount > 0 ? (
+                          <p className="mt-1 text-[10px] font-medium text-amber-700 dark:text-amber-300">Awaiting milestone readiness confirmation</p>
+                        ) : null}
                       </TableCell>
                       <TableCell>
                         {row.latestInvoice ? (
@@ -323,10 +342,12 @@ export default function FinanceAgreementBillingControl({
                         ) : <span className="text-xs text-muted-foreground">No linked invoice</span>}
                       </TableCell>
                       <TableCell data-export-ignore className="text-right">
-                        {Number(row.remainingToPrepare) > 0 ? (
+                        {Number(row.remainingToPrepare) > 0 && (row.billingMilestoneCount === 0 || Boolean(row.nextMilestone)) ? (
                           <Button type="button" size="sm" onClick={() => onPrepareDraft(row)}>
                             <FileText className="mr-1.5 size-3.5" /> Prepare next draft
                           </Button>
+                        ) : row.billingMilestoneCount > 0 && row.unbilledMilestoneCount > 0 && !row.nextMilestone ? (
+                          <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300">Await readiness</span>
                         ) : row.state === 'overbilled' ? (
                           <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-300">Review exception</span>
                         ) : (
