@@ -46,7 +46,7 @@ async function inventory() {
       include: { allocations: true },
     }),
     db.financeVendorBill.findMany({
-      where: { status: { not: 'void' } },
+      where: { status: { notIn: ['draft', 'rejected', 'void'] } },
       orderBy: [{ issueDate: 'asc' }, { createdAt: 'asc' }],
     }),
     db.financeVendorPayment.findMany({
