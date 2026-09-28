@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
     take: 1000,
   });
-  const [policy, creditApprovals, invoiceDrafts, rejectedInvoiceDrafts] = await Promise.all([
+  const [policy, creditApprovals, invoiceDrafts, rejectedInvoiceDrafts, creditNoteDrafts] = await Promise.all([
     getFinanceApprovalPolicy(),
     db.financeCreditPolicyApproval.findMany({
       include: {
@@ -84,6 +84,27 @@ export async function GET(request: NextRequest) {
         billingMilestone: { select: { id: true, title: true } },
       },
     }),
+    db.financeCreditNote.findMany({
+      where: { status: 'draft' },
+      orderBy: [{ createdAt: 'asc' }],
+      take: 1000,
+      select: {
+        id: true,
+        creditNoteNumber: true,
+        invoiceId: true,
+        currency: true,
+        subtotal: true,
+        tax: true,
+        total: true,
+        issueDate: true,
+        reason: true,
+        createdByAdminId: true,
+        createdBy: true,
+        createdAt: true,
+        organization: { select: { id: true, name: true } },
+        invoice: { select: { id: true, invoiceNumber: true, status: true } },
+      },
+    }),
   ]);
 
   return NextResponse.json({
@@ -109,6 +130,14 @@ export async function GET(request: NextRequest) {
         ...item,
         total: item.total.toFixed(2),
         mine: item.createdByAdminId === actor.id,
+      })),
+      creditNoteDrafts: creditNoteDrafts.map((item) => ({
+        ...item,
+        subtotal: item.subtotal.toFixed(2),
+        tax: item.tax.toFixed(2),
+        total: item.total.toFixed(2),
+        mine: item.createdByAdminId === actor.id,
+        makerCanApprove: !policy?.enabled || !policy.requireSecondApprover || item.createdByAdminId !== actor.id,
       })),
     },
   });

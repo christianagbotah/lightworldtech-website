@@ -116,6 +116,25 @@ type InvoiceDraftApproval = {
   billingMilestone: { id: string; title: string } | null;
 };
 
+type CreditNoteDraftApproval = {
+  id: string;
+  creditNoteNumber: string;
+  invoiceId: string;
+  currency: string;
+  subtotal: string;
+  tax: string;
+  total: string;
+  issueDate: string;
+  reason: string;
+  createdByAdminId: string;
+  createdBy: string;
+  createdAt: string;
+  mine: boolean;
+  makerCanApprove: boolean;
+  organization: { id: string; name: string };
+  invoice: { id: string; invoiceNumber: string; status: string };
+};
+
 type RejectedInvoiceDraft = {
   id: string;
   invoiceNumber: string;
@@ -146,6 +165,7 @@ type Inbox = {
   creditApprovals: CreditApproval[];
   invoiceDrafts: InvoiceDraftApproval[];
   rejectedInvoiceDrafts: RejectedInvoiceDraft[];
+  creditNoteDrafts: CreditNoteDraftApproval[];
 };
 
 type Policy = {
@@ -228,6 +248,8 @@ export default function FinanceOutflowApprovals({
   const [creditNotes, setCreditNotes] = useState('');
   const [invoiceReject, setInvoiceReject] = useState<InvoiceDraftApproval | null>(null);
   const [invoiceRejectReason, setInvoiceRejectReason] = useState('');
+  const [creditNoteReject, setCreditNoteReject] = useState<CreditNoteDraftApproval | null>(null);
+  const [creditNoteRejectReason, setCreditNoteRejectReason] = useState('');
   const [approvalProofFiles, setApprovalProofFiles] = useState<Record<string, File | null>>({});
 
   const load = async () => {
@@ -384,12 +406,53 @@ export default function FinanceOutflowApprovals({
     }
   };
 
+  const postCreditNoteDraft = async (note: CreditNoteDraftApproval) => {
+    setWorking(true);
+    try {
+      await readJson('/api/admin/finance/credit-notes/' + encodeURIComponent(note.id) + '/post', {
+        method: 'POST',
+      });
+      toast.success('Credit note posted and customer balance updated');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to post credit note');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const rejectCreditNoteDraft = async () => {
+    if (!creditNoteReject) return;
+    const reason = creditNoteRejectReason.trim();
+    if (reason.length < 3) {
+      toast.error('Enter a clear rejection reason');
+      return;
+    }
+    setWorking(true);
+    try {
+      await readJson('/api/admin/finance/credit-notes/' + encodeURIComponent(creditNoteReject.id) + '/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      toast.success('Credit note draft rejected without changing the customer balance');
+      setCreditNoteReject(null);
+      setCreditNoteRejectReason('');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to reject credit note draft');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   const approvals = inbox?.approvals || [];
   const pending = approvals.filter((item) => item.status === 'pending');
   const scheduled = approvals.filter((item) => item.status === 'scheduled');
   const history = approvals.filter((item) => !['pending', 'scheduled'].includes(item.status));
   const invoiceDrafts = inbox?.invoiceDrafts || [];
   const rejectedInvoiceDrafts = inbox?.rejectedInvoiceDrafts || [];
+  const creditNoteDrafts = inbox?.creditNoteDrafts || [];
   const creditApprovals = inbox?.creditApprovals || [];
   const pendingCredit = creditApprovals.filter((item) => item.status === 'pending');
   const creditHistory = creditApprovals.filter((item) => item.status !== 'pending');
@@ -415,7 +478,7 @@ export default function FinanceOutflowApprovals({
                   </Badge>
                 </div>
                 <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
-                  When enabled, invoice drafts require a different authorized approver before issuance, while supplier payments and customer refunds only post cash after second-person approval.
+                  When enabled, invoice and credit-note drafts require a different authorized approver before posting, while supplier payments and customer refunds only post cash after second-person approval.
                 </p>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Eligible approvers: <strong className="text-foreground">{policy?.eligibleApprovers ?? 0}</strong>
@@ -640,6 +703,53 @@ export default function FinanceOutflowApprovals({
                     </TableCell>
                   </TableRow>
                 )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="text-base">Pending credit-note approvals</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Draft credit notes have no ledger, receivable or customer-credit effect until a different authorized approver posts them.
+              </p>
+            </div>
+            <Badge variant="outline">{creditNoteDrafts.length} draft{creditNoteDrafts.length === 1 ? '' : 's'}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-pending-credit-note-approvals" className="min-w-[980px]">
+              <TableHeader><TableRow>
+                <TableHead>Credit note</TableHead><TableHead>Customer / invoice</TableHead><TableHead>Prepared by</TableHead>
+                <TableHead>Reason</TableHead><TableHead>Age</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Action</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {creditNoteDrafts.map((note) => {
+                  const canDecide = Boolean(inbox?.canApprove) && note.makerCanApprove;
+                  const age = approvalAge(note.createdAt);
+                  return (
+                    <TableRow key={note.id}>
+                      <TableCell><p className="font-mono text-xs font-semibold">{note.creditNoteNumber}</p><p className="mt-1 text-[10px] text-muted-foreground">{date(note.issueDate)}</p></TableCell>
+                      <TableCell><p className="text-xs font-medium">{note.organization.name}</p><p className="mt-1 font-mono text-[10px] text-muted-foreground">{note.invoice.invoiceNumber}</p></TableCell>
+                      <TableCell><p className="text-xs">{note.createdBy || 'Finance'}</p>{note.mine && <Badge variant="outline" className="mt-1">Prepared by you</Badge>}</TableCell>
+                      <TableCell><p className="max-w-[280px] whitespace-pre-wrap text-xs">{note.reason}</p></TableCell>
+                      <TableCell><Badge variant="outline">{age.label}</Badge></TableCell>
+                      <TableCell className="text-right font-semibold">{money(note.total, note.currency)}</TableCell>
+                      <TableCell className="text-right">
+                        {canDecide ? <div className="flex justify-end gap-2">
+                          <Button type="button" size="sm" disabled={working} onClick={() => void postCreditNoteDraft(note)}><CheckCircle2 className="mr-1.5 size-3.5" /> Post</Button>
+                          <Button type="button" size="sm" variant="outline" disabled={working} onClick={() => { setCreditNoteReject(note); setCreditNoteRejectReason(''); }}><XCircle className="mr-1.5 size-3.5" /> Reject</Button>
+                        </div> : <p className="text-[10px] text-muted-foreground">{note.mine && policy?.enabled ? 'A different approver must decide this draft.' : 'Finance Approvals permission required.'}</p>}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!creditNoteDrafts.length && <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No credit-note drafts are waiting for approval.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
@@ -1150,6 +1260,37 @@ export default function FinanceOutflowApprovals({
               {working && <Loader2 className="mr-2 size-4 animate-spin" />}
               {creditDecision?.action === 'approve' ? <UserCheck className="mr-2 size-4" /> : null}
               {creditDecision?.action ? pretty(creditDecision.action) : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(creditNoteReject)}
+        onOpenChange={(open) => {
+          if (!open && !working) {
+            setCreditNoteReject(null);
+            setCreditNoteRejectReason('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Reject credit note draft</DialogTitle>
+            <DialogDescription>
+              Rejection leaves the invoice, receivable, revenue, tax and customer credit unchanged.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="credit-note-reject-reason">Reason for rejection</Label>
+            <Textarea id="credit-note-reject-reason" rows={5} maxLength={2000} disabled={working}
+              value={creditNoteRejectReason} onChange={(event) => setCreditNoteRejectReason(event.target.value)}
+              placeholder="Explain why this proposed credit should not be posted." />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={working} onClick={() => { setCreditNoteReject(null); setCreditNoteRejectReason(''); }}>Cancel</Button>
+            <Button type="button" variant="destructive" disabled={working || creditNoteRejectReason.trim().length < 3} onClick={() => void rejectCreditNoteDraft()}>
+              {working ? <Loader2 className="mr-2 size-4 animate-spin" /> : <XCircle className="mr-2 size-4" />} Reject draft
             </Button>
           </DialogFooter>
         </DialogContent>
