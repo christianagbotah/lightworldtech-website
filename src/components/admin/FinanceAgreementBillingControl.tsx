@@ -25,6 +25,8 @@ export type AgreementBillingRow = {
   agreementType: string;
   currency: string;
   contractValue: string;
+  contractValueBasis: 'unspecified' | 'tax_exclusive' | 'tax_inclusive';
+  basisUnspecified: boolean;
   issuedAmount: string;
   draftAmount: string;
   remainingToPrepare: string;
@@ -57,6 +59,7 @@ type AgreementBillingData = {
     remainingToPrepare: string;
     agreements: number;
     overbilled: number;
+    basisUnspecified: number;
   }>;
   methodology: string;
 };
@@ -188,6 +191,11 @@ export default function FinanceAgreementBillingControl({
                       <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{item.currency} agreements</p>
                       <p className="mt-1 text-lg font-bold">{money(item.contractValue, item.currency)}</p>
                       <p className="text-[10px] text-muted-foreground">{item.agreements} agreement{item.agreements === 1 ? '' : 's'}</p>
+                      {item.basisUnspecified > 0 && (
+                        <p className="mt-1 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                          {item.basisUnspecified} basis review required
+                        </p>
+                      )}
                     </div>
                     {item.overbilled > 0 && <AlertTriangle className="size-4 text-rose-600" />}
                   </div>
@@ -255,7 +263,21 @@ export default function FinanceAgreementBillingControl({
                       </TableCell>
                       <TableCell className="text-xs">{row.project?.name || 'No linked project'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={stateClass(row.state)}>{pretty(row.state)}</Badge>
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="outline" className={stateClass(row.state)}>{pretty(row.state)}</Badge>
+                          <Badge
+                            variant="outline"
+                            className={row.basisUnspecified
+                              ? 'border-amber-300 text-amber-800 dark:border-amber-900 dark:text-amber-200'
+                              : ''}
+                          >
+                            {row.contractValueBasis === 'tax_exclusive'
+                              ? 'Tax-exclusive'
+                              : row.contractValueBasis === 'tax_inclusive'
+                                ? 'Tax-inclusive'
+                                : 'Basis unspecified'}
+                          </Badge>
+                        </div>
                         {Number(row.overbilledAmount) > 0 && (
                           <p className="mt-1 text-[10px] font-medium text-rose-700 dark:text-rose-300">
                             {money(row.overbilledAmount, row.currency)} over contract
