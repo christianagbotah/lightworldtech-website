@@ -610,6 +610,7 @@ model ClientAgreementBillingMilestone {
   order       Int             @default(0)
   notes       String          @default("")
   createdBy   String          @default("Admin")
+  invoices    ClientInvoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -890,6 +891,8 @@ model ClientInvoice {
   project        ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
   agreementId    String?
   agreement      ClientAgreement?   @relation(fields: [agreementId], references: [id], onDelete: SetNull)
+  billingMilestoneId String?
+  billingMilestone   ClientAgreementBillingMilestone? @relation(fields: [billingMilestoneId], references: [id], onDelete: SetNull)
   status         String             @default("draft")
   currency       String             @default("GHS")
   issueDate      DateTime
@@ -926,6 +929,7 @@ model ClientInvoice {
   @@index([serviceId, renewalForDate])
   @@index([projectId])
   @@index([agreementId])
+  @@index([billingMilestoneId])
   @@index([dueDate, status])
   @@index([issueDate])
 }
