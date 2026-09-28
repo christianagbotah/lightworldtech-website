@@ -270,6 +270,18 @@ type FinanceData = {
   taxProfile: TaxProfile | null;
 };
 
+type AgreementBillingContext = {
+  agreementId: string;
+  title: string;
+  referenceNumber: string;
+  projectId: string;
+  projectName: string;
+  currency: string;
+  contractValue: string;
+  effectiveDate: string | null;
+  expiryDate: string | null;
+};
+
 type DialogName =
   | 'service'
   | 'service-manage'
@@ -423,6 +435,7 @@ export default function AdminFinance() {
   const [deepLinkProjectId, setDeepLinkProjectId] = useState('');
   const [deepLinkServiceId, setDeepLinkServiceId] = useState('');
   const [deepLinkAction, setDeepLinkAction] = useState('');
+  const [deepLinkAgreementBilling, setDeepLinkAgreementBilling] = useState<AgreementBillingContext | null>(null);
   const [dialog, setDialog] = useState<DialogName>(null);
   const [financeRecord, setFinanceRecord] = useState<FinanceRecordSelection>(null);
   const [saving, setSaving] = useState(false);
@@ -532,6 +545,27 @@ export default function AdminFinance() {
     setDeepLinkProjectId(sessionStorage.getItem('lw-finance-project-id') || '');
     setDeepLinkServiceId(sessionStorage.getItem('lw-finance-service-id') || '');
     setDeepLinkAction(sessionStorage.getItem('lw-finance-action') || '');
+    const agreementContextRaw = sessionStorage.getItem('lw-finance-agreement-context') || '';
+    if (agreementContextRaw) {
+      try {
+        const parsed = JSON.parse(agreementContextRaw) as Partial<AgreementBillingContext>;
+        if (parsed.agreementId && parsed.title) {
+          setDeepLinkAgreementBilling({
+            agreementId: String(parsed.agreementId),
+            title: String(parsed.title),
+            referenceNumber: String(parsed.referenceNumber || ''),
+            projectId: String(parsed.projectId || ''),
+            projectName: String(parsed.projectName || ''),
+            currency: String(parsed.currency || 'GHS').toUpperCase(),
+            contractValue: String(parsed.contractValue || '0'),
+            effectiveDate: parsed.effectiveDate ? String(parsed.effectiveDate) : null,
+            expiryDate: parsed.expiryDate ? String(parsed.expiryDate) : null,
+          });
+        }
+      } catch {
+        setDeepLinkAgreementBilling(null);
+      }
+    }
     const requestedRecordType = sessionStorage.getItem('lw-finance-record-type') || '';
     const requestedRecordId = sessionStorage.getItem('lw-finance-record-id') || '';
     if (
@@ -549,6 +583,7 @@ export default function AdminFinance() {
     sessionStorage.removeItem('lw-finance-project-id');
     sessionStorage.removeItem('lw-finance-service-id');
     sessionStorage.removeItem('lw-finance-action');
+    sessionStorage.removeItem('lw-finance-agreement-context');
     sessionStorage.removeItem('lw-finance-record-type');
     sessionStorage.removeItem('lw-finance-record-id');
   }, []);
@@ -563,7 +598,40 @@ export default function AdminFinance() {
 
     setSection('customers');
 
-    if (deepLinkAction === 'invoice') {
+    if (deepLinkAction === 'agreement-invoice' && deepLinkAgreementBilling) {
+      const issueDate = today();
+      const contractValue = Number(deepLinkAgreementBilling.contractValue || 0);
+      const agreementLabel = [
+        deepLinkAgreementBilling.title,
+        deepLinkAgreementBilling.referenceNumber ? '(' + deepLinkAgreementBilling.referenceNumber + ')' : '',
+      ].filter(Boolean).join(' ');
+      setInvoiceForm({
+        organizationId: organization.id,
+        serviceId: '',
+        projectId: deepLinkAgreementBilling.projectId || '',
+        status: 'draft',
+        currency: deepLinkAgreementBilling.currency || 'GHS',
+        issueDate,
+        dueDate: addDays(issueDate, organization.paymentTermsDays ?? 30),
+        renewalForDate: '',
+        discount: '0',
+        taxTreatment: 'none',
+        notes:
+          'Prepared from approved active agreement ' +
+          agreementLabel +
+          '. Contract value is prefilled as commercial context only. Review invoice lines, tax treatment, dates, discounts and amount before issuing.',
+        lines: [{
+          description:
+            agreementLabel +
+            (deepLinkAgreementBilling.projectName ? ' · ' + deepLinkAgreementBilling.projectName : '') +
+            ' · billing draft',
+          quantity: '1',
+          unitPrice: contractValue > 0 ? String(contractValue) : '',
+        }],
+      });
+      setDialog('invoice');
+      setDeepLinkAgreementBilling(null);
+    } else if (deepLinkAction === 'invoice') {
       setInvoiceForm((current) => ({
         ...current,
         organizationId: organization.id,
@@ -592,7 +660,7 @@ export default function AdminFinance() {
     }
 
     setDeepLinkAction('');
-  }, [data, deepLinkAction, deepLinkOrganizationId]);
+  }, [data, deepLinkAction, deepLinkOrganizationId, deepLinkAgreementBilling]);
 
   const receiptInvoices = useMemo(
     () => (data?.invoices || []).filter((invoice) =>
