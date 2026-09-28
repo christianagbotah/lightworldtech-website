@@ -757,6 +757,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                       fill
                       sizes="(max-width: 1024px) 100vw, 33vw"
                       className="object-cover object-top transition duration-700 group-hover:scale-[1.035]"
+                      unoptimized
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
                     <span className="absolute left-5 top-5 rounded-full border border-white/15 bg-slate-950/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 backdrop-blur-lg">{project.category}</span>
