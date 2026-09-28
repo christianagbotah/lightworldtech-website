@@ -42,6 +42,7 @@ function coreSitemap(base: string, lastModified?: Date): MetadataRoute.Sitemap {
     { url: base + '/estimate', ...freshness, changeFrequency: 'monthly', priority: 0.78 },
     { url: base + '/contact', ...freshness, changeFrequency: 'yearly', priority: 0.8 },
     { url: base + '/newsroom', ...freshness, changeFrequency: 'weekly', priority: 0.8 },
+    { url: base + '/media-kit', ...freshness, changeFrequency: 'monthly', priority: 0.65 },
     { url: base + '/trust', ...freshness, changeFrequency: 'monthly', priority: 0.6 },
     { url: base + '/privacy', ...freshness, changeFrequency: 'yearly', priority: 0.3 },
     { url: base + '/terms', ...freshness, changeFrequency: 'yearly', priority: 0.3 },
