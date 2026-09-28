@@ -43,7 +43,15 @@ export default function MediaKitActions({
         className="inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-700 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-white/65"
       >
         <Download className="size-4" />
-        Download logo
+        PNG logo
+      </a>
+      <a
+        href="/logo.svg"
+        download="lightworld-technologies-logo.svg"
+        className="inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-700 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-white/65"
+      >
+        <Download className="size-4" />
+        SVG logo
       </a>
       <a
         href={'mailto:' + mediaEmail + '?subject=Media%20enquiry'}
