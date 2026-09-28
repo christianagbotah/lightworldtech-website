@@ -9,6 +9,7 @@ import {
   isCompletedProjectRestartIntent,
   isCompletedProjectStatusIntent,
   isLeadershipIntent,
+  isMediaKitIntent,
   isNewsroomIntent,
   isTrustIntent,
 } from './assistant-intents';
@@ -37,6 +38,20 @@ describe('assistant trust intent', () => {
 
   test('does not capture a generic service question', () => {
     expect(isTrustIntent('Can you build an ERP for us?')).toBe(false);
+  });
+});
+
+describe('assistant media kit intent', () => {
+  test('routes governed press-kit and brand-resource requests to the media kit', () => {
+    expect(isMediaKitIntent('Can I download your media kit?')).toBe(true);
+    expect(isMediaKitIntent('I need your press kit')).toBe(true);
+    expect(isMediaKitIntent('Send me the company fact sheet')).toBe(true);
+    expect(isMediaKitIntent('Where are your official logo files?')).toBe(true);
+    expect(isMediaKitIntent('I need brand resources')).toBe(true);
+  });
+
+  test('does not capture a general journalist enquiry', () => {
+    expect(isMediaKitIntent('I am a journalist and need to speak to your media team')).toBe(false);
   });
 });
 

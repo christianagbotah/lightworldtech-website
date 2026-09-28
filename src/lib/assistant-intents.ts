@@ -10,10 +10,16 @@ export function isTrustIntent(message: string): boolean {
   return /trust center|security practice|security controls?|privacy practice|privacy controls?|responsible ai|data handling|protect.*data|secure.*(website|system|platform)|report.*(security|vulnerab)|vulnerab/.test(q);
 }
 
+export function isMediaKitIntent(message: string): boolean {
+  const q = message.trim().toLowerCase();
+
+  return /media kit|press kit|company fact sheet|brand resources?|official logo|logo files?|download.*logo/.test(q);
+}
+
 export function isNewsroomIntent(message: string): boolean {
   const q = message.trim().toLowerCase();
 
-  return /newsroom|media center|media centre|media enquiry|media inquiry|media information|media resources?|media relations?|press coverage|press contact|press kit|press release|\\bpress\\b|journalist|company fact sheet|brand resources?/.test(q);
+  return /newsroom|media center|media centre|media enquiry|media inquiry|media information|media resources?|media relations?|press coverage|press contact|press release|\\bpress\\b|journalist/.test(q);
 }
 
 
