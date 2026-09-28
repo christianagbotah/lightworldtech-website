@@ -9,7 +9,9 @@ const updateSchema = z.object({
   title: z.string().trim().min(2).max(220).optional(),
   amount: z.coerce.number().positive().max(999999999999).optional(),
   dueDate: z.string().datetime().nullable().optional(),
+  status: z.enum(['planned', 'ready', 'waived']).optional(),
   notes: z.string().trim().max(4000).optional(),
+  waiverReason: z.string().trim().max(1200).optional(),
 });
 
 export async function PATCH(
@@ -37,7 +39,13 @@ export async function PATCH(
             organizationId: true,
             currency: true,
             contractValue: true,
+            status: true,
+            approvalStatus: true,
           },
+        },
+        invoices: {
+          select: { id: true, invoiceNumber: true, status: true },
+          orderBy: { createdAt: 'desc' },
         },
       },
     });
@@ -48,17 +56,52 @@ export async function PATCH(
       'lightworld-agreement-billing-schedule:' + existing.agreementId,
     );
 
-    if (parsed.data.amount !== undefined) {
+    const hasLiveInvoice = existing.invoices.some((invoice) => invoice.status !== 'void');
+    const materialChange =
+      parsed.data.title !== undefined ||
+      parsed.data.amount !== undefined ||
+      parsed.data.dueDate !== undefined ||
+      parsed.data.status !== undefined;
+
+    if (hasLiveInvoice && materialChange) {
+      return {
+        milestone: null,
+        error: 'A billing milestone linked to a non-void invoice is financially locked. Update notes only or manage the invoice through Finance.',
+        status: 409,
+      };
+    }
+
+    const nextStatus = parsed.data.status || existing.status;
+    if (
+      nextStatus === 'ready' &&
+      (existing.agreement.status !== 'active' || existing.agreement.approvalStatus !== 'approved')
+    ) {
+      return {
+        milestone: null,
+        error: 'Only approved active agreements can have billing milestones marked Ready',
+        status: 409,
+      };
+    }
+
+    if (nextStatus === 'waived' && !(parsed.data.waiverReason || existing.waiverReason || '').trim()) {
+      return { milestone: null, error: 'A waiver reason is required', status: 400 };
+    }
+
+    const nextAmount = parsed.data.amount !== undefined
+      ? new Prisma.Decimal(parsed.data.amount).toDecimalPlaces(2)
+      : existing.amount;
+
+    if (nextStatus !== 'waived' && existing.agreement.contractValue.gt(0)) {
       const aggregate = await tx.clientAgreementBillingMilestone.aggregate({
         where: {
           agreementId: existing.agreementId,
           id: { not: existing.id },
+          status: { not: 'waived' },
         },
         _sum: { amount: true },
       });
       const otherScheduled = aggregate._sum.amount || new Prisma.Decimal(0);
-      const amount = new Prisma.Decimal(parsed.data.amount).toDecimalPlaces(2);
-      const projected = otherScheduled.plus(amount);
+      const projected = otherScheduled.plus(nextAmount);
       if (projected.gt(existing.agreement.contractValue)) {
         return {
           milestone: null,
@@ -74,16 +117,32 @@ export async function PATCH(
       }
     }
 
+    const data: Record<string, unknown> = {};
+    if (parsed.data.title !== undefined) data.title = parsed.data.title;
+    if (parsed.data.amount !== undefined) data.amount = nextAmount;
+    if (parsed.data.dueDate !== undefined) data.dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null;
+    if (parsed.data.notes !== undefined) data.notes = parsed.data.notes;
+    if (parsed.data.status !== undefined) {
+      data.status = parsed.data.status;
+      if (parsed.data.status === 'waived') {
+        data.waiverReason = (parsed.data.waiverReason || existing.waiverReason).trim();
+        data.waivedAt = new Date();
+        data.waivedBy = actor.name || actor.email;
+      } else {
+        data.waiverReason = '';
+        data.waivedAt = null;
+        data.waivedBy = '';
+      }
+    }
+
     const milestone = await tx.clientAgreementBillingMilestone.update({
       where: { id },
-      data: {
-        ...parsed.data,
-        ...(parsed.data.amount !== undefined
-          ? { amount: new Prisma.Decimal(parsed.data.amount).toDecimalPlaces(2) }
-          : {}),
-        ...(parsed.data.dueDate !== undefined
-          ? { dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null }
-          : {}),
+      data,
+      include: {
+        invoices: {
+          select: { id: true, invoiceNumber: true, status: true, total: true, issueDate: true, dueDate: true },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
 
@@ -106,12 +165,18 @@ export async function PATCH(
       organizationId: result.agreement.organizationId,
       milestoneId: result.milestone.id,
       fields: Object.keys(parsed.data),
+      status: result.milestone.status,
+      waiverReason: result.milestone.waiverReason,
     },
   });
 
   return NextResponse.json({
     success: true,
-    data: { ...result.milestone, amount: result.milestone.amount.toFixed(2) },
+    data: {
+      ...result.milestone,
+      amount: result.milestone.amount.toFixed(2),
+      invoices: result.milestone.invoices.map((invoice) => ({ ...invoice, total: invoice.total.toFixed(2) })),
+    },
   });
 }
 
@@ -129,9 +194,17 @@ export async function DELETE(
     where: { id },
     include: {
       agreement: { select: { id: true, organizationId: true, currency: true } },
+      invoices: { select: { id: true, invoiceNumber: true, status: true } },
     },
   });
   if (!existing) return NextResponse.json({ success: false, error: 'Billing milestone not found' }, { status: 404 });
+
+  if (existing.invoices.length > 0) {
+    return NextResponse.json(
+      { success: false, error: 'A billing milestone with invoice history cannot be deleted. Waive or retain it for audit traceability.' },
+      { status: 409 },
+    );
+  }
 
   await db.clientAgreementBillingMilestone.delete({ where: { id } });
 
