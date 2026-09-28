@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       take: 1000,
     }),
     db.clientInvoice.findMany({
-      where: { status: 'draft' },
+      where: { status: 'draft', reviewStatus: 'pending' },
       orderBy: [{ createdAt: 'asc' }],
       take: 1000,
       select: {
