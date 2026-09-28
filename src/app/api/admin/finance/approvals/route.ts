@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
     take: 1000,
   });
-  const [policy, receiptApprovals, creditApprovals, invoiceDrafts, rejectedInvoiceDrafts, creditNoteDrafts] = await Promise.all([
+  const [policy, receiptApprovals, creditApprovals, invoiceDrafts, rejectedInvoiceDrafts, creditNoteDrafts, supplierBillDrafts] = await Promise.all([
     getFinanceApprovalPolicy(),
     db.financeReceiptApproval.findMany({
       include: {
@@ -113,6 +113,33 @@ export async function GET(request: NextRequest) {
         invoice: { select: { id: true, invoiceNumber: true, status: true } },
       },
     }),
+    db.financeVendorBill.findMany({
+      where: { status: 'draft' },
+      orderBy: [{ createdAt: 'asc' }],
+      take: 1000,
+      select: {
+        id: true,
+        payableNumber: true,
+        vendorId: true,
+        vendorReference: true,
+        category: true,
+        currency: true,
+        taxableAmount: true,
+        total: true,
+        issueDate: true,
+        dueDate: true,
+        purchaseOrderId: true,
+        createdByAdminId: true,
+        createdBy: true,
+        createdAt: true,
+        vendor: { select: { id: true, name: true } },
+        purchaseOrder: { select: { id: true, poNumber: true } },
+        attachments: {
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, originalName: true, createdAt: true },
+        },
+      },
+    }),
   ]);
 
   return NextResponse.json({
@@ -147,6 +174,14 @@ export async function GET(request: NextRequest) {
         total: item.total.toFixed(2),
         mine: item.createdByAdminId === actor.id,
         makerCanApprove: !policy?.enabled || !policy.requireSecondApprover || item.createdByAdminId !== actor.id,
+      })),
+      supplierBillDrafts: supplierBillDrafts.map((item) => ({
+        ...item,
+        taxableAmount: item.taxableAmount.toFixed(2),
+        total: item.total.toFixed(2),
+        mine: item.createdByAdminId === actor.id,
+        makerCanApprove: !policy?.enabled || !policy.requireSecondApprover || item.createdByAdminId !== actor.id,
+        evidenceAttached: item.attachments.length > 0,
       })),
     },
   });
