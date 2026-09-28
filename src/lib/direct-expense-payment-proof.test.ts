@@ -38,7 +38,7 @@ describe('direct expense payment proof governance', () => {
 
     expect(inbox).toContain("['vendor_payment', 'direct_expense_payment'].includes(approval.outflowType)");
     expect(inbox).toContain("proofRequired = ['vendor_payment', 'direct_expense_payment'].includes(approval.outflowType)");
-    expect(inbox).toContain("accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp"");
+    expect(inbox).toContain('accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp"');
     expect(inbox).toContain("disabled={!proofReady}");
     expect(inbox).toContain('Attach payment proof before approval');
   });
