@@ -5,6 +5,7 @@ import {
   Ban,
   CheckCircle2,
   Clock3,
+  FileText,
   Loader2,
   PlayCircle,
   RefreshCw,
@@ -94,6 +95,27 @@ type CreditApproval = {
   };
 };
 
+type InvoiceDraftApproval = {
+  id: string;
+  invoiceNumber: string;
+  organizationId: string;
+  projectId: string | null;
+  agreementId: string | null;
+  billingMilestoneId: string | null;
+  currency: string;
+  total: string;
+  issueDate: string;
+  dueDate: string;
+  createdByAdminId: string;
+  createdBy: string;
+  createdAt: string;
+  makerCanIssue: boolean;
+  organization: { id: string; name: string };
+  project: { id: string; name: string } | null;
+  agreement: { id: string; title: string; referenceNumber: string } | null;
+  billingMilestone: { id: string; title: string } | null;
+};
+
 type Inbox = {
   policy: {
     enabled: boolean;
@@ -103,6 +125,7 @@ type Inbox = {
   currentAdminId: string;
   approvals: Approval[];
   creditApprovals: CreditApproval[];
+  invoiceDrafts: InvoiceDraftApproval[];
 };
 
 type Policy = {
@@ -162,7 +185,11 @@ async function readJson(url: string, init?: RequestInit) {
   return payload;
 }
 
-export default function FinanceOutflowApprovals() {
+export default function FinanceOutflowApprovals({
+  onOpenInvoice,
+}: {
+  onOpenInvoice?: (invoiceId: string) => void;
+}) {
   const [inbox, setInbox] = useState<Inbox | null>(null);
   const [policy, setPolicy] = useState<Policy | null>(null);
   const [loading, setLoading] = useState(true);
@@ -308,6 +335,7 @@ export default function FinanceOutflowApprovals() {
   const pending = approvals.filter((item) => item.status === 'pending');
   const scheduled = approvals.filter((item) => item.status === 'scheduled');
   const history = approvals.filter((item) => !['pending', 'scheduled'].includes(item.status));
+  const invoiceDrafts = inbox?.invoiceDrafts || [];
   const creditApprovals = inbox?.creditApprovals || [];
   const pendingCredit = creditApprovals.filter((item) => item.status === 'pending');
   const creditHistory = creditApprovals.filter((item) => item.status !== 'pending');
@@ -363,6 +391,109 @@ export default function FinanceOutflowApprovals() {
                 </Button>
               )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="text-base">Pending invoice approvals</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Review saved invoice drafts before issuance. When maker-checker is enabled, the preparer cannot issue their own draft.
+              </p>
+            </div>
+            <Badge variant="outline">{invoiceDrafts.length} draft{invoiceDrafts.length === 1 ? '' : 's'}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-pending-invoice-approvals" className="min-w-[1120px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>Customer / context</TableHead>
+                  <TableHead>Prepared by</TableHead>
+                  <TableHead>Age</TableHead>
+                  <TableHead>Due</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invoiceDrafts.map((invoice) => {
+                  const mine = invoice.createdByAdminId === inbox?.currentAdminId;
+                  const canIssue = Boolean(inbox?.canApprove) && invoice.makerCanIssue;
+                  const age = approvalAge(invoice.createdAt);
+                  return (
+                    <TableRow key={invoice.id}>
+                      <TableCell>
+                        <p className="font-mono text-xs font-semibold">{invoice.invoiceNumber}</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">{date(invoice.issueDate)}</p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-xs font-medium">{invoice.organization.name}</p>
+                        <p className="mt-1 max-w-[320px] truncate text-[10px] text-muted-foreground">
+                          {invoice.billingMilestone?.title
+                            ? 'Milestone: ' + invoice.billingMilestone.title
+                            : invoice.agreement?.title
+                              ? 'Agreement: ' + invoice.agreement.title + (invoice.agreement.referenceNumber ? ' · ' + invoice.agreement.referenceNumber : '')
+                              : invoice.project?.name
+                                ? 'Project: ' + invoice.project.name
+                                : 'General account invoice'}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-xs">{invoice.createdBy || 'Finance'}</p>
+                        {mine && <Badge variant="outline" className="mt-1">Prepared by you</Badge>}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            age.hours >= 48
+                              ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300'
+                              : age.hours >= 24
+                                ? 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300'
+                                : ''
+                          }
+                        >
+                          {age.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs">{date(invoice.dueDate)}</TableCell>
+                      <TableCell className="text-right font-semibold">{money(invoice.total, invoice.currency)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={canIssue ? 'default' : 'outline'}
+                            onClick={() => onOpenInvoice?.(invoice.id)}
+                          >
+                            <FileText className="mr-1.5 size-3.5" /> Review invoice
+                          </Button>
+                        </div>
+                        {policy?.enabled && mine && (
+                          <p className="mt-1 text-[10px] text-muted-foreground">A different approver must issue this draft.</p>
+                        )}
+                        {policy?.enabled && !mine && !inbox?.canApprove && (
+                          <p className="mt-1 text-[10px] text-muted-foreground">Finance Approvals permission required to issue.</p>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!invoiceDrafts.length && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                      No invoice drafts are waiting for review or issuance.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

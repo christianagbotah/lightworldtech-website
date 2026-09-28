@@ -2186,7 +2186,12 @@ export default function AdminFinance() {
         />
       )}
 
-      {section === 'accounting' && <FinanceAccountingWorkspace initialView={accountingView} />}
+      {section === 'accounting' && (
+        <FinanceAccountingWorkspace
+          initialView={accountingView}
+          onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)}
+        />
+      )}
 
       <FinanceRecordDetailsDialog
         selection={financeRecord}
