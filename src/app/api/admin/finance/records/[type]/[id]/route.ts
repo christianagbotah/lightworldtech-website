@@ -205,6 +205,17 @@ export async function GET(
           },
         },
         project: { select: { id: true, name: true, status: true, manager: true } },
+        agreement: {
+          select: {
+            id: true,
+            title: true,
+            referenceNumber: true,
+            agreementType: true,
+            status: true,
+            effectiveDate: true,
+            expiryDate: true,
+          },
+        },
         lines: { orderBy: { order: 'asc' } },
         creditNotes: {
           where: { status: 'posted' },
