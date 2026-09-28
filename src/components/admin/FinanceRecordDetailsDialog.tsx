@@ -583,6 +583,10 @@ export default function FinanceRecordDetailsDialog({
                         : '—'}
                     />
                     <DetailItem
+                      label="Agreement value basis"
+                      value={data.invoice.agreement ? pretty(data.invoice.agreement.contractValueBasis || 'unspecified') : '—'}
+                    />
+                    <DetailItem
                       label="Billing milestone"
                       value={data.invoice.billingMilestones?.length
                         ? data.invoice.billingMilestones.map((item: any) => item.title).join(', ')
