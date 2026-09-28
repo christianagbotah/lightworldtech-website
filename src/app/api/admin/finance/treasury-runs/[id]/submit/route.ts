@@ -62,7 +62,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   for (const line of run.lines) {
     if (!line.bill.vendor.active) return NextResponse.json({ success: false, error: 'Supplier is no longer active for ' + line.payableNumber }, { status: 409 });
     if (!line.bill.attachments.length) return NextResponse.json({ success: false, error: 'Supplier invoice evidence is missing for ' + line.payableNumber }, { status: 409 });
-    if (line.bill.status === 'void' || line.bill.status === 'paid') return NextResponse.json({ success: false, error: line.payableNumber + ' is no longer payable' }, { status: 409 });
+    if (['draft', 'rejected', 'void', 'paid'].includes(line.bill.status)) return NextResponse.json({ success: false, error: line.payableNumber + ' is no longer payable' }, { status: 409 });
     if (line.bill.currency !== run.currency) return NextResponse.json({ success: false, error: 'Currency changed on ' + line.payableNumber }, { status: 409 });
     const available = Prisma.Decimal.max(
       new Prisma.Decimal(0),
