@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { contentJson, contentText, type SiteSettings } from '@/lib/site-content';
 import { serviceSearchHref } from '@/lib/service-search-content';
+import { safeNavigationHref } from '@/lib/navigation-content';
 import { companyProfile, isSafePublicSourceUrl } from '@/lib/company-profile';
 import { readJsonSafely } from '@/lib/http-response';
 import CmsHeroMedia from '@/components/pages/CmsHeroMedia';
@@ -143,18 +144,21 @@ const work = [
     category: 'Business systems',
     description: 'Complex workflows translated into clear, role-aware operating experiences.',
     image: '/images/hero-slide-5.png',
+    url: '',
   },
   {
     title: 'Digital commerce',
     category: 'Web platforms',
     description: 'Fast storefronts and transaction journeys built for conversion and maintainability.',
     image: '/images/portfolio/ecommerce.png',
+    url: '',
   },
   {
     title: 'Learning platforms',
     category: 'Education technology',
     description: 'Connected learning, assessment and administration experiences for modern institutions.',
     image: '/images/portfolio/lms.png',
+    url: '',
   },
 ];
 
@@ -366,6 +370,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
           image: item.image
             ? `${String(item.image)}${String(item.image).includes('?') ? '&' : '?'}v=20260928-hero-v2`
             : String(work[index]?.image || '/images/hero-slide-5.png'),
+          url: item.url ? safeNavigationHref(String(item.url), '') : '',
         })));
       })
       .catch(() => {});
@@ -749,7 +754,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
           <div className="mt-10 grid gap-4 lg:grid-cols-3">
             {homeWork.map((project, index) => (
               <Reveal key={project.title} delay={index * 0.06}>
-                <Link href="/portfolio" className="group block overflow-hidden rounded-[30px] border border-slate-200/70 bg-white dark:border-white/[0.07] dark:bg-white/[0.025]">
+                <article className="group block overflow-hidden rounded-[30px] border border-slate-200/70 bg-white transition hover:-translate-y-0.5 hover:border-emerald-300/50 hover:shadow-xl hover:shadow-emerald-950/[0.04] dark:border-white/[0.07] dark:bg-white/[0.025]">
                   <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-white/[0.03]">
                     <Image
                       src={project.image}
@@ -762,14 +767,26 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
                     <span className="absolute left-5 top-5 rounded-full border border-white/15 bg-slate-950/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 backdrop-blur-lg">{project.category}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-4 p-5">
-                    <div>
-                      <h3 className="text-lg font-semibold">{project.title}</h3>
-                      <p className="mt-1.5 text-sm leading-6 text-slate-500 dark:text-white/35">{project.description}</p>
+                  <div className="p-5">
+                    <h3 className="text-lg font-semibold">{project.title}</h3>
+                    <p className="mt-1.5 text-sm leading-6 text-slate-500 dark:text-white/35">{project.description}</p>
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/70 pt-4 dark:border-white/[0.07]">
+                      <Link href="/portfolio" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition hover:text-emerald-700 dark:text-white/35 dark:hover:text-emerald-300">
+                        View portfolio <ArrowRight className="size-3.5" />
+                      </Link>
+                      {project.url && (
+                        <a
+                          href={project.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 transition hover:text-emerald-600 dark:text-emerald-300 dark:hover:text-emerald-200"
+                        >
+                          Visit live site <ArrowUpRight className="size-3.5" />
+                        </a>
+                      )}
                     </div>
-                    <ArrowUpRight className="mt-1 size-4 shrink-0 text-slate-300 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-500 dark:text-white/15" />
                   </div>
-                </Link>
+                </article>
               </Reveal>
             ))}
           </div>
