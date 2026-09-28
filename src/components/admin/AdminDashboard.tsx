@@ -82,6 +82,16 @@ interface HealthData {
   status: 'healthy' | 'attention';
   checkedAt: string;
   database: { status: 'healthy' | 'unhealthy'; latencyMs: number; message?: string };
+  disk: {
+    status: 'healthy' | 'attention';
+    path: string;
+    totalBytes: number;
+    usedBytes: number;
+    availableBytes: number;
+    usedPercent: number;
+    minimumFreeBytes: number;
+    warning: string;
+  };
   mail: { status: 'healthy' | 'attention'; mode: string; configured: boolean; warning: string };
   communications: {
     status: 'healthy' | 'attention';
@@ -451,7 +461,7 @@ export default function AdminDashboard() {
             type="button"
             onClick={() => navigate('admin-settings')}
             className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-left backdrop-blur-sm transition hover:bg-white/15"
-            title={health?.communications?.warning || health?.mail.warning || 'Open system settings'}
+            title={health?.disk?.warning || health?.communications?.warning || health?.mail.warning || 'Open system settings'}
           >
             <div className="relative">
               <div className={`size-2 rounded-full ${health?.status === 'healthy' ? 'bg-emerald-300' : 'bg-amber-200'}`} />
@@ -462,7 +472,7 @@ export default function AdminDashboard() {
                 {health?.status === 'healthy' ? 'Systems operational' : 'System attention needed'}
               </span>
               <span className="block text-[10px] text-amber-50/80">
-                DB {health?.database.latencyMs ?? '—'}ms · Mail {health?.mail.configured ? 'ready' : 'check'} · Automation {health?.communications?.automationEnabled ? (health.communications.status === 'healthy' ? 'live' : 'check') : 'off'}
+                DB {health?.database.latencyMs ?? '—'}ms · Disk {health?.disk?.usedPercent ?? '—'}% · Mail {health?.mail.configured ? 'ready' : 'check'} · Automation {health?.communications?.automationEnabled ? (health.communications.status === 'healthy' ? 'live' : 'check') : 'off'}
               </span>
             </div>
             <ArrowUpRight className="size-3.5 text-white/70" />
