@@ -440,6 +440,44 @@ export async function GET(
             },
           },
         },
+        reversesPayment: {
+          select: {
+            id: true,
+            paymentNumber: true,
+            amount: true,
+            paidAt: true,
+            source: true,
+            reversalReason: true,
+          },
+        },
+        reversalPayment: {
+          select: {
+            id: true,
+            paymentNumber: true,
+            amount: true,
+            paidAt: true,
+            source: true,
+            reversalReason: true,
+          },
+        },
+        reversalRequests: {
+          orderBy: { requestedAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            requestNumber: true,
+            status: true,
+            reversalDate: true,
+            reason: true,
+            requestedByName: true,
+            requestedAt: true,
+            decidedByName: true,
+            decidedAt: true,
+            decisionNotes: true,
+            resultPaymentId: true,
+            resultPaymentNumber: true,
+          },
+        },
         hubtelIntent: {
           select: {
             id: true,
@@ -471,6 +509,14 @@ export async function GET(
           amount: payment.amount.toFixed(2),
           allocatedAmount: sumAmounts(payment.allocations).toFixed(2),
           unallocatedAmount: paymentUnallocated(payment.amount, payment.allocations).toFixed(2),
+          reversesPayment: payment.reversesPayment ? {
+            ...payment.reversesPayment,
+            amount: payment.reversesPayment.amount.toFixed(2),
+          } : null,
+          reversalPayment: payment.reversalPayment ? {
+            ...payment.reversalPayment,
+            amount: payment.reversalPayment.amount.toFixed(2),
+          } : null,
           allocations: payment.allocations.map((allocation) => ({
             ...allocation,
             amount: allocation.amount.toFixed(2),
