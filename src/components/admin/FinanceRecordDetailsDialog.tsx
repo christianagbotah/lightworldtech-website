@@ -15,6 +15,7 @@ import {
   Landmark,
   Loader2,
   ReceiptText,
+  Send,
   ShieldCheck,
   WalletCards,
 } from 'lucide-react';
@@ -38,6 +39,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 
 export type FinanceRecordSelection = {
   type: 'invoice' | 'receipt' | 'bill' | 'expense';
@@ -293,6 +295,8 @@ export default function FinanceRecordDetailsDialog({
   const [error, setError] = useState('');
   const [invoiceLink, setInvoiceLink] = useState<any>(null);
   const [deliveryBusy, setDeliveryBusy] = useState<'link' | 'open' | 'email' | ''>('');
+  const [issueDraftOpen, setIssueDraftOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!selection) {
@@ -300,6 +304,7 @@ export default function FinanceRecordDetailsDialog({
       setError('');
       setInvoiceLink(null);
       setDeliveryBusy('');
+      setIssueDraftOpen(false);
       return;
     }
 
@@ -341,7 +346,7 @@ export default function FinanceRecordDetailsDialog({
     return () => {
       active = false;
     };
-  }, [selection]);
+  }, [selection, reloadKey]);
 
   const identity = useMemo(() => {
     if (!data) return null;
@@ -438,8 +443,34 @@ export default function FinanceRecordDetailsDialog({
     }
   };
 
+  const issueReviewedDraft = async () => {
+    if (!data?.invoice?.id) return;
+
+    try {
+      const response = await fetch(
+        '/api/admin/finance/invoices/' + encodeURIComponent(data.invoice.id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'issued' }),
+        },
+      );
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Unable to issue the reviewed draft invoice');
+      }
+      toast.success('Draft invoice issued and posted to the ledger');
+      setReloadKey((current) => current + 1);
+    } catch (cause) {
+      const error = cause instanceof Error ? cause : new Error('Unable to issue the reviewed draft invoice');
+      toast.error(error.message);
+      throw error;
+    }
+  };
+
   return (
-    <Dialog open={Boolean(selection)} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={Boolean(selection)} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[94vh] w-[calc(100vw-1rem)] max-w-6xl overflow-hidden p-0">
         <DialogHeader className="border-b border-border/60 px-5 py-4 pr-12 sm:px-6">
           <DialogTitle className="sr-only">Financial record details</DialogTitle>
@@ -502,12 +533,23 @@ export default function FinanceRecordDetailsDialog({
               </div>
 
               <div className="flex flex-wrap justify-end gap-2">
+                {data.invoice.status === 'draft' && (
+                  <Button type="button" onClick={() => setIssueDraftOpen(true)}>
+                    <Send className="mr-2 size-4" /> Issue reviewed draft
+                  </Button>
+                )}
                 {Number(data.invoice.balance) > 0 && !['draft', 'void'].includes(data.invoice.derivedStatus) && (
                   <Button type="button" onClick={() => onRecordReceipt(data.invoice)}>
                     <ArrowDownLeft className="mr-2 size-4" /> Record receipt
                   </Button>
                 )}
               </div>
+
+              {data.invoice.status === 'draft' && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
+                  Issuing this saved draft revalidates customer credit controls, agreement approval and value limits, billing milestone readiness, linked currencies and the current Ghana statutory tax profile before the receivable is posted to the ledger.
+                </div>
+              )}
 
               {!['draft', 'void'].includes(data.invoice.derivedStatus) && (
                 <Card className="border-amber-200/70 bg-amber-50/35 dark:border-amber-900/40 dark:bg-amber-950/10">
@@ -934,6 +976,23 @@ export default function FinanceRecordDetailsDialog({
           )}
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      <ConfirmActionDialog
+        open={issueDraftOpen}
+        onOpenChange={setIssueDraftOpen}
+        title="Issue this reviewed draft?"
+        description={
+          data?.invoice
+            ? 'Invoice ' + data.invoice.invoiceNumber + ' for ' + data.invoice.organization.name +
+              ' will become an issued receivable for ' + money(data.invoice.total, data.invoice.currency) +
+              '. The server will revalidate credit, agreement, milestone and tax controls before posting.'
+            : 'The server will revalidate all commercial and credit controls before issuing.'
+        }
+        confirmLabel="Issue invoice"
+        tone="warning"
+        onConfirm={issueReviewedDraft}
+      />
+    </>
   );
 }
