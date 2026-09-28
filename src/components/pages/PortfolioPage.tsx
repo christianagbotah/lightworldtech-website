@@ -116,7 +116,9 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
             tags,
             featured: item.featured === true,
             clientUrl: item.url ? safeNavigationHref(String(item.url), '') : undefined,
-            image: item.image ? String(item.image) : undefined,
+            image: item.image
+              ? `${String(item.image)}${String(item.image).includes('?') ? '&' : '?'}v=20260928-hero-v2`
+              : undefined,
           };
         });
 
