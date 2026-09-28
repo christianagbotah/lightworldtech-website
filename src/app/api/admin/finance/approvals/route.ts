@@ -7,6 +7,7 @@ import {
   getFinanceApprovalPolicy,
   serializeOutflowApproval,
 } from '@/lib/finance-approvals';
+import { serializeReceiptApproval } from '@/lib/finance-receipt-approvals';
 
 export async function GET(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
@@ -26,8 +27,15 @@ export async function GET(request: NextRequest) {
     orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
     take: 1000,
   });
-  const [policy, creditApprovals, invoiceDrafts, rejectedInvoiceDrafts, creditNoteDrafts] = await Promise.all([
+  const [policy, receiptApprovals, creditApprovals, invoiceDrafts, rejectedInvoiceDrafts, creditNoteDrafts] = await Promise.all([
     getFinanceApprovalPolicy(),
+    db.financeReceiptApproval.findMany({
+      include: {
+        organization: { select: { id: true, name: true } },
+      },
+      orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
+      take: 1000,
+    }),
     db.financeCreditPolicyApproval.findMany({
       include: {
         organization: { select: { id: true, name: true } },
@@ -117,6 +125,7 @@ export async function GET(request: NextRequest) {
       canApprove: canApproveFinanceOutflow(actor),
       currentAdminId: actor.id,
       approvals: approvals.map(serializeOutflowApproval),
+      receiptApprovals: receiptApprovals.map(serializeReceiptApproval),
       creditApprovals: creditApprovals.map((item) => ({
         ...item,
         creditLimit: item.creditLimit.toFixed(2),
