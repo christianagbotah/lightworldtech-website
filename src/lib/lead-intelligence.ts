@@ -1,5 +1,5 @@
 export type LeadIntelligence = {
-  source: 'website' | 'assistant';
+  source: 'website' | 'assistant' | 'estimator';
   summary: string;
   tags: string[];
   priority: 'low' | 'normal' | 'high';
@@ -39,9 +39,11 @@ export function deriveLeadIntelligence(input: {
   if (tags.length === 0) tags.push('general');
 
   const source: LeadIntelligence['source'] =
-    /project brief from lightworld assistant|\[assistant\]|lightworld assistant/i.test(haystack)
-      ? 'assistant'
-      : 'website';
+    /lightworld project estimator|project scope prepared with the lightworld project estimator/i.test(haystack)
+      ? 'estimator'
+      : /project brief from lightworld assistant|\[assistant\]|lightworld assistant/i.test(haystack)
+        ? 'assistant'
+        : 'website';
 
   const isExploratory = /research|exploring|early stage|someday|no fixed deadline|no deadline yet/i.test(haystack);
   const isUrgent = /urgent|asap|immediately|emergency|this week|within (?:a|one) week|deadline\s*(?:is|:|on|by)|by end of/i.test(haystack);
