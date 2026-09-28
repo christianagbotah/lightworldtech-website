@@ -927,6 +927,9 @@ model ClientInvoice {
   rejectedBy     String              @default("")
   rejectedAt     DateTime?
   rejectionReason String             @default("")
+  replacesInvoiceId String?          @unique
+  replacesInvoice   ClientInvoice?   @relation("InvoiceReplacement", fields: [replacesInvoiceId], references: [id], onDelete: SetNull)
+  replacementInvoice ClientInvoice?  @relation("InvoiceReplacement")
   lines          ClientInvoiceLine[]
   allocations    ClientPaymentAllocation[]
   paymentIntents  HubtelPaymentIntent[]
@@ -943,6 +946,7 @@ model ClientInvoice {
   @@index([projectId])
   @@index([agreementId])
   @@index([billingMilestoneId])
+  @@index([replacesInvoiceId])
   @@index([dueDate, status])
   @@index([issueDate])
 }

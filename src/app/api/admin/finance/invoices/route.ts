@@ -27,6 +27,7 @@ const schema = z.object({
   projectId: z.string().min(1).nullable().optional(),
   agreementId: z.string().min(1).nullable().optional(),
   billingMilestoneId: z.string().min(1).nullable().optional(),
+  replacesInvoiceId: z.string().min(1).nullable().optional(),
   status: z.enum(['draft', 'issued']).default('issued'),
   currency: z.string().trim().max(3).default('GHS'),
   issueDate: z.coerce.date(),
@@ -246,6 +247,83 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  if (parsed.data.replacesInvoiceId) {
+    const predecessor = await db.clientInvoice.findUnique({
+      where: { id: parsed.data.replacesInvoiceId },
+      select: {
+        id: true,
+        invoiceNumber: true,
+        organizationId: true,
+        serviceId: true,
+        projectId: true,
+        agreementId: true,
+        billingMilestoneId: true,
+        renewalForDate: true,
+        status: true,
+        currency: true,
+        rejectedAt: true,
+      },
+    });
+    if (!predecessor) {
+      return NextResponse.json(
+        { success: false, error: 'Rejected predecessor invoice was not found' },
+        { status: 400 },
+      );
+    }
+    if (predecessor.status !== 'void' || !predecessor.rejectedAt) {
+      return NextResponse.json(
+        { success: false, error: 'Only a rejected invoice draft can be replaced' },
+        { status: 409 },
+      );
+    }
+    if (predecessor.organizationId !== parsed.data.organizationId) {
+      return NextResponse.json(
+        { success: false, error: 'Replacement invoice must belong to the same customer as the rejected draft' },
+        { status: 400 },
+      );
+    }
+    if (normalizeCurrency(predecessor.currency) !== normalizeCurrency(parsed.data.currency)) {
+      return NextResponse.json(
+        { success: false, error: 'Replacement invoice currency must match the rejected draft' },
+        { status: 400 },
+      );
+    }
+    const contextMatches =
+      predecessor.serviceId === (parsed.data.serviceId || null) &&
+      predecessor.projectId === (parsed.data.projectId || null) &&
+      predecessor.agreementId === (parsed.data.agreementId || null) &&
+      predecessor.billingMilestoneId === (parsed.data.billingMilestoneId || null);
+    if (!contextMatches) {
+      return NextResponse.json(
+        { success: false, error: 'Replacement invoice must retain the rejected draft service, project, agreement and milestone context' },
+        { status: 400 },
+      );
+    }
+    const predecessorRenewal = predecessor.renewalForDate?.toISOString().slice(0, 10) || '';
+    const replacementRenewal = parsed.data.renewalForDate?.toISOString().slice(0, 10) || '';
+    if (predecessorRenewal !== replacementRenewal) {
+      return NextResponse.json(
+        { success: false, error: 'Replacement invoice must retain the rejected draft renewal cycle' },
+        { status: 400 },
+      );
+    }
+
+    const existingReplacement = await db.clientInvoice.findUnique({
+      where: { replacesInvoiceId: predecessor.id },
+      select: { id: true, invoiceNumber: true, status: true },
+    });
+    if (existingReplacement) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'A replacement invoice already exists for this rejected draft',
+          existingInvoice: existingReplacement,
+        },
+        { status: 409 },
+      );
+    }
+  }
+
   const lines = parsed.data.lines.map((line, index) => {
     const quantity = new Prisma.Decimal(line.quantity);
     const unitPrice = new Prisma.Decimal(line.unitPrice);
@@ -309,6 +387,25 @@ export async function POST(request: NextRequest) {
 
   const currency = normalizeCurrency(parsed.data.currency);
   const transactionResult = await db.$transaction(async (tx) => {
+    if (parsed.data.replacesInvoiceId) {
+      await tx.$queryRawUnsafe(
+        'SELECT pg_advisory_xact_lock(hashtext($1))',
+        'lightworld-invoice-replacement:' + parsed.data.replacesInvoiceId,
+      );
+      const replacementDuplicate = await tx.clientInvoice.findUnique({
+        where: { replacesInvoiceId: parsed.data.replacesInvoiceId },
+        select: { id: true, invoiceNumber: true, status: true },
+      });
+      if (replacementDuplicate) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          replacementDuplicate,
+        };
+      }
+    }
+
     if (effectiveStatus === 'issued') {
       if (organization.creditHold) {
         return {
@@ -416,6 +513,7 @@ export async function POST(request: NextRequest) {
         projectId: parsed.data.projectId || null,
         agreementId: parsed.data.agreementId || null,
         billingMilestoneId: parsed.data.billingMilestoneId || null,
+        replacesInvoiceId: parsed.data.replacesInvoiceId || null,
         status: effectiveStatus,
         currency,
         issueDate: parsed.data.issueDate,
@@ -449,6 +547,7 @@ export async function POST(request: NextRequest) {
         project: { select: { id: true, name: true } },
         agreement: { select: { id: true, title: true, referenceNumber: true, agreementType: true, status: true } },
         billingMilestone: { select: { id: true, title: true, amount: true, dueDate: true, order: true } },
+        replacesInvoice: { select: { id: true, invoiceNumber: true, status: true, rejectedAt: true } },
         lines: { orderBy: { order: 'asc' } },
         allocations: true,
         creditNotes: { where: { status: 'posted' } },
@@ -498,6 +597,14 @@ export async function POST(request: NextRequest) {
     }, { status: 409 });
   }
 
+  if ('replacementDuplicate' in transactionResult && transactionResult.replacementDuplicate) {
+    return NextResponse.json({
+      success: false,
+      error: 'A replacement invoice already exists for this rejected draft',
+      existingInvoice: transactionResult.replacementDuplicate,
+    }, { status: 409 });
+  }
+
   if ('milestoneDuplicate' in transactionResult && transactionResult.milestoneDuplicate) {
     return NextResponse.json({
       success: false,
@@ -526,6 +633,7 @@ export async function POST(request: NextRequest) {
       organizationId: invoice.organizationId,
       agreementId: invoice.agreementId,
       billingMilestoneId: invoice.billingMilestoneId,
+      replacesInvoiceId: invoice.replacesInvoiceId,
       total: total.toFixed(2),
       currency: invoice.currency,
       taxTreatment: invoice.taxTreatment,

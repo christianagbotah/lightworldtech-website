@@ -648,6 +648,34 @@ export default function FinanceRecordDetailsDialog({
                         <DetailItem label="Rejected at" value={date(data.invoice.rejectedAt, true)} />
                       </>
                     )}
+                    {data.invoice.replacesInvoice && (
+                      <DetailItem
+                        label="Replaces invoice"
+                        value={
+                          <button
+                            type="button"
+                            className="font-mono text-xs font-semibold text-amber-700 hover:underline dark:text-amber-300"
+                            onClick={() => onOpenRecord({ type: 'invoice', id: data.invoice.replacesInvoice.id })}
+                          >
+                            {data.invoice.replacesInvoice.invoiceNumber}
+                          </button>
+                        }
+                      />
+                    )}
+                    {data.invoice.replacementInvoice && (
+                      <DetailItem
+                        label="Replacement invoice"
+                        value={
+                          <button
+                            type="button"
+                            className="font-mono text-xs font-semibold text-emerald-700 hover:underline dark:text-emerald-300"
+                            onClick={() => onOpenRecord({ type: 'invoice', id: data.invoice.replacementInvoice.id })}
+                          >
+                            {data.invoice.replacementInvoice.invoiceNumber}
+                          </button>
+                        }
+                      />
+                    )}
                     <DetailItem label="Subtotal" value={money(data.invoice.subtotal, data.invoice.currency)} />
                     <DetailItem label="Discount" value={money(data.invoice.discount, data.invoice.currency)} />
                     <DetailItem label="Tax" value={money(data.invoice.tax, data.invoice.currency)} />
