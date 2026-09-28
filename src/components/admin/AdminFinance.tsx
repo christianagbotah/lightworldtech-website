@@ -2472,6 +2472,9 @@ export default function AdminFinance() {
                   {deepLinkAgreementBilling.referenceNumber ? ' · ' + deepLinkAgreementBilling.referenceNumber : ''}
                   {deepLinkAgreementBilling.projectName ? ' · ' + deepLinkAgreementBilling.projectName : ''}
                 </p>
+                {deepLinkAgreementBilling.billingMilestoneTitle && (
+                  <p className="mt-1 text-[11px] font-medium">Billing milestone: {deepLinkAgreementBilling.billingMilestoneTitle}</p>
+                )}
                 <p className="mt-1 text-[10px] leading-4 opacity-80">
                   This draft will retain the agreement link for audit traceability. Review all invoice terms before issuing.
                 </p>
@@ -2507,7 +2510,13 @@ export default function AdminFinance() {
               ))}
             </div>
             <Textarea rows={3} placeholder="Invoice notes" value={invoiceForm.notes} onChange={(e) => setInvoiceForm({ ...invoiceForm, notes: e.target.value })} />
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button><Button disabled={saving}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Issue invoice</Button></DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button>
+              <Button disabled={saving}>
+                {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                {invoiceForm.status === 'draft' ? 'Save draft invoice' : 'Issue invoice'}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
