@@ -588,6 +588,7 @@ model ClientAgreement {
   attachments       ClientAgreementAttachment[]
   changes           ClientAgreementChange[]
   obligations       ClientAgreementObligation[]
+  invoices          ClientInvoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -867,6 +868,8 @@ model ClientInvoice {
   service        ClientServiceAccount? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   projectId      String?
   project        ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  agreementId    String?
+  agreement      ClientAgreement?   @relation(fields: [agreementId], references: [id], onDelete: SetNull)
   status         String             @default("draft")
   currency       String             @default("GHS")
   issueDate      DateTime
@@ -902,6 +905,7 @@ model ClientInvoice {
   @@index([serviceId, dueDate])
   @@index([serviceId, renewalForDate])
   @@index([projectId])
+  @@index([agreementId])
   @@index([dueDate, status])
   @@index([issueDate])
 }
