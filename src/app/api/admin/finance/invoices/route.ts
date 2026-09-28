@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
   if (parsed.data.agreementId) {
     const agreement = await db.clientAgreement.findFirst({
       where: { id: parsed.data.agreementId, organizationId: parsed.data.organizationId },
-      select: { id: true, projectId: true, status: true, approvalStatus: true },
+      select: { id: true, projectId: true, status: true, approvalStatus: true, currency: true },
     });
     if (!agreement) {
       return NextResponse.json({ success: false, error: 'Agreement does not belong to this client' }, { status: 400 });
@@ -197,6 +197,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Only approved active agreements can be linked to a new invoice' },
         { status: 409 },
+      );
+    }
+    if (normalizeCurrency(parsed.data.currency) !== normalizeCurrency(agreement.currency)) {
+      return NextResponse.json(
+        { success: false, error: 'Invoice currency must match the linked agreement currency' },
+        { status: 400 },
       );
     }
     if (parsed.data.projectId && agreement.projectId && parsed.data.projectId !== agreement.projectId) {
