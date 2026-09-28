@@ -60,6 +60,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       where: { id },
       include: {
         allocations: true,
+        creditNotes: {
+          where: { status: 'posted' },
+          select: { id: true, creditNoteNumber: true },
+        },
         organization: {
           select: {
             id: true,
@@ -100,6 +104,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return {
         updated: null,
         blocked: { error: 'An invoice with allocated payments cannot be voided', status: 409 } satisfies IssueBlock,
+      };
+    }
+    if (parsed.data.status === 'void' && invoice.creditNotes.length > 0) {
+      return {
+        updated: null,
+        blocked: { error: 'An invoice with posted credit notes cannot be voided. Reverse the credit-note workflow first.', status: 409 } satisfies IssueBlock,
       };
     }
     if (invoice.status === 'void' && parsed.data.status && parsed.data.status !== 'void') {
@@ -321,6 +331,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const next = await tx.clientInvoice.update({ where: { id }, data: parsed.data });
+    let cleanup = { revokedAccessLinks: 0, cancelledPaymentIntents: 0 };
 
     if (issuing && next.status === 'issued') {
       await postInvoiceJournal(tx, {
@@ -340,6 +351,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     if (invoice.status !== 'void' && next.status === 'void') {
+      const voidedAt = new Date();
       const originalJournal = await tx.financeJournalEntry.findFirst({
         where: {
           sourceType: 'client_invoice',
@@ -352,7 +364,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         await postInvoiceVoidJournal(tx, {
           invoiceId: next.id,
           invoiceNumber: next.invoiceNumber,
-          voidDate: new Date(),
+          voidDate: voidedAt,
           currency: next.currency,
           subtotal: next.subtotal,
           discount: next.discount,
@@ -361,9 +373,37 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           postedBy: actor.name || actor.email,
         });
       }
+
+      const revokedLinks = await tx.invoiceAccessLink.updateMany({
+        where: {
+          invoiceId: next.id,
+          status: 'active',
+          revokedAt: null,
+        },
+        data: {
+          status: 'revoked',
+          revokedAt: voidedAt,
+        },
+      });
+
+      const cancelledIntents = await tx.hubtelPaymentIntent.updateMany({
+        where: {
+          invoiceId: next.id,
+          recordedPaymentId: null,
+        },
+        data: {
+          status: 'cancelled_invoice_void',
+          expiresAt: voidedAt,
+        },
+      });
+
+      cleanup = {
+        revokedAccessLinks: revokedLinks.count,
+        cancelledPaymentIntents: cancelledIntents.count,
+      };
     }
 
-    return { updated: next, blocked: null };
+    return { updated: next, blocked: null, cleanup };
   });
 
   if (result.blocked) {
@@ -394,9 +434,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const updated = result.updated!;
   await recordAdminAudit({
     admin: actor,
-    action: existing.status === 'draft' && updated.status === 'issued'
-      ? 'admin.finance_invoice_issued_from_draft'
-      : 'admin.finance_invoice_updated',
+    action: updated.status === 'void' && existing.status !== 'void'
+      ? 'admin.finance_invoice_voided'
+      : existing.status === 'draft' && updated.status === 'issued'
+        ? 'admin.finance_invoice_issued_from_draft'
+        : 'admin.finance_invoice_updated',
     entity: 'ClientInvoice',
     entityId: id,
     details: {
@@ -404,6 +446,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       fromStatus: existing.status,
       toStatus: updated.status,
       changedFields: Object.keys(parsed.data),
+      revokedAccessLinks: 'cleanup' in result ? result.cleanup.revokedAccessLinks : 0,
+      cancelledPaymentIntents: 'cleanup' in result ? result.cleanup.cancelledPaymentIntents : 0,
     },
   });
 
