@@ -476,7 +476,7 @@ export async function POST(request: NextRequest) {
             invoice: null,
             duplicate: null,
             billingBlocked: null,
-          creditBlocked: {
+            creditBlocked: {
               type: 'credit_limit' as const,
               message: 'Issuing this invoice would exceed the customer credit limit',
               limit: organization.creditLimit.toFixed(2),
