@@ -116,6 +116,25 @@ type InvoiceDraftApproval = {
   billingMilestone: { id: string; title: string } | null;
 };
 
+type CreditNoteDraftApproval = {
+  id: string;
+  creditNoteNumber: string;
+  invoiceId: string;
+  currency: string;
+  subtotal: string;
+  tax: string;
+  total: string;
+  issueDate: string;
+  reason: string;
+  createdByAdminId: string;
+  createdBy: string;
+  createdAt: string;
+  mine: boolean;
+  makerCanApprove: boolean;
+  organization: { id: string; name: string };
+  invoice: { id: string; invoiceNumber: string; status: string };
+};
+
 type RejectedInvoiceDraft = {
   id: string;
   invoiceNumber: string;
@@ -146,6 +165,7 @@ type Inbox = {
   creditApprovals: CreditApproval[];
   invoiceDrafts: InvoiceDraftApproval[];
   rejectedInvoiceDrafts: RejectedInvoiceDraft[];
+  creditNoteDrafts: CreditNoteDraftApproval[];
 };
 
 type Policy = {
@@ -228,6 +248,8 @@ export default function FinanceOutflowApprovals({
   const [creditNotes, setCreditNotes] = useState('');
   const [invoiceReject, setInvoiceReject] = useState<InvoiceDraftApproval | null>(null);
   const [invoiceRejectReason, setInvoiceRejectReason] = useState('');
+  const [creditNoteReject, setCreditNoteReject] = useState<CreditNoteDraftApproval | null>(null);
+  const [creditNoteRejectReason, setCreditNoteRejectReason] = useState('');
   const [approvalProofFiles, setApprovalProofFiles] = useState<Record<string, File | null>>({});
 
   const load = async () => {
@@ -384,12 +406,53 @@ export default function FinanceOutflowApprovals({
     }
   };
 
+  const postCreditNoteDraft = async (note: CreditNoteDraftApproval) => {
+    setWorking(true);
+    try {
+      await readJson('/api/admin/finance/credit-notes/' + encodeURIComponent(note.id) + '/post', {
+        method: 'POST',
+      });
+      toast.success('Credit note posted and customer balance updated');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to post credit note');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const rejectCreditNoteDraft = async () => {
+    if (!creditNoteReject) return;
+    const reason = creditNoteRejectReason.trim();
+    if (reason.length < 3) {
+      toast.error('Enter a clear rejection reason');
+      return;
+    }
+    setWorking(true);
+    try {
+      await readJson('/api/admin/finance/credit-notes/' + encodeURIComponent(creditNoteReject.id) + '/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      toast.success('Credit note draft rejected without changing the customer balance');
+      setCreditNoteReject(null);
+      setCreditNoteRejectReason('');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to reject credit note draft');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   const approvals = inbox?.approvals || [];
   const pending = approvals.filter((item) => item.status === 'pending');
   const scheduled = approvals.filter((item) => item.status === 'scheduled');
   const history = approvals.filter((item) => !['pending', 'scheduled'].includes(item.status));
   const invoiceDrafts = inbox?.invoiceDrafts || [];
   const rejectedInvoiceDrafts = inbox?.rejectedInvoiceDrafts || [];
+  const creditNoteDrafts = inbox?.creditNoteDrafts || [];
   const creditApprovals = inbox?.creditApprovals || [];
   const pendingCredit = creditApprovals.filter((item) => item.status === 'pending');
   const creditHistory = creditApprovals.filter((item) => item.status !== 'pending');
@@ -415,7 +478,7 @@ export default function FinanceOutflowApprovals({
                   </Badge>
                 </div>
                 <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
-                  When enabled, invoice drafts require a different authorized approver before issuance, while supplier payments and customer refunds only post cash after second-person approval.
+                  When enabled, invoice and credit-note drafts require a different authorized approver before posting, while supplier payments and customer refunds only post cash after second-person approval.
                 </p>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Eligible approvers: <strong className="text-foreground">{policy?.eligibleApprovers ?? 0}</strong>
