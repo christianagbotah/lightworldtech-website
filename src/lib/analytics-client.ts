@@ -7,6 +7,7 @@ export type AnalyticsEventName =
   | 'assistant_message'
   | 'assistant_project_scope'
   | 'assistant_feedback'
+  | 'project_estimator_complete'
   | 'whatsapp_open'
   | 'contact_submit'
   | 'newsletter_subscribe'
