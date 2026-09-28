@@ -1,0 +1,5 @@
+ALTER TABLE "ClientInvoice"
+ADD COLUMN "rejectedByAdminId" TEXT NOT NULL DEFAULT '',
+ADD COLUMN "rejectedBy" TEXT NOT NULL DEFAULT '',
+ADD COLUMN "rejectedAt" TIMESTAMP(3),
+ADD COLUMN "rejectionReason" TEXT NOT NULL DEFAULT '';
