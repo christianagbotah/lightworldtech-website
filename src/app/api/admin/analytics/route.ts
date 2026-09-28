@@ -54,6 +54,25 @@ export async function GET(request: NextRequest) {
       ? Math.round((assistantHelpful / assistantFeedbackTotal) * 100)
       : null;
     const contactSubmits = events.filter((event) => event.event === 'contact_submit');
+    const scopeStartedBySession = new Map<string, Date>();
+    for (const event of projectScopes) {
+      const existing = scopeStartedBySession.get(event.sessionId);
+      if (!existing || event.createdAt < existing) {
+        scopeStartedBySession.set(event.sessionId, event.createdAt);
+      }
+    }
+    const assistantLeadSessions = new Set<string>();
+    for (const event of contactSubmits) {
+      const scopeStartedAt = scopeStartedBySession.get(event.sessionId);
+      if (scopeStartedAt && event.createdAt >= scopeStartedAt) {
+        assistantLeadSessions.add(event.sessionId);
+      }
+    }
+    const assistantScopeSessions = scopeStartedBySession.size;
+    const assistantLeadConversions = assistantLeadSessions.size;
+    const assistantLeadConversionRate = assistantScopeSessions
+      ? Math.round((assistantLeadConversions / assistantScopeSessions) * 1000) / 10
+      : null;
 
     const pageCounts = new Map<string, number>();
     for (const event of pageViews) {
@@ -102,6 +121,9 @@ export async function GET(request: NextRequest) {
         assistantNotHelpful,
         assistantFeedbackTotal,
         assistantHelpfulnessRate,
+        assistantScopeSessions,
+        assistantLeadConversions,
+        assistantLeadConversionRate,
         contactSubmits: contactSubmits.length,
         topPages: [...pageCounts.entries()]
           .sort((a, b) => b[1] - a[1])
