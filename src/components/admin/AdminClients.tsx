@@ -105,6 +105,10 @@ type ObligationQueueState = {
   team: Array<{ id: string; name: string; email: string; total: number; overdue: number; due30: number }>;
   data: ObligationQueueItem[];
 };
+type AgreementBillingMilestone = {
+  id: string; title: string; amount: string; dueDate: string | null; order: number;
+  notes: string; createdBy: string; createdAt: string; updatedAt: string;
+};
 type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
   projectId: string | null; currency: string; contractValue: string; contractValueBasis: string; effectiveDate: string | null;
@@ -113,6 +117,7 @@ type Agreement = {
   project: { id: string; name: string; proposal: ProposalLineage | null } | null;
   approvalStatus: string; approvalDecisionBy: string; approvalDecisionAt: string | null; approvalNotes: string;
   attachments: AgreementAttachment[]; changes: AgreementChange[]; obligations: AgreementObligation[];
+  billingMilestones: AgreementBillingMilestone[];
 };
 type TicketMessage = {
   id: string; authorType: string; authorName: string; message: string; createdAt: string;
@@ -247,9 +252,12 @@ export default function AdminClients() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<{ kind: 'document' | 'announcement' | 'agreement-attachment'; id: string; label: string } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ kind: 'document' | 'announcement' | 'agreement-attachment' | 'agreement-billing-milestone'; id: string; label: string } | null>(null);
   const [agreementUploadingId, setAgreementUploadingId] = useState('');
   const [agreementApprovalNotes, setAgreementApprovalNotes] = useState<Record<string, string>>({});
+  const [agreementBillingForms, setAgreementBillingForms] = useState<Record<string, {
+    title: string; amount: string; dueDate: string; notes: string;
+  }>>({});
   const [obligationDecisionNotes, setObligationDecisionNotes] = useState<Record<string, string>>({});
   const [agreementObligationForms, setAgreementObligationForms] = useState<Record<string, {
     title: string; category: string; owner: string; ownerAdminId: string; dueDate: string; notes: string; evidenceUrl: string;
@@ -776,6 +784,65 @@ export default function AdminClients() {
       toast.success('Agreement updated');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update agreement');
+    }
+  };
+
+  const createAgreementBillingMilestone = async (event: FormEvent, agreementId: string) => {
+    event.preventDefault();
+    const form = agreementBillingForms[agreementId] || { title: '', amount: '', dueDate: '', notes: '' };
+    if (!form.title.trim() || Number(form.amount || 0) <= 0) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/client-agreements/' + agreementId + '/billing-milestones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title,
+          amount: Number(form.amount),
+          dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : null,
+          notes: form.notes,
+        }),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not add billing milestone');
+      setAgreementBillingForms((current) => ({
+        ...current,
+        [agreementId]: { title: '', amount: '', dueDate: '', notes: '' },
+      }));
+      await fetchOrganizations();
+      toast.success('Billing milestone added');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not add billing milestone');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const patchAgreementBillingMilestone = async (milestoneId: string, update: Record<string, unknown>) => {
+    try {
+      const response = await fetch('/api/admin/agreement-billing-milestones/' + milestoneId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not update billing milestone');
+      await fetchOrganizations();
+      toast.success('Billing milestone updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update billing milestone');
+    }
+  };
+
+  const deleteAgreementBillingMilestone = async (milestoneId: string) => {
+    try {
+      const response = await fetch('/api/admin/agreement-billing-milestones/' + milestoneId, { method: 'DELETE' });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not delete billing milestone');
+      await fetchOrganizations();
+      toast.success('Billing milestone deleted');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not delete billing milestone');
     }
   };
 
@@ -1779,6 +1846,11 @@ export default function AdminClients() {
                   {selected.agreements.map((agreement) => {
                     const daysToExpiry = agreement.expiryDate ? Math.ceil((new Date(agreement.expiryDate).getTime() - Date.now()) / 86400000) : null;
                     const noticeDue = daysToExpiry !== null && daysToExpiry <= agreement.renewalNoticeDays && daysToExpiry >= 0;
+                    const scheduledBilling = agreement.billingMilestones.reduce((sum, milestone) => sum + Number(milestone.amount || 0), 0);
+                    const unscheduledBilling = Math.max(0, Number(agreement.contractValue || 0) - scheduledBilling);
+                    const scheduleCoverage = Number(agreement.contractValue || 0) > 0
+                      ? Math.min(100, (scheduledBilling / Number(agreement.contractValue || 0)) * 100)
+                      : 0;
                     return <div id={'agreement-' + agreement.id} key={agreement.id} className="scroll-mt-28 rounded-2xl border border-border/60 p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0"><p className="text-sm font-semibold">{agreement.title}</p><p className="mt-1 text-xs text-muted-foreground">{pretty(agreement.agreementType)}{agreement.referenceNumber ? ' · ' + agreement.referenceNumber : ''}{agreement.project?.name ? ' · ' + agreement.project.name : ''}</p></div>
