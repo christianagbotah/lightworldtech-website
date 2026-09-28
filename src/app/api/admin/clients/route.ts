@@ -52,6 +52,21 @@ export async function GET(request: NextRequest) {
             include: { ownerAdmin: { select: { id: true, name: true, email: true, role: true } } },
             orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
           },
+          billingMilestones: {
+            include: {
+              invoice: {
+                select: {
+                  id: true,
+                  invoiceNumber: true,
+                  status: true,
+                  total: true,
+                  issueDate: true,
+                  dueDate: true,
+                },
+              },
+            },
+            orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }],
+          },
         },
         orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
       },
