@@ -217,6 +217,34 @@ export async function GET(
             expiryDate: true,
           },
         },
+        billingMilestone: {
+          select: {
+            id: true,
+            title: true,
+            amount: true,
+            dueDate: true,
+            order: true,
+            readinessStatus: true,
+          },
+        },
+        replacesInvoice: {
+          select: {
+            id: true,
+            invoiceNumber: true,
+            status: true,
+            rejectedAt: true,
+            rejectionReason: true,
+          },
+        },
+        replacementInvoice: {
+          select: {
+            id: true,
+            invoiceNumber: true,
+            status: true,
+            issueDate: true,
+            createdAt: true,
+          },
+        },
         lines: { orderBy: { order: 'asc' } },
         creditNotes: {
           where: { status: 'posted' },
