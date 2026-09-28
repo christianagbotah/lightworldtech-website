@@ -27,6 +27,15 @@ type ActionsData = {
     totalsByCurrency: Record<string, string>;
     oldestDueDate: string | null;
   };
+  agreementBilling: {
+    attentionCount: number;
+    overbilledCount: number;
+    draftPendingCount: number;
+    unpreparedCount: number;
+    remainingByCurrency: Record<string, string>;
+    draftByCurrency: Record<string, string>;
+    overbilledByCurrency: Record<string, string>;
+  };
   priorMonthClose: {
     month: string;
     label: string;
@@ -130,6 +139,7 @@ export default function FinanceExecutiveActionCenter({
   collections,
   onCollections,
   onRenewals,
+  onAgreementBilling,
   onApprovals,
   onClose,
 }: {
@@ -142,6 +152,7 @@ export default function FinanceExecutiveActionCenter({
   };
   onCollections: () => void;
   onRenewals: () => void;
+  onAgreementBilling: () => void;
   onApprovals: () => void;
   onClose: () => void;
 }) {
@@ -189,7 +200,7 @@ export default function FinanceExecutiveActionCenter({
           </div>
         )}
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
           <ActionCard
             eyebrow="Collections"
             title="Follow-up exceptions"
@@ -221,6 +232,26 @@ export default function FinanceExecutiveActionCenter({
             tone={data?.paidRenewals.count ? 'warning' : 'good'}
             button="Open renewals"
             onClick={onRenewals}
+          />
+
+          <ActionCard
+            eyebrow="Agreements"
+            title="Billing exceptions"
+            value={data ? String(data.agreementBilling.attentionCount) : loading ? '…' : '—'}
+            detail={
+              data
+                ? data.agreementBilling.overbilledCount + ' overbilled · ' +
+                  data.agreementBilling.draftPendingCount + ' draft pending · ' +
+                  data.agreementBilling.unpreparedCount + ' unprepared' +
+                  (Object.keys(data.agreementBilling.remainingByCurrency).length
+                    ? ' · ' + moneyList(data.agreementBilling.remainingByCurrency) + ' not yet represented'
+                    : '')
+                : 'Checking agreement billing coverage'
+            }
+            Icon={CircleAlert}
+            tone={data?.agreementBilling.overbilledCount ? 'critical' : data?.agreementBilling.attentionCount ? 'warning' : 'good'}
+            button="Open agreement billing"
+            onClick={onAgreementBilling}
           />
 
           <ActionCard
