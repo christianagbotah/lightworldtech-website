@@ -944,10 +944,64 @@ export default function FinanceRecordDetailsDialog({
           {!loading && data?.type === 'receipt' && data.payment && (
             <div className="space-y-5 p-5 sm:p-6">
               <div className="grid gap-3 sm:grid-cols-3">
-                <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Receipt amount</p><p className="mt-1 text-xl font-bold">{money(data.payment.amount, data.payment.currency)}</p></CardContent></Card>
-                <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Allocated</p><p className="mt-1 text-xl font-bold text-emerald-700">{money(data.payment.allocatedAmount, data.payment.currency)}</p></CardContent></Card>
-                <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Unapplied credit</p><p className="mt-1 text-xl font-bold text-amber-700">{money(data.payment.unallocatedAmount, data.payment.currency)}</p></CardContent></Card>
+                <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{data.payment.source === 'reversal' ? 'Reversal amount' : 'Receipt amount'}</p><p className="mt-1 text-xl font-bold">{money(data.payment.amount, data.payment.currency)}</p></CardContent></Card>
+                <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{data.payment.source === 'reversal' ? 'Allocation reversal' : 'Allocated'}</p><p className={data.payment.source === 'reversal' ? 'mt-1 text-xl font-bold text-rose-700' : 'mt-1 text-xl font-bold text-emerald-700'}>{money(data.payment.allocatedAmount, data.payment.currency)}</p></CardContent></Card>
+                <Card className="border-border/60"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{data.payment.source === 'reversal' ? 'Unapplied reversal' : 'Unapplied credit'}</p><p className="mt-1 text-xl font-bold text-amber-700">{money(data.payment.unallocatedAmount, data.payment.currency)}</p></CardContent></Card>
               </div>
+
+              {data.payment.reversalPayment && (
+                <Card className="border-rose-200 bg-rose-50/60 dark:border-rose-900/40 dark:bg-rose-950/20">
+                  <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-rose-800 dark:text-rose-200">Receipt reversed</p>
+                      <p className="mt-1 text-sm">Reversed by <span className="font-mono font-semibold">{data.payment.reversalPayment.paymentNumber}</span> on {date(data.payment.reversalPayment.paidAt)}.</p>
+                      {data.payment.reversalPayment.reversalReason && <p className="mt-1 text-xs text-muted-foreground">{data.payment.reversalPayment.reversalReason}</p>}
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => onOpenRecord({ type: 'receipt', id: data.payment.reversalPayment.id })}>Open reversal</Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {data.payment.reversesPayment && (
+                <Card className="border-rose-200 bg-rose-50/60 dark:border-rose-900/40 dark:bg-rose-950/20">
+                  <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-rose-800 dark:text-rose-200">Reversal record</p>
+                      <p className="mt-1 text-sm">This compensating record reverses <span className="font-mono font-semibold">{data.payment.reversesPayment.paymentNumber}</span>.</p>
+                      {data.payment.reversalReason && <p className="mt-1 text-xs text-muted-foreground">{data.payment.reversalReason}</p>}
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => onOpenRecord({ type: 'receipt', id: data.payment.reversesPayment.id })}>Open original receipt</Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {data.payment.source === 'manual' && Number(data.payment.amount) > 0 && !data.payment.reversalPayment && (
+                <>
+                  {data.payment.reversalRequests?.some((item: any) => ['pending', 'processing'].includes(item.status)) ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+                      Receipt reversal request <strong>{data.payment.reversalRequests.find((item: any) => ['pending', 'processing'].includes(item.status))?.requestNumber}</strong> is awaiting Finance approval.
+                    </div>
+                  ) : (
+                    <div className="flex justify-end">
+                      <Button type="button" variant="outline" onClick={() => setReceiptReversalOpen((open) => !open)}>Request reversal</Button>
+                    </div>
+                  )}
+                  {receiptReversalOpen && (
+                    <Card className="border-rose-200/70 dark:border-rose-900/40">
+                      <CardHeader className="pb-3"><CardTitle className="text-base">Request governed receipt reversal</CardTitle></CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="text-xs leading-5 text-muted-foreground">The original receipt remains preserved. Approval posts a linked negative receipt, reverses the invoice allocation effect and creates a compensating journal. Hubtel receipts use the provider/refund workflow instead.</p>
+                        <div><Label>Reversal date</Label><Input type="date" value={receiptReversalDate} min={data.payment.paidAt?.slice(0, 10)} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setReceiptReversalDate(event.target.value)} /></div>
+                        <div><Label>Reason</Label><Textarea rows={3} value={receiptReversalReason} onChange={(event) => setReceiptReversalReason(event.target.value)} placeholder="Explain why this manual receipt must be reversed…" /></div>
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => { setReceiptReversalOpen(false); setReceiptReversalReason(''); }} disabled={receiptReversalBusy}>Cancel</Button>
+                          <Button type="button" onClick={() => void requestReceiptReversal()} disabled={receiptReversalBusy || receiptReversalReason.trim().length < 5}>{receiptReversalBusy && <Loader2 className="mr-2 size-4 animate-spin" />} Submit reversal</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
 
               <PositionCards position={data.accountPosition} />
 
