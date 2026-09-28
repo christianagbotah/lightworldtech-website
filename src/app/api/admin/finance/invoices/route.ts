@@ -25,6 +25,7 @@ const schema = z.object({
   serviceId: z.string().min(1).nullable().optional(),
   projectId: z.string().min(1).nullable().optional(),
   agreementId: z.string().min(1).nullable().optional(),
+  billingMilestoneId: z.string().min(1).nullable().optional(),
   status: z.enum(['draft', 'issued']).default('issued'),
   currency: z.string().trim().max(3).default('GHS'),
   issueDate: z.coerce.date(),
@@ -116,6 +117,7 @@ export async function GET(request: NextRequest) {
       service: { select: { id: true, name: true, planName: true } },
       project: { select: { id: true, name: true } },
       agreement: { select: { id: true, title: true, referenceNumber: true, agreementType: true, status: true } },
+      billingMilestone: { select: { id: true, title: true, amount: true, dueDate: true, order: true } },
       lines: { orderBy: { order: 'asc' } },
       creditNotes: { where: { status: 'posted' }, orderBy: { issueDate: 'asc' } },
       allocations: {
@@ -147,6 +149,13 @@ export async function POST(request: NextRequest) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: 'Invalid invoice', details: parsed.error.flatten() }, { status: 400 });
+  }
+
+  if (parsed.data.billingMilestoneId && !parsed.data.agreementId) {
+    return NextResponse.json(
+      { success: false, error: 'Billing milestone invoices must be linked to their agreement' },
+      { status: 400 },
+    );
   }
 
   const organization = await db.clientOrganization.findUnique({
@@ -276,11 +285,157 @@ export async function POST(request: NextRequest) {
 
   const currency = normalizeCurrency(parsed.data.currency);
   const transactionResult = await db.$transaction(async (tx) => {
+    let billingMilestone: {
+      id: string;
+      agreementId: string;
+      title: string;
+      amount: Prisma.Decimal;
+      agreement: {
+        id: string;
+        organizationId: string;
+        projectId: string | null;
+        status: string;
+        approvalStatus: string;
+        currency: string;
+        contractValueBasis: string;
+      };
+    } | null = null;
+
+    if (parsed.data.billingMilestoneId) {
+      await tx.$queryRawUnsafe(
+        'SELECT pg_advisory_xact_lock(hashtext($1))',
+        'lightworld-agreement-billing-milestone-invoice:' + parsed.data.billingMilestoneId,
+      );
+
+      billingMilestone = await tx.clientAgreementBillingMilestone.findUnique({
+        where: { id: parsed.data.billingMilestoneId },
+        select: {
+          id: true,
+          agreementId: true,
+          title: true,
+          amount: true,
+          agreement: {
+            select: {
+              id: true,
+              organizationId: true,
+              projectId: true,
+              status: true,
+              approvalStatus: true,
+              currency: true,
+              contractValueBasis: true,
+            },
+          },
+        },
+      });
+
+      if (!billingMilestone) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: { message: 'Billing milestone not found', status: 404 },
+        };
+      }
+      if (
+        billingMilestone.agreementId !== parsed.data.agreementId ||
+        billingMilestone.agreement.organizationId !== parsed.data.organizationId
+      ) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: { message: 'Billing milestone does not belong to this client agreement', status: 400 },
+        };
+      }
+      if (
+        billingMilestone.agreement.status !== 'active' ||
+        billingMilestone.agreement.approvalStatus !== 'approved'
+      ) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: { message: 'Billing milestone agreement must be approved and active', status: 409 },
+        };
+      }
+      if (billingMilestone.agreement.contractValueBasis === 'unspecified') {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: { message: 'Classify the agreement contract value basis before invoicing a billing milestone', status: 409 },
+        };
+      }
+      if (normalizeCurrency(currency) !== normalizeCurrency(billingMilestone.agreement.currency)) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: { message: 'Invoice currency must match the billing milestone agreement currency', status: 400 },
+        };
+      }
+      if (
+        parsed.data.projectId &&
+        billingMilestone.agreement.projectId &&
+        parsed.data.projectId !== billingMilestone.agreement.projectId
+      ) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: { message: 'Invoice project must match the billing milestone agreement project', status: 400 },
+        };
+      }
+
+      const duplicateMilestoneInvoice = await tx.clientInvoice.findFirst({
+        where: {
+          billingMilestoneId: billingMilestone.id,
+          status: { not: 'void' },
+        },
+        select: { id: true, invoiceNumber: true, status: true },
+      });
+      if (duplicateMilestoneInvoice) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: {
+            message: 'A non-void invoice already exists for this billing milestone',
+            status: 409,
+            existingInvoice: duplicateMilestoneInvoice,
+          },
+        };
+      }
+
+      const comparableAmount =
+        billingMilestone.agreement.contractValueBasis === 'tax_exclusive'
+          ? taxableAmount
+          : total;
+      if (!comparableAmount.eq(billingMilestone.amount)) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: {
+            message:
+              billingMilestone.agreement.contractValueBasis === 'tax_exclusive'
+                ? 'Invoice taxable value must equal the billing milestone amount'
+                : 'Final invoice total must equal the tax-inclusive billing milestone amount',
+            status: 409,
+            expectedAmount: billingMilestone.amount.toFixed(2),
+            actualAmount: comparableAmount.toFixed(2),
+            valueBasis: billingMilestone.agreement.contractValueBasis,
+          },
+        };
+      }
+    }
+
     if (parsed.data.status === 'issued') {
       if (organization.creditHold) {
         return {
           invoice: null,
           duplicate: null,
+          billingBlocked: null,
           creditBlocked: {
             type: 'credit_hold' as const,
             message: organization.creditHoldReason || 'Customer account is on credit hold',
@@ -320,7 +475,8 @@ export async function POST(request: NextRequest) {
           return {
             invoice: null,
             duplicate: null,
-            creditBlocked: {
+            billingBlocked: null,
+          creditBlocked: {
               type: 'credit_limit' as const,
               message: 'Issuing this invoice would exceed the customer credit limit',
               limit: organization.creditLimit.toFixed(2),
@@ -353,7 +509,7 @@ export async function POST(request: NextRequest) {
         select: { id: true, invoiceNumber: true, status: true },
       });
       if (duplicate) {
-        return { invoice: null, duplicate, creditBlocked: null };
+        return { invoice: null, duplicate, creditBlocked: null, billingBlocked: null };
       }
     }
 
@@ -364,6 +520,7 @@ export async function POST(request: NextRequest) {
         serviceId: parsed.data.serviceId || null,
         projectId: parsed.data.projectId || null,
         agreementId: parsed.data.agreementId || null,
+        billingMilestoneId: parsed.data.billingMilestoneId || null,
         status: parsed.data.status,
         currency,
         issueDate: parsed.data.issueDate,
@@ -390,6 +547,7 @@ export async function POST(request: NextRequest) {
         service: { select: { id: true, name: true, planName: true } },
         project: { select: { id: true, name: true } },
         agreement: { select: { id: true, title: true, referenceNumber: true, agreementType: true, status: true } },
+        billingMilestone: { select: { id: true, title: true, amount: true, dueDate: true, order: true } },
         lines: { orderBy: { order: 'asc' } },
         allocations: true,
         creditNotes: { where: { status: 'posted' } },
@@ -413,8 +571,16 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return { invoice: created, duplicate: null, creditBlocked: null };
+    return { invoice: created, duplicate: null, creditBlocked: null, billingBlocked: null };
   });
+
+  if (transactionResult.billingBlocked) {
+    return NextResponse.json({
+      success: false,
+      error: transactionResult.billingBlocked.message,
+      billingControl: transactionResult.billingBlocked,
+    }, { status: transactionResult.billingBlocked.status });
+  }
 
   if (transactionResult.creditBlocked) {
     await recordAdminAudit({
@@ -458,6 +624,7 @@ export async function POST(request: NextRequest) {
       invoiceNumber,
       organizationId: invoice.organizationId,
       agreementId: invoice.agreementId,
+      billingMilestoneId: invoice.billingMilestoneId,
       total: total.toFixed(2),
       currency: invoice.currency,
       taxTreatment: invoice.taxTreatment,
