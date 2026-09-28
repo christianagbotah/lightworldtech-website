@@ -73,6 +73,12 @@ type AgreementChange = {
   id: string; changedBy: string; changeType: string; fields: string;
   beforeState: Record<string, unknown>; afterState: Record<string, unknown>; createdAt: string;
 };
+type AgreementBillingMilestone = {
+  id: string; agreementId: string; invoiceId: string | null; title: string; amount: string;
+  dueDate: string | null; status: string; notes: string; createdBy: string;
+  waivedAt: string | null; waivedBy: string; waiverReason: string; createdAt: string; updatedAt: string;
+  invoice: { id: string; invoiceNumber: string; status: string; total: string; issueDate: string; dueDate: string } | null;
+};
 type ObligationOwner = {
   id: string; name: string; email: string; role: string; lastLogin: string | null;
 };
@@ -113,6 +119,7 @@ type Agreement = {
   project: { id: string; name: string; proposal: ProposalLineage | null } | null;
   approvalStatus: string; approvalDecisionBy: string; approvalDecisionAt: string | null; approvalNotes: string;
   attachments: AgreementAttachment[]; changes: AgreementChange[]; obligations: AgreementObligation[];
+  billingMilestones: AgreementBillingMilestone[];
 };
 type TicketMessage = {
   id: string; authorType: string; authorName: string; message: string; createdAt: string;
@@ -254,6 +261,10 @@ export default function AdminClients() {
   const [agreementObligationForms, setAgreementObligationForms] = useState<Record<string, {
     title: string; category: string; owner: string; ownerAdminId: string; dueDate: string; notes: string; evidenceUrl: string;
   }>>({});
+  const [agreementBillingForms, setAgreementBillingForms] = useState<Record<string, {
+    title: string; amount: string; dueDate: string; status: 'planned' | 'ready'; notes: string;
+  }>>({});
+  const [billingMilestoneWaiverReasons, setBillingMilestoneWaiverReasons] = useState<Record<string, string>>({});
   const [obligationOwners, setObligationOwners] = useState<ObligationOwner[]>([]);
   const [obligationQueue, setObligationQueue] = useState<ObligationQueueState>({
     scope: 'mine',
@@ -734,6 +745,50 @@ export default function AdminClients() {
     useAppStore.getState().navigate('admin-finance');
   };
 
+  const prepareAgreementMilestoneBilling = (agreement: Agreement, milestone: AgreementBillingMilestone) => {
+    if (!selected) return;
+    if (agreement.status !== 'active' || agreement.approvalStatus !== 'approved') {
+      toast.error('Only approved active agreements can prepare milestone billing');
+      return;
+    }
+    if (milestone.status !== 'ready' || milestone.invoiceId) {
+      toast.error(milestone.invoiceId ? 'This billing milestone is already linked to an invoice' : 'Mark the billing milestone Ready before preparing an invoice');
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lw-finance-section', 'customers');
+      sessionStorage.setItem('lw-finance-organization-id', selected.id);
+      sessionStorage.setItem('lw-finance-customer-name', selected.name);
+      sessionStorage.setItem('lw-finance-project-id', agreement.projectId || '');
+      sessionStorage.setItem('lw-finance-action', 'agreement-invoice');
+      sessionStorage.setItem('lw-finance-agreement-context', JSON.stringify({
+        agreementId: agreement.id,
+        title: agreement.title + ' · ' + milestone.title,
+        referenceNumber: agreement.referenceNumber,
+        projectId: agreement.projectId || '',
+        projectName: agreement.project?.name || '',
+        currency: agreement.currency || 'GHS',
+        contractValue: milestone.amount,
+        effectiveDate: agreement.effectiveDate,
+        expiryDate: agreement.expiryDate,
+        billingMilestoneIds: [milestone.id],
+        billingMilestoneTitle: milestone.title,
+      }));
+    }
+
+    useAppStore.getState().navigate('admin-finance');
+  };
+
+  const openAgreementMilestoneInvoice = (invoiceId: string) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lw-finance-section', 'customers');
+      sessionStorage.setItem('lw-finance-record-type', 'invoice');
+      sessionStorage.setItem('lw-finance-record-id', invoiceId);
+    }
+    useAppStore.getState().navigate('admin-finance');
+  };
+
   const createAgreement = async (event: FormEvent) => {
     event.preventDefault();
     if (!selected) return;
@@ -776,6 +831,68 @@ export default function AdminClients() {
       toast.success('Agreement updated');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update agreement');
+    }
+  };
+
+  const createAgreementBillingMilestone = async (event: FormEvent, agreementId: string) => {
+    event.preventDefault();
+    const form = agreementBillingForms[agreementId] || { title: '', amount: '', dueDate: '', status: 'planned', notes: '' };
+    if (!form.title.trim() || Number(form.amount || 0) <= 0) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/client-agreements/' + agreementId + '/billing-milestones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title,
+          amount: Number(form.amount),
+          dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : null,
+          status: form.status,
+          notes: form.notes,
+        }),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not add billing milestone');
+      setAgreementBillingForms((current) => ({
+        ...current,
+        [agreementId]: { title: '', amount: '', dueDate: '', status: 'planned', notes: '' },
+      }));
+      await fetchOrganizations();
+      toast.success('Billing milestone added');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not add billing milestone');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const patchAgreementBillingMilestone = async (milestoneId: string, update: Record<string, unknown>) => {
+    try {
+      const response = await fetch('/api/admin/agreement-billing-milestones/' + milestoneId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not update billing milestone');
+      await fetchOrganizations();
+      toast.success('Billing milestone updated');
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update billing milestone');
+      return false;
+    }
+  };
+
+  const waiveAgreementBillingMilestone = async (milestoneId: string) => {
+    const reason = (billingMilestoneWaiverReasons[milestoneId] || '').trim();
+    if (!reason) {
+      toast.error('Enter a waiver reason before waiving the billing milestone.');
+      return;
+    }
+    const updated = await patchAgreementBillingMilestone(milestoneId, { status: 'waived', waiverReason: reason });
+    if (updated) {
+      setBillingMilestoneWaiverReasons((current) => ({ ...current, [milestoneId]: '' }));
     }
   };
 
@@ -1779,6 +1896,9 @@ export default function AdminClients() {
                   {selected.agreements.map((agreement) => {
                     const daysToExpiry = agreement.expiryDate ? Math.ceil((new Date(agreement.expiryDate).getTime() - Date.now()) / 86400000) : null;
                     const noticeDue = daysToExpiry !== null && daysToExpiry <= agreement.renewalNoticeDays && daysToExpiry >= 0;
+                    const activeBillingMilestones = agreement.billingMilestones.filter((item) => item.status !== 'waived');
+                    const scheduledBillingValue = activeBillingMilestones.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+                    const unscheduledBillingValue = Math.max(0, Number(agreement.contractValue || 0) - scheduledBillingValue);
                     return <div id={'agreement-' + agreement.id} key={agreement.id} className="scroll-mt-28 rounded-2xl border border-border/60 p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0"><p className="text-sm font-semibold">{agreement.title}</p><p className="mt-1 text-xs text-muted-foreground">{pretty(agreement.agreementType)}{agreement.referenceNumber ? ' · ' + agreement.referenceNumber : ''}{agreement.project?.name ? ' · ' + agreement.project.name : ''}</p></div>
@@ -1905,6 +2025,177 @@ export default function AdminClients() {
                             <Button type="button" size="sm" variant="outline" onClick={() => void decideAgreementApproval(agreement.id, 'rejected')}>Reject</Button>
                           </div>
                         )}
+                      </div>
+
+                      <div className="mt-4 rounded-xl border border-emerald-200/70 bg-emerald-50/40 p-3 dark:border-emerald-900/30 dark:bg-emerald-950/10">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-800 dark:text-emerald-200">Agreement billing schedule</p>
+                            <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+                              Define governed payment stages. A Ready milestone may prepare a draft invoice only after the agreement is approved and active.
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            <Badge variant="outline">{money(scheduledBillingValue, agreement.currency)} scheduled</Badge>
+                            <Badge variant="outline">{money(unscheduledBillingValue, agreement.currency)} unscheduled</Badge>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 space-y-2">
+                          {agreement.billingMilestones.map((milestone) => {
+                            const derivedStatus = milestone.invoice ? 'invoiced' : milestone.status;
+                            const overdue = Boolean(
+                              milestone.dueDate &&
+                              !milestone.invoice &&
+                              milestone.status !== 'waived' &&
+                              new Date(milestone.dueDate).getTime() < Date.now(),
+                            );
+                            return (
+                              <div key={milestone.id} className="rounded-lg border border-border/60 bg-background p-3">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <p className="text-xs font-semibold">{milestone.title}</p>
+                                      <Badge variant="outline">{pretty(derivedStatus)}</Badge>
+                                      {overdue && <Badge className="bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200">Overdue</Badge>}
+                                    </div>
+                                    <p className="mt-1 text-[10px] text-muted-foreground">
+                                      {money(milestone.amount, agreement.currency)}
+                                      {milestone.dueDate ? ' · due ' + new Date(milestone.dueDate).toLocaleDateString() : ' · no due date'}
+                                      {' · created by ' + (milestone.createdBy || 'Admin')}
+                                    </p>
+                                    {milestone.notes && <p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{milestone.notes}</p>}
+                                    {milestone.status === 'waived' && (
+                                      <p className="mt-2 text-[10px] text-muted-foreground">
+                                        Waived by {milestone.waivedBy || 'Unknown'}
+                                        {milestone.waivedAt ? ' · ' + new Date(milestone.waivedAt).toLocaleString() : ''}
+                                        {milestone.waiverReason ? ' · ' + milestone.waiverReason : ''}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {milestone.invoice ? (
+                                      <Button type="button" size="sm" variant="outline" onClick={() => openAgreementMilestoneInvoice(milestone.invoice!.id)}>
+                                        <FileText className="mr-1 size-3.5" /> {milestone.invoice.invoiceNumber}
+                                      </Button>
+                                    ) : (
+                                      <>
+                                        <select
+                                          value={milestone.status}
+                                          onChange={(event) => void patchAgreementBillingMilestone(milestone.id, { status: event.target.value })}
+                                          className="h-8 rounded-lg border border-input bg-background px-2 text-[11px]"
+                                        >
+                                          <option value="planned">Planned</option>
+                                          <option value="ready" disabled={agreement.status !== 'active' || agreement.approvalStatus !== 'approved'}>Ready</option>
+                                          {milestone.status === 'waived' && <option value="waived">Waived</option>}
+                                        </select>
+                                        {milestone.status === 'ready' && agreement.status === 'active' && agreement.approvalStatus === 'approved' && (
+                                          <Button type="button" size="sm" onClick={() => prepareAgreementMilestoneBilling(agreement, milestone)}>
+                                            <CircleDollarSign className="mr-1 size-3.5" /> Prepare draft
+                                          </Button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {!milestone.invoice && milestone.status !== 'waived' && (
+                                  <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                                    <div>
+                                      <Label>Waiver reason</Label>
+                                      <Input
+                                        value={billingMilestoneWaiverReasons[milestone.id] || ''}
+                                        onChange={(event) => setBillingMilestoneWaiverReasons((current) => ({ ...current, [milestone.id]: event.target.value }))}
+                                        placeholder="Reason required only when waiving this billing stage"
+                                        className="mt-1 h-9 text-xs"
+                                      />
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={!(billingMilestoneWaiverReasons[milestone.id] || '').trim()}
+                                      onClick={() => void waiveAgreementBillingMilestone(milestone.id)}
+                                    >
+                                      Waive milestone
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                          {!agreement.billingMilestones.length && (
+                            <p className="text-[11px] text-muted-foreground">No billing milestones recorded for this agreement yet.</p>
+                          )}
+                        </div>
+
+                        <form
+                          onSubmit={(event) => void createAgreementBillingMilestone(event, agreement.id)}
+                          className="mt-3 space-y-2 border-t border-emerald-200/70 pt-3 dark:border-emerald-900/30"
+                        >
+                          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                            <Input
+                              required
+                              placeholder="Billing stage / milestone"
+                              value={agreementBillingForms[agreement.id]?.title || ''}
+                              onChange={(event) => setAgreementBillingForms((current) => ({
+                                ...current,
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', amount: '', dueDate: '', status: 'planned', notes: '' }), title: event.target.value },
+                              }))}
+                            />
+                            <Input
+                              required
+                              type="number"
+                              min="0.01"
+                              step="0.01"
+                              placeholder={'Amount (' + agreement.currency + ')'}
+                              value={agreementBillingForms[agreement.id]?.amount || ''}
+                              onChange={(event) => setAgreementBillingForms((current) => ({
+                                ...current,
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', amount: '', dueDate: '', status: 'planned', notes: '' }), amount: event.target.value },
+                              }))}
+                            />
+                            <Input
+                              type="date"
+                              value={agreementBillingForms[agreement.id]?.dueDate || ''}
+                              onChange={(event) => setAgreementBillingForms((current) => ({
+                                ...current,
+                                [agreement.id]: { ...(current[agreement.id] || { title: '', amount: '', dueDate: '', status: 'planned', notes: '' }), dueDate: event.target.value },
+                              }))}
+                            />
+                            <select
+                              value={agreementBillingForms[agreement.id]?.status || 'planned'}
+                              onChange={(event) => setAgreementBillingForms((current) => ({
+                                ...current,
+                                [agreement.id]: {
+                                  ...(current[agreement.id] || { title: '', amount: '', dueDate: '', status: 'planned', notes: '' }),
+                                  status: event.target.value as 'planned' | 'ready',
+                                },
+                              }))}
+                              className="h-10 rounded-xl border border-input bg-background px-3 text-sm"
+                            >
+                              <option value="planned">Planned</option>
+                              <option value="ready" disabled={agreement.status !== 'active' || agreement.approvalStatus !== 'approved'}>Ready for billing</option>
+                            </select>
+                          </div>
+                          <Textarea
+                            rows={2}
+                            placeholder="Milestone billing notes / entitlement condition"
+                            value={agreementBillingForms[agreement.id]?.notes || ''}
+                            onChange={(event) => setAgreementBillingForms((current) => ({
+                              ...current,
+                              [agreement.id]: { ...(current[agreement.id] || { title: '', amount: '', dueDate: '', status: 'planned', notes: '' }), notes: event.target.value },
+                            }))}
+                          />
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-[10px] text-muted-foreground">
+                              Scheduled value cannot exceed {money(agreement.contractValue, agreement.currency)} unless the agreement value is revised first.
+                            </p>
+                            <Button disabled={saving || Number(unscheduledBillingValue) <= 0} type="submit" size="sm" variant="outline">
+                              <Plus className="mr-1 size-3.5" /> Add billing milestone
+                            </Button>
+                          </div>
+                        </form>
                       </div>
 
                       <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
