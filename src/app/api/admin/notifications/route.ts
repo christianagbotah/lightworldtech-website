@@ -6,6 +6,7 @@ import { hasAdminPermission } from '@/lib/admin-permissions';
 import { getMailTransportStatus } from '@/lib/mail';
 import { invoiceBalance } from '@/lib/finance';
 import { reconcileSupportEscalations } from '@/lib/support-ticket';
+import { getServerDiskHealth } from '@/lib/server-disk-health';
 
 type Notice = {
   id: string;
@@ -28,6 +29,25 @@ export async function GET(request: NextRequest) {
   const canProposals = hasAdminPermission(admin.role, admin.permissions, 'proposals.manage');
   const canComms = hasAdminPermission(admin.role, admin.permissions, 'communications.manage');
   const canFinance = hasAdminPermission(admin.role, admin.permissions, 'finance.manage');
+
+  const disk = await getServerDiskHealth();
+  if (disk.status === 'attention') {
+    const critical = disk.availableBytes < disk.minimumFreeBytes;
+    const freeGb = Math.round((disk.availableBytes / 1024 ** 3) * 10) / 10;
+    notices.push({
+      id: 'production-disk-capacity',
+      severity: critical ? 'critical' : 'warning',
+      title: critical ? 'Production disk critically low' : 'Production disk capacity warning',
+      message:
+        disk.usedPercent +
+        '% used · ' +
+        freeGb +
+        ' GB free. ' +
+        (disk.warning || 'Production disk capacity needs review.'),
+      count: 1,
+      action: 'admin-settings',
+    });
+  }
 
   if (canCrm) {
     const [unreadMessages, overdueFollowUps] = await Promise.all([
