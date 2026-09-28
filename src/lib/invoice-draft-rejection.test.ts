@@ -54,6 +54,22 @@ describe('invoice draft rejection governance', () => {
     expect(details).toContain('data.invoice.rejectionReason');
   });
 
+  test('keeps rejected drafts visible in approval history and notifies the original maker', () => {
+    const approvalsRoute = source('src/app/api/admin/finance/approvals/route.ts');
+    const approvalsUi = source('src/components/admin/FinanceOutflowApprovals.tsx');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(approvalsRoute).toContain('rejectedInvoiceDrafts');
+    expect(approvalsRoute).toContain("status: 'void'");
+    expect(approvalsRoute).toContain('rejectedAt: { not: null }');
+    expect(approvalsUi).toContain('Rejected invoice drafts');
+    expect(approvalsUi).toContain('lightworld-rejected-invoice-drafts');
+    expect(approvalsUi).toContain('invoice.rejectionReason');
+    expect(notifications).toContain("'finance-my-rejected-invoice-drafts'");
+    expect(notifications).toContain('createdByAdminId: admin.id');
+    expect(notifications).toContain("action: 'admin-finance-approvals'");
+  });
+
   test('existing agreement billing control ignores rejected void drafts so replacements remain possible', () => {
     const billing = source('src/app/api/admin/finance/agreement-billing/route.ts');
 
