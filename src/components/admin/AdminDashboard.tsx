@@ -197,6 +197,9 @@ interface AnalyticsData {
   assistantNotHelpful: number;
   assistantFeedbackTotal: number;
   assistantHelpfulnessRate: number | null;
+  assistantScopeSessions: number;
+  assistantLeadConversions: number;
+  assistantLeadConversionRate: number | null;
   contactSubmits: number;
   topPages: Array<{ path: string; views: number }>;
   topReferrers: Array<{ referrer: string; events: number }>;
@@ -487,7 +490,7 @@ export default function AdminDashboard() {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">First-party analytics · last 30 days</p>
           <span className="text-[10px] text-muted-foreground">Only visitors who allow Analytics are counted</span>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
           { label: 'Unique Sessions', value: analytics?.uniqueSessions || 0, icon: Users, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
           { label: 'Page Views', value: analytics?.pageViews || 0, icon: Eye, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-900/30' },
@@ -496,6 +499,13 @@ export default function AdminDashboard() {
             label: 'Assistant Helpful',
             value: analytics?.assistantHelpfulnessRate == null ? '—' : analytics.assistantHelpfulnessRate + '%',
             icon: CheckCircle2,
+            color: 'text-emerald-700 dark:text-emerald-300',
+            bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+          },
+          {
+            label: 'AI Scope → Lead',
+            value: analytics?.assistantLeadConversionRate == null ? '—' : analytics.assistantLeadConversionRate + '%',
+            icon: TrendingUp,
             color: 'text-emerald-700 dark:text-emerald-300',
             bg: 'bg-emerald-100 dark:bg-emerald-900/30',
           },
