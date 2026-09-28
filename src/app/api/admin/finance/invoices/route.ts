@@ -301,6 +301,75 @@ export async function POST(request: NextRequest) {
       };
     } | null = null;
 
+    if (parsed.data.agreementId) {
+      await tx.$queryRawUnsafe(
+        'SELECT pg_advisory_xact_lock(hashtext($1))',
+        'lightworld-agreement-billing-invoice:' + parsed.data.agreementId,
+      );
+
+      const agreementControl = await tx.clientAgreement.findUnique({
+        where: { id: parsed.data.agreementId },
+        select: {
+          id: true,
+          organizationId: true,
+          status: true,
+          approvalStatus: true,
+          currency: true,
+          contractValue: true,
+          contractValueBasis: true,
+        },
+      });
+      if (!agreementControl || agreementControl.organizationId !== parsed.data.organizationId) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: { message: 'Agreement billing control could not verify this client agreement', status: 400 },
+        };
+      }
+
+      const existingAgreementInvoices = await tx.clientInvoice.findMany({
+        where: {
+          agreementId: agreementControl.id,
+          status: { not: 'void' },
+        },
+        select: {
+          taxableAmount: true,
+          total: true,
+        },
+      });
+      const existingComparable = existingAgreementInvoices.reduce(
+        (sum, invoice) => sum.plus(
+          agreementControl.contractValueBasis === 'tax_exclusive'
+            ? invoice.taxableAmount
+            : invoice.total,
+        ),
+        new Prisma.Decimal(0),
+      );
+      const currentComparable =
+        agreementControl.contractValueBasis === 'tax_exclusive'
+          ? taxableAmount
+          : total;
+      const projectedAgreementBilling = existingComparable.plus(currentComparable);
+      if (projectedAgreementBilling.gt(agreementControl.contractValue)) {
+        return {
+          invoice: null,
+          duplicate: null,
+          creditBlocked: null,
+          billingBlocked: {
+            message: 'Invoice would exceed the remaining approved agreement value',
+            status: 409,
+            currency: agreementControl.currency,
+            contractValue: agreementControl.contractValue.toFixed(2),
+            alreadyRepresented: existingComparable.toFixed(2),
+            proposedAmount: currentComparable.toFixed(2),
+            projectedAmount: projectedAgreementBilling.toFixed(2),
+            valueBasis: agreementControl.contractValueBasis,
+          },
+        };
+      }
+    }
+
     if (parsed.data.billingMilestoneId) {
       await tx.$queryRawUnsafe(
         'SELECT pg_advisory_xact_lock(hashtext($1))',
