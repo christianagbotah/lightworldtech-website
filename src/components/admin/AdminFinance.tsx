@@ -1248,6 +1248,39 @@ export default function AdminFinance() {
         ))}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-card/70 p-3 shadow-sm">
+        <span className="mr-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Quick actions</span>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => {
+            setSection('customers');
+            setDialog('receipt');
+          }}
+        >
+          <ArrowDownLeft className="mr-2 size-4" />
+          Record customer payment
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setSection('customers');
+            setDialog('invoice');
+          }}
+        >
+          <FileText className="mr-2 size-4" />
+          Issue invoice
+        </Button>
+        <Button type="button" size="sm" variant="outline" onClick={() => setSection('renewals')}>
+          Renewals
+        </Button>
+        <Button type="button" size="sm" variant="outline" onClick={() => setSection('collections')}>
+          Collections
+        </Button>
+      </div>
+
       {section === 'overview' && (
         <FinanceExecutiveDashboard
           initialData={data.dashboard}
@@ -1328,7 +1361,7 @@ export default function AdminFinance() {
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => setDialog('service')}><Plus className="mr-2 size-4" /> Add service</Button>
             <Button variant="outline" onClick={() => setDialog('invoice')}><FileText className="mr-2 size-4" /> Issue invoice</Button>
-            <Button variant="outline" onClick={() => setDialog('receipt')}><ArrowDownLeft className="mr-2 size-4" /> Record receipt</Button>
+            <Button variant="outline" onClick={() => setDialog('receipt')}><ArrowDownLeft className="mr-2 size-4" /> Record customer payment</Button>
           </div>
 
           <Card className="min-w-0 border-border/60">
