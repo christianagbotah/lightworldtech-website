@@ -712,7 +712,7 @@ export default function AdminFinance() {
     () => (data?.bills || []).filter((bill) =>
       bill.vendorId === supplierPaymentForm.vendorId &&
       Number(bill.balance) > 0 &&
-      bill.derivedStatus !== 'paid'
+      !['draft', 'rejected', 'void', 'paid'].includes(bill.derivedStatus)
     ),
     [data?.bills, supplierPaymentForm.vendorId],
   );
@@ -726,7 +726,8 @@ export default function AdminFinance() {
     () => (data?.bills || []).filter((bill) => {
       const agingBucket = payableAgingBucket(bill.dueDate, bill.balance);
       const dueBucket = payableDueBucket(bill.dueDate, bill.balance);
-      return agingBucket !== 'paid'
+      return !['draft', 'rejected', 'void'].includes(bill.derivedStatus)
+        && agingBucket !== 'paid'
         && (supplierAgingFilter === 'all' || agingBucket === supplierAgingFilter)
         && (supplierDueFilter === 'all' || dueBucket === supplierDueFilter);
     }),
@@ -742,6 +743,7 @@ export default function AdminFinance() {
       '90_plus': number; '90_plusCount': number;
     }>();
     for (const bill of data?.bills || []) {
+      if (['draft', 'rejected', 'void'].includes(bill.derivedStatus)) continue;
       const bucket = payableAgingBucket(bill.dueDate, bill.balance);
       if (bucket === 'paid') continue;
       const currency = bill.currency.trim().toUpperCase() || 'UNSPECIFIED';
