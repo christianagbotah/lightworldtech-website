@@ -1232,6 +1232,15 @@ model FinanceVendorBill {
   getfundAmount  Decimal             @default(0) @db.Decimal(18, 2)
   total          Decimal             @db.Decimal(18, 2)
   notes          String              @default("")
+  createdByAdminId String             @default("")
+  createdBy      String              @default("Admin")
+  approvedByAdminId String            @default("")
+  approvedBy     String              @default("")
+  approvedAt     DateTime?
+  rejectedByAdminId String            @default("")
+  rejectedBy     String              @default("")
+  rejectedAt     DateTime?
+  rejectionReason String              @default("")
   purchaseOrderId String?             @unique
   purchaseOrder   FinancePurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
   allocations    FinanceVendorPaymentAllocation[]
