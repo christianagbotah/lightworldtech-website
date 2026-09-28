@@ -25,6 +25,7 @@ const schema = z.object({
   serviceId: z.string().min(1).nullable().optional(),
   projectId: z.string().min(1).nullable().optional(),
   agreementId: z.string().min(1).nullable().optional(),
+  billingMilestoneIds: z.array(z.string().min(1)).max(20).optional().default([]),
   status: z.enum(['draft', 'issued']).default('issued'),
   currency: z.string().trim().max(3).default('GHS'),
   issueDate: z.coerce.date(),
@@ -116,6 +117,10 @@ export async function GET(request: NextRequest) {
       service: { select: { id: true, name: true, planName: true } },
       project: { select: { id: true, name: true } },
       agreement: { select: { id: true, title: true, referenceNumber: true, agreementType: true, status: true } },
+      billingMilestones: {
+        select: { id: true, title: true, amount: true, dueDate: true, status: true },
+        orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }],
+      },
       lines: { orderBy: { order: 'asc' } },
       creditNotes: { where: { status: 'posted' }, orderBy: { issueDate: 'asc' } },
       allocations: {
@@ -213,6 +218,41 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  let selectedBillingMilestones: Array<{
+    id: string;
+    agreementId: string;
+    invoiceId: string | null;
+    status: string;
+    amount: Prisma.Decimal;
+  }> = [];
+
+  if (parsed.data.billingMilestoneIds.length > 0) {
+    if (!parsed.data.agreementId) {
+      return NextResponse.json(
+        { success: false, error: 'Billing milestones require an originating agreement' },
+        { status: 400 },
+      );
+    }
+
+    selectedBillingMilestones = await db.clientAgreementBillingMilestone.findMany({
+      where: { id: { in: parsed.data.billingMilestoneIds } },
+      select: { id: true, agreementId: true, invoiceId: true, status: true, amount: true },
+    });
+
+    if (selectedBillingMilestones.length !== parsed.data.billingMilestoneIds.length) {
+      return NextResponse.json({ success: false, error: 'One or more billing milestones could not be found' }, { status: 400 });
+    }
+    if (selectedBillingMilestones.some((item) => item.agreementId !== parsed.data.agreementId)) {
+      return NextResponse.json({ success: false, error: 'Billing milestones must belong to the linked agreement' }, { status: 400 });
+    }
+    if (selectedBillingMilestones.some((item) => item.invoiceId)) {
+      return NextResponse.json({ success: false, error: 'One or more billing milestones are already linked to an invoice' }, { status: 409 });
+    }
+    if (selectedBillingMilestones.some((item) => item.status !== 'ready')) {
+      return NextResponse.json({ success: false, error: 'Only Ready billing milestones can be invoiced' }, { status: 409 });
+    }
+  }
+
   const lines = parsed.data.lines.map((line, index) => {
     const quantity = new Prisma.Decimal(line.quantity);
     const unitPrice = new Prisma.Decimal(line.unitPrice);
@@ -231,6 +271,23 @@ export async function POST(request: NextRequest) {
   }
 
   const taxableAmount = subtotal.minus(discount).toDecimalPlaces(2);
+  if (selectedBillingMilestones.length > 0) {
+    const scheduledAmount = selectedBillingMilestones.reduce(
+      (sum, item) => sum.plus(item.amount),
+      new Prisma.Decimal(0),
+    ).toDecimalPlaces(2);
+    if (!taxableAmount.eq(scheduledAmount)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invoice net line value must match the selected billing milestone amount',
+          scheduledAmount: scheduledAmount.toFixed(2),
+          invoiceNetValue: taxableAmount.toFixed(2),
+        },
+        { status: 409 },
+      );
+    }
+  }
   const taxTreatment = parsed.data.taxTreatment || (Number(parsed.data.tax || 0) > 0 ? 'legacy' : 'none');
 
   let taxProfile: Awaited<ReturnType<typeof db.financeTaxProfile.findUnique>> = null;
@@ -396,6 +453,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    if (parsed.data.billingMilestoneIds.length > 0) {
+      const linked = await tx.clientAgreementBillingMilestone.updateMany({
+        where: {
+          id: { in: parsed.data.billingMilestoneIds },
+          agreementId: parsed.data.agreementId!,
+          invoiceId: null,
+          status: 'ready',
+        },
+        data: { invoiceId: created.id },
+      });
+      if (linked.count !== parsed.data.billingMilestoneIds.length) {
+        throw new Error('Billing milestone changed while the invoice was being created. Retry after refreshing Finance.');
+      }
+    }
+
     if (created.status === 'issued') {
       await postInvoiceJournal(tx, {
         invoiceId: created.id,
@@ -458,6 +530,7 @@ export async function POST(request: NextRequest) {
       invoiceNumber,
       organizationId: invoice.organizationId,
       agreementId: invoice.agreementId,
+      billingMilestoneIds: parsed.data.billingMilestoneIds,
       total: total.toFixed(2),
       currency: invoice.currency,
       taxTreatment: invoice.taxTreatment,
