@@ -133,6 +133,7 @@ type Invoice = {
   serviceId: string | null;
   projectId: string | null;
   agreementId: string | null;
+  billingMilestoneId: string | null;
   status: string;
   derivedStatus: string;
   currency: string;
@@ -158,6 +159,7 @@ type Invoice = {
   organization: { id: string; name: string };
   service: { id: string; name: string; planName: string } | null;
   agreement: { id: string; title: string; referenceNumber: string; agreementType: string; status: string } | null;
+  billingMilestone: { id: string; title: string; amount: string; dueDate: string | null; order: number } | null;
   lines: Array<{ id: string; description: string; quantity: string; unitPrice: string; amount: string }>;
 };
 
@@ -465,7 +467,7 @@ export default function AdminFinance() {
     renewalNoticeDays: '30', notes: '',
   });
   const [invoiceForm, setInvoiceForm] = useState({
-    organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
+    organizationId: '', serviceId: '', projectId: '', agreementId: '', billingMilestoneId: '', status: 'issued', currency: 'GHS',
     issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
     lines: [{ description: '', quantity: '1', unitPrice: '' }],
   });
@@ -618,6 +620,7 @@ export default function AdminFinance() {
         serviceId: '',
         projectId: deepLinkAgreementBilling.projectId || '',
         agreementId: deepLinkAgreementBilling.agreementId,
+        billingMilestoneId: '',
         status: 'draft',
         currency: deepLinkAgreementBilling.currency || 'GHS',
         issueDate,
@@ -652,6 +655,7 @@ export default function AdminFinance() {
         serviceId: '',
         projectId: '',
         agreementId: '',
+        billingMilestoneId: '',
         renewalForDate: '',
         dueDate: addDays(current.issueDate, organization.paymentTermsDays ?? 30),
         notes: current.notes || 'Prepared from Customer 360. Review invoice lines, tax treatment and due date before issuing.',
@@ -824,6 +828,7 @@ export default function AdminFinance() {
       serviceId: service.id,
       projectId: service.project?.id || '',
       agreementId: '',
+      billingMilestoneId: '',
       status: 'issued',
       currency: service.currency,
       issueDate: todayValue,
@@ -868,6 +873,7 @@ export default function AdminFinance() {
       serviceId: '',
       projectId: project.id,
       agreementId: '',
+      billingMilestoneId: '',
       status: 'issued',
       currency: project.renewalCurrency,
       issueDate: todayValue,
@@ -896,8 +902,18 @@ export default function AdminFinance() {
       toast.error('No unprepared agreement value remains');
       return;
     }
+    if (row.nextMilestone && row.contractValueBasis === 'unspecified') {
+      toast.error('Classify the agreement contract value basis before invoicing a scheduled milestone');
+      return;
+    }
+    if (row.nextMilestone && Number(row.nextMilestone.amount) > Number(row.remainingToPrepare)) {
+      toast.error('The next milestone exceeds the remaining uninvoiced agreement value. Review the billing schedule and existing invoices.');
+      return;
+    }
 
-    const issueDate = today();
+    const plannedIssueDate = row.nextMilestone?.dueDate?.slice(0, 10) || today();
+    const issueDate = plannedIssueDate;
+    const draftAmount = row.nextMilestone?.amount || row.remainingToPrepare;
     const context: AgreementBillingContext = {
       agreementId: row.id,
       title: row.title,
@@ -905,7 +921,7 @@ export default function AdminFinance() {
       projectId: row.projectId || '',
       projectName: row.project?.name || '',
       currency: row.currency,
-      contractValue: row.remainingToPrepare,
+      contractValue: draftAmount,
       contractValueBasis: row.contractValueBasis,
       effectiveDate: row.effectiveDate,
       expiryDate: row.expiryDate,
@@ -914,6 +930,9 @@ export default function AdminFinance() {
       row.title,
       row.referenceNumber ? '(' + row.referenceNumber + ')' : '',
     ].filter(Boolean).join(' ');
+    const milestoneLabel = row.nextMilestone
+      ? row.nextMilestone.title + (row.nextMilestone.dueDate ? ' · planned ' + new Date(row.nextMilestone.dueDate).toLocaleDateString() : '')
+      : 'unscheduled agreement value';
 
     setDeepLinkAgreementBilling(context);
     setInvoiceForm({
@@ -921,6 +940,7 @@ export default function AdminFinance() {
       serviceId: '',
       projectId: row.projectId || '',
       agreementId: row.id,
+      billingMilestoneId: row.nextMilestone?.id || '',
       status: 'draft',
       currency: row.currency,
       issueDate,
@@ -931,20 +951,21 @@ export default function AdminFinance() {
       notes:
         'Prepared from Agreement Billing Control for ' +
         agreementLabel +
-        '. ' +
+        '. Billing source: ' + milestoneLabel + '. ' +
         (row.contractValueBasis === 'tax_exclusive'
-          ? 'Remaining value is measured before tax; approved taxes may be added separately. '
+          ? 'Milestone / remaining value is measured before tax; approved taxes may be added separately. '
           : row.contractValueBasis === 'tax_inclusive'
-            ? 'Remaining value is measured against final invoice totals; if tax is applied, adjust the pre-tax line value so the final total stays within the approved agreement value. '
+            ? 'Milestone / remaining value is measured against final invoice totals; if tax is applied, adjust the pre-tax line value so the final total equals the approved value. '
             : 'Contract value basis is unspecified; confirm the tax basis before relying on the remaining amount. ') +
-        'Confirm milestone entitlement, dates, discounts and amount before issuing.',
+        'Confirm entitlement, dates, discounts and amount before issuing.',
       lines: [{
         description:
           agreementLabel +
           (row.project?.name ? ' · ' + row.project.name : '') +
-          ' · next billing draft',
+          ' · ' +
+          (row.nextMilestone?.title || 'next billing draft'),
         quantity: '1',
-        unitPrice: row.remainingToPrepare,
+        unitPrice: draftAmount,
       }],
     });
     setSection('customers');
@@ -1072,6 +1093,7 @@ export default function AdminFinance() {
       serviceId: invoiceForm.serviceId || null,
       projectId: invoiceForm.projectId || null,
       agreementId: invoiceForm.agreementId || null,
+      billingMilestoneId: invoiceForm.billingMilestoneId || null,
       renewalForDate: invoiceForm.renewalForDate || null,
       discount: Number(invoiceForm.discount || 0),
       taxTreatment: invoiceForm.taxTreatment,
@@ -1083,7 +1105,7 @@ export default function AdminFinance() {
     }, 'Invoice issued');
     if (ok) {
       setInvoiceForm({
-        organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
+        organizationId: '', serviceId: '', projectId: '', agreementId: '', billingMilestoneId: '', status: 'issued', currency: 'GHS',
         issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
         lines: [{ description: '', quantity: '1', unitPrice: '' }],
       });
@@ -2428,12 +2450,13 @@ export default function AdminFinance() {
                 serviceId: '',
                 projectId: '',
                 agreementId: '',
+                billingMilestoneId: '',
                 renewalForDate: '',
                 dueDate: addDays(invoiceForm.issueDate, organization?.paymentTermsDays ?? 30),
               });
               setDeepLinkAgreementBilling(null);
             }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => {
-              setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, agreementId: '', renewalForDate: '' });
+              setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, agreementId: '', billingMilestoneId: '', renewalForDate: '' });
               setDeepLinkAgreementBilling(null);
             }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -2480,6 +2503,14 @@ export default function AdminFinance() {
                 </div>
               );
             })()}
+            {invoiceForm.billingMilestoneId && (
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900 dark:border-indigo-900/40 dark:bg-indigo-950/20 dark:text-indigo-200">
+                <p className="font-semibold">Scheduled billing milestone</p>
+                <p className="mt-1">
+                  This draft is permanently linked to the selected agreement billing milestone. The server prevents another non-void invoice for the same milestone and validates the milestone amount against the agreement value basis.
+                </p>
+              </div>
+            )}
             {invoiceForm.agreementId && deepLinkAgreementBilling && (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-200">
                 <p className="font-semibold">Originating agreement</p>
