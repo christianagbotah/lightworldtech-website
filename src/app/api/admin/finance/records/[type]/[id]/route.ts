@@ -216,6 +216,16 @@ export async function GET(
             expiryDate: true,
           },
         },
+        billingMilestones: {
+          select: {
+            id: true,
+            title: true,
+            amount: true,
+            dueDate: true,
+            status: true,
+          },
+          orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }],
+        },
         lines: { orderBy: { order: 'asc' } },
         creditNotes: {
           where: { status: 'posted' },
