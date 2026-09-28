@@ -343,6 +343,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const migration = source('prisma/migrations/20260926123500_payment_customer_notifications/migration.sql');
     const notification = source('src/lib/payment-notification.ts');
     const manualPayments = source('src/app/api/admin/finance/payments/route.ts');
+    const receiptPosting = source('src/lib/finance-receipt-approvals.ts');
     const hubtelPayment = source('src/lib/hubtel-payment.ts');
 
     expect(schema).toContain('customerNotificationStatus');
@@ -355,7 +356,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(notification).toContain("'partial'");
     expect(notification).toContain("'skipped'");
     expect(notification).toContain('sendTransactionalMail');
-    expect(manualPayments).toContain('notifyCustomerPaymentReceived(payment.id)');
+    expect(manualPayments).toContain('postManualCustomerReceipt(actor, input)');
+    expect(receiptPosting).toContain('notifyCustomerPaymentReceived(payment.id)');
     expect(hubtelPayment).toContain('notifyCustomerPaymentReceived');
   });
 
@@ -606,6 +608,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     const publicInvoicePage = source('src/components/invoice/PublicInvoicePage.tsx');
     const invoiceAccessMigration = source('prisma/migrations/20260924233000_invoice_secure_delivery/migration.sql');
     const receipts = source('src/app/api/admin/finance/payments/route.ts');
+    const receiptPosting = source('src/lib/finance-receipt-approvals.ts');
     const bills = source('src/app/api/admin/finance/bills/route.ts');
     const expenses = source('src/app/api/admin/finance/expenses/route.ts');
     const expenseAttributionMigration = source('prisma/migrations/20260925114500_finance_expense_customer_attribution/migration.sql');
@@ -1070,7 +1073,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(financeDetails).toContain('Create & copy secure link');
     expect(financeDetails).toContain('Email invoice');
     expect(receipts).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes)');
-    expect(receipts).toContain('postCustomerPaymentJournal');
+    expect(receipts).toContain('postManualCustomerReceipt');
+    expect(receiptPosting).toContain('postCustomerPaymentJournal');
     expect(bills).toContain('postVendorBillJournal');
     expect(expenses).toContain('postExpenseJournal');
     expect(vendorPayments).toContain('invoiceBalance(bill.total, bill.allocations)');
