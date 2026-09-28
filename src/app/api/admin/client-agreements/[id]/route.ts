@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { ClientAgreement } from '@prisma/client';
+import { Prisma, type ClientAgreement } from '@prisma/client';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
@@ -72,6 +72,44 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       select: { id: true },
     });
     if (!project) return NextResponse.json({ error: 'Selected project does not belong to this client' }, { status: 400 });
+  }
+
+  const billingSchedule = await db.clientAgreementBillingMilestone.aggregate({
+    where: { agreementId: id },
+    _sum: { amount: true },
+    _count: { id: true },
+  });
+  const scheduledAmount = billingSchedule._sum.amount || new Prisma.Decimal(0);
+
+  if (
+    parsed.data.contractValue !== undefined &&
+    new Prisma.Decimal(parsed.data.contractValue).lt(scheduledAmount)
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Contract value cannot be lower than the active billing schedule total',
+        billingControl: {
+          currency: existing.currency,
+          scheduledAmount: scheduledAmount.toFixed(2),
+        },
+      },
+      { status: 409 },
+    );
+  }
+
+  if (
+    parsed.data.currency &&
+    normalizeCurrency(parsed.data.currency) !== normalizeCurrency(existing.currency) &&
+    billingSchedule._count.id > 0
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Remove or revise billing milestones before changing the agreement currency',
+      },
+      { status: 409 },
+    );
   }
 
   const data = {
