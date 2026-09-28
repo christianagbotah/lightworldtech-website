@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
           id: true,
           invoiceNumber: true,
           status: true,
+          billingMilestoneId: true,
           taxableAmount: true,
           total: true,
           issueDate: true,
@@ -107,15 +108,22 @@ export async function GET(request: NextRequest) {
       zero(),
     );
     const unscheduledAmount = positive(agreement.contractValue.minus(scheduledAmount));
-    const nextMilestone =
-      agreement.billingMilestones
-        .slice()
-        .sort((a, b) => {
-          const ad = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
-          const bd = b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
-          if (ad !== bd) return ad - bd;
-          return a.order - b.order;
-        })[0] || null;
+    const linkedMilestoneIds = new Set(
+      agreement.invoices
+        .map((invoice) => invoice.billingMilestoneId)
+        .filter((id): id is string => Boolean(id)),
+    );
+    const sortedMilestones = agreement.billingMilestones
+      .slice()
+      .sort((a, b) => {
+        const ad = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+        const bd = b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+        if (ad !== bd) return ad - bd;
+        return a.order - b.order;
+      });
+    const nextMilestone = sortedMilestones.find((milestone) => !linkedMilestoneIds.has(milestone.id)) || null;
+    const invoicedMilestoneCount = linkedMilestoneIds.size;
+    const openMilestoneCount = Math.max(0, agreement.billingMilestones.length - invoicedMilestoneCount);
     const remainingToPrepare = positive(agreement.contractValue.minus(committedAmount));
     const remainingUnissued = positive(agreement.contractValue.minus(issuedAmount));
     const overbilledAmount = positive(issuedAmount.minus(agreement.contractValue));
@@ -167,6 +175,8 @@ export async function GET(request: NextRequest) {
       scheduledAmount: scheduledAmount.toFixed(2),
       unscheduledAmount: unscheduledAmount.toFixed(2),
       billingMilestoneCount: agreement.billingMilestones.length,
+      invoicedMilestoneCount,
+      openMilestoneCount,
       nextMilestone: nextMilestone ? {
         id: nextMilestone.id,
         title: nextMilestone.title,
@@ -208,7 +218,7 @@ export async function GET(request: NextRequest) {
           basisUnspecified: values.basisUnspecified,
         })),
       methodology:
-        'Tax-exclusive agreements are compared with invoice taxable value before tax; tax-inclusive agreements are compared with final invoice totals. Unspecified legacy agreements continue to use final invoice totals but are explicitly flagged for review. Billing milestones are planning records only and do not create, issue, reserve or charge an invoice; draft invoices separately reserve billing coverage but are not treated as issued.',
+        'Tax-exclusive agreements are compared with invoice taxable value before tax; tax-inclusive agreements are compared with final invoice totals. Unspecified legacy agreements continue to use final invoice totals but are explicitly flagged for review. Billing milestones are planning records until explicitly linked to an invoice. A milestone with a non-void linked invoice is treated as invoiced for schedule progression; draft invoices reserve billing coverage but are not treated as issued.',
     },
   });
 }
