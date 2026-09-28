@@ -68,6 +68,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
   if (!existing) return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
 
+  const postIssueTermsMutationRequested =
+    existing.status !== 'draft' &&
+    existing.status !== 'void' &&
+    parsed.data.status !== 'void' &&
+    (parsed.data.dueDate !== undefined || parsed.data.notes !== undefined);
+
   const result = await db.$transaction(async (tx) => {
     await tx.$queryRawUnsafe(
       'SELECT pg_advisory_xact_lock(hashtext($1))',
@@ -115,6 +121,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const voiding = invoice.status !== 'void' && parsed.data.status === 'void';
+    const customerFacingTermsMutation =
+      parsed.data.dueDate !== undefined || parsed.data.notes !== undefined;
+
+    if (invoice.status === 'void') {
+      return {
+        updated: null,
+        blocked: { error: 'A void invoice is terminal and immutable', status: 409 } satisfies IssueBlock,
+      };
+    }
+
+    if (invoice.status !== 'draft' && !voiding && customerFacingTermsMutation) {
+      return {
+        updated: null,
+        blocked: {
+          error: 'Issued invoice terms are immutable. Void and replace the invoice to change due dates or customer-visible notes.',
+          status: 409,
+        } satisfies IssueBlock,
+      };
+    }
     if (voiding) {
       if (!hasAdminPermission(actor.role, actor.permissions, 'finance.approve')) {
         return {
@@ -145,12 +170,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           blocked: { error: 'An invoice with allocated payments cannot be voided', status: 409 } satisfies IssueBlock,
         };
       }
-    }
-    if (invoice.status === 'void' && parsed.data.status && parsed.data.status !== 'void') {
-      return {
-        updated: null,
-        blocked: { error: 'A void invoice is terminal and cannot be reactivated', status: 409 } satisfies IssueBlock,
-      };
     }
     if (invoice.status !== 'draft' && parsed.data.status === 'draft') {
       return {
@@ -490,9 +509,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       admin: actor,
       action: parsed.data.status === 'void'
         ? 'admin.finance_invoice_void_blocked'
-        : result.blocked.creditControl
-          ? 'admin.finance_invoice_issue_credit_blocked'
-          : 'admin.finance_invoice_issue_blocked',
+        : postIssueTermsMutationRequested
+          ? 'admin.finance_invoice_post_issue_mutation_blocked'
+          : result.blocked.creditControl
+            ? 'admin.finance_invoice_issue_credit_blocked'
+            : 'admin.finance_invoice_issue_blocked',
       entity: 'ClientInvoice',
       entityId: id,
       details: {
