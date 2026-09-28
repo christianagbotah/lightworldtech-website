@@ -90,6 +90,19 @@ export async function POST(
         currency: expense.currency,
       },
     });
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_expense_payment_requested',
+      entity: 'FinanceExpense',
+      entityId: expense.id,
+      details: {
+        requestNumber: approval.requestNumber,
+        approvalId: approval.id,
+        amount: expense.amount.toFixed(2),
+        currency: expense.currency,
+        effectiveDate: approval.effectiveDate.toISOString(),
+      },
+    });
 
     return NextResponse.json({
       success: true,
