@@ -122,8 +122,8 @@ export async function GET(request: NextRequest) {
         return a.order - b.order;
       });
     const nextMilestone = sortedMilestones.find((milestone) => !linkedMilestoneIds.has(milestone.id)) || null;
-    const invoicedMilestoneCount = linkedMilestoneIds.size;
-    const openMilestoneCount = Math.max(0, agreement.billingMilestones.length - invoicedMilestoneCount);
+    const linkedMilestoneCount = linkedMilestoneIds.size;
+    const openMilestoneCount = Math.max(0, agreement.billingMilestones.length - linkedMilestoneCount);
     const remainingToPrepare = positive(agreement.contractValue.minus(committedAmount));
     const remainingUnissued = positive(agreement.contractValue.minus(issuedAmount));
     const overbilledAmount = positive(issuedAmount.minus(agreement.contractValue));
@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
       scheduledAmount: scheduledAmount.toFixed(2),
       unscheduledAmount: unscheduledAmount.toFixed(2),
       billingMilestoneCount: agreement.billingMilestones.length,
-      invoicedMilestoneCount,
+      linkedMilestoneCount,
       openMilestoneCount,
       nextMilestone: nextMilestone ? {
         id: nextMilestone.id,
