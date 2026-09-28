@@ -22,6 +22,7 @@ import {
   isCompletedProjectRestartIntent,
   isCompletedProjectStatusIntent,
   isLeadershipIntent,
+  isMediaKitIntent,
   isNewsroomIntent,
   isTrustIntent,
 } from '@/lib/assistant-intents';
@@ -364,12 +365,22 @@ export async function answerConcierge(
     };
   }
 
+  if (isMediaKitIntent(q)) {
+    return {
+      intent: 'newsroom',
+      reply:
+        'Lightworld has a governed Media Kit with the approved company fact sheet, executive leadership, core capabilities, publisher-linked recognition, public coverage, media contact details, and official PNG and SVG logo files. You can also print or save the fact sheet as a PDF.',
+      suggestions: ['Open the media kit', 'Show me your awards', 'How can media contact you?'],
+      cta: { label: 'Open Media Kit', href: '/media-kit' },
+    };
+  }
+
   if (isNewsroomIntent(q)) {
     return {
       intent: 'newsroom',
       reply:
         'The Lightworld Newsroom & Media Center brings together verified company facts, source-linked recognition and press coverage, executive leadership information, recent published insights, and media contact details.',
-      suggestions: ['Show me your awards', 'Who leads Lightworld?', 'How can media contact you?'],
+      suggestions: ['Open the media kit', 'Show me your awards', 'Who leads Lightworld?', 'How can media contact you?'],
       cta: { label: 'Open Newsroom', href: '/newsroom' },
     };
   }
