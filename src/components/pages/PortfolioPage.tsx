@@ -207,7 +207,7 @@ export default function PortfolioPage({ settings = {} }: { settings?: SiteSettin
               >
                 <div className="relative aspect-[16/9] overflow-hidden bg-slate-100 dark:bg-white/[0.03]">
                   {project.image ? (
-                    <Image src={project.image} alt="" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover transition duration-700 group-hover:scale-[1.025]" unoptimized />
+                    <Image src={project.image} alt={`${project.title} homepage hero`} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover object-top transition duration-700 group-hover:scale-[1.025]" unoptimized />
                   ) : (
                     <div className="lw-dot-grid absolute inset-0 bg-slate-950 opacity-80" />
                   )}
