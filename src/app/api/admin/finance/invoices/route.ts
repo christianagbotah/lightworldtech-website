@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { postInvoiceJournal } from '@/lib/finance-ledger';
+import { getFinanceApprovalPolicy } from '@/lib/finance-approvals';
 import {
   computeTaxComponents,
   invoiceBalance,
@@ -150,6 +151,10 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: 'Invalid invoice', details: parsed.error.flatten() }, { status: 400 });
   }
+
+  const approvalPolicy = await getFinanceApprovalPolicy();
+  const makerCheckerEnabled = Boolean(approvalPolicy?.enabled && approvalPolicy.requireSecondApprover);
+  const effectiveStatus: 'draft' | 'issued' = makerCheckerEnabled ? 'draft' : parsed.data.status;
 
   const organization = await db.clientOrganization.findUnique({
     where: { id: parsed.data.organizationId },
@@ -304,7 +309,7 @@ export async function POST(request: NextRequest) {
 
   const currency = normalizeCurrency(parsed.data.currency);
   const transactionResult = await db.$transaction(async (tx) => {
-    if (parsed.data.status === 'issued') {
+    if (effectiveStatus === 'issued') {
       if (organization.creditHold) {
         return {
           invoice: null,
@@ -411,7 +416,7 @@ export async function POST(request: NextRequest) {
         projectId: parsed.data.projectId || null,
         agreementId: parsed.data.agreementId || null,
         billingMilestoneId: parsed.data.billingMilestoneId || null,
-        status: parsed.data.status,
+        status: effectiveStatus,
         currency,
         issueDate: parsed.data.issueDate,
         dueDate: parsed.data.dueDate,
@@ -429,7 +434,13 @@ export async function POST(request: NextRequest) {
         tax,
         total,
         notes: parsed.data.notes,
+        createdByAdminId: actor.id,
         createdBy: actor.name || actor.email,
+        ...(effectiveStatus === 'issued' ? {
+          issuedByAdminId: actor.id,
+          issuedBy: actor.name || actor.email,
+          issuedAt: new Date(),
+        } : {}),
         lines: { create: lines },
       },
       include: {
@@ -523,8 +534,18 @@ export async function POST(request: NextRequest) {
       nhilAmount: invoice.nhilAmount.toFixed(2),
       getfundAmount: invoice.getfundAmount.toFixed(2),
       renewalForDate: invoice.renewalForDate?.toISOString() || null,
+      requestedStatus: parsed.data.status,
+      effectiveStatus: invoice.status,
+      makerCheckerRequired: makerCheckerEnabled,
     },
   });
 
-  return NextResponse.json({ success: true, data: serializeInvoice(invoice) }, { status: 201 });
+  return NextResponse.json({
+    success: true,
+    data: {
+      ...serializeInvoice(invoice),
+      makerCheckerRequired: makerCheckerEnabled,
+      requestedStatus: parsed.data.status,
+    },
+  }, { status: 201 });
 }

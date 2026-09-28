@@ -1272,7 +1272,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(approvalLib).toContain('approval.requestedByAdminId === actor.id');
     expect(approvalLib).toContain('invoiceBalance(bill.total, bill.allocations)');
     expect(approvalLib).toContain('refundableBalance');
-    expect(approvalWorkspace).toContain('Maker-checker cash-out approval');
+    expect(approvalWorkspace).toContain('Finance maker-checker approval');
     expect(approvalWorkspace).toContain('Pending cash-out approvals');
     expect(approvalWorkspace).toContain('Approval history');
     expect(approvalWorkspace).toContain('Enable maker-checker');
@@ -2889,7 +2889,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(creditPolicy).toContain("'admin.client_credit_policy_approval_requested'");
     expect(creditPolicy).toContain("'admin.client_credit_terms_updated'");
     expect(creditPolicy).toContain('A credit hold requires a reason');
-    expect(invoices).toContain("parsed.data.status === 'issued'");
+    expect(invoices).toContain("effectiveStatus === 'issued'");
     expect(invoices).toContain("'lightworld-credit-control:' + organization.id + ':' + currency");
     expect(invoices).toContain('invoiceBalance(row.total, row.allocations, row.creditNotes)');
     expect(invoices).toContain('projected.gt(organization.creditLimit)');

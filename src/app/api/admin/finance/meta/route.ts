@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
+import { countEligibleFinanceApprovers, getFinanceApprovalPolicy } from '@/lib/finance-approvals';
 
 export async function GET(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
 
-  const [organizations, vendors, taxProfile] = await Promise.all([
+  const [organizations, vendors, taxProfile, approvalPolicy, eligibleApprovers] = await Promise.all([
     db.clientOrganization.findMany({
       where: { status: 'active' },
       orderBy: { name: 'asc' },
@@ -58,6 +59,8 @@ export async function GET(request: NextRequest) {
       select: { id: true, name: true, email: true, phone: true, paymentTermsDays: true },
     }),
     db.financeTaxProfile.findUnique({ where: { id: 'ghana-default' } }),
+    getFinanceApprovalPolicy(),
+    countEligibleFinanceApprovers(),
   ]);
 
   return NextResponse.json({
@@ -89,6 +92,12 @@ export async function GET(request: NextRequest) {
         canManage: actor.role === 'super_admin',
         effectiveRate: taxProfile.vatRate.plus(taxProfile.nhilRate).plus(taxProfile.getfundRate).toFixed(2),
       } : null,
+      approvalPolicy: {
+        enabled: approvalPolicy?.enabled || false,
+        requireSecondApprover: approvalPolicy?.requireSecondApprover ?? true,
+        eligibleApprovers,
+        canApprove: hasAdminPermission(actor.role, actor.permissions, 'finance.approve'),
+      },
     },
   });
 }

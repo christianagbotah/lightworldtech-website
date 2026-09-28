@@ -6,6 +6,7 @@ import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance'
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { postInvoiceJournal, postInvoiceVoidJournal } from '@/lib/finance-ledger';
 import { invoiceBalance, normalizeCurrency } from '@/lib/finance';
+import { getFinanceApprovalPolicy } from '@/lib/finance-approvals';
 
 const schema = z.object({
   status: z.enum(['draft', 'issued', 'void']).optional(),
@@ -46,7 +47,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params;
   const existing = await db.clientInvoice.findUnique({
     where: { id },
-    select: { id: true, invoiceNumber: true, status: true },
+    select: { id: true, invoiceNumber: true, status: true, createdByAdminId: true },
   });
   if (!existing) return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
 
@@ -123,6 +124,35 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const issuing = invoice.status === 'draft' && parsed.data.status === 'issued';
     if (issuing) {
+      const approvalPolicy = await getFinanceApprovalPolicy();
+      const makerCheckerEnabled = Boolean(approvalPolicy?.enabled && approvalPolicy.requireSecondApprover);
+      if (makerCheckerEnabled) {
+        if (!hasAdminPermission(actor.role, actor.permissions, 'finance.approve')) {
+          return {
+            updated: null,
+            blocked: { error: 'Finance approval permission is required to issue this draft', status: 403 } satisfies IssueBlock,
+          };
+        }
+        if (!invoice.createdByAdminId) {
+          return {
+            updated: null,
+            blocked: {
+              error: 'This legacy draft has no recorded maker identity. Void it and prepare a replacement under the current maker-checker policy.',
+              status: 409,
+            } satisfies IssueBlock,
+          };
+        }
+        if (invoice.createdByAdminId === actor.id) {
+          return {
+            updated: null,
+            blocked: {
+              error: 'Maker-checker prevents the invoice preparer from issuing their own draft',
+              status: 409,
+            } satisfies IssueBlock,
+          };
+        }
+      }
+
       if (invoice.organization.creditHold) {
         return {
           updated: null,
@@ -320,7 +350,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
     }
 
-    const next = await tx.clientInvoice.update({ where: { id }, data: parsed.data });
+    const updateData = issuing
+      ? {
+          ...parsed.data,
+          issuedByAdminId: actor.id,
+          issuedBy: actor.name || actor.email,
+          issuedAt: new Date(),
+        }
+      : parsed.data;
+    const next = await tx.clientInvoice.update({ where: { id }, data: updateData });
 
     if (issuing && next.status === 'issued') {
       await postInvoiceJournal(tx, {
@@ -404,6 +442,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       fromStatus: existing.status,
       toStatus: updated.status,
       changedFields: Object.keys(parsed.data),
+      createdByAdminId: existing.createdByAdminId,
+      issuedByAdminId: existing.status === 'draft' && updated.status === 'issued' ? actor.id : '',
     },
   });
 

@@ -639,7 +639,9 @@ export default function FinanceRecordDetailsDialog({
                     <DetailItem label="Currency" value={data.invoice.currency} mono />
                     <DetailItem label="Issue date" value={date(data.invoice.issueDate)} />
                     <DetailItem label="Due date" value={date(data.invoice.dueDate)} />
-                    <DetailItem label="Created by" value={data.invoice.createdBy || 'Admin'} />
+                    <DetailItem label="Prepared by" value={data.invoice.createdBy || 'Admin'} />
+                    <DetailItem label="Issued by" value={data.invoice.issuedBy || (data.invoice.status === 'draft' ? 'Pending second-person approval' : 'Legacy / not recorded')} />
+                    <DetailItem label="Issued at" value={data.invoice.issuedAt ? date(data.invoice.issuedAt, true) : '—'} />
                     <DetailItem label="Subtotal" value={money(data.invoice.subtotal, data.invoice.currency)} />
                     <DetailItem label="Discount" value={money(data.invoice.discount, data.invoice.currency)} />
                     <DetailItem label="Tax" value={money(data.invoice.tax, data.invoice.currency)} />

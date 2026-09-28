@@ -155,6 +155,8 @@ type Invoice = {
   total: string;
   amountPaid: string;
   balance: string;
+  makerCheckerRequired?: boolean;
+  requestedStatus?: string;
   organization: { id: string; name: string };
   service: { id: string; name: string; planName: string } | null;
   agreement: { id: string; title: string; referenceNumber: string; agreementType: string; status: string } | null;
@@ -260,6 +262,13 @@ type TaxProfile = {
   effectiveRate: string;
 };
 
+type FinanceApprovalPolicyMeta = {
+  enabled: boolean;
+  requireSecondApprover: boolean;
+  eligibleApprovers: number;
+  canApprove: boolean;
+};
+
 type FinanceData = {
   dashboard: Dashboard;
   organizations: Organization[];
@@ -271,6 +280,7 @@ type FinanceData = {
   supplierPayments: SupplierPayment[];
   expenses: Expense[];
   taxProfile: TaxProfile | null;
+  approvalPolicy: FinanceApprovalPolicyMeta;
 };
 
 type AgreementBillingContext = {
@@ -508,7 +518,7 @@ export default function AdminFinance() {
       const [dashboard, meta, services, invoices, receipts, bills, supplierPayments, expenses] =
         await Promise.all([
           api<Dashboard>('/api/admin/finance/dashboard'),
-          api<{ organizations: Organization[]; vendors: Vendor[]; taxProfile: TaxProfile | null }>('/api/admin/finance/meta'),
+          api<{ organizations: Organization[]; vendors: Vendor[]; taxProfile: TaxProfile | null; approvalPolicy: FinanceApprovalPolicyMeta }>('/api/admin/finance/meta'),
           api<Service[]>('/api/admin/finance/services'),
           api<Invoice[]>('/api/admin/finance/invoices'),
           api<Receipt[]>('/api/admin/finance/payments'),
@@ -527,6 +537,7 @@ export default function AdminFinance() {
         supplierPayments,
         expenses,
         taxProfile: meta.taxProfile,
+        approvalPolicy: meta.approvalPolicy,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to load Finance & Accounts';
@@ -1090,28 +1101,52 @@ export default function AdminFinance() {
 
   const submitInvoice = async (event: FormEvent) => {
     event.preventDefault();
-    const ok = await post('/api/admin/finance/invoices', {
-      ...invoiceForm,
-      serviceId: invoiceForm.serviceId || null,
-      projectId: invoiceForm.projectId || null,
-      agreementId: invoiceForm.agreementId || null,
-      billingMilestoneId: invoiceForm.billingMilestoneId || null,
-      renewalForDate: invoiceForm.renewalForDate || null,
-      discount: Number(invoiceForm.discount || 0),
-      taxTreatment: invoiceForm.taxTreatment,
-      lines: invoiceForm.lines.map((line) => ({
-        ...line,
-        quantity: Number(line.quantity || 0),
-        unitPrice: Number(line.unitPrice || 0),
-      })),
-    }, 'Invoice issued');
-    if (ok) {
+    setSaving(true);
+    try {
+      const makerCheckerEnabled = Boolean(data?.approvalPolicy.enabled && data.approvalPolicy.requireSecondApprover);
+      const created = await api<Invoice>('/api/admin/finance/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...invoiceForm,
+          status: makerCheckerEnabled ? 'draft' : invoiceForm.status,
+          serviceId: invoiceForm.serviceId || null,
+          projectId: invoiceForm.projectId || null,
+          agreementId: invoiceForm.agreementId || null,
+          billingMilestoneId: invoiceForm.billingMilestoneId || null,
+          renewalForDate: invoiceForm.renewalForDate || null,
+          discount: Number(invoiceForm.discount || 0),
+          taxTreatment: invoiceForm.taxTreatment,
+          lines: invoiceForm.lines.map((line) => ({
+            ...line,
+            quantity: Number(line.quantity || 0),
+            unitPrice: Number(line.unitPrice || 0),
+          })),
+        }),
+      });
+
+      if (created.status === 'draft') {
+        toast.success(
+          makerCheckerEnabled || created.makerCheckerRequired
+            ? 'Invoice draft saved. A different finance approver must review and issue it.'
+            : 'Invoice draft saved',
+        );
+      } else {
+        toast.success('Invoice issued');
+      }
+
       setInvoiceForm({
         organizationId: '', serviceId: '', projectId: '', agreementId: '', billingMilestoneId: '', status: 'issued', currency: 'GHS',
         issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
         lines: [{ description: '', quantity: '1', unitPrice: '' }],
       });
       setDeepLinkAgreementBilling(null);
+      setDialog(null);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to save invoice');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -2442,8 +2477,21 @@ export default function AdminFinance() {
         }
       }}>
         <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-y-auto">
-          <DialogHeader><DialogTitle>Issue customer invoice</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{data.approvalPolicy.enabled ? 'Prepare customer invoice draft' : 'Issue customer invoice'}</DialogTitle>
+          </DialogHeader>
           <form onSubmit={submitInvoice} className="space-y-4">
+            {data.approvalPolicy.enabled && (
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900 dark:border-indigo-900/40 dark:bg-indigo-950/20 dark:text-indigo-200">
+                <p className="font-semibold">Finance maker-checker is active</p>
+                <p className="mt-1 leading-5">
+                  This invoice will be saved as a draft. A different administrator with Finance Approvals permission must review and issue it before any ledger posting or customer delivery.
+                </p>
+                <p className="mt-1 text-[10px] opacity-80">
+                  Eligible approvers: {data.approvalPolicy.eligibleApprovers}
+                </p>
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2"><div><Label>Client</Label><select required value={invoiceForm.organizationId} onChange={(e) => {
               const organization = data.organizations.find((item) => item.id === e.target.value);
               setInvoiceForm({
