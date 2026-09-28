@@ -82,6 +82,15 @@ export async function GET(request: NextRequest) {
         project: { select: { id: true, name: true } },
         agreement: { select: { id: true, title: true, referenceNumber: true } },
         billingMilestone: { select: { id: true, title: true } },
+        replacementInvoice: {
+          select: {
+            id: true,
+            invoiceNumber: true,
+            status: true,
+            issueDate: true,
+            createdAt: true,
+          },
+        },
       },
     }),
   ]);
