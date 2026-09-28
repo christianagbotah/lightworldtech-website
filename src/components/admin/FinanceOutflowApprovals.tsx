@@ -116,6 +116,25 @@ type InvoiceDraftApproval = {
   billingMilestone: { id: string; title: string } | null;
 };
 
+type RejectedInvoiceDraft = {
+  id: string;
+  invoiceNumber: string;
+  currency: string;
+  total: string;
+  createdByAdminId: string;
+  createdBy: string;
+  createdAt: string;
+  rejectedByAdminId: string;
+  rejectedBy: string;
+  rejectedAt: string;
+  rejectionReason: string;
+  mine: boolean;
+  organization: { id: string; name: string };
+  project: { id: string; name: string } | null;
+  agreement: { id: string; title: string; referenceNumber: string } | null;
+  billingMilestone: { id: string; title: string } | null;
+};
+
 type Inbox = {
   policy: {
     enabled: boolean;
@@ -126,6 +145,7 @@ type Inbox = {
   approvals: Approval[];
   creditApprovals: CreditApproval[];
   invoiceDrafts: InvoiceDraftApproval[];
+  rejectedInvoiceDrafts: RejectedInvoiceDraft[];
 };
 
 type Policy = {
@@ -367,6 +387,7 @@ export default function FinanceOutflowApprovals({
   const scheduled = approvals.filter((item) => item.status === 'scheduled');
   const history = approvals.filter((item) => !['pending', 'scheduled'].includes(item.status));
   const invoiceDrafts = inbox?.invoiceDrafts || [];
+  const rejectedInvoiceDrafts = inbox?.rejectedInvoiceDrafts || [];
   const creditApprovals = inbox?.creditApprovals || [];
   const pendingCredit = creditApprovals.filter((item) => item.status === 'pending');
   const creditHistory = creditApprovals.filter((item) => item.status !== 'pending');
@@ -534,6 +555,75 @@ export default function FinanceOutflowApprovals({
                   <TableRow>
                     <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                       No invoice drafts are waiting for review or issuance.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="text-base">Rejected invoice drafts</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Rejected drafts are void and cannot issue later. The recorded reason remains attached for audit and replacement billing.
+              </p>
+            </div>
+            <Badge variant="outline">{rejectedInvoiceDrafts.length} rejected</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-rejected-invoice-drafts" className="min-w-[1040px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>Customer / context</TableHead>
+                  <TableHead>Prepared by</TableHead>
+                  <TableHead>Rejected by</TableHead>
+                  <TableHead>Rejected</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rejectedInvoiceDrafts.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell>
+                      <button type="button" className="text-left" onClick={() => onOpenInvoice?.(invoice.id)}>
+                        <p className="font-mono text-xs font-semibold hover:underline">{invoice.invoiceNumber}</p>
+                        {invoice.mine && <Badge variant="outline" className="mt-1">Prepared by you</Badge>}
+                      </button>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-xs font-medium">{invoice.organization.name}</p>
+                      <p className="mt-1 max-w-[300px] truncate text-[10px] text-muted-foreground">
+                        {invoice.billingMilestone?.title
+                          ? 'Milestone: ' + invoice.billingMilestone.title
+                          : invoice.agreement?.title
+                            ? 'Agreement: ' + invoice.agreement.title + (invoice.agreement.referenceNumber ? ' · ' + invoice.agreement.referenceNumber : '')
+                            : invoice.project?.name
+                              ? 'Project: ' + invoice.project.name
+                              : 'General account invoice'}
+                      </p>
+                    </TableCell>
+                    <TableCell className="text-xs">{invoice.createdBy || 'Finance'}</TableCell>
+                    <TableCell className="text-xs">{invoice.rejectedBy || 'Finance approver'}</TableCell>
+                    <TableCell className="text-xs">{date(invoice.rejectedAt)}</TableCell>
+                    <TableCell>
+                      <p className="max-w-[360px] whitespace-pre-wrap text-xs text-rose-700 dark:text-rose-300">{invoice.rejectionReason}</p>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">{money(invoice.total, invoice.currency)}</TableCell>
+                  </TableRow>
+                ))}
+                {!rejectedInvoiceDrafts.length && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                      No invoice draft rejection history yet.
                     </TableCell>
                   </TableRow>
                 )}
