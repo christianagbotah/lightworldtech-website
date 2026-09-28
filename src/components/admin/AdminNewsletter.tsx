@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   MailCheck,
@@ -226,29 +226,25 @@ export default function AdminNewsletter() {
   };
   const transport = data?.transport;
 
-  const visibleSubscribers = useMemo(() => {
-    const query = subscriberQuery.trim().toLowerCase();
-    return (data?.subscribers || []).filter((subscriber) => {
-      if (subscriberStatus === 'active' && !subscriber.active) return false;
-      if (subscriberStatus === 'paused' && subscriber.active) return false;
-      return !query || subscriber.email.toLowerCase().includes(query);
-    });
-  }, [data?.subscribers, subscriberQuery, subscriberStatus]);
+  const subscriberSearch = subscriberQuery.trim().toLowerCase();
+  const visibleSubscribers = (data?.subscribers || []).filter((subscriber) => {
+    if (subscriberStatus === 'active' && !subscriber.active) return false;
+    if (subscriberStatus === 'paused' && subscriber.active) return false;
+    return !subscriberSearch || subscriber.email.toLowerCase().includes(subscriberSearch);
+  });
 
-  const visibleDeliveries = useMemo(() => {
-    const query = deliveryQuery.trim().toLowerCase();
-    return (data?.deliveries || []).filter((delivery) => {
-      if (deliveryStatus !== 'all' && delivery.status !== deliveryStatus) return false;
-      if (!query) return true;
-      return [
-        delivery.recipient,
-        delivery.kind,
-        delivery.subject,
-        delivery.transport,
-        delivery.error,
-      ].some((value) => value?.toLowerCase().includes(query));
-    });
-  }, [data?.deliveries, deliveryQuery, deliveryStatus]);
+  const deliverySearch = deliveryQuery.trim().toLowerCase();
+  const visibleDeliveries = (data?.deliveries || []).filter((delivery) => {
+    if (deliveryStatus !== 'all' && delivery.status !== deliveryStatus) return false;
+    if (!deliverySearch) return true;
+    return [
+      delivery.recipient,
+      delivery.kind,
+      delivery.subject,
+      delivery.transport,
+      delivery.error,
+    ].some((value) => value?.toLowerCase().includes(deliverySearch));
+  });
 
   return (
     <div className="space-y-6">

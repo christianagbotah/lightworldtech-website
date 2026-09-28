@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
@@ -33,14 +33,13 @@ interface BlogPost {
 export default function BlogDetailPage({ initialPost }: { initialPost: BlogPost }) {
   const post = initialPost;
 
-  const publishedDate = useMemo(() => {
-    if (!post?.createdAt) return '';
-    return new Date(post.createdAt).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }, [post?.createdAt]);
+  const publishedDate = post?.createdAt
+    ? new Date(post.createdAt).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : '';
 
   const share = async () => {
     if (typeof window === 'undefined' || !post) return;
