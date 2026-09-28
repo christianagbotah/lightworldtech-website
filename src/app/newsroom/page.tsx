@@ -263,11 +263,14 @@ export default async function NewsroomPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <a href={'mailto:' + email + '?subject=Media%20enquiry'} className="inline-flex h-11 items-center gap-2 rounded-full bg-emerald-400 px-5 text-sm font-semibold text-slate-950">
+                <Link href="/media-kit" className="inline-flex h-11 items-center gap-2 rounded-full bg-amber-400 px-5 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
+                  Media kit <ArrowRight className="size-4" />
+                </Link>
+                <a href={'mailto:' + email + '?subject=Media%20enquiry'} className="inline-flex h-11 items-center gap-2 rounded-full border border-white/[0.1] px-5 text-sm font-semibold text-white/80">
                   <Mail className="size-4" /> {email}
                 </a>
-                <a href="/logo.png" target="_blank" rel="noreferrer" className="inline-flex h-11 items-center gap-2 rounded-full border border-white/[0.1] px-5 text-sm font-semibold text-white/70">
-                  View logo <ArrowUpRight className="size-4" />
+                <a href="/logo.png" download="lightworld-technologies-logo.png" className="inline-flex h-11 items-center gap-2 rounded-full border border-white/[0.1] px-5 text-sm font-semibold text-white/70">
+                  Download logo <ArrowUpRight className="size-4" />
                 </a>
               </div>
             </div>
