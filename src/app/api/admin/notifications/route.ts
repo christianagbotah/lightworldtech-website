@@ -345,6 +345,29 @@ export async function GET(request: NextRequest) {
 
   if (canFinance) {
     const now = new Date();
+    const rejectedInvoiceCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const myRecentlyRejectedInvoiceDrafts = await db.clientInvoice.count({
+      where: {
+        createdByAdminId: admin.id,
+        status: 'void',
+        rejectedAt: { gte: rejectedInvoiceCutoff },
+      },
+    });
+    if (myRecentlyRejectedInvoiceDrafts > 0) {
+      notices.push({
+        id: 'finance-my-rejected-invoice-drafts',
+        severity: 'warning',
+        title: 'Your invoice drafts need correction',
+        message:
+          myRecentlyRejectedInvoiceDrafts +
+          ' invoice draft' +
+          (myRecentlyRejectedInvoiceDrafts === 1 ? ' was' : 's were') +
+          ' rejected in the last 30 days. Review the recorded reason before preparing a replacement.',
+        count: myRecentlyRejectedInvoiceDrafts,
+        action: 'admin-finance-approvals',
+      });
+    }
+
     const renewalWindow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
     const [overdueInvoices, overdueBills, renewalCandidates, projectRenewalCandidates, expiredServices, collectionInvoices, renewalDrafts] = await Promise.all([
       db.clientInvoice.findMany({

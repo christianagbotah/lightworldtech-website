@@ -642,6 +642,12 @@ export default function FinanceRecordDetailsDialog({
                     <DetailItem label="Prepared by" value={data.invoice.createdBy || 'Admin'} />
                     <DetailItem label="Issued by" value={data.invoice.issuedBy || (data.invoice.status === 'draft' ? 'Pending second-person approval' : 'Legacy / not recorded')} />
                     <DetailItem label="Issued at" value={data.invoice.issuedAt ? date(data.invoice.issuedAt, true) : '—'} />
+                    {data.invoice.rejectedAt && (
+                      <>
+                        <DetailItem label="Rejected by" value={data.invoice.rejectedBy || 'Finance approver'} />
+                        <DetailItem label="Rejected at" value={date(data.invoice.rejectedAt, true)} />
+                      </>
+                    )}
                     <DetailItem label="Subtotal" value={money(data.invoice.subtotal, data.invoice.currency)} />
                     <DetailItem label="Discount" value={money(data.invoice.discount, data.invoice.currency)} />
                     <DetailItem label="Tax" value={money(data.invoice.tax, data.invoice.currency)} />
@@ -651,6 +657,12 @@ export default function FinanceRecordDetailsDialog({
                 <Card className="min-w-0 border-border/60">
                   <CardHeader className="pb-3"><CardTitle className="text-base">Notes & lifecycle</CardTitle></CardHeader>
                   <CardContent className="space-y-3 text-sm">
+                    {data.invoice.rejectedAt && (
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-100">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em]">Draft rejected</p>
+                        <p className="mt-1 whitespace-pre-wrap text-sm">{data.invoice.rejectionReason || 'No rejection reason recorded.'}</p>
+                      </div>
+                    )}
                     <div className="rounded-xl bg-muted/25 p-3">
                       <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Notes</p>
                       <p className="mt-1 whitespace-pre-wrap text-sm">{data.invoice.notes || 'No invoice notes.'}</p>
