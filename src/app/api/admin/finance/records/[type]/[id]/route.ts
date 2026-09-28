@@ -212,6 +212,7 @@ export async function GET(
             referenceNumber: true,
             agreementType: true,
             status: true,
+            contractValueBasis: true,
             effectiveDate: true,
             expiryDate: true,
           },
