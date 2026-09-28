@@ -1,0 +1,162 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
+import { db } from '@/lib/db';
+import { getActiveAdminContext } from '@/lib/admin-governance';
+import { hasAdminPermission } from '@/lib/admin-permissions';
+
+function zero(): Prisma.Decimal {
+  return new Prisma.Decimal(0);
+}
+
+function positive(value: Prisma.Decimal): Prisma.Decimal {
+  return Prisma.Decimal.max(zero(), value);
+}
+
+export async function GET(request: NextRequest) {
+  const actor = await getActiveAdminContext(request);
+  if (!actor || !hasAdminPermission(actor.role, actor.permissions, 'finance.manage')) {
+    return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+  }
+
+  const organizationId = request.nextUrl.searchParams.get('organizationId')?.trim() || '';
+
+  const agreements = await db.clientAgreement.findMany({
+    where: {
+      status: 'active',
+      approvalStatus: 'approved',
+      contractValue: { gt: 0 },
+      ...(organizationId ? { organizationId } : {}),
+    },
+    orderBy: [{ expiryDate: 'asc' }, { updatedAt: 'desc' }],
+    take: 1000,
+    select: {
+      id: true,
+      organizationId: true,
+      projectId: true,
+      title: true,
+      referenceNumber: true,
+      agreementType: true,
+      currency: true,
+      contractValue: true,
+      effectiveDate: true,
+      expiryDate: true,
+      updatedAt: true,
+      organization: {
+        select: {
+          id: true,
+          name: true,
+          paymentTermsDays: true,
+        },
+      },
+      project: {
+        select: {
+          id: true,
+          name: true,
+          status: true,
+        },
+      },
+      invoices: {
+        where: { status: { not: 'void' } },
+        orderBy: [{ issueDate: 'desc' }, { createdAt: 'desc' }],
+        select: {
+          id: true,
+          invoiceNumber: true,
+          status: true,
+          total: true,
+          issueDate: true,
+          dueDate: true,
+        },
+      },
+    },
+  });
+
+  const summary = new Map<string, {
+    contract: Prisma.Decimal;
+    issued: Prisma.Decimal;
+    drafts: Prisma.Decimal;
+    remainingToPrepare: Prisma.Decimal;
+    agreements: number;
+    overbilled: number;
+  }>();
+
+  const rows = agreements.map((agreement) => {
+    const issuedInvoices = agreement.invoices.filter((invoice) => invoice.status !== 'draft');
+    const draftInvoices = agreement.invoices.filter((invoice) => invoice.status === 'draft');
+    const issuedAmount = issuedInvoices.reduce((sum, invoice) => sum.plus(invoice.total), zero());
+    const draftAmount = draftInvoices.reduce((sum, invoice) => sum.plus(invoice.total), zero());
+    const committedAmount = issuedAmount.plus(draftAmount);
+    const remainingToPrepare = positive(agreement.contractValue.minus(committedAmount));
+    const remainingUnissued = positive(agreement.contractValue.minus(issuedAmount));
+    const overbilledAmount = positive(issuedAmount.minus(agreement.contractValue));
+
+    let state: 'unbilled' | 'partially_billed' | 'draft_pending' | 'fully_billed' | 'overbilled' = 'unbilled';
+    if (overbilledAmount.gt(0)) state = 'overbilled';
+    else if (remainingUnissued.eq(0)) state = 'fully_billed';
+    else if (draftAmount.gt(0)) state = 'draft_pending';
+    else if (issuedAmount.gt(0)) state = 'partially_billed';
+
+    const currency = agreement.currency.trim().toUpperCase() || 'UNSPECIFIED';
+    const bucket = summary.get(currency) || {
+      contract: zero(),
+      issued: zero(),
+      drafts: zero(),
+      remainingToPrepare: zero(),
+      agreements: 0,
+      overbilled: 0,
+    };
+    bucket.contract = bucket.contract.plus(agreement.contractValue);
+    bucket.issued = bucket.issued.plus(issuedAmount);
+    bucket.drafts = bucket.drafts.plus(draftAmount);
+    bucket.remainingToPrepare = bucket.remainingToPrepare.plus(remainingToPrepare);
+    bucket.agreements += 1;
+    if (state === 'overbilled') bucket.overbilled += 1;
+    summary.set(currency, bucket);
+
+    return {
+      id: agreement.id,
+      organizationId: agreement.organizationId,
+      projectId: agreement.projectId,
+      title: agreement.title,
+      referenceNumber: agreement.referenceNumber,
+      agreementType: agreement.agreementType,
+      currency,
+      contractValue: agreement.contractValue.toFixed(2),
+      issuedAmount: issuedAmount.toFixed(2),
+      draftAmount: draftAmount.toFixed(2),
+      remainingToPrepare: remainingToPrepare.toFixed(2),
+      remainingUnissued: remainingUnissued.toFixed(2),
+      overbilledAmount: overbilledAmount.toFixed(2),
+      state,
+      effectiveDate: agreement.effectiveDate,
+      expiryDate: agreement.expiryDate,
+      updatedAt: agreement.updatedAt,
+      organization: agreement.organization,
+      project: agreement.project,
+      latestInvoice: agreement.invoices[0] ? {
+        ...agreement.invoices[0],
+        total: agreement.invoices[0].total.toFixed(2),
+      } : null,
+      invoiceCount: agreement.invoices.length,
+    };
+  });
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      rows,
+      byCurrency: [...summary.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([currency, values]) => ({
+          currency,
+          contractValue: values.contract.toFixed(2),
+          issuedAmount: values.issued.toFixed(2),
+          draftAmount: values.drafts.toFixed(2),
+          remainingToPrepare: values.remainingToPrepare.toFixed(2),
+          agreements: values.agreements,
+          overbilled: values.overbilled,
+        })),
+      methodology:
+        'Agreement contract values are compared with linked invoice totals in the same recorded currency. Draft invoices reserve billing coverage but are not treated as issued. Confirm whether each contract value is tax-inclusive or tax-exclusive before relying on the remaining amount as a commercial balance.',
+    },
+  });
+}
