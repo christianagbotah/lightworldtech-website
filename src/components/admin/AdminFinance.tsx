@@ -284,6 +284,8 @@ type AgreementBillingContext = {
   contractValueBasis: 'unspecified' | 'tax_exclusive' | 'tax_inclusive';
   effectiveDate: string | null;
   expiryDate: string | null;
+  billingMilestoneIds: string[];
+  billingMilestoneTitle: string;
 };
 
 type DialogName =
@@ -465,7 +467,7 @@ export default function AdminFinance() {
     renewalNoticeDays: '30', notes: '',
   });
   const [invoiceForm, setInvoiceForm] = useState({
-    organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
+    organizationId: '', serviceId: '', projectId: '', agreementId: '', billingMilestoneIds: [] as string[], status: 'issued', currency: 'GHS',
     issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
     lines: [{ description: '', quantity: '1', unitPrice: '' }],
   });
@@ -568,6 +570,8 @@ export default function AdminFinance() {
                 : 'unspecified',
             effectiveDate: parsed.effectiveDate ? String(parsed.effectiveDate) : null,
             expiryDate: parsed.expiryDate ? String(parsed.expiryDate) : null,
+            billingMilestoneIds: Array.isArray(parsed.billingMilestoneIds) ? parsed.billingMilestoneIds.map(String).filter(Boolean) : [],
+            billingMilestoneTitle: String(parsed.billingMilestoneTitle || ''),
           });
         }
       } catch {
@@ -618,6 +622,7 @@ export default function AdminFinance() {
         serviceId: '',
         projectId: deepLinkAgreementBilling.projectId || '',
         agreementId: deepLinkAgreementBilling.agreementId,
+        billingMilestoneIds: deepLinkAgreementBilling.billingMilestoneIds,
         status: 'draft',
         currency: deepLinkAgreementBilling.currency || 'GHS',
         issueDate,
@@ -652,6 +657,7 @@ export default function AdminFinance() {
         serviceId: '',
         projectId: '',
         agreementId: '',
+        billingMilestoneIds: [],
         renewalForDate: '',
         dueDate: addDays(current.issueDate, organization.paymentTermsDays ?? 30),
         notes: current.notes || 'Prepared from Customer 360. Review invoice lines, tax treatment and due date before issuing.',
@@ -824,6 +830,7 @@ export default function AdminFinance() {
       serviceId: service.id,
       projectId: service.project?.id || '',
       agreementId: '',
+      billingMilestoneIds: [],
       status: 'issued',
       currency: service.currency,
       issueDate: todayValue,
@@ -868,6 +875,7 @@ export default function AdminFinance() {
       serviceId: '',
       projectId: project.id,
       agreementId: '',
+      billingMilestoneIds: [],
       status: 'issued',
       currency: project.renewalCurrency,
       issueDate: todayValue,
@@ -909,6 +917,8 @@ export default function AdminFinance() {
       contractValueBasis: row.contractValueBasis,
       effectiveDate: row.effectiveDate,
       expiryDate: row.expiryDate,
+      billingMilestoneIds: [],
+      billingMilestoneTitle: '',
     };
     const agreementLabel = [
       row.title,
@@ -921,6 +931,7 @@ export default function AdminFinance() {
       serviceId: '',
       projectId: row.projectId || '',
       agreementId: row.id,
+      billingMilestoneIds: [],
       status: 'draft',
       currency: row.currency,
       issueDate,
@@ -1072,6 +1083,7 @@ export default function AdminFinance() {
       serviceId: invoiceForm.serviceId || null,
       projectId: invoiceForm.projectId || null,
       agreementId: invoiceForm.agreementId || null,
+      billingMilestoneIds: invoiceForm.billingMilestoneIds,
       renewalForDate: invoiceForm.renewalForDate || null,
       discount: Number(invoiceForm.discount || 0),
       taxTreatment: invoiceForm.taxTreatment,
@@ -1083,7 +1095,7 @@ export default function AdminFinance() {
     }, 'Invoice issued');
     if (ok) {
       setInvoiceForm({
-        organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
+        organizationId: '', serviceId: '', projectId: '', agreementId: '', billingMilestoneIds: [], status: 'issued', currency: 'GHS',
         issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
         lines: [{ description: '', quantity: '1', unitPrice: '' }],
       });
@@ -2428,12 +2440,13 @@ export default function AdminFinance() {
                 serviceId: '',
                 projectId: '',
                 agreementId: '',
+                billingMilestoneIds: [],
                 renewalForDate: '',
                 dueDate: addDays(invoiceForm.issueDate, organization?.paymentTermsDays ?? 30),
               });
               setDeepLinkAgreementBilling(null);
             }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => {
-              setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, agreementId: '', renewalForDate: '' });
+              setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, agreementId: '', billingMilestoneIds: [], renewalForDate: '' });
               setDeepLinkAgreementBilling(null);
             }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -2488,6 +2501,9 @@ export default function AdminFinance() {
                   {deepLinkAgreementBilling.referenceNumber ? ' · ' + deepLinkAgreementBilling.referenceNumber : ''}
                   {deepLinkAgreementBilling.projectName ? ' · ' + deepLinkAgreementBilling.projectName : ''}
                 </p>
+                {deepLinkAgreementBilling.billingMilestoneTitle && (
+                  <p className="mt-1 text-[11px] font-medium">Billing milestone: {deepLinkAgreementBilling.billingMilestoneTitle}</p>
+                )}
                 <p className="mt-1 text-[10px] leading-4 opacity-80">
                   This draft will retain the agreement link for audit traceability. Review all invoice terms before issuing.
                 </p>
@@ -2523,7 +2539,13 @@ export default function AdminFinance() {
               ))}
             </div>
             <Textarea rows={3} placeholder="Invoice notes" value={invoiceForm.notes} onChange={(e) => setInvoiceForm({ ...invoiceForm, notes: e.target.value })} />
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button><Button disabled={saving}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Issue invoice</Button></DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialog(null)}>Cancel</Button>
+              <Button disabled={saving}>
+                {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                {invoiceForm.status === 'draft' ? 'Save draft invoice' : 'Issue invoice'}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
