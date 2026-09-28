@@ -27,6 +27,18 @@ export function canApproveReceiptReversal(actor: ActiveAdminContext): boolean {
 export function serializeReceiptReversalRequest(request: any) {
   return {
     ...request,
+    payment: request.payment
+      ? {
+          ...request.payment,
+          amount: request.payment.amount.toFixed(2),
+        }
+      : undefined,
+  };
+}
+
+export function serializeReceiptReversalRequest(request: any) {
+  return {
+    ...request,
     payment: request.payment ? {
       ...request.payment,
       amount: request.payment.amount.toFixed(2),
@@ -171,7 +183,7 @@ export async function executeReceiptReversal(
         where: {
           sourceType: 'client_payment',
           sourceId: original.id,
-          status: { in: ['posted', 'reversed'] },
+          status: 'posted',
         },
         select: { id: true, journalNumber: true, status: true },
       });
