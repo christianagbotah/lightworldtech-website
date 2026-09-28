@@ -207,6 +207,12 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(convertClientRoute).toContain('renewalAmount');
     expect(convertClientRoute).toContain('nextRenewalDate');
     expect(convertClientRoute).toContain('renewalNoticeDays');
+    expect(convertClientRoute).toContain('ensureProjectAgreementDraft');
+    expect(convertClientRoute).toContain("agreementType: 'statement_of_work'");
+    expect(convertClientRoute).toContain("status: 'draft'");
+    expect(convertClientRoute).toContain('contractValue: 0');
+    expect(convertClientRoute).toContain('agreementDraftCreated');
+    expect(proposals).toContain('draft Statement of Work');
     expect(convertClientRoute).toContain("'admin.proposal_converted_to_client'");
   });
 
