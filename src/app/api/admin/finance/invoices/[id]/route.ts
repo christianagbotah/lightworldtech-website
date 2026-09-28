@@ -22,6 +22,13 @@ const schema = z.object({
         message: 'A meaningful void reason of at least 5 characters is required',
       });
     }
+    if (value.voidReason !== undefined && value.status !== 'void') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['voidReason'],
+        message: 'Void reason can only be supplied when voiding an invoice',
+      });
+    }
   })
   .refine((value) => Object.keys(value).length > 0, 'At least one invoice change is required');
 
@@ -70,7 +77,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const postIssueTermsMutationRequested =
     existing.status !== 'draft' &&
-    existing.status !== 'void' &&
     parsed.data.status !== 'void' &&
     (parsed.data.dueDate !== undefined || parsed.data.notes !== undefined);
 
@@ -140,6 +146,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         } satisfies IssueBlock,
       };
     }
+
+    if (voiding && customerFacingTermsMutation) {
+      return {
+        updated: null,
+        blocked: {
+          error: 'Void requests cannot modify invoice terms. Void the original unchanged and prepare a replacement if corrections are required.',
+          status: 409,
+        } satisfies IssueBlock,
+      };
+    }
+
     if (voiding) {
       if (!hasAdminPermission(actor.role, actor.permissions, 'finance.approve')) {
         return {
