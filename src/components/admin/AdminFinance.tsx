@@ -131,6 +131,7 @@ type Invoice = {
   organizationId: string;
   serviceId: string | null;
   projectId: string | null;
+  agreementId: string | null;
   status: string;
   derivedStatus: string;
   currency: string;
@@ -155,6 +156,7 @@ type Invoice = {
   balance: string;
   organization: { id: string; name: string };
   service: { id: string; name: string; planName: string } | null;
+  agreement: { id: string; title: string; referenceNumber: string; agreementType: string; status: string } | null;
   lines: Array<{ id: string; description: string; quantity: string; unitPrice: string; amount: string }>;
 };
 
@@ -461,7 +463,7 @@ export default function AdminFinance() {
     renewalNoticeDays: '30', notes: '',
   });
   const [invoiceForm, setInvoiceForm] = useState({
-    organizationId: '', serviceId: '', projectId: '', status: 'issued', currency: 'GHS',
+    organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
     issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
     lines: [{ description: '', quantity: '1', unitPrice: '' }],
   });
@@ -609,6 +611,7 @@ export default function AdminFinance() {
         organizationId: organization.id,
         serviceId: '',
         projectId: deepLinkAgreementBilling.projectId || '',
+        agreementId: deepLinkAgreementBilling.agreementId,
         status: 'draft',
         currency: deepLinkAgreementBilling.currency || 'GHS',
         issueDate,
@@ -630,13 +633,13 @@ export default function AdminFinance() {
         }],
       });
       setDialog('invoice');
-      setDeepLinkAgreementBilling(null);
     } else if (deepLinkAction === 'invoice') {
       setInvoiceForm((current) => ({
         ...current,
         organizationId: organization.id,
         serviceId: '',
         projectId: '',
+        agreementId: '',
         renewalForDate: '',
         dueDate: addDays(current.issueDate, organization.paymentTermsDays ?? 30),
         notes: current.notes || 'Prepared from Customer 360. Review invoice lines, tax treatment and due date before issuing.',
@@ -808,6 +811,7 @@ export default function AdminFinance() {
       organizationId: service.organizationId,
       serviceId: service.id,
       projectId: service.project?.id || '',
+      agreementId: '',
       status: 'issued',
       currency: service.currency,
       issueDate: todayValue,
@@ -851,6 +855,7 @@ export default function AdminFinance() {
       organizationId: organization.id,
       serviceId: '',
       projectId: project.id,
+      agreementId: '',
       status: 'issued',
       currency: project.renewalCurrency,
       issueDate: todayValue,
@@ -989,6 +994,7 @@ export default function AdminFinance() {
       ...invoiceForm,
       serviceId: invoiceForm.serviceId || null,
       projectId: invoiceForm.projectId || null,
+      agreementId: invoiceForm.agreementId || null,
       renewalForDate: invoiceForm.renewalForDate || null,
       discount: Number(invoiceForm.discount || 0),
       taxTreatment: invoiceForm.taxTreatment,
@@ -998,11 +1004,14 @@ export default function AdminFinance() {
         unitPrice: Number(line.unitPrice || 0),
       })),
     }, 'Invoice issued');
-    if (ok) setInvoiceForm({
-      organizationId: '', serviceId: '', projectId: '', status: 'issued', currency: 'GHS',
-      issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
-      lines: [{ description: '', quantity: '1', unitPrice: '' }],
-    });
+    if (ok) {
+      setInvoiceForm({
+        organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
+        issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
+        lines: [{ description: '', quantity: '1', unitPrice: '' }],
+      });
+      setDeepLinkAgreementBilling(null);
+    }
   };
 
   const submitReceipt = async (event: FormEvent) => {
@@ -2303,7 +2312,12 @@ export default function AdminFinance() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={dialog === 'invoice'} onOpenChange={(open) => !open && setDialog(null)}>
+      <Dialog open={dialog === 'invoice'} onOpenChange={(open) => {
+        if (!open) {
+          setDialog(null);
+          setDeepLinkAgreementBilling(null);
+        }
+      }}>
         <DialogContent className="max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-y-auto">
           <DialogHeader><DialogTitle>Issue customer invoice</DialogTitle></DialogHeader>
           <form onSubmit={submitInvoice} className="space-y-4">
@@ -2314,10 +2328,15 @@ export default function AdminFinance() {
                 organizationId: e.target.value,
                 serviceId: '',
                 projectId: '',
+                agreementId: '',
                 renewalForDate: '',
                 dueDate: addDays(invoiceForm.issueDate, organization?.paymentTermsDays ?? 30),
               });
-            }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, renewalForDate: '' })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
+              setDeepLinkAgreementBilling(null);
+            }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => {
+              setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, agreementId: '', renewalForDate: '' });
+              setDeepLinkAgreementBilling(null);
+            }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div><Label>Issue date</Label><Input type="date" required value={invoiceForm.issueDate} onChange={(e) => {
                 const organization = data.organizations.find((item) => item.id === invoiceForm.organizationId);
@@ -2362,6 +2381,19 @@ export default function AdminFinance() {
                 </div>
               );
             })()}
+            {invoiceForm.agreementId && deepLinkAgreementBilling && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-200">
+                <p className="font-semibold">Originating agreement</p>
+                <p className="mt-1">
+                  {deepLinkAgreementBilling.title}
+                  {deepLinkAgreementBilling.referenceNumber ? ' · ' + deepLinkAgreementBilling.referenceNumber : ''}
+                  {deepLinkAgreementBilling.projectName ? ' · ' + deepLinkAgreementBilling.projectName : ''}
+                </p>
+                <p className="mt-1 text-[10px] leading-4 opacity-80">
+                  This draft will retain the agreement link for audit traceability. Review all invoice terms before issuing.
+                </p>
+              </div>
+            )}
             {invoiceForm.renewalForDate && (
               <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-200">
                 Renewal cycle: <strong>{new Date(invoiceForm.renewalForDate + 'T00:00:00Z').toLocaleDateString()}</strong>. The server prevents another non-void invoice for this service and renewal date.

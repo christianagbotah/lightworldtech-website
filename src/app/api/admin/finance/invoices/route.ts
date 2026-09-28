@@ -24,6 +24,7 @@ const schema = z.object({
   organizationId: z.string().min(1),
   serviceId: z.string().min(1).nullable().optional(),
   projectId: z.string().min(1).nullable().optional(),
+  agreementId: z.string().min(1).nullable().optional(),
   status: z.enum(['draft', 'issued']).default('issued'),
   currency: z.string().trim().max(3).default('GHS'),
   issueDate: z.coerce.date(),
@@ -114,6 +115,7 @@ export async function GET(request: NextRequest) {
       organization: { select: { id: true, name: true } },
       service: { select: { id: true, name: true, planName: true } },
       project: { select: { id: true, name: true } },
+      agreement: { select: { id: true, title: true, referenceNumber: true, agreementType: true, status: true } },
       lines: { orderBy: { order: 'asc' } },
       creditNotes: { where: { status: 'posted' }, orderBy: { issueDate: 'asc' } },
       allocations: {
@@ -181,6 +183,28 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!project) return NextResponse.json({ success: false, error: 'Project does not belong to this client' }, { status: 400 });
+  }
+
+  if (parsed.data.agreementId) {
+    const agreement = await db.clientAgreement.findFirst({
+      where: { id: parsed.data.agreementId, organizationId: parsed.data.organizationId },
+      select: { id: true, projectId: true, status: true, approvalStatus: true },
+    });
+    if (!agreement) {
+      return NextResponse.json({ success: false, error: 'Agreement does not belong to this client' }, { status: 400 });
+    }
+    if (agreement.status !== 'active' || agreement.approvalStatus !== 'approved') {
+      return NextResponse.json(
+        { success: false, error: 'Only approved active agreements can be linked to a new invoice' },
+        { status: 409 },
+      );
+    }
+    if (parsed.data.projectId && agreement.projectId && parsed.data.projectId !== agreement.projectId) {
+      return NextResponse.json(
+        { success: false, error: 'Invoice project must match the linked agreement project' },
+        { status: 400 },
+      );
+    }
   }
 
   const lines = parsed.data.lines.map((line, index) => {
@@ -333,6 +357,7 @@ export async function POST(request: NextRequest) {
         organizationId: parsed.data.organizationId,
         serviceId: parsed.data.serviceId || null,
         projectId: parsed.data.projectId || null,
+        agreementId: parsed.data.agreementId || null,
         status: parsed.data.status,
         currency,
         issueDate: parsed.data.issueDate,
@@ -358,6 +383,7 @@ export async function POST(request: NextRequest) {
         organization: { select: { id: true, name: true } },
         service: { select: { id: true, name: true, planName: true } },
         project: { select: { id: true, name: true } },
+        agreement: { select: { id: true, title: true, referenceNumber: true, agreementType: true, status: true } },
         lines: { orderBy: { order: 'asc' } },
         allocations: true,
         creditNotes: { where: { status: 'posted' } },
@@ -425,6 +451,7 @@ export async function POST(request: NextRequest) {
     details: {
       invoiceNumber,
       organizationId: invoice.organizationId,
+      agreementId: invoice.agreementId,
       total: total.toFixed(2),
       currency: invoice.currency,
       taxTreatment: invoice.taxTreatment,
