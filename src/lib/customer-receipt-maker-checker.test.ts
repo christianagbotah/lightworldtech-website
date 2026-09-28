@@ -70,4 +70,18 @@ describe('customer receipt maker-checker governance', () => {
     expect(finance).toContain('Customer receipt submitted for approval');
     expect(finance).toContain('result?.pendingApproval');
   });
+
+  test('surfaces actionable receipt approvals through the admin notification centre', () => {
+    const notices = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notices).toContain("key: 'finance.approve'");
+    expect(notices).toContain('requestedByAdminId: { not: admin.id }');
+    expect(notices).toContain("status: 'pending'");
+    expect(notices).toContain('24 * 60 * 60 * 1000');
+    expect(notices).toContain('48 * 60 * 60 * 1000');
+    expect(notices).toContain("id: 'finance-receipt-approvals'");
+    expect(notices).toContain("id: 'finance-receipt-approvals-aging'");
+    expect(notices).toContain("id: 'finance-receipt-approvals-overdue'");
+    expect(notices).toContain("action: 'admin-finance-approvals'");
+  });
 });
