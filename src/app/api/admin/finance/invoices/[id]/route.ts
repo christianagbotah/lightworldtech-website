@@ -102,6 +102,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         blocked: { error: 'An invoice with allocated payments cannot be voided', status: 409 } satisfies IssueBlock,
       };
     }
+    if (invoice.status === 'void' && parsed.data.status && parsed.data.status !== 'void') {
+      return {
+        updated: null,
+        blocked: { error: 'A void invoice is terminal and cannot be reactivated', status: 409 } satisfies IssueBlock,
+      };
+    }
     if (invoice.status !== 'draft' && parsed.data.status === 'draft') {
       return {
         updated: null,
@@ -361,18 +367,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
 
   if (result.blocked) {
-    if (result.blocked.creditControl) {
-      await recordAdminAudit({
-        admin: actor,
-        action: 'admin.finance_invoice_issue_credit_blocked',
-        entity: 'ClientInvoice',
-        entityId: id,
-        details: {
-          invoiceNumber: existing.invoiceNumber,
-          ...result.blocked.creditControl,
-        },
-      });
-    }
+    await recordAdminAudit({
+      admin: actor,
+      action: result.blocked.creditControl
+        ? 'admin.finance_invoice_issue_credit_blocked'
+        : 'admin.finance_invoice_issue_blocked',
+      entity: 'ClientInvoice',
+      entityId: id,
+      details: {
+        invoiceNumber: existing.invoiceNumber,
+        reason: result.blocked.error,
+        statusCode: result.blocked.status,
+        ...(result.blocked.creditControl || {}),
+      },
+    });
     return NextResponse.json(
       {
         success: false,
