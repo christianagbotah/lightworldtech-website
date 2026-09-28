@@ -9,6 +9,7 @@ const schema = z.object({
   title: z.string().trim().min(2).max(220),
   amount: z.coerce.number().positive().max(999999999999),
   dueDate: z.string().datetime().nullable().optional(),
+  status: z.enum(['planned', 'ready']).optional().default('planned'),
   notes: z.string().trim().max(4000).optional().default(''),
 });
 
@@ -41,6 +42,8 @@ export async function POST(
         title: true,
         currency: true,
         contractValue: true,
+        status: true,
+        approvalStatus: true,
       },
     });
     if (!agreement) return { milestone: null, error: 'Agreement not found', status: 404 };
@@ -49,9 +52,17 @@ export async function POST(
       return { milestone: null, error: 'Record a positive agreement contract value before scheduling billing milestones', status: 409 };
     }
 
+    if (parsed.data.status === 'ready' && (agreement.status !== 'active' || agreement.approvalStatus !== 'approved')) {
+      return {
+        milestone: null,
+        error: 'Only approved active agreements can have billing milestones marked Ready',
+        status: 409,
+      };
+    }
+
     const [aggregate, count] = await Promise.all([
       tx.clientAgreementBillingMilestone.aggregate({
-        where: { agreementId },
+        where: { agreementId, status: { not: 'waived' } },
         _sum: { amount: true },
       }),
       tx.clientAgreementBillingMilestone.count({ where: { agreementId } }),
@@ -81,6 +92,7 @@ export async function POST(
         amount,
         dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
         order: count,
+        status: parsed.data.status,
         notes: parsed.data.notes,
         createdBy: actor.name || actor.email,
       },
@@ -108,6 +120,7 @@ export async function POST(
       amount: result.milestone.amount.toFixed(2),
       currency: result.agreement.currency,
       dueDate: result.milestone.dueDate?.toISOString() || null,
+      status: result.milestone.status,
     },
   });
 

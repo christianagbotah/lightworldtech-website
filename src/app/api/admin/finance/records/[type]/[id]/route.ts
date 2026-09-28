@@ -205,6 +205,17 @@ export async function GET(
           },
         },
         project: { select: { id: true, name: true, status: true, manager: true } },
+        billingMilestone: {
+          select: {
+            id: true,
+            title: true,
+            amount: true,
+            dueDate: true,
+            status: true,
+            waiverReason: true,
+            waivedAt: true,
+          },
+        },
         agreement: {
           select: {
             id: true,
@@ -318,6 +329,10 @@ export async function GET(
             credits: invoice.creditNotes,
             dueDate: invoice.dueDate,
           }),
+          billingMilestone: invoice.billingMilestone ? {
+            ...invoice.billingMilestone,
+            amount: invoice.billingMilestone.amount.toFixed(2),
+          } : null,
           service: invoice.service ? {
             ...invoice.service,
             recurringAmount: invoice.service.recurringAmount.toFixed(2),

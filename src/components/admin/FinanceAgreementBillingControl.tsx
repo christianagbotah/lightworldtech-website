@@ -40,6 +40,7 @@ export type AgreementBillingRow = {
     amount: string;
     dueDate: string | null;
     order: number;
+    status: string;
   } | null;
   overbilledAmount: string;
   state: 'unbilled' | 'partially_billed' | 'draft_pending' | 'fully_billed' | 'overbilled';
@@ -309,7 +310,7 @@ export default function FinanceAgreementBillingControl({
                         </p>
                         {row.nextMilestone && (
                           <p className="mt-1 max-w-[220px] truncate text-[10px] text-amber-700 dark:text-amber-300">
-                            Next: {row.nextMilestone.title} · {money(row.nextMilestone.amount, row.currency)}
+                            Next: {row.nextMilestone.title} · {pretty(row.nextMilestone.status)} · {money(row.nextMilestone.amount, row.currency)}
                             {row.nextMilestone.dueDate ? ' · ' + new Date(row.nextMilestone.dueDate).toLocaleDateString() : ''}
                           </p>
                         )}

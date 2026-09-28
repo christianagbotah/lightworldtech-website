@@ -64,6 +64,11 @@ export async function GET(request: NextRequest) {
           amount: true,
           dueDate: true,
           order: true,
+          status: true,
+          invoices: {
+            where: { status: { not: 'void' } },
+            select: { id: true, status: true },
+          },
         },
       },
       invoices: {
@@ -102,13 +107,15 @@ export async function GET(request: NextRequest) {
     const issuedAmount = issuedInvoices.reduce((sum, invoice) => sum.plus(comparableAmount(invoice)), zero());
     const draftAmount = draftInvoices.reduce((sum, invoice) => sum.plus(comparableAmount(invoice)), zero());
     const committedAmount = issuedAmount.plus(draftAmount);
-    const scheduledAmount = agreement.billingMilestones.reduce(
+    const activeMilestones = agreement.billingMilestones.filter((milestone) => milestone.status !== 'waived');
+    const scheduledAmount = activeMilestones.reduce(
       (sum, milestone) => sum.plus(milestone.amount),
       zero(),
     );
     const unscheduledAmount = positive(agreement.contractValue.minus(scheduledAmount));
     const nextMilestone =
-      agreement.billingMilestones
+      activeMilestones
+        .filter((milestone) => milestone.invoices.length === 0)
         .slice()
         .sort((a, b) => {
           const ad = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
@@ -173,6 +180,7 @@ export async function GET(request: NextRequest) {
         amount: nextMilestone.amount.toFixed(2),
         dueDate: nextMilestone.dueDate,
         order: nextMilestone.order,
+        status: nextMilestone.status,
       } : null,
       overbilledAmount: overbilledAmount.toFixed(2),
       state,
@@ -208,7 +216,7 @@ export async function GET(request: NextRequest) {
           basisUnspecified: values.basisUnspecified,
         })),
       methodology:
-        'Tax-exclusive agreements are compared with invoice taxable value before tax; tax-inclusive agreements are compared with final invoice totals. Unspecified legacy agreements continue to use final invoice totals but are explicitly flagged for review. Billing milestones are planning records only and do not create, issue, reserve or charge an invoice; draft invoices separately reserve billing coverage but are not treated as issued.',
+        'Tax-exclusive agreements are compared with invoice taxable value before tax; tax-inclusive agreements are compared with final invoice totals. Unspecified legacy agreements continue to use final invoice totals but are explicitly flagged for review. Waived milestones are excluded from active scheduled value. Milestones linked to non-void invoices are skipped when identifying the next billable stage; drafts reserve billing coverage but are not treated as issued.',
     },
   });
 }

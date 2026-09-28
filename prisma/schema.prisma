@@ -601,21 +601,28 @@ model ClientAgreement {
 }
 
 model ClientAgreementBillingMilestone {
-  id          String          @id @default(cuid())
-  agreementId String
-  agreement   ClientAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
-  title       String
-  amount      Decimal         @db.Decimal(18, 2)
-  dueDate     DateTime?
-  order       Int             @default(0)
-  notes       String          @default("")
-  createdBy   String          @default("Admin")
+  id           String          @id @default(cuid())
+  agreementId  String
+  agreement    ClientAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  title        String
+  amount       Decimal         @db.Decimal(18, 2)
+  dueDate      DateTime?
+  order        Int             @default(0)
+  status       String          @default("planned")
+  notes        String          @default("")
+  createdBy    String          @default("Admin")
+  waivedAt     DateTime?
+  waivedBy     String          @default("")
+  waiverReason String          @default("")
+  invoices     ClientInvoice[] @relation("AgreementBillingMilestoneInvoices")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([agreementId, order])
   @@index([agreementId, dueDate])
+  @@index([agreementId, status])
+  @@index([dueDate, status])
 }
 
 model ClientAgreementChange {
@@ -888,9 +895,11 @@ model ClientInvoice {
   service        ClientServiceAccount? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   projectId      String?
   project        ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  agreementId    String?
-  agreement      ClientAgreement?   @relation(fields: [agreementId], references: [id], onDelete: SetNull)
-  status         String             @default("draft")
+  agreementId      String?
+  agreement        ClientAgreement?                 @relation(fields: [agreementId], references: [id], onDelete: SetNull)
+  billingMilestoneId String?
+  billingMilestone  ClientAgreementBillingMilestone? @relation("AgreementBillingMilestoneInvoices", fields: [billingMilestoneId], references: [id], onDelete: SetNull)
+  status           String             @default("draft")
   currency       String             @default("GHS")
   issueDate      DateTime
   dueDate        DateTime
@@ -926,6 +935,7 @@ model ClientInvoice {
   @@index([serviceId, renewalForDate])
   @@index([projectId])
   @@index([agreementId])
+  @@index([billingMilestoneId])
   @@index([dueDate, status])
   @@index([issueDate])
 }

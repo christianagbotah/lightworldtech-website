@@ -74,11 +74,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!project) return NextResponse.json({ error: 'Selected project does not belong to this client' }, { status: 400 });
   }
 
-  const billingSchedule = await db.clientAgreementBillingMilestone.aggregate({
-    where: { agreementId: id },
-    _sum: { amount: true },
-    _count: { id: true },
-  });
+  const [billingSchedule, billingMilestoneCount] = await Promise.all([
+    db.clientAgreementBillingMilestone.aggregate({
+      where: { agreementId: id, status: { not: 'waived' } },
+      _sum: { amount: true },
+    }),
+    db.clientAgreementBillingMilestone.count({ where: { agreementId: id } }),
+  ]);
   const scheduledAmount = billingSchedule._sum.amount || new Prisma.Decimal(0);
 
   if (
@@ -101,7 +103,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (
     parsed.data.currency &&
     normalizeCurrency(parsed.data.currency) !== normalizeCurrency(existing.currency) &&
-    billingSchedule._count.id > 0
+    billingMilestoneCount > 0
   ) {
     return NextResponse.json(
       {

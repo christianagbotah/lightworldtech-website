@@ -49,6 +49,19 @@ export async function GET(request: NextRequest) {
           attachments: { orderBy: { createdAt: 'desc' } },
           changes: { orderBy: { createdAt: 'desc' }, take: 50 },
           billingMilestones: {
+            include: {
+              invoices: {
+                select: {
+                  id: true,
+                  invoiceNumber: true,
+                  status: true,
+                  total: true,
+                  issueDate: true,
+                  dueDate: true,
+                },
+                orderBy: { createdAt: 'desc' },
+              },
+            },
             orderBy: [{ order: 'asc' }, { dueDate: 'asc' }, { createdAt: 'asc' }],
           },
           obligations: {
