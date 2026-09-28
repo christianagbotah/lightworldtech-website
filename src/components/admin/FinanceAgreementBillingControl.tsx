@@ -34,7 +34,7 @@ export type AgreementBillingRow = {
   scheduledAmount: string;
   unscheduledAmount: string;
   billingMilestoneCount: number;
-  invoicedMilestoneCount: number;
+  linkedMilestoneCount: number;
   openMilestoneCount: number;
   nextMilestone: {
     id: string;
@@ -307,7 +307,7 @@ export default function FinanceAgreementBillingControl({
                       <TableCell>
                         <p className="text-xs font-medium">{row.billingMilestoneCount} milestone{row.billingMilestoneCount === 1 ? '' : 's'}</p>
                         <p className="mt-0.5 text-[10px] text-muted-foreground">
-                          {row.invoicedMilestoneCount} invoiced · {row.openMilestoneCount} open
+                          {row.linkedMilestoneCount} linked · {row.openMilestoneCount} open
                         </p>
                         <p className="mt-0.5 text-[10px] text-muted-foreground">
                           {money(row.scheduledAmount, row.currency)} scheduled · {money(row.unscheduledAmount, row.currency)} unscheduled
@@ -329,8 +329,26 @@ export default function FinanceAgreementBillingControl({
                       </TableCell>
                       <TableCell data-export-ignore className="text-right">
                         {Number(row.remainingToPrepare) > 0 ? (
-                          <Button type="button" size="sm" onClick={() => onPrepareDraft(row)}>
-                            <FileText className="mr-1.5 size-3.5" /> Prepare next draft
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => onPrepareDraft(row)}
+                            disabled={Boolean(
+                              row.nextMilestone &&
+                              (
+                                row.contractValueBasis === 'unspecified' ||
+                                Number(row.nextMilestone.amount) > Number(row.remainingToPrepare)
+                              )
+                            )}
+                          >
+                            <FileText className="mr-1.5 size-3.5" />
+                            {row.nextMilestone
+                              ? row.contractValueBasis === 'unspecified'
+                                ? 'Classify basis first'
+                                : Number(row.nextMilestone.amount) > Number(row.remainingToPrepare)
+                                  ? 'Review schedule'
+                                  : 'Prepare milestone draft'
+                              : 'Prepare unscheduled draft'}
                           </Button>
                         ) : row.state === 'overbilled' ? (
                           <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-300">Review exception</span>
