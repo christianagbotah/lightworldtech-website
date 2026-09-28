@@ -281,6 +281,7 @@ type AgreementBillingContext = {
   projectName: string;
   currency: string;
   contractValue: string;
+  contractValueBasis: 'unspecified' | 'tax_exclusive' | 'tax_inclusive';
   effectiveDate: string | null;
   expiryDate: string | null;
   billingMilestoneIds: string[];
@@ -563,6 +564,10 @@ export default function AdminFinance() {
             projectName: String(parsed.projectName || ''),
             currency: String(parsed.currency || 'GHS').toUpperCase(),
             contractValue: String(parsed.contractValue || '0'),
+            contractValueBasis:
+              parsed.contractValueBasis === 'tax_exclusive' || parsed.contractValueBasis === 'tax_inclusive'
+                ? parsed.contractValueBasis
+                : 'unspecified',
             effectiveDate: parsed.effectiveDate ? String(parsed.effectiveDate) : null,
             expiryDate: parsed.expiryDate ? String(parsed.expiryDate) : null,
             billingMilestoneIds: Array.isArray(parsed.billingMilestoneIds) ? parsed.billingMilestoneIds.map(String).filter(Boolean) : [],
@@ -628,7 +633,13 @@ export default function AdminFinance() {
         notes:
           'Prepared from approved active agreement ' +
           agreementLabel +
-          '. Contract value is prefilled as commercial context only. Review invoice lines, tax treatment, dates, discounts and amount before issuing.',
+          '. ' +
+          (deepLinkAgreementBilling.contractValueBasis === 'tax_exclusive'
+            ? 'Agreement value is tax-exclusive, so approved taxes may be added on top of the pre-tax contract value. '
+            : deepLinkAgreementBilling.contractValueBasis === 'tax_inclusive'
+              ? 'Agreement value is tax-inclusive; if tax is applied, adjust the pre-tax line amount so the final invoice total remains within the approved value. '
+              : 'Agreement value basis is unspecified; confirm whether the contract value is tax-inclusive or tax-exclusive before issuing. ') +
+          'Review invoice lines, tax treatment, dates, discounts and amount before issuing.',
         lines: [{
           description:
             agreementLabel +
@@ -903,6 +914,7 @@ export default function AdminFinance() {
       projectName: row.project?.name || '',
       currency: row.currency,
       contractValue: row.remainingToPrepare,
+      contractValueBasis: row.contractValueBasis,
       effectiveDate: row.effectiveDate,
       expiryDate: row.expiryDate,
       billingMilestoneIds: [],
@@ -930,7 +942,13 @@ export default function AdminFinance() {
       notes:
         'Prepared from Agreement Billing Control for ' +
         agreementLabel +
-        '. The remaining unrepresented contract value is a billing-control reference only. Confirm tax basis, milestone entitlement, dates, discounts and amount before issuing.',
+        '. ' +
+        (row.contractValueBasis === 'tax_exclusive'
+          ? 'Remaining value is measured before tax; approved taxes may be added separately. '
+          : row.contractValueBasis === 'tax_inclusive'
+            ? 'Remaining value is measured against final invoice totals; if tax is applied, adjust the pre-tax line value so the final total stays within the approved agreement value. '
+            : 'Contract value basis is unspecified; confirm the tax basis before relying on the remaining amount. ') +
+        'Confirm milestone entitlement, dates, discounts and amount before issuing.',
       lines: [{
         description:
           agreementLabel +
@@ -1450,6 +1468,15 @@ export default function AdminFinance() {
           }}
           onCollections={() => setSection('collections')}
           onRenewals={() => setSection('renewals')}
+          onAgreementBilling={() => {
+            setSection('customers');
+            window.setTimeout(() => {
+              document.getElementById('agreement-billing-control')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+              });
+            }, 0);
+          }}
           onSuppliers={() => setSection('suppliers')}
           onCashbook={() => {
             setAccountingView('cashbook');
