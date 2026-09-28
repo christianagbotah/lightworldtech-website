@@ -1919,7 +1919,9 @@ export default function AdminClients() {
                   {selected.agreements.map((agreement) => {
                     const daysToExpiry = agreement.expiryDate ? Math.ceil((new Date(agreement.expiryDate).getTime() - Date.now()) / 86400000) : null;
                     const noticeDue = daysToExpiry !== null && daysToExpiry <= agreement.renewalNoticeDays && daysToExpiry >= 0;
-                    const scheduledBilling = agreement.billingMilestones.reduce((sum, milestone) => sum + Number(milestone.amount || 0), 0);
+                    const scheduledBilling = agreement.billingMilestones
+                      .filter((milestone) => milestone.status !== 'waived')
+                      .reduce((sum, milestone) => sum + Number(milestone.amount || 0), 0);
                     const unscheduledBilling = Math.max(0, Number(agreement.contractValue || 0) - scheduledBilling);
                     const scheduleCoverage = Number(agreement.contractValue || 0) > 0
                       ? Math.min(100, (scheduledBilling / Number(agreement.contractValue || 0)) * 100)
@@ -2071,82 +2073,169 @@ export default function AdminClients() {
                         </div>
 
                         <div className="mt-3 space-y-2">
-                          {agreement.billingMilestones.map((milestone) => (
-                            <div key={milestone.id} className="rounded-lg border border-border/60 bg-background p-3">
-                              <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_150px_160px_auto] lg:items-end">
-                                <div>
-                                  <Label className="text-[10px] uppercase tracking-[0.08em]">Milestone</Label>
-                                  <Input
-                                    defaultValue={milestone.title}
+                          {agreement.billingMilestones.map((milestone) => {
+                            const liveInvoice = milestone.invoices.find((invoice) => invoice.status !== 'void') || null;
+                            const previousVoids = milestone.invoices.filter((invoice) => invoice.status === 'void');
+                            const derivedStatus = liveInvoice
+                              ? liveInvoice.status === 'draft' ? 'draft_pending' : 'billed'
+                              : milestone.status;
+                            const financiallyLocked = Boolean(liveInvoice);
+                            const overdue = Boolean(
+                              milestone.dueDate &&
+                              !liveInvoice &&
+                              milestone.status === 'ready' &&
+                              new Date(milestone.dueDate).getTime() < Date.now(),
+                            );
+                            return (
+                              <div key={milestone.id} className="rounded-lg border border-border/60 bg-background p-3">
+                                <div className="flex flex-wrap items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <p className="text-xs font-semibold">{milestone.title}</p>
+                                      <Badge variant="outline">{pretty(derivedStatus)}</Badge>
+                                      {overdue && <Badge className="bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200">Ready overdue</Badge>}
+                                    </div>
+                                    <p className="mt-1 text-[10px] text-muted-foreground">
+                                      {money(milestone.amount, agreement.currency)}
+                                      {milestone.dueDate ? ' · planned ' + new Date(milestone.dueDate).toLocaleDateString() : ' · no planned billing date'}
+                                      {' · created by ' + (milestone.createdBy || 'Admin')}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {liveInvoice ? (
+                                      <Button type="button" size="sm" variant="outline" onClick={() => openAgreementMilestoneInvoice(liveInvoice.id)}>
+                                        <FileText className="mr-1 size-3.5" /> {liveInvoice.invoiceNumber}
+                                      </Button>
+                                    ) : (
+                                      <>
+                                        <select
+                                          value={milestone.status}
+                                          onChange={(event) => void patchAgreementBillingMilestone(milestone.id, { status: event.target.value })}
+                                          className="h-8 rounded-lg border border-input bg-background px-2 text-[11px]"
+                                        >
+                                          <option value="planned">Planned</option>
+                                          <option value="ready" disabled={agreement.status !== 'active' || agreement.approvalStatus !== 'approved'}>Ready</option>
+                                          {milestone.status === 'waived' && <option value="waived">Waived</option>}
+                                        </select>
+                                        {milestone.status === 'ready' && agreement.status === 'active' && agreement.approvalStatus === 'approved' && (
+                                          <Button type="button" size="sm" onClick={() => prepareAgreementMilestoneBilling(agreement, milestone)}>
+                                            <CircleDollarSign className="mr-1 size-3.5" /> Prepare draft
+                                          </Button>
+                                        )}
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => setPendingDelete({
+                                            kind: 'agreement-billing-milestone',
+                                            id: milestone.id,
+                                            label: milestone.title,
+                                          })}
+                                        >
+                                          <Trash2 className="mr-1 size-3.5 text-destructive" /> Delete
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(0,1fr)_150px_160px]">
+                                  <div>
+                                    <Label className="text-[10px] uppercase tracking-[0.08em]">Milestone</Label>
+                                    <Input
+                                      defaultValue={milestone.title}
+                                      disabled={financiallyLocked || milestone.status === 'waived'}
+                                      onBlur={(event) => {
+                                        const title = event.currentTarget.value.trim();
+                                        if (title && title !== milestone.title) void patchAgreementBillingMilestone(milestone.id, { title });
+                                      }}
+                                      className="h-9 text-xs"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-[10px] uppercase tracking-[0.08em]">Amount · {agreement.currency}</Label>
+                                    <Input
+                                      type="number"
+                                      min="0.01"
+                                      step="0.01"
+                                      defaultValue={milestone.amount}
+                                      disabled={financiallyLocked || milestone.status === 'waived'}
+                                      onBlur={(event) => {
+                                        const amount = Number(event.currentTarget.value || 0);
+                                        if (amount > 0 && amount !== Number(milestone.amount)) void patchAgreementBillingMilestone(milestone.id, { amount });
+                                      }}
+                                      className="h-9 text-xs"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-[10px] uppercase tracking-[0.08em]">Planned billing date</Label>
+                                    <Input
+                                      type="date"
+                                      defaultValue={milestone.dueDate?.slice(0, 10) || ''}
+                                      disabled={financiallyLocked || milestone.status === 'waived'}
+                                      onBlur={(event) => {
+                                        const dueDate = event.currentTarget.value ? new Date(event.currentTarget.value).toISOString() : null;
+                                        const current = milestone.dueDate?.slice(0, 10) || '';
+                                        if (event.currentTarget.value !== current) void patchAgreementBillingMilestone(milestone.id, { dueDate });
+                                      }}
+                                      className="h-9 text-xs"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="mt-2">
+                                  <Label className="text-[10px] uppercase tracking-[0.08em]">Billing notes</Label>
+                                  <Textarea
+                                    rows={2}
+                                    defaultValue={milestone.notes}
                                     onBlur={(event) => {
-                                      const title = event.currentTarget.value.trim();
-                                      if (title && title !== milestone.title) void patchAgreementBillingMilestone(milestone.id, { title });
+                                      const notes = event.currentTarget.value.trim();
+                                      if (notes !== milestone.notes) void patchAgreementBillingMilestone(milestone.id, { notes });
                                     }}
-                                    className="h-9 text-xs"
+                                    placeholder="Trigger, acceptance condition or invoice instruction"
+                                    className="text-xs"
                                   />
                                 </div>
-                                <div>
-                                  <Label className="text-[10px] uppercase tracking-[0.08em]">Amount · {agreement.currency}</Label>
-                                  <Input
-                                    type="number"
-                                    min="0.01"
-                                    step="0.01"
-                                    defaultValue={milestone.amount}
-                                    onBlur={(event) => {
-                                      const amount = Number(event.currentTarget.value || 0);
-                                      if (amount > 0 && amount !== Number(milestone.amount)) void patchAgreementBillingMilestone(milestone.id, { amount });
-                                    }}
-                                    className="h-9 text-xs"
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-[10px] uppercase tracking-[0.08em]">Planned billing date</Label>
-                                  <Input
-                                    type="date"
-                                    defaultValue={milestone.dueDate?.slice(0, 10) || ''}
-                                    onBlur={(event) => {
-                                      const dueDate = event.currentTarget.value
-                                        ? new Date(event.currentTarget.value).toISOString()
-                                        : null;
-                                      const current = milestone.dueDate?.slice(0, 10) || '';
-                                      if (event.currentTarget.value !== current) void patchAgreementBillingMilestone(milestone.id, { dueDate });
-                                    }}
-                                    className="h-9 text-xs"
-                                  />
-                                </div>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setPendingDelete({
-                                    kind: 'agreement-billing-milestone',
-                                    id: milestone.id,
-                                    label: milestone.title,
-                                  })}
-                                >
-                                  <Trash2 className="mr-1 size-3.5 text-destructive" /> Delete
-                                </Button>
+
+                                {milestone.status === 'waived' && (
+                                  <p className="mt-2 text-[10px] text-muted-foreground">
+                                    Waived by {milestone.waivedBy || 'Unknown'}
+                                    {milestone.waivedAt ? ' · ' + new Date(milestone.waivedAt).toLocaleString() : ''}
+                                    {milestone.waiverReason ? ' · ' + milestone.waiverReason : ''}
+                                  </p>
+                                )}
+
+                                {!liveInvoice && milestone.status !== 'waived' && (
+                                  <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                                    <div>
+                                      <Label>Waiver reason</Label>
+                                      <Input
+                                        value={billingMilestoneWaiverReasons[milestone.id] || ''}
+                                        onChange={(event) => setBillingMilestoneWaiverReasons((current) => ({ ...current, [milestone.id]: event.target.value }))}
+                                        placeholder="Reason required if this billing stage will not be charged"
+                                        className="mt-1 h-9 text-xs"
+                                      />
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={!(billingMilestoneWaiverReasons[milestone.id] || '').trim()}
+                                      onClick={() => void waiveAgreementBillingMilestone(milestone.id)}
+                                    >
+                                      Waive milestone
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {previousVoids.length > 0 && (
+                                  <p className="mt-2 text-[10px] text-muted-foreground">
+                                    Previous void invoice{previousVoids.length === 1 ? '' : 's'}: {previousVoids.map((invoice) => invoice.invoiceNumber).join(', ')}. Audit history is retained; a Ready milestone may prepare a replacement draft.
+                                  </p>
+                                )}
                               </div>
-                              <div className="mt-2">
-                                <Label className="text-[10px] uppercase tracking-[0.08em]">Billing notes</Label>
-                                <Textarea
-                                  rows={2}
-                                  defaultValue={milestone.notes}
-                                  onBlur={(event) => {
-                                    const notes = event.currentTarget.value.trim();
-                                    if (notes !== milestone.notes) void patchAgreementBillingMilestone(milestone.id, { notes });
-                                  }}
-                                  placeholder="Trigger, acceptance condition or invoice instruction"
-                                  className="text-xs"
-                                />
-                              </div>
-                              <p className="mt-2 text-[10px] text-muted-foreground">
-                                {milestone.dueDate ? 'Planned ' + new Date(milestone.dueDate).toLocaleDateString() : 'No planned billing date'}
-                                {' · '}
-                                created by {milestone.createdBy || 'Admin'}
-                              </p>
-                            </div>
-                          ))}
+                            );
+                          })}
                           {!agreement.billingMilestones.length && (
                             <p className="rounded-lg border border-dashed border-border p-3 text-[11px] text-muted-foreground">
                               No billing milestones are planned yet. Add the first milestone below; this does not create or issue an invoice.
