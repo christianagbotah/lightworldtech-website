@@ -105,6 +105,11 @@ export async function finalizeHubtelPayment(clientReference: string, hubtelTrans
   const receiptNumber = await nextReceiptNumber(paidAt || new Date());
 
   const result = await db.$transaction(async (tx) => {
+    await tx.$queryRawUnsafe(
+      'SELECT pg_advisory_xact_lock(hashtext($1))',
+      'lightworld-invoice-lifecycle:' + intent.invoiceId,
+    );
+
     const claimed = await tx.hubtelPaymentIntent.updateMany({
       where: {
         id: intent.id,
@@ -135,8 +140,11 @@ export async function finalizeHubtelPayment(clientReference: string, hubtelTrans
     });
     if (!invoice) throw new Error('Invoice linked to Hubtel payment no longer exists');
 
+    const invoiceVoided = invoice.status === 'void';
     const balance = invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes);
-    const allocationAmount = Prisma.Decimal.min(intent.amount, balance);
+    const allocationAmount = invoiceVoided
+      ? new Prisma.Decimal(0)
+      : Prisma.Decimal.min(intent.amount, balance);
 
     const payment = await tx.clientPayment.create({
       data: {
@@ -149,7 +157,9 @@ export async function finalizeHubtelPayment(clientReference: string, hubtelTrans
         reference: provider.externalTransactionId || provider.transactionId || intent.clientReference,
         source: 'hubtel',
         providerReference: provider.transactionId || intent.clientReference,
-        notes: 'Verified Hubtel payment for ' + invoice.invoiceNumber,
+        notes: invoiceVoided
+          ? 'Verified Hubtel payment received after invoice ' + invoice.invoiceNumber + ' was voided; held as unapplied customer credit'
+          : 'Verified Hubtel payment for ' + invoice.invoiceNumber,
         receivedBy: 'Hubtel',
         ...(allocationAmount.gt(0)
           ? {
@@ -183,7 +193,7 @@ export async function finalizeHubtelPayment(clientReference: string, hubtelTrans
       where: { id: intent.id },
       data: {
         recordedPaymentId: payment.id,
-        status: 'paid',
+        status: invoiceVoided ? 'paid_after_invoice_void' : 'paid',
         paidAt: paidAt || new Date(),
       },
     });
