@@ -40,7 +40,7 @@ import {
 type Approval = {
   id: string;
   requestNumber: string;
-  outflowType: 'vendor_payment' | 'customer_refund';
+  outflowType: 'vendor_payment' | 'customer_refund' | 'direct_expense_payment';
   status: 'pending' | 'scheduled' | 'approved' | 'rejected' | 'cancelled';
   counterpartyId: string;
   counterpartyName: string;
