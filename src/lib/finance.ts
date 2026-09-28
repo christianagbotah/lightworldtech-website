@@ -67,7 +67,7 @@ export function vendorBillStatusFromBalance(input: {
   dueDate: Date;
   now?: Date;
 }): string {
-  if (input.storedStatus === 'void') return 'void';
+  if (['draft', 'rejected', 'void'].includes(input.storedStatus)) return input.storedStatus;
   const balance = invoiceBalance(input.total, input.allocations);
   if (balance.lte(0)) return 'paid';
   if (sumAmounts(input.allocations).gt(0)) {
