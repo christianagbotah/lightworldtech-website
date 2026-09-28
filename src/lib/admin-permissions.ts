@@ -32,7 +32,7 @@ export const ADMIN_PERMISSION_DEFINITIONS = [
   {
     key: 'finance.approve',
     label: 'Finance Approvals',
-    description: 'Approve or reject governed supplier payments and customer refunds under maker-checker controls.',
+    description: 'Approve governed invoice issuance, supplier payments, customer refunds and other sensitive finance actions under maker-checker controls.',
   },
 ] as const;
 
