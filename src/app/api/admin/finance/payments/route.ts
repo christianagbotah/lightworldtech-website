@@ -4,15 +4,16 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
-import { postCustomerPaymentJournal } from '@/lib/finance-ledger';
-import { notifyCustomerPaymentReceived } from '@/lib/payment-notification';
 import {
   invoiceBalance,
-  invoiceStatusFromBalance,
-  nextReceiptNumber,
   normalizeCurrency,
-  paymentUnallocated,
 } from '@/lib/finance';
+import { getFinanceApprovalPolicy } from '@/lib/finance-approvals';
+import {
+  createReceiptApproval,
+  postManualCustomerReceipt,
+  serializePostedPayment,
+} from '@/lib/finance-receipt-approvals';
 
 const allocationSchema = z.object({
   invoiceId: z.string().min(1),
@@ -38,26 +39,6 @@ const schema = z.object({
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['allocations'], message: 'Each invoice can be allocated only once per receipt' });
   }
 });
-
-function serializePayment(payment: any) {
-  return {
-    ...payment,
-    amount: payment.amount.toFixed(2),
-    allocatedAmount: payment.allocations.reduce(
-      (sum: Prisma.Decimal, item: any) => sum.plus(item.amount),
-      new Prisma.Decimal(0),
-    ).toFixed(2),
-    unallocatedAmount: paymentUnallocated(payment.amount, payment.allocations).toFixed(2),
-    allocations: payment.allocations.map((allocation: any) => ({
-      ...allocation,
-      amount: allocation.amount.toFixed(2),
-      invoice: allocation.invoice ? {
-        ...allocation.invoice,
-        total: allocation.invoice.total.toFixed(2),
-      } : undefined,
-    })),
-  };
-}
 
 export async function GET(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
@@ -92,7 +73,7 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ success: true, data: payments.map(serializePayment) });
+  return NextResponse.json({ success: true, data: payments.map(serializePostedPayment) });
 }
 
 export async function POST(request: NextRequest) {
@@ -107,12 +88,18 @@ export async function POST(request: NextRequest) {
   }
 
   const currency = normalizeCurrency(parsed.data.currency);
-  const organization = await db.clientOrganization.findUnique({ where: { id: parsed.data.organizationId }, select: { id: true } });
+  const organization = await db.clientOrganization.findUnique({
+    where: { id: parsed.data.organizationId },
+    select: { id: true, name: true },
+  });
   if (!organization) return NextResponse.json({ success: false, error: 'Client organization not found' }, { status: 404 });
 
   const invoices = parsed.data.allocations.length
     ? await db.clientInvoice.findMany({
-        where: { id: { in: parsed.data.allocations.map((item) => item.invoiceId) }, organizationId: parsed.data.organizationId },
+        where: {
+          id: { in: parsed.data.allocations.map((item) => item.invoiceId) },
+          organizationId: parsed.data.organizationId,
+        },
         include: { allocations: true, creditNotes: { where: { status: 'posted' } } },
       })
     : [];
@@ -138,91 +125,80 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const paymentNumber = await nextReceiptNumber(parsed.data.paidAt);
-  const now = new Date();
+  const input = {
+    organizationId: parsed.data.organizationId,
+    currency,
+    amount: parsed.data.amount,
+    paidAt: parsed.data.paidAt,
+    method: parsed.data.method,
+    reference: parsed.data.reference,
+    notes: parsed.data.notes,
+    allocations: parsed.data.allocations,
+  };
 
-  const payment = await db.$transaction(async (tx) => {
-    const created = await tx.clientPayment.create({
+  const policy = await getFinanceApprovalPolicy();
+  if (policy?.enabled && policy.requireSecondApprover) {
+    const approval = await createReceiptApproval(actor, input);
+
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_customer_receipt_approval_requested',
+      entity: 'FinanceReceiptApproval',
+      entityId: approval.id,
+      details: {
+        requestNumber: approval.requestNumber,
+        organizationId: approval.organizationId,
+        amount: approval.amount.toFixed(2),
+        currency: approval.currency,
+        allocationCount: parsed.data.allocations.length,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
       data: {
-        paymentNumber,
-        organizationId: parsed.data.organizationId,
+        pendingApproval: true,
+        approval: {
+          id: approval.id,
+          requestNumber: approval.requestNumber,
+          status: approval.status,
+          organization: approval.organization,
+          amount: approval.amount.toFixed(2),
+          currency: approval.currency,
+          paidAt: approval.paidAt,
+        },
+      },
+    }, { status: 202 });
+  }
+
+  try {
+    const result = await postManualCustomerReceipt(actor, input);
+
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_customer_payment_recorded',
+      entity: 'ClientPayment',
+      entityId: result.payment.id,
+      details: {
+        paymentNumber: result.payment.paymentNumber,
+        organizationId: result.payment.organizationId,
+        amount: result.payment.amount.toFixed(2),
         currency,
-        amount: parsed.data.amount,
-        paidAt: parsed.data.paidAt,
-        method: parsed.data.method,
-        reference: parsed.data.reference,
-        notes: parsed.data.notes,
-        receivedBy: actor.name || actor.email,
-        allocations: {
-          create: parsed.data.allocations.map((item) => ({
-            invoiceId: item.invoiceId,
-            amount: item.amount,
-          })),
-        },
-      },
-      include: {
-        organization: { select: { id: true, name: true } },
-        allocations: {
-          include: {
-            invoice: { select: { id: true, invoiceNumber: true, total: true, dueDate: true, status: true } },
-          },
-        },
+        allocationCount: result.payment.allocations.length,
       },
     });
 
-    for (const allocation of parsed.data.allocations) {
-      const invoice = invoices.find((item) => item.id === allocation.invoiceId)!;
-      const combined = [...invoice.allocations, { amount: new Prisma.Decimal(allocation.amount) }];
-      const nextStatus = invoiceStatusFromBalance({
-        storedStatus: invoice.status,
-        total: invoice.total,
-        allocations: combined,
-        credits: invoice.creditNotes,
-        dueDate: invoice.dueDate,
-        now,
-      });
-      await tx.clientInvoice.update({ where: { id: invoice.id }, data: { status: nextStatus } });
-    }
-
-    const allocatedAmount = parsed.data.allocations.reduce(
-      (sum, item) => sum.plus(new Prisma.Decimal(item.amount)),
-      new Prisma.Decimal(0),
-    );
-    await postCustomerPaymentJournal(tx, {
-      paymentId: created.id,
-      paymentNumber: created.paymentNumber,
-      paidAt: created.paidAt,
-      currency: created.currency,
-      amount: created.amount,
-      allocatedAmount,
-      method: created.method,
-      postedBy: actor.name || actor.email,
-    });
-
-    return created;
-  });
-
-  await recordAdminAudit({
-    admin: actor,
-    action: 'admin.finance_customer_payment_recorded',
-    entity: 'ClientPayment',
-    entityId: payment.id,
-    details: {
-      paymentNumber,
-      organizationId: payment.organizationId,
-      amount: payment.amount.toFixed(2),
-      currency,
-      allocationCount: payment.allocations.length,
-    },
-  });
-
-  const notification = await notifyCustomerPaymentReceived(payment.id).catch(() => null);
-
-  return NextResponse.json({
-    success: true,
-    data: {
-      ...serializePayment(payment),
-      customerNotificationStatus: notification?.status || payment.customerNotificationStatus,
-    },
-  }, { status: 201 });
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...serializePostedPayment(result.payment),
+        customerNotificationStatus: result.notification?.status || result.payment.customerNotificationStatus,
+      },
+    }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unable to record customer receipt',
+    }, { status: 409 });
+  }
 }
