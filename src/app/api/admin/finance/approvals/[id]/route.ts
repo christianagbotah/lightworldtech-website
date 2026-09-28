@@ -194,10 +194,11 @@ export async function PATCH(
   }
 
   if (parsed.data.action === 'approve' && isFutureFinanceDate(approval.effectiveDate)) {
-    if (approval.outflowType === 'vendor_payment' && approval.method !== 'cash') {
+    if (['vendor_payment', 'direct_expense_payment'].includes(approval.outflowType) && approval.method !== 'cash') {
       const proofCount = await db.financeOutflowApprovalAttachment.count({ where: { approvalId: approval.id } });
       if (!proofCount) {
-        return NextResponse.json({ success: false, error: 'Payment proof is required before a non-cash supplier payment can be scheduled' }, { status: 409 });
+        const label = approval.outflowType === 'vendor_payment' ? 'supplier payment' : 'direct expense payment';
+        return NextResponse.json({ success: false, error: 'Payment proof is required before a non-cash ' + label + ' can be scheduled' }, { status: 409 });
       }
     }
     const updated = await db.financeOutflowApproval.update({

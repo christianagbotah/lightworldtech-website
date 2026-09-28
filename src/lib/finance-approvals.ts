@@ -324,6 +324,9 @@ export async function executeOutflowApproval(
   }
 
   if (approval.outflowType === 'direct_expense_payment') {
+    if (approval.method !== 'cash' && approval.attachments.length === 0) {
+      throw new Error('Payment proof is required before a non-cash direct expense payment can be approved');
+    }
     const expense = await db.financeExpense.findUnique({
       where: { id: approval.sourceId },
       select: {

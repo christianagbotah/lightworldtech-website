@@ -29,8 +29,8 @@ export async function POST(
     select: { id: true, requestNumber: true, outflowType: true, status: true },
   });
   if (!approval) return NextResponse.json({ success: false, error: 'Approval request not found' }, { status: 404 });
-  if (approval.outflowType !== 'vendor_payment') {
-    return NextResponse.json({ success: false, error: 'Payment proof can only be attached to supplier payment approvals' }, { status: 409 });
+  if (!['vendor_payment', 'direct_expense_payment'].includes(approval.outflowType)) {
+    return NextResponse.json({ success: false, error: 'Payment proof can only be attached to supported payment approvals' }, { status: 409 });
   }
   if (approval.status !== 'pending') {
     return NextResponse.json({ success: false, error: 'Payment proof can only be added while the approval is pending' }, { status: 409 });
