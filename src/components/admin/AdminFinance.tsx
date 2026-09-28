@@ -1448,21 +1448,43 @@ export default function AdminFinance() {
 
   const submitExpense = async (event: FormEvent) => {
     event.preventDefault();
-    const ok = await post('/api/admin/finance/expenses', {
-      ...expenseForm,
-      vendorId: expenseForm.vendorId || null,
-      organizationId: expenseForm.organizationId || null,
-      projectId: expenseForm.projectId || null,
-      serviceId: expenseForm.serviceId || null,
-      amount: Number(expenseForm.amount || 0),
-      paidAt: expenseForm.paidAt || null,
-    }, 'Expense recorded');
-    if (ok) setExpenseForm({
-      vendorId: '', organizationId: '', projectId: '', serviceId: '',
-      category: 'operating_expense', description: '', currency: 'GHS',
-      amount: '', incurredAt: today(), paidAt: today(), method: 'bank_transfer',
-      reference: '', notes: '',
-    });
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/finance/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...expenseForm,
+          vendorId: expenseForm.vendorId || null,
+          organizationId: expenseForm.organizationId || null,
+          projectId: expenseForm.projectId || null,
+          serviceId: expenseForm.serviceId || null,
+          amount: Number(expenseForm.amount || 0),
+          paidAt: expenseForm.paidAt || null,
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to save expense');
+
+      toast.success(
+        payload?.pendingApproval
+          ? 'Expense recorded; payment submitted for approval' +
+            (payload?.approval?.requestNumber ? ' · ' + payload.approval.requestNumber : '')
+          : 'Expense recorded',
+      );
+      setExpenseForm({
+        vendorId: '', organizationId: '', projectId: '', serviceId: '',
+        category: 'operating_expense', description: '', currency: 'GHS',
+        amount: '', incurredAt: today(), paidAt: today(), method: 'bank_transfer',
+        reference: '', notes: '',
+      });
+      setDialog(null);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to save expense');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading && !data) {
