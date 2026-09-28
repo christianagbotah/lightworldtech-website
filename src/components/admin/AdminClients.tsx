@@ -73,6 +73,12 @@ type AgreementChange = {
   id: string; changedBy: string; changeType: string; fields: string;
   beforeState: Record<string, unknown>; afterState: Record<string, unknown>; createdAt: string;
 };
+type AgreementBillingMilestone = {
+  id: string; agreementId: string; invoiceId: string | null; title: string; amount: string;
+  dueDate: string | null; status: string; notes: string; createdBy: string;
+  waivedAt: string | null; waivedBy: string; waiverReason: string; createdAt: string; updatedAt: string;
+  invoice: { id: string; invoiceNumber: string; status: string; total: string; issueDate: string; dueDate: string } | null;
+};
 type ObligationOwner = {
   id: string; name: string; email: string; role: string; lastLogin: string | null;
 };
@@ -113,6 +119,7 @@ type Agreement = {
   project: { id: string; name: string; proposal: ProposalLineage | null } | null;
   approvalStatus: string; approvalDecisionBy: string; approvalDecisionAt: string | null; approvalNotes: string;
   attachments: AgreementAttachment[]; changes: AgreementChange[]; obligations: AgreementObligation[];
+  billingMilestones: AgreementBillingMilestone[];
 };
 type TicketMessage = {
   id: string; authorType: string; authorName: string; message: string; createdAt: string;
@@ -254,6 +261,10 @@ export default function AdminClients() {
   const [agreementObligationForms, setAgreementObligationForms] = useState<Record<string, {
     title: string; category: string; owner: string; ownerAdminId: string; dueDate: string; notes: string; evidenceUrl: string;
   }>>({});
+  const [agreementBillingForms, setAgreementBillingForms] = useState<Record<string, {
+    title: string; amount: string; dueDate: string; status: 'planned' | 'ready'; notes: string;
+  }>>({});
+  const [billingMilestoneWaiverReasons, setBillingMilestoneWaiverReasons] = useState<Record<string, string>>({});
   const [obligationOwners, setObligationOwners] = useState<ObligationOwner[]>([]);
   const [obligationQueue, setObligationQueue] = useState<ObligationQueueState>({
     scope: 'mine',
@@ -775,6 +786,68 @@ export default function AdminClients() {
       toast.success('Agreement updated');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update agreement');
+    }
+  };
+
+  const createAgreementBillingMilestone = async (event: FormEvent, agreementId: string) => {
+    event.preventDefault();
+    const form = agreementBillingForms[agreementId] || { title: '', amount: '', dueDate: '', status: 'planned', notes: '' };
+    if (!form.title.trim() || Number(form.amount || 0) <= 0) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/client-agreements/' + agreementId + '/billing-milestones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title,
+          amount: Number(form.amount),
+          dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : null,
+          status: form.status,
+          notes: form.notes,
+        }),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not add billing milestone');
+      setAgreementBillingForms((current) => ({
+        ...current,
+        [agreementId]: { title: '', amount: '', dueDate: '', status: 'planned', notes: '' },
+      }));
+      await fetchOrganizations();
+      toast.success('Billing milestone added');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not add billing milestone');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const patchAgreementBillingMilestone = async (milestoneId: string, update: Record<string, unknown>) => {
+    try {
+      const response = await fetch('/api/admin/agreement-billing-milestones/' + milestoneId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not update billing milestone');
+      await fetchOrganizations();
+      toast.success('Billing milestone updated');
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not update billing milestone');
+      return false;
+    }
+  };
+
+  const waiveAgreementBillingMilestone = async (milestoneId: string) => {
+    const reason = (billingMilestoneWaiverReasons[milestoneId] || '').trim();
+    if (!reason) {
+      toast.error('Enter a waiver reason before waiving the billing milestone.');
+      return;
+    }
+    const updated = await patchAgreementBillingMilestone(milestoneId, { status: 'waived', waiverReason: reason });
+    if (updated) {
+      setBillingMilestoneWaiverReasons((current) => ({ ...current, [milestoneId]: '' }));
     }
   };
 
