@@ -117,7 +117,7 @@ export default function PwaRegistrar() {
 
   const install = async () => {
     if (deferredPrompt) {
-      await deferredPrompt.prompt();
+      await deferredPrompt['prompt']();
       const choice = await deferredPrompt.userChoice;
       if (choice.outcome === 'accepted') {
         setDeferredPrompt(null);
