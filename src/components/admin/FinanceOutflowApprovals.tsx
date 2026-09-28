@@ -325,7 +325,7 @@ export default function FinanceOutflowApprovals() {
               </span>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold">Maker-checker cash-out approval</p>
+                  <p className="font-semibold">Finance maker-checker approval</p>
                   <Badge className={policy?.enabled
                     ? 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
                     : 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'}>
@@ -333,7 +333,7 @@ export default function FinanceOutflowApprovals() {
                   </Badge>
                 </div>
                 <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
-                  When enabled, supplier payments and customer refunds are requested first and only post cash after approval by a different authorized administrator.
+                  When enabled, invoice drafts require a different authorized approver before issuance, while supplier payments and customer refunds only post cash after second-person approval.
                 </p>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Eligible approvers: <strong className="text-foreground">{policy?.eligibleApprovers ?? 0}</strong>
