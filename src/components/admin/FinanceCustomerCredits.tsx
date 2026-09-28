@@ -119,6 +119,15 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return payload.data as T;
 }
 
+async function apiPayload(url: string, init?: RequestInit): Promise<any> {
+  const response = await fetch(url, { cache: 'no-store', ...init });
+  const raw = await response.text();
+  let payload: any = null;
+  try { payload = raw ? JSON.parse(raw) : null; } catch {}
+  if (!response.ok) throw new Error(payload?.error || 'Request failed');
+  return payload;
+}
+
 export default function FinanceCustomerCredits({ invoices, onFinanceChanged }: Props) {
   const [notes, setNotes] = useState<CreditNote[]>([]);
   const [refunds, setRefunds] = useState<Refund[]>([]);
@@ -199,12 +208,16 @@ export default function FinanceCustomerCredits({ invoices, onFinanceChanged }: P
     event.preventDefault();
     setSaving(true);
     try {
-      await api<CreditNote>('/api/admin/finance/credit-notes', {
+      const payload = await apiPayload('/api/admin/finance/credit-notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(creditForm),
       });
-      toast.success('Credit note posted to the customer account and general ledger');
+      toast.success(
+        payload?.pendingApproval
+          ? 'Credit note draft saved for second-person approval'
+          : 'Credit note posted to the customer account and general ledger',
+      );
       setCreditDialog(false);
       await Promise.all([load(), Promise.resolve(onFinanceChanged())]);
     } catch (error) {
@@ -389,7 +402,7 @@ export default function FinanceCustomerCredits({ invoices, onFinanceChanged }: P
           <DialogHeader>
             <DialogTitle>Issue customer credit note</DialogTitle>
             <DialogDescription>
-              The original invoice remains unchanged. The credit note posts its own reversing journal and reduces the customer balance.
+              The original invoice remains unchanged. When maker-checker is enabled, this saves a draft for second-person approval; only posting creates the reversing journal and reduces the customer balance.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submitCredit} className="space-y-4">
@@ -447,7 +460,7 @@ export default function FinanceCustomerCredits({ invoices, onFinanceChanged }: P
               <Button type="button" variant="outline" onClick={() => setCreditDialog(false)} disabled={saving}>Cancel</Button>
               <Button disabled={saving || !creditForm.invoiceId || !creditForm.subtotal}>
                 {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
-                Post credit note
+                Save credit note
               </Button>
             </DialogFooter>
           </form>
