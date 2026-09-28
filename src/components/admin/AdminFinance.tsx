@@ -131,6 +131,7 @@ type Invoice = {
   organizationId: string;
   serviceId: string | null;
   projectId: string | null;
+  agreementId: string | null;
   status: string;
   derivedStatus: string;
   currency: string;
@@ -155,6 +156,7 @@ type Invoice = {
   balance: string;
   organization: { id: string; name: string };
   service: { id: string; name: string; planName: string } | null;
+  agreement: { id: string; title: string; referenceNumber: string; agreementType: string; status: string } | null;
   lines: Array<{ id: string; description: string; quantity: string; unitPrice: string; amount: string }>;
 };
 
@@ -461,7 +463,7 @@ export default function AdminFinance() {
     renewalNoticeDays: '30', notes: '',
   });
   const [invoiceForm, setInvoiceForm] = useState({
-    organizationId: '', serviceId: '', projectId: '', status: 'issued', currency: 'GHS',
+    organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
     issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
     lines: [{ description: '', quantity: '1', unitPrice: '' }],
   });
@@ -609,6 +611,7 @@ export default function AdminFinance() {
         organizationId: organization.id,
         serviceId: '',
         projectId: deepLinkAgreementBilling.projectId || '',
+        agreementId: deepLinkAgreementBilling.agreementId,
         status: 'draft',
         currency: deepLinkAgreementBilling.currency || 'GHS',
         issueDate,
@@ -637,6 +640,7 @@ export default function AdminFinance() {
         organizationId: organization.id,
         serviceId: '',
         projectId: '',
+        agreementId: '',
         renewalForDate: '',
         dueDate: addDays(current.issueDate, organization.paymentTermsDays ?? 30),
         notes: current.notes || 'Prepared from Customer 360. Review invoice lines, tax treatment and due date before issuing.',
@@ -808,6 +812,7 @@ export default function AdminFinance() {
       organizationId: service.organizationId,
       serviceId: service.id,
       projectId: service.project?.id || '',
+      agreementId: '',
       status: 'issued',
       currency: service.currency,
       issueDate: todayValue,
@@ -851,6 +856,7 @@ export default function AdminFinance() {
       organizationId: organization.id,
       serviceId: '',
       projectId: project.id,
+      agreementId: '',
       status: 'issued',
       currency: project.renewalCurrency,
       issueDate: todayValue,
@@ -989,6 +995,7 @@ export default function AdminFinance() {
       ...invoiceForm,
       serviceId: invoiceForm.serviceId || null,
       projectId: invoiceForm.projectId || null,
+      agreementId: invoiceForm.agreementId || null,
       renewalForDate: invoiceForm.renewalForDate || null,
       discount: Number(invoiceForm.discount || 0),
       taxTreatment: invoiceForm.taxTreatment,
@@ -999,7 +1006,7 @@ export default function AdminFinance() {
       })),
     }, 'Invoice issued');
     if (ok) setInvoiceForm({
-      organizationId: '', serviceId: '', projectId: '', status: 'issued', currency: 'GHS',
+      organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
       issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
       lines: [{ description: '', quantity: '1', unitPrice: '' }],
     });
