@@ -56,6 +56,16 @@ export async function GET(request: NextRequest) {
           status: true,
         },
       },
+      billingMilestones: {
+        orderBy: [{ order: 'asc' }, { dueDate: 'asc' }, { createdAt: 'asc' }],
+        select: {
+          id: true,
+          title: true,
+          amount: true,
+          dueDate: true,
+          order: true,
+        },
+      },
       invoices: {
         where: { status: { not: 'void' } },
         orderBy: [{ issueDate: 'desc' }, { createdAt: 'desc' }],
@@ -77,6 +87,8 @@ export async function GET(request: NextRequest) {
     issued: Prisma.Decimal;
     drafts: Prisma.Decimal;
     remainingToPrepare: Prisma.Decimal;
+    scheduled: Prisma.Decimal;
+    unscheduled: Prisma.Decimal;
     agreements: number;
     overbilled: number;
     basisUnspecified: number;
@@ -90,6 +102,20 @@ export async function GET(request: NextRequest) {
     const issuedAmount = issuedInvoices.reduce((sum, invoice) => sum.plus(comparableAmount(invoice)), zero());
     const draftAmount = draftInvoices.reduce((sum, invoice) => sum.plus(comparableAmount(invoice)), zero());
     const committedAmount = issuedAmount.plus(draftAmount);
+    const scheduledAmount = agreement.billingMilestones.reduce(
+      (sum, milestone) => sum.plus(milestone.amount),
+      zero(),
+    );
+    const unscheduledAmount = positive(agreement.contractValue.minus(scheduledAmount));
+    const nextMilestone =
+      agreement.billingMilestones
+        .slice()
+        .sort((a, b) => {
+          const ad = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+          const bd = b.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+          if (ad !== bd) return ad - bd;
+          return a.order - b.order;
+        })[0] || null;
     const remainingToPrepare = positive(agreement.contractValue.minus(committedAmount));
     const remainingUnissued = positive(agreement.contractValue.minus(issuedAmount));
     const overbilledAmount = positive(issuedAmount.minus(agreement.contractValue));
@@ -106,6 +132,8 @@ export async function GET(request: NextRequest) {
       issued: zero(),
       drafts: zero(),
       remainingToPrepare: zero(),
+      scheduled: zero(),
+      unscheduled: zero(),
       agreements: 0,
       overbilled: 0,
       basisUnspecified: 0,
@@ -114,6 +142,8 @@ export async function GET(request: NextRequest) {
     bucket.issued = bucket.issued.plus(issuedAmount);
     bucket.drafts = bucket.drafts.plus(draftAmount);
     bucket.remainingToPrepare = bucket.remainingToPrepare.plus(remainingToPrepare);
+    bucket.scheduled = bucket.scheduled.plus(scheduledAmount);
+    bucket.unscheduled = bucket.unscheduled.plus(unscheduledAmount);
     bucket.agreements += 1;
     if (state === 'overbilled') bucket.overbilled += 1;
     if (agreement.contractValueBasis === 'unspecified') bucket.basisUnspecified += 1;
@@ -134,6 +164,16 @@ export async function GET(request: NextRequest) {
       draftAmount: draftAmount.toFixed(2),
       remainingToPrepare: remainingToPrepare.toFixed(2),
       remainingUnissued: remainingUnissued.toFixed(2),
+      scheduledAmount: scheduledAmount.toFixed(2),
+      unscheduledAmount: unscheduledAmount.toFixed(2),
+      billingMilestoneCount: agreement.billingMilestones.length,
+      nextMilestone: nextMilestone ? {
+        id: nextMilestone.id,
+        title: nextMilestone.title,
+        amount: nextMilestone.amount.toFixed(2),
+        dueDate: nextMilestone.dueDate,
+        order: nextMilestone.order,
+      } : null,
       overbilledAmount: overbilledAmount.toFixed(2),
       state,
       effectiveDate: agreement.effectiveDate,
@@ -161,12 +201,14 @@ export async function GET(request: NextRequest) {
           issuedAmount: values.issued.toFixed(2),
           draftAmount: values.drafts.toFixed(2),
           remainingToPrepare: values.remainingToPrepare.toFixed(2),
+          scheduledAmount: values.scheduled.toFixed(2),
+          unscheduledAmount: values.unscheduled.toFixed(2),
           agreements: values.agreements,
           overbilled: values.overbilled,
           basisUnspecified: values.basisUnspecified,
         })),
       methodology:
-        'Tax-exclusive agreements are compared with invoice taxable value before tax; tax-inclusive agreements are compared with final invoice totals. Unspecified legacy agreements continue to use final invoice totals but are explicitly flagged for review. Draft invoices reserve billing coverage but are not treated as issued.',
+        'Tax-exclusive agreements are compared with invoice taxable value before tax; tax-inclusive agreements are compared with final invoice totals. Unspecified legacy agreements continue to use final invoice totals but are explicitly flagged for review. Billing milestones are planning records only and do not create, issue, reserve or charge an invoice; draft invoices separately reserve billing coverage but are not treated as issued.',
     },
   });
 }

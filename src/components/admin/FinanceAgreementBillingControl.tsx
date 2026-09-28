@@ -31,6 +31,16 @@ export type AgreementBillingRow = {
   draftAmount: string;
   remainingToPrepare: string;
   remainingUnissued: string;
+  scheduledAmount: string;
+  unscheduledAmount: string;
+  billingMilestoneCount: number;
+  nextMilestone: {
+    id: string;
+    title: string;
+    amount: string;
+    dueDate: string | null;
+    order: number;
+  } | null;
   overbilledAmount: string;
   state: 'unbilled' | 'partially_billed' | 'draft_pending' | 'fully_billed' | 'overbilled';
   effectiveDate: string | null;
@@ -57,6 +67,8 @@ type AgreementBillingData = {
     issuedAmount: string;
     draftAmount: string;
     remainingToPrepare: string;
+    scheduledAmount: string;
+    unscheduledAmount: string;
     agreements: number;
     overbilled: number;
     basisUnspecified: number;
@@ -199,10 +211,11 @@ export default function FinanceAgreementBillingControl({
                     </div>
                     {item.overbilled > 0 && <AlertTriangle className="size-4 text-rose-600" />}
                   </div>
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] sm:grid-cols-4">
                     <div><p className="text-muted-foreground">Issued</p><p className="mt-0.5 font-semibold">{money(item.issuedAmount, item.currency)}</p></div>
                     <div><p className="text-muted-foreground">Drafts</p><p className="mt-0.5 font-semibold">{money(item.draftAmount, item.currency)}</p></div>
-                    <div><p className="text-muted-foreground">Unprepared</p><p className="mt-0.5 font-semibold">{money(item.remainingToPrepare, item.currency)}</p></div>
+                    <div><p className="text-muted-foreground">Scheduled</p><p className="mt-0.5 font-semibold">{money(item.scheduledAmount, item.currency)}</p></div>
+                    <div><p className="text-muted-foreground">Unscheduled</p><p className="mt-0.5 font-semibold">{money(item.unscheduledAmount, item.currency)}</p></div>
                   </div>
                 </div>
               ))}
@@ -247,6 +260,7 @@ export default function FinanceAgreementBillingControl({
                     <TableHead className="text-right">Issued</TableHead>
                     <TableHead className="text-right">Drafts</TableHead>
                     <TableHead className="text-right">Unprepared</TableHead>
+                    <TableHead>Billing schedule</TableHead>
                     <TableHead>Latest invoice</TableHead>
                     <TableHead data-export-ignore className="text-right">Action</TableHead>
                   </TableRow>
@@ -289,6 +303,18 @@ export default function FinanceAgreementBillingControl({
                       <TableCell className="text-right">{money(row.draftAmount, row.currency)}</TableCell>
                       <TableCell className="text-right font-semibold">{money(row.remainingToPrepare, row.currency)}</TableCell>
                       <TableCell>
+                        <p className="text-xs font-medium">{row.billingMilestoneCount} milestone{row.billingMilestoneCount === 1 ? '' : 's'}</p>
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                          {money(row.scheduledAmount, row.currency)} scheduled · {money(row.unscheduledAmount, row.currency)} unscheduled
+                        </p>
+                        {row.nextMilestone && (
+                          <p className="mt-1 max-w-[220px] truncate text-[10px] text-amber-700 dark:text-amber-300">
+                            Next: {row.nextMilestone.title} · {money(row.nextMilestone.amount, row.currency)}
+                            {row.nextMilestone.dueDate ? ' · ' + new Date(row.nextMilestone.dueDate).toLocaleDateString() : ''}
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {row.latestInvoice ? (
                           <button type="button" onClick={() => onOpenInvoice(row.latestInvoice!.id)} className="text-left">
                             <p className="font-mono text-xs font-semibold hover:underline">{row.latestInvoice.invoiceNumber}</p>
@@ -311,7 +337,7 @@ export default function FinanceAgreementBillingControl({
                   ))}
                   {!rows.length && (
                     <TableRow>
-                      <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
+                      <TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">
                         No agreements match this billing-control view.
                       </TableCell>
                     </TableRow>
