@@ -2296,6 +2296,21 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(dashboard).toContain("Disk {health?.disk?.usedPercent ?? '—'}%");
   });
 
+  test('alerts administrators when production disk capacity needs attention', () => {
+    const diskHealth = source('src/lib/server-disk-health.ts');
+    const health = source('src/app/api/admin/health/route.ts');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(diskHealth).toContain("SERVER_DISK_MINIMUM_FREE_BYTES = 2 * 1024 ** 3");
+    expect(diskHealth).toContain("SERVER_DISK_WARNING_FREE_BYTES = 5 * 1024 ** 3");
+    expect(diskHealth).toContain("statfs(SERVER_DISK_PATH, { bigint: true })");
+    expect(health).toContain("getServerDiskHealth");
+    expect(notifications).toContain("id: 'production-disk-capacity'");
+    expect(notifications).toContain("'Production disk critically low'");
+    expect(notifications).toContain("'Production disk capacity warning'");
+    expect(notifications).toContain("action: 'admin-settings'");
+  });
+
   test('keeps blog admin contracts aligned with wrapped API responses', () => {
     const blog = source('src/components/admin/AdminBlog.tsx');
     const editor = source('src/components/admin/AdminBlogEditor.tsx');
