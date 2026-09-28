@@ -93,6 +93,11 @@ describe('public corporate brand consistency', () => {
     expect(layout).toContain('<PwaRegistrar />');
     expect(registrar).toContain("navigator.serviceWorker");
     expect(registrar).toContain("register('/sw.js', { scope: '/' })");
+    expect(registrar).toContain("'beforeinstallprompt'");
+    expect(registrar).toContain("'appinstalled'");
+    expect(registrar).toContain('Add to Home Screen');
+    expect(registrar).toContain('Install Lightworld');
+    expect(registrar).toContain("DISMISS_KEY = 'lw-pwa-install-dismissed-at'");
     expect(worker).toContain("'/api/'");
     expect(worker).toContain("'/admin'");
     expect(worker).toContain("'/client'");
