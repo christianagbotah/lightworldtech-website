@@ -2290,8 +2290,7 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(messages).toContain('max-w-5xl');
     expect(health).toContain('getActiveAdminContext(request)');
     expect(health).toContain('await db.$queryRaw');
-    expect(health).toContain("statfs(diskPath, { bigint: true })");
-    expect(health).toContain('diskMinimumFreeBytes = 2 * 1024 ** 3');
+    expect(health).toContain('getServerDiskHealth');
     expect(health).toContain("disk.status === 'healthy'");
     expect(dashboard).toContain("Disk {health?.disk?.usedPercent ?? '—'}%");
   });
