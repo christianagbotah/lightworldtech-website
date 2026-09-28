@@ -29,6 +29,62 @@ const schema = z.object({
   renewalNotes: z.string().trim().max(4000).optional().default(''),
 });
 
+async function ensureProjectAgreementDraft(
+  project: {
+    id: string;
+    organizationId: string;
+    name: string;
+    budgetCurrency: string;
+    startDate: Date | null;
+    expiryDate: Date | null;
+    renewalNoticeDays: number;
+    manager: string;
+  },
+  proposal: {
+    id: string;
+    commercialNotes: string;
+  },
+) {
+  const existing = await db.clientAgreement.findFirst({
+    where: {
+      organizationId: project.organizationId,
+      projectId: project.id,
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  if (existing) return { agreement: existing, created: false };
+
+  const title = (project.name + ' — Statement of Work').slice(0, 220);
+  const notes = [
+    'Draft agreement register entry created automatically from accepted proposal ' + proposal.id + '.',
+    'Contract value, legal terms, payment obligations, signatures and activation require separate human review and approval.',
+    proposal.commercialNotes ? 'Proposal commercial context: ' + proposal.commercialNotes : '',
+  ].filter(Boolean).join('\n\n');
+
+  const agreement = await db.clientAgreement.create({
+    data: {
+      organizationId: project.organizationId,
+      projectId: project.id,
+      title,
+      agreementType: 'statement_of_work',
+      status: 'draft',
+      referenceNumber: '',
+      currency: project.budgetCurrency || 'GHS',
+      contractValue: 0,
+      effectiveDate: project.startDate,
+      expiryDate: project.expiryDate,
+      renewalNoticeDays: project.renewalNoticeDays,
+      owner: project.manager || '',
+      documentUrl: '',
+      notes,
+      signedAt: null,
+    },
+  });
+
+  return { agreement, created: true };
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -62,12 +118,19 @@ export async function POST(
     }
 
     if (proposal.clientProject) {
+      const agreementDraft = await ensureProjectAgreementDraft(proposal.clientProject, proposal);
       return NextResponse.json({
         success: true,
         created: false,
         data: {
           organization: proposal.clientProject.organization,
           project: proposal.clientProject,
+        },
+        agreementDraft: {
+          id: agreementDraft.agreement.id,
+          title: agreementDraft.agreement.title,
+          status: agreementDraft.agreement.status,
+          created: agreementDraft.created,
         },
       });
     }
@@ -161,6 +224,8 @@ export async function POST(
       },
     });
 
+    const agreementDraft = await ensureProjectAgreementDraft(project, proposal);
+
     await db.lead.update({
       where: { id: proposal.leadId },
       data: { status: 'won', lastContactedAt: new Date() },
@@ -181,6 +246,8 @@ export async function POST(
         renewalAmount: project.renewalAmount.toFixed(2),
         renewalCycle: project.renewalCycle,
         autoRenew: project.autoRenew,
+        agreementDraftId: agreementDraft.agreement.id,
+        agreementDraftCreated: agreementDraft.created,
       },
     });
 
@@ -197,6 +264,12 @@ export async function POST(
           active: existingUser.active,
           mustSetPassword: existingUser.mustSetPassword,
         },
+      },
+      agreementDraft: {
+        id: agreementDraft.agreement.id,
+        title: agreementDraft.agreement.title,
+        status: agreementDraft.agreement.status,
+        created: agreementDraft.created,
       },
       ...(activationUrl ? { activationUrl } : {}),
     }, { status: 201 });
