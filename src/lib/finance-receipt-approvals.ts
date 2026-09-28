@@ -100,6 +100,8 @@ async function createPostedReceipt(
   const ids = input.allocations.map((item) => item.invoiceId);
   if (new Set(ids).size !== ids.length) throw new Error('Each invoice can be allocated only once per receipt');
 
+  const paymentNumber = await nextReceiptNumber(input.paidAt);
+
   return db.$transaction(async (tx) => {
     const organization = await tx.clientOrganization.findUnique({
       where: { id: input.organizationId },
@@ -137,7 +139,6 @@ async function createPostedReceipt(
       }
     }
 
-    const paymentNumber = await nextReceiptNumber(input.paidAt);
     const now = new Date();
     const created = await tx.clientPayment.create({
       data: {
@@ -219,8 +220,16 @@ export async function executeReceiptApproval(
     throw new Error('Maker-checker prevents the requester from approving their own receipt');
   }
 
+  const claimed = await db.financeReceiptApproval.updateMany({
+    where: { id: approval.id, status: 'pending' },
+    data: { status: 'processing' },
+  });
+  if (claimed.count !== 1) throw new Error('Receipt approval request has already been decided');
+
   const allocations = parseReceiptApprovalAllocations(approval.allocationsJson);
-  const result = await postManualCustomerReceipt(actor, {
+  let result;
+  try {
+    result = await postManualCustomerReceipt(actor, {
     organizationId: approval.organizationId,
     currency: approval.currency,
     amount: Number(approval.amount),
@@ -228,8 +237,15 @@ export async function executeReceiptApproval(
     method: approval.method,
     reference: approval.reference,
     notes: approval.notes,
-    allocations,
-  });
+      allocations,
+    });
+  } catch (error) {
+    await db.financeReceiptApproval.updateMany({
+      where: { id: approval.id, status: 'processing' },
+      data: { status: 'pending' },
+    });
+    throw error;
+  }
 
   const updated = await db.financeReceiptApproval.update({
     where: { id: approval.id },
