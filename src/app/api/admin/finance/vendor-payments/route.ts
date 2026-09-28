@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
   for (const allocation of parsed.data.allocations) {
     const bill = bills.find((item) => item.id === allocation.billId)!;
     if (bill.currency !== currency) return NextResponse.json({ success: false, error: 'Supplier payment and bill currencies must match' }, { status: 400 });
-    if (bill.status === 'void') return NextResponse.json({ success: false, error: 'Payments cannot be allocated to void bills' }, { status: 409 });
+    if (['draft', 'rejected', 'void'].includes(bill.status)) return NextResponse.json({ success: false, error: 'Payments cannot be allocated to unposted or rejected bills' }, { status: 409 });
     if (!bill.attachments.length) {
       return NextResponse.json(
         {
