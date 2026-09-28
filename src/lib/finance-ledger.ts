@@ -369,6 +369,54 @@ export async function postCustomerPaymentJournal(tx: Tx, input: {
   });
 }
 
+export async function postCustomerPaymentReversalJournal(tx: Tx, input: {
+  reversalPaymentId: string;
+  originalPaymentNumber: string;
+  reversalPaymentNumber: string;
+  reversalDate: Date;
+  currency: string;
+  amount: Prisma.Decimal;
+  allocatedAmount: Prisma.Decimal;
+  method: string;
+  reason: string;
+  postedBy: string;
+}) {
+  const unallocated = Prisma.Decimal.max(
+    new Prisma.Decimal(0),
+    input.amount.minus(input.allocatedAmount),
+  );
+  return postSourceJournal(tx, {
+    sourceType: 'client_payment_reversal',
+    sourceId: input.reversalPaymentId,
+    entryDate: input.reversalDate,
+    currency: input.currency,
+    description:
+      'Reverse customer receipt ' +
+      input.originalPaymentNumber +
+      ' · ' +
+      input.reason,
+    reference: input.reversalPaymentNumber,
+    postedBy: input.postedBy,
+    lines: [
+      {
+        systemKey: 'accounts_receivable',
+        description: 'Reopen customer receivables',
+        debit: input.allocatedAmount,
+      },
+      {
+        systemKey: 'customer_deposits',
+        description: 'Reverse unapplied customer credit',
+        debit: unallocated,
+      },
+      {
+        systemKey: cashSystemKey(input.method),
+        description: 'Reverse receipt from ' + input.method.replaceAll('_', ' '),
+        credit: input.amount,
+      },
+    ],
+  });
+}
+
 export async function postVendorBillJournal(tx: Tx, input: {
   billId: string;
   payableNumber: string;
