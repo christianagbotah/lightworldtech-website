@@ -269,8 +269,9 @@ export default function AdminProposals() {
 
   const openConversion = () => {
     if (!selected) return;
+    const crmCurrency = selected.lead.currency?.trim().toUpperCase() || 'GHS';
     setConversionForm({
-      organizationName: selected.lead.contactMessage.name,
+      organizationName: selected.lead.company?.trim() || selected.lead.contactMessage.name,
       projectName: selected.title,
       manager: '',
       startDate: new Date().toISOString().slice(0, 10),
@@ -278,9 +279,9 @@ export default function AdminProposals() {
       expiryDate: '',
       nextRenewalDate: '',
       renewalCycle: 'annual',
-      renewalCurrency: 'GHS',
+      renewalCurrency: crmCurrency,
       renewalAmount: '',
-      budgetCurrency: 'GHS',
+      budgetCurrency: crmCurrency,
       budgetAmount: '',
       autoRenew: false,
       renewalNoticeDays: '30',

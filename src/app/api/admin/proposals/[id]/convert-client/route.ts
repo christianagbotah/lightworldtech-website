@@ -160,7 +160,7 @@ export async function POST(
     if (!organization) {
       organization = await db.clientOrganization.create({
         data: {
-          name: parsed.data.organizationName || contact.name,
+          name: parsed.data.organizationName || proposal.lead.company || contact.name,
           primaryContactName: contact.name,
           primaryEmail: email,
           primaryPhone: contact.phone || '',
