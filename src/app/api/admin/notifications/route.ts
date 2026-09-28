@@ -555,6 +555,26 @@ export async function GET(request: NextRequest) {
       (item) => item.requestedAt < receiptApproval48hCutoff,
     ).length;
 
+    const pendingReceiptReversalRows = canApproveFinance
+      ? await db.financeReceiptReversalRequest.findMany({
+          where: {
+            status: 'pending',
+            requestedByAdminId: { not: admin.id },
+          },
+          select: { requestedAt: true },
+          take: 1000,
+        })
+      : [];
+    const pendingReceiptReversals = pendingReceiptReversalRows.length;
+    const receiptReversal24hCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const receiptReversal48hCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const agedReceiptReversals = pendingReceiptReversalRows.filter(
+      (item) => item.requestedAt < receiptReversal24hCutoff,
+    ).length;
+    const overdueReceiptReversals = pendingReceiptReversalRows.filter(
+      (item) => item.requestedAt < receiptReversal48hCutoff,
+    ).length;
+
     const pendingCreditPolicyApprovalRows = await db.financeCreditPolicyApproval.findMany({
       where: { status: 'pending' },
       select: { requestedAt: true },
@@ -617,6 +637,35 @@ export async function GET(request: NextRequest) {
       const days = Math.ceil((project.nextRenewalDate.getTime() - now.getTime()) / 86400000);
       return days <= project.renewalNoticeDays;
     }).length;
+
+    if (overdueReceiptReversals > 0) {
+      notices.push({
+        id: 'finance-receipt-reversals-overdue',
+        severity: 'critical',
+        title: 'Customer receipt reversals overdue',
+        message: overdueReceiptReversals + ' receipt reversal request' + (overdueReceiptReversals === 1 ? ' has' : 's have') + ' been waiting more than 48 hours for independent Finance approval.',
+        count: overdueReceiptReversals,
+        action: 'admin-finance-approvals',
+      });
+    } else if (agedReceiptReversals > 0) {
+      notices.push({
+        id: 'finance-receipt-reversals-aging',
+        severity: 'warning',
+        title: 'Customer receipt reversals aging',
+        message: agedReceiptReversals + ' receipt reversal request' + (agedReceiptReversals === 1 ? ' has' : 's have') + ' been waiting more than 24 hours for independent Finance approval.',
+        count: agedReceiptReversals,
+        action: 'admin-finance-approvals',
+      });
+    } else if (pendingReceiptReversals > 0) {
+      notices.push({
+        id: 'finance-receipt-reversals',
+        severity: 'info',
+        title: 'Customer receipt reversals awaiting approval',
+        message: pendingReceiptReversals + ' receipt reversal request' + (pendingReceiptReversals === 1 ? ' is' : 's are') + ' waiting for independent Finance approval.',
+        count: pendingReceiptReversals,
+        action: 'admin-finance-approvals',
+      });
+    }
 
     if (overdueReceiptApprovals > 0) {
       notices.push({
