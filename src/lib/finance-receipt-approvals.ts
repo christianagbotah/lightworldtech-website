@@ -227,16 +227,16 @@ export async function executeReceiptApproval(
   if (claimed.count !== 1) throw new Error('Receipt approval request has already been decided');
 
   const allocations = parseReceiptApprovalAllocations(approval.allocationsJson);
-  let result;
+  let result: Awaited<ReturnType<typeof postManualCustomerReceipt>>;
   try {
     result = await postManualCustomerReceipt(actor, {
-    organizationId: approval.organizationId,
-    currency: approval.currency,
-    amount: Number(approval.amount),
-    paidAt: approval.paidAt,
-    method: approval.method,
-    reference: approval.reference,
-    notes: approval.notes,
+      organizationId: approval.organizationId,
+      currency: approval.currency,
+      amount: Number(approval.amount),
+      paidAt: approval.paidAt,
+      method: approval.method,
+      reference: approval.reference,
+      notes: approval.notes,
       allocations,
     });
   } catch (error) {
