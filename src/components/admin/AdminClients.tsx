@@ -105,9 +105,13 @@ type ObligationQueueState = {
   team: Array<{ id: string; name: string; email: string; total: number; overdue: number; due30: number }>;
   data: ObligationQueueItem[];
 };
+type AgreementBillingMilestoneInvoice = {
+  id: string; invoiceNumber: string; status: string; total: string; issueDate: string; dueDate: string;
+};
 type AgreementBillingMilestone = {
   id: string; title: string; amount: string; dueDate: string | null; order: number;
-  notes: string; createdBy: string; createdAt: string; updatedAt: string;
+  status: string; notes: string; createdBy: string; waivedAt: string | null; waivedBy: string; waiverReason: string;
+  invoices: AgreementBillingMilestoneInvoice[]; createdAt: string; updatedAt: string;
 };
 type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
@@ -258,6 +262,7 @@ export default function AdminClients() {
   const [agreementBillingForms, setAgreementBillingForms] = useState<Record<string, {
     title: string; amount: string; dueDate: string; notes: string;
   }>>({});
+  const [billingMilestoneWaiverReasons, setBillingMilestoneWaiverReasons] = useState<Record<string, string>>({});
   const [obligationDecisionNotes, setObligationDecisionNotes] = useState<Record<string, string>>({});
   const [agreementObligationForms, setAgreementObligationForms] = useState<Record<string, {
     title: string; category: string; owner: string; ownerAdminId: string; dueDate: string; notes: string; evidenceUrl: string;
