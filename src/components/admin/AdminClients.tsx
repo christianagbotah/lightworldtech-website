@@ -704,6 +704,35 @@ export default function AdminClients() {
     useAppStore.getState().navigate('admin-proposals');
   };
 
+  const prepareAgreementBilling = (agreement: Agreement) => {
+    if (!selected) return;
+    if (agreement.status !== 'active' || agreement.approvalStatus !== 'approved') {
+      toast.error('Only approved active agreements can prepare billing');
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lw-finance-section', 'customers');
+      sessionStorage.setItem('lw-finance-organization-id', selected.id);
+      sessionStorage.setItem('lw-finance-customer-name', selected.name);
+      sessionStorage.setItem('lw-finance-project-id', agreement.projectId || '');
+      sessionStorage.setItem('lw-finance-action', 'agreement-invoice');
+      sessionStorage.setItem('lw-finance-agreement-context', JSON.stringify({
+        agreementId: agreement.id,
+        title: agreement.title,
+        referenceNumber: agreement.referenceNumber,
+        projectId: agreement.projectId || '',
+        projectName: agreement.project?.name || '',
+        currency: agreement.currency || 'GHS',
+        contractValue: agreement.contractValue || '0',
+        effectiveDate: agreement.effectiveDate,
+        expiryDate: agreement.expiryDate,
+      }));
+    }
+
+    useAppStore.getState().navigate('admin-finance');
+  };
+
   const createAgreement = async (event: FormEvent) => {
     event.preventDefault();
     if (!selected) return;
@@ -2062,6 +2091,11 @@ export default function AdminClients() {
 
                       <div className="mt-3 flex flex-wrap gap-2">
                         <select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active" disabled={agreement.approvalStatus !== 'approved'}>Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>
+                        {agreement.status === 'active' && agreement.approvalStatus === 'approved' && (
+                          <Button type="button" size="sm" onClick={() => prepareAgreementBilling(agreement)}>
+                            <CircleDollarSign className="mr-2 size-3.5" /> Prepare billing
+                          </Button>
+                        )}
                         {agreement.documentUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(agreement.documentUrl, '_blank', 'noopener,noreferrer')}><FileText className="mr-2 size-3.5" /> Open legacy link</Button>}
                       </div>
                     </div>;
