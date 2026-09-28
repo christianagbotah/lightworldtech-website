@@ -34,6 +34,19 @@ describe('billing milestone readiness governance', () => {
     expect(route).toContain('readyBy: existing.readinessStatus');
   });
 
+  test('invalidates readiness when unbilled commercial terms materially change', () => {
+    const route = source('src/app/api/admin/agreement-billing-milestones/[id]/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(route).toContain('const readinessInvalidated =');
+    expect(route).toContain("existing.readinessStatus === 'ready_to_bill'");
+    expect(route).toContain('changesCommercialTerms');
+    expect(route).toContain("parsed.data.readinessStatus === undefined");
+    expect(route).toContain("readinessStatus: 'planned'");
+    expect(route).toContain('readinessInvalidated:');
+    expect(clients).toContain('will return this milestone to Planned and require a fresh readiness confirmation');
+  });
+
   test('enforces readiness again at the finance invoice boundary', () => {
     const route = source('src/app/api/admin/finance/invoices/route.ts');
 
