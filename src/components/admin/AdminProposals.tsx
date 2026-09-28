@@ -323,7 +323,13 @@ export default function AdminProposals() {
       }
       setConversionOpen(false);
       await fetchData();
-      toast.success(payload?.created ? 'Client workspace created with commercial terms' : 'Client workspace already exists');
+      toast.success(
+        payload?.agreementDraft?.created
+          ? 'Client workspace created and draft Statement of Work registered'
+          : payload?.created
+            ? 'Client workspace created with commercial terms'
+            : 'Client workspace already exists',
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to create client workspace');
     } finally {
@@ -715,7 +721,7 @@ export default function AdminProposals() {
             }}
           >
             <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
-              Review these commercial fields before conversion. Nothing here is inferred as a binding commitment from the assisted proposal text.
+              Review these commercial fields before conversion. Nothing here is inferred as a binding commitment from the assisted proposal text. Conversion also registers a linked draft Statement of Work with zero contract value; legal terms, value, signatures and activation still require separate human review.
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
