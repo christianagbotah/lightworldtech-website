@@ -282,6 +282,9 @@ type AgreementBillingContext = {
   currency: string;
   contractValue: string;
   contractValueBasis: 'unspecified' | 'tax_exclusive' | 'tax_inclusive';
+  billingMilestoneId: string;
+  billingMilestoneTitle: string;
+  billingMilestoneDueDate: string | null;
   effectiveDate: string | null;
   expiryDate: string | null;
 };
@@ -465,7 +468,7 @@ export default function AdminFinance() {
     renewalNoticeDays: '30', notes: '',
   });
   const [invoiceForm, setInvoiceForm] = useState({
-    organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
+    organizationId: '', serviceId: '', projectId: '', agreementId: '', billingMilestoneId: '', status: 'issued', currency: 'GHS',
     issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
     lines: [{ description: '', quantity: '1', unitPrice: '' }],
   });
@@ -566,6 +569,9 @@ export default function AdminFinance() {
               parsed.contractValueBasis === 'tax_exclusive' || parsed.contractValueBasis === 'tax_inclusive'
                 ? parsed.contractValueBasis
                 : 'unspecified',
+            billingMilestoneId: String((parsed as any).billingMilestoneId || ''),
+            billingMilestoneTitle: String((parsed as any).billingMilestoneTitle || ''),
+            billingMilestoneDueDate: (parsed as any).billingMilestoneDueDate ? String((parsed as any).billingMilestoneDueDate) : null,
             effectiveDate: parsed.effectiveDate ? String(parsed.effectiveDate) : null,
             expiryDate: parsed.expiryDate ? String(parsed.expiryDate) : null,
           });
@@ -618,6 +624,7 @@ export default function AdminFinance() {
         serviceId: '',
         projectId: deepLinkAgreementBilling.projectId || '',
         agreementId: deepLinkAgreementBilling.agreementId,
+        billingMilestoneId: deepLinkAgreementBilling.billingMilestoneId || '',
         status: 'draft',
         currency: deepLinkAgreementBilling.currency || 'GHS',
         issueDate,
@@ -652,6 +659,7 @@ export default function AdminFinance() {
         serviceId: '',
         projectId: '',
         agreementId: '',
+        billingMilestoneId: '',
         renewalForDate: '',
         dueDate: addDays(current.issueDate, organization.paymentTermsDays ?? 30),
         notes: current.notes || 'Prepared from Customer 360. Review invoice lines, tax treatment and due date before issuing.',
@@ -824,6 +832,7 @@ export default function AdminFinance() {
       serviceId: service.id,
       projectId: service.project?.id || '',
       agreementId: '',
+      billingMilestoneId: '',
       status: 'issued',
       currency: service.currency,
       issueDate: todayValue,
@@ -868,6 +877,7 @@ export default function AdminFinance() {
       serviceId: '',
       projectId: project.id,
       agreementId: '',
+      billingMilestoneId: '',
       status: 'issued',
       currency: project.renewalCurrency,
       issueDate: todayValue,
@@ -898,6 +908,7 @@ export default function AdminFinance() {
     }
 
     const issueDate = today();
+    const milestoneAmount = row.nextMilestone?.amount || row.remainingToPrepare;
     const context: AgreementBillingContext = {
       agreementId: row.id,
       title: row.title,
@@ -905,8 +916,11 @@ export default function AdminFinance() {
       projectId: row.projectId || '',
       projectName: row.project?.name || '',
       currency: row.currency,
-      contractValue: row.remainingToPrepare,
+      contractValue: milestoneAmount,
       contractValueBasis: row.contractValueBasis,
+      billingMilestoneId: row.nextMilestone?.id || '',
+      billingMilestoneTitle: row.nextMilestone?.title || '',
+      billingMilestoneDueDate: row.nextMilestone?.dueDate || null,
       effectiveDate: row.effectiveDate,
       expiryDate: row.expiryDate,
     };
@@ -921,6 +935,7 @@ export default function AdminFinance() {
       serviceId: '',
       projectId: row.projectId || '',
       agreementId: row.id,
+      billingMilestoneId: row.nextMilestone?.id || '',
       status: 'draft',
       currency: row.currency,
       issueDate,
@@ -937,6 +952,10 @@ export default function AdminFinance() {
           : row.contractValueBasis === 'tax_inclusive'
             ? 'Remaining value is measured against final invoice totals; if tax is applied, adjust the pre-tax line value so the final total stays within the approved agreement value. '
             : 'Contract value basis is unspecified; confirm the tax basis before relying on the remaining amount. ') +
+        (row.nextMilestone
+          ? 'Prepared for billing milestone "' + row.nextMilestone.title + '"' +
+            (row.nextMilestone.dueDate ? ' due ' + new Date(row.nextMilestone.dueDate).toLocaleDateString() : '') + '. '
+          : 'No unbilled milestone was selected; this uses the remaining agreement value. ') +
         'Confirm milestone entitlement, dates, discounts and amount before issuing.',
       lines: [{
         description:
@@ -944,7 +963,7 @@ export default function AdminFinance() {
           (row.project?.name ? ' · ' + row.project.name : '') +
           ' · next billing draft',
         quantity: '1',
-        unitPrice: row.remainingToPrepare,
+        unitPrice: milestoneAmount,
       }],
     });
     setSection('customers');
@@ -1072,6 +1091,7 @@ export default function AdminFinance() {
       serviceId: invoiceForm.serviceId || null,
       projectId: invoiceForm.projectId || null,
       agreementId: invoiceForm.agreementId || null,
+      billingMilestoneId: invoiceForm.billingMilestoneId || null,
       renewalForDate: invoiceForm.renewalForDate || null,
       discount: Number(invoiceForm.discount || 0),
       taxTreatment: invoiceForm.taxTreatment,
@@ -1083,7 +1103,7 @@ export default function AdminFinance() {
     }, 'Invoice issued');
     if (ok) {
       setInvoiceForm({
-        organizationId: '', serviceId: '', projectId: '', agreementId: '', status: 'issued', currency: 'GHS',
+        organizationId: '', serviceId: '', projectId: '', agreementId: '', billingMilestoneId: '', status: 'issued', currency: 'GHS',
         issueDate: today(), dueDate: inDays(14), renewalForDate: '', discount: '0', taxTreatment: 'none', notes: '',
         lines: [{ description: '', quantity: '1', unitPrice: '' }],
       });
@@ -2428,12 +2448,13 @@ export default function AdminFinance() {
                 serviceId: '',
                 projectId: '',
                 agreementId: '',
+                billingMilestoneId: '',
                 renewalForDate: '',
                 dueDate: addDays(invoiceForm.issueDate, organization?.paymentTermsDays ?? 30),
               });
               setDeepLinkAgreementBilling(null);
             }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Select client</option>{data.organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}</select></div><div><Label>Service</Label><select value={invoiceForm.serviceId} onChange={(e) => {
-              setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, agreementId: '', renewalForDate: '' });
+              setInvoiceForm({ ...invoiceForm, serviceId: e.target.value, agreementId: '', billingMilestoneId: '', renewalForDate: '' });
               setDeepLinkAgreementBilling(null);
             }} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">General invoice</option>{data.services.filter((x) => x.organizationId === invoiceForm.organizationId).map((x) => <option key={x.id} value={x.id}>{x.name} · {x.planName}</option>)}</select></div></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
