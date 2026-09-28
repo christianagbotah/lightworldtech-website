@@ -39,6 +39,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 
@@ -130,7 +132,7 @@ function statusTone(status: string): string {
   if (['paid', 'active', 'received', 'completed', 'delivered', 'sent'].includes(status)) {
     return 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
   }
-  if (['overdue', 'expired', 'cancelled', 'void', 'failed'].includes(status)) {
+  if (['overdue', 'expired', 'cancelled', 'void', 'failed', 'reversed', 'reversal'].includes(status)) {
     return 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200';
   }
   if (['partially_paid', 'suspended', 'pending', 'unpaid'].includes(status)) {
@@ -300,6 +302,10 @@ export default function FinanceRecordDetailsDialog({
   const [voidInvoiceOpen, setVoidInvoiceOpen] = useState(false);
   const [voidReason, setVoidReason] = useState('');
   const [voidBusy, setVoidBusy] = useState(false);
+  const [receiptReversalOpen, setReceiptReversalOpen] = useState(false);
+  const [receiptReversalDate, setReceiptReversalDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [receiptReversalReason, setReceiptReversalReason] = useState('');
+  const [receiptReversalBusy, setReceiptReversalBusy] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -312,6 +318,9 @@ export default function FinanceRecordDetailsDialog({
       setVoidInvoiceOpen(false);
       setVoidReason('');
       setVoidBusy(false);
+      setReceiptReversalOpen(false);
+      setReceiptReversalReason('');
+      setReceiptReversalBusy(false);
       return;
     }
 
@@ -367,12 +376,14 @@ export default function FinanceRecordDetailsDialog({
       };
     }
     if (data.type === 'receipt' && data.payment) {
+      const isReversal = data.payment.source === 'reversal';
+      const isReversed = Boolean(data.payment.reversalPayment);
       return {
         icon: ReceiptText,
-        eyebrow: 'Customer receipt',
+        eyebrow: isReversal ? 'Customer receipt reversal' : 'Customer receipt',
         title: data.payment.paymentNumber,
         subtitle: data.payment.organization?.name || '',
-        status: 'received',
+        status: isReversal ? 'reversal' : isReversed ? 'reversed' : 'received',
       };
     }
     if (data.type === 'bill' && data.bill) {
@@ -506,6 +517,45 @@ export default function FinanceRecordDetailsDialog({
       toast.error(cause instanceof Error ? cause.message : 'Unable to void this invoice');
     } finally {
       setVoidBusy(false);
+    }
+  };
+
+  const requestReceiptReversal = async () => {
+    if (!data?.payment?.id) return;
+    const reason = receiptReversalReason.trim();
+    if (reason.length < 5) {
+      toast.error('Enter a clear reversal reason of at least 5 characters');
+      return;
+    }
+    setReceiptReversalBusy(true);
+    try {
+      const response = await fetch(
+        '/api/admin/finance/payments/' + encodeURIComponent(data.payment.id) + '/reversal',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reversalDate: new Date(receiptReversalDate + 'T12:00:00Z').toISOString(),
+            reason,
+          }),
+        },
+      );
+      const raw = await response.text();
+      let payload: any = null;
+      try { payload = raw ? JSON.parse(raw) : null; } catch {}
+      if (!response.ok) throw new Error(payload?.error || 'Unable to request receipt reversal');
+      if (payload?.data?.pendingApproval) {
+        toast.success('Receipt reversal submitted for approval · ' + (payload.data.request?.requestNumber || 'pending'));
+      } else {
+        toast.success('Receipt reversed · ' + (payload?.data?.reversal?.paymentNumber || 'posted'));
+      }
+      setReceiptReversalOpen(false);
+      setReceiptReversalReason('');
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : 'Unable to request receipt reversal');
+    } finally {
+      setReceiptReversalBusy(false);
     }
   };
 
