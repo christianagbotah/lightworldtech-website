@@ -363,7 +363,9 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
           title: String(item.title || work[index]?.title || 'Project'),
           category: String(item.category || work[index]?.category || 'Digital product'),
           description: String(item.description || ''),
-          image: String(item.image || work[index]?.image || '/images/hero-slide-5.png'),
+          image: item.image
+            ? `${String(item.image)}${String(item.image).includes('?') ? '&' : '?'}v=20260928-hero-v2`
+            : String(work[index]?.image || '/images/hero-slide-5.png'),
         })));
       })
       .catch(() => {});
@@ -751,10 +753,10 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
                   <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-white/[0.03]">
                     <Image
                       src={project.image}
-                      alt=""
+                      alt={`${project.title} homepage hero`}
                       fill
                       sizes="(max-width: 1024px) 100vw, 33vw"
-                      className="object-cover transition duration-700 group-hover:scale-[1.035]"
+                      className="object-cover object-top transition duration-700 group-hover:scale-[1.035]"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
                     <span className="absolute left-5 top-5 rounded-full border border-white/15 bg-slate-950/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 backdrop-blur-lg">{project.category}</span>
