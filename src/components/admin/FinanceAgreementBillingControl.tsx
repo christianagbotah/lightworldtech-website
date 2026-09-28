@@ -145,7 +145,7 @@ export default function FinanceAgreementBillingControl({
   const draftPendingCount = (data?.rows || []).filter((row) => row.state === 'draft_pending').length;
 
   return (
-    <Card className="min-w-0 border-border/60">
+    <Card id="agreement-billing-control" className="min-w-0 scroll-mt-28 border-border/60">
       <CardHeader>
         <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <div>
