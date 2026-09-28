@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
   const canProposals = hasAdminPermission(admin.role, admin.permissions, 'proposals.manage');
   const canComms = hasAdminPermission(admin.role, admin.permissions, 'communications.manage');
   const canFinance = hasAdminPermission(admin.role, admin.permissions, 'finance.manage');
+  const canApproveFinance = hasAdminPermission(admin.role, admin.permissions, 'finance.approve');
 
   const disk = await getServerDiskHealth();
   if (disk.status === 'attention') {
@@ -534,6 +535,26 @@ export async function GET(request: NextRequest) {
       return outstanding.gte(account.creditLimit.mul(0.9));
     }).length;
 
+    const pendingReceiptApprovalRows = canApproveFinance
+      ? await db.financeReceiptApproval.findMany({
+          where: {
+            status: 'pending',
+            requestedByAdminId: { not: admin.id },
+          },
+          select: { requestedAt: true },
+          take: 1000,
+        })
+      : [];
+    const pendingReceiptApprovals = pendingReceiptApprovalRows.length;
+    const receiptApproval24hCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const receiptApproval48hCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const agedReceiptApprovals = pendingReceiptApprovalRows.filter(
+      (item) => item.requestedAt < receiptApproval24hCutoff,
+    ).length;
+    const overdueReceiptApprovals = pendingReceiptApprovalRows.filter(
+      (item) => item.requestedAt < receiptApproval48hCutoff,
+    ).length;
+
     const pendingCreditPolicyApprovalRows = await db.financeCreditPolicyApproval.findMany({
       where: { status: 'pending' },
       select: { requestedAt: true },
@@ -596,6 +617,35 @@ export async function GET(request: NextRequest) {
       const days = Math.ceil((project.nextRenewalDate.getTime() - now.getTime()) / 86400000);
       return days <= project.renewalNoticeDays;
     }).length;
+
+    if (overdueReceiptApprovals > 0) {
+      notices.push({
+        id: 'finance-receipt-approvals-overdue',
+        severity: 'critical',
+        title: 'Customer receipt approvals overdue',
+        message: overdueReceiptApprovals + ' manual customer receipt' + (overdueReceiptApprovals === 1 ? ' has' : 's have') + ' been waiting more than 48 hours for independent Finance approval.',
+        count: overdueReceiptApprovals,
+        action: 'admin-finance-approvals',
+      });
+    } else if (agedReceiptApprovals > 0) {
+      notices.push({
+        id: 'finance-receipt-approvals-aging',
+        severity: 'warning',
+        title: 'Customer receipt approvals aging',
+        message: agedReceiptApprovals + ' manual customer receipt' + (agedReceiptApprovals === 1 ? ' has' : 's have') + ' been waiting more than 24 hours for independent Finance approval.',
+        count: agedReceiptApprovals,
+        action: 'admin-finance-approvals',
+      });
+    } else if (pendingReceiptApprovals > 0) {
+      notices.push({
+        id: 'finance-receipt-approvals',
+        severity: 'info',
+        title: 'Customer receipts awaiting approval',
+        message: pendingReceiptApprovals + ' manual customer receipt' + (pendingReceiptApprovals === 1 ? ' is' : 's are') + ' waiting for your independent Finance approval.',
+        count: pendingReceiptApprovals,
+        action: 'admin-finance-approvals',
+      });
+    }
 
     if (overdueCreditPolicyApprovals > 0) {
       notices.push({
