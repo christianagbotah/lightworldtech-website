@@ -2318,6 +2318,7 @@ export default function AdminFinance() {
         <FinanceAccountingWorkspace
           initialView={accountingView}
           onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)}
+          onOpenBill={(billId) => openFinanceRecord('bill', billId)}
           onPrepareInvoiceReplacement={prepareRejectedInvoiceReplacement}
         />
       )}
