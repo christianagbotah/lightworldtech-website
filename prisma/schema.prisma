@@ -608,9 +608,14 @@ model ClientAgreementBillingMilestone {
   amount      Decimal         @db.Decimal(18, 2)
   dueDate     DateTime?
   order       Int             @default(0)
-  notes       String          @default("")
-  createdBy   String          @default("Admin")
-  invoices    ClientInvoice[]
+  notes         String          @default("")
+  readinessStatus String        @default("planned")
+  readinessNote  String        @default("")
+  evidenceUrl    String        @default("")
+  readyAt        DateTime?
+  readyBy        String        @default("")
+  createdBy      String        @default("Admin")
+  invoices       ClientInvoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
