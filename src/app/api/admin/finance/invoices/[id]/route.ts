@@ -531,8 +531,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       issuedByAdminId: existing.status === 'draft' && updated.status === 'issued' ? actor.id : '',
       voidedByAdminId: updated.status === 'void' && existing.status !== 'void' ? actor.id : '',
       voidReason: updated.status === 'void' && existing.status !== 'void' ? updated.voidReason : '',
-      revokedAccessLinks: result.cleanup?.revokedAccessLinks || 0,
-      cancelledPaymentIntents: result.cleanup?.cancelledPaymentIntents || 0,
+      revokedAccessLinks: 'cleanup' in result ? result.cleanup.revokedAccessLinks : 0,
+      cancelledPaymentIntents: 'cleanup' in result ? result.cleanup.cancelledPaymentIntents : 0,
     },
   });
 
