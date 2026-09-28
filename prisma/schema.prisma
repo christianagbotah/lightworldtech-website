@@ -588,6 +588,7 @@ model ClientAgreement {
   attachments       ClientAgreementAttachment[]
   changes           ClientAgreementChange[]
   obligations       ClientAgreementObligation[]
+  billingMilestones ClientAgreementBillingMilestone[]
   invoices          ClientInvoice[]
 
   createdAt DateTime @default(now())
@@ -645,6 +646,30 @@ model ClientAgreementObligation {
   @@index([agreementId, status])
   @@index([ownerAdminId, status])
   @@index([dueDate])
+}
+
+model ClientAgreementBillingMilestone {
+  id          String          @id @default(cuid())
+  agreementId String
+  agreement   ClientAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  invoiceId   String?
+  invoice     ClientInvoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  title       String
+  amount      Decimal         @db.Decimal(18, 2)
+  dueDate     DateTime?
+  status      String          @default("planned")
+  notes       String          @default("")
+  createdBy   String          @default("Admin")
+  waivedAt    DateTime?
+  waivedBy    String          @default("")
+  waiverReason String         @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([agreementId, status])
+  @@index([invoiceId])
+  @@index([dueDate, status])
 }
 
 model ClientAgreementAttachment {
@@ -870,6 +895,7 @@ model ClientInvoice {
   project        ClientProject?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
   agreementId    String?
   agreement      ClientAgreement?   @relation(fields: [agreementId], references: [id], onDelete: SetNull)
+  billingMilestones ClientAgreementBillingMilestone[]
   status         String             @default("draft")
   currency       String             @default("GHS")
   issueDate      DateTime
