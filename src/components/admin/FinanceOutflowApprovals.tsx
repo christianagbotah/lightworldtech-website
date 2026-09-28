@@ -1007,7 +1007,7 @@ export default function FinanceOutflowApprovals({
                 {pending.map((approval) => {
                   const mine = approval.requestedByAdminId === inbox?.currentAdminId;
                   const canDecide = Boolean(inbox?.canApprove) && !mine;
-                  const proofRequired = approval.outflowType === 'vendor_payment' && approval.method !== 'cash';
+                  const proofRequired = ['vendor_payment', 'direct_expense_payment'].includes(approval.outflowType) && approval.method !== 'cash';
                   const proofReady = !proofRequired || approval.attachments.length > 0;
                   return (
                     <TableRow key={approval.id}>
@@ -1030,7 +1030,7 @@ export default function FinanceOutflowApprovals({
                         <p className="text-[10px] text-muted-foreground">{approval.reference || 'No reference'}</p>
                       </TableCell>
                       <TableCell>
-                        {approval.outflowType === 'vendor_payment' ? (
+                        {['vendor_payment', 'direct_expense_payment'].includes(approval.outflowType) ? (
                           <div className="min-w-[210px] space-y-2">
                             {approval.attachments.length ? (
                               <div className="flex flex-col gap-1">
