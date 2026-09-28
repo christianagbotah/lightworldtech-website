@@ -345,6 +345,7 @@ export default function FinanceExecutiveDashboard({
   onPrepareRenewalInvoice,
   onCollections,
   onRenewals,
+  onAgreementBilling,
   onSuppliers,
   onCashbook,
   onStatements,
@@ -359,6 +360,7 @@ export default function FinanceExecutiveDashboard({
   onPrepareRenewalInvoice: (serviceId: string) => void;
   onCollections: () => void;
   onRenewals: () => void;
+  onAgreementBilling: () => void;
   onSuppliers: () => void;
   onCashbook: () => void;
   onStatements: () => void;
@@ -820,6 +822,7 @@ export default function FinanceExecutiveDashboard({
         collections={dashboard.collections}
         onCollections={onCollections}
         onRenewals={onRenewals}
+        onAgreementBilling={onAgreementBilling}
         onApprovals={onApprovals}
         onClose={onClose}
       />

@@ -1438,6 +1438,15 @@ export default function AdminFinance() {
           }}
           onCollections={() => setSection('collections')}
           onRenewals={() => setSection('renewals')}
+          onAgreementBilling={() => {
+            setSection('customers');
+            window.setTimeout(() => {
+              document.getElementById('agreement-billing-control')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+              });
+            }, 0);
+          }}
           onSuppliers={() => setSection('suppliers')}
           onCashbook={() => {
             setAccountingView('cashbook');

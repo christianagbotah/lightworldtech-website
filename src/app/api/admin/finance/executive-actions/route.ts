@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
   const [
     pendingApprovals,
     renewalInvoices,
+    agreementBillingAgreements,
     existingClose,
     accountingPeriod,
   ] = await Promise.all([
@@ -86,6 +87,26 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: [{ dueDate: 'asc' }, { issueDate: 'asc' }],
+    }),
+    db.clientAgreement.findMany({
+      where: {
+        status: 'active',
+        approvalStatus: 'approved',
+        contractValue: { gt: 0 },
+      },
+      select: {
+        id: true,
+        currency: true,
+        contractValue: true,
+        invoices: {
+          where: { status: { not: 'void' } },
+          select: {
+            status: true,
+            total: true,
+          },
+        },
+      },
+      take: 1000,
     }),
     db.financeMonthClose.findUnique({
       where: { monthStart: closeRange.from },
@@ -124,6 +145,46 @@ export async function GET(request: NextRequest) {
     add(paidRenewalTotals, invoice.currency, invoice.total);
     if (['custom', 'one_time'].includes(invoice.service?.billingCycle || '')) {
       manualRenewalCount += 1;
+    }
+  }
+
+  const agreementRemainingTotals: Record<string, Prisma.Decimal> = {};
+  const agreementDraftTotals: Record<string, Prisma.Decimal> = {};
+  const agreementOverbilledTotals: Record<string, Prisma.Decimal> = {};
+  let agreementOverbilledCount = 0;
+  let agreementDraftPendingCount = 0;
+  let agreementUnpreparedCount = 0;
+
+  for (const agreement of agreementBillingAgreements) {
+    const issuedAmount = agreement.invoices
+      .filter((invoice) => invoice.status !== 'draft')
+      .reduce((sum, invoice) => sum.plus(invoice.total), new Prisma.Decimal(0));
+    const draftAmount = agreement.invoices
+      .filter((invoice) => invoice.status === 'draft')
+      .reduce((sum, invoice) => sum.plus(invoice.total), new Prisma.Decimal(0));
+    const committedAmount = issuedAmount.plus(draftAmount);
+    const remainingToPrepare = Prisma.Decimal.max(
+      new Prisma.Decimal(0),
+      agreement.contractValue.minus(committedAmount),
+    );
+    const overbilledAmount = Prisma.Decimal.max(
+      new Prisma.Decimal(0),
+      issuedAmount.minus(agreement.contractValue),
+    );
+
+    if (overbilledAmount.gt(0)) {
+      agreementOverbilledCount += 1;
+      add(agreementOverbilledTotals, agreement.currency, overbilledAmount);
+      continue;
+    }
+    if (draftAmount.gt(0)) {
+      agreementDraftPendingCount += 1;
+      add(agreementDraftTotals, agreement.currency, draftAmount);
+      continue;
+    }
+    if (remainingToPrepare.gt(0)) {
+      agreementUnpreparedCount += 1;
+      add(agreementRemainingTotals, agreement.currency, remainingToPrepare);
     }
   }
 
@@ -203,6 +264,15 @@ export async function GET(request: NextRequest) {
         manualDateCount: manualRenewalCount,
         totalsByCurrency: jsonTotals(paidRenewalTotals),
         oldestDueDate: paidRenewals[0]?.dueDate || null,
+      },
+      agreementBilling: {
+        attentionCount: agreementOverbilledCount + agreementDraftPendingCount + agreementUnpreparedCount,
+        overbilledCount: agreementOverbilledCount,
+        draftPendingCount: agreementDraftPendingCount,
+        unpreparedCount: agreementUnpreparedCount,
+        remainingByCurrency: jsonTotals(agreementRemainingTotals),
+        draftByCurrency: jsonTotals(agreementDraftTotals),
+        overbilledByCurrency: jsonTotals(agreementOverbilledTotals),
       },
       priorMonthClose: {
         month: closeRange.key,
