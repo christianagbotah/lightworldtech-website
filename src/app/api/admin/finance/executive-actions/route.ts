@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
 
   const [
     pendingApprovals,
+    invoiceDrafts,
     renewalInvoices,
     agreementBillingAgreements,
     existingClose,
@@ -65,6 +66,17 @@ export async function GET(request: NextRequest) {
         amount: true,
         counterpartyName: true,
         requestedAt: true,
+      },
+    }),
+    db.clientInvoice.findMany({
+      where: { status: 'draft' },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        invoiceNumber: true,
+        currency: true,
+        total: true,
+        createdAt: true,
       },
     }),
     db.clientInvoice.findMany({
@@ -136,6 +148,11 @@ export async function GET(request: NextRequest) {
   const approvalTotals: Record<string, Prisma.Decimal> = {};
   for (const approval of pendingApprovals) {
     add(approvalTotals, approval.currency, approval.amount);
+  }
+
+  const invoiceApprovalTotals: Record<string, Prisma.Decimal> = {};
+  for (const invoice of invoiceDrafts) {
+    add(invoiceApprovalTotals, invoice.currency, invoice.total);
   }
 
   const paidRenewals = renewalInvoices.filter((invoice) =>
@@ -271,6 +288,12 @@ export async function GET(request: NextRequest) {
         totalsByCurrency: jsonTotals(approvalTotals),
         oldestRequestedAt: pendingApprovals[0]?.requestedAt || null,
         oldestRequestNumber: pendingApprovals[0]?.requestNumber || '',
+      },
+      invoiceApprovals: {
+        pendingCount: invoiceDrafts.length,
+        totalsByCurrency: jsonTotals(invoiceApprovalTotals),
+        oldestCreatedAt: invoiceDrafts[0]?.createdAt || null,
+        oldestInvoiceNumber: invoiceDrafts[0]?.invoiceNumber || '',
       },
       paidRenewals: {
         count: paidRenewals.length,

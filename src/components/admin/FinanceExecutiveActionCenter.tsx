@@ -21,6 +21,12 @@ type ActionsData = {
     oldestRequestedAt: string | null;
     oldestRequestNumber: string;
   };
+  invoiceApprovals: {
+    pendingCount: number;
+    totalsByCurrency: Record<string, string>;
+    oldestCreatedAt: string | null;
+    oldestInvoiceNumber: string;
+  };
   paidRenewals: {
     count: number;
     manualDateCount: number;
@@ -201,7 +207,7 @@ export default function FinanceExecutiveActionCenter({
           </div>
         )}
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           <ActionCard
             eyebrow="Collections"
             title="Follow-up exceptions"
@@ -254,6 +260,22 @@ export default function FinanceExecutiveActionCenter({
             tone={data?.agreementBilling.overbilledCount ? 'critical' : data?.agreementBilling.attentionCount ? 'warning' : 'good'}
             button="Open agreement billing"
             onClick={onAgreementBilling}
+          />
+
+          <ActionCard
+            eyebrow="Governance"
+            title="Invoice drafts awaiting approval"
+            value={data ? String(data.invoiceApprovals.pendingCount) : loading ? '…' : '—'}
+            detail={
+              data
+                ? moneyList(data.invoiceApprovals.totalsByCurrency) +
+                  (data.invoiceApprovals.oldestCreatedAt ? ' · ' + ageText(data.invoiceApprovals.oldestCreatedAt) : '')
+                : 'Checking governed invoice drafts'
+            }
+            Icon={ClipboardCheck}
+            tone={data?.invoiceApprovals.pendingCount ? 'warning' : 'good'}
+            button="Review invoice approvals"
+            onClick={onApprovals}
           />
 
           <ActionCard
