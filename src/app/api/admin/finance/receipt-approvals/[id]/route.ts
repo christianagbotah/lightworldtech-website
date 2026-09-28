@@ -134,6 +134,21 @@ export async function PATCH(
         receiptNumber: result.payment.paymentNumber,
       },
     });
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_customer_payment_recorded',
+      entity: 'ClientPayment',
+      entityId: result.payment.id,
+      details: {
+        paymentNumber: result.payment.paymentNumber,
+        organizationId: result.payment.organizationId,
+        amount: result.payment.amount.toFixed(2),
+        currency: result.payment.currency,
+        sourceApprovalId: id,
+        sourceApprovalNumber: approval.requestNumber,
+        allocationCount: result.payment.allocations.length,
+      },
+    });
 
     return NextResponse.json({
       success: true,
