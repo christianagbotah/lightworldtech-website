@@ -100,6 +100,37 @@ type ReceiptApproval = {
   organization: { id: string; name: string };
 };
 
+type ReceiptReversalRequest = {
+  id: string;
+  requestNumber: string;
+  status: 'pending' | 'processing' | 'approved' | 'rejected' | 'cancelled';
+  organizationId: string;
+  paymentId: string;
+  reversalDate: string;
+  reason: string;
+  requestedByAdminId: string;
+  requestedByName: string;
+  requestedByEmail: string;
+  requestedAt: string;
+  decidedByAdminId: string;
+  decidedByName: string;
+  decidedByEmail: string;
+  decidedAt: string | null;
+  decisionNotes: string;
+  resultPaymentId: string;
+  resultPaymentNumber: string;
+  organization: { id: string; name: string };
+  payment: {
+    id: string;
+    paymentNumber: string;
+    amount: string;
+    currency: string;
+    paidAt: string;
+    method: string;
+    source: string;
+  };
+};
+
 type CreditApproval = {
   id: string;
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
@@ -189,6 +220,7 @@ type Inbox = {
   currentAdminId: string;
   approvals: Approval[];
   receiptApprovals: ReceiptApproval[];
+  receiptReversalRequests: ReceiptReversalRequest[];
   creditApprovals: CreditApproval[];
   invoiceDrafts: InvoiceDraftApproval[];
   rejectedInvoiceDrafts: RejectedInvoiceDraft[];
@@ -273,6 +305,11 @@ export default function FinanceOutflowApprovals({
     action: 'approve' | 'reject' | 'cancel';
   } | null>(null);
   const [receiptNotes, setReceiptNotes] = useState('');
+  const [receiptReversalDecision, setReceiptReversalDecision] = useState<{
+    request: ReceiptReversalRequest;
+    action: 'approve' | 'reject' | 'cancel';
+  } | null>(null);
+  const [receiptReversalNotes, setReceiptReversalNotes] = useState('');
   const [creditDecision, setCreditDecision] = useState<{
     approval: CreditApproval;
     action: 'approve' | 'reject' | 'cancel' | 'execute';
@@ -409,6 +446,35 @@ export default function FinanceOutflowApprovals({
     }
   };
 
+  const decideReceiptReversal = async () => {
+    if (!receiptReversalDecision) return;
+    setWorking(true);
+    try {
+      const payload = await readJson(
+        '/api/admin/finance/receipt-reversals/' + encodeURIComponent(receiptReversalDecision.request.id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: receiptReversalDecision.action, notes: receiptReversalNotes }),
+        },
+      );
+      toast.success(
+        receiptReversalDecision.action === 'approve'
+          ? 'Receipt reversal approved and posted' + (payload?.data?.reversal?.paymentNumber ? ' · ' + payload.data.reversal.paymentNumber : '')
+          : receiptReversalDecision.action === 'reject'
+            ? 'Receipt reversal request rejected'
+            : 'Receipt reversal request cancelled',
+      );
+      setReceiptReversalDecision(null);
+      setReceiptReversalNotes('');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to decide receipt reversal request');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   const decideCredit = async () => {
     if (!creditDecision) return;
     setWorking(true);
@@ -514,6 +580,9 @@ export default function FinanceOutflowApprovals({
   const receiptApprovals = inbox?.receiptApprovals || [];
   const pendingReceipts = receiptApprovals.filter((item) => item.status === 'pending');
   const receiptHistory = receiptApprovals.filter((item) => item.status !== 'pending');
+  const receiptReversalRequests = inbox?.receiptReversalRequests || [];
+  const pendingReceiptReversals = receiptReversalRequests.filter((item) => item.status === 'pending');
+  const receiptReversalHistory = receiptReversalRequests.filter((item) => item.status !== 'pending' && item.status !== 'processing');
   const invoiceDrafts = inbox?.invoiceDrafts || [];
   const rejectedInvoiceDrafts = inbox?.rejectedInvoiceDrafts || [];
   const creditNoteDrafts = inbox?.creditNoteDrafts || [];
@@ -542,7 +611,7 @@ export default function FinanceOutflowApprovals({
                   </Badge>
                 </div>
                 <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
-                  When enabled, invoice and credit-note drafts require a different authorized approver before posting; manual customer receipts, supplier payments and customer refunds only post cash after second-person approval.
+                  When enabled, invoice and credit-note drafts require a different authorized approver before posting; manual customer receipts, receipt reversals, supplier payments and customer refunds only post cash corrections after second-person approval.
                 </p>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Eligible approvers: <strong className="text-foreground">{policy?.eligibleApprovers ?? 0}</strong>
@@ -624,6 +693,60 @@ export default function FinanceOutflowApprovals({
                   );
                 })}
                 {!pendingReceipts.length && <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No manual customer receipts are waiting for approval.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-rose-200/70 bg-rose-50/20 dark:border-rose-900/40 dark:bg-rose-950/10">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="text-base">Pending customer receipt reversals</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Reversals are cash corrections. Approval creates a linked negative receipt, mirrors the original invoice allocations and posts a compensating journal; the original receipt remains intact.
+              </p>
+            </div>
+            <Badge variant="outline">{pendingReceiptReversals.length} pending</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-pending-customer-receipt-reversals" className="min-w-[1120px]">
+              <TableHeader><TableRow>
+                <TableHead>Request</TableHead><TableHead>Customer / receipt</TableHead><TableHead>Requested by</TableHead>
+                <TableHead>Reversal date</TableHead><TableHead>Reason</TableHead><TableHead>Age</TableHead>
+                <TableHead className="text-right">Original amount</TableHead><TableHead className="text-right">Action</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {pendingReceiptReversals.map((request) => {
+                  const mine = request.requestedByAdminId === inbox?.currentAdminId;
+                  const canDecide = Boolean(inbox?.canApprove) && (!policy?.enabled || !mine);
+                  const age = approvalAge(request.requestedAt);
+                  return (
+                    <TableRow key={request.id}>
+                      <TableCell><p className="font-mono text-xs font-semibold">{request.requestNumber}</p><p className="mt-1 text-[10px] text-muted-foreground">{date(request.requestedAt)}</p></TableCell>
+                      <TableCell><p className="text-xs font-medium">{request.organization.name}</p><p className="mt-1 font-mono text-[10px] text-muted-foreground">{request.payment.paymentNumber} · {pretty(request.payment.method)}</p></TableCell>
+                      <TableCell><p className="text-xs">{request.requestedByName || 'Finance'}</p>{mine && <Badge variant="outline" className="mt-1">Requested by you</Badge>}</TableCell>
+                      <TableCell className="text-xs">{date(request.reversalDate)}</TableCell>
+                      <TableCell><p className="max-w-[260px] truncate text-xs">{request.reason}</p></TableCell>
+                      <TableCell><Badge variant="outline" className={age.hours >= 48 ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300' : age.hours >= 24 ? 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300' : ''}>{age.label}</Badge></TableCell>
+                      <TableCell className="text-right font-semibold">{money(request.payment.amount, request.payment.currency)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1.5">
+                          {canDecide && <>
+                            <Button type="button" size="sm" onClick={() => { setReceiptReversalDecision({ request, action: 'approve' }); setReceiptReversalNotes(''); }}><CheckCircle2 className="mr-1.5 size-3.5" /> Approve</Button>
+                            <Button type="button" size="sm" variant="outline" onClick={() => { setReceiptReversalDecision({ request, action: 'reject' }); setReceiptReversalNotes(''); }}><XCircle className="mr-1.5 size-3.5" /> Reject</Button>
+                          </>}
+                          {mine && <Button type="button" size="sm" variant="outline" onClick={() => { setReceiptReversalDecision({ request, action: 'cancel' }); setReceiptReversalNotes(''); }}><Ban className="mr-1.5 size-3.5" /> Cancel</Button>}
+                          {!mine && !canDecide && <span className="text-[10px] text-muted-foreground">Approval permission required</span>}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!pendingReceiptReversals.length && <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No customer receipt reversals are waiting for approval.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
@@ -1237,6 +1360,27 @@ export default function FinanceOutflowApprovals({
       </Card>
 
       <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3"><div className="flex items-center justify-between gap-3"><CardTitle className="text-base">Customer receipt reversal history</CardTitle><Badge variant="outline">{receiptReversalHistory.length}</Badge></div></CardHeader>
+        <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
+          <Table exportFileName="lightworld-customer-receipt-reversal-history" className="min-w-[980px]">
+            <TableHeader><TableRow><TableHead>Request</TableHead><TableHead>Status</TableHead><TableHead>Customer / original</TableHead><TableHead>Requester</TableHead><TableHead>Decision</TableHead><TableHead>Reversal receipt</TableHead><TableHead className="text-right">Original amount</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {receiptReversalHistory.map((request) => <TableRow key={request.id}>
+                <TableCell className="font-mono text-xs">{request.requestNumber}</TableCell>
+                <TableCell><Badge className={statusTone(request.status as Approval['status'])}>{pretty(request.status)}</Badge></TableCell>
+                <TableCell><p className="text-xs font-medium">{request.organization.name}</p><p className="font-mono text-[10px] text-muted-foreground">{request.payment.paymentNumber}</p></TableCell>
+                <TableCell><p className="text-xs">{request.requestedByName || 'Finance'}</p><p className="text-[10px] text-muted-foreground">{date(request.requestedAt)}</p></TableCell>
+                <TableCell><p className="text-xs">{request.decidedByName || '—'}</p><p className="text-[10px] text-muted-foreground">{date(request.decidedAt)}</p>{request.decisionNotes && <p className="max-w-[240px] truncate text-[10px] text-muted-foreground">{request.decisionNotes}</p>}</TableCell>
+                <TableCell className="font-mono text-xs">{request.resultPaymentNumber || '—'}</TableCell>
+                <TableCell className="text-right font-semibold">{money(request.payment.amount, request.payment.currency)}</TableCell>
+              </TableRow>)}
+              {!receiptReversalHistory.length && <TableRow><TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">No customer receipt reversal history yet.</TableCell></TableRow>}
+            </TableBody>
+          </Table>
+        </div></CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-border/60">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="text-base">Customer credit approval history</CardTitle>
@@ -1282,6 +1426,29 @@ export default function FinanceOutflowApprovals({
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(receiptReversalDecision)} onOpenChange={(open) => !working && !open && setReceiptReversalDecision(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{receiptReversalDecision?.action === 'approve' ? 'Approve receipt reversal?' : receiptReversalDecision?.action === 'reject' ? 'Reject receipt reversal?' : 'Cancel receipt reversal request?'}</DialogTitle>
+            <DialogDescription>
+              {receiptReversalDecision?.action === 'approve'
+                ? 'Approval posts a linked negative receipt and compensating journal, and reopens affected invoice balances. The original receipt remains preserved.'
+                : receiptReversalDecision?.action === 'reject'
+                  ? 'Rejection leaves the original receipt, allocations, cash and journal unchanged.'
+                  : 'Cancellation withdraws the pending reversal request without changing accounting records.'}
+            </DialogDescription>
+          </DialogHeader>
+          {receiptReversalDecision && <div className="rounded-xl border border-border/60 bg-muted/20 p-3"><div className="flex items-center justify-between gap-3"><div><p className="font-mono text-xs font-semibold">{receiptReversalDecision.request.requestNumber}</p><p className="mt-1 text-sm">{receiptReversalDecision.request.organization.name} · {receiptReversalDecision.request.payment.paymentNumber}</p></div><p className="font-bold">{money(receiptReversalDecision.request.payment.amount, receiptReversalDecision.request.payment.currency)}</p></div><p className="mt-2 text-xs text-muted-foreground">{receiptReversalDecision.request.reason}</p></div>}
+          <div><Label>Decision notes</Label><Textarea rows={3} value={receiptReversalNotes} onChange={(event) => setReceiptReversalNotes(event.target.value)} placeholder={receiptReversalDecision?.action === 'reject' ? 'Reason for rejection…' : 'Optional approval/cancellation note…'} /></div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setReceiptReversalDecision(null)} disabled={working}>Back</Button>
+            <Button type="button" variant={receiptReversalDecision?.action === 'reject' || receiptReversalDecision?.action === 'cancel' ? 'outline' : 'default'} onClick={() => void decideReceiptReversal()} disabled={working || (receiptReversalDecision?.action === 'reject' && !receiptReversalNotes.trim())}>
+              {working && <Loader2 className="mr-2 size-4 animate-spin" />}{receiptReversalDecision?.action === 'approve' ? <UserCheck className="mr-2 size-4" /> : null}{receiptReversalDecision?.action ? pretty(receiptReversalDecision.action) : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(receiptDecision)} onOpenChange={(open) => !working && !open && setReceiptDecision(null)}>
         <DialogContent className="max-w-lg">
