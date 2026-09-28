@@ -94,7 +94,11 @@ describe('public corporate brand consistency', () => {
     expect(mediaKit).toContain('Public coverage');
     expect(mediaActions).toContain('Print / Save as PDF');
     expect(mediaActions).toContain('Copy company facts');
+    expect(mediaKit).toContain('Approved brand resources');
+    expect(mediaKit).toContain('do not recolor, stretch, crop or redraw it');
     expect(mediaActions).toContain('download="lightworld-technologies-logo.png"');
+    expect(mediaActions).toContain('download="lightworld-technologies-logo.svg"');
+    expect(mediaKit).toContain('download="lightworld-technologies-logo.svg"');
     expect(sitemap).toContain("base + '/media-kit'");
   });
 
