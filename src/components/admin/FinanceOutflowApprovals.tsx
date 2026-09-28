@@ -161,6 +161,29 @@ type CreditNoteDraftApproval = {
   invoice: { id: string; invoiceNumber: string; status: string };
 };
 
+type SupplierBillDraftApproval = {
+  id: string;
+  payableNumber: string;
+  vendorId: string;
+  vendorReference: string;
+  category: string;
+  currency: string;
+  taxableAmount: string;
+  total: string;
+  issueDate: string;
+  dueDate: string;
+  purchaseOrderId: string | null;
+  createdByAdminId: string;
+  createdBy: string;
+  createdAt: string;
+  mine: boolean;
+  makerCanApprove: boolean;
+  evidenceAttached: boolean;
+  vendor: { id: string; name: string };
+  purchaseOrder: { id: string; poNumber: string } | null;
+  attachments: Array<{ id: string; originalName: string; createdAt: string }>;
+};
+
 type RejectedInvoiceDraft = {
   id: string;
   invoiceNumber: string;
@@ -193,6 +216,7 @@ type Inbox = {
   invoiceDrafts: InvoiceDraftApproval[];
   rejectedInvoiceDrafts: RejectedInvoiceDraft[];
   creditNoteDrafts: CreditNoteDraftApproval[];
+  supplierBillDrafts: SupplierBillDraftApproval[];
 };
 
 type Policy = {
@@ -254,9 +278,11 @@ async function readJson(url: string, init?: RequestInit) {
 
 export default function FinanceOutflowApprovals({
   onOpenInvoice,
+  onOpenBill,
   onPrepareReplacement,
 }: {
   onOpenInvoice?: (invoiceId: string) => void;
+  onOpenBill?: (billId: string) => void;
   onPrepareReplacement?: (invoiceId: string) => void;
 }) {
   const [inbox, setInbox] = useState<Inbox | null>(null);
@@ -282,6 +308,8 @@ export default function FinanceOutflowApprovals({
   const [invoiceRejectReason, setInvoiceRejectReason] = useState('');
   const [creditNoteReject, setCreditNoteReject] = useState<CreditNoteDraftApproval | null>(null);
   const [creditNoteRejectReason, setCreditNoteRejectReason] = useState('');
+  const [supplierBillReject, setSupplierBillReject] = useState<SupplierBillDraftApproval | null>(null);
+  const [supplierBillRejectReason, setSupplierBillRejectReason] = useState('');
   const [approvalProofFiles, setApprovalProofFiles] = useState<Record<string, File | null>>({});
 
   const load = async () => {
@@ -507,6 +535,46 @@ export default function FinanceOutflowApprovals({
     }
   };
 
+  const postSupplierBillDraft = async (bill: SupplierBillDraftApproval) => {
+    setWorking(true);
+    try {
+      await readJson('/api/admin/finance/bills/' + encodeURIComponent(bill.id) + '/post', {
+        method: 'POST',
+      });
+      toast.success('Supplier bill approved, posted and added to payables');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to post supplier bill');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const rejectSupplierBillDraft = async () => {
+    if (!supplierBillReject) return;
+    const reason = supplierBillRejectReason.trim();
+    if (reason.length < 3) {
+      toast.error('Enter a clear rejection reason');
+      return;
+    }
+    setWorking(true);
+    try {
+      await readJson('/api/admin/finance/bills/' + encodeURIComponent(supplierBillReject.id) + '/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      toast.success('Supplier bill draft rejected without posting a payable');
+      setSupplierBillReject(null);
+      setSupplierBillRejectReason('');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to reject supplier bill');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   const approvals = inbox?.approvals || [];
   const pending = approvals.filter((item) => item.status === 'pending');
   const scheduled = approvals.filter((item) => item.status === 'scheduled');
@@ -517,6 +585,7 @@ export default function FinanceOutflowApprovals({
   const invoiceDrafts = inbox?.invoiceDrafts || [];
   const rejectedInvoiceDrafts = inbox?.rejectedInvoiceDrafts || [];
   const creditNoteDrafts = inbox?.creditNoteDrafts || [];
+  const supplierBillDrafts = inbox?.supplierBillDrafts || [];
   const creditApprovals = inbox?.creditApprovals || [];
   const pendingCredit = creditApprovals.filter((item) => item.status === 'pending');
   const creditHistory = creditApprovals.filter((item) => item.status !== 'pending');
@@ -542,7 +611,7 @@ export default function FinanceOutflowApprovals({
                   </Badge>
                 </div>
                 <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
-                  When enabled, invoice and credit-note drafts require a different authorized approver before posting; manual customer receipts, supplier payments and customer refunds only post cash after second-person approval.
+                  When enabled, invoice, credit-note and supplier-bill drafts require a different authorized approver before posting; manual customer receipts, supplier payments and customer refunds only post cash after second-person approval.
                 </p>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Eligible approvers: <strong className="text-foreground">{policy?.eligibleApprovers ?? 0}</strong>
@@ -624,6 +693,76 @@ export default function FinanceOutflowApprovals({
                   );
                 })}
                 {!pendingReceipts.length && <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No manual customer receipts are waiting for approval.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="text-base">Pending supplier bill approvals</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Draft supplier bills stay out of payables, tax reporting and the ledger until a different authorized approver posts them. Supplier invoice evidence is required before posting.
+              </p>
+            </div>
+            <Badge variant="outline">{supplierBillDrafts.length} draft{supplierBillDrafts.length === 1 ? '' : 's'}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-pending-supplier-bill-approvals" className="min-w-[1180px]">
+              <TableHeader><TableRow>
+                <TableHead>Bill</TableHead><TableHead>Supplier / PO</TableHead><TableHead>Prepared by</TableHead><TableHead>Evidence</TableHead><TableHead>Age</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Action</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {supplierBillDrafts.map((bill) => {
+                  const canDecide = Boolean(inbox?.canApprove) && bill.makerCanApprove;
+                  const age = approvalAge(bill.createdAt);
+                  return (
+                    <TableRow key={bill.id}>
+                      <TableCell>
+                        <button type="button" className="text-left" onClick={() => onOpenBill?.(bill.id)}>
+                          <p className="font-mono text-xs font-semibold hover:underline">{bill.payableNumber}</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">{date(bill.issueDate)}</p>
+                        </button>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-xs font-medium">{bill.vendor.name}</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">{bill.purchaseOrder?.poNumber ? 'PO ' + bill.purchaseOrder.poNumber : 'No linked purchase order'}{bill.vendorReference ? ' · Ref ' + bill.vendorReference : ''}</p>
+                      </TableCell>
+                      <TableCell><p className="text-xs">{bill.createdBy || 'Finance'}</p>{bill.mine && <Badge variant="outline" className="mt-1">Prepared by you</Badge>}</TableCell>
+                      <TableCell>
+                        <Badge className={bill.evidenceAttached ? 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200' : 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'}>
+                          {bill.evidenceAttached ? 'Attached' : 'Required'}
+                        </Badge>
+                        {bill.attachments[0]?.originalName && <p className="mt-1 max-w-[180px] truncate text-[10px] text-muted-foreground">{bill.attachments[0].originalName}</p>}
+                      </TableCell>
+                      <TableCell><Badge variant="outline">{age.label}</Badge></TableCell>
+                      <TableCell className="text-xs">{date(bill.dueDate)}</TableCell>
+                      <TableCell className="text-right font-semibold">{money(bill.total, bill.currency)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => onOpenBill?.(bill.id)}><FileText className="mr-1.5 size-3.5" /> Open bill</Button>
+                          {canDecide && (
+                            <>
+                              <Button type="button" size="sm" disabled={working || !bill.evidenceAttached} title={!bill.evidenceAttached ? 'Attach supplier invoice evidence before posting' : undefined} onClick={() => void postSupplierBillDraft(bill)}>
+                                <CheckCircle2 className="mr-1.5 size-3.5" /> Post
+                              </Button>
+                              <Button type="button" size="sm" variant="outline" disabled={working} onClick={() => { setSupplierBillReject(bill); setSupplierBillRejectReason(''); }}>
+                                <XCircle className="mr-1.5 size-3.5" /> Reject
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                        {!canDecide && <p className="mt-1 text-[10px] text-muted-foreground">{bill.mine && policy?.enabled ? 'A different approver must decide this draft.' : 'Finance Approvals permission required.'}</p>}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!supplierBillDrafts.length && <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No supplier bill drafts are waiting for approval.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </div>
@@ -1452,6 +1591,48 @@ export default function FinanceOutflowApprovals({
           <DialogFooter>
             <Button type="button" variant="outline" disabled={working} onClick={() => { setCreditNoteReject(null); setCreditNoteRejectReason(''); }}>Cancel</Button>
             <Button type="button" variant="destructive" disabled={working || creditNoteRejectReason.trim().length < 3} onClick={() => void rejectCreditNoteDraft()}>
+              {working ? <Loader2 className="mr-2 size-4 animate-spin" /> : <XCircle className="mr-2 size-4" />} Reject draft
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(supplierBillReject)}
+        onOpenChange={(open) => {
+          if (!open && !working) {
+            setSupplierBillReject(null);
+            setSupplierBillRejectReason('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Reject supplier bill draft</DialogTitle>
+            <DialogDescription>
+              Rejection leaves payables, tax, expenses and the general ledger unchanged.
+            </DialogDescription>
+          </DialogHeader>
+          {supplierBillReject && (
+            <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-mono text-xs font-semibold">{supplierBillReject.payableNumber}</p>
+                  <p className="mt-1 text-sm">{supplierBillReject.vendor.name}</p>
+                </div>
+                <p className="font-bold">{money(supplierBillReject.total, supplierBillReject.currency)}</p>
+              </div>
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="supplier-bill-reject-reason">Reason for rejection</Label>
+            <Textarea id="supplier-bill-reject-reason" rows={5} maxLength={4000} disabled={working}
+              value={supplierBillRejectReason} onChange={(event) => setSupplierBillRejectReason(event.target.value)}
+              placeholder="Explain what must be corrected before a new supplier bill is prepared." />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={working} onClick={() => { setSupplierBillReject(null); setSupplierBillRejectReason(''); }}>Cancel</Button>
+            <Button type="button" variant="destructive" disabled={working || supplierBillRejectReason.trim().length < 3} onClick={() => void rejectSupplierBillDraft()}>
               {working ? <Loader2 className="mr-2 size-4 animate-spin" /> : <XCircle className="mr-2 size-4" />} Reject draft
             </Button>
           </DialogFooter>
