@@ -74,6 +74,32 @@ type Approval = {
   }>;
 };
 
+type ReceiptApproval = {
+  id: string;
+  requestNumber: string;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  organizationId: string;
+  currency: string;
+  amount: string;
+  paidAt: string;
+  method: string;
+  reference: string;
+  notes: string;
+  requestedByAdminId: string;
+  requestedByName: string;
+  requestedByEmail: string;
+  requestedAt: string;
+  decidedByAdminId: string;
+  decidedByName: string;
+  decidedByEmail: string;
+  decidedAt: string | null;
+  decisionNotes: string;
+  resultPaymentId: string;
+  resultReceiptNumber: string;
+  allocations: Array<{ invoiceId: string; amount: number }>;
+  organization: { id: string; name: string };
+};
+
 type CreditApproval = {
   id: string;
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
@@ -162,6 +188,7 @@ type Inbox = {
   canApprove: boolean;
   currentAdminId: string;
   approvals: Approval[];
+  receiptApprovals: ReceiptApproval[];
   creditApprovals: CreditApproval[];
   invoiceDrafts: InvoiceDraftApproval[];
   rejectedInvoiceDrafts: RejectedInvoiceDraft[];
@@ -241,6 +268,11 @@ export default function FinanceOutflowApprovals({
     action: 'approve' | 'reject' | 'cancel' | 'execute';
   } | null>(null);
   const [notes, setNotes] = useState('');
+  const [receiptDecision, setReceiptDecision] = useState<{
+    approval: ReceiptApproval;
+    action: 'approve' | 'reject' | 'cancel';
+  } | null>(null);
+  const [receiptNotes, setReceiptNotes] = useState('');
   const [creditDecision, setCreditDecision] = useState<{
     approval: CreditApproval;
     action: 'approve' | 'reject' | 'cancel' | 'execute';
@@ -348,6 +380,35 @@ export default function FinanceOutflowApprovals({
     }
   };
 
+  const decideReceipt = async () => {
+    if (!receiptDecision) return;
+    setWorking(true);
+    try {
+      const payload = await readJson(
+        '/api/admin/finance/receipt-approvals/' + encodeURIComponent(receiptDecision.approval.id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: receiptDecision.action, notes: receiptNotes }),
+        },
+      );
+      toast.success(
+        receiptDecision.action === 'approve'
+          ? 'Customer receipt approved and posted' + (payload?.data?.payment?.paymentNumber ? ' · ' + payload.data.payment.paymentNumber : '')
+          : receiptDecision.action === 'reject'
+            ? 'Customer receipt request rejected'
+            : 'Customer receipt request cancelled',
+      );
+      setReceiptDecision(null);
+      setReceiptNotes('');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to decide customer receipt request');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   const decideCredit = async () => {
     if (!creditDecision) return;
     setWorking(true);
@@ -450,6 +511,9 @@ export default function FinanceOutflowApprovals({
   const pending = approvals.filter((item) => item.status === 'pending');
   const scheduled = approvals.filter((item) => item.status === 'scheduled');
   const history = approvals.filter((item) => !['pending', 'scheduled'].includes(item.status));
+  const receiptApprovals = inbox?.receiptApprovals || [];
+  const pendingReceipts = receiptApprovals.filter((item) => item.status === 'pending');
+  const receiptHistory = receiptApprovals.filter((item) => item.status !== 'pending');
   const invoiceDrafts = inbox?.invoiceDrafts || [];
   const rejectedInvoiceDrafts = inbox?.rejectedInvoiceDrafts || [];
   const creditNoteDrafts = inbox?.creditNoteDrafts || [];
@@ -478,7 +542,7 @@ export default function FinanceOutflowApprovals({
                   </Badge>
                 </div>
                 <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
-                  When enabled, invoice and credit-note drafts require a different authorized approver before posting, while supplier payments and customer refunds only post cash after second-person approval.
+                  When enabled, invoice and credit-note drafts require a different authorized approver before posting; manual customer receipts, supplier payments and customer refunds only post cash after second-person approval.
                 </p>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Eligible approvers: <strong className="text-foreground">{policy?.eligibleApprovers ?? 0}</strong>
@@ -508,6 +572,60 @@ export default function FinanceOutflowApprovals({
                 </Button>
               )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="text-base">Pending customer receipt approvals</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Manual cash-in remains unposted until a different Finance approver revalidates the customer, currency and invoice allocations.
+              </p>
+            </div>
+            <Badge variant="outline">{pendingReceipts.length} pending</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-pending-customer-receipt-approvals" className="min-w-[1080px]">
+              <TableHeader><TableRow>
+                <TableHead>Request</TableHead><TableHead>Customer</TableHead><TableHead>Requested by</TableHead>
+                <TableHead>Paid / method</TableHead><TableHead>Allocations</TableHead><TableHead>Age</TableHead>
+                <TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Action</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {pendingReceipts.map((approval) => {
+                  const mine = approval.requestedByAdminId === inbox?.currentAdminId;
+                  const canDecide = Boolean(inbox?.canApprove) && !mine;
+                  const age = approvalAge(approval.requestedAt);
+                  return (
+                    <TableRow key={approval.id}>
+                      <TableCell><p className="font-mono text-xs font-semibold">{approval.requestNumber}</p><p className="mt-1 text-[10px] text-muted-foreground">{date(approval.requestedAt)}</p></TableCell>
+                      <TableCell><p className="text-xs font-medium">{approval.organization.name}</p><p className="mt-1 text-[10px] text-muted-foreground">{approval.reference || 'No external reference'}</p></TableCell>
+                      <TableCell><p className="text-xs">{approval.requestedByName || 'Finance'}</p>{mine && <Badge variant="outline" className="mt-1">Requested by you</Badge>}</TableCell>
+                      <TableCell><p className="text-xs">{date(approval.paidAt)}</p><p className="mt-1 text-[10px] text-muted-foreground">{pretty(approval.method)}</p></TableCell>
+                      <TableCell><p className="text-xs">{approval.allocations.length} invoice{approval.allocations.length === 1 ? '' : 's'}</p><p className="mt-1 text-[10px] text-muted-foreground">{approval.allocations.length ? 'Revalidated at approval' : 'Unallocated customer credit'}</p></TableCell>
+                      <TableCell><Badge variant="outline" className={age.hours >= 48 ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300' : age.hours >= 24 ? 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300' : ''}>{age.label}</Badge></TableCell>
+                      <TableCell className="text-right font-semibold">{money(approval.amount, approval.currency)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1.5">
+                          {canDecide && <>
+                            <Button type="button" size="sm" onClick={() => { setReceiptDecision({ approval, action: 'approve' }); setReceiptNotes(''); }}><CheckCircle2 className="mr-1.5 size-3.5" /> Approve</Button>
+                            <Button type="button" size="sm" variant="outline" onClick={() => { setReceiptDecision({ approval, action: 'reject' }); setReceiptNotes(''); }}><XCircle className="mr-1.5 size-3.5" /> Reject</Button>
+                          </>}
+                          {mine && <Button type="button" size="sm" variant="outline" onClick={() => { setReceiptDecision({ approval, action: 'cancel' }); setReceiptNotes(''); }}><Ban className="mr-1.5 size-3.5" /> Cancel</Button>}
+                          {!mine && !canDecide && <span className="text-[10px] text-muted-foreground">Approval permission required</span>}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!pendingReceipts.length && <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No manual customer receipts are waiting for approval.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
@@ -1098,6 +1216,27 @@ export default function FinanceOutflowApprovals({
       </Card>
 
       <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3"><div className="flex items-center justify-between gap-3"><CardTitle className="text-base">Customer receipt approval history</CardTitle><Badge variant="outline">{receiptHistory.length}</Badge></div></CardHeader>
+        <CardContent className="p-0"><div className="max-w-full overflow-x-auto">
+          <Table exportFileName="lightworld-customer-receipt-approval-history" className="min-w-[920px]">
+            <TableHeader><TableRow><TableHead>Request</TableHead><TableHead>Status</TableHead><TableHead>Customer</TableHead><TableHead>Requester</TableHead><TableHead>Decision</TableHead><TableHead>Receipt</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {receiptHistory.map((approval) => <TableRow key={approval.id}>
+                <TableCell className="font-mono text-xs">{approval.requestNumber}</TableCell>
+                <TableCell><Badge className={statusTone(approval.status)}>{pretty(approval.status)}</Badge></TableCell>
+                <TableCell className="text-xs font-medium">{approval.organization.name}</TableCell>
+                <TableCell><p className="text-xs">{approval.requestedByName || 'Finance'}</p><p className="text-[10px] text-muted-foreground">{date(approval.requestedAt)}</p></TableCell>
+                <TableCell><p className="text-xs">{approval.decidedByName || '—'}</p><p className="text-[10px] text-muted-foreground">{date(approval.decidedAt)}</p>{approval.decisionNotes && <p className="max-w-[240px] truncate text-[10px] text-muted-foreground">{approval.decisionNotes}</p>}</TableCell>
+                <TableCell className="font-mono text-xs">{approval.resultReceiptNumber || '—'}</TableCell>
+                <TableCell className="text-right font-semibold">{money(approval.amount, approval.currency)}</TableCell>
+              </TableRow>)}
+              {!receiptHistory.length && <TableRow><TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">No customer receipt approval history yet.</TableCell></TableRow>}
+            </TableBody>
+          </Table>
+        </div></CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-border/60">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="text-base">Customer credit approval history</CardTitle>
@@ -1143,6 +1282,29 @@ export default function FinanceOutflowApprovals({
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(receiptDecision)} onOpenChange={(open) => !working && !open && setReceiptDecision(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{receiptDecision?.action === 'approve' ? 'Approve customer receipt?' : receiptDecision?.action === 'reject' ? 'Reject customer receipt?' : 'Cancel customer receipt request?'}</DialogTitle>
+            <DialogDescription>
+              {receiptDecision?.action === 'approve'
+                ? 'Approval will create the receipt, revalidate and apply invoice allocations, post the cash journal and then trigger the customer payment notification.'
+                : receiptDecision?.action === 'reject'
+                  ? 'Rejection leaves cash, invoice balances and journals unchanged.'
+                  : 'Cancellation withdraws this pending manual receipt before another approver acts.'}
+            </DialogDescription>
+          </DialogHeader>
+          {receiptDecision && <div className="rounded-xl border border-border/60 bg-muted/20 p-3"><div className="flex items-center justify-between gap-3"><div><p className="font-mono text-xs font-semibold">{receiptDecision.approval.requestNumber}</p><p className="mt-1 text-sm">{receiptDecision.approval.organization.name}</p></div><p className="font-bold">{money(receiptDecision.approval.amount, receiptDecision.approval.currency)}</p></div></div>}
+          <div><Label>Decision notes</Label><Textarea rows={3} value={receiptNotes} onChange={(event) => setReceiptNotes(event.target.value)} placeholder={receiptDecision?.action === 'reject' ? 'Reason for rejection…' : 'Optional approval/cancellation note…'} /></div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setReceiptDecision(null)} disabled={working}>Back</Button>
+            <Button type="button" variant={receiptDecision?.action === 'reject' || receiptDecision?.action === 'cancel' ? 'outline' : 'default'} onClick={() => void decideReceipt()} disabled={working || (receiptDecision?.action === 'reject' && !receiptNotes.trim())}>
+              {working && <Loader2 className="mr-2 size-4 animate-spin" />}{receiptDecision?.action === 'approve' ? <UserCheck className="mr-2 size-4" /> : null}{receiptDecision?.action ? pretty(receiptDecision.action) : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(decision)} onOpenChange={(open) => !working && !open && setDecision(null)}>
         <DialogContent className="max-w-lg">
