@@ -1003,6 +1003,79 @@ export default function AdminFinance() {
     setFinanceRecord({ type, id });
   };
 
+  const prepareRejectedInvoiceReplacement = async (invoiceId: string) => {
+    try {
+      const record = await api<any>(
+        '/api/admin/finance/records/invoice/' + encodeURIComponent(invoiceId),
+      );
+      const invoice = record?.invoice;
+      if (!invoice || invoice.status !== 'void' || !invoice.rejectedAt) {
+        toast.error('Only rejected invoice drafts can be used to prepare a replacement');
+        return;
+      }
+
+      const organization = data?.organizations.find(
+        (item) => item.id === invoice.organizationId,
+      );
+      if (!organization) {
+        toast.error('Customer billing terms are unavailable for this replacement');
+        return;
+      }
+
+      const issueDate = today();
+      const rejectionReason = String(invoice.rejectionReason || '').trim() || 'No rejection reason recorded';
+      const originalNotes = String(invoice.notes || '').trim();
+      const lines = Array.isArray(invoice.lines)
+        ? invoice.lines.map((line: any) => ({
+            description: String(line.description || ''),
+            quantity: String(line.quantity || '1'),
+            unitPrice: String(line.unitPrice || ''),
+          }))
+        : [];
+
+      if (!lines.length) {
+        toast.error('The rejected invoice has no line items to copy');
+        return;
+      }
+
+      setDeepLinkAgreementBilling(null);
+      setFinanceRecord(null);
+      setSection('customers');
+      setInvoiceForm({
+        organizationId: String(invoice.organizationId || ''),
+        serviceId: String(invoice.serviceId || ''),
+        projectId: String(invoice.projectId || ''),
+        agreementId: String(invoice.agreementId || ''),
+        billingMilestoneId: String(invoice.billingMilestoneId || ''),
+        status: 'draft',
+        currency: String(invoice.currency || 'GHS').toUpperCase(),
+        issueDate,
+        dueDate: addDays(issueDate, organization.paymentTermsDays ?? 30),
+        renewalForDate: invoice.renewalForDate
+          ? String(invoice.renewalForDate).slice(0, 10)
+          : '',
+        discount: String(invoice.discount || '0'),
+        taxTreatment: String(invoice.taxTreatment || 'none'),
+        notes:
+          'Replacement for rejected draft ' +
+          String(invoice.invoiceNumber || '') +
+          '. Rejection reason: ' +
+          rejectionReason +
+          '. Review current scope, agreement/milestone readiness, tax treatment, dates, discounts and amounts before saving.' +
+          (originalNotes ? '\n\nOriginal draft notes: ' + originalNotes : ''),
+        lines,
+      });
+      setDialog('invoice');
+      toast.success('Corrected replacement draft prepared for review');
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Unable to prepare a replacement invoice draft',
+      );
+    }
+  };
+
   const prepareReceiptFromInvoice = (invoice: any) => {
     const balance = String(invoice.balance || '0');
     setFinanceRecord(null);
@@ -2190,6 +2263,7 @@ export default function AdminFinance() {
         <FinanceAccountingWorkspace
           initialView={accountingView}
           onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)}
+          onPrepareInvoiceReplacement={prepareRejectedInvoiceReplacement}
         />
       )}
 
