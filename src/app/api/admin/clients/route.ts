@@ -50,6 +50,12 @@ export async function GET(request: NextRequest) {
           changes: { orderBy: { createdAt: 'desc' }, take: 50 },
           billingMilestones: {
             orderBy: [{ order: 'asc' }, { dueDate: 'asc' }, { createdAt: 'asc' }],
+            include: {
+              invoices: {
+                where: { status: { not: 'void' } },
+                select: { id: true, invoiceNumber: true, status: true },
+              },
+            },
           },
           obligations: {
             include: { ownerAdmin: { select: { id: true, name: true, email: true, role: true } } },
