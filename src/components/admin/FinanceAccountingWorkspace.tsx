@@ -209,9 +209,11 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 export default function FinanceAccountingWorkspace({
   initialView = 'trial-balance',
   onOpenInvoice,
+  onPrepareInvoiceReplacement,
 }: {
   initialView?: FinanceAccountingView;
   onOpenInvoice?: (invoiceId: string) => void;
+  onPrepareInvoiceReplacement?: (invoiceId: string) => void;
 }) {
   const [view, setView] = useState<FinanceAccountingView>(initialView);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -605,7 +607,12 @@ export default function FinanceAccountingWorkspace({
 
       {view === 'cashbook' && <FinanceCashbookWorkspace />}
 
-      {view === 'approvals' && <FinanceOutflowApprovals onOpenInvoice={onOpenInvoice} />}
+      {view === 'approvals' && (
+        <FinanceOutflowApprovals
+          onOpenInvoice={onOpenInvoice}
+          onPrepareReplacement={onPrepareInvoiceReplacement}
+        />
+      )}
 
       {view === 'tax' && <FinanceTaxWorkspace />}
 
