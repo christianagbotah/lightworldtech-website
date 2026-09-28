@@ -185,8 +185,8 @@ export async function executeOutflowApproval(
       if (bill.currency !== approval.currency) {
         throw new Error('Supplier payment and bill currencies must match');
       }
-      if (bill.status === 'void') {
-        throw new Error('Payments cannot be allocated to void supplier bills');
+      if (['draft', 'rejected', 'void'].includes(bill.status)) {
+        throw new Error('Payments can only be allocated to posted supplier bills');
       }
       const available = invoiceBalance(bill.total, bill.allocations);
       if (new Prisma.Decimal(allocation.amount).gt(available)) {
