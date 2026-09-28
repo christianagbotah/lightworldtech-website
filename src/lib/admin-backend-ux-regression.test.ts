@@ -2272,6 +2272,8 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(settings).toContain('Automation dispatcher');
     expect(settings).toContain('Automation runtime');
     expect(settings).toContain('Backup & recovery');
+    expect(settings).toContain('Disk capacity');
+    expect(settings).toContain('health.disk.usedPercent');
     expect(settings).toContain("navigate('admin-sms')");
   });
 
@@ -2288,6 +2290,10 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(messages).toContain('max-w-5xl');
     expect(health).toContain('getActiveAdminContext(request)');
     expect(health).toContain('await db.$queryRaw');
+    expect(health).toContain("statfs(diskPath, { bigint: true })");
+    expect(health).toContain('diskMinimumFreeBytes = 2 * 1024 ** 3');
+    expect(health).toContain("disk.status === 'healthy'");
+    expect(dashboard).toContain("Disk {health?.disk?.usedPercent ?? '—'}%");
   });
 
   test('keeps blog admin contracts aligned with wrapped API responses', () => {
