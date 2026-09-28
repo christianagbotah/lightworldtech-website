@@ -9,6 +9,7 @@ import {
   Building2,
   BrainCircuit,
   Briefcase,
+  Calculator,
   ChevronDown,
   Cloud,
   Code2,
@@ -46,6 +47,7 @@ const defaultCompanyMenu = [
   { icon: 'shield', title: 'Trust Center', desc: 'Security, privacy and responsible AI', href: '/trust' },
   { icon: 'newspaper', title: 'Newsroom & media', desc: 'Verified facts, awards and public coverage', href: '/newsroom' },
   { icon: 'briefcase', title: 'Careers', desc: 'Talent network and opportunities', href: '/careers' },
+  { icon: 'calculator', title: 'Project scope builder', desc: 'Shape an RFQ and prepare a structured project brief', href: '/estimate' },
   { icon: 'message', title: 'Contact', desc: 'Start a project or conversation', href: '/contact' },
   { icon: 'key', title: 'Client Portal', desc: 'Secure project and support workspace', href: '/client' },
 ];
@@ -72,6 +74,7 @@ const navigationIcons = {
   building: Building2,
   brain: BrainCircuit,
   briefcase: Briefcase,
+  calculator: Calculator,
   cloud: Cloud,
   code: Code2,
   graduation: GraduationCap,
@@ -107,10 +110,13 @@ export default function Header({ settings = {} }: { settings?: SiteSettings }) {
     contentJson<unknown>(settings, 'header_service_menu', defaultServiceMenu),
     defaultServiceMenu,
   );
-  const companyMenu = normalizeNavigationMenu(
+  const configuredCompanyMenu = normalizeNavigationMenu(
     contentJson<unknown>(settings, 'header_company_menu', defaultCompanyMenu),
     defaultCompanyMenu,
   );
+  const companyMenu = configuredCompanyMenu.some((item) => item.href === '/estimate')
+    ? configuredCompanyMenu
+    : [...configuredCompanyMenu, { icon: 'calculator', title: 'Project scope builder', desc: 'Shape an RFQ and prepare a structured project brief', href: '/estimate' }];
   const mobileDock = normalizeNavigationMenu(
     contentJson<unknown>(settings, 'header_mobile_dock_links', defaultMobileDock),
     defaultMobileDock,

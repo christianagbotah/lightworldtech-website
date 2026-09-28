@@ -336,7 +336,7 @@ export default function CommandPalette({ settings = {} }: { settings?: SiteSetti
       }
       window.location.assign(href);
     },
-    [router],
+    [router, setOpen],
   );
 
   const groups: Array<SearchItem['group']> = ['Pages', 'Services', 'Insights', 'Portfolio', 'FAQ'];
