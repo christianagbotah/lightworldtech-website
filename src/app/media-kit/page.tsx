@@ -142,6 +142,34 @@ export default async function MediaKitPage() {
             </div>
           </section>
 
+          <section className="mt-5 rounded-[28px] border border-slate-200/70 bg-white p-6 dark:border-white/[0.07] dark:bg-white/[0.025] print:rounded-none print:border-slate-300 print:bg-white">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-600">Approved brand resources</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">Use the official Lightworld logo files.</h2>
+                <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-white/38 print:text-slate-600">
+                  Use the SVG for scalable print or high-resolution layouts and the PNG for standard digital use. Keep the logo proportions intact, preserve clear space around the mark, and do not recolor, stretch, crop or redraw it.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 print:hidden">
+                <a href="/logo.svg" download="lightworld-technologies-logo.svg" className="inline-flex h-10 items-center rounded-full bg-slate-950 px-4 text-xs font-semibold text-white transition hover:bg-amber-600 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300">
+                  Download SVG
+                </a>
+                <a href="/logo.png" download="lightworld-technologies-logo.png" className="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 text-xs font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-700 dark:border-white/[0.08] dark:text-white/65">
+                  Download PNG
+                </a>
+              </div>
+            </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 print:grid-cols-2">
+              <div className="flex min-h-36 items-center justify-center rounded-2xl border border-slate-200/70 bg-[#f7f9f8] p-6 dark:border-white/[0.07] dark:bg-white/[0.025] print:rounded-none print:border-slate-300">
+                <Image src="/logo.svg" alt="Lightworld Technologies vector logo preview" width={180} height={72} unoptimized />
+              </div>
+              <div className="flex min-h-36 items-center justify-center rounded-2xl border border-slate-200/70 bg-slate-950 p-6 dark:border-white/[0.07] print:rounded-none print:border-slate-300">
+                <Image src="/logo.png" alt="Lightworld Technologies PNG logo preview" width={180} height={72} unoptimized />
+              </div>
+            </div>
+          </section>
+
           <section className="mt-5 grid gap-5 lg:grid-cols-2 print:grid-cols-1">
             <div className="rounded-[28px] border border-slate-200/70 bg-white p-6 dark:border-white/[0.07] dark:bg-white/[0.025] print:rounded-none print:border-slate-300 print:bg-white">
               <div className="flex items-center gap-3">
