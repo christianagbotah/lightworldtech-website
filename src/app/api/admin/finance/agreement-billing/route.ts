@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
       agreementType: true,
       currency: true,
       contractValue: true,
+      contractValueBasis: true,
       effectiveDate: true,
       expiryDate: true,
       updatedAt: true,
@@ -62,6 +63,7 @@ export async function GET(request: NextRequest) {
           id: true,
           invoiceNumber: true,
           status: true,
+          taxableAmount: true,
           total: true,
           issueDate: true,
           dueDate: true,
@@ -77,13 +79,16 @@ export async function GET(request: NextRequest) {
     remainingToPrepare: Prisma.Decimal;
     agreements: number;
     overbilled: number;
+    basisUnspecified: number;
   }>();
 
   const rows = agreements.map((agreement) => {
     const issuedInvoices = agreement.invoices.filter((invoice) => invoice.status !== 'draft');
     const draftInvoices = agreement.invoices.filter((invoice) => invoice.status === 'draft');
-    const issuedAmount = issuedInvoices.reduce((sum, invoice) => sum.plus(invoice.total), zero());
-    const draftAmount = draftInvoices.reduce((sum, invoice) => sum.plus(invoice.total), zero());
+    const comparableAmount = (invoice: { taxableAmount: Prisma.Decimal; total: Prisma.Decimal }) =>
+      agreement.contractValueBasis === 'tax_exclusive' ? invoice.taxableAmount : invoice.total;
+    const issuedAmount = issuedInvoices.reduce((sum, invoice) => sum.plus(comparableAmount(invoice)), zero());
+    const draftAmount = draftInvoices.reduce((sum, invoice) => sum.plus(comparableAmount(invoice)), zero());
     const committedAmount = issuedAmount.plus(draftAmount);
     const remainingToPrepare = positive(agreement.contractValue.minus(committedAmount));
     const remainingUnissued = positive(agreement.contractValue.minus(issuedAmount));
@@ -103,6 +108,7 @@ export async function GET(request: NextRequest) {
       remainingToPrepare: zero(),
       agreements: 0,
       overbilled: 0,
+      basisUnspecified: 0,
     };
     bucket.contract = bucket.contract.plus(agreement.contractValue);
     bucket.issued = bucket.issued.plus(issuedAmount);
@@ -110,6 +116,7 @@ export async function GET(request: NextRequest) {
     bucket.remainingToPrepare = bucket.remainingToPrepare.plus(remainingToPrepare);
     bucket.agreements += 1;
     if (state === 'overbilled') bucket.overbilled += 1;
+    if (agreement.contractValueBasis === 'unspecified') bucket.basisUnspecified += 1;
     summary.set(currency, bucket);
 
     return {
@@ -121,6 +128,8 @@ export async function GET(request: NextRequest) {
       agreementType: agreement.agreementType,
       currency,
       contractValue: agreement.contractValue.toFixed(2),
+      contractValueBasis: agreement.contractValueBasis,
+      basisUnspecified: agreement.contractValueBasis === 'unspecified',
       issuedAmount: issuedAmount.toFixed(2),
       draftAmount: draftAmount.toFixed(2),
       remainingToPrepare: remainingToPrepare.toFixed(2),
@@ -154,9 +163,10 @@ export async function GET(request: NextRequest) {
           remainingToPrepare: values.remainingToPrepare.toFixed(2),
           agreements: values.agreements,
           overbilled: values.overbilled,
+          basisUnspecified: values.basisUnspecified,
         })),
       methodology:
-        'Agreement contract values are compared with linked invoice totals in the same recorded currency. Draft invoices reserve billing coverage but are not treated as issued. Confirm whether each contract value is tax-inclusive or tax-exclusive before relying on the remaining amount as a commercial balance.',
+        'Tax-exclusive agreements are compared with invoice taxable value before tax; tax-inclusive agreements are compared with final invoice totals. Unspecified legacy agreements continue to use final invoice totals but are explicitly flagged for review. Draft invoices reserve billing coverage but are not treated as issued.',
     },
   });
 }

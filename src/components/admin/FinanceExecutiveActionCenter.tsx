@@ -32,6 +32,7 @@ type ActionsData = {
     overbilledCount: number;
     draftPendingCount: number;
     unpreparedCount: number;
+    basisUnspecifiedCount: number;
     remainingByCurrency: Record<string, string>;
     draftByCurrency: Record<string, string>;
     overbilledByCurrency: Record<string, string>;
@@ -242,7 +243,8 @@ export default function FinanceExecutiveActionCenter({
               data
                 ? data.agreementBilling.overbilledCount + ' overbilled · ' +
                   data.agreementBilling.draftPendingCount + ' draft pending · ' +
-                  data.agreementBilling.unpreparedCount + ' unprepared' +
+                  data.agreementBilling.unpreparedCount + ' unprepared · ' +
+                  data.agreementBilling.basisUnspecifiedCount + ' basis review' +
                   (Object.keys(data.agreementBilling.remainingByCurrency).length
                     ? ' · ' + moneyList(data.agreementBilling.remainingByCurrency) + ' not yet represented'
                     : '')

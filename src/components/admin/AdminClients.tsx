@@ -107,7 +107,7 @@ type ObligationQueueState = {
 };
 type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
-  projectId: string | null; currency: string; contractValue: string; effectiveDate: string | null;
+  projectId: string | null; currency: string; contractValue: string; contractValueBasis: string; effectiveDate: string | null;
   expiryDate: string | null; renewalNoticeDays: number; owner: string; documentUrl: string;
   notes: string; signedAt: string | null;
   project: { id: string; name: string; proposal: ProposalLineage | null } | null;
@@ -288,7 +288,7 @@ export default function AdminClients() {
   const [milestoneForm, setMilestoneForm] = useState({ projectId: '', title: '', dueDate: '' });
   const [agreementForm, setAgreementForm] = useState({
     title: '', agreementType: 'contract', status: 'draft', referenceNumber: '', projectId: '',
-    currency: 'GHS', contractValue: '', effectiveDate: '', expiryDate: '', renewalNoticeDays: '30',
+    currency: 'GHS', contractValue: '', contractValueBasis: 'unspecified', effectiveDate: '', expiryDate: '', renewalNoticeDays: '30',
     owner: '', documentUrl: '', notes: '', signedAt: '',
   });
   const [documentForms, setDocumentForms] = useState<Record<string, { title: string; url: string; description: string; category: string }>>({});
@@ -725,6 +725,7 @@ export default function AdminClients() {
         projectName: agreement.project?.name || '',
         currency: agreement.currency || 'GHS',
         contractValue: agreement.contractValue || '0',
+        contractValueBasis: agreement.contractValueBasis || 'unspecified',
         effectiveDate: agreement.effectiveDate,
         expiryDate: agreement.expiryDate,
       }));
@@ -754,7 +755,7 @@ export default function AdminClients() {
       if (!response.ok) throw new Error(payload?.error || 'Could not create agreement');
       setAgreementForm({
         title: '', agreementType: 'contract', status: 'draft', referenceNumber: '', projectId: '',
-        currency: 'GHS', contractValue: '', effectiveDate: '', expiryDate: '', renewalNoticeDays: '30',
+        currency: 'GHS', contractValue: '', contractValueBasis: 'unspecified', effectiveDate: '', expiryDate: '', renewalNoticeDays: '30',
         owner: '', documentUrl: '', notes: '', signedAt: '',
       });
       await fetchOrganizations();
@@ -1757,6 +1758,14 @@ export default function AdminClients() {
                     <div><Label>Linked project</Label><select value={agreementForm.projectId} onChange={(e) => setAgreementForm({ ...agreementForm, projectId: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Organization level</option>{selected.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></div>
                     <div><Label>Agreement owner</Label><Input value={agreementForm.owner} onChange={(e) => setAgreementForm({ ...agreementForm, owner: e.target.value })} placeholder="Account / project owner" /></div>
                     <div className="grid grid-cols-[1fr_92px] gap-2"><div><Label>Contract value</Label><Input type="number" min="0" step="0.01" value={agreementForm.contractValue} onChange={(e) => setAgreementForm({ ...agreementForm, contractValue: e.target.value })} /></div><div><Label>Currency</Label><Input maxLength={3} value={agreementForm.currency} onChange={(e) => setAgreementForm({ ...agreementForm, currency: e.target.value.toUpperCase() })} /></div></div>
+                    <div>
+                      <Label>Contract value basis</Label>
+                      <select value={agreementForm.contractValueBasis} onChange={(e) => setAgreementForm({ ...agreementForm, contractValueBasis: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="unspecified">Unspecified — review required</option>
+                        <option value="tax_exclusive">Tax-exclusive / before tax</option>
+                        <option value="tax_inclusive">Tax-inclusive / final invoice total</option>
+                      </select>
+                    </div>
                     <div><Label>Renewal notice days</Label><Input type="number" min="0" max="365" value={agreementForm.renewalNoticeDays} onChange={(e) => setAgreementForm({ ...agreementForm, renewalNoticeDays: e.target.value })} /></div>
                     <div><Label>Effective date</Label><Input type="date" value={agreementForm.effectiveDate} onChange={(e) => setAgreementForm({ ...agreementForm, effectiveDate: e.target.value })} /></div>
                     <div><Label>Signed date</Label><Input type="date" value={agreementForm.signedAt} onChange={(e) => setAgreementForm({ ...agreementForm, signedAt: e.target.value })} /></div>
@@ -1780,7 +1789,7 @@ export default function AdminClients() {
                           {daysToExpiry !== null && daysToExpiry < 0 && <Badge className="bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200">Expired</Badge>}
                         </div>
                       </div>
-                      <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 xl:grid-cols-3"><p><span className="text-muted-foreground">Value:</span> {money(agreement.contractValue, agreement.currency)}</p><p><span className="text-muted-foreground">Owner:</span> {agreement.owner || 'Unassigned'}</p><p><span className="text-muted-foreground">Signed:</span> {agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'Not recorded'}</p><p><span className="text-muted-foreground">Effective:</span> {agreement.effectiveDate ? new Date(agreement.effectiveDate).toLocaleDateString() : 'Not set'}</p><p><span className="text-muted-foreground">Expiry:</span> {agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString() : 'Open-ended'}</p><p><span className="text-muted-foreground">Notice:</span> {agreement.renewalNoticeDays} days</p></div>
+                      <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 xl:grid-cols-3"><p><span className="text-muted-foreground">Value:</span> {money(agreement.contractValue, agreement.currency)}</p><p><span className="text-muted-foreground">Value basis:</span> {pretty(agreement.contractValueBasis || 'unspecified')}</p><p><span className="text-muted-foreground">Owner:</span> {agreement.owner || 'Unassigned'}</p><p><span className="text-muted-foreground">Signed:</span> {agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'Not recorded'}</p><p><span className="text-muted-foreground">Effective:</span> {agreement.effectiveDate ? new Date(agreement.effectiveDate).toLocaleDateString() : 'Not set'}</p><p><span className="text-muted-foreground">Expiry:</span> {agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString() : 'Open-ended'}</p><p><span className="text-muted-foreground">Notice:</span> {agreement.renewalNoticeDays} days</p></div>
                       {agreement.notes && <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{agreement.notes}</p>}
 
                       {agreement.project && (
@@ -2090,6 +2099,16 @@ export default function AdminClients() {
                       </div>
 
                       <div className="mt-3 flex flex-wrap gap-2">
+                        <select
+                          value={agreement.contractValueBasis || 'unspecified'}
+                          onChange={(e) => void patchAgreement(agreement.id, { contractValueBasis: e.target.value })}
+                          className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"
+                          aria-label={'Contract value basis for ' + agreement.title}
+                        >
+                          <option value="unspecified">Basis unspecified</option>
+                          <option value="tax_exclusive">Tax-exclusive</option>
+                          <option value="tax_inclusive">Tax-inclusive</option>
+                        </select>
                         <select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active" disabled={agreement.approvalStatus !== 'approved'}>Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>
                         {agreement.status === 'active' && agreement.approvalStatus === 'approved' && (
                           <Button type="button" size="sm" onClick={() => prepareAgreementBilling(agreement)}>

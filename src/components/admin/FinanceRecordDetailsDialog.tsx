@@ -582,6 +582,10 @@ export default function FinanceRecordDetailsDialog({
                         ? data.invoice.agreement.title + (data.invoice.agreement.referenceNumber ? ' · ' + data.invoice.agreement.referenceNumber : '')
                         : '—'}
                     />
+                    <DetailItem
+                      label="Agreement value basis"
+                      value={data.invoice.agreement ? pretty(data.invoice.agreement.contractValueBasis || 'unspecified') : '—'}
+                    />
                     <DetailItem label="Currency" value={data.invoice.currency} mono />
                     <DetailItem label="Issue date" value={date(data.invoice.issueDate)} />
                     <DetailItem label="Due date" value={date(data.invoice.dueDate)} />

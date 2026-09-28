@@ -22,13 +22,17 @@ describe('agreement billing control', () => {
     expect(route).toContain('remainingToPrepare');
   });
 
-  test('keeps currency summaries separate and explains tax-basis ambiguity', () => {
+  test('keeps currency summaries separate and compares invoices by explicit contract-value basis', () => {
     const route = source('src/app/api/admin/finance/agreement-billing/route.ts');
 
     expect(route).toContain("agreement.currency.trim().toUpperCase()");
     expect(route).toContain('summary.get(currency)');
     expect(route).toContain('byCurrency:');
-    expect(route).toContain('tax-inclusive or tax-exclusive');
+    expect(route).toContain("agreement.contractValueBasis === 'tax_exclusive'");
+    expect(route).toContain('invoice.taxableAmount');
+    expect(route).toContain('invoice.total');
+    expect(route).toContain('basisUnspecified');
+    expect(route).toContain('Unspecified legacy agreements continue to use final invoice totals');
     expect(route).toContain('Draft invoices reserve billing coverage but are not treated as issued');
   });
 
@@ -52,7 +56,9 @@ describe('agreement billing control', () => {
     expect(finance).toContain('unitPrice: row.remainingToPrepare');
     expect(finance).toContain("agreementId: row.id");
     expect(finance).toContain("status: 'draft'");
-    expect(finance).toContain('remaining unrepresented contract value is a billing-control reference only');
+    expect(finance).toContain('Remaining value is measured before tax');
+    expect(finance).toContain('Remaining value is measured against final invoice totals');
+    expect(finance).toContain('Contract value basis is unspecified');
     expect(finance).toContain('organization.paymentTermsDays');
   });
 });

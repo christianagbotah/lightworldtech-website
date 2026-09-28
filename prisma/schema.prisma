@@ -574,6 +574,7 @@ model ClientAgreement {
   referenceNumber   String             @default("")
   currency          String             @default("GHS")
   contractValue     Decimal            @default(0) @db.Decimal(18, 2)
+  contractValueBasis String            @default("unspecified")
   effectiveDate     DateTime?
   expiryDate        DateTime?
   renewalNoticeDays Int                @default(30)
