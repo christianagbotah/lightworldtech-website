@@ -80,6 +80,24 @@ describe('public corporate brand consistency', () => {
     expect(widgets).toContain('bg-amber-600');
     expect(widgets).toContain('hover:bg-amber-600 hover:border-amber-500');
   });
+  test('publishes a governed media kit from verified company sources', () => {
+    const newsroom = source('src/app/newsroom/page.tsx');
+    const mediaKit = source('src/app/media-kit/page.tsx');
+    const mediaActions = source('src/components/pages/MediaKitActions.tsx');
+    const sitemap = source('src/app/sitemap.ts');
+
+    expect(newsroom).toContain('href="/media-kit"');
+    expect(newsroom).toContain('Media kit');
+    expect(mediaKit).toContain('companyProfile');
+    expect(mediaKit).toContain('isSafePublicSourceUrl');
+    expect(mediaKit).toContain('Verified recognition');
+    expect(mediaKit).toContain('Public coverage');
+    expect(mediaActions).toContain('Print / Save as PDF');
+    expect(mediaActions).toContain('Copy company facts');
+    expect(mediaActions).toContain('download="lightworld-technologies-logo.png"');
+    expect(sitemap).toContain("base + '/media-kit'");
+  });
+
   test('supports safe installable PWA behavior without caching secure workspaces', () => {
     const manifest = source('src/app/manifest.ts');
     const layout = source('src/app/layout.tsx');
