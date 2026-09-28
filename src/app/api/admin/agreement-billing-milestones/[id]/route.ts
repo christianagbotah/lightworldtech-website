@@ -39,6 +39,10 @@ export async function PATCH(
             contractValue: true,
           },
         },
+        invoices: {
+          where: { status: { not: 'void' } },
+          select: { id: true, invoiceNumber: true, status: true },
+        },
       },
     });
     if (!existing) return { milestone: null, error: 'Billing milestone not found', status: 404 };
@@ -47,6 +51,19 @@ export async function PATCH(
       'SELECT pg_advisory_xact_lock(hashtext($1))',
       'lightworld-agreement-billing-schedule:' + existing.agreementId,
     );
+
+    if (
+      parsed.data.amount !== undefined &&
+      new Prisma.Decimal(parsed.data.amount).toDecimalPlaces(2).neq(existing.amount) &&
+      existing.invoices.length > 0
+    ) {
+      return {
+        milestone: null,
+        error: 'Milestone amount cannot change while a non-void invoice is linked',
+        status: 409,
+        existingInvoice: existing.invoices[0],
+      };
+    }
 
     if (parsed.data.amount !== undefined) {
       const aggregate = await tx.clientAgreementBillingMilestone.aggregate({
@@ -92,7 +109,12 @@ export async function PATCH(
 
   if (!result.milestone) {
     return NextResponse.json(
-      { success: false, error: result.error, billingControl: 'control' in result ? result.control : undefined },
+      {
+        success: false,
+        error: result.error,
+        billingControl: 'control' in result ? result.control : undefined,
+        existingInvoice: 'existingInvoice' in result ? result.existingInvoice : undefined,
+      },
       { status: result.status },
     );
   }
@@ -129,9 +151,23 @@ export async function DELETE(
     where: { id },
     include: {
       agreement: { select: { id: true, organizationId: true, currency: true } },
+      invoices: {
+        select: { id: true, invoiceNumber: true, status: true },
+        orderBy: { createdAt: 'desc' },
+      },
     },
   });
   if (!existing) return NextResponse.json({ success: false, error: 'Billing milestone not found' }, { status: 404 });
+  if (existing.invoices.length > 0) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Billing milestone cannot be deleted because invoice history is linked to it',
+        existingInvoice: existing.invoices[0],
+      },
+      { status: 409 },
+    );
+  }
 
   await db.clientAgreementBillingMilestone.delete({ where: { id } });
 
