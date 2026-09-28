@@ -386,7 +386,7 @@ export async function GET(request: NextRequest) {
       db.financeVendorBill.findMany({
         where: {
           dueDate: { lt: now },
-          status: { not: 'void' },
+          status: { notIn: ['draft', 'rejected', 'void'] },
         },
         select: {
           total: true,
