@@ -923,6 +923,10 @@ model ClientInvoice {
   issuedByAdminId String             @default("")
   issuedBy       String             @default("")
   issuedAt       DateTime?
+  rejectedByAdminId String           @default("")
+  rejectedBy     String              @default("")
+  rejectedAt     DateTime?
+  rejectionReason String             @default("")
   lines          ClientInvoiceLine[]
   allocations    ClientPaymentAllocation[]
   paymentIntents  HubtelPaymentIntent[]
