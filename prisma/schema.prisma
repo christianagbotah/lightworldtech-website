@@ -927,6 +927,10 @@ model ClientInvoice {
   rejectedBy     String              @default("")
   rejectedAt     DateTime?
   rejectionReason String             @default("")
+  voidedByAdminId String             @default("")
+  voidedBy      String             @default("")
+  voidedAt      DateTime?
+  voidReason    String             @default("")
   replacesInvoiceId String?          @unique
   replacesInvoice   ClientInvoice?   @relation("InvoiceReplacement", fields: [replacesInvoiceId], references: [id], onDelete: SetNull)
   replacementInvoice ClientInvoice?  @relation("InvoiceReplacement")

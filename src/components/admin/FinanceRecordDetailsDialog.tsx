@@ -39,6 +39,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 
 export type FinanceRecordSelection = {
@@ -296,6 +297,9 @@ export default function FinanceRecordDetailsDialog({
   const [invoiceLink, setInvoiceLink] = useState<any>(null);
   const [deliveryBusy, setDeliveryBusy] = useState<'link' | 'open' | 'email' | ''>('');
   const [issueDraftOpen, setIssueDraftOpen] = useState(false);
+  const [voidInvoiceOpen, setVoidInvoiceOpen] = useState(false);
+  const [voidReason, setVoidReason] = useState('');
+  const [voidBusy, setVoidBusy] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -305,6 +309,9 @@ export default function FinanceRecordDetailsDialog({
       setInvoiceLink(null);
       setDeliveryBusy('');
       setIssueDraftOpen(false);
+      setVoidInvoiceOpen(false);
+      setVoidReason('');
+      setVoidBusy(false);
       return;
     }
 
@@ -468,6 +475,40 @@ export default function FinanceRecordDetailsDialog({
     }
   };
 
+  const voidInvoice = async () => {
+    if (!data?.invoice?.id) return;
+    const reason = voidReason.trim();
+    if (reason.length < 5) {
+      toast.error('Enter a clear reason for voiding this invoice');
+      return;
+    }
+
+    setVoidBusy(true);
+    try {
+      const response = await fetch(
+        '/api/admin/finance/invoices/' + encodeURIComponent(data.invoice.id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'void', voidReason: reason }),
+        },
+      );
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Unable to void this invoice');
+      }
+
+      toast.success('Invoice voided, customer access revoked and ledger reversal recorded');
+      setVoidInvoiceOpen(false);
+      setVoidReason('');
+      setReloadKey((current) => current + 1);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : 'Unable to void this invoice');
+    } finally {
+      setVoidBusy(false);
+    }
+  };
+
   return (
     <>
       <Dialog open={Boolean(selection)} onOpenChange={onOpenChange}>
@@ -541,6 +582,11 @@ export default function FinanceRecordDetailsDialog({
                 {Number(data.invoice.balance) > 0 && !['draft', 'void'].includes(data.invoice.derivedStatus) && (
                   <Button type="button" onClick={() => onRecordReceipt(data.invoice)}>
                     <ArrowDownLeft className="mr-2 size-4" /> Record receipt
+                  </Button>
+                )}
+                {data.invoice.status !== 'draft' && data.invoice.status !== 'void' && (data.invoice.allocations?.length || 0) === 0 && (
+                  <Button type="button" variant="destructive" onClick={() => setVoidInvoiceOpen(true)}>
+                    Void invoice
                   </Button>
                 )}
               </div>
@@ -642,6 +688,12 @@ export default function FinanceRecordDetailsDialog({
                     <DetailItem label="Prepared by" value={data.invoice.createdBy || 'Admin'} />
                     <DetailItem label="Issued by" value={data.invoice.issuedBy || (data.invoice.status === 'draft' ? 'Pending second-person approval' : 'Legacy / not recorded')} />
                     <DetailItem label="Issued at" value={data.invoice.issuedAt ? date(data.invoice.issuedAt, true) : '—'} />
+                    {data.invoice.voidedAt && (
+                      <>
+                        <DetailItem label="Voided by" value={data.invoice.voidedBy || 'Finance approver'} />
+                        <DetailItem label="Voided at" value={date(data.invoice.voidedAt, true)} />
+                      </>
+                    )}
                     {data.invoice.rejectedAt && (
                       <>
                         <DetailItem label="Rejected by" value={data.invoice.rejectedBy || 'Finance approver'} />
@@ -685,6 +737,12 @@ export default function FinanceRecordDetailsDialog({
                 <Card className="min-w-0 border-border/60">
                   <CardHeader className="pb-3"><CardTitle className="text-base">Notes & lifecycle</CardTitle></CardHeader>
                   <CardContent className="space-y-3 text-sm">
+                    {data.invoice.voidedAt && (
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-100">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em]">Invoice voided</p>
+                        <p className="mt-1 whitespace-pre-wrap text-sm">{data.invoice.voidReason || 'No void reason recorded.'}</p>
+                      </div>
+                    )}
                     {data.invoice.rejectedAt && (
                       <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-100">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.12em]">Draft rejected</p>
@@ -1018,6 +1076,53 @@ export default function FinanceRecordDetailsDialog({
           )}
         </div>
       </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={voidInvoiceOpen}
+        onOpenChange={(open) => {
+          if (!voidBusy) {
+            setVoidInvoiceOpen(open);
+            if (!open) setVoidReason('');
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Void this invoice?</DialogTitle>
+            <DialogDescription>
+              This reverses the posted receivable, revokes active customer invoice links and cancels open Hubtel payment intents. A late verified payment will be held as unapplied customer credit. This action is terminal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="invoice-void-reason">Reason for voiding</label>
+            <Textarea
+              id="invoice-void-reason"
+              rows={4}
+              value={voidReason}
+              onChange={(event) => setVoidReason(event.target.value)}
+              placeholder="Explain the business reason, correction required, or cancellation basis…"
+              disabled={voidBusy}
+            />
+            <p className="text-[11px] leading-5 text-muted-foreground">
+              Finance approval permission is required. Under maker-checker policy, the original invoice preparer cannot void their own invoice.
+            </p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" disabled={voidBusy} onClick={() => setVoidInvoiceOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={voidBusy || voidReason.trim().length < 5}
+              onClick={() => void voidInvoice()}
+            >
+              {voidBusy && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {voidBusy ? 'Voiding…' : 'Void invoice'}
+            </Button>
+          </div>
+        </DialogContent>
       </Dialog>
 
       <ConfirmActionDialog

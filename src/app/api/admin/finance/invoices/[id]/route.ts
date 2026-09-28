@@ -12,7 +12,18 @@ const schema = z.object({
   status: z.enum(['draft', 'issued', 'void']).optional(),
   dueDate: z.coerce.date().optional(),
   notes: z.string().trim().max(8000).optional(),
-}).refine((value) => Object.keys(value).length > 0, 'At least one invoice change is required');
+  voidReason: z.string().trim().max(2000).optional(),
+})
+  .superRefine((value, ctx) => {
+    if (value.status === 'void' && (!value.voidReason || value.voidReason.trim().length < 5)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['voidReason'],
+        message: 'A meaningful void reason of at least 5 characters is required',
+      });
+    }
+  })
+  .refine((value) => Object.keys(value).length > 0, 'At least one invoice change is required');
 
 type IssueBlock = {
   error: string;
@@ -47,7 +58,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params;
   const existing = await db.clientInvoice.findUnique({
     where: { id },
-    select: { id: true, invoiceNumber: true, status: true, createdByAdminId: true },
+    select: {
+      id: true,
+      invoiceNumber: true,
+      status: true,
+      createdByAdminId: true,
+      issuedByAdminId: true,
+    },
   });
   if (!existing) return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
 
@@ -97,11 +114,37 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return { updated: null, blocked: { error: 'Invoice not found', status: 404 } satisfies IssueBlock };
     }
 
-    if (parsed.data.status === 'void' && invoice.allocations.length > 0) {
-      return {
-        updated: null,
-        blocked: { error: 'An invoice with allocated payments cannot be voided', status: 409 } satisfies IssueBlock,
-      };
+    const voiding = invoice.status !== 'void' && parsed.data.status === 'void';
+    if (voiding) {
+      if (!hasAdminPermission(actor.role, actor.permissions, 'finance.approve')) {
+        return {
+          updated: null,
+          blocked: { error: 'Finance approval permission is required to void an invoice', status: 403 } satisfies IssueBlock,
+        };
+      }
+
+      const approvalPolicy = await getFinanceApprovalPolicy();
+      if (
+        approvalPolicy?.enabled &&
+        approvalPolicy.requireSecondApprover &&
+        invoice.createdByAdminId &&
+        invoice.createdByAdminId === actor.id
+      ) {
+        return {
+          updated: null,
+          blocked: {
+            error: 'Maker-checker prevents the invoice preparer from voiding their own invoice',
+            status: 409,
+          } satisfies IssueBlock,
+        };
+      }
+
+      if (invoice.allocations.length > 0) {
+        return {
+          updated: null,
+          blocked: { error: 'An invoice with allocated payments cannot be voided', status: 409 } satisfies IssueBlock,
+        };
+      }
     }
     if (invoice.status === 'void' && parsed.data.status && parsed.data.status !== 'void') {
       return {
@@ -350,6 +393,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
     }
 
+    const voidedAt = voiding ? new Date() : null;
     const updateData = issuing
       ? {
           ...parsed.data,
@@ -357,8 +401,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           issuedBy: actor.name || actor.email,
           issuedAt: new Date(),
         }
-      : parsed.data;
+      : voiding
+        ? {
+            ...parsed.data,
+            voidedByAdminId: actor.id,
+            voidedBy: actor.name || actor.email,
+            voidedAt,
+          }
+        : parsed.data;
     const next = await tx.clientInvoice.update({ where: { id }, data: updateData });
+    let cleanup = { revokedAccessLinks: 0, cancelledPaymentIntents: 0 };
 
     if (issuing && next.status === 'issued') {
       await postInvoiceJournal(tx, {
@@ -378,6 +430,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     if (invoice.status !== 'void' && next.status === 'void') {
+      const effectiveVoidDate = voidedAt || new Date();
       const originalJournal = await tx.financeJournalEntry.findFirst({
         where: {
           sourceType: 'client_invoice',
@@ -390,7 +443,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         await postInvoiceVoidJournal(tx, {
           invoiceId: next.id,
           invoiceNumber: next.invoiceNumber,
-          voidDate: new Date(),
+          voidDate: effectiveVoidDate,
           currency: next.currency,
           subtotal: next.subtotal,
           discount: next.discount,
@@ -399,17 +452,47 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           postedBy: actor.name || actor.email,
         });
       }
+
+      const revokedLinks = await tx.invoiceAccessLink.updateMany({
+        where: {
+          invoiceId: next.id,
+          status: 'active',
+          revokedAt: null,
+        },
+        data: {
+          status: 'revoked',
+          revokedAt: effectiveVoidDate,
+        },
+      });
+
+      const cancelledIntents = await tx.hubtelPaymentIntent.updateMany({
+        where: {
+          invoiceId: next.id,
+          recordedPaymentId: null,
+        },
+        data: {
+          status: 'cancelled_invoice_void',
+          expiresAt: effectiveVoidDate,
+        },
+      });
+
+      cleanup = {
+        revokedAccessLinks: revokedLinks.count,
+        cancelledPaymentIntents: cancelledIntents.count,
+      };
     }
 
-    return { updated: next, blocked: null };
+    return { updated: next, blocked: null, cleanup };
   });
 
   if (result.blocked) {
     await recordAdminAudit({
       admin: actor,
-      action: result.blocked.creditControl
-        ? 'admin.finance_invoice_issue_credit_blocked'
-        : 'admin.finance_invoice_issue_blocked',
+      action: parsed.data.status === 'void'
+        ? 'admin.finance_invoice_void_blocked'
+        : result.blocked.creditControl
+          ? 'admin.finance_invoice_issue_credit_blocked'
+          : 'admin.finance_invoice_issue_blocked',
       entity: 'ClientInvoice',
       entityId: id,
       details: {
@@ -432,9 +515,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const updated = result.updated!;
   await recordAdminAudit({
     admin: actor,
-    action: existing.status === 'draft' && updated.status === 'issued'
-      ? 'admin.finance_invoice_issued_from_draft'
-      : 'admin.finance_invoice_updated',
+    action: updated.status === 'void' && existing.status !== 'void'
+      ? 'admin.finance_invoice_voided'
+      : existing.status === 'draft' && updated.status === 'issued'
+        ? 'admin.finance_invoice_issued_from_draft'
+        : 'admin.finance_invoice_updated',
     entity: 'ClientInvoice',
     entityId: id,
     details: {
@@ -444,6 +529,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       changedFields: Object.keys(parsed.data),
       createdByAdminId: existing.createdByAdminId,
       issuedByAdminId: existing.status === 'draft' && updated.status === 'issued' ? actor.id : '',
+      voidedByAdminId: updated.status === 'void' && existing.status !== 'void' ? actor.id : '',
+      voidReason: updated.status === 'void' && existing.status !== 'void' ? updated.voidReason : '',
+      revokedAccessLinks: 'cleanup' in result ? result.cleanup.revokedAccessLinks : 0,
+      cancelledPaymentIntents: 'cleanup' in result ? result.cleanup.cancelledPaymentIntents : 0,
     },
   });
 
