@@ -204,6 +204,8 @@ export default function FinanceOutflowApprovals({
     action: 'approve' | 'reject' | 'cancel' | 'execute';
   } | null>(null);
   const [creditNotes, setCreditNotes] = useState('');
+  const [invoiceReject, setInvoiceReject] = useState<InvoiceDraftApproval | null>(null);
+  const [invoiceRejectReason, setInvoiceRejectReason] = useState('');
   const [approvalProofFiles, setApprovalProofFiles] = useState<Record<string, File | null>>({});
 
   const load = async () => {
@@ -331,6 +333,35 @@ export default function FinanceOutflowApprovals({
     }
   };
 
+  const rejectInvoiceDraft = async () => {
+    if (!invoiceReject) return;
+    const reason = invoiceRejectReason.trim();
+    if (reason.length < 3) {
+      toast.error('Enter a clear rejection reason');
+      return;
+    }
+
+    setWorking(true);
+    try {
+      await readJson(
+        '/api/admin/finance/invoices/' + encodeURIComponent(invoiceReject.id) + '/reject',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason }),
+        },
+      );
+      toast.success('Invoice draft rejected. A corrected replacement can now be prepared.');
+      setInvoiceReject(null);
+      setInvoiceRejectReason('');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to reject invoice draft');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   const approvals = inbox?.approvals || [];
   const pending = approvals.filter((item) => item.status === 'pending');
   const scheduled = approvals.filter((item) => item.status === 'scheduled');
@@ -425,6 +456,7 @@ export default function FinanceOutflowApprovals({
                 {invoiceDrafts.map((invoice) => {
                   const mine = invoice.createdByAdminId === inbox?.currentAdminId;
                   const canIssue = Boolean(inbox?.canApprove) && invoice.makerCanIssue;
+                  const canReject = Boolean(inbox?.canApprove) && (!policy?.enabled || !mine);
                   const age = approvalAge(invoice.createdAt);
                   return (
                     <TableRow key={invoice.id}>
@@ -474,6 +506,19 @@ export default function FinanceOutflowApprovals({
                           >
                             <FileText className="mr-1.5 size-3.5" /> Review invoice
                           </Button>
+                          {canReject && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setInvoiceReject(invoice);
+                                setInvoiceRejectReason('');
+                              }}
+                            >
+                              <XCircle className="mr-1.5 size-3.5" /> Reject draft
+                            </Button>
+                          )}
                         </div>
                         {policy?.enabled && mine && (
                           <p className="mt-1 text-[10px] text-muted-foreground">A different approver must issue this draft.</p>
@@ -1002,6 +1047,59 @@ export default function FinanceOutflowApprovals({
               {working && <Loader2 className="mr-2 size-4 animate-spin" />}
               {creditDecision?.action === 'approve' ? <UserCheck className="mr-2 size-4" /> : null}
               {creditDecision?.action ? pretty(creditDecision.action) : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(invoiceReject)}
+        onOpenChange={(open) => {
+          if (!open && !working) {
+            setInvoiceReject(null);
+            setInvoiceRejectReason('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Reject invoice draft</DialogTitle>
+            <DialogDescription>
+              {invoiceReject
+                ? 'Reject ' + invoiceReject.invoiceNumber + ' for ' + invoiceReject.organization.name + '. The draft will be voided and cannot be issued later.'
+                : 'Reject this invoice draft.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="invoice-reject-reason">Reason for rejection</Label>
+            <Textarea
+              id="invoice-reject-reason"
+              value={invoiceRejectReason}
+              onChange={(event) => setInvoiceRejectReason(event.target.value)}
+              placeholder="Explain what must be corrected before a replacement draft is prepared."
+              rows={5}
+              maxLength={4000}
+              disabled={working}
+            />
+            <p className="text-[11px] leading-5 text-muted-foreground">
+              Rejection keeps the invoice, agreement and billing-milestone provenance for audit. If this draft consumed a milestone, voiding it makes that milestone eligible for a corrected replacement.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => {
+              setInvoiceReject(null);
+              setInvoiceRejectReason('');
+            }} disabled={working}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void rejectInvoiceDraft()}
+              disabled={working || invoiceRejectReason.trim().length < 3}
+            >
+              {working ? <Loader2 className="mr-2 size-4 animate-spin" /> : <XCircle className="mr-2 size-4" />}
+              Reject draft
             </Button>
           </DialogFooter>
         </DialogContent>
