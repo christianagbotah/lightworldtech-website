@@ -918,7 +918,11 @@ model ClientInvoice {
   getfundAmount  Decimal            @default(0) @db.Decimal(18, 2)
   total          Decimal            @db.Decimal(18, 2)
   notes          String             @default("")
+  createdByAdminId String            @default("")
   createdBy      String             @default("Admin")
+  issuedByAdminId String             @default("")
+  issuedBy       String             @default("")
+  issuedAt       DateTime?
   lines          ClientInvoiceLine[]
   allocations    ClientPaymentAllocation[]
   paymentIntents  HubtelPaymentIntent[]
