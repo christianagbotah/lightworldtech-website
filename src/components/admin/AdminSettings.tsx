@@ -20,6 +20,16 @@ type HealthData = {
   status: 'healthy' | 'attention';
   checkedAt: string;
   database: { status: 'healthy' | 'unhealthy'; latencyMs: number; message?: string };
+  disk: {
+    status: 'healthy' | 'attention';
+    path: string;
+    totalBytes: number;
+    usedBytes: number;
+    availableBytes: number;
+    usedPercent: number;
+    minimumFreeBytes: number;
+    warning: string;
+  };
   mail: { status: 'healthy' | 'attention'; mode: string; configured: boolean; warning: string };
   communications: {
     status: 'healthy' | 'attention';
@@ -48,6 +58,14 @@ type HealthData = {
     warning: string;
   };
 };
+
+function formatBytes(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  const amount = value / 1024 ** index;
+  return amount.toFixed(index === 0 ? 0 : amount >= 10 ? 1 : 2) + ' ' + units[index];
+}
 
 type BackupArtifact = {
   filename: string;
@@ -341,7 +359,7 @@ export default function AdminSettings() {
 
           {readinessLoading && !health ? (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {Array.from({ length: adminRole === 'super_admin' ? 9 : 8 }).map((_, index) => (
+              {Array.from({ length: adminRole === 'super_admin' ? 10 : 9 }).map((_, index) => (
                 <Skeleton key={index} className="h-28 rounded-xl" />
               ))}
             </div>
@@ -364,6 +382,13 @@ export default function AdminSettings() {
                     ready: health.database.status === 'healthy',
                     detail: health.database.message || 'PostgreSQL connectivity',
                     icon: Database,
+                  },
+                  {
+                    label: 'Disk capacity',
+                    value: health.disk.usedPercent + '% used',
+                    ready: health.disk.status === 'healthy',
+                    detail: health.disk.warning || (formatBytes(health.disk.availableBytes) + ' free of ' + formatBytes(health.disk.totalBytes)),
+                    icon: HardDrive,
                   },
                   {
                     label: 'Outbound mail',
@@ -463,7 +488,7 @@ export default function AdminSettings() {
                     </p>
                   )}
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    {health.communications.warning || 'Database, mail and enabled automation dependencies are currently reporting healthy.'}
+                    {health.disk.warning || health.communications.warning || 'Database, disk, mail and enabled automation dependencies are currently reporting healthy.'}
                     {adminRole === 'super_admin' && backup?.restoreVerification?.message
                       ? ' ' + backup.restoreVerification.message
                       : ''}

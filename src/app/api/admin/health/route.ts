@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { statfs } from 'node:fs/promises';
 import { db } from '@/lib/db';
 import { getActiveAdminContext } from '@/lib/admin-governance';
 import { getMailTransportStatus } from '@/lib/mail';
@@ -27,6 +28,57 @@ export async function GET(request: NextRequest) {
       status: 'unhealthy',
       latencyMs: Math.max(0, Math.round(performance.now() - startedAt)),
       message: 'Database check failed',
+    };
+  }
+
+  const diskPath = '/home/lightworld/shared/lightworldtech';
+  const diskMinimumFreeBytes = 2 * 1024 ** 3;
+  const diskWarningFreeBytes = 5 * 1024 ** 3;
+  let disk: {
+    status: 'healthy' | 'attention';
+    path: string;
+    totalBytes: number;
+    usedBytes: number;
+    availableBytes: number;
+    usedPercent: number;
+    minimumFreeBytes: number;
+    warning: string;
+  };
+
+  try {
+    const stats = await statfs(diskPath, { bigint: true });
+    const totalBytes = Number(stats.blocks * stats.bsize);
+    const availableBytes = Number(stats.bavail * stats.bsize);
+    const usedBytes = Math.max(0, totalBytes - availableBytes);
+    const usedPercent = totalBytes > 0
+      ? Math.round((usedBytes / totalBytes) * 1000) / 10
+      : 0;
+    const healthy = availableBytes >= diskWarningFreeBytes && usedPercent < 95;
+    disk = {
+      status: healthy ? 'healthy' : 'attention',
+      path: diskPath,
+      totalBytes,
+      usedBytes,
+      availableBytes,
+      usedPercent,
+      minimumFreeBytes: diskMinimumFreeBytes,
+      warning: healthy
+        ? ''
+        : availableBytes < diskMinimumFreeBytes
+          ? 'Disk space is below the 2 GB deployment safety reserve. Free space before deploying.'
+          : 'Disk capacity is inside the warning band. Review old artifacts, releases, logs or caches before it becomes critical.',
+    };
+  } catch (error) {
+    console.error('Admin health disk check failed:', error);
+    disk = {
+      status: 'attention',
+      path: diskPath,
+      totalBytes: 0,
+      usedBytes: 0,
+      availableBytes: 0,
+      usedPercent: 0,
+      minimumFreeBytes: diskMinimumFreeBytes,
+      warning: 'Disk capacity could not be verified from the production host.',
     };
   }
 
@@ -77,7 +129,7 @@ export async function GET(request: NextRequest) {
     (!emailAutomationEnabled || mail.configured) &&
     runtimeHealthy;
   const overall =
-    database.status === 'healthy' && mailHealthy && automationHealthy
+    database.status === 'healthy' && disk.status === 'healthy' && mailHealthy && automationHealthy
       ? 'healthy'
       : 'attention';
 
@@ -88,6 +140,7 @@ export async function GET(request: NextRequest) {
         status: overall,
         checkedAt: new Date().toISOString(),
         database,
+        disk,
         mail: {
           status: mailHealthy ? 'healthy' : 'attention',
           mode: mail.mode,
