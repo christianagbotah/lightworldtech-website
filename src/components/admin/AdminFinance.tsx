@@ -1233,18 +1233,41 @@ export default function AdminFinance() {
 
   const submitReceipt = async (event: FormEvent) => {
     event.preventDefault();
-    const ok = await post('/api/admin/finance/payments', {
-      ...receiptForm,
-      amount: Number(receiptForm.amount || 0),
-      allocations: receiptForm.allocations
-        .filter((item) => item.invoiceId && Number(item.amount) > 0)
-        .map((item) => ({ invoiceId: item.invoiceId, amount: Number(item.amount) })),
-    }, 'Customer receipt recorded');
-    if (ok) setReceiptForm({
-      organizationId: '', currency: 'GHS', amount: '', paidAt: today(),
-      method: 'bank_transfer', reference: '', notes: '',
-      allocations: [{ invoiceId: '', amount: '' }],
-    });
+    setSaving(true);
+    try {
+      const result = await api<any>('/api/admin/finance/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...receiptForm,
+          amount: Number(receiptForm.amount || 0),
+          allocations: receiptForm.allocations
+            .filter((item) => item.invoiceId && Number(item.amount) > 0)
+            .map((item) => ({ invoiceId: item.invoiceId, amount: Number(item.amount) })),
+        }),
+      });
+
+      if (result?.pendingApproval) {
+        toast.success(
+          'Customer receipt submitted for approval' +
+          (result.approval?.requestNumber ? ' · ' + result.approval.requestNumber : ''),
+        );
+      } else {
+        toast.success('Customer receipt recorded');
+      }
+
+      setReceiptForm({
+        organizationId: '', currency: 'GHS', amount: '', paidAt: today(),
+        method: 'bank_transfer', reference: '', notes: '',
+        allocations: [{ invoiceId: '', amount: '' }],
+      });
+      setDialog(null);
+      if (!result?.pendingApproval) await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to submit customer receipt');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const submitVendor = async (event: FormEvent) => {
