@@ -24,6 +24,7 @@ import { useAppStore } from '@/lib/store';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import FinanceRecordDetailsDialog, { type FinanceRecordSelection } from '@/components/admin/FinanceRecordDetailsDialog';
 import FinanceCustomerCredits from '@/components/admin/FinanceCustomerCredits';
+import FinanceAgreementBillingControl, { type AgreementBillingRow } from '@/components/admin/FinanceAgreementBillingControl';
 import FinanceAccountingWorkspace, { type FinanceAccountingView } from '@/components/admin/FinanceAccountingWorkspace';
 import FinanceExecutiveDashboard, { type FinanceExecutiveDashboardData } from '@/components/admin/FinanceExecutiveDashboard';
 import FinanceCollectionsWorkspace from '@/components/admin/FinanceCollectionsWorkspace';
@@ -874,6 +875,64 @@ export default function AdminFinance() {
     setDialog('invoice');
   };
 
+  const prepareAgreementControlInvoice = (row: AgreementBillingRow) => {
+    const organization = data?.organizations.find((item) => item.id === row.organizationId);
+    if (!organization) {
+      toast.error('Client billing terms are unavailable');
+      return;
+    }
+    if (Number(row.remainingToPrepare || 0) <= 0) {
+      toast.error('No unprepared agreement value remains');
+      return;
+    }
+
+    const issueDate = today();
+    const context: AgreementBillingContext = {
+      agreementId: row.id,
+      title: row.title,
+      referenceNumber: row.referenceNumber,
+      projectId: row.projectId || '',
+      projectName: row.project?.name || '',
+      currency: row.currency,
+      contractValue: row.remainingToPrepare,
+      effectiveDate: row.effectiveDate,
+      expiryDate: row.expiryDate,
+    };
+    const agreementLabel = [
+      row.title,
+      row.referenceNumber ? '(' + row.referenceNumber + ')' : '',
+    ].filter(Boolean).join(' ');
+
+    setDeepLinkAgreementBilling(context);
+    setInvoiceForm({
+      organizationId: row.organizationId,
+      serviceId: '',
+      projectId: row.projectId || '',
+      agreementId: row.id,
+      status: 'draft',
+      currency: row.currency,
+      issueDate,
+      dueDate: addDays(issueDate, organization.paymentTermsDays ?? 30),
+      renewalForDate: '',
+      discount: '0',
+      taxTreatment: 'none',
+      notes:
+        'Prepared from Agreement Billing Control for ' +
+        agreementLabel +
+        '. The remaining unrepresented contract value is a billing-control reference only. Confirm tax basis, milestone entitlement, dates, discounts and amount before issuing.',
+      lines: [{
+        description:
+          agreementLabel +
+          (row.project?.name ? ' · ' + row.project.name : '') +
+          ' · next billing draft',
+        quantity: '1',
+        unitPrice: row.remainingToPrepare,
+      }],
+    });
+    setSection('customers');
+    setDialog('invoice');
+  };
+
   const sendRenewalReminder = async (service: Service) => {
     setReminderSendingId(service.id);
     try {
@@ -1440,6 +1499,19 @@ export default function AdminFinance() {
             <Button variant="outline" onClick={() => setDialog('invoice')}><FileText className="mr-2 size-4" /> Issue invoice</Button>
             <Button variant="outline" onClick={() => setDialog('receipt')}><ArrowDownLeft className="mr-2 size-4" /> Record customer payment</Button>
           </div>
+
+          <FinanceAgreementBillingControl
+            refreshKey={(data.invoices || []).map((invoice) => invoice.id + ':' + invoice.status + ':' + invoice.total).join('|')}
+            organizationId={deepLinkOrganizationId}
+            onPrepareDraft={prepareAgreementControlInvoice}
+            onOpenInvoice={(invoiceId) => openFinanceRecord('invoice', invoiceId)}
+            onOpenCustomer={(organizationId) => {
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('lw-client-organization-id', organizationId);
+              }
+              navigate('admin-clients');
+            }}
+          />
 
           <Card className="min-w-0 border-border/60">
             <CardHeader><CardTitle className="text-base">Client services & subscriptions</CardTitle></CardHeader>
