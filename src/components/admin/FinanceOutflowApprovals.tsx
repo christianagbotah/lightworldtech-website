@@ -207,8 +207,10 @@ async function readJson(url: string, init?: RequestInit) {
 
 export default function FinanceOutflowApprovals({
   onOpenInvoice,
+  onPrepareReplacement,
 }: {
   onOpenInvoice?: (invoiceId: string) => void;
+  onPrepareReplacement?: (invoiceId: string) => void;
 }) {
   const [inbox, setInbox] = useState<Inbox | null>(null);
   const [policy, setPolicy] = useState<Policy | null>(null);
@@ -588,6 +590,7 @@ export default function FinanceOutflowApprovals({
                   <TableHead>Rejected</TableHead>
                   <TableHead>Reason</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
+                  <TableHead data-export-ignore className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -618,11 +621,21 @@ export default function FinanceOutflowApprovals({
                       <p className="max-w-[360px] whitespace-pre-wrap text-xs text-rose-700 dark:text-rose-300">{invoice.rejectionReason}</p>
                     </TableCell>
                     <TableCell className="text-right font-semibold">{money(invoice.total, invoice.currency)}</TableCell>
+                    <TableCell data-export-ignore className="text-right">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onPrepareReplacement?.(invoice.id)}
+                      >
+                        <RefreshCw className="mr-1.5 size-3.5" /> Prepare replacement
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {!rejectedInvoiceDrafts.length && (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
                       No invoice draft rejection history yet.
                     </TableCell>
                   </TableRow>
