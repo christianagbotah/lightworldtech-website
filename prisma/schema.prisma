@@ -1775,7 +1775,15 @@ model FinanceCreditNote {
   total            Decimal            @db.Decimal(18, 2)
   appliedAmount    Decimal            @default(0) @db.Decimal(18, 2)
   status           String             @default("posted")
+  createdByAdminId String             @default("")
   createdBy        String             @default("Admin")
+  approvedByAdminId String            @default("")
+  approvedBy       String             @default("")
+  approvedAt       DateTime?
+  rejectedByAdminId String            @default("")
+  rejectedBy       String             @default("")
+  rejectedAt       DateTime?
+  rejectionReason  String             @default("")
   refunds          FinanceCustomerRefund[]
 
   createdAt DateTime @default(now())
