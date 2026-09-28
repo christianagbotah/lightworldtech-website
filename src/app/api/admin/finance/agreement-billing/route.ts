@@ -64,6 +64,11 @@ export async function GET(request: NextRequest) {
           amount: true,
           dueDate: true,
           order: true,
+          readinessStatus: true,
+          readinessNote: true,
+          evidenceUrl: true,
+          readyAt: true,
+          readyBy: true,
           invoices: {
             where: { status: { not: 'void' } },
             select: { id: true, invoiceNumber: true, status: true },
@@ -113,7 +118,11 @@ export async function GET(request: NextRequest) {
     const unscheduledAmount = positive(agreement.contractValue.minus(scheduledAmount));
     const nextMilestone =
       agreement.billingMilestones
-        .filter((milestone) => milestone.invoices.length === 0)
+.filter(
+          (milestone) =>
+            milestone.readinessStatus === 'ready_to_bill' &&
+            milestone.invoices.length === 0,
+        )
         .slice()
         .sort((a, b) => {
           const ad = a.dueDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
@@ -174,12 +183,23 @@ export async function GET(request: NextRequest) {
       billingMilestoneCount: agreement.billingMilestones.length,
       billedMilestoneCount: agreement.billingMilestones.filter((milestone) => milestone.invoices.length > 0).length,
       unbilledMilestoneCount: agreement.billingMilestones.filter((milestone) => milestone.invoices.length === 0).length,
+      readyUnbilledMilestoneCount: agreement.billingMilestones.filter(
+        (milestone) => milestone.readinessStatus === 'ready_to_bill' && milestone.invoices.length === 0,
+      ).length,
+      plannedUnbilledMilestoneCount: agreement.billingMilestones.filter(
+        (milestone) => milestone.readinessStatus !== 'ready_to_bill' && milestone.invoices.length === 0,
+      ).length,
       nextMilestone: nextMilestone ? {
         id: nextMilestone.id,
         title: nextMilestone.title,
         amount: nextMilestone.amount.toFixed(2),
         dueDate: nextMilestone.dueDate,
         order: nextMilestone.order,
+        readinessStatus: nextMilestone.readinessStatus,
+        readinessNote: nextMilestone.readinessNote,
+        evidenceUrl: nextMilestone.evidenceUrl,
+        readyAt: nextMilestone.readyAt,
+        readyBy: nextMilestone.readyBy,
       } : null,
       overbilledAmount: overbilledAmount.toFixed(2),
       state,
@@ -215,7 +235,7 @@ export async function GET(request: NextRequest) {
           basisUnspecified: values.basisUnspecified,
         })),
       methodology:
-        'Tax-exclusive agreements are compared with invoice taxable value before tax; tax-inclusive agreements are compared with final invoice totals. Unspecified legacy agreements continue to use final invoice totals but are explicitly flagged for review. Billing milestones are planning records until Finance explicitly prepares a draft. A non-void invoice can consume a milestone only once; voiding that invoice makes the milestone eligible for replacement billing. Draft invoices separately reserve billing coverage but are not treated as issued.',
+        'Tax-exclusive agreements are compared with invoice taxable value before tax; tax-inclusive agreements are compared with final invoice totals. Unspecified legacy agreements continue to use final invoice totals but are explicitly flagged for review. Billing milestones are planning records until Client Management explicitly marks them ready to bill. Finance can prepare drafts only from ready, unbilled milestones; a non-void invoice can consume a milestone only once, and voiding that invoice makes the milestone eligible for replacement billing. Draft invoices separately reserve billing coverage but are not treated as issued.',
     },
   });
 }
