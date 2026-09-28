@@ -8,6 +8,7 @@ import {
   serializeOutflowApproval,
 } from '@/lib/finance-approvals';
 import { serializeReceiptApproval } from '@/lib/finance-receipt-approvals';
+import { serializeReceiptReversalRequest } from '@/lib/finance-receipt-reversals';
 
 export async function GET(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
@@ -27,11 +28,29 @@ export async function GET(request: NextRequest) {
     orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
     take: 1000,
   });
-  const [policy, receiptApprovals, creditApprovals, invoiceDrafts, rejectedInvoiceDrafts, creditNoteDrafts] = await Promise.all([
+  const [policy, receiptApprovals, receiptReversalRequests, creditApprovals, invoiceDrafts, rejectedInvoiceDrafts, creditNoteDrafts] = await Promise.all([
     getFinanceApprovalPolicy(),
     db.financeReceiptApproval.findMany({
       include: {
         organization: { select: { id: true, name: true } },
+      },
+      orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
+      take: 1000,
+    }),
+    db.financeReceiptReversalRequest.findMany({
+      include: {
+        organization: { select: { id: true, name: true } },
+        payment: {
+          select: {
+            id: true,
+            paymentNumber: true,
+            amount: true,
+            currency: true,
+            paidAt: true,
+            method: true,
+            source: true,
+          },
+        },
       },
       orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
       take: 1000,
@@ -126,6 +145,7 @@ export async function GET(request: NextRequest) {
       currentAdminId: actor.id,
       approvals: approvals.map(serializeOutflowApproval),
       receiptApprovals: receiptApprovals.map(serializeReceiptApproval),
+      receiptReversalRequests: receiptReversalRequests.map(serializeReceiptReversalRequest),
       creditApprovals: creditApprovals.map((item) => ({
         ...item,
         creditLimit: item.creditLimit.toFixed(2),
