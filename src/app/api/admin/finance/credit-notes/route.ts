@@ -10,6 +10,7 @@ import {
   nextCreditNoteNumber,
 } from '@/lib/finance';
 import { postCreditNoteJournal } from '@/lib/finance-ledger';
+import { getFinanceApprovalPolicy } from '@/lib/finance-approvals';
 
 const schema = z.object({
   invoiceId: z.string().min(1),
@@ -186,8 +187,12 @@ export async function POST(request: NextRequest) {
     invoice.allocations,
     invoice.creditNotes,
   );
-  const appliedAmount = Prisma.Decimal.min(total, outstandingBeforeCredit);
+  const proposedAppliedAmount = Prisma.Decimal.min(total, outstandingBeforeCredit);
   const creditNoteNumber = await nextCreditNoteNumber(parsed.data.issueDate);
+  const policy = await getFinanceApprovalPolicy();
+  const makerCheckerRequired = Boolean(policy?.enabled && policy.requireSecondApprover);
+  const initialStatus = makerCheckerRequired ? 'draft' : 'posted';
+  const initialAppliedAmount = makerCheckerRequired ? new Prisma.Decimal(0) : proposedAppliedAmount;
 
   const created = await db.$transaction(async (tx) => {
     const note = await tx.financeCreditNote.create({
@@ -204,8 +209,9 @@ export async function POST(request: NextRequest) {
         nhilAmount,
         getfundAmount,
         total,
-        appliedAmount,
-        status: 'posted',
+        appliedAmount: initialAppliedAmount,
+        status: initialStatus,
+        createdByAdminId: actor.id,
         createdBy: actor.name || actor.email,
       },
       include: {
@@ -215,40 +221,44 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await postCreditNoteJournal(tx, {
-      creditNoteId: note.id,
-      creditNoteNumber: note.creditNoteNumber,
-      issueDate: note.issueDate,
-      currency: note.currency,
-      subtotal: note.subtotal,
-      tax: note.tax,
-      vatAmount: note.vatAmount,
-      nhilAmount: note.nhilAmount,
-      getfundAmount: note.getfundAmount,
-      total: note.total,
-      appliedAmount: note.appliedAmount,
-      postedBy: actor.name || actor.email,
-    });
+    if (!makerCheckerRequired) {
+      await postCreditNoteJournal(tx, {
+        creditNoteId: note.id,
+        creditNoteNumber: note.creditNoteNumber,
+        issueDate: note.issueDate,
+        currency: note.currency,
+        subtotal: note.subtotal,
+        tax: note.tax,
+        vatAmount: note.vatAmount,
+        nhilAmount: note.nhilAmount,
+        getfundAmount: note.getfundAmount,
+        total: note.total,
+        appliedAmount: note.appliedAmount,
+        postedBy: actor.name || actor.email,
+      });
 
-    const allCredits = [...invoice.creditNotes, { appliedAmount }];
-    const nextStatus = invoiceStatusFromBalance({
-      storedStatus: invoice.status,
-      total: invoice.total,
-      allocations: invoice.allocations,
-      credits: allCredits,
-      dueDate: invoice.dueDate,
-    });
-    await tx.clientInvoice.update({
-      where: { id: invoice.id },
-      data: { status: nextStatus },
-    });
+      const allCredits = [...invoice.creditNotes, { appliedAmount: proposedAppliedAmount }];
+      const nextStatus = invoiceStatusFromBalance({
+        storedStatus: invoice.status,
+        total: invoice.total,
+        allocations: invoice.allocations,
+        credits: allCredits,
+        dueDate: invoice.dueDate,
+      });
+      await tx.clientInvoice.update({
+        where: { id: invoice.id },
+        data: { status: nextStatus },
+      });
+    }
 
     return note;
   });
 
   await recordAdminAudit({
     admin: actor,
-    action: 'admin.finance_credit_note_issued',
+    action: makerCheckerRequired
+      ? 'admin.finance_credit_note_draft_created'
+      : 'admin.finance_credit_note_issued',
     entity: 'FinanceCreditNote',
     entityId: created.id,
     details: {
@@ -260,13 +270,24 @@ export async function POST(request: NextRequest) {
       vatAmount: vatAmount.toFixed(2),
       nhilAmount: nhilAmount.toFixed(2),
       getfundAmount: getfundAmount.toFixed(2),
-      appliedAmount: appliedAmount.toFixed(2),
-      customerCredit: total.minus(appliedAmount).toFixed(2),
+      appliedAmount: initialAppliedAmount.toFixed(2),
+      customerCredit: makerCheckerRequired ? '0.00' : total.minus(initialAppliedAmount).toFixed(2),
+      makerCheckerRequired,
       previouslyCredited: previouslyCredited.toFixed(2),
       remainingRevenueAfterCredit: remainingRevenue.minus(subtotal).toFixed(2),
       remainingTaxAfterCredit: remainingTax.minus(tax).toFixed(2),
     },
   });
 
-  return NextResponse.json({ success: true, data: serialize(created) }, { status: 201 });
+  return NextResponse.json(
+    {
+      success: true,
+      pendingApproval: makerCheckerRequired,
+      data: {
+        ...serialize(created),
+        makerCheckerRequired,
+      },
+    },
+    { status: 201 },
+  );
 }
