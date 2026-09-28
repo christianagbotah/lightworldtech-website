@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         organization: { select: { id: true, name: true } },
         invoice: { select: { id: true, invoiceNumber: true, status: true } },
       },
-
+    }),
   ]);
 
   return NextResponse.json({
