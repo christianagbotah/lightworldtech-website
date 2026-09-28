@@ -4,6 +4,11 @@ import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { postExpenseJournal } from '@/lib/finance-ledger';
+import {
+  createOutflowApproval,
+  getFinanceApprovalPolicy,
+  serializeOutflowApproval,
+} from '@/lib/finance-approvals';
 import { nextExpenseNumber, normalizeCurrency } from '@/lib/finance';
 
 const schema = z.object({
@@ -51,18 +56,28 @@ export async function POST(request: NextRequest) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ success: false, error: 'Invalid expense', details: parsed.error.flatten() }, { status: 400 });
 
+  let vendorName = '';
   if (parsed.data.vendorId) {
-    const vendor = await db.financeVendor.findUnique({ where: { id: parsed.data.vendorId }, select: { id: true } });
+    const vendor = await db.financeVendor.findUnique({
+      where: { id: parsed.data.vendorId },
+      select: { id: true, name: true },
+    });
     if (!vendor) return NextResponse.json({ success: false, error: 'Supplier not found' }, { status: 404 });
+    vendorName = vendor.name;
   }
 
+  let organizationName = '';
   let organizationId = parsed.data.organizationId || null;
   let projectId = parsed.data.projectId || null;
   let serviceId = parsed.data.serviceId || null;
 
   if (organizationId) {
-    const organization = await db.clientOrganization.findUnique({ where: { id: organizationId }, select: { id: true } });
+    const organization = await db.clientOrganization.findUnique({
+      where: { id: organizationId },
+      select: { id: true, name: true },
+    });
     if (!organization) return NextResponse.json({ success: false, error: 'Customer not found' }, { status: 404 });
+    organizationName = organization.name;
   }
 
   if (projectId) {
@@ -95,7 +110,10 @@ export async function POST(request: NextRequest) {
 
   const expenseNumber = await nextExpenseNumber(parsed.data.incurredAt);
   const currency = normalizeCurrency(parsed.data.currency);
-  const expense = await db.$transaction(async (tx) => {
+  const policy = await getFinanceApprovalPolicy();
+  const settlementRequiresApproval = Boolean(policy?.enabled && parsed.data.paidAt);
+
+  const transactionResult = await db.$transaction(async (tx) => {
     const created = await tx.financeExpense.create({
       data: {
         expenseNumber,
@@ -108,7 +126,7 @@ export async function POST(request: NextRequest) {
         currency,
         amount: parsed.data.amount,
         incurredAt: parsed.data.incurredAt,
-        paidAt: parsed.data.paidAt || null,
+        paidAt: settlementRequiresApproval ? null : (parsed.data.paidAt || null),
         method: parsed.data.method,
         reference: parsed.data.reference,
         notes: parsed.data.notes,
@@ -126,7 +144,7 @@ export async function POST(request: NextRequest) {
       expenseId: created.id,
       expenseNumber: created.expenseNumber,
       incurredAt: created.incurredAt,
-      paidAt: created.paidAt,
+      paidAt: settlementRequiresApproval ? null : created.paidAt,
       currency: created.currency,
       amount: created.amount,
       category: created.category,
@@ -134,8 +152,27 @@ export async function POST(request: NextRequest) {
       postedBy: actor.name || actor.email,
     });
 
-    return created;
+    const approval = settlementRequiresApproval && parsed.data.paidAt
+      ? await createOutflowApproval(actor, {
+          outflowType: 'direct_expense_payment',
+          counterpartyId: parsed.data.vendorId || organizationId || created.id,
+          counterpartyName: vendorName || organizationName || 'Direct expense',
+          sourceId: created.id,
+          sourceReference: created.expenseNumber,
+          currency: created.currency,
+          amount: created.amount,
+          effectiveDate: parsed.data.paidAt,
+          method: parsed.data.method,
+          reference: parsed.data.reference,
+          reason: parsed.data.notes || created.description,
+        }, tx)
+      : null;
+
+    return { expense: created, approval };
   });
+
+  const expense = transactionResult.expense;
+  const approval = transactionResult.approval;
 
   await recordAdminAudit({
     admin: actor,
@@ -150,7 +187,47 @@ export async function POST(request: NextRequest) {
       organizationId,
       projectId,
       serviceId,
+      pendingPaymentApprovalId: approval?.id || null,
     },
   });
-  return NextResponse.json({ success: true, data: { ...expense, amount: expense.amount.toFixed(2) } }, { status: 201 });
+
+  if (approval) {
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_expense_payment_requested',
+      entity: 'FinanceOutflowApproval',
+      entityId: approval.id,
+      details: {
+        requestNumber: approval.requestNumber,
+        expenseId: expense.id,
+        expenseNumber: expense.expenseNumber,
+        amount: approval.amount.toFixed(2),
+        currency: approval.currency,
+        effectiveDate: approval.effectiveDate.toISOString(),
+      },
+    });
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_expense_payment_requested',
+      entity: 'FinanceExpense',
+      entityId: expense.id,
+      details: {
+        requestNumber: approval.requestNumber,
+        approvalId: approval.id,
+        amount: approval.amount.toFixed(2),
+        currency: approval.currency,
+        effectiveDate: approval.effectiveDate.toISOString(),
+      },
+    });
+  }
+
+  return NextResponse.json(
+    {
+      success: true,
+      pendingApproval: Boolean(approval),
+      approval: approval ? serializeOutflowApproval(approval) : null,
+      data: { ...expense, amount: expense.amount.toFixed(2) },
+    },
+    { status: approval ? 202 : 201 },
+  );
 }

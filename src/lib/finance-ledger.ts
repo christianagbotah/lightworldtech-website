@@ -474,6 +474,38 @@ export async function postVendorPaymentJournal(tx: Tx, input: {
   });
 }
 
+export async function postExpenseSettlementJournal(tx: Tx, input: {
+  expenseId: string;
+  expenseNumber: string;
+  paidAt: Date;
+  currency: string;
+  amount: Prisma.Decimal;
+  method: string;
+  postedBy: string;
+}) {
+  return postSourceJournal(tx, {
+    sourceType: 'finance_expense_payment',
+    sourceId: input.expenseId,
+    entryDate: input.paidAt,
+    currency: input.currency,
+    description: 'Settle direct expense ' + input.expenseNumber,
+    reference: input.expenseNumber,
+    postedBy: input.postedBy,
+    lines: [
+      {
+        systemKey: 'accrued_expenses',
+        description: 'Settle accrued expense',
+        debit: input.amount,
+      },
+      {
+        systemKey: cashSystemKey(input.method),
+        description: 'Expense payment from ' + input.method.replaceAll('_', ' '),
+        credit: input.amount,
+      },
+    ],
+  });
+}
+
 export async function postExpenseJournal(tx: Tx, input: {
   expenseId: string;
   expenseNumber: string;
@@ -512,26 +544,14 @@ export async function postExpenseJournal(tx: Tx, input: {
   });
 
   if (input.paidAt && !paidSameDay) {
-    const settlement = await postSourceJournal(tx, {
-      sourceType: 'finance_expense_payment',
-      sourceId: input.expenseId,
-      entryDate: input.paidAt,
+    const settlement = await postExpenseSettlementJournal(tx, {
+      expenseId: input.expenseId,
+      expenseNumber: input.expenseNumber,
+      paidAt: input.paidAt,
       currency: input.currency,
-      description: 'Settle direct expense ' + input.expenseNumber,
-      reference: input.expenseNumber,
+      amount: input.amount,
+      method: input.method,
       postedBy: input.postedBy,
-      lines: [
-        {
-          systemKey: 'accrued_expenses',
-          description: 'Settle accrued expense',
-          debit: input.amount,
-        },
-        {
-          systemKey: cashSystemKey(input.method),
-          description: 'Expense payment from ' + input.method.replaceAll('_', ' '),
-          credit: input.amount,
-        },
-      ],
     });
     return { recognition, settlement };
   }

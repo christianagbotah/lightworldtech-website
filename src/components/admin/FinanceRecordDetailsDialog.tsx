@@ -38,6 +38,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
@@ -300,6 +302,14 @@ export default function FinanceRecordDetailsDialog({
   const [voidInvoiceOpen, setVoidInvoiceOpen] = useState(false);
   const [voidReason, setVoidReason] = useState('');
   const [voidBusy, setVoidBusy] = useState(false);
+  const [expensePaymentOpen, setExpensePaymentOpen] = useState(false);
+  const [expensePaymentBusy, setExpensePaymentBusy] = useState(false);
+  const [expensePaymentForm, setExpensePaymentForm] = useState({
+    paidAt: new Date().toISOString().slice(0, 10),
+    method: 'bank_transfer',
+    reference: '',
+    notes: '',
+  });
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -312,6 +322,14 @@ export default function FinanceRecordDetailsDialog({
       setVoidInvoiceOpen(false);
       setVoidReason('');
       setVoidBusy(false);
+      setExpensePaymentOpen(false);
+      setExpensePaymentBusy(false);
+      setExpensePaymentForm({
+        paidAt: new Date().toISOString().slice(0, 10),
+        method: 'bank_transfer',
+        reference: '',
+        notes: '',
+      });
       return;
     }
 
@@ -506,6 +524,48 @@ export default function FinanceRecordDetailsDialog({
       toast.error(cause instanceof Error ? cause.message : 'Unable to void this invoice');
     } finally {
       setVoidBusy(false);
+    }
+  };
+
+  const openExpensePayment = () => {
+    if (!data?.expense || data.expense.paidAt) return;
+    setExpensePaymentForm({
+      paidAt: new Date().toISOString().slice(0, 10),
+      method: data.expense.method || 'bank_transfer',
+      reference: data.expense.reference || '',
+      notes: '',
+    });
+    setExpensePaymentOpen(true);
+  };
+
+  const requestExpensePayment = async () => {
+    if (!data?.expense?.id) return;
+    setExpensePaymentBusy(true);
+    try {
+      const response = await fetch(
+        '/api/admin/finance/expenses/' + encodeURIComponent(data.expense.id) + '/payment-request',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...expensePaymentForm,
+            paidAt: new Date(expensePaymentForm.paidAt + 'T12:00:00Z').toISOString(),
+          }),
+        },
+      );
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || 'Unable to request expense payment');
+      toast.success(
+        payload?.pendingApproval
+          ? 'Expense payment submitted for approval' + (payload?.data?.requestNumber ? ' · ' + payload.data.requestNumber : '')
+          : 'Expense payment recorded',
+      );
+      setExpensePaymentOpen(false);
+      setReloadKey((current) => current + 1);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : 'Unable to request expense payment');
+    } finally {
+      setExpensePaymentBusy(false);
     }
   };
 
@@ -1039,6 +1099,13 @@ export default function FinanceRecordDetailsDialog({
 
           {!loading && data?.type === 'expense' && data.expense && (
             <div className="space-y-5 p-5 sm:p-6">
+              {!data.expense.paidAt && (
+                <div className="flex justify-end">
+                  <Button type="button" onClick={openExpensePayment}>
+                    <ArrowUpRight className="mr-2 size-4" /> Request payment
+                  </Button>
+                </div>
+              )}
               <div className="grid gap-3 md:grid-cols-3">
                 <Card className="border-border/60 md:col-span-1"><CardContent className="p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Expense amount</p><p className="mt-1 text-2xl font-bold">{money(data.expense.amount, data.expense.currency)}</p></CardContent></Card>
                 <Card className="border-border/60 md:col-span-2">
@@ -1076,6 +1143,82 @@ export default function FinanceRecordDetailsDialog({
           )}
         </div>
       </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={expensePaymentOpen}
+        onOpenChange={(open) => {
+          if (!expensePaymentBusy) setExpensePaymentOpen(open);
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Request expense payment</DialogTitle>
+            <DialogDescription>
+              Settle this existing accrued expense without creating a duplicate record. When maker-checker is enabled, a different finance approver must authorize the cash movement.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="expense-payment-date">Payment date</Label>
+              <Input
+                id="expense-payment-date"
+                type="date"
+                min={data?.expense?.incurredAt ? new Date(data.expense.incurredAt).toISOString().slice(0, 10) : undefined}
+                value={expensePaymentForm.paidAt}
+                onChange={(event) => setExpensePaymentForm((current) => ({ ...current, paidAt: event.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="expense-payment-method">Method</Label>
+              <select
+                id="expense-payment-method"
+                value={expensePaymentForm.method}
+                onChange={(event) => setExpensePaymentForm((current) => ({ ...current, method: event.target.value }))}
+                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="bank_transfer">Bank transfer</option>
+                <option value="mobile_money">Mobile money</option>
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="cheque">Cheque</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="expense-payment-reference">Reference</Label>
+              <Input
+                id="expense-payment-reference"
+                value={expensePaymentForm.reference}
+                onChange={(event) => setExpensePaymentForm((current) => ({ ...current, reference: event.target.value }))}
+                placeholder="Bank reference, MoMo reference, cheque number…"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="expense-payment-notes">Payment note</Label>
+              <Textarea
+                id="expense-payment-notes"
+                rows={3}
+                value={expensePaymentForm.notes}
+                onChange={(event) => setExpensePaymentForm((current) => ({ ...current, notes: event.target.value }))}
+                placeholder="Approval context or payment instruction…"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" disabled={expensePaymentBusy} onClick={() => setExpensePaymentOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={expensePaymentBusy || !expensePaymentForm.paidAt}
+              onClick={() => void requestExpensePayment()}
+            >
+              {expensePaymentBusy && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {expensePaymentBusy ? 'Submitting…' : 'Submit payment request'}
+            </Button>
+          </div>
+        </DialogContent>
       </Dialog>
 
       <Dialog

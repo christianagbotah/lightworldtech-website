@@ -65,6 +65,23 @@ export async function PATCH(
           resultNumber: result.resultNumber,
         },
       });
+      if (approval.outflowType === 'direct_expense_payment') {
+        await recordAdminAudit({
+          admin: actor,
+          action: 'admin.finance_expense_payment_approved',
+          entity: 'FinanceExpense',
+          entityId: result.resultId,
+          details: {
+            requestNumber: approval.requestNumber,
+            approvalId: approval.id,
+            resultNumber: result.resultNumber,
+            amount: approval.amount.toFixed(2),
+            currency: approval.currency,
+            effectiveDate: approval.effectiveDate.toISOString(),
+            scheduledExecution: true,
+          },
+        });
+      }
       return NextResponse.json({ success: true, scheduledExecution: true, data: result });
     } catch (error) {
       return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Unable to execute scheduled outflow' }, { status: 409 });
@@ -226,6 +243,23 @@ export async function PATCH(
         resultNumber: result.resultNumber,
       },
     });
+    if (approval.outflowType === 'direct_expense_payment') {
+      await recordAdminAudit({
+        admin: actor,
+        action: 'admin.finance_expense_payment_approved',
+        entity: 'FinanceExpense',
+        entityId: result.resultId,
+        details: {
+          requestNumber: approval.requestNumber,
+          approvalId: approval.id,
+          resultNumber: result.resultNumber,
+          amount: approval.amount.toFixed(2),
+          currency: approval.currency,
+          effectiveDate: approval.effectiveDate.toISOString(),
+          scheduledExecution: false,
+        },
+      });
+    }
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     return NextResponse.json(
