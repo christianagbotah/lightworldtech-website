@@ -6,6 +6,7 @@ import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance'
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { postVendorBillJournal } from '@/lib/finance-ledger';
 import { computeTaxComponents, invoiceBalance, nextPayableNumber, normalizeCurrency, sumAmounts, vendorBillStatusFromBalance } from '@/lib/finance';
+import { getFinanceApprovalPolicy } from '@/lib/finance-approvals';
 
 const schema = z.object({
   vendorId: z.string().min(1),
@@ -180,6 +181,9 @@ export async function POST(request: NextRequest) {
     total,
   } = taxResult;
   const payableNumber = await nextPayableNumber(parsed.data.issueDate);
+  const policy = await getFinanceApprovalPolicy();
+  const makerCheckerRequired = Boolean(policy?.enabled && policy.requireSecondApprover);
+  const initialStatus = makerCheckerRequired ? 'draft' : 'unpaid';
   const bill = await db.$transaction(async (tx) => {
     const created = await tx.financeVendorBill.create({
       data: {
@@ -202,7 +206,9 @@ export async function POST(request: NextRequest) {
         total,
         notes: parsed.data.notes,
         purchaseOrderId: matchedPurchaseOrder?.id || null,
-        status: 'unpaid',
+        status: initialStatus,
+        createdByAdminId: actor.id,
+        createdBy: actor.name || actor.email,
       },
       include: {
         vendor: { select: { id: true, name: true } },
@@ -212,27 +218,31 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await postVendorBillJournal(tx, {
-      billId: created.id,
-      payableNumber: created.payableNumber,
-      issueDate: created.issueDate,
-      currency: created.currency,
-      total: created.total,
-      taxableAmount: created.taxableAmount,
-      vatAmount: created.vatAmount,
-      nhilAmount: created.nhilAmount,
-      getfundAmount: created.getfundAmount,
-      taxRecoverable: created.taxRecoverable,
-      category: created.category,
-      postedBy: actor.name || actor.email,
-    });
+    if (!makerCheckerRequired) {
+      await postVendorBillJournal(tx, {
+        billId: created.id,
+        payableNumber: created.payableNumber,
+        issueDate: created.issueDate,
+        currency: created.currency,
+        total: created.total,
+        taxableAmount: created.taxableAmount,
+        vatAmount: created.vatAmount,
+        nhilAmount: created.nhilAmount,
+        getfundAmount: created.getfundAmount,
+        taxRecoverable: created.taxRecoverable,
+        category: created.category,
+        postedBy: actor.name || actor.email,
+      });
+    }
 
     return created;
   });
 
   await recordAdminAudit({
     admin: actor,
-    action: 'admin.finance_supplier_bill_created',
+    action: makerCheckerRequired
+      ? 'admin.finance_supplier_bill_draft_created'
+      : 'admin.finance_supplier_bill_created',
     entity: 'FinanceVendorBill',
     entityId: bill.id,
     details: {
@@ -250,7 +260,11 @@ export async function POST(request: NextRequest) {
       supplierPaymentTermsDays: vendor.paymentTermsDays,
       defaultDueDate: defaultDueDate.toISOString().slice(0, 10),
       dueDateOverride,
+      makerCheckerRequired,
     },
   });
-  return NextResponse.json({ success: true, data: serialize(bill) }, { status: 201 });
+  return NextResponse.json(
+    { success: true, pendingApproval: makerCheckerRequired, data: serialize(bill) },
+    { status: 201 },
+  );
 }
