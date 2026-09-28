@@ -27,10 +27,10 @@ describe('rejected invoice replacement workflow', () => {
     expect(finance).toContain("status: 'draft'");
     expect(finance).toContain("issueDate,");
     expect(finance).toContain('dueDate: addDays(issueDate, organization.paymentTermsDays ?? 30)');
-    expect(finance).toContain('serviceId: String(invoice.serviceId || '')');
-    expect(finance).toContain('projectId: String(invoice.projectId || '')');
-    expect(finance).toContain('agreementId: String(invoice.agreementId || '')');
-    expect(finance).toContain('billingMilestoneId: String(invoice.billingMilestoneId || '')');
+    expect(finance).toContain("serviceId: String(invoice.serviceId || '')");
+    expect(finance).toContain("projectId: String(invoice.projectId || '')");
+    expect(finance).toContain("agreementId: String(invoice.agreementId || '')");
+    expect(finance).toContain("billingMilestoneId: String(invoice.billingMilestoneId || '')");
     expect(finance).toContain("description: String(line.description || '')");
     expect(finance).toContain("unitPrice: String(line.unitPrice || '')");
   });
