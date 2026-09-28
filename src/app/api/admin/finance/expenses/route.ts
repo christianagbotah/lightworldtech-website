@@ -206,6 +206,19 @@ export async function POST(request: NextRequest) {
         effectiveDate: approval.effectiveDate.toISOString(),
       },
     });
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_expense_payment_requested',
+      entity: 'FinanceExpense',
+      entityId: expense.id,
+      details: {
+        requestNumber: approval.requestNumber,
+        approvalId: approval.id,
+        amount: approval.amount.toFixed(2),
+        currency: approval.currency,
+        effectiveDate: approval.effectiveDate.toISOString(),
+      },
+    });
   }
 
   return NextResponse.json(
