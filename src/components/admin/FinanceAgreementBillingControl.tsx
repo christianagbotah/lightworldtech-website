@@ -34,6 +34,8 @@ export type AgreementBillingRow = {
   scheduledAmount: string;
   unscheduledAmount: string;
   billingMilestoneCount: number;
+  invoicedMilestoneCount: number;
+  openMilestoneCount: number;
   nextMilestone: {
     id: string;
     title: string;
@@ -304,6 +306,9 @@ export default function FinanceAgreementBillingControl({
                       <TableCell className="text-right font-semibold">{money(row.remainingToPrepare, row.currency)}</TableCell>
                       <TableCell>
                         <p className="text-xs font-medium">{row.billingMilestoneCount} milestone{row.billingMilestoneCount === 1 ? '' : 's'}</p>
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                          {row.invoicedMilestoneCount} invoiced · {row.openMilestoneCount} open
+                        </p>
                         <p className="mt-0.5 text-[10px] text-muted-foreground">
                           {money(row.scheduledAmount, row.currency)} scheduled · {money(row.unscheduledAmount, row.currency)} unscheduled
                         </p>
