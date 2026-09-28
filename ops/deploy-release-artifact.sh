@@ -10,16 +10,85 @@ EXPECTED_SHA="${2:-}"
 RELEASE_ROOT="/home/lightworld/releases"
 SHARED="/home/lightworld/shared/lightworldtech"
 OPS="$SHARED/ops"
+ARTIFACT_DIR="$SHARED/artifacts"
+CURRENT_LINK="/home/lightworld/webapps/lightworldtech"
+PREVIOUS_LINK="/home/lightworld/webapps/lightworldtech-previous"
+MIN_FREE_KB=$((2 * 1024 * 1024))
 
 fail() {
   echo "ERROR: $*" >&2
   exit 1
 }
 
+release_sha_from_path() {
+  local release_path="${1:-}"
+  [ -n "$release_path" ] || return 0
+  [ -f "$release_path/.next/standalone/RELEASE_SHA" ] || return 0
+  tr -d '\\r\\n' < "$release_path/.next/standalone/RELEASE_SHA"
+}
+
+same_path() {
+  local left="${1:-}"
+  local right="${2:-}"
+  [ -n "$left" ] && [ -n "$right" ] || return 1
+  [ "$(readlink -f "$left" 2>/dev/null || true)" = "$(readlink -f "$right" 2>/dev/null || true)" ]
+}
+
+prune_stale_deployment_payloads() {
+  local incoming_artifact="${1:-}"
+  local current_release=""
+  local previous_release=""
+  local current_sha=""
+  local previous_sha=""
+  local path=""
+  local artifact=""
+
+  current_release="$(readlink -f "$CURRENT_LINK" 2>/dev/null || true)"
+  previous_release="$(readlink -f "$PREVIOUS_LINK" 2>/dev/null || true)"
+  current_sha="$(release_sha_from_path "$current_release")"
+  previous_sha="$(release_sha_from_path "$previous_release")"
+
+  while IFS= read -r -d '' path; do
+    if [ "$path" != "$current_release" ] && [ "$path" != "$previous_release" ]; then
+      rm -rf -- "$path"
+    fi
+  done < <(find "$RELEASE_ROOT" -mindepth 1 -maxdepth 1 -type d -name 'lightworldtech-*' -print0)
+
+  while IFS= read -r -d '' artifact; do
+    if ! same_path "$artifact" "$incoming_artifact"; then
+      rm -f -- "$artifact"
+    fi
+  done < <(find "$SHARED" -maxdepth 1 -type f -name 'lightworldtech-runtime-*.zip' -print0)
+
+  install -d -m 0755 "$ARTIFACT_DIR"
+  while IFS= read -r -d '' artifact; do
+    if same_path "$artifact" "$incoming_artifact"; then
+      continue
+    fi
+    if [ -n "$current_sha" ] && [ "$(basename "$artifact")" = "lightworldtech-runtime-$current_sha.zip" ]; then
+      continue
+    fi
+    if [ -n "$previous_sha" ] && [ "$(basename "$artifact")" = "lightworldtech-runtime-$previous_sha.zip" ]; then
+      continue
+    fi
+    rm -f -- "$artifact"
+  done < <(find "$ARTIFACT_DIR" -maxdepth 1 -type f -name 'lightworldtech-runtime-*.zip' -print0)
+}
+
+ensure_disk_reserve() {
+  local available_kb
+  available_kb="$(df -Pk "$SHARED" | awk 'NR == 2 { print $4 }')"
+  [[ "$available_kb" =~ ^[0-9]+$ ]] || fail "Could not determine available disk space"
+  [ "$available_kb" -ge "$MIN_FREE_KB" ] || fail "Insufficient free disk for safe deployment: ${available_kb}KB available; require at least ${MIN_FREE_KB}KB"
+}
+
 [ "$(id -u)" -eq 0 ] || fail "Run this deployer as root"
 [ -n "$ARTIFACT_ZIP" ] && [ -n "$EXPECTED_SHA" ] || fail "Usage: $0 <github-artifact.zip> <40-char-git-sha>"
 [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "Expected SHA must be a lowercase 40-character Git commit SHA"
 [ -f "$ARTIFACT_ZIP" ] || fail "Artifact ZIP does not exist: $ARTIFACT_ZIP"
+
+prune_stale_deployment_payloads "$ARTIFACT_ZIP"
+ensure_disk_reserve
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
@@ -79,6 +148,10 @@ bash "$REL/ops/install-production-ops.sh"
 )
 
 "$OPS/promote-release.sh" "$REL"
+
+prune_stale_deployment_payloads "$ARTIFACT_ZIP"
+ensure_disk_reserve
+echo "deployment_free_kb=$(df -Pk "$SHARED" | awk 'NR == 2 { print $4 }')"
 
 echo "artifact_release=$REL"
 echo "artifact_sha=$EXPECTED_SHA"

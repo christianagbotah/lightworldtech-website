@@ -38,6 +38,12 @@ describe('CI-built release artifacts', () => {
     expect(deploy).toContain('.next/standalone/.next/server/app');
     expect(deploy).toContain('chmod 0750');
     expect(deploy).toContain('chmod 0640');
+    expect(deploy).toContain('MIN_FREE_KB=$((2 * 1024 * 1024))');
+    expect(deploy).toContain('prune_stale_deployment_payloads "$ARTIFACT_ZIP"');
+    expect(deploy).toContain("find \"$RELEASE_ROOT\" -mindepth 1 -maxdepth 1 -type d -name 'lightworldtech-*' -print0");
+    expect(deploy).toContain("find \"$ARTIFACT_DIR\" -maxdepth 1 -type f -name 'lightworldtech-runtime-*.zip' -print0");
+    expect(deploy).toContain('Insufficient free disk for safe deployment');
+    expect(deploy).toContain('deployment_free_kb=');
   });
 
   test('runtime preparation grants only Next-managed write surfaces', () => {
