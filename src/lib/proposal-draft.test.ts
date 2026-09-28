@@ -9,6 +9,15 @@ describe('proposal draft generator', () => {
         tags: ['enterprise', 'education', 'ai'],
         source: 'assistant',
         priority: 'high',
+        company: 'Example Academy',
+        industry: 'Education',
+        countryRegion: 'Ghana',
+        serviceInterest: 'School management platform',
+        currency: 'GHS',
+        budgetRange: '50,000-80,000',
+        deliveryWindow: 'Within 1-3 months',
+        engagementModel: 'Phased implementation',
+        international: false,
       },
       contact: {
         name: 'Example School',
@@ -19,10 +28,48 @@ describe('proposal draft generator', () => {
 
     expect(draft.title).toContain('School platform');
     expect(draft.executiveSummary).toContain('Replace manual administration');
+    expect(draft.executiveSummary).toContain('organization: Example Academy');
+    expect(draft.executiveSummary).toContain('service interest: School management platform');
+    expect(draft.executiveSummary).toContain('industry: Education');
+    expect(draft.executiveSummary).toContain('country / region: Ghana');
+    expect(draft.executiveSummary).toContain('budget context: GHS 50,000-80,000');
+    expect(draft.solution).toContain('recorded service interest is School management platform');
     expect(draft.solution).toContain('enterprise software');
     expect(draft.solution).toContain('education technology');
-    expect(draft.timeline).toContain('within 1-3 months');
+    expect(draft.timeline).toContain('Within 1-3 months');
+    expect(draft.timeline).toContain('CRM qualification');
     expect(draft.timeline.toLowerCase()).toContain('not a committed delivery date');
+    expect(draft.commercialNotes).toContain('GHS 50,000-80,000');
+    expect(draft.commercialNotes.toLowerCase()).toContain('not a lightworld quote');
+  });
+
+  test('prefers structured CRM qualification over unstructured timing text without turning it into a commitment', () => {
+    const draft = generateProposalDraft({
+      lead: {
+        summary: 'Enterprise workflow modernization.',
+        tags: ['enterprise'],
+        source: 'website',
+        priority: 'normal',
+        company: 'Example Manufacturing Ltd',
+        industry: 'Manufacturing',
+        countryRegion: 'Ghana',
+        serviceInterest: 'Enterprise workflow automation',
+        deliveryWindow: 'Q1 2027',
+        engagementModel: 'Discovery then phased delivery',
+        international: false,
+      },
+      contact: {
+        name: 'Ama Example',
+        subject: 'Workflow modernization',
+        message: 'We are exploring options and have not agreed a delivery date.',
+      },
+    });
+
+    expect(draft.executiveSummary).toContain('Example Manufacturing Ltd');
+    expect(draft.executiveSummary).toContain('Discovery then phased delivery');
+    expect(draft.timeline).toContain('Q1 2027');
+    expect(draft.timeline).not.toContain('have not agreed a delivery date');
+    expect(draft.assumptions.join(' ')).toContain('CRM qualification fields');
   });
 
   test('never invents commercial terms or binding dates', () => {
