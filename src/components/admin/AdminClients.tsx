@@ -2152,6 +2152,11 @@ export default function AdminClients() {
                                 {' · '}
                                 created by {milestone.createdBy || 'Admin'}
                               </p>
+                              {milestone.readinessStatus === 'ready_to_bill' && milestone.invoices.length === 0 && (
+                                <p className="mt-1 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                                  Editing the milestone title, amount or planned billing date will return this milestone to Planned and require a fresh readiness confirmation.
+                                </p>
+                              )}
                             </div>
                           ))}
                           {!agreement.billingMilestones.length && (
