@@ -32,6 +32,14 @@ describe('agreement billing control', () => {
     expect(route).toContain('Draft invoices reserve billing coverage but are not treated as issued');
   });
 
+  test('enforces same-currency agreement billing at the server boundary', () => {
+    const invoiceRoute = source('src/app/api/admin/finance/invoices/route.ts');
+
+    expect(invoiceRoute).toContain('currency: true');
+    expect(invoiceRoute).toContain('normalizeCurrency(parsed.data.currency) !== normalizeCurrency(agreement.currency)');
+    expect(invoiceRoute).toContain('Invoice currency must match the linked agreement currency');
+  });
+
   test('surfaces governed billing controls in Finance without auto-issuing', () => {
     const control = source('src/components/admin/FinanceAgreementBillingControl.tsx');
     const finance = source('src/components/admin/AdminFinance.tsx');
