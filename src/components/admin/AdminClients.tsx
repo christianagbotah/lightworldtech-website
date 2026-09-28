@@ -1979,6 +1979,188 @@ export default function AdminClients() {
                         )}
                       </div>
 
+                      <div className="mt-4 rounded-xl border border-amber-200/70 bg-amber-50/35 p-3 dark:border-amber-900/40 dark:bg-amber-950/10">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-amber-800 dark:text-amber-200">Billing schedule</p>
+                            <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
+                              Plan contractual billing milestones without creating invoices. The server prevents the schedule from exceeding the agreement value.
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            <Badge variant="outline">{money(scheduledBilling, agreement.currency)} scheduled</Badge>
+                            <Badge variant="outline">{money(unscheduledBilling, agreement.currency)} unscheduled</Badge>
+                            <Badge variant="outline">{scheduleCoverage.toFixed(0)}% covered</Badge>
+                            {agreement.contractValueBasis === 'unspecified' && (
+                              <Badge className="border-0 bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-100">Basis review required</Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 space-y-2">
+                          {agreement.billingMilestones.map((milestone) => (
+                            <div key={milestone.id} className="rounded-lg border border-border/60 bg-background p-3">
+                              <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_150px_160px_auto] lg:items-end">
+                                <div>
+                                  <Label className="text-[10px] uppercase tracking-[0.08em]">Milestone</Label>
+                                  <Input
+                                    defaultValue={milestone.title}
+                                    onBlur={(event) => {
+                                      const title = event.currentTarget.value.trim();
+                                      if (title && title !== milestone.title) void patchAgreementBillingMilestone(milestone.id, { title });
+                                    }}
+                                    className="h-9 text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-[10px] uppercase tracking-[0.08em]">Amount · {agreement.currency}</Label>
+                                  <Input
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    defaultValue={milestone.amount}
+                                    onBlur={(event) => {
+                                      const amount = Number(event.currentTarget.value || 0);
+                                      if (amount > 0 && amount !== Number(milestone.amount)) void patchAgreementBillingMilestone(milestone.id, { amount });
+                                    }}
+                                    className="h-9 text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-[10px] uppercase tracking-[0.08em]">Planned billing date</Label>
+                                  <Input
+                                    type="date"
+                                    defaultValue={milestone.dueDate?.slice(0, 10) || ''}
+                                    onBlur={(event) => {
+                                      const dueDate = event.currentTarget.value
+                                        ? new Date(event.currentTarget.value).toISOString()
+                                        : null;
+                                      const current = milestone.dueDate?.slice(0, 10) || '';
+                                      if (event.currentTarget.value !== current) void patchAgreementBillingMilestone(milestone.id, { dueDate });
+                                    }}
+                                    className="h-9 text-xs"
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setPendingDelete({
+                                    kind: 'agreement-billing-milestone',
+                                    id: milestone.id,
+                                    label: milestone.title,
+                                  })}
+                                >
+                                  <Trash2 className="mr-1 size-3.5 text-destructive" /> Delete
+                                </Button>
+                              </div>
+                              <div className="mt-2">
+                                <Label className="text-[10px] uppercase tracking-[0.08em]">Billing notes</Label>
+                                <Textarea
+                                  rows={2}
+                                  defaultValue={milestone.notes}
+                                  onBlur={(event) => {
+                                    const notes = event.currentTarget.value.trim();
+                                    if (notes !== milestone.notes) void patchAgreementBillingMilestone(milestone.id, { notes });
+                                  }}
+                                  placeholder="Trigger, acceptance condition or invoice instruction"
+                                  className="text-xs"
+                                />
+                              </div>
+                              <p className="mt-2 text-[10px] text-muted-foreground">
+                                {milestone.dueDate ? 'Planned ' + new Date(milestone.dueDate).toLocaleDateString() : 'No planned billing date'}
+                                {' · '}
+                                created by {milestone.createdBy || 'Admin'}
+                              </p>
+                            </div>
+                          ))}
+                          {!agreement.billingMilestones.length && (
+                            <p className="rounded-lg border border-dashed border-border p-3 text-[11px] text-muted-foreground">
+                              No billing milestones are planned yet. Add the first milestone below; this does not create or issue an invoice.
+                            </p>
+                          )}
+                        </div>
+
+                        <form
+                          onSubmit={(event) => void createAgreementBillingMilestone(event, agreement.id)}
+                          className="mt-3 space-y-2 border-t border-amber-200/70 pt-3 dark:border-amber-900/40"
+                        >
+                          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(180px,1fr)_150px_170px]">
+                            <div>
+                              <Label>Milestone title</Label>
+                              <Input
+                                required
+                                placeholder="30% on project kickoff"
+                                value={agreementBillingForms[agreement.id]?.title || ''}
+                                onChange={(event) => setAgreementBillingForms((current) => ({
+                                  ...current,
+                                  [agreement.id]: {
+                                    ...(current[agreement.id] || { title: '', amount: '', dueDate: '', notes: '' }),
+                                    title: event.target.value,
+                                  },
+                                }))}
+                              />
+                            </div>
+                            <div>
+                              <Label>Amount · {agreement.currency}</Label>
+                              <Input
+                                required
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                value={agreementBillingForms[agreement.id]?.amount || ''}
+                                onChange={(event) => setAgreementBillingForms((current) => ({
+                                  ...current,
+                                  [agreement.id]: {
+                                    ...(current[agreement.id] || { title: '', amount: '', dueDate: '', notes: '' }),
+                                    amount: event.target.value,
+                                  },
+                                }))}
+                              />
+                            </div>
+                            <div>
+                              <Label>Planned billing date</Label>
+                              <Input
+                                type="date"
+                                value={agreementBillingForms[agreement.id]?.dueDate || ''}
+                                onChange={(event) => setAgreementBillingForms((current) => ({
+                                  ...current,
+                                  [agreement.id]: {
+                                    ...(current[agreement.id] || { title: '', amount: '', dueDate: '', notes: '' }),
+                                    dueDate: event.target.value,
+                                  },
+                                }))}
+                              />
+                            </div>
+                          </div>
+                          <Textarea
+                            rows={2}
+                            placeholder="Billing trigger, acceptance condition or notes"
+                            value={agreementBillingForms[agreement.id]?.notes || ''}
+                            onChange={(event) => setAgreementBillingForms((current) => ({
+                              ...current,
+                              [agreement.id]: {
+                                ...(current[agreement.id] || { title: '', amount: '', dueDate: '', notes: '' }),
+                                notes: event.target.value,
+                              },
+                            }))}
+                          />
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-[10px] text-muted-foreground">
+                              Remaining schedulable value: <strong>{money(unscheduledBilling, agreement.currency)}</strong>. Billing milestones are planning records only.
+                            </p>
+                            <Button
+                              disabled={saving || Number(agreementBillingForms[agreement.id]?.amount || 0) <= 0}
+                              type="submit"
+                              size="sm"
+                              variant="outline"
+                            >
+                              <Plus className="mr-1 size-3.5" /> Add billing milestone
+                            </Button>
+                          </div>
+                        </form>
+                      </div>
+
                       <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div>
@@ -2505,15 +2687,19 @@ export default function AdminClients() {
             ? 'Remove client document?'
             : pendingDelete?.kind === 'agreement-attachment'
               ? 'Delete agreement PDF?'
-              : 'Delete client announcement?'
+              : pendingDelete?.kind === 'agreement-billing-milestone'
+                ? 'Delete billing milestone?'
+                : 'Delete client announcement?'
         }
         description={
           pendingDelete?.kind === 'document'
             ? 'Remove “' + pendingDelete.label + '” from the client portal. The linked source file is not deleted by this action.'
             : pendingDelete?.kind === 'agreement-attachment'
               ? 'Permanently delete the managed agreement file “' + pendingDelete.label + '”. This removes the private stored PDF and its database record.'
-              : pendingDelete
-                ? 'Permanently delete the announcement “' + pendingDelete.label + '”. Clients will no longer be able to view it.'
+              : pendingDelete?.kind === 'agreement-billing-milestone'
+                ? 'Remove the planned billing milestone “' + pendingDelete.label + '” from this agreement schedule. No invoice or payment record is deleted.'
+                : pendingDelete
+                  ? 'Permanently delete the announcement “' + pendingDelete.label + '”. Clients will no longer be able to view it.'
                 : 'Confirm this destructive action.'
         }
         confirmLabel={
@@ -2521,12 +2707,15 @@ export default function AdminClients() {
             ? 'Remove document'
             : pendingDelete?.kind === 'agreement-attachment'
               ? 'Delete agreement PDF'
-              : 'Delete announcement'
+              : pendingDelete?.kind === 'agreement-billing-milestone'
+                ? 'Delete milestone'
+                : 'Delete announcement'
         }
         onConfirm={async () => {
           if (!pendingDelete) return;
           if (pendingDelete.kind === 'document') await deleteDocument(pendingDelete.id);
           else if (pendingDelete.kind === 'agreement-attachment') await deleteAgreementAttachment(pendingDelete.id);
+          else if (pendingDelete.kind === 'agreement-billing-milestone') await deleteAgreementBillingMilestone(pendingDelete.id);
           else await deleteAnnouncement(pendingDelete.id);
         }}
       />
