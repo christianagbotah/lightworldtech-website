@@ -923,6 +923,11 @@ model ClientInvoice {
   issuedByAdminId String             @default("")
   issuedBy       String             @default("")
   issuedAt       DateTime?
+  reviewStatus   String             @default("pending")
+  reviewedByAdminId String          @default("")
+  reviewedBy     String             @default("")
+  reviewedAt     DateTime?
+  reviewNotes    String             @default("")
   lines          ClientInvoiceLine[]
   allocations    ClientPaymentAllocation[]
   paymentIntents  HubtelPaymentIntent[]
@@ -939,6 +944,7 @@ model ClientInvoice {
   @@index([projectId])
   @@index([agreementId])
   @@index([billingMilestoneId])
+  @@index([status, reviewStatus])
   @@index([dueDate, status])
   @@index([issueDate])
 }
