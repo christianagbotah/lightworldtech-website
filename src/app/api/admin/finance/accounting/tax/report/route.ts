@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     }),
     db.financeVendorBill.findMany({
       where: {
-        status: { not: 'void' },
+        status: { notIn: ['draft', 'rejected', 'void'] },
         issueDate: { gte: from, lte: to },
         ...(currency ? { currency } : {}),
       },
