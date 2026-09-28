@@ -82,6 +82,16 @@ interface HealthData {
   status: 'healthy' | 'attention';
   checkedAt: string;
   database: { status: 'healthy' | 'unhealthy'; latencyMs: number; message?: string };
+  disk: {
+    status: 'healthy' | 'attention';
+    path: string;
+    totalBytes: number;
+    usedBytes: number;
+    availableBytes: number;
+    usedPercent: number;
+    minimumFreeBytes: number;
+    warning: string;
+  };
   mail: { status: 'healthy' | 'attention'; mode: string; configured: boolean; warning: string };
   communications: {
     status: 'healthy' | 'attention';
@@ -451,7 +461,7 @@ export default function AdminDashboard() {
             type="button"
             onClick={() => navigate('admin-settings')}
             className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-left backdrop-blur-sm transition hover:bg-white/15"
-            title={health?.communications?.warning || health?.mail.warning || 'Open system settings'}
+            title={health?.disk?.warning || health?.communications?.warning || health?.mail.warning || 'Open system settings'}
           >
             <div className="relative">
               <div className={`size-2 rounded-full ${health?.status === 'healthy' ? 'bg-emerald-300' : 'bg-amber-200'}`} />
@@ -462,7 +472,7 @@ export default function AdminDashboard() {
                 {health?.status === 'healthy' ? 'Systems operational' : 'System attention needed'}
               </span>
               <span className="block text-[10px] text-amber-50/80">
-                DB {health?.database.latencyMs ?? '—'}ms · Mail {health?.mail.configured ? 'ready' : 'check'} · Automation {health?.communications?.automationEnabled ? (health.communications.status === 'healthy' ? 'live' : 'check') : 'off'}
+                DB {health?.database.latencyMs ?? '—'}ms · Disk {health?.disk?.usedPercent ?? '—'}% · Mail {health?.mail.configured ? 'ready' : 'check'} · Automation {health?.communications?.automationEnabled ? (health.communications.status === 'healthy' ? 'live' : 'check') : 'off'}
               </span>
             </div>
             <ArrowUpRight className="size-3.5 text-white/70" />
@@ -988,145 +998,3 @@ export default function AdminDashboard() {
                   return (
                     <button
                       key={activity.id}
-                      type="button"
-                      onClick={() => {
-                        if ('business' in activity && activity.business) {
-                          openBusinessActivity(activity.business);
-                        } else if (activity.type === 'message') {
-                          openMessage(activity.targetId);
-                        } else {
-                          navigate('admin-blog-editor', activity.targetId);
-                        }
-                      }}
-                      className="flex w-full items-start gap-3 px-5 py-3 text-left hover:bg-muted/50 transition-colors"
-                    >
-                      <div className={`size-8 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5`}>
-                        <Icon className={`size-3.5 ${activity.iconColor}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground leading-snug">{activity.text}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <Clock className="size-3 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">{new Date(activity.createdAt).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-        )}
-      </div>
-
-      <Dialog open={backupOpen} onOpenChange={setBackupOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <HardDrive className="size-5 text-amber-600" />
-              Recovery readiness
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              { label: 'PostgreSQL database', artifact: backup?.database, icon: Database },
-              { label: 'Uploaded files', artifact: backup?.uploads, icon: FolderOpen },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.label} className="rounded-2xl border border-border/60 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
-                      <Icon className="size-5" />
-                    </span>
-                    <Badge variant={item.artifact?.freshness === 'fresh' ? 'default' : 'secondary'}>
-                      {item.artifact?.freshness === 'fresh' ? 'Fresh' : item.artifact ? 'Stale' : 'Missing'}
-                    </Badge>
-                  </div>
-                  <p className="mt-4 font-semibold">{item.label}</p>
-                  {item.artifact ? (
-                    <div className="mt-3 space-y-1 text-xs text-muted-foreground">
-                      <p>Latest artifact: {new Date(item.artifact.timestamp).toLocaleString()}</p>
-                      <p>Age: {item.artifact.ageHours} hours</p>
-                      <p>Size: {formatBytes(item.artifact.sizeBytes)}</p>
-                    </div>
-                  ) : (
-                    <p className="mt-3 text-xs text-rose-600">No matching backup artifact detected.</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className={
-            'rounded-2xl border p-4 ' +
-            (backup?.restoreVerification.status === 'verified'
-              ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/20'
-              : 'border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20')
-          }>
-            <p className={
-              'flex items-center gap-2 text-sm font-semibold ' +
-              (backup?.restoreVerification.status === 'verified'
-                ? 'text-emerald-900 dark:text-emerald-200'
-                : 'text-amber-900 dark:text-amber-200')
-            }>
-              {backup?.restoreVerification.status === 'verified'
-                ? <CheckCircle2 className="size-4" />
-                : <ShieldAlert className="size-4" />}
-              Restore verification
-            </p>
-            <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              {backup?.restoreVerification.message || 'No restore verification result is available.'}
-            </p>
-            {backup?.restoreVerification.verifiedAt && (
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
-                <span>Verified {new Date(backup.restoreVerification.verifiedAt).toLocaleString()}</span>
-                {backup.restoreVerification.publicTableCount !== null && <span>{backup.restoreVerification.publicTableCount} public tables restored</span>}
-                {backup.restoreVerification.uploadArchiveEntries !== null && <span>{backup.restoreVerification.uploadArchiveEntries} upload archive entries checked</span>}
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
-        <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] max-w-5xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BarChart3 className="size-5 text-amber-600" />
-              Analytics drill-down · last {analytics?.days || 30} days
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="rounded-2xl border border-border/60 p-5">
-              <h3 className="font-semibold">Top pages</h3>
-              <div className="mt-4 space-y-3">
-                {(analytics?.topPages || []).slice(0, 10).map((item, index) => (
-                  <div key={item.path + index} className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                    <span className="min-w-0 truncate text-sm">{item.path}</span>
-                    <Badge variant="secondary">{item.views} views</Badge>
-                  </div>
-                ))}
-                {!analytics?.topPages?.length && <p className="text-sm text-muted-foreground">No page-view data yet.</p>}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-border/60 p-5">
-              <h3 className="font-semibold">Top referrers</h3>
-              <div className="mt-4 space-y-3">
-                {(analytics?.topReferrers || []).slice(0, 10).map((item, index) => (
-                  <div key={item.referrer + index} className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                    <span className="min-w-0 truncate text-sm">{item.referrer || 'Direct / unknown'}</span>
-                    <Badge variant="secondary">{item.events} events</Badge>
-                  </div>
-                ))}
-                {!analytics?.topReferrers?.length && <p className="text-sm text-muted-foreground">No referrer data yet.</p>}
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
