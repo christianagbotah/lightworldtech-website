@@ -576,6 +576,12 @@ export default function FinanceRecordDetailsDialog({
                     <DetailItem label="Email" value={data.invoice.organization.primaryEmail || '—'} />
                     <DetailItem label="Service" value={data.invoice.service?.name || 'General account'} />
                     <DetailItem label="Project" value={data.invoice.project?.name || '—'} />
+                    <DetailItem
+                      label="Originating agreement"
+                      value={data.invoice.agreement
+                        ? data.invoice.agreement.title + (data.invoice.agreement.referenceNumber ? ' · ' + data.invoice.agreement.referenceNumber : '')
+                        : '—'}
+                    />
                     <DetailItem label="Currency" value={data.invoice.currency} mono />
                     <DetailItem label="Issue date" value={date(data.invoice.issueDate)} />
                     <DetailItem label="Due date" value={date(data.invoice.dueDate)} />
