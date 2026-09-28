@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
     const pageViews = events.filter((event) => event.event === 'page_view');
     const assistantMessages = events.filter((event) => event.event === 'assistant_message');
     const projectScopes = events.filter((event) => event.event === 'assistant_project_scope');
+    const estimatorCompletions = events.filter((event) => event.event === 'project_estimator_complete');
     const assistantFeedback = events.filter((event) => event.event === 'assistant_feedback');
     let assistantHelpful = 0;
     let assistantNotHelpful = 0;
@@ -72,6 +73,33 @@ export async function GET(request: NextRequest) {
     const assistantLeadConversions = assistantLeadSessions.size;
     const assistantLeadConversionRate = assistantScopeSessions
       ? Math.round((assistantLeadConversions / assistantScopeSessions) * 1000) / 10
+      : null;
+
+    const estimatorStartedBySession = new Map<string, Date>();
+    for (const event of estimatorCompletions) {
+      const existing = estimatorStartedBySession.get(event.sessionId);
+      if (!existing || event.createdAt < existing) {
+        estimatorStartedBySession.set(event.sessionId, event.createdAt);
+      }
+    }
+    const estimatorLeadSessions = new Set<string>();
+    for (const event of contactSubmits) {
+      let source = '';
+      try {
+        const metadata = JSON.parse(event.metadata || '{}') as { source?: string };
+        source = metadata.source || '';
+      } catch {
+        // Ignore malformed legacy analytics metadata.
+      }
+      const estimatorStartedAt = estimatorStartedBySession.get(event.sessionId);
+      if (source === 'estimator' && estimatorStartedAt && event.createdAt >= estimatorStartedAt) {
+        estimatorLeadSessions.add(event.sessionId);
+      }
+    }
+    const estimatorSessions = estimatorStartedBySession.size;
+    const estimatorLeadConversions = estimatorLeadSessions.size;
+    const estimatorLeadConversionRate = estimatorSessions
+      ? Math.round((estimatorLeadConversions / estimatorSessions) * 1000) / 10
       : null;
 
     const pageCounts = new Map<string, number>();
@@ -124,6 +152,9 @@ export async function GET(request: NextRequest) {
         assistantScopeSessions,
         assistantLeadConversions,
         assistantLeadConversionRate,
+        estimatorSessions,
+        estimatorLeadConversions,
+        estimatorLeadConversionRate,
         contactSubmits: contactSubmits.length,
         topPages: [...pageCounts.entries()]
           .sort((a, b) => b[1] - a[1])

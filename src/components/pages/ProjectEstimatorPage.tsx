@@ -124,6 +124,7 @@ export default function ProjectEstimatorPage() {
     try {
       sessionStorage.setItem('lw-project-brief', brief);
       sessionStorage.setItem('lw-project-brief-data', JSON.stringify({
+        source: 'estimator',
         service: serviceName(projectType),
         goal: goal.trim(),
         users: users.trim(),

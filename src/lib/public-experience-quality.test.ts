@@ -133,7 +133,7 @@ describe('public experience quality', () => {
     expect(floating).toContain("PROJECT_BRIEF_DATA_KEY = 'lw-project-brief-data'");
     expect(floating).toContain('projectScope?: ProjectScopeHandoff');
     expect(floating).toContain('nextState.step === \'done\'');
-    expect(floating).toContain('JSON.stringify(msg.projectScope)');
+    expect(floating).toContain("JSON.stringify({ ...msg.projectScope, source: 'assistant' })");
     expect(contact).toContain("sessionStorage.getItem('lw-project-brief-data')");
     expect(contact).toContain('mapAssistantService');
     expect(contact).toContain('mapAssistantTimeline');

@@ -83,6 +83,7 @@ const engagementModels = [
 ];
 
 type AssistantProjectScope = {
+  source?: 'assistant' | 'estimator';
   service?: string;
   goal?: string;
   users?: string;
@@ -131,6 +132,7 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
     subject: '',
     message: '',
   });
+  const [handoffSource, setHandoffSource] = useState<'website' | 'assistant' | 'estimator'>('website');
   const [sending, setSending] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle');
   const [responseMessage, setResponseMessage] = useState('');
@@ -153,11 +155,25 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
       }
       if (!projectBrief && !scope) return;
 
+      const source: 'website' | 'assistant' | 'estimator' =
+        scope?.source === 'estimator' || /lightworld project estimator/i.test(projectBrief || '')
+          ? 'estimator'
+          : scope?.source === 'assistant' || /lightworld assistant/i.test(projectBrief || '')
+            ? 'assistant'
+            : 'website';
+      setHandoffSource(source);
+
       setForm((current) => ({
         ...current,
         service: scope?.service ? mapAssistantService(scope.service) : current.service,
         deliveryWindow: scope?.timeline ? mapAssistantTimeline(scope.timeline) || current.deliveryWindow : current.deliveryWindow,
-        subject: current.subject || 'Project brief from Lightworld Assistant',
+        subject: current.subject || (
+          source === 'estimator'
+            ? 'Project brief from Lightworld Project Estimator'
+            : source === 'assistant'
+              ? 'Project brief from Lightworld Assistant'
+              : 'Project enquiry'
+        ),
         message: current.message || projectBrief || [
           scope?.service ? 'Project type: ' + scope.service : '',
           scope?.goal ? 'Primary outcome: ' + scope.goal : '',
@@ -250,7 +266,12 @@ export default function ContactPage({ settings = {} }: { settings?: SiteSettings
       setResponseMessage(
         'Thank you. The Lightworld team has received your message and can review the brief using the contact details you provided.',
       );
-      trackEvent('contact_submit', { metadata: { service: form.service.slice(0, 120) } });
+      trackEvent('contact_submit', {
+        metadata: {
+          service: form.service.slice(0, 120),
+          source: handoffSource,
+        },
+      });
       try {
         sessionStorage.removeItem('lw-project-brief');
         sessionStorage.removeItem('lw-project-brief-data');

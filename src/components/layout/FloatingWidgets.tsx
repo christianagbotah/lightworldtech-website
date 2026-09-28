@@ -43,6 +43,7 @@ interface ProjectScopeState {
 }
 
 interface ProjectScopeHandoff {
+  source?: 'assistant';
   service?: string;
   goal?: string;
   users?: string;
@@ -649,7 +650,7 @@ export default function FloatingWidgets({ settings = {} }: { settings?: SiteSett
                               sessionStorage.setItem(PROJECT_BRIEF_KEY, msg.projectBrief);
                             }
                             if (msg.projectScope) {
-                              sessionStorage.setItem(PROJECT_BRIEF_DATA_KEY, JSON.stringify(msg.projectScope));
+                              sessionStorage.setItem(PROJECT_BRIEF_DATA_KEY, JSON.stringify({ ...msg.projectScope, source: 'assistant' }));
                             }
                             trackEvent('cta_click', { metadata: { source: 'assistant', label: msg.cta?.label || '' } });
                           }}
