@@ -905,6 +905,8 @@ export default function AdminFinance() {
       contractValue: row.remainingToPrepare,
       effectiveDate: row.effectiveDate,
       expiryDate: row.expiryDate,
+      billingMilestoneIds: [],
+      billingMilestoneTitle: '',
     };
     const agreementLabel = [
       row.title,
