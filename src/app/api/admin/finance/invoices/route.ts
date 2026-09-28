@@ -25,6 +25,7 @@ const schema = z.object({
   serviceId: z.string().min(1).nullable().optional(),
   projectId: z.string().min(1).nullable().optional(),
   agreementId: z.string().min(1).nullable().optional(),
+  billingMilestoneId: z.string().min(1).nullable().optional(),
   status: z.enum(['draft', 'issued']).default('issued'),
   currency: z.string().trim().max(3).default('GHS'),
   issueDate: z.coerce.date(),
@@ -116,6 +117,7 @@ export async function GET(request: NextRequest) {
       service: { select: { id: true, name: true, planName: true } },
       project: { select: { id: true, name: true } },
       agreement: { select: { id: true, title: true, referenceNumber: true, agreementType: true, status: true } },
+      billingMilestone: { select: { id: true, title: true, amount: true, dueDate: true, order: true } },
       lines: { orderBy: { order: 'asc' } },
       creditNotes: { where: { status: 'posted' }, orderBy: { issueDate: 'asc' } },
       allocations: {
@@ -185,6 +187,13 @@ export async function POST(request: NextRequest) {
     if (!project) return NextResponse.json({ success: false, error: 'Project does not belong to this client' }, { status: 400 });
   }
 
+  if (parsed.data.billingMilestoneId && !parsed.data.agreementId) {
+    return NextResponse.json(
+      { success: false, error: 'Billing milestone invoices must be linked to their agreement' },
+      { status: 400 },
+    );
+  }
+
   if (parsed.data.agreementId) {
     const agreement = await db.clientAgreement.findFirst({
       where: { id: parsed.data.agreementId, organizationId: parsed.data.organizationId },
@@ -210,6 +219,19 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Invoice project must match the linked agreement project' },
         { status: 400 },
       );
+    }
+
+    if (parsed.data.billingMilestoneId) {
+      const milestone = await db.clientAgreementBillingMilestone.findFirst({
+        where: { id: parsed.data.billingMilestoneId, agreementId: agreement.id },
+        select: { id: true },
+      });
+      if (!milestone) {
+        return NextResponse.json(
+          { success: false, error: 'Billing milestone does not belong to the linked agreement' },
+          { status: 400 },
+        );
+      }
     }
   }
 
@@ -333,6 +355,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (parsed.data.billingMilestoneId) {
+      await tx.$queryRawUnsafe(
+        'SELECT pg_advisory_xact_lock(hashtext($1))',
+        'lightworld-billing-milestone-invoice:' + parsed.data.billingMilestoneId,
+      );
+
+      const milestoneDuplicate = await tx.clientInvoice.findFirst({
+        where: {
+          billingMilestoneId: parsed.data.billingMilestoneId,
+          status: { not: 'void' },
+        },
+        select: { id: true, invoiceNumber: true, status: true },
+      });
+      if (milestoneDuplicate) {
+        return { invoice: null, duplicate: null, creditBlocked: null, milestoneDuplicate };
+      }
+    }
+
     if (parsed.data.serviceId && parsed.data.renewalForDate) {
       const cycleKey =
         'lightworld-renewal-invoice:' +
@@ -364,6 +404,7 @@ export async function POST(request: NextRequest) {
         serviceId: parsed.data.serviceId || null,
         projectId: parsed.data.projectId || null,
         agreementId: parsed.data.agreementId || null,
+        billingMilestoneId: parsed.data.billingMilestoneId || null,
         status: parsed.data.status,
         currency,
         issueDate: parsed.data.issueDate,
@@ -390,6 +431,7 @@ export async function POST(request: NextRequest) {
         service: { select: { id: true, name: true, planName: true } },
         project: { select: { id: true, name: true } },
         agreement: { select: { id: true, title: true, referenceNumber: true, agreementType: true, status: true } },
+        billingMilestone: { select: { id: true, title: true, amount: true, dueDate: true, order: true } },
         lines: { orderBy: { order: 'asc' } },
         allocations: true,
         creditNotes: { where: { status: 'posted' } },
@@ -439,6 +481,14 @@ export async function POST(request: NextRequest) {
     }, { status: 409 });
   }
 
+  if ('milestoneDuplicate' in transactionResult && transactionResult.milestoneDuplicate) {
+    return NextResponse.json({
+      success: false,
+      error: 'A non-void invoice already exists for this billing milestone',
+      existingInvoice: transactionResult.milestoneDuplicate,
+    }, { status: 409 });
+  }
+
   if (transactionResult.duplicate) {
     return NextResponse.json({
       success: false,
@@ -458,6 +508,7 @@ export async function POST(request: NextRequest) {
       invoiceNumber,
       organizationId: invoice.organizationId,
       agreementId: invoice.agreementId,
+      billingMilestoneId: invoice.billingMilestoneId,
       total: total.toFixed(2),
       currency: invoice.currency,
       taxTreatment: invoice.taxTreatment,
