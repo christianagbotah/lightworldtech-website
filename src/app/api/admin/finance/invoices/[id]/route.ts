@@ -12,7 +12,13 @@ const schema = z.object({
   status: z.enum(['draft', 'issued', 'void']).optional(),
   dueDate: z.coerce.date().optional(),
   notes: z.string().trim().max(8000).optional(),
-}).refine((value) => Object.keys(value).length > 0, 'At least one invoice change is required');
+  reviewAction: z.enum(['reject']).optional(),
+  reviewNotes: z.string().trim().max(4000).optional(),
+}).refine((value) => Object.keys(value).length > 0, 'At least one invoice change is required')
+  .refine((value) => value.reviewAction !== 'reject' || Boolean(value.reviewNotes?.trim()), {
+    message: 'A rejection reason is required',
+    path: ['reviewNotes'],
+  });
 
 type IssueBlock = {
   error: string;
@@ -122,8 +128,41 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       };
     }
 
+    const rejecting = invoice.status === 'draft' && parsed.data.reviewAction === 'reject';
+    if (rejecting) {
+      const approvalPolicy = await getFinanceApprovalPolicy();
+      const makerCheckerEnabled = Boolean(approvalPolicy?.enabled && approvalPolicy.requireSecondApprover);
+      if (!hasAdminPermission(actor.role, actor.permissions, 'finance.approve')) {
+        return {
+          updated: null,
+          blocked: { error: 'Finance approval permission is required to reject this draft', status: 403 } satisfies IssueBlock,
+        };
+      }
+      if (makerCheckerEnabled && invoice.createdByAdminId && invoice.createdByAdminId === actor.id) {
+        return {
+          updated: null,
+          blocked: { error: 'Maker-checker prevents the invoice preparer from rejecting their own draft', status: 409 } satisfies IssueBlock,
+        };
+      }
+      if (invoice.reviewStatus === 'rejected') {
+        return {
+          updated: null,
+          blocked: { error: 'This invoice draft has already been rejected', status: 409 } satisfies IssueBlock,
+        };
+      }
+    }
+
     const issuing = invoice.status === 'draft' && parsed.data.status === 'issued';
     if (issuing) {
+      if (invoice.reviewStatus === 'rejected') {
+        return {
+          updated: null,
+          blocked: {
+            error: 'This draft was rejected and cannot be issued. Void it and prepare a replacement.',
+            status: 409,
+          } satisfies IssueBlock,
+        };
+      }
       const approvalPolicy = await getFinanceApprovalPolicy();
       const makerCheckerEnabled = Boolean(approvalPolicy?.enabled && approvalPolicy.requireSecondApprover);
       if (makerCheckerEnabled) {
@@ -350,14 +389,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
     }
 
-    const updateData = issuing
+    const { reviewAction: _reviewAction, reviewNotes: requestedReviewNotes, ...baseUpdate } = parsed.data;
+    const updateData = rejecting
       ? {
-          ...parsed.data,
-          issuedByAdminId: actor.id,
-          issuedBy: actor.name || actor.email,
-          issuedAt: new Date(),
+          ...baseUpdate,
+          reviewStatus: 'rejected',
+          reviewedByAdminId: actor.id,
+          reviewedBy: actor.name || actor.email,
+          reviewedAt: new Date(),
+          reviewNotes: requestedReviewNotes || '',
         }
-      : parsed.data;
+      : issuing
+        ? {
+            ...baseUpdate,
+            issuedByAdminId: actor.id,
+            issuedBy: actor.name || actor.email,
+            issuedAt: new Date(),
+            reviewStatus: 'approved',
+            reviewedByAdminId: actor.id,
+            reviewedBy: actor.name || actor.email,
+            reviewedAt: new Date(),
+            reviewNotes: '',
+          }
+        : baseUpdate;
     const next = await tx.clientInvoice.update({ where: { id }, data: updateData });
 
     if (issuing && next.status === 'issued') {
@@ -432,9 +486,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const updated = result.updated!;
   await recordAdminAudit({
     admin: actor,
-    action: existing.status === 'draft' && updated.status === 'issued'
-      ? 'admin.finance_invoice_issued_from_draft'
-      : 'admin.finance_invoice_updated',
+    action: parsed.data.reviewAction === 'reject'
+      ? 'admin.finance_invoice_draft_rejected'
+      : existing.status === 'draft' && updated.status === 'issued'
+        ? 'admin.finance_invoice_issued_from_draft'
+        : 'admin.finance_invoice_updated',
     entity: 'ClientInvoice',
     entityId: id,
     details: {
@@ -444,6 +500,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       changedFields: Object.keys(parsed.data),
       createdByAdminId: existing.createdByAdminId,
       issuedByAdminId: existing.status === 'draft' && updated.status === 'issued' ? actor.id : '',
+      reviewAction: parsed.data.reviewAction || '',
+      reviewNotes: parsed.data.reviewNotes || '',
     },
   });
 
