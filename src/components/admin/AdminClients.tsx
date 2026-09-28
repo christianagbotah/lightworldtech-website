@@ -747,6 +747,74 @@ export default function AdminClients() {
     useAppStore.getState().navigate('admin-finance');
   };
 
+  const openAgreementMilestoneInvoice = (invoiceId: string) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lw-finance-section', 'customers');
+      sessionStorage.setItem('lw-finance-record-type', 'invoice');
+      sessionStorage.setItem('lw-finance-record-id', invoiceId);
+    }
+    useAppStore.getState().navigate('admin-finance');
+  };
+
+  const prepareAgreementMilestoneBilling = (agreement: Agreement, milestone: AgreementBillingMilestone) => {
+    if (!selected) return;
+    const liveInvoice = milestone.invoices.find((invoice) => invoice.status !== 'void');
+    if (agreement.status !== 'active' || agreement.approvalStatus !== 'approved' || milestone.status !== 'ready') {
+      toast.error('Only Ready milestones on approved active agreements can prepare billing');
+      return;
+    }
+    if (liveInvoice) {
+      toast.error('This billing milestone already has a non-void invoice');
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lw-finance-section', 'customers');
+      sessionStorage.setItem('lw-finance-organization-id', selected.id);
+      sessionStorage.setItem('lw-finance-customer-name', selected.name);
+      sessionStorage.setItem('lw-finance-project-id', agreement.projectId || '');
+      sessionStorage.setItem('lw-finance-action', 'agreement-invoice');
+      sessionStorage.setItem('lw-finance-agreement-context', JSON.stringify({
+        agreementId: agreement.id,
+        title: agreement.title,
+        referenceNumber: agreement.referenceNumber,
+        projectId: agreement.projectId || '',
+        projectName: agreement.project?.name || '',
+        currency: agreement.currency || 'GHS',
+        contractValue: milestone.amount,
+        contractValueBasis: agreement.contractValueBasis || 'unspecified',
+        effectiveDate: agreement.effectiveDate,
+        expiryDate: agreement.expiryDate,
+        billingMilestoneId: milestone.id,
+        billingMilestoneTitle: milestone.title,
+      }));
+    }
+
+    useAppStore.getState().navigate('admin-finance');
+  };
+
+  const waiveAgreementBillingMilestone = async (milestoneId: string) => {
+    const waiverReason = (billingMilestoneWaiverReasons[milestoneId] || '').trim();
+    if (!waiverReason) {
+      toast.error('Enter a waiver reason before waiving this billing milestone');
+      return;
+    }
+    try {
+      const response = await fetch('/api/admin/agreement-billing-milestones/' + milestoneId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'waived', waiverReason }),
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not waive billing milestone');
+      setBillingMilestoneWaiverReasons((current) => ({ ...current, [milestoneId]: '' }));
+      await fetchOrganizations();
+      toast.success('Billing milestone waived with audit reason');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not waive billing milestone');
+    }
+  };
+
   const createAgreement = async (event: FormEvent) => {
     event.preventDefault();
     if (!selected) return;
