@@ -54,6 +54,15 @@ type Lead = {
   source: string;
   summary: string;
   tags: string;
+  company: string;
+  industry: string;
+  countryRegion: string;
+  serviceInterest: string;
+  currency: string;
+  budgetRange: string;
+  deliveryWindow: string;
+  engagementModel: string;
+  international: boolean;
   contactMessage: ContactMessage;
   proposal?: { id: string } | null;
 };
@@ -629,6 +638,38 @@ export default function AdminProposals() {
                       <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em]">Reply internally</span>
                     </button>
                     <p className="mt-3 text-xs leading-5 text-muted-foreground">{selected.lead.summary}</p>
+                  </div>
+
+                  <div className="border-t border-border/60 pt-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">CRM qualification context</p>
+                      <Badge variant="outline" className="text-[9px]">Grounded</Badge>
+                    </div>
+                    <div className="mt-3 space-y-2 text-[11px]">
+                      {[
+                        ['Organization', selected.lead.company],
+                        ['Service', selected.lead.serviceInterest],
+                        ['Industry', selected.lead.industry],
+                        ['Region', selected.lead.countryRegion],
+                        ['Engagement', selected.lead.engagementModel],
+                        ['Delivery window', selected.lead.deliveryWindow],
+                        ['Budget context', [selected.lead.currency, selected.lead.budgetRange].filter(Boolean).join(' ')],
+                      ].filter(([, value]) => Boolean(value)).map(([label, value]) => (
+                        <div key={label} className="grid grid-cols-[92px_1fr] gap-2">
+                          <span className="text-muted-foreground">{label}</span>
+                          <span className="font-medium text-foreground">{value}</span>
+                        </div>
+                      ))}
+                      {selected.lead.international && (
+                        <div className="grid grid-cols-[92px_1fr] gap-2">
+                          <span className="text-muted-foreground">Delivery</span>
+                          <span className="font-medium text-foreground">International / remote</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-3 text-[9px] leading-4 text-muted-foreground">
+                      These values come from CRM qualification. They guide assisted drafting but remain subject to human validation before approval or sending.
+                    </p>
                   </div>
 
                   <div className="border-t border-border/60 pt-4 text-xs text-muted-foreground">

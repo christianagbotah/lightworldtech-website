@@ -4,6 +4,15 @@ export type ProposalDraftInput = {
     tags: string[];
     source: string;
     priority: 'low' | 'normal' | 'high' | string;
+    company?: string;
+    industry?: string;
+    countryRegion?: string;
+    serviceInterest?: string;
+    currency?: string;
+    budgetRange?: string;
+    deliveryWindow?: string;
+    engagementModel?: string;
+    international?: boolean;
   };
   contact: {
     name: string;
@@ -47,7 +56,12 @@ function titleCaseFirst(value: string): string {
   return v ? v.charAt(0).toUpperCase() + v.slice(1) : v;
 }
 
-function prospectTimeline(message: string): string {
+function prospectTimeline(message: string, structuredWindow = ''): string {
+  const qualifiedWindow = clean(structuredWindow);
+  if (qualifiedWindow) {
+    return 'Target window recorded during CRM qualification: ' + qualifiedWindow + '. This is not a committed delivery date until scope, dependencies, resourcing and commercial approval are complete.';
+  }
+
   const text = clean(message);
   const patterns = [
     /within\s+\d+\s*[-–]\s*\d+\s+(?:weeks?|months?)/i,
@@ -69,6 +83,27 @@ function prospectTimeline(message: string): string {
 export function generateProposalDraft(input: ProposalDraftInput): ProposalDraft {
   const subject = clean(input.contact.subject);
   const summary = clean(input.lead.summary || input.contact.message);
+  const company = clean(input.lead.company || '');
+  const industry = clean(input.lead.industry || '');
+  const countryRegion = clean(input.lead.countryRegion || '');
+  const serviceInterest = clean(input.lead.serviceInterest || '');
+  const currency = clean(input.lead.currency || '').toUpperCase();
+  const budgetRange = clean(input.lead.budgetRange || '');
+  const deliveryWindow = clean(input.lead.deliveryWindow || '');
+  const engagementModel = clean(input.lead.engagementModel || '');
+  const qualificationFacts = [
+    company ? 'organization: ' + company : '',
+    serviceInterest ? 'service interest: ' + serviceInterest : '',
+    industry ? 'industry: ' + industry : '',
+    countryRegion ? 'country / region: ' + countryRegion : '',
+    engagementModel ? 'engagement model: ' + engagementModel : '',
+    budgetRange ? 'budget context: ' + [currency, budgetRange].filter(Boolean).join(' ') : '',
+    deliveryWindow ? 'target window: ' + deliveryWindow : '',
+    input.lead.international ? 'international / remote engagement: yes' : '',
+  ].filter(Boolean);
+  const qualificationContext = qualificationFacts.length
+    ? ' CRM qualification currently records ' + qualificationFacts.join('; ') + '. These are working discovery facts and must be reconfirmed before approval.'
+    : '';
   const tags = [...new Set(input.lead.tags.map((tag) => clean(tag).toLowerCase()).filter(Boolean))];
   const capabilities = tags.map((tag) => capabilityByTag[tag]).filter(Boolean);
   const capabilityText = capabilities.length
@@ -81,9 +116,11 @@ export function generateProposalDraft(input: ProposalDraftInput): ProposalDraft 
     'This draft translates the enquiry from ' + input.contact.name +
     ' into a structured starting point for discovery. The current need is summarized as: ' +
     summary +
+    qualificationContext +
     ' The purpose of the next stage is to validate the problem, users, workflows, constraints and success measures before Lightworld Technologies Ltd makes final commercial or delivery commitments.';
 
   const solution =
+    (serviceInterest ? 'The recorded service interest is ' + serviceInterest + '. ' : '') +
     'Lightworld proposes a discovery-led engagement using ' + capabilityText +
     '. The team would first validate requirements and operating context, then define the appropriate experience, system boundaries, integrations, security considerations and implementation approach. Any final architecture or module list remains subject to discovery findings.';
 
@@ -93,6 +130,9 @@ export function generateProposalDraft(input: ProposalDraftInput): ProposalDraft 
     'Confirm functional requirements, integrations, data and reporting needs.',
     'Identify security, access-control, deployment and operational constraints.',
     'Define the recommended solution shape, delivery phases and acceptance approach.',
+    ...(industry || countryRegion || engagementModel
+      ? ['Reconfirm the recorded qualification context for industry, operating region and engagement model before proposal approval.']
+      : []),
   ].join('\n');
 
   const deliverables = [
@@ -109,10 +149,16 @@ export function generateProposalDraft(input: ProposalDraftInput): ProposalDraft 
     'Required information about current processes, systems, integrations and constraints will be shared where applicable.',
     'Third-party licenses, infrastructure, data migration and external integrations will be confirmed before final commercial commitments.',
     'Scope, pricing, payment terms and committed delivery dates require explicit human approval from Lightworld Technologies Ltd.',
+    ...(qualificationFacts.length
+      ? ['CRM qualification fields are working discovery context and will be reconfirmed with the prospect before they are treated as proposal facts.']
+      : []),
   ];
 
   const commercialNotes =
-    'Commercial terms are intentionally not auto-generated. Pricing, taxes, payment milestones, validity period, support terms and any binding delivery dates must be entered and approved through human review by an authorized Lightworld representative.';
+    'Commercial terms are intentionally not auto-generated. Pricing, taxes, payment milestones, validity period, support terms and any binding delivery dates must be entered and approved through human review by an authorized Lightworld representative.' +
+    (budgetRange
+      ? ' The CRM budget context of ' + [currency, budgetRange].filter(Boolean).join(' ') + ' is qualification information only; it is not a Lightworld quote, price or commitment.'
+      : '');
 
   const nextSteps =
     'Review this draft with the prospect, confirm the decision-makers and discovery participants, resolve open scope questions, then prepare the final commercial proposal for authorized approval before it is sent.';
@@ -124,7 +170,7 @@ export function generateProposalDraft(input: ProposalDraftInput): ProposalDraft 
     scope,
     deliverables,
     assumptions,
-    timeline: prospectTimeline(input.contact.message),
+    timeline: prospectTimeline(input.contact.message, deliveryWindow),
     commercialNotes,
     nextSteps,
   };
