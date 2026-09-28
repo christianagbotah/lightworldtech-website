@@ -10,6 +10,9 @@ const updateSchema = z.object({
   amount: z.coerce.number().positive().max(999999999999).optional(),
   dueDate: z.string().datetime().nullable().optional(),
   notes: z.string().trim().max(4000).optional(),
+  readinessStatus: z.enum(['planned', 'ready_to_bill']).optional(),
+  readinessNote: z.string().trim().max(4000).optional(),
+  evidenceUrl: z.string().trim().url().or(z.literal('')).optional(),
 });
 
 export async function PATCH(
@@ -39,6 +42,10 @@ export async function PATCH(
             contractValue: true,
           },
         },
+        invoices: {
+          where: { status: { not: 'void' } },
+          select: { id: true, invoiceNumber: true, status: true },
+        },
       },
     });
     if (!existing) return { milestone: null, error: 'Billing milestone not found', status: 404 };
@@ -47,6 +54,38 @@ export async function PATCH(
       'SELECT pg_advisory_xact_lock(hashtext($1))',
       'lightworld-agreement-billing-schedule:' + existing.agreementId,
     );
+
+    const hasLiveInvoice = existing.invoices.length > 0;
+    const changesCommercialTerms =
+      parsed.data.title !== undefined ||
+      parsed.data.amount !== undefined ||
+      parsed.data.dueDate !== undefined;
+
+    if (hasLiveInvoice && changesCommercialTerms) {
+      return {
+        milestone: null,
+        error: 'Billed milestone terms cannot be changed while a non-void invoice is linked',
+        status: 409,
+      };
+    }
+
+    if (hasLiveInvoice && parsed.data.readinessStatus === 'planned') {
+      return {
+        milestone: null,
+        error: 'A billed milestone cannot be returned to planned status while a non-void invoice is linked',
+        status: 409,
+      };
+    }
+
+    const effectiveReadinessNote =
+      parsed.data.readinessNote !== undefined ? parsed.data.readinessNote : existing.readinessNote;
+    if (parsed.data.readinessStatus === 'ready_to_bill' && effectiveReadinessNote.trim().length < 3) {
+      return {
+        milestone: null,
+        error: 'A readiness note is required before a milestone can be marked ready to bill',
+        status: 400,
+      };
+    }
 
     if (parsed.data.amount !== undefined) {
       const aggregate = await tx.clientAgreementBillingMilestone.aggregate({
@@ -84,6 +123,22 @@ export async function PATCH(
         ...(parsed.data.dueDate !== undefined
           ? { dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null }
           : {}),
+        ...(parsed.data.readinessStatus === 'ready_to_bill'
+          ? {
+              readinessStatus: 'ready_to_bill',
+              readinessNote: effectiveReadinessNote,
+              readyAt: existing.readinessStatus === 'ready_to_bill' && existing.readyAt ? existing.readyAt : new Date(),
+              readyBy: existing.readinessStatus === 'ready_to_bill' && existing.readyBy
+                ? existing.readyBy
+                : actor.name || actor.email,
+            }
+          : parsed.data.readinessStatus === 'planned'
+            ? {
+                readinessStatus: 'planned',
+                readyAt: null,
+                readyBy: '',
+              }
+            : {}),
       },
     });
 
@@ -129,9 +184,24 @@ export async function DELETE(
     where: { id },
     include: {
       agreement: { select: { id: true, organizationId: true, currency: true } },
+      invoices: {
+        where: { status: { not: 'void' } },
+        select: { id: true, invoiceNumber: true, status: true },
+      },
     },
   });
   if (!existing) return NextResponse.json({ success: false, error: 'Billing milestone not found' }, { status: 404 });
+
+  if (existing.invoices.length > 0) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'A billed milestone cannot be deleted while a non-void invoice is linked',
+        existingInvoice: existing.invoices[0],
+      },
+      { status: 409 },
+    );
+  }
 
   await db.clientAgreementBillingMilestone.delete({ where: { id } });
 

@@ -906,6 +906,10 @@ export default function AdminFinance() {
       toast.error('No unprepared agreement value remains');
       return;
     }
+    if (row.billingMilestoneCount > 0 && !row.nextMilestone) {
+      toast.error('No unbilled milestone is ready to bill. Confirm milestone readiness in Client Agreements first.');
+      return;
+    }
 
     const issueDate = today();
     const milestoneAmount = row.nextMilestone?.amount || row.remainingToPrepare;
@@ -953,7 +957,7 @@ export default function AdminFinance() {
             ? 'Remaining value is measured against final invoice totals; if tax is applied, adjust the pre-tax line value so the final total stays within the approved agreement value. '
             : 'Contract value basis is unspecified; confirm the tax basis before relying on the remaining amount. ') +
         (row.nextMilestone
-          ? 'Prepared for billing milestone "' + row.nextMilestone.title + '"' +
+          ? 'Prepared for ready billing milestone "' + row.nextMilestone.title + '"' +
             (row.nextMilestone.dueDate ? ' due ' + new Date(row.nextMilestone.dueDate).toLocaleDateString() : '') + '. '
           : 'No unbilled milestone was selected; this uses the remaining agreement value. ') +
         'Confirm milestone entitlement, dates, discounts and amount before issuing.',

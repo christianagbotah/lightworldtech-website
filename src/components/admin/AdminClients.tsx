@@ -107,7 +107,9 @@ type ObligationQueueState = {
 };
 type AgreementBillingMilestone = {
   id: string; title: string; amount: string; dueDate: string | null; order: number;
-  notes: string; createdBy: string; createdAt: string; updatedAt: string;
+  notes: string; readinessStatus: string; readinessNote: string; evidenceUrl: string;
+  readyAt: string | null; readyBy: string; createdBy: string; createdAt: string; updatedAt: string;
+  invoices: Array<{ id: string; invoiceNumber: string; status: string }>;
 };
 type Agreement = {
   id: string; title: string; agreementType: string; status: string; referenceNumber: string;
@@ -1984,7 +1986,7 @@ export default function AdminClients() {
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-amber-800 dark:text-amber-200">Billing schedule</p>
                             <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
-                              Plan contractual billing milestones without creating invoices. The server prevents the schedule from exceeding the agreement value.
+                              Plan contractual billing milestones, confirm entitlement, then hand only ready milestones to Finance. Creating or marking a milestone ready does not create or issue an invoice.
                             </p>
                           </div>
                           <div className="flex flex-wrap gap-1">
@@ -2000,6 +2002,26 @@ export default function AdminClients() {
                         <div className="mt-3 space-y-2">
                           {agreement.billingMilestones.map((milestone) => (
                             <div key={milestone.id} className="rounded-lg border border-border/60 bg-background p-3">
+                              <div className="mb-2 flex flex-wrap items-center gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className={milestone.readinessStatus === 'ready_to_bill'
+                                    ? 'border-emerald-300 text-emerald-800 dark:border-emerald-900 dark:text-emerald-200'
+                                    : 'border-amber-300 text-amber-800 dark:border-amber-900 dark:text-amber-200'}
+                                >
+                                  {milestone.readinessStatus === 'ready_to_bill' ? 'Ready to bill' : 'Planned'}
+                                </Badge>
+                                {milestone.invoices.length > 0 && (
+                                  <Badge className="border-0 bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
+                                    Billed · {milestone.invoices[0].invoiceNumber}
+                                  </Badge>
+                                )}
+                                {milestone.readyAt && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    Ready {new Date(milestone.readyAt).toLocaleString()} · {milestone.readyBy || 'Admin'}
+                                  </span>
+                                )}
+                              </div>
                               <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_150px_160px_auto] lg:items-end">
                                 <div>
                                   <Label className="text-[10px] uppercase tracking-[0.08em]">Milestone</Label>
@@ -2009,6 +2031,7 @@ export default function AdminClients() {
                                       const title = event.currentTarget.value.trim();
                                       if (title && title !== milestone.title) void patchAgreementBillingMilestone(milestone.id, { title });
                                     }}
+                                    disabled={milestone.invoices.length > 0}
                                     className="h-9 text-xs"
                                   />
                                 </div>
@@ -2023,6 +2046,7 @@ export default function AdminClients() {
                                       const amount = Number(event.currentTarget.value || 0);
                                       if (amount > 0 && amount !== Number(milestone.amount)) void patchAgreementBillingMilestone(milestone.id, { amount });
                                     }}
+                                    disabled={milestone.invoices.length > 0}
                                     className="h-9 text-xs"
                                   />
                                 </div>
@@ -2038,6 +2062,7 @@ export default function AdminClients() {
                                       const current = milestone.dueDate?.slice(0, 10) || '';
                                       if (event.currentTarget.value !== current) void patchAgreementBillingMilestone(milestone.id, { dueDate });
                                     }}
+                                    disabled={milestone.invoices.length > 0}
                                     className="h-9 text-xs"
                                   />
                                 </div>
@@ -2045,6 +2070,7 @@ export default function AdminClients() {
                                   type="button"
                                   size="sm"
                                   variant="ghost"
+                                  disabled={milestone.invoices.length > 0}
                                   onClick={() => setPendingDelete({
                                     kind: 'agreement-billing-milestone',
                                     id: milestone.id,
@@ -2066,6 +2092,60 @@ export default function AdminClients() {
                                   placeholder="Trigger, acceptance condition or invoice instruction"
                                   className="text-xs"
                                 />
+                              </div>
+                              <div className="mt-2 grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(220px,.75fr)_auto] lg:items-end">
+                                <div>
+                                  <Label className="text-[10px] uppercase tracking-[0.08em]">Readiness / acceptance note</Label>
+                                  <Textarea
+                                    rows={2}
+                                    defaultValue={milestone.readinessNote}
+                                    onBlur={(event) => {
+                                      const readinessNote = event.currentTarget.value.trim();
+                                      if (readinessNote !== milestone.readinessNote) void patchAgreementBillingMilestone(milestone.id, { readinessNote });
+                                    }}
+                                    placeholder="What acceptance, delivery or commercial condition has been satisfied?"
+                                    className="text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-[10px] uppercase tracking-[0.08em]">Evidence URL</Label>
+                                  <Input
+                                    type="url"
+                                    defaultValue={milestone.evidenceUrl}
+                                    onBlur={(event) => {
+                                      const evidenceUrl = event.currentTarget.value.trim();
+                                      if (evidenceUrl !== milestone.evidenceUrl) void patchAgreementBillingMilestone(milestone.id, { evidenceUrl });
+                                    }}
+                                    placeholder="https://..."
+                                    className="h-9 text-xs"
+                                  />
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {milestone.evidenceUrl && (
+                                    <Button type="button" size="sm" variant="outline" onClick={() => window.open(milestone.evidenceUrl, '_blank', 'noopener,noreferrer')}>
+                                      Evidence
+                                    </Button>
+                                  )}
+                                  {milestone.readinessStatus === 'ready_to_bill' ? (
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={milestone.invoices.length > 0}
+                                      onClick={() => void patchAgreementBillingMilestone(milestone.id, { readinessStatus: 'planned' })}
+                                    >
+                                      Return to planned
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      onClick={() => void patchAgreementBillingMilestone(milestone.id, { readinessStatus: 'ready_to_bill' })}
+                                    >
+                                      Mark ready to bill
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                               <p className="mt-2 text-[10px] text-muted-foreground">
                                 {milestone.dueDate ? 'Planned ' + new Date(milestone.dueDate).toLocaleDateString() : 'No planned billing date'}
