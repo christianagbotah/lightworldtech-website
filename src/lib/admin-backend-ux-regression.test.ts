@@ -2217,6 +2217,18 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(sms).not.toContain('const payload = await response.json();');
   });
 
+  test('measures assistant project-scope conversion into submitted leads by first-party session', () => {
+    const analytics = source('src/app/api/admin/analytics/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(analytics).toContain('scopeStartedBySession');
+    expect(analytics).toContain('assistantLeadSessions');
+    expect(analytics).toContain('event.createdAt >= scopeStartedAt');
+    expect(analytics).toContain('assistantLeadConversionRate');
+    expect(dashboard).toContain('AI Scope → Lead');
+    expect(dashboard).toContain('assistantLeadConversionRate');
+  });
+
   test('captures privacy-bounded assistant quality feedback', () => {
     const analyticsClient = source('src/lib/analytics-client.ts');
     const analyticsApi = source('src/app/api/analytics/route.ts');
