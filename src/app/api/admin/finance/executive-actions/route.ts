@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
       },
     }),
     db.clientInvoice.findMany({
-      where: { status: 'draft' },
+      where: { status: 'draft', reviewStatus: 'pending' },
       orderBy: { createdAt: 'asc' },
       select: {
         id: true,
