@@ -1266,6 +1266,37 @@ export default function FinanceOutflowApprovals({
       </Dialog>
 
       <Dialog
+        open={Boolean(creditNoteReject)}
+        onOpenChange={(open) => {
+          if (!open && !working) {
+            setCreditNoteReject(null);
+            setCreditNoteRejectReason('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Reject credit note draft</DialogTitle>
+            <DialogDescription>
+              Rejection leaves the invoice, receivable, revenue, tax and customer credit unchanged.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="credit-note-reject-reason">Reason for rejection</Label>
+            <Textarea id="credit-note-reject-reason" rows={5} maxLength={2000} disabled={working}
+              value={creditNoteRejectReason} onChange={(event) => setCreditNoteRejectReason(event.target.value)}
+              placeholder="Explain why this proposed credit should not be posted." />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={working} onClick={() => { setCreditNoteReject(null); setCreditNoteRejectReason(''); }}>Cancel</Button>
+            <Button type="button" variant="destructive" disabled={working || creditNoteRejectReason.trim().length < 3} onClick={() => void rejectCreditNoteDraft()}>
+              {working ? <Loader2 className="mr-2 size-4 animate-spin" /> : <XCircle className="mr-2 size-4" />} Reject draft
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
         open={Boolean(invoiceReject)}
         onOpenChange={(open) => {
           if (!open && !working) {
