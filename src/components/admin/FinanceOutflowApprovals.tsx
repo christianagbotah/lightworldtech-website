@@ -711,6 +711,53 @@ export default function FinanceOutflowApprovals({
 
       <Card className="min-w-0 border-border/60">
         <CardHeader className="pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="text-base">Pending credit-note approvals</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Draft credit notes have no ledger, receivable or customer-credit effect until a different authorized approver posts them.
+              </p>
+            </div>
+            <Badge variant="outline">{creditNoteDrafts.length} draft{creditNoteDrafts.length === 1 ? '' : 's'}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-w-full overflow-x-auto">
+            <Table exportFileName="lightworld-pending-credit-note-approvals" className="min-w-[980px]">
+              <TableHeader><TableRow>
+                <TableHead>Credit note</TableHead><TableHead>Customer / invoice</TableHead><TableHead>Prepared by</TableHead>
+                <TableHead>Reason</TableHead><TableHead>Age</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Action</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {creditNoteDrafts.map((note) => {
+                  const canDecide = Boolean(inbox?.canApprove) && note.makerCanApprove;
+                  const age = approvalAge(note.createdAt);
+                  return (
+                    <TableRow key={note.id}>
+                      <TableCell><p className="font-mono text-xs font-semibold">{note.creditNoteNumber}</p><p className="mt-1 text-[10px] text-muted-foreground">{date(note.issueDate)}</p></TableCell>
+                      <TableCell><p className="text-xs font-medium">{note.organization.name}</p><p className="mt-1 font-mono text-[10px] text-muted-foreground">{note.invoice.invoiceNumber}</p></TableCell>
+                      <TableCell><p className="text-xs">{note.createdBy || 'Finance'}</p>{note.mine && <Badge variant="outline" className="mt-1">Prepared by you</Badge>}</TableCell>
+                      <TableCell><p className="max-w-[280px] whitespace-pre-wrap text-xs">{note.reason}</p></TableCell>
+                      <TableCell><Badge variant="outline">{age.label}</Badge></TableCell>
+                      <TableCell className="text-right font-semibold">{money(note.total, note.currency)}</TableCell>
+                      <TableCell className="text-right">
+                        {canDecide ? <div className="flex justify-end gap-2">
+                          <Button type="button" size="sm" disabled={working} onClick={() => void postCreditNoteDraft(note)}><CheckCircle2 className="mr-1.5 size-3.5" /> Post</Button>
+                          <Button type="button" size="sm" variant="outline" disabled={working} onClick={() => { setCreditNoteReject(note); setCreditNoteRejectReason(''); }}><XCircle className="mr-1.5 size-3.5" /> Reject</Button>
+                        </div> : <p className="text-[10px] text-muted-foreground">{note.mine && policy?.enabled ? 'A different approver must decide this draft.' : 'Finance Approvals permission required.'}</p>}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!creditNoteDrafts.length && <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No credit-note drafts are waiting for approval.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0 border-border/60">
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <CardTitle className="text-base">Pending customer credit approvals</CardTitle>
