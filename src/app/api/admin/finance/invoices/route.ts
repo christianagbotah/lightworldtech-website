@@ -224,12 +224,18 @@ export async function POST(request: NextRequest) {
     if (parsed.data.billingMilestoneId) {
       const milestone = await db.clientAgreementBillingMilestone.findFirst({
         where: { id: parsed.data.billingMilestoneId, agreementId: agreement.id },
-        select: { id: true },
+        select: { id: true, readinessStatus: true },
       });
       if (!milestone) {
         return NextResponse.json(
           { success: false, error: 'Billing milestone does not belong to the linked agreement' },
           { status: 400 },
+        );
+      }
+      if (milestone.readinessStatus !== 'ready_to_bill') {
+        return NextResponse.json(
+          { success: false, error: 'Billing milestone must be marked ready to bill before an invoice draft can be created' },
+          { status: 409 },
         );
       }
     }
