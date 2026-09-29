@@ -10,6 +10,7 @@ const schema = z.object({
   amount: z.coerce.number().positive().max(999999999999),
   dueDate: z.string().datetime().nullable().optional(),
   notes: z.string().trim().max(4000).optional().default(''),
+  visibleToClient: z.boolean().optional().default(false),
 });
 
 export async function POST(
@@ -82,6 +83,7 @@ export async function POST(
         dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
         order: count,
         notes: parsed.data.notes,
+        visibleToClient: parsed.data.visibleToClient,
         createdBy: actor.name || actor.email,
       },
     });
