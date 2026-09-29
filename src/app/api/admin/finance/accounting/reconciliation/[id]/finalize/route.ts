@@ -9,8 +9,15 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const actor = await getActiveAdminContext(request);
-  if (!actor || !hasAdminPermission(actor.role, actor.permissions, 'finance.manage')) {
-    return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+  if (
+    !actor ||
+    !hasAdminPermission(actor.role, actor.permissions, 'finance.manage') ||
+    !hasAdminPermission(actor.role, actor.permissions, 'finance.approve')
+  ) {
+    return NextResponse.json(
+      { success: false, error: 'Finance approval permission is required to finalize reconciliation' },
+      { status: 403 },
+    );
   }
 
   const { id } = await params;
@@ -27,6 +34,52 @@ export async function POST(
   }
   if (batch.status === 'reconciled') {
     return NextResponse.json({ success: true, data: batch });
+  }
+
+  if (!batch.importedByAdminId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'This legacy reconciliation lacks an auditable importer identity and must be recreated before finalization',
+      },
+      { status: 409 },
+    );
+  }
+
+  const matchedWithoutOperator = batch.lines.find(
+    (line) => line.status === 'matched' && !line.matchedByAdminId,
+  );
+  if (matchedWithoutOperator) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'This reconciliation contains legacy matches without auditable operator identity and must be recreated',
+      },
+      { status: 409 },
+    );
+  }
+
+  if (batch.importedByAdminId === actor.id) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Maker-checker prevents the statement importer from finalizing their own reconciliation',
+      },
+      { status: 409 },
+    );
+  }
+
+  const matcherIds = [...new Set(
+    batch.lines.map((line) => line.matchedByAdminId).filter(Boolean),
+  )];
+  if (matcherIds.includes(actor.id)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Maker-checker prevents a statement-line matcher from finalizing the same reconciliation',
+      },
+      { status: 409 },
+    );
   }
 
   const unmatched = batch.lines.filter((line) => line.status !== 'matched');
@@ -158,6 +211,7 @@ export async function POST(
     data: {
       status: 'reconciled',
       reconciledAt: new Date(),
+      reconciledByAdminId: actor.id,
       reconciledBy: actor.name || actor.email,
     },
     include: {
@@ -184,6 +238,9 @@ export async function POST(
       ledgerMovement: ledgerMovement.toFixed(2),
       matchedLineCount: batch.lines.length,
       matchedLedgerLineCount: periodLedgerLines.length,
+      importerAdminId: batch.importedByAdminId,
+      matcherAdminIds: matcherIds,
+      checkerAdminId: actor.id,
     },
   });
 
