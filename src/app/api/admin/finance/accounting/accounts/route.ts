@@ -34,8 +34,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const actor = await getActiveAdminContext(request);
-  if (!actor || !hasAdminPermission(actor.role, actor.permissions, 'finance.manage')) {
-    return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+  if (
+    !actor ||
+    !hasAdminPermission(actor.role, actor.permissions, 'finance.manage') ||
+    !hasAdminPermission(actor.role, actor.permissions, 'finance.approve')
+  ) {
+    return NextResponse.json(
+      { success: false, error: 'Finance approval permission is required to create ledger accounts' },
+      { status: 403 },
+    );
   }
 
   const parsed = createSchema.safeParse(await request.json().catch(() => null));

@@ -42,6 +42,33 @@ export async function PATCH(
     return NextResponse.json({ success: false, error: 'Ledger account not found' }, { status: 404 });
   }
 
+  const requestedCode = parsed.data.code?.toUpperCase();
+  const codeChanged = requestedCode !== undefined && requestedCode !== current.code;
+  const typeChanged = parsed.data.type !== undefined && parsed.data.type !== current.type;
+  const activeChanged = parsed.data.active !== undefined && parsed.data.active !== current.active;
+  const postingChanged = parsed.data.allowPosting !== undefined && parsed.data.allowPosting !== current.allowPosting;
+  const controlledStructuralChange = codeChanged || typeChanged || activeChanged || postingChanged;
+
+  if (current._count.journalLines > 0 && (codeChanged || typeChanged)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Account code and type are immutable after journal history exists. Create a new account and stop future posting to the old account instead.',
+      },
+      { status: 409 },
+    );
+  }
+
+  if (
+    controlledStructuralChange &&
+    !hasAdminPermission(actor.role, actor.permissions, 'finance.approve')
+  ) {
+    return NextResponse.json(
+      { success: false, error: 'Finance approval permission is required for structural ledger account changes' },
+      { status: 403 },
+    );
+  }
+
   if (current.systemKey) {
     const structuralChange =
       (parsed.data.code !== undefined && parsed.data.code.toUpperCase() !== current.code) ||
@@ -57,7 +84,7 @@ export async function PATCH(
     }
   }
 
-  const code = parsed.data.code?.toUpperCase();
+  const code = requestedCode;
   if (code && code !== current.code) {
     const duplicate = await db.financeAccount.findUnique({ where: { code }, select: { id: true } });
     if (duplicate) {
@@ -90,6 +117,11 @@ export async function PATCH(
       active: account.active,
       allowPosting: account.allowPosting,
       journalLineCount: current._count.journalLines,
+      structuralChange: controlledStructuralChange,
+      previousCode: current.code,
+      previousType: current.type,
+      previousActive: current.active,
+      previousAllowPosting: current.allowPosting,
     },
   });
 
