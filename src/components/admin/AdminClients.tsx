@@ -1853,6 +1853,9 @@ export default function AdminClients() {
                     const scheduleCoverage = Number(agreement.contractValue || 0) > 0
                       ? Math.min(100, (scheduledBilling / Number(agreement.contractValue || 0)) * 100)
                       : 0;
+                    const basisRequired =
+                      Number(agreement.contractValue || 0) > 0 &&
+                      (agreement.contractValueBasis || 'unspecified') === 'unspecified';
                     return <div id={'agreement-' + agreement.id} key={agreement.id} className="scroll-mt-28 rounded-2xl border border-border/60 p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0"><p className="text-sm font-semibold">{agreement.title}</p><p className="mt-1 text-xs text-muted-foreground">{pretty(agreement.agreementType)}{agreement.referenceNumber ? ' · ' + agreement.referenceNumber : ''}{agreement.project?.name ? ' · ' + agreement.project.name : ''}</p></div>
@@ -1966,6 +1969,11 @@ export default function AdminClients() {
                           </div>
                           <Badge variant="outline">{pretty(agreement.approvalStatus)}</Badge>
                         </div>
+                        {basisRequired && (
+                          <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-[11px] leading-5 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-100">
+                            This agreement has a positive contract value but its value basis is unspecified. Choose Tax-exclusive or Tax-inclusive below before approval or activation.
+                          </div>
+                        )}
                         {agreement.approvalNotes && <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">{agreement.approvalNotes}</p>}
                         {agreement.status !== 'active' && (
                           <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
@@ -1975,7 +1983,15 @@ export default function AdminClients() {
                               placeholder="Approval / rejection note"
                               className="h-9 text-xs"
                             />
-                            <Button type="button" size="sm" onClick={() => void decideAgreementApproval(agreement.id, 'approved')}>Approve for activation</Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={basisRequired}
+                              title={basisRequired ? 'Select a contract value basis before approval' : undefined}
+                              onClick={() => void decideAgreementApproval(agreement.id, 'approved')}
+                            >
+                              Approve for activation
+                            </Button>
                             <Button type="button" size="sm" variant="outline" onClick={() => void decideAgreementApproval(agreement.id, 'rejected')}>Reject</Button>
                           </div>
                         )}
@@ -2456,7 +2472,7 @@ export default function AdminClients() {
                           <option value="tax_exclusive">Tax-exclusive</option>
                           <option value="tax_inclusive">Tax-inclusive</option>
                         </select>
-                        <select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active" disabled={agreement.approvalStatus !== 'approved'}>Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>
+                        <select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active" disabled={agreement.approvalStatus !== 'approved' || basisRequired}>Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>
                         {agreement.status === 'active' && agreement.approvalStatus === 'approved' && (
                           <Button type="button" size="sm" onClick={() => prepareAgreementBilling(agreement)}>
                             <CircleDollarSign className="mr-2 size-3.5" /> Prepare billing
