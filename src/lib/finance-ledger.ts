@@ -184,6 +184,9 @@ export async function postSourceJournal(
       sourceType: input.sourceType,
       sourceId: input.sourceId,
       status: 'posted',
+      createdBy: input.postedBy,
+      approvedBy: input.postedBy,
+      approvedAt: new Date(),
       postedAt: new Date(),
       postedBy: input.postedBy,
       lines: {
