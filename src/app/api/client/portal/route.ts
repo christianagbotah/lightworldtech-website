@@ -209,6 +209,7 @@ export async function GET(request: NextRequest) {
           ? {
               id: invoice.billingMilestone.id,
               title: invoice.billingMilestone.title,
+              visibleToClient: true,
             }
           : null;
       const clientVisibleAgreement =
