@@ -2006,10 +2006,25 @@ export default function AdminClients() {
                                 <Button
                                   type="button"
                                   size="sm"
-                                  variant={attachment.visibleToClient ? 'default' : 'outline'}
+                                  variant={attachment.visibleToClient && agreement.approvalStatus === 'approved' && agreement.status !== 'draft' ? 'default' : 'outline'}
+                                  disabled={
+                                    !attachment.visibleToClient &&
+                                    (agreement.approvalStatus !== 'approved' || agreement.status === 'draft')
+                                  }
+                                  title={
+                                    agreement.approvalStatus !== 'approved' || agreement.status === 'draft'
+                                      ? 'Client sharing is available only after agreement approval and activation / non-draft status'
+                                      : undefined
+                                  }
                                   onClick={() => void setAgreementAttachmentVisibility(attachment.id, !attachment.visibleToClient)}
                                 >
-                                  {attachment.visibleToClient ? 'Shared with client' : 'Internal only'}
+                                  {attachment.visibleToClient
+                                    ? agreement.approvalStatus === 'approved' && agreement.status !== 'draft'
+                                      ? 'Shared with client'
+                                      : 'Visibility flag · access blocked'
+                                    : agreement.approvalStatus !== 'approved' || agreement.status === 'draft'
+                                      ? 'Share after approval'
+                                      : 'Internal only'}
                                 </Button>
                                 <Button type="button" size="sm" variant="outline" onClick={() => window.open('/api/agreement-attachments/' + attachment.id, '_blank', 'noopener,noreferrer')}>
                                   <Download className="mr-1 size-3.5" /> Download
