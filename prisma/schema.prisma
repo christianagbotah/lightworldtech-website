@@ -613,6 +613,7 @@ model ClientAgreementBillingMilestone {
   readinessStatus String        @default("planned")
   readinessNote  String        @default("")
   evidenceUrl    String        @default("")
+  visibleToClient Boolean      @default(false)
   readyAt        DateTime?
   readyBy        String        @default("")
   createdBy      String        @default("Admin")
