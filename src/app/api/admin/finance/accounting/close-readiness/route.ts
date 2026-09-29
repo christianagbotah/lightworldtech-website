@@ -45,6 +45,16 @@ export async function GET(request: NextRequest) {
       closeState: monthClose ? {
         id: monthClose.id,
         status: monthClose.status,
+        requestedByAdminId: monthClose.requestedByAdminId,
+        requestedBy: monthClose.requestedBy,
+        requestedAt: monthClose.requestedAt,
+        approvedByAdminId: monthClose.approvedByAdminId,
+        approvedBy: monthClose.approvedBy,
+        approvedAt: monthClose.approvedAt,
+        rejectedByAdminId: monthClose.rejectedByAdminId,
+        rejectedBy: monthClose.rejectedBy,
+        rejectedAt: monthClose.rejectedAt,
+        rejectionReason: monthClose.rejectionReason,
         closedAt: monthClose.closedAt,
         closedBy: monthClose.closedBy,
         reopenedAt: monthClose.reopenedAt,
@@ -53,13 +63,33 @@ export async function GET(request: NextRequest) {
       } : {
         id: null,
         status: 'open',
+        requestedByAdminId: '',
+        requestedBy: '',
+        requestedAt: null,
+        approvedByAdminId: '',
+        approvedBy: '',
+        approvedAt: null,
+        rejectedByAdminId: '',
+        rejectedBy: '',
+        rejectedAt: null,
+        rejectionReason: '',
         closedAt: null,
         closedBy: '',
         reopenedAt: null,
         reopenedBy: '',
         notes: '',
       },
-      canClose: closeStatus !== 'closed' && monthEnded && result.ready,
+      canClose: !['closed', 'pending_approval'].includes(closeStatus) && monthEnded && result.ready,
+      canApproveClose:
+        closeStatus === 'pending_approval' &&
+        Boolean(monthClose?.requestedByAdminId) &&
+        monthClose?.requestedByAdminId !== actor.id &&
+        hasAdminPermission(actor.role, actor.permissions, 'finance.approve'),
+      canRejectClose:
+        closeStatus === 'pending_approval' &&
+        Boolean(monthClose?.requestedByAdminId) &&
+        monthClose?.requestedByAdminId !== actor.id &&
+        hasAdminPermission(actor.role, actor.permissions, 'finance.approve'),
       canReopen: closeStatus === 'closed' && actor.role === 'super_admin',
     },
   });

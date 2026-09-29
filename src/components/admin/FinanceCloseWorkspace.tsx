@@ -14,8 +14,17 @@ import ConfirmActionDialog from '@/components/ui/ConfirmActionDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 type CloseControl = {
   key: string;
@@ -35,10 +44,22 @@ type CloseReadiness = {
   ready: boolean;
   monthEnded: boolean;
   canClose: boolean;
+  canApproveClose: boolean;
+  canRejectClose: boolean;
   canReopen: boolean;
   closeState: {
     id: string | null;
-    status: 'open' | 'closed';
+    status: 'open' | 'pending_approval' | 'rejected' | 'closed';
+    requestedByAdminId: string;
+    requestedBy: string;
+    requestedAt: string | null;
+    approvedByAdminId: string;
+    approvedBy: string;
+    approvedAt: string | null;
+    rejectedByAdminId: string;
+    rejectedBy: string;
+    rejectedAt: string | null;
+    rejectionReason: string;
     closedAt: string | null;
     closedBy: string;
     reopenedAt: string | null;
@@ -127,6 +148,9 @@ export default function FinanceCloseWorkspace() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [monthAction, setMonthAction] = useState<'close' | 'reopen' | null>(null);
+  const [closeDecision, setCloseDecision] = useState<'approve' | 'reject' | null>(null);
+  const [closeDecisionNotes, setCloseDecisionNotes] = useState('');
+  const [savingDecision, setSavingDecision] = useState(false);
 
   const run = async () => {
     setLoading(true);
@@ -169,9 +193,49 @@ export default function FinanceCloseWorkspace() {
     if (!response.ok) {
       throw new Error(payload?.error || 'Unable to update month close status');
     }
-    toast.success(monthAction === 'close' ? 'Accounting month closed' : 'Accounting month reopened');
+    toast.success(monthAction === 'close' ? 'Month close submitted for independent approval' : 'Accounting month reopened');
     setMonthAction(null);
     await run();
+  };
+
+  const decideClose = async () => {
+    if (!closeDecision || !data?.closeState.id) return;
+    if (closeDecision === 'reject' && closeDecisionNotes.trim().length < 3) {
+      toast.error('Enter a meaningful rejection reason');
+      return;
+    }
+
+    setSavingDecision(true);
+    try {
+      const response = await fetch(
+        '/api/admin/finance/accounting/month-close/' + encodeURIComponent(data.closeState.id) + '/decision',
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: closeDecision,
+            notes: closeDecisionNotes.trim(),
+          }),
+        },
+      );
+      const raw = await response.text();
+      let payload: any = null;
+      try {
+        payload = raw ? JSON.parse(raw) : null;
+      } catch {
+        // Keep proxy HTML outside the control state.
+      }
+      if (!response.ok) throw new Error(payload?.error || 'Unable to decide month-close request');
+
+      toast.success(closeDecision === 'approve' ? 'Accounting month independently approved and closed' : 'Month-close request rejected');
+      setCloseDecision(null);
+      setCloseDecisionNotes('');
+      await run();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to decide month-close request');
+    } finally {
+      setSavingDecision(false);
+    }
   };
 
   const missingEntries = Object.entries(data?.details.missingSourceJournals || {})
@@ -221,7 +285,15 @@ export default function FinanceCloseWorkspace() {
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-2xl font-bold">
-                      {data.closeState.status === 'closed' ? 'Closed' : data.ready ? 'Ready' : 'Blocked'}
+                      {data.closeState.status === 'closed'
+                        ? 'Closed'
+                        : data.closeState.status === 'pending_approval'
+                          ? 'Awaiting approval'
+                          : data.closeState.status === 'rejected'
+                            ? 'Rejected'
+                            : data.ready
+                              ? 'Ready'
+                              : 'Blocked'}
                     </p>
                     <p className="text-xs text-muted-foreground">{date(data.from)} – {date(data.to)}</p>
                   </div>
@@ -342,10 +414,21 @@ export default function FinanceCloseWorkspace() {
                       This month is still in progress and cannot be closed before its calendar end.
                     </p>
                   )}
+                  {data.closeState.status === 'pending_approval' && (
+                    <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+                      Close prepared by {data.closeState.requestedBy || 'Unknown'}{data.closeState.requestedAt ? ' on ' + date(data.closeState.requestedAt) : ''}. An independent finance approver must re-run the controls and sign off.
+                    </p>
+                  )}
+                  {data.closeState.status === 'rejected' && (
+                    <p className="mt-2 text-xs font-medium text-rose-700 dark:text-rose-300">
+                      Close request rejected by {data.closeState.rejectedBy || 'Unknown'}{data.closeState.rejectionReason ? ': ' + data.closeState.rejectionReason : ''}.
+                    </p>
+                  )}
                   {data.closeState.status === 'closed' && (
                     <p className="mt-2 text-xs text-muted-foreground">
                       Closed {data.closeState.closedAt ? date(data.closeState.closedAt) : '—'}
-                      {data.closeState.closedBy ? ' by ' + data.closeState.closedBy : ''}.
+                      {data.closeState.closedBy ? ' by ' + data.closeState.closedBy : ''}
+                      {data.closeState.requestedBy ? ' · prepared by ' + data.closeState.requestedBy : ''}.
                     </p>
                   )}
                 </div>
@@ -353,8 +436,28 @@ export default function FinanceCloseWorkspace() {
                   {data.canClose && (
                     <Button type="button" onClick={() => setMonthAction('close')}>
                       <ShieldCheck className="mr-2 size-4" />
-                      Close month
+                      Submit close for approval
                     </Button>
+                  )}
+                  {data.canApproveClose && (
+                    <Button type="button" onClick={() => {
+                      setCloseDecision('approve');
+                      setCloseDecisionNotes('');
+                    }}>
+                      <ShieldCheck className="mr-2 size-4" />
+                      Approve & close
+                    </Button>
+                  )}
+                  {data.canRejectClose && (
+                    <Button type="button" variant="outline" onClick={() => {
+                      setCloseDecision('reject');
+                      setCloseDecisionNotes('');
+                    }}>
+                      Reject close
+                    </Button>
+                  )}
+                  {data.closeState.status === 'pending_approval' && !data.canApproveClose && (
+                    <Badge variant="outline">Awaiting independent finance approver</Badge>
                   )}
                   {data.canReopen && (
                     <Button type="button" variant="outline" onClick={() => setMonthAction('reopen')}>
@@ -368,18 +471,68 @@ export default function FinanceCloseWorkspace() {
         </>
       )}
 
+      <Dialog open={Boolean(closeDecision)} onOpenChange={(open) => {
+        if (!open && !savingDecision) {
+          setCloseDecision(null);
+          setCloseDecisionNotes('');
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{closeDecision === 'approve' ? 'Approve and close this month?' : 'Reject this month-close request?'}</DialogTitle>
+            <DialogDescription>
+              {closeDecision === 'approve'
+                ? 'Approval re-runs the finance close controls and then locks the month. The preparer cannot approve their own close.'
+                : 'Rejecting returns the month to a state where finance can correct issues and submit a new close request.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {data?.closeState.requestedBy && (
+              <div className="rounded-xl bg-muted/35 p-3 text-sm">
+                Prepared by <strong>{data.closeState.requestedBy}</strong>
+                {data.closeState.requestedAt ? ' · ' + date(data.closeState.requestedAt) : ''}
+              </div>
+            )}
+            <div>
+              <Label>{closeDecision === 'reject' ? 'Rejection reason' : 'Approval note (optional)'}</Label>
+              <Textarea
+                rows={3}
+                value={closeDecisionNotes}
+                onChange={(event) => setCloseDecisionNotes(event.target.value)}
+                placeholder={closeDecision === 'reject' ? 'Explain what must be corrected before resubmission.' : 'Optional close sign-off note…'}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => {
+                setCloseDecision(null);
+                setCloseDecisionNotes('');
+              }} disabled={savingDecision}>Cancel</Button>
+              <Button
+                type="button"
+                variant={closeDecision === 'reject' ? 'destructive' : 'default'}
+                onClick={() => void decideClose()}
+                disabled={savingDecision || (closeDecision === 'reject' && closeDecisionNotes.trim().length < 3)}
+              >
+                {savingDecision && <Loader2 className="mr-2 size-4 animate-spin" />}
+                {closeDecision === 'approve' ? 'Approve & close' : 'Reject request'}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <ConfirmActionDialog
         open={Boolean(monthAction)}
         onOpenChange={(open) => {
           if (!open) setMonthAction(null);
         }}
-        title={monthAction === 'close' ? 'Close this accounting month?' : 'Reopen this accounting month?'}
+        title={monthAction === 'close' ? 'Submit this month close for approval?' : 'Reopen this accounting month?'}
         description={
           monthAction === 'close'
-            ? 'Closing locks the selected month against new operational journals, manual journals and reversals. Existing posted entries remain unchanged.'
+            ? 'This submits the completed close controls to an independent finance approver. The month remains open until that second-person approval locks it.'
             : 'Reopening permits new postings into a previously closed month and requires super-admin authority.'
         }
-        confirmLabel={monthAction === 'close' ? 'Close month' : 'Reopen month'}
+        confirmLabel={monthAction === 'close' ? 'Submit for approval' : 'Reopen month'}
         cancelLabel="Cancel"
         tone={monthAction === 'close' ? 'warning' : 'default'}
         onConfirm={applyMonthAction}
