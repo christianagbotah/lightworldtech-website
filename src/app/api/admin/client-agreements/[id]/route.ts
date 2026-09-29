@@ -41,6 +41,10 @@ function snapshot(agreement: ClientAgreement) {
     documentUrl: agreement.documentUrl,
     notes: agreement.notes,
     signedAt: agreement.signedAt?.toISOString() || null,
+    approvalStatus: agreement.approvalStatus,
+    approvalDecisionBy: agreement.approvalDecisionBy,
+    approvalDecisionAt: agreement.approvalDecisionAt?.toISOString() || null,
+    approvalNotes: agreement.approvalNotes,
   };
 }
 
@@ -85,6 +89,61 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       { status: 409 },
     );
   }
+
+  const nextProjectId = parsed.data.projectId !== undefined
+    ? parsed.data.projectId || null
+    : existing.projectId;
+  const nextCurrency = parsed.data.currency
+    ? normalizeCurrency(parsed.data.currency)
+    : normalizeCurrency(existing.currency);
+  const projectChanged =
+    parsed.data.projectId !== undefined &&
+    nextProjectId !== existing.projectId;
+  const currencyChanged =
+    parsed.data.currency !== undefined &&
+    nextCurrency !== normalizeCurrency(existing.currency);
+  const contractValueChanged =
+    parsed.data.contractValue !== undefined &&
+    !new Prisma.Decimal(parsed.data.contractValue).eq(existing.contractValue);
+  const contractValueBasisChanged =
+    parsed.data.contractValueBasis !== undefined &&
+    parsed.data.contractValueBasis !== existing.contractValueBasis;
+  const materialCommercialChange =
+    projectChanged || currencyChanged || contractValueChanged || contractValueBasisChanged;
+
+  const legacyBasisCorrectionOnly =
+    existing.status === 'active' &&
+    existing.contractValueBasis === 'unspecified' &&
+    parsed.data.contractValueBasis !== undefined &&
+    parsed.data.contractValueBasis !== 'unspecified' &&
+    !projectChanged &&
+    !currencyChanged &&
+    !contractValueChanged;
+
+  if (existing.status === 'active' && materialCommercialChange && !legacyBasisCorrectionOnly) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Active agreement commercial terms cannot be changed in place. Terminate or supersede the agreement and use an approved replacement.',
+      },
+      { status: 409 },
+    );
+  }
+
+  if (parsed.data.status === 'active' && materialCommercialChange) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Save the material commercial amendment first, then obtain a new approval decision before activation.',
+      },
+      { status: 409 },
+    );
+  }
+
+  const requiresReapproval =
+    existing.status !== 'active' &&
+    materialCommercialChange &&
+    ['approved', 'rejected'].includes(existing.approvalStatus);
 
   if (parsed.data.projectId) {
     const project = await db.clientProject.findFirst({
@@ -139,6 +198,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     ...(parsed.data.effectiveDate !== undefined ? { effectiveDate: parsed.data.effectiveDate ? new Date(parsed.data.effectiveDate) : null } : {}),
     ...(parsed.data.expiryDate !== undefined ? { expiryDate: parsed.data.expiryDate ? new Date(parsed.data.expiryDate) : null } : {}),
     ...(parsed.data.signedAt !== undefined ? { signedAt: parsed.data.signedAt ? new Date(parsed.data.signedAt) : null } : {}),
+    ...(requiresReapproval ? {
+      approvalStatus: 'pending',
+      approvalDecisionBy: '',
+      approvalDecisionAt: null,
+      approvalNotes: 'Material commercial terms changed after the previous approval decision; re-approval is required.',
+    } : {}),
   };
 
   const beforeState = snapshot(existing);
@@ -154,7 +219,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         data: {
           agreementId: id,
           changedBy: actor.name || actor.email,
-          changeType: parsed.data.status && parsed.data.status !== existing.status ? 'status_change' : 'update',
+          changeType: requiresReapproval
+            ? 'material_amendment'
+            : parsed.data.status && parsed.data.status !== existing.status
+              ? 'status_change'
+              : legacyBasisCorrectionOnly
+                ? 'legacy_basis_correction'
+                : 'update',
           fields: fields.join(','),
           beforeState,
           afterState,
@@ -169,8 +240,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     action: 'admin.client_agreement_updated',
     entity: 'ClientAgreement',
     entityId: agreement.id,
-    details: { organizationId: agreement.organizationId, fields: Object.keys(parsed.data) },
+    details: {
+      organizationId: agreement.organizationId,
+      fields: Object.keys(parsed.data),
+      materialCommercialChange,
+      approvalReset: requiresReapproval,
+      legacyBasisCorrectionOnly,
+    },
   });
 
-  return NextResponse.json({ success: true, data: agreement });
+  return NextResponse.json({
+    success: true,
+    data: agreement,
+    governance: {
+      materialCommercialChange,
+      approvalReset: requiresReapproval,
+      legacyBasisCorrectionOnly,
+    },
+  });
 }
