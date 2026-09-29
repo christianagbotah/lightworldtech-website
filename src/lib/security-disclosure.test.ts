@@ -21,6 +21,7 @@ describe('public security disclosure', () => {
   test('keeps disclosure claims scoped and discoverable', () => {
     const page = source('src/app/security/page.tsx');
     const trust = source('src/app/trust/page.tsx');
+    const footer = source('src/components/layout/Footer.tsx');
     const sitemap = source('src/app/sitemap.ts');
 
     expect(page).toContain('This page is a reporting policy, not a bug-bounty promise or certification claim.');
@@ -28,6 +29,8 @@ describe('public security disclosure', () => {
     expect(page).toContain('We do not promise a reward or fixed response deadline on this page.');
     expect(trust).toContain('href="/security"');
     expect(trust).toContain('Vulnerability disclosure');
+    expect(footer).toContain('href="/security"');
+    expect(footer).toContain('>Security</Link>');
     expect(sitemap).toContain("base + '/security'");
   });
 });
