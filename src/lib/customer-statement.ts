@@ -24,6 +24,9 @@ export async function buildCustomerAccountStatement(
         orderBy: [{ issueDate: 'asc' }, { createdAt: 'asc' }],
         include: {
           service: { select: { name: true, planName: true } },
+          project: { select: { name: true } },
+          agreement: { select: { title: true, referenceNumber: true } },
+          billingMilestone: { select: { title: true, visibleToClient: true } },
           allocations: true,
         },
       },
@@ -66,9 +69,17 @@ export async function buildCustomerAccountStatement(
       order: 0,
       type: 'Invoice',
       reference: invoice.invoiceNumber,
-      description: invoice.service
-        ? invoice.service.name + (invoice.service.planName ? ' · ' + invoice.service.planName : '')
-        : 'General account invoice',
+      description: (() => {
+        const base = invoice.service
+          ? invoice.service.name + (invoice.service.planName ? ' · ' + invoice.service.planName : '')
+          : invoice.project?.name || 'General account invoice';
+        if (!invoice.billingMilestone?.visibleToClient) return base;
+        const agreementLabel = invoice.agreement
+          ? ' · Agreement: ' + invoice.agreement.title +
+            (invoice.agreement.referenceNumber ? ' (' + invoice.agreement.referenceNumber + ')' : '')
+          : '';
+        return base + agreementLabel + ' · Billing milestone: ' + invoice.billingMilestone.title;
+      })(),
       debit: invoice.total,
       credit: new Prisma.Decimal(0),
       currency: invoice.currency,
