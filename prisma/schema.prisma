@@ -1217,6 +1217,7 @@ model FinanceVendorBill {
   vendorId       String
   vendor         FinanceVendor       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
   vendorReference String             @default("")
+  vendorReferenceNormalized String?
   category       String              @default("operating_expense")
   status         String              @default("unpaid")
   currency       String              @default("GHS")
@@ -1252,6 +1253,7 @@ model FinanceVendorBill {
   updatedAt DateTime @updatedAt
 
   @@index([vendorId, status])
+  @@index([vendorId, vendorReferenceNormalized])
   @@index([dueDate, status])
   @@index([issueDate])
 }

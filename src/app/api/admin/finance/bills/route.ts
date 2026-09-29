@@ -7,6 +7,7 @@ import { hasAdminPermission } from '@/lib/admin-permissions';
 import { postVendorBillJournal } from '@/lib/finance-ledger';
 import { computeTaxComponents, invoiceBalance, nextPayableNumber, normalizeCurrency, sumAmounts, vendorBillStatusFromBalance } from '@/lib/finance';
 import { getFinanceApprovalPolicy } from '@/lib/finance-approvals';
+import { normalizeSupplierInvoiceReference } from '@/lib/supplier-invoice-reference';
 
 const schema = z.object({
   vendorId: z.string().min(1),
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest) {
     parsed.data.taxableAmount ?? parsed.data.total ?? 0,
   ).toDecimalPlaces(2);
   const currency = normalizeCurrency(parsed.data.currency);
+  const vendorReferenceNormalized = normalizeSupplierInvoiceReference(parsed.data.vendorReference);
 
   let matchedPurchaseOrder: Awaited<ReturnType<typeof db.financePurchaseOrder.findUnique>> = null;
   if (parsed.data.purchaseOrderId) {
@@ -184,12 +186,38 @@ export async function POST(request: NextRequest) {
   const policy = await getFinanceApprovalPolicy();
   const makerCheckerRequired = Boolean(policy?.enabled && policy.requireSecondApprover);
   const initialStatus = makerCheckerRequired ? 'draft' : 'unpaid';
-  const bill = await db.$transaction(async (tx) => {
+  const transactionResult = await db.$transaction(async (tx) => {
+    if (vendorReferenceNormalized) {
+      await tx.$queryRawUnsafe(
+        'SELECT pg_advisory_xact_lock(hashtext($1))',
+        'lightworld-supplier-invoice-reference:' + parsed.data.vendorId + ':' + vendorReferenceNormalized,
+      );
+
+      const duplicate = await tx.financeVendorBill.findFirst({
+        where: {
+          vendorId: parsed.data.vendorId,
+          vendorReferenceNormalized,
+          status: { not: 'rejected' },
+        },
+        select: {
+          id: true,
+          payableNumber: true,
+          vendorReference: true,
+          status: true,
+          issueDate: true,
+        },
+      });
+      if (duplicate) {
+        return { bill: null, duplicate };
+      }
+    }
+
     const created = await tx.financeVendorBill.create({
       data: {
         payableNumber,
         vendorId: parsed.data.vendorId,
         vendorReference: parsed.data.vendorReference,
+        vendorReferenceNormalized,
         category: parsed.data.category,
         currency,
         issueDate: parsed.data.issueDate,
@@ -235,8 +263,34 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return created;
+    return { bill: created, duplicate: null };
   });
+
+  if (transactionResult.duplicate) {
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.finance_supplier_bill_duplicate_blocked',
+      entity: 'FinanceVendor',
+      entityId: parsed.data.vendorId,
+      details: {
+        vendorReference: parsed.data.vendorReference,
+        existingBillId: transactionResult.duplicate.id,
+        existingPayableNumber: transactionResult.duplicate.payableNumber,
+        existingStatus: transactionResult.duplicate.status,
+      },
+    });
+    return NextResponse.json({
+      success: false,
+      error:
+        'Supplier invoice reference ' +
+        parsed.data.vendorReference +
+        ' is already recorded as ' +
+        transactionResult.duplicate.payableNumber,
+      duplicate: transactionResult.duplicate,
+    }, { status: 409 });
+  }
+
+  const bill = transactionResult.bill!;
 
   await recordAdminAudit({
     admin: actor,
@@ -257,6 +311,7 @@ export async function POST(request: NextRequest) {
       nhilAmount: bill.nhilAmount.toFixed(2),
       getfundAmount: bill.getfundAmount.toFixed(2),
       purchaseOrderId: bill.purchaseOrderId,
+      vendorReference: bill.vendorReference,
       supplierPaymentTermsDays: vendor.paymentTermsDays,
       defaultDueDate: defaultDueDate.toISOString().slice(0, 10),
       dueDateOverride,
