@@ -30,6 +30,20 @@ export async function POST(
     return NextResponse.json({ success: false, error: 'Active agreements cannot be re-decided; terminate or supersede the agreement instead' }, { status: 409 });
   }
 
+  if (
+    parsed.data.decision === 'approved' &&
+    existing.contractValue.gt(0) &&
+    existing.contractValueBasis === 'unspecified'
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Record whether the contract value is tax-inclusive or tax-exclusive before approving this agreement',
+      },
+      { status: 409 },
+    );
+  }
+
   const decidedAt = new Date();
   const agreement = await db.$transaction(async (tx) => {
     const updated = await tx.clientAgreement.update({
