@@ -1761,18 +1761,27 @@ model FinanceMonthClose {
 }
 
 model FinanceJournalEntry {
-  id            String               @id @default(cuid())
-  journalNumber String               @unique
-  entryDate     DateTime
-  currency      String               @default("GHS")
-  description   String
-  reference     String               @default("")
-  sourceType    String               @default("manual")
-  sourceId      String               @default("")
-  status        String               @default("posted")
-  postedAt      DateTime             @default(now())
-  postedBy      String               @default("Admin")
-  lines         FinanceJournalLine[]
+  id                 String               @id @default(cuid())
+  journalNumber      String               @unique
+  entryDate          DateTime
+  currency           String               @default("GHS")
+  description        String
+  reference          String               @default("")
+  sourceType         String               @default("manual")
+  sourceId           String               @default("")
+  status             String               @default("posted")
+  createdByAdminId   String               @default("")
+  createdBy          String               @default("Admin")
+  approvedByAdminId  String               @default("")
+  approvedBy         String               @default("")
+  approvedAt         DateTime?
+  rejectedByAdminId  String               @default("")
+  rejectedBy         String               @default("")
+  rejectedAt         DateTime?
+  rejectionReason    String               @default("")
+  postedAt           DateTime?
+  postedBy           String               @default("")
+  lines              FinanceJournalLine[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1780,6 +1789,7 @@ model FinanceJournalEntry {
   @@index([entryDate, status])
   @@index([currency, entryDate])
   @@index([sourceType, sourceId])
+  @@index([createdByAdminId, status])
 }
 
 model FinanceJournalLine {

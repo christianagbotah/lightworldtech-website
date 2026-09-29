@@ -88,10 +88,23 @@ type Journal = {
   sourceType: string;
   sourceId: string;
   status: string;
-  postedAt: string;
+  createdByAdminId: string;
+  createdBy: string;
+  approvedByAdminId: string;
+  approvedBy: string;
+  approvedAt: string | null;
+  rejectedByAdminId: string;
+  rejectedBy: string;
+  rejectedAt: string | null;
+  rejectionReason: string;
+  postedAt: string | null;
   postedBy: string;
+  mine: boolean;
+  canApprove: boolean;
   totalDebit: string;
   totalCredit: string;
+  createdAt: string;
+  updatedAt: string;
   lines: JournalLine[];
 };
 
@@ -233,6 +246,8 @@ export default function FinanceAccountingWorkspace({
   const [journalDialog, setJournalDialog] = useState(false);
   const [reversalJournal, setReversalJournal] = useState<Journal | null>(null);
   const [reversalForm, setReversalForm] = useState({ entryDate: today(), reason: '' });
+  const [journalDecision, setJournalDecision] = useState<{ journal: Journal; action: 'approve' | 'reject' } | null>(null);
+  const [journalDecisionNotes, setJournalDecisionNotes] = useState('');
   const [periodAction, setPeriodAction] = useState<{ period: Period; action: 'close' | 'reopen' } | null>(null);
 
   const now = new Date();
@@ -443,7 +458,7 @@ export default function FinanceAccountingWorkspace({
           })),
         }),
       });
-      toast.success('Balanced journal posted');
+      toast.success('Balanced journal submitted for independent approval');
       setJournalDialog(false);
       setJournalForm({
         entryDate: today(),
@@ -477,13 +492,45 @@ export default function FinanceAccountingWorkspace({
           body: JSON.stringify(reversalForm),
         },
       );
-      toast.success('Journal reversed with a new balancing entry');
+      toast.success('Journal reversal submitted for independent approval');
       setReversalJournal(null);
       setReversalForm({ entryDate: today(), reason: '' });
       setLedger(null);
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to reverse journal');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const decideJournal = async () => {
+    if (!journalDecision) return;
+    if (journalDecision.action === 'reject' && journalDecisionNotes.trim().length < 3) {
+      toast.error('Enter a meaningful rejection reason');
+      return;
+    }
+    setSaving(true);
+    try {
+      await api<Journal>(
+        '/api/admin/finance/accounting/journals/' + encodeURIComponent(journalDecision.journal.id) + '/decision',
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: journalDecision.action,
+            notes: journalDecisionNotes.trim(),
+          }),
+        },
+      );
+      toast.success(journalDecision.action === 'approve' ? 'Journal approved and posted' : 'Journal draft rejected');
+      setJournalDecision(null);
+      setJournalDecisionNotes('');
+      setLedger(null);
+      await load();
+      if (view === 'general-ledger' && ledgerAccountId) await loadLedger();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to decide journal draft');
     } finally {
       setSaving(false);
     }
@@ -768,36 +815,78 @@ export default function FinanceAccountingWorkspace({
         <Card className="min-w-0 border-border/60">
           <CardHeader className="pb-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div><CardTitle className="flex items-center gap-2 text-base"><BookOpen className="size-4 text-amber-700" /> Posted journals</CardTitle><p className="mt-1 text-xs text-muted-foreground">Every posted journal is balanced before it enters the ledger.</p></div>
-              <Button type="button" size="sm" onClick={() => setJournalDialog(true)}><Plus className="mr-2 size-4" /> Post journal</Button>
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="size-4 text-amber-700" /> Journal register</CardTitle>
+                <p className="mt-1 text-xs text-muted-foreground">Manual journals and reversals require an independent checker before they enter the posted ledger.</p>
+              </div>
+              <Button type="button" size="sm" onClick={() => setJournalDialog(true)}><Plus className="mr-2 size-4" /> Prepare journal</Button>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <Table exportFileName="lightworld-journal-register" className="min-w-[800px]">
-              <TableHeader><TableRow><TableHead>Journal</TableHead><TableHead>Date</TableHead><TableHead>Description</TableHead><TableHead>Reference</TableHead><TableHead>Status</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Debit</TableHead><TableHead className="text-right">Credit</TableHead><TableHead>Posted by</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
+            <Table exportFileName="lightworld-journal-register" className="min-w-[980px]">
+              <TableHeader><TableRow><TableHead>Journal</TableHead><TableHead>Date</TableHead><TableHead>Description</TableHead><TableHead>Reference</TableHead><TableHead>Status</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Debit</TableHead><TableHead className="text-right">Credit</TableHead><TableHead>Prepared / posted by</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
               <TableBody>
-                {journals.map((journal) => (
-                  <TableRow key={journal.id}>
-                    <TableCell><p className="font-mono text-xs font-semibold">{journal.journalNumber}</p><p className="text-[10px] text-muted-foreground">{pretty(journal.sourceType)}</p></TableCell>
-                    <TableCell className="text-xs">{date(journal.entryDate)}</TableCell>
-                    <TableCell className="max-w-[300px] whitespace-normal">{journal.description}</TableCell>
-                    <TableCell className="font-mono text-xs">{journal.reference || '—'}</TableCell>
-                    <TableCell><Badge className={journal.status === 'reversed' ? 'border-0 bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200' : 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'}>{pretty(journal.status)}</Badge></TableCell>
-                    <TableCell>{journal.currency}</TableCell>
-                    <TableCell className="text-right">{money(journal.totalDebit, journal.currency)}</TableCell>
-                    <TableCell className="text-right">{money(journal.totalCredit, journal.currency)}</TableCell>
-                    <TableCell><p className="text-xs">{journal.postedBy}</p><p className="text-[10px] text-muted-foreground">{date(journal.postedAt, true)}</p></TableCell>
-                    <TableCell className="text-right">
-                      {journal.status === 'posted' && journal.sourceType !== 'reversal' ? (
-                        <Button type="button" size="sm" variant="outline" onClick={() => {
-                          setReversalJournal(journal);
-                          setReversalForm({ entryDate: today(), reason: '' });
-                        }}>Reverse</Button>
-                      ) : <span className="text-xs text-muted-foreground">—</span>}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!journals.length && <TableRow><TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">No journals have been posted yet.</TableCell></TableRow>}
+                {journals.map((journal) => {
+                  const statusClass =
+                    journal.status === 'draft'
+                      ? 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                      : journal.status === 'rejected'
+                        ? 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200'
+                        : journal.status === 'reversed'
+                          ? 'border-0 bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
+                          : 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
+                  return (
+                    <TableRow key={journal.id}>
+                      <TableCell><p className="font-mono text-xs font-semibold">{journal.journalNumber}</p><p className="text-[10px] text-muted-foreground">{pretty(journal.sourceType)}</p></TableCell>
+                      <TableCell className="text-xs">{date(journal.entryDate)}</TableCell>
+                      <TableCell className="max-w-[300px] whitespace-normal">
+                        <p>{journal.description}</p>
+                        {journal.rejectionReason && <p className="mt-1 text-[10px] text-rose-700 dark:text-rose-300">Rejected: {journal.rejectionReason}</p>}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{journal.reference || '—'}</TableCell>
+                      <TableCell><Badge className={statusClass}>{pretty(journal.status)}</Badge></TableCell>
+                      <TableCell>{journal.currency}</TableCell>
+                      <TableCell className="text-right">{money(journal.totalDebit, journal.currency)}</TableCell>
+                      <TableCell className="text-right">{money(journal.totalCredit, journal.currency)}</TableCell>
+                      <TableCell>
+                        <p className="text-xs">{journal.status === 'draft' || journal.status === 'rejected' ? journal.createdBy : journal.postedBy}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {journal.status === 'draft' || journal.status === 'rejected'
+                            ? 'Prepared ' + date(journal.createdAt, true)
+                            : 'Posted ' + date(journal.postedAt, true)}
+                        </p>
+                        {journal.approvedBy && <p className="text-[10px] text-muted-foreground">Checker: {journal.approvedBy}</p>}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          {journal.status === 'draft' && journal.canApprove && (
+                            <>
+                              <Button type="button" size="sm" onClick={() => {
+                                setJournalDecision({ journal, action: 'approve' });
+                                setJournalDecisionNotes('');
+                              }}>Approve & post</Button>
+                              <Button type="button" size="sm" variant="outline" onClick={() => {
+                                setJournalDecision({ journal, action: 'reject' });
+                                setJournalDecisionNotes('');
+                              }}>Reject</Button>
+                            </>
+                          )}
+                          {journal.status === 'draft' && !journal.canApprove && (
+                            <span className="text-xs text-muted-foreground">{journal.mine ? 'Awaiting checker' : 'Approval required'}</span>
+                          )}
+                          {journal.status === 'posted' && journal.sourceType !== 'reversal' && (
+                            <Button type="button" size="sm" variant="outline" onClick={() => {
+                              setReversalJournal(journal);
+                              setReversalForm({ entryDate: today(), reason: '' });
+                            }}>Request reversal</Button>
+                          )}
+                          {!['draft', 'posted'].includes(journal.status) && <span className="text-xs text-muted-foreground">—</span>}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!journals.length && <TableRow><TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">No journal entries exist yet.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>
@@ -910,7 +999,7 @@ export default function FinanceAccountingWorkspace({
 
       <Dialog open={journalDialog} onOpenChange={setJournalDialog}>
         <DialogContent className="max-h-[94vh] w-[calc(100vw-1rem)] max-w-4xl overflow-y-auto">
-          <DialogHeader><DialogTitle>Post balanced journal</DialogTitle><DialogDescription>Debits must equal credits exactly. Posted journals flow immediately to the General Ledger and Trial Balance.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>Prepare balanced journal</DialogTitle><DialogDescription>Debits must equal credits exactly. The draft will require an independent checker before it enters the General Ledger or Trial Balance.</DialogDescription></DialogHeader>
           <form onSubmit={postJournal} className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div><Label>Posting date</Label><Input required type="date" value={journalForm.entryDate} onChange={(event) => setJournalForm({ ...journalForm, entryDate: event.target.value })} /></div>
@@ -939,9 +1028,9 @@ export default function FinanceAccountingWorkspace({
               <div className={Math.abs(journalTotals.debit - journalTotals.credit) < 0.005 && journalTotals.debit > 0 ? 'rounded-xl bg-emerald-50 p-3 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-200' : 'rounded-xl bg-amber-50 p-3 text-amber-800 dark:bg-amber-950/20 dark:text-amber-200'}><p className="text-[10px] uppercase tracking-[0.1em]">Control difference</p><p className="mt-1 font-semibold">{money(Math.abs(journalTotals.debit - journalTotals.credit), journalForm.currency)}</p></div>
             </div>
 
-            {!openPeriods.length && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">No accounting period is open. Create an open period before posting.</div>}
+            {!openPeriods.length && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">No accounting period is open. Create an open period before preparing a journal.</div>}
 
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setJournalDialog(false)}>Cancel</Button><Button disabled={saving || !openPeriods.length || journalTotals.debit <= 0 || Math.abs(journalTotals.debit - journalTotals.credit) >= 0.005}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Post journal</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setJournalDialog(false)}>Cancel</Button><Button disabled={saving || !openPeriods.length || journalTotals.debit <= 0 || Math.abs(journalTotals.debit - journalTotals.credit) >= 0.005}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Submit for approval</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -949,9 +1038,9 @@ export default function FinanceAccountingWorkspace({
       <Dialog open={Boolean(reversalJournal)} onOpenChange={(open) => { if (!open) setReversalJournal(null); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Reverse posted journal?</DialogTitle>
+            <DialogTitle>Request journal reversal?</DialogTitle>
             <DialogDescription>
-              The original journal will remain in history and a new journal with equal opposite entries will be posted. No ledger lines are edited or deleted.
+              The original journal will remain posted while an equal-and-opposite reversal draft waits for an independent checker. No ledger lines are edited or deleted.
             </DialogDescription>
           </DialogHeader>
           {reversalJournal && (
@@ -963,8 +1052,61 @@ export default function FinanceAccountingWorkspace({
               </div>
               <div><Label>Reversal date</Label><Input required type="date" value={reversalForm.entryDate} min={reversalJournal.entryDate.slice(0, 10)} onChange={(event) => setReversalForm({ ...reversalForm, entryDate: event.target.value })} /></div>
               <div><Label>Reason</Label><Textarea required rows={3} value={reversalForm.reason} onChange={(event) => setReversalForm({ ...reversalForm, reason: event.target.value })} placeholder="Explain why this posted journal must be reversed." /></div>
-              <DialogFooter><Button type="button" variant="outline" onClick={() => setReversalJournal(null)}>Cancel</Button><Button type="submit" variant="destructive" disabled={saving}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Post reversal</Button></DialogFooter>
+              <DialogFooter><Button type="button" variant="outline" onClick={() => setReversalJournal(null)}>Cancel</Button><Button type="submit" variant="destructive" disabled={saving}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Submit reversal for approval</Button></DialogFooter>
             </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(journalDecision)} onOpenChange={(open) => {
+        if (!open) {
+          setJournalDecision(null);
+          setJournalDecisionNotes('');
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{journalDecision?.action === 'approve' ? 'Approve and post journal?' : 'Reject journal draft?'}</DialogTitle>
+            <DialogDescription>
+              {journalDecision?.action === 'approve'
+                ? 'Approval posts this balanced draft into the ledger. You cannot edit posted lines afterward; corrections require a governed reversal.'
+                : 'Rejecting leaves the draft in the audit history and prevents it from entering the ledger.'}
+            </DialogDescription>
+          </DialogHeader>
+          {journalDecision && (
+            <div className="space-y-4">
+              <div className="rounded-xl bg-muted/35 p-3">
+                <p className="font-mono text-xs font-semibold">{journalDecision.journal.journalNumber}</p>
+                <p className="mt-1 text-sm">{journalDecision.journal.description}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {money(journalDecision.journal.totalDebit, journalDecision.journal.currency)} · {date(journalDecision.journal.entryDate)} · prepared by {journalDecision.journal.createdBy}
+                </p>
+              </div>
+              <div>
+                <Label>{journalDecision.action === 'reject' ? 'Rejection reason' : 'Approval note (optional)'}</Label>
+                <Textarea
+                  rows={3}
+                  value={journalDecisionNotes}
+                  onChange={(event) => setJournalDecisionNotes(event.target.value)}
+                  placeholder={journalDecision.action === 'reject' ? 'Explain why this journal must be corrected before resubmission.' : 'Optional checker note…'}
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => {
+                  setJournalDecision(null);
+                  setJournalDecisionNotes('');
+                }}>Cancel</Button>
+                <Button
+                  type="button"
+                  variant={journalDecision.action === 'reject' ? 'destructive' : 'default'}
+                  disabled={saving || (journalDecision.action === 'reject' && journalDecisionNotes.trim().length < 3)}
+                  onClick={() => void decideJournal()}
+                >
+                  {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                  {journalDecision.action === 'approve' ? 'Approve & post' : 'Reject draft'}
+                </Button>
+              </DialogFooter>
+            </div>
           )}
         </DialogContent>
       </Dialog>
