@@ -107,7 +107,7 @@ type ObligationQueueState = {
 };
 type AgreementBillingMilestone = {
   id: string; title: string; amount: string; dueDate: string | null; order: number;
-  notes: string; readinessStatus: string; readinessNote: string; evidenceUrl: string;
+  notes: string; readinessStatus: string; readinessNote: string; evidenceUrl: string; visibleToClient: boolean;
   readyAt: string | null; readyBy: string; createdBy: string; createdAt: string; updatedAt: string;
   invoices: Array<{ id: string; invoiceNumber: string; status: string }>;
 };
@@ -2016,6 +2016,14 @@ export default function AdminClients() {
                                     Billed · {milestone.invoices[0].invoiceNumber}
                                   </Badge>
                                 )}
+                                <label className="ml-auto inline-flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-border/60 bg-muted/20 px-2.5 text-[10px] font-medium">
+                                  <input
+                                    type="checkbox"
+                                    checked={milestone.visibleToClient}
+                                    onChange={(event) => void patchAgreementBillingMilestone(milestone.id, { visibleToClient: event.target.checked })}
+                                  />
+                                  {milestone.visibleToClient ? 'Shared with client' : 'Internal only'}
+                                </label>
                                 {milestone.readyAt && (
                                   <span className="text-[10px] text-muted-foreground">
                                     Ready {new Date(milestone.readyAt).toLocaleString()} · {milestone.readyBy || 'Admin'}

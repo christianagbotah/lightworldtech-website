@@ -64,7 +64,14 @@ export async function GET(request: NextRequest) {
         },
         agreements: {
           where: {
-            attachments: { some: { visibleToClient: true } },
+            OR: [
+              { attachments: { some: { visibleToClient: true } } },
+              {
+                status: 'active',
+                approvalStatus: 'approved',
+                billingMilestones: { some: { visibleToClient: true } },
+              },
+            ],
           },
           orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
           select: {
@@ -73,10 +80,29 @@ export async function GET(request: NextRequest) {
             agreementType: true,
             status: true,
             referenceNumber: true,
+            currency: true,
             effectiveDate: true,
             expiryDate: true,
             signedAt: true,
             project: { select: { id: true, name: true } },
+            billingMilestones: {
+              where: { visibleToClient: true },
+              orderBy: [{ order: 'asc' }, { dueDate: 'asc' }, { createdAt: 'asc' }],
+              select: {
+                id: true,
+                title: true,
+                amount: true,
+                dueDate: true,
+                order: true,
+                readinessStatus: true,
+                invoices: {
+                  where: { status: { notIn: ['draft', 'void'] } },
+                  orderBy: [{ issueDate: 'desc' }, { createdAt: 'desc' }],
+                  take: 1,
+                  select: { id: true, invoiceNumber: true, status: true },
+                },
+              },
+            },
             attachments: {
               where: { visibleToClient: true },
               orderBy: { createdAt: 'desc' },
@@ -104,6 +130,8 @@ export async function GET(request: NextRequest) {
           include: {
             service: { select: { id: true, name: true, planName: true } },
             project: { select: { id: true, name: true } },
+            agreement: { select: { id: true, title: true, referenceNumber: true } },
+            billingMilestone: { select: { id: true, title: true, visibleToClient: true } },
             lines: { orderBy: { order: 'asc' } },
             creditNotes: {
               where: { status: 'posted' },
@@ -176,8 +204,23 @@ export async function GET(request: NextRequest) {
         ensureCurrency(invoice.currency).outstanding.plus(balance);
       ensureCurrency(invoice.currency).credit =
         ensureCurrency(invoice.currency).credit.plus(refundableCredit);
+      const clientVisibleBillingMilestone =
+        invoice.billingMilestone?.visibleToClient
+          ? {
+              id: invoice.billingMilestone.id,
+              title: invoice.billingMilestone.title,
+              visibleToClient: true,
+            }
+          : null;
+      const clientVisibleAgreement =
+        clientVisibleBillingMilestone && invoice.agreement
+          ? invoice.agreement
+          : null;
+
       return {
         ...invoice,
+        agreement: clientVisibleAgreement,
+        billingMilestone: clientVisibleBillingMilestone,
         subtotal: invoice.subtotal.toFixed(2),
         discount: invoice.discount.toFixed(2),
         tax: invoice.tax.toFixed(2),
@@ -345,7 +388,13 @@ export async function GET(request: NextRequest) {
         })),
         tickets: organization.tickets,
         announcements: organization.announcements,
-        agreements: organization.agreements,
+        agreements: organization.agreements.map((agreement) => ({
+          ...agreement,
+          billingMilestones: agreement.billingMilestones.map((milestone) => ({
+            ...milestone,
+            amount: milestone.amount.toFixed(2),
+          })),
+        })),
         account: {
           summary: accountSummary,
           services,
