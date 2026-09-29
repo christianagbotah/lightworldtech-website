@@ -56,7 +56,21 @@ function signedMovement(lines: Array<{ direction: string; amount: Prisma.Decimal
   );
 }
 
-function serialize(batch: any) {
+function serialize(batch: any, actor?: { id: string; role: string; permissions: string[] }) {
+  const matcherIds = [...new Set(
+    (batch.lines || [])
+      .map((line: any) => line.matchedByAdminId)
+      .filter(Boolean),
+  )];
+  const governanceComplete = Boolean(batch.importedByAdminId) &&
+    (batch.lines || []).every((line: any) => line.status !== 'matched' || Boolean(line.matchedByAdminId));
+  const canFinalize = Boolean(actor) &&
+    hasAdminPermission(actor!.role, actor!.permissions as any, 'finance.approve') &&
+    batch.status === 'open' &&
+    governanceComplete &&
+    batch.importedByAdminId !== actor!.id &&
+    !matcherIds.includes(actor!.id);
+
   const matched = (batch.lines || []).filter((line: any) => line.status === 'matched').length;
   const unmatched = (batch.lines || []).filter((line: any) => line.status === 'unmatched').length;
   const movement = signedMovement(batch.lines || []);
@@ -71,6 +85,9 @@ function serialize(batch: any) {
     matchedCount: matched,
     unmatchedCount: unmatched,
     lineCount: (batch.lines || []).length,
+    governanceComplete,
+    canFinalize,
+    matcherCount: matcherIds.length,
     lines: (batch.lines || []).map((line: any) => ({
       ...line,
       amount: line.amount.toFixed(2),
@@ -94,12 +111,13 @@ export async function GET(request: NextRequest) {
           direction: true,
           amount: true,
           status: true,
+          matchedByAdminId: true,
         },
       },
     },
   });
 
-  return NextResponse.json({ success: true, data: batches.map(serialize) });
+  return NextResponse.json({ success: true, data: batches.map((batch) => serialize(batch, actor)) });
 }
 
 export async function POST(request: NextRequest) {
@@ -182,6 +200,7 @@ export async function POST(request: NextRequest) {
       openingBalance: opening,
       closingBalance: closing,
       status: 'open',
+      importedByAdminId: actor.id,
       importedBy: actor.name || actor.email,
       notes: parsed.data.notes,
       lines: {
@@ -212,5 +231,5 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ success: true, data: serialize(batch) }, { status: 201 });
+  return NextResponse.json({ success: true, data: serialize(batch, actor) }, { status: 201 });
 }
