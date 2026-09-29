@@ -30,7 +30,7 @@ export async function GET(
   const { id } = await params;
   const attachment = await db.clientAgreementAttachment.findUnique({
     where: { id },
-    include: { agreement: { select: { id: true, organizationId: true, title: true } } },
+    include: { agreement: { select: { id: true, organizationId: true, title: true, status: true, approvalStatus: true } } },
   });
   if (!attachment) {
     return NextResponse.json({ success: false, error: 'Agreement attachment not found' }, { status: 404 });
@@ -39,7 +39,9 @@ export async function GET(
     client &&
     (
       client.user.organizationId !== attachment.agreement.organizationId ||
-      !attachment.visibleToClient
+      !attachment.visibleToClient ||
+      attachment.agreement.approvalStatus !== 'approved' ||
+      attachment.agreement.status === 'draft'
     )
   ) {
     return NextResponse.json({ success: false, error: 'Agreement attachment not found' }, { status: 404 });
@@ -94,10 +96,23 @@ export async function PATCH(
 
   const existing = await db.clientAgreementAttachment.findUnique({
     where: { id },
-    include: { agreement: { select: { id: true, organizationId: true, title: true } } },
+    include: { agreement: { select: { id: true, organizationId: true, title: true, status: true, approvalStatus: true } } },
   });
   if (!existing) {
     return NextResponse.json({ success: false, error: 'Agreement attachment not found' }, { status: 404 });
+  }
+
+  if (
+    payload.visibleToClient &&
+    (existing.agreement.approvalStatus !== 'approved' || existing.agreement.status === 'draft')
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Agreement files can be shared with clients only after the agreement is approved and no longer draft',
+      },
+      { status: 409 },
+    );
   }
 
   const attachment = await db.clientAgreementAttachment.update({
@@ -132,7 +147,7 @@ export async function DELETE(
   const { id } = await params;
   const attachment = await db.clientAgreementAttachment.findUnique({
     where: { id },
-    include: { agreement: { select: { id: true, organizationId: true, title: true } } },
+    include: { agreement: { select: { id: true, organizationId: true, title: true, status: true, approvalStatus: true } } },
   });
   if (!attachment) {
     return NextResponse.json({ success: false, error: 'Agreement attachment not found' }, { status: 404 });
