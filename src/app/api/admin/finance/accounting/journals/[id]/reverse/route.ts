@@ -91,12 +91,16 @@ export async function POST(
   }
 
   const duplicate = await db.financeJournalEntry.findFirst({
-    where: { sourceType: 'reversal', sourceId: original.id },
-    select: { id: true, journalNumber: true, entryDate: true },
+    where: {
+      sourceType: 'reversal',
+      sourceId: original.id,
+      status: { not: 'rejected' },
+    },
+    select: { id: true, journalNumber: true, entryDate: true, status: true },
   });
   if (duplicate) {
     return NextResponse.json(
-      { success: false, error: 'This journal already has a reversal', reversal: duplicate },
+      { success: false, error: 'This journal already has a pending or posted reversal', reversal: duplicate },
       { status: 409 },
     );
   }
@@ -137,52 +141,45 @@ export async function POST(
   }
 
   const journalNumber = await nextJournalNumber(parsed.data.entryDate);
-  const reversal = await db.$transaction(async (tx) => {
-    const created = await tx.financeJournalEntry.create({
-      data: {
-        journalNumber,
-        entryDate: parsed.data.entryDate,
-        currency: original.currency,
-        description: 'Reversal of ' + original.journalNumber + ' · ' + parsed.data.reason,
-        reference: original.reference || original.journalNumber,
-        sourceType: 'reversal',
-        sourceId: original.id,
-        status: 'posted',
-        postedAt: new Date(),
-        postedBy: actor.name || actor.email,
-        lines: {
-          create: original.lines.map((line) => ({
-            accountId: line.accountId,
-            description: line.description || 'Reversal of ' + original.journalNumber,
-            debit: line.credit,
-            credit: line.debit,
-          })),
-        },
+  const reversal = await db.financeJournalEntry.create({
+    data: {
+      journalNumber,
+      entryDate: parsed.data.entryDate,
+      currency: original.currency,
+      description: 'Reversal of ' + original.journalNumber + ' · ' + parsed.data.reason,
+      reference: original.reference || original.journalNumber,
+      sourceType: 'reversal',
+      sourceId: original.id,
+      status: 'draft',
+      createdByAdminId: actor.id,
+      createdBy: actor.name || actor.email,
+      postedAt: null,
+      postedBy: '',
+      lines: {
+        create: original.lines.map((line) => ({
+          accountId: line.accountId,
+          description: line.description || 'Reversal of ' + original.journalNumber,
+          debit: line.credit,
+          credit: line.debit,
+        })),
       },
-      include: {
-        lines: {
-          orderBy: { createdAt: 'asc' },
-          include: { account: { select: { id: true, code: true, name: true, type: true } } },
-        },
+    },
+    include: {
+      lines: {
+        orderBy: { createdAt: 'asc' },
+        include: { account: { select: { id: true, code: true, name: true, type: true } } },
       },
-    });
-
-    await tx.financeJournalEntry.update({
-      where: { id: original.id },
-      data: { status: 'reversed' },
-    });
-
-    return created;
+    },
   });
 
   await recordAdminAudit({
     admin: actor,
-    action: 'admin.finance_journal_reversed',
+    action: 'admin.finance_journal_reversal_requested',
     entity: 'FinanceJournalEntry',
-    entityId: original.id,
+    entityId: reversal.id,
     details: {
+      originalJournalId: original.id,
       originalJournalNumber: original.journalNumber,
-      reversalJournalId: reversal.id,
       reversalJournalNumber: reversal.journalNumber,
       reversalDate: reversal.entryDate.toISOString(),
       reason: parsed.data.reason,
@@ -191,5 +188,8 @@ export async function POST(
     },
   });
 
-  return NextResponse.json({ success: true, data: serialize(reversal) }, { status: 201 });
+  return NextResponse.json(
+    { success: true, pendingApproval: true, data: serialize(reversal) },
+    { status: 202 },
+  );
 }
