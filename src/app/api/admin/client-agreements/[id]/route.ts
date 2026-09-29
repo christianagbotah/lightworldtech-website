@@ -65,6 +65,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const existing = await db.clientAgreement.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
 
+  if (parsed.data.status === 'superseded' && existing.status !== 'superseded') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Superseded status is managed by the replacement-agreement workflow. Create and activate an approved replacement instead.',
+      },
+      { status: 409 },
+    );
+  }
+
   if (parsed.data.status === 'active' && existing.approvalStatus !== 'approved') {
     return NextResponse.json(
       { success: false, error: 'Agreement must be approved by an authorized administrator before activation' },
@@ -234,7 +244,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const beforeState = snapshot(existing);
   let supersededAgreementId: string | null = null;
-  let agreement;
+  let agreement: ClientAgreement;
   try {
     agreement = await db.$transaction(async (tx) => {
       if (activatingReplacement && existing.supersedesAgreementId) {
