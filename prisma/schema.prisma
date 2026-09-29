@@ -1246,6 +1246,9 @@ model FinanceVendorBill {
   voidedBy       String              @default("")
   voidedAt       DateTime?
   voidReason     String              @default("")
+  replacesBillId String?              @unique
+  replacesBill   FinanceVendorBill?   @relation("VendorBillReplacement", fields: [replacesBillId], references: [id], onDelete: SetNull)
+  replacementBill FinanceVendorBill?  @relation("VendorBillReplacement")
   purchaseOrderId String?             @unique
   purchaseOrder   FinancePurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
   allocations    FinanceVendorPaymentAllocation[]
