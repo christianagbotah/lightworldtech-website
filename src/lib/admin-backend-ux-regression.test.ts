@@ -1,3 +1,1137 @@
+import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+function source(relativePath: string): string {
+  return readFileSync(join(process.cwd(), relativePath), 'utf8');
+}
+
+describe('admin backend and responsive UX regression coverage', () => {
+  test('hardens remaining legacy admin workspaces against malformed JSON responses', () => {
+    const resilient = [
+      'src/components/admin/AdminBlog.tsx',
+      'src/components/admin/AdminBlogEditor.tsx',
+      'src/components/admin/AdminFAQs.tsx',
+      'src/components/admin/AdminTeam.tsx',
+      'src/components/admin/AdminServices.tsx',
+      'src/components/admin/AdminTestimonials.tsx',
+      'src/components/admin/AdminPortfolio.tsx',
+      'src/components/admin/AdminMessages.tsx',
+      'src/components/admin/AdminCRM.tsx',
+      'src/components/admin/AdminClients.tsx',
+      'src/components/admin/AdminProposals.tsx',
+    ];
+
+    for (const path of resilient) {
+      const value = source(path);
+      expect(value).toContain('readJsonResponse');
+      expect(value).not.toContain('await res.json()');
+    }
+
+    const proposals = source('src/components/admin/AdminProposals.tsx');
+    expect(proposals).not.toContain('proposalsRes.json()');
+    expect(proposals).not.toContain('leadsRes.json()');
+
+    const login = source('src/components/admin/AdminLogin.tsx');
+    expect(login).toContain('async function readAuthPayload');
+    expect(login).toContain('const raw = await response.text()');
+    expect(login).toContain('The authentication service returned an invalid response');
+    expect(login).not.toContain('await res.json()');
+    expect(login).toContain('requiresTotp');
+  });
+
+
+  test('keeps the fixed-sidebar admin shell inside the viewport', () => {
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(layout).toContain('w-full overflow-x-hidden');
+    expect(layout).toContain('lg:w-[calc(100%-16rem)]');
+    expect(layout).toContain('min-w-0 max-w-full flex-1 overflow-x-hidden');
+    expect(layout).toContain('h-dvh min-h-0');
+    expect(layout).toContain('min-h-0 flex-1 py-3');
+  });
+
+  test('keeps the wide CRM board inside its own horizontal scroller', () => {
+    const crm = source('src/components/admin/AdminCRM.tsx');
+
+    expect(crm).toContain('max-w-full overflow-x-auto');
+    expect(crm).toContain('min-w-[1960px]');
+    expect(crm).toContain('md:grid-cols-12');
+    expect(crm).toContain('max-w-5xl');
+    expect(crm).toContain('DialogDescription');
+    expect(crm).toContain('Original customer enquiry');
+    expect(crm).toContain('max-h-[36vh] overflow-y-auto');
+  });
+
+  test('keeps client creation controls on one desktop row', () => {
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(clients).toContain('lg:grid-cols-[minmax(180px,1.2fr)_minmax(160px,1fr)_minmax(200px,1.2fr)_minmax(150px,1fr)_auto]');
+    expect(clients).toContain('lg:items-center');
+  });
+
+  test('keeps the client portal workspace inside the viewport', () => {
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(portal).toContain('w-full overflow-x-hidden');
+    expect(portal).toContain('lg:grid-cols-[minmax(0,.75fr)_minmax(0,1.25fr)]');
+    expect(portal).toContain('lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]');
+  });
+
+  test('uses canonical validated CMS endpoints from admin screens', () => {
+    const files = [
+      ['src/components/admin/AdminServices.tsx', '/api/services'],
+      ['src/components/admin/AdminTeam.tsx', '/api/team'],
+      ['src/components/admin/AdminPortfolio.tsx', '/api/portfolio'],
+      ['src/components/admin/AdminTestimonials.tsx', '/api/testimonials'],
+      ['src/components/admin/AdminFAQs.tsx', '/api/faqs'],
+    ] as const;
+
+    for (const [path, endpoint] of files) {
+      const value = source(path);
+      expect(value).toContain(endpoint);
+      expect(value).not.toContain(endpoint.replace('/api/', '/api/admin/'));
+    }
+  });
+
+  test('provides a permission-aware command palette and notification centre', () => {
+    const layout = source('src/components/admin/AdminLayout.tsx');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(layout).toContain("event.key.toLowerCase() === 'k'");
+    expect(layout).toContain('CommandDialog');
+    expect(layout).toContain("fetch('/api/admin/notifications'");
+    expect(layout).toContain('Notification centre');
+    expect(layout).toContain("sessionStorage.setItem('lw-crm-overdue-filter', '1')");
+    expect(notifications).toContain('getActiveAdminContext(request)');
+    expect(notifications).toContain("'overdue-followups'");
+    expect(notifications).toContain("'support-sla-breached'");
+    expect(notifications).toContain("'unread-client-tickets'");
+    expect(notifications).toContain("'newsletter-failures'");
+  });
+
+  test('supports saved CRM views and overdue deep links', () => {
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const leads = source('src/app/api/admin/leads/route.ts');
+
+    expect(crm).toContain("localStorage.getItem('lw-crm-saved-views')");
+    expect(crm).toContain("localStorage.setItem('lw-crm-saved-views'");
+    expect(crm).toContain("sessionStorage.getItem('lw-crm-overdue-filter')");
+    expect(crm).toContain("params.set('overdue', 'true')");
+    expect(crm).toContain('Save current view');
+    expect(leads).toContain("searchParams.get('overdue') === 'true'");
+    expect(leads).toContain("where.status = status && status !== 'all' ? status : { notIn: ['won', 'lost'] }");
+  });
+
+  test('adds human-controlled CRM operating intelligence and governed proposal readiness', () => {
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const leadList = source('src/app/api/admin/leads/route.ts');
+    const leadDetail = source('src/app/api/admin/leads/[id]/route.ts');
+    const crmIntelligence = source('src/lib/crm-operating-intelligence.ts');
+    const proposals = source('src/components/admin/AdminProposals.tsx');
+    const convertClientRoute = source('src/app/api/admin/proposals/[id]/convert-client/route.ts');
+    const proposalList = source('src/app/api/admin/proposals/route.ts');
+    const proposalDetail = source('src/app/api/admin/proposals/[id]/route.ts');
+    const proposalReadiness = source('src/lib/proposal-readiness.ts');
+
+    expect(crm).toContain('Operating intelligence');
+    expect(crm).toContain('Use as next action');
+    expect(crm).toContain('operatingIntelligence.urgency');
+    expect(leadList).toContain('deriveCrmOperatingIntelligence');
+    expect(leadDetail).toContain('deriveCrmOperatingIntelligence');
+    expect(crmIntelligence).toContain('overdue follow-up');
+    expect(crmIntelligence).toContain('human-controlled');
+
+    expect(proposals).toContain('Proposal readiness');
+    expect(proposals).toContain('Approval blockers');
+    expect(proposals).toContain('Qualification warnings');
+    expect(proposals).toContain("status.id === 'sent' && !selected.approvedAt");
+    expect(proposalList).toContain('readinessFor');
+    expect(proposalDetail).toContain('Proposal must be human-approved as Ready before it can be marked Sent.');
+    expect(proposalDetail).toContain('Proposal must be marked Sent before it can be marked Accepted.');
+    expect(proposalDetail).toContain('Sent or accepted proposals cannot be edited in place.');
+    expect(proposalDetail).toContain('Proposal content changes must be reviewed and approved');
+    expect(proposalReadiness).toContain('readyForApproval');
+    expect(proposalReadiness).toContain('Pricing, taxes, payment terms');
+  });
+
+  test('keeps customer email replies inside the Lightworld admin portal', () => {
+    const schema = source('prisma/schema.prisma');
+    const replies = source('src/app/api/admin/messages/[id]/replies/route.ts');
+    const retryReply = source('src/app/api/admin/messages/[id]/replies/[replyId]/retry/route.ts');
+    const replyMail = source('src/lib/contact-reply-mail.ts');
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const proposals = source('src/components/admin/AdminProposals.tsx');
+    const convertClientRoute = source('src/app/api/admin/proposals/[id]/convert-client/route.ts');
+
+    expect(schema).toContain('model ContactMessageReply');
+    expect(schema).toContain('replies ContactMessageReply[]');
+    expect(replies).toContain('sendTransactionalMail');
+    expect(replies).toContain("'admin.message_replied'");
+    expect(replies).toContain("'admin.message_reply_failed'");
+    expect(replies).toContain('lastContactedAt: sentAt');
+    expect(replies).toContain("status: 'sending'");
+    expect(replies).toContain("status: 'sent'");
+    expect(replies).toContain("status: 'failed'");
+    expect(replies).toContain('status: 503');
+    expect(replies).toContain("'Retry-After': '30'");
+    expect(replies).toContain('details: safeError');
+    expect(replies).toContain('buildContactReplyMail');
+    expect(retryReply).toContain("status: 'failed'");
+    expect(retryReply).toContain("data: { status: 'sending', error: '' }");
+    expect(retryReply).toContain("'admin.message_reply_retried'");
+    expect(retryReply).toContain("'admin.message_reply_retry_failed'");
+    expect(retryReply).toContain('sendTransactionalMail');
+    expect(replyMail).toContain('buildContactReplyMail');
+    expect(messages).toContain('readMessageReplyApiPayload');
+    expect(messages).toContain('Retry delivery');
+    expect(messages).toContain('response.text()');
+    expect(messages).toContain('Reply internally');
+    expect(messages).toContain('Internal correspondence history');
+    expect(messages).toContain("fetch('/api/admin/messages/'");
+    expect(messages).toContain("sessionStorage.getItem('lw-reply-message-id')");
+    expect(messages).not.toContain("href={'mailto:' + viewing.email}");
+    expect(crm).toContain("sessionStorage.setItem('lw-reply-message-id'");
+    expect(crm).not.toContain("href={'mailto:' + selected.contactMessage.email}");
+    expect(proposals).toContain("sessionStorage.setItem('lw-reply-message-id'");
+    expect(proposals).toContain('Accepted proposal → client & project handoff');
+    expect(proposals).toContain('Project expiry date');
+    expect(proposals).toContain('Next renewal date');
+    expect(proposals).toContain('Project budget');
+    expect(proposals).toContain('Renewal amount');
+    expect(proposals).toContain('Review these commercial fields before conversion');
+    expect(proposals).toContain('Review & create client workspace');
+    expect(proposals).not.toContain("href={'mailto:' + selected.lead.contactMessage.email}");
+    expect(convertClientRoute).toContain('budgetAmount');
+    expect(convertClientRoute).toContain('renewalAmount');
+    expect(convertClientRoute).toContain('nextRenewalDate');
+    expect(convertClientRoute).toContain('renewalNoticeDays');
+    expect(convertClientRoute).toContain('ensureProjectAgreementDraft');
+    expect(convertClientRoute).toContain("agreementType: 'statement_of_work'");
+    expect(convertClientRoute).toContain("status: 'draft'");
+    expect(convertClientRoute).toContain('contractValue: 0');
+    expect(convertClientRoute).toContain('agreementDraftCreated');
+    expect(convertClientRoute).toContain('proposal.lead.company || contact.name');
+    expect(proposals).toContain("selected.lead.company?.trim() || selected.lead.contactMessage.name");
+    expect(proposals).toContain("selected.lead.currency?.trim().toUpperCase() || 'GHS'");
+    expect(proposals).toContain('draft Statement of Work');
+    expect(convertClientRoute).toContain("'admin.proposal_converted_to_client'");
+  });
+
+  test('implements the enterprise Support Desk across admin and client portal', () => {
+    const schema = source('prisma/schema.prisma');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const listApi = source('src/app/api/admin/support-tickets/route.ts');
+    const detailApi = source('src/app/api/admin/support-tickets/[id]/route.ts');
+    const notesApi = source('src/app/api/admin/support-tickets/[id]/notes/route.ts');
+    const clientCreate = source('src/app/api/client/tickets/route.ts');
+    const clientReply = source('src/app/api/client/tickets/[id]/messages/route.ts');
+    const adminReply = source('src/app/api/admin/client-tickets/[id]/messages/route.ts');
+    const clientPortal = source('src/components/client/ClientPortalPage.tsx');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(schema).toMatch(/ticketNumber\s+String\s+@unique/);
+    expect(schema).toContain('firstResponseDueAt DateTime?');
+    expect(schema).toContain('internalNotes      ClientTicketInternalNote[]');
+    expect(schema).toContain('model ClientTicketInternalNote');
+    expect(support).toContain('Enterprise Support Desk');
+    expect(support).toContain('Private staff notes');
+    expect(support).toContain('SLA breached');
+    expect(listApi).toContain('supportSlaState');
+    expect(detailApi).toContain('unreadByAdmin: false');
+    expect(notesApi).toContain("'admin.support_ticket_internal_note_added'");
+    expect(clientCreate).toContain('nextSupportTicketNumber');
+    expect(clientCreate).toContain('notifySupportDesk');
+    expect(clientReply).toContain("status === 'awaiting_client'");
+    expect(adminReply).toContain('notifyClientOfSupportReply');
+    expect(adminReply).toContain("status: nextStatus");
+    expect(clientPortal).toContain('Search ticket number or subject');
+    expect(clientPortal).toContain('ticket.category');
+    expect(layout).toContain("label: 'Support Desk'");
+  });
+
+  test('supports bounded multi-file evidence selection on both support surfaces', () => {
+    const client = source('src/components/client/ClientPortalPage.tsx');
+    const admin = source('src/components/admin/AdminSupportDesk.tsx');
+
+    expect(client).toContain('uploadTicketAttachments');
+    expect(client).toContain('Array.from(selectedFiles).slice(0, 5)');
+    expect(client).toContain('multiple');
+    expect(client).toContain('Select up to 5 files at once');
+    expect(admin).toContain('uploadAttachments');
+    expect(admin).toContain('Array.from(selectedFiles).slice(0, 5)');
+    expect(admin).toContain('multiple');
+    expect(admin).toContain('Select up to 5 at once');
+  });
+
+  test('keeps support evidence private and records a ticket activity timeline', () => {
+    const schema = source('prisma/schema.prisma');
+    const clientUpload = source('src/app/api/client/tickets/[id]/attachments/route.ts');
+    const adminUpload = source('src/app/api/admin/support-tickets/[id]/attachments/route.ts');
+    const download = source('src/app/api/support-attachments/[id]/route.ts');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const clientPortal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(schema).toContain('model ClientTicketAttachment');
+    expect(schema).toContain('model ClientTicketEvent');
+    expect(clientUpload).toContain('detectSupportAttachment');
+    expect(clientUpload).toContain("uploadedByType: 'client'");
+    expect(adminUpload).toContain("uploadedByType: 'admin'");
+    expect(download).toContain("if (!admin && !client)");
+    expect(download.indexOf("if (!admin && !client)")).toBeLessThan(
+      download.indexOf('db.clientTicketAttachment.findUnique'),
+    );
+    expect(download).toContain("hasAdminPermission(admin.role, admin.permissions, 'clients.manage')");
+    expect(download).toContain('client.user.organizationId !== attachment.ticket.organizationId');
+    expect(download).toContain("'Cache-Control': 'private, no-store, max-age=0'");
+    expect(download).toContain("'X-Content-Type-Options': 'nosniff'");
+    expect(support).toContain('Evidence & attachments');
+    expect(support).toContain('Activity timeline');
+    expect(clientPortal).toContain('Add evidence');
+    expect(clientPortal).toContain("'/api/support-attachments/' + attachment.id");
+  });
+
+  test('keeps export controls available on operational detail tables', () => {
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const details = source('src/components/admin/FinanceRecordDetailsDialog.tsx');
+
+    expect(support).toContain('exportFileName="lightworld-support-desk"');
+    expect(support).not.toContain('<Table hideExport exportFileName="lightworld-support-desk"');
+    expect(details).toContain('exportFileName="lightworld-finance-record-activity"');
+    expect(details).toContain('exportFileName="lightworld-finance-record-lines"');
+    expect(details).not.toContain('<Table hideExport');
+  });
+
+  test('surfaces and retries failed customer payment confirmation channels', () => {
+    const notification = source('src/lib/payment-notification.ts');
+    const retry = source('src/app/api/admin/finance/payments/[id]/notification/route.ts');
+    const commercial = source('src/components/admin/ClientCommercialAccount.tsx');
+    const notices = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notification).toContain('retryFailedChannels');
+    expect(notification).toContain("previousSuccesses.has('email')");
+    expect(notification).toContain("previousSuccesses.has('sms')");
+    expect(retry).toContain("'admin.finance_payment_confirmation_retried'");
+    expect(retry).toContain("['failed', 'partial']");
+    expect(commercial).toContain('Retry confirmation');
+    expect(commercial).toContain('/notification');
+    expect(commercial).toContain('customerNotificationChannels');
+    expect(notices).toContain("id: 'payment-confirmation-failures'");
+    expect(notices).toContain('Payment confirmations need attention');
+  });
+
+  test('uses the approved support SMS template for best-effort client updates', () => {
+    const support = source('src/lib/support-ticket.ts');
+    const reply = source('src/app/api/admin/client-tickets/[id]/messages/route.ts');
+    const status = source('src/app/api/admin/client-tickets/[id]/route.ts');
+    const bulk = source('src/app/api/admin/support-tickets/bulk/route.ts');
+
+    expect(support).toContain("key: 'support_update'");
+    expect(support).toContain("createdBy: 'System support update'");
+    expect(support).toContain('30 * 60 * 1000');
+    expect(support).toContain('queueSingleSms');
+    expect(support).toContain('notifySupportUpdateSms');
+    expect(reply).toContain('organization: { select: { primaryPhone: true } }');
+    expect(reply).toContain('phone: ticket.organization.primaryPhone');
+    expect(status).toContain('phone: existing.organization.primaryPhone');
+    expect(bulk).toContain('phone: ticket.organization.primaryPhone');
+  });
+
+  test('sends idempotent customer payment confirmations for manual and Hubtel receipts', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260926123500_payment_customer_notifications/migration.sql');
+    const notification = source('src/lib/payment-notification.ts');
+    const manualPayments = source('src/app/api/admin/finance/payments/route.ts');
+    const receiptPosting = source('src/lib/finance-receipt-approvals.ts');
+    const hubtelPayment = source('src/lib/hubtel-payment.ts');
+
+    expect(schema).toContain('customerNotificationStatus');
+    expect(schema).toContain('customerNotificationChannels');
+    expect(migration).toContain('customerNotificationStatus');
+    expect(notification).toContain('pg_advisory_xact_lock');
+    expect(notification).toContain("key: 'payment_received'");
+    expect(notification).toContain("createdBy: 'System payment confirmation'");
+    expect(notification).toContain("customerNotificationStatus: 'sending'");
+    expect(notification).toContain("'partial'");
+    expect(notification).toContain("'skipped'");
+    expect(notification).toContain('sendTransactionalMail');
+    expect(manualPayments).toContain('postManualCustomerReceipt(actor, input)');
+    expect(receiptPosting).toContain('notifyCustomerPaymentReceived(payment.id)');
+    expect(hubtelPayment).toContain('notifyCustomerPaymentReceived');
+  });
+
+  test('gives clients secure printable invoice and receipt documents', () => {
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+    const invoiceDocument = source('src/app/api/client/invoices/[id]/document/route.ts');
+    const receiptDocument = source('src/app/api/client/payments/[id]/receipt/route.ts');
+
+    expect(portal).toContain("/api/client/invoices/");
+    expect(portal).toContain("/document");
+    expect(portal).toContain("/api/client/payments/");
+    expect(portal).toContain("/receipt");
+    expect(portal).toContain('View / print');
+    expect(invoiceDocument).toContain('getActiveClientContext');
+    expect(invoiceDocument).toContain('organizationId: context.user.organizationId');
+    expect(invoiceDocument).toContain("status: { notIn: ['draft', 'void'] }");
+    expect(invoiceDocument).toContain('Print / Save PDF');
+    expect(invoiceDocument).toContain("Cache-Control': 'private, no-store");
+    expect(receiptDocument).toContain('getActiveClientContext');
+    expect(receiptDocument).toContain('organizationId: context.user.organizationId');
+    expect(receiptDocument).toContain('Print / Save PDF');
+  });
+
+  test('provides searchable self-service help alongside the client portal', () => {
+    const page = source('src/app/client/page.tsx');
+    const knowledge = source('src/components/client/ClientKnowledgeWidget.tsx');
+
+    expect(page).toContain('ClientKnowledgeWidget');
+    expect(knowledge).toContain("fetch('/api/faqs?active=true'");
+    expect(knowledge).toContain('Client help & knowledge');
+    expect(knowledge).toContain('Search client help');
+    expect(knowledge).toContain('account-specific help');
+  });
+
+  test('warns support operations before SLA breach', () => {
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const api = source('src/app/api/admin/support-tickets/route.ts');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(api).toContain('SUPPORT_SLA_WARNING_MINUTES');
+    expect(api).toContain("sla === 'at_risk'");
+    expect(api).toContain('atRisk');
+    expect(support).toContain('SLA at risk');
+    expect(support).toContain('<option value="at_risk">SLA at risk</option>');
+    expect(notifications).toContain('Support SLA approaching deadline');
+    expect(notifications).toContain("action: 'admin-support-at-risk'");
+    expect(layout).toContain("sessionStorage.setItem('lw-support-sla-filter', 'at_risk')");
+  });
+
+  test('measures support backlog age and reopen incidence', () => {
+    const api = source('src/app/api/admin/support-tickets/route.ts');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+
+    expect(api).toContain("where: { type: 'ticket_reopened' }");
+    expect(api).toContain('avgOpenAgeMinutes');
+    expect(api).toContain('oldestOpenAgeMinutes');
+    expect(api).toContain('reopenedTickets');
+    expect(api).toContain('reopenIncidencePct');
+    expect(api).toContain('not a defect attribution metric');
+    expect(support).toContain('Avg open age');
+    expect(support).toContain('Reopen incidence');
+    expect(support).toContain('oldestOpenAgeMinutes');
+  });
+
+  test('supports real Support Desk agents, bounded bulk actions, exports and SLA escalation', () => {
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const agents = source('src/app/api/admin/support-agents/route.ts');
+    const bulk = source('src/app/api/admin/support-tickets/bulk/route.ts');
+    const exportRoute = source('src/app/api/admin/support-tickets/export/route.ts');
+    const ticketUpdate = source('src/app/api/admin/client-tickets/[id]/route.ts');
+    const supportLib = source('src/lib/support-ticket.ts');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(agents).toContain("normalizeAdminPermissions(admin.permissions).includes('clients.manage')");
+    expect(support).toContain("fetch('/api/admin/support-agents'");
+    expect(support).toContain("fetch('/api/admin/support-tickets/bulk'");
+    expect(support).toContain("fetch('/api/admin/support-tickets/export?'");
+    expect(support).toContain('Select all visible support tickets');
+    expect(bulk).toContain('.max(100)');
+    expect(bulk).toContain('Bulk status changes are limited to 25 tickets at a time');
+    expect(bulk).toContain("'admin.support_tickets_bulk_updated'");
+    expect(exportRoute).toContain("'admin.support_tickets_exported'");
+    expect(ticketUpdate).toContain('Selected assignee is not an active Support Desk agent');
+    expect(supportLib).toContain('reconcileSupportEscalations');
+    expect(supportLib).toContain("type: 'sla_escalated'");
+    expect(notifications).toContain('await reconcileSupportEscalations()');
+  });
+
+  test('keeps the client portfolio searchable and exportable at management scale', () => {
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(clients).toContain('Export portfolio');
+    expect(clients).toContain('lightworld-client-portfolio-');
+    expect(clients).toContain('Priority action queue');
+    expect(clients).toContain('organizationQuery');
+    expect(clients).toContain('organizationStatus');
+    expect(clients).toContain('Filter client organizations by status');
+    expect(clients).toContain('No client organizations match this search.');
+  });
+
+  test('provides a finance-authorized cross-customer executive portfolio cockpit', () => {
+    const clients = source('src/components/admin/AdminClients.tsx');
+    const portfolio = source('src/app/api/admin/clients/portfolio-intelligence/route.ts');
+
+    expect(clients).toContain('Executive client portfolio');
+    expect(clients).toContain('Accounts by management priority');
+    expect(clients).toContain('Priority action queue');
+    expect(clients).toContain('openPortfolioAction');
+    expect(clients).toContain("import { useAppStore } from '@/lib/store';");
+    expect(portfolio).toContain('const actionQueue = rows');
+    expect(portfolio).toContain("'collections' | 'renewals' | 'agreements' | 'support' | 'projects' | 'budget'");
+    expect(portfolio).toContain('Correct project budget overrun');
+    expect(portfolio).toContain('agreementsInNoticeWindow');
+    expect(portfolio).toContain('expiredAgreements');
+    expect(portfolio).toContain('Review expired agreements');
+    expect(clients).toContain('Agreement exceptions');
+    expect(clients).toContain("action.type === 'agreements'");
+    expect(clients).toContain("'client-agreements'");
+    expect(clients).toContain('Currency exposure');
+    expect(clients).toContain('portfolio-intelligence');
+    expect(clients).toContain('setSelectedId(row.id)');
+    expect(portfolio).toContain("'finance.manage'");
+    expect(portfolio).toContain('invoiceBalance');
+    expect(portfolio).toContain('overdueReceivables');
+    expect(portfolio).toContain('renewals30');
+    expect(portfolio).toContain('budgetPressure');
+    expect(portfolio).toContain('overBudget');
+    expect(portfolio).toContain('slaBreaches');
+    expect(portfolio).toContain('Currency values are never converted');
+  });
+
+  test('prepares bounded duplicate-safe renewal invoice drafts without issuing them', () => {
+    const automation = source('src/lib/renewal-draft-automation.ts');
+    const dispatcher = source('src/lib/sms.ts');
+
+    expect(automation).toContain("AUTO_RENEWAL_DRAFT_INVOICES === 'true'");
+    expect(automation).toContain('RENEWAL_DRAFT_INVOICE_BATCH_SIZE');
+    expect(automation).toContain('autoRenew: true');
+    expect(automation).toContain("status: 'draft'");
+    expect(automation).toContain("taxTreatment: 'none'");
+    expect(automation).toContain('human finance review');
+    expect(automation).toContain('pg_advisory_xact_lock');
+    expect(automation).toContain('renewalForDate: renewalDate');
+    expect(automation).toContain("'system.finance_renewal_draft_created'");
+    expect(dispatcher).toContain('renewalDraftQueue');
+  });
+
+  test('exports a multi-currency executive finance management snapshot', () => {
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(dashboard).toContain('Download management pack');
+    expect(dashboard).toContain('Executive finance management snapshot');
+    expect(dashboard).toContain('Cash runway months');
+    expect(dashboard).toContain('Collections control');
+    expect(dashboard).toContain('Currencies remain separate');
+    expect(dashboard).toContain('lightworld-finance-management-');
+  });
+
+  test('supports bounded bulk Hubtel reminders from collections', () => {
+    const workspace = source('src/components/admin/FinanceCollectionsWorkspace.tsx');
+    const bulk = source('src/app/api/admin/finance/collections/bulk-reminders/route.ts');
+
+    expect(workspace).toContain('Send selected reminders');
+    expect(workspace).toContain('maximum 25 per action');
+    expect(workspace).toContain('/api/admin/finance/collections/bulk-reminders');
+    expect(bulk).toContain('.max(25)');
+    expect(bulk).toContain('promise_to_pay');
+    expect(bulk).toContain("createdAt: { gte: duplicateCutoff }");
+    expect(bulk).toContain("type: 'sms_reminder_scheduled'");
+    expect(bulk).toContain("'admin.finance_collection_bulk_sms_scheduled'");
+  });
+
+  test('measures per-currency customer receivable concentration without FX assumptions', () => {
+    const api = source('src/app/api/admin/finance/dashboard/route.ts');
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(api).toContain('receivableConcentrationRaw');
+    expect(api).toContain('topSharePct');
+    expect(api).toContain('top3SharePct');
+    expect(api).toContain('No FX conversion is applied');
+    expect(dashboard).toContain('Customer concentration');
+    expect(dashboard).toContain('Largest customer receivable share %');
+  });
+
+  test('reports renewal workflow completion without presenting it as retention', () => {
+    const api = source('src/app/api/admin/finance/dashboard/route.ts');
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(api).toContain('renewalPerformance');
+    expect(api).toContain('completedDueInPeriod');
+    expect(api).toContain('overdueOpenRenewals');
+    expect(api).toContain('This is not a customer-retention rate');
+    expect(dashboard).toContain('Renewal workflow performance');
+    expect(dashboard).toContain('Renewal workflow completion %');
+  });
+
+  test('normalizes recurring service revenue into MRR and ARR without guessing custom cycles', () => {
+    const api = source('src/app/api/admin/finance/dashboard/route.ts');
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(api).toContain('recurringRevenueRaw');
+    expect(api).toContain("service.billingCycle === 'quarterly'");
+    expect(api).toContain("service.billingCycle === 'semiannual'");
+    expect(api).toContain("service.billingCycle === 'annual'");
+    expect(api).toContain('One-time and custom cycles are excluded rather than estimated');
+    expect(dashboard).toContain('Recurring revenue');
+    expect(dashboard).toContain("'MRR'");
+    expect(dashboard).toContain("'ARR'");
+  });
+
+  test('adds per-currency historical cash runway without FX assumptions', () => {
+    const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
+    const dashboard = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(dashboardApi).toContain('const runway = Object.fromEntries');
+    expect(dashboardApi).toContain('averageMonthlyCashOut');
+    expect(dashboardApi).toContain('sampleMonths');
+    expect(dashboardApi).toContain('Historical cash-out coverage');
+    expect(dashboardApi).toContain('Future collections and currency conversion are excluded');
+    expect(dashboard).toContain('Cash runway');
+    expect(dashboard).toContain('avg monthly cash out');
+    expect(dashboard).toContain('runway.methodology');
+  });
+
+  test('implements customer accounts billing debtors creditors cashflow and management P&L', () => {
+    const schema = source('prisma/schema.prisma');
+    const permissions = source('src/lib/admin-permissions.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+    const executiveFinance = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+    const executiveActions = source('src/components/admin/FinanceExecutiveActionCenter.tsx');
+    const executiveActionsApi = source('src/app/api/admin/finance/executive-actions/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+    const clientCommercial = source('src/components/admin/ClientCommercialAccount.tsx');
+    const clientCommercialApi = source('src/app/api/admin/clients/[id]/commercial/route.ts');
+    const adminStatement = source('src/app/api/admin/clients/[id]/statement/route.ts');
+    const clientStatement = source('src/app/api/client/account/statement/route.ts');
+    const customerStatement = source('src/lib/customer-statement.ts');
+    const projectCreateApi = source('src/app/api/admin/clients/[id]/projects/route.ts');
+    const projectUpdateApi = source('src/app/api/admin/client-projects/[id]/route.ts');
+    const dashboard = source('src/app/api/admin/finance/dashboard/route.ts');
+    const invoices = source('src/app/api/admin/finance/invoices/route.ts');
+    const invoiceAccessLink = source('src/lib/invoice-access-link.ts');
+    const invoiceAccessApi = source('src/app/api/admin/finance/invoices/[id]/access-link/route.ts');
+    const invoiceSendApi = source('src/app/api/admin/finance/invoices/[id]/send/route.ts');
+    const publicInvoiceApi = source('src/app/api/invoice/[token]/route.ts');
+    const publicInvoicePay = source('src/app/api/invoice/[token]/pay/route.ts');
+    const publicInvoicePage = source('src/components/invoice/PublicInvoicePage.tsx');
+    const invoiceAccessMigration = source('prisma/migrations/20260924233000_invoice_secure_delivery/migration.sql');
+    const receipts = source('src/app/api/admin/finance/payments/route.ts');
+    const receiptPosting = source('src/lib/finance-receipt-approvals.ts');
+    const bills = source('src/app/api/admin/finance/bills/route.ts');
+    const expenses = source('src/app/api/admin/finance/expenses/route.ts');
+    const expenseAttributionMigration = source('prisma/migrations/20260925114500_finance_expense_customer_attribution/migration.sql');
+    const vendorPayments = source('src/app/api/admin/finance/vendor-payments/route.ts');
+    const renewalReminder = source('src/app/api/admin/finance/services/[id]/renewal-reminder/route.ts');
+    const projectRenewalReminder = source('src/app/api/admin/client-projects/[id]/renewal-reminder/route.ts');
+    const projectRenewalTemplateMigration = source('prisma/migrations/20260925140500_project_renewal_sms_templates/migration.sql');
+    const recordDetails = source('src/app/api/admin/finance/records/[type]/[id]/route.ts');
+    const financeDetails = source('src/components/admin/FinanceRecordDetailsDialog.tsx');
+    const accounting = source('src/components/admin/FinanceAccountingWorkspace.tsx');
+    const statementsWorkspace = source('src/components/admin/FinanceFinancialStatements.tsx');
+    const collections = source('src/components/admin/FinanceCollectionsWorkspace.tsx');
+    const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
+    const financeMeta = source('src/app/api/admin/finance/meta/route.ts');
+    const renewalCompletionApi = source('src/app/api/admin/finance/invoices/[id]/complete-renewal/route.ts');
+    const serviceRenewalLib = source('src/lib/service-renewal.ts');
+    const serviceRenewalTest = source('src/lib/service-renewal.test.ts');
+    const collectionsApi = source('src/app/api/admin/finance/collections/route.ts');
+    const collectionCompleteApi = source('src/app/api/admin/finance/collections/[id]/route.ts');
+    const collectionsMigration = source('prisma/migrations/20260924003000_finance_collections_workflow/migration.sql');
+    const renewalCycleMigration = source('prisma/migrations/20260924004500_invoice_renewal_cycle_marker/migration.sql');
+    const renewalCompletionMigration = source('prisma/migrations/20260924010000_service_renewal_completion/migration.sql');
+    const accountsApi = source('src/app/api/admin/finance/accounting/accounts/route.ts');
+    const periodsApi = source('src/app/api/admin/finance/accounting/periods/route.ts');
+    const periodActionApi = source('src/app/api/admin/finance/accounting/periods/[id]/route.ts');
+    const journalsApi = source('src/app/api/admin/finance/accounting/journals/route.ts');
+    const journalReversalApi = source('src/app/api/admin/finance/accounting/journals/[id]/reverse/route.ts');
+    const trialBalanceApi = source('src/app/api/admin/finance/accounting/reports/trial-balance/route.ts');
+    const generalLedgerApi = source('src/app/api/admin/finance/accounting/reports/general-ledger/route.ts');
+    const financialStatementsApi = source('src/app/api/admin/finance/accounting/reports/financial-statements/route.ts');
+    const cashbookApi = source('src/app/api/admin/finance/accounting/reports/cashbook/route.ts');
+    const financialStatements = source('src/components/admin/FinanceFinancialStatements.tsx');
+    const cashbookWorkspace = source('src/components/admin/FinanceCashbookWorkspace.tsx');
+    const ledgerInitialization = source('src/components/admin/FinanceLedgerInitialization.tsx');
+    const ledgerBackfillApi = source('src/app/api/admin/finance/accounting/backfill/route.ts');
+    const financeLedger = source('src/lib/finance-ledger.ts');
+    const creditNotesApi = source('src/app/api/admin/finance/credit-notes/route.ts');
+    const refundsApi = source('src/app/api/admin/finance/refunds/route.ts');
+    const customerCredits = source('src/components/admin/FinanceCustomerCredits.tsx');
+    const reconciliationApi = source('src/app/api/admin/finance/accounting/reconciliation/route.ts');
+    const reconciliationDetailApi = source('src/app/api/admin/finance/accounting/reconciliation/[id]/route.ts');
+    const reconciliationMatchApi = source('src/app/api/admin/finance/accounting/reconciliation/[id]/match/route.ts');
+    const reconciliationFinalizeApi = source('src/app/api/admin/finance/accounting/reconciliation/[id]/finalize/route.ts');
+    const reconciliationWorkspace = source('src/components/admin/FinanceReconciliationWorkspace.tsx');
+    const closeReadinessApi = source('src/app/api/admin/finance/accounting/close-readiness/route.ts');
+    const monthCloseApi = source('src/app/api/admin/finance/accounting/month-close/route.ts');
+    const closeWorkspace = source('src/components/admin/FinanceCloseWorkspace.tsx');
+    const financeClose = source('src/lib/finance-close.ts');
+    const financeControlsMigration = source('prisma/migrations/20260923151500_finance_controls_credit_refund_reconciliation/migration.sql');
+    const monthCloseMigration = source('prisma/migrations/20260923154500_finance_month_close_locks/migration.sql');
+    const taxMigration = source('prisma/migrations/20260923162500_ghana_vat_tax_controls/migration.sql');
+    const financeVendorBillTaxRepair = source('prisma/migrations/20260925151500_finance_vendor_bill_tax_recoverable_repair/migration.sql');
+    const projectCommercialMigration = source('prisma/migrations/20260923165000_client_project_commercial_lifecycle/migration.sql');
+    const projectBudgetMigration = source('prisma/migrations/20260925120500_client_project_budget_planning/migration.sql');
+    const approvalMigration = source('prisma/migrations/20260923172000_finance_outflow_maker_checker/migration.sql');
+    const approvalPolicyApi = source('src/app/api/admin/finance/approvals/policy/route.ts');
+    const approvalsApi = source('src/app/api/admin/finance/approvals/route.ts');
+    const approvalDecisionApi = source('src/app/api/admin/finance/approvals/[id]/route.ts');
+    const approvalLib = source('src/lib/finance-approvals.ts');
+    const approvalWorkspace = source('src/components/admin/FinanceOutflowApprovals.tsx');
+    const taxProfileApi = source('src/app/api/admin/finance/accounting/tax/profile/route.ts');
+    const taxReportApi = source('src/app/api/admin/finance/accounting/tax/report/route.ts');
+    const taxWorkspace = source('src/components/admin/FinanceTaxWorkspace.tsx');
+    const sourceIntegrityMigration = source('prisma/migrations/20260923134500_finance_source_journal_integrity/migration.sql');
+    const accountingMigration = source('prisma/migrations/20260923132000_double_entry_accounting_core/migration.sql');
+    const portalApi = source('src/app/api/client/portal/route.ts');
+    const statement = source('src/app/api/client/account/statement/route.ts');
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(schema).toContain('model ClientServiceAccount');
+    expect(schema).toContain('model ClientInvoice');
+    expect(schema).toContain('model ClientPaymentAllocation');
+    expect(schema).toContain('model FinanceVendorBill');
+    expect(schema).toContain('model FinanceExpense');
+    expect(schema).toContain('organizationId String?');
+    expect(schema).toContain('projectId      String?');
+    expect(schema).toContain('serviceId      String?');
+    expect(schema).toContain('model FinanceAccount');
+    expect(schema).toContain('model FinanceAccountingPeriod');
+    expect(schema).toContain('model FinanceJournalEntry');
+    expect(schema).toContain('model FinanceJournalLine');
+    expect(schema).toContain('model FinanceCreditNote');
+    expect(schema).toContain('model FinanceCustomerRefund');
+    expect(schema).toContain('model FinanceReconciliationBatch');
+    expect(schema).toContain('model FinanceReconciliationLine');
+    expect(schema).toContain('model FinanceMonthClose');
+    expect(schema).toContain('model FinanceTaxProfile');
+    expect(schema).toContain('taxTreatment');
+    expect(schema).toContain('taxRecoverable');
+    expect(schema).toContain('vatAmount');
+    expect(schema).toContain('nhilAmount');
+    expect(schema).toContain('getfundAmount');
+    expect(schema).toContain('nextRenewalDate');
+    expect(schema).toContain('renewalAmount');
+    expect(schema).toContain('budgetCurrency');
+    expect(schema).toContain('budgetAmount');
+    expect(schema).toContain('renewalCurrency');
+    expect(schema).toContain('renewalNoticeDays');
+    expect(schema).toContain('model FinanceApprovalPolicy');
+    expect(schema).toContain('model FinanceOutflowApproval');
+    expect(schema).toContain('model FinanceCollectionActivity');
+    expect(schema).toContain('renewalForDate');
+    expect(schema).toContain('renewalCompletedAt');
+    expect(schema).toContain('sourceInvoiceId');
+    expect(schema).toContain('previousExpiryDate');
+    expect(schema).toContain('newNextDueDate');
+    expect(permissions).toContain("key: 'finance.manage'");
+    expect(permissions).toContain("key: 'finance.approve'");
+    expect(permissions).toContain("pathname.startsWith('/api/admin/finance')");
+    expect(finance).toContain('Finance & Accounts');
+    expect(finance).toContain('const raw = await response.text()');
+    expect(finance).toContain('Finance endpoint returned invalid JSON');
+    expect(finance).toContain('Finance endpoint returned an empty response');
+    expect(finance).toContain("const maxAttempts = method === 'GET' ? 2 : 1");
+    expect(finance).toContain('[502, 503, 504].includes(response.status)');
+    expect(finance).not.toContain('const payload = await response.json();');
+    expect(finance).toContain('Customer accounts');
+    expect(finance).toContain('Suppliers & expenses');
+    expect(finance).toContain("['accounting', 'Accounting']");
+    expect(finance).toContain("['collections', 'Collections']");
+    expect(finance).toContain("['renewals', 'Renewals']");
+    expect(finance).toContain('projects={data.organizations.flatMap');
+    expect(finance).toContain('FinanceAccountingWorkspace');
+    expect(finance).toContain('FinanceExecutiveDashboard');
+    expect(executiveFinance).toContain('FinanceExecutiveActionCenter');
+    expect(executiveActions).toContain('Executive action centre');
+    expect(executiveActions).toContain('Paid cycles awaiting completion');
+    expect(executiveActions).toContain('Outflows awaiting approval');
+    expect(executiveActions).toContain('Prior-month close');
+    expect(executiveActions).toContain('/api/admin/finance/executive-actions');
+    expect(executiveActionsApi).toContain("'finance.manage'");
+    expect(executiveActionsApi).toContain("status: 'pending'");
+    expect(executiveActionsApi).toContain('renewalCompletedAt: null');
+    expect(executiveActionsApi).toContain('invoiceBalance');
+    expect(executiveActionsApi).toContain('assessFinanceClose');
+    expect(finance).toContain("setAccountingView('approvals')");
+    expect(finance).toContain("setAccountingView('close')");
+    expect(finance).toContain('FinanceRenewalBillingWorkspace');
+    expect(finance).toContain('FinanceCollectionsWorkspace');
+    expect(finance).toContain('Manage service');
+    expect(finance).toContain('Save service change');
+    expect(finance).toContain('Service history');
+    expect(finance).toContain("changeType: 'renewal'");
+    expect(finance).toContain('Prepare renewal invoice');
+    expect(finance).toContain('Send renewal SMS');
+    expect(finance).toContain('/renewal-reminder');
+    expect(finance).toContain('FinanceRecordDetailsDialog');
+    expect(finance).toContain("openFinanceRecord('invoice'");
+    expect(finance).toContain("openFinanceRecord('receipt'");
+    expect(finance).toContain("openFinanceRecord('bill'");
+    expect(finance).toContain("openFinanceRecord('expense'");
+    expect(finance).toContain('prepareReceiptFromInvoice');
+    expect(finance).toContain('prepareSupplierPaymentFromBill');
+    expect(executiveFinance).toContain('Financial command centre');
+    expect(executiveFinance).toContain('Available liquidity');
+    expect(executiveFinance).toContain('Receivables');
+    expect(executiveFinance).toContain('Payables');
+    expect(executiveFinance).toContain('Net profit');
+    expect(executiveFinance).toContain('Renewal exposure');
+    expect(executiveFinance).toContain('Collection pressure');
+    expect(executiveFinance).toContain('Performance trend');
+    expect(executiveFinance).toContain('Cashflow trend');
+    expect(executiveFinance).toContain('Receivables health');
+    expect(executiveFinance).toContain('Supplier payables aging');
+    expect(executiveFinance).toContain('Current payables');
+    expect(executiveFinance).toContain('Overdue payables');
+    expect(executiveFinance).toContain('dashboard.aging.creditors');
+    expect(executiveFinance).toContain('creditorAging.map');
+    expect(executiveFinance).toContain('Largest customer balances');
+    expect(executiveFinance).toContain('Largest supplier balances');
+    expect(executiveFinance).toContain('Renewal action centre');
+    expect(executiveFinance).toContain('Currencies remain separate');
+    expect(executiveFinance).toContain('ChartContainer');
+    expect(executiveFinance).toContain('lightworld-executive-debtors');
+    expect(executiveFinance).toContain('lightworld-executive-creditors');
+    expect(finance).toContain("setAccountingView('cashbook')");
+    expect(finance).toContain("setAccountingView('statements')");
+    expect(collections).toContain('Receivables collection queue');
+    expect(collections).toContain('Promise to pay');
+    expect(collections).toContain('Send Hubtel payment reminder');
+    expect(collections).toContain('Send payment reminder email');
+    expect(collections).toContain('Log email contact (no send)');
+    expect(collections).toContain('onOpenCustomer');
+    expect(collections).toContain('Mark complete');
+    expect(collections).toContain('exportFileName="lightworld-receivables-collection-queue"');
+    expect(collectionsApi).toContain("'promise_to_pay'");
+    expect(collectionsApi).toContain("'sms_reminder'");
+    expect(collectionsApi).toContain("'email_reminder'");
+    expect(collectionsApi).toContain("'email_reminder_sending'");
+    expect(collectionsApi).toContain("'communications.manage'");
+    expect(collectionsApi).toContain('getMailTransportStatus');
+    expect(collectionsApi).toContain('sendTransactionalMail');
+    expect(collectionsApi).toContain('sanitizeMailError');
+    expect(collectionsApi).toContain("'admin.finance_collection_email_reminder_sent'");
+    expect(collectionsApi).toContain("'admin.finance_collection_email_reminder_failed'");
+    expect(collectionsApi).toContain("key: 'payment_due'");
+    expect(collectionsApi).toContain('12 * 60 * 60 * 1000');
+    expect(collectionsApi).toContain('queueSingleSms');
+    expect(collectionCompleteApi).toContain('completedAt: new Date()');
+    expect(collectionsMigration).toContain('CREATE TABLE "FinanceCollectionActivity"');
+    expect(finance).toContain('exportFileName="lightworld-client-services"');
+    expect(finance).toContain('exportFileName="lightworld-client-invoices"');
+    expect(finance).toContain('exportFileName="lightworld-client-receipts"');
+    expect(finance).toContain('exportFileName="lightworld-supplier-bills"');
+    expect(finance).toContain('exportFileName="lightworld-direct-expenses"');
+    expect(finance).toContain('Customer attribution');
+    expect(finance).toContain('feeds Customer 360 profitability reporting');
+    expect(finance).toContain('lw-finance-action');
+    expect(finance).toContain("deepLinkAction === 'invoice'");
+    expect(finance).toContain("deepLinkAction === 'receipt'");
+    expect(finance).toContain("deepLinkAction === 'service'");
+    expect(expenses).toContain('Project does not belong to the selected customer');
+    expect(expenses).toContain('Service is linked to a different project');
+    expect(expenses).toContain('organizationId,');
+    expect(expenses).toContain('projectId,');
+    expect(expenses).toContain('serviceId,');
+    expect(expenseAttributionMigration).toContain('FinanceExpense_organizationId_fkey');
+    expect(expenseAttributionMigration).toContain('FinanceExpense_projectId_fkey');
+    expect(expenseAttributionMigration).toContain('FinanceExpense_serviceId_fkey');
+    expect(finance).toContain('Tax treatment');
+    expect(finance).toContain('Ghana standard VAT');
+    expect(finance).toContain('Recoverable input tax');
+    expect(finance).toContain('invoiceVatPreview');
+    expect(finance).toContain('billVatPreview');
+    expect(clients).toContain('ClientCommercialAccount');
+    expect(clients).toContain('Client command centre sections');
+    expect(clients).toContain('Primary contact');
+    expect(clients).toContain('Portal access');
+    expect(clients).toContain('Delivery portfolio');
+    expect(clients).toContain('Support load');
+    expect(clients).toContain('client-overview');
+    expect(clients).toContain('client-portal-users');
+    expect(clients).toContain('client-commercial');
+    expect(clients).toContain('client-communications');
+    expect(clients).toContain('client-projects');
+    expect(clients).toContain('client-support');
+    expect(clients).toContain('scrollIntoView');
+    expect(clients).toContain('Commercial lifecycle');
+    expect(clients).toContain('Expiry date');
+    expect(clients).toContain('Next renewal');
+    expect(clients).toContain('Renewal amount');
+    expect(clients).toContain('Project budget');
+    expect(clients).toContain('Budget CCY');
+    expect(clients).toContain('Auto-renew');
+    expect(clientCommercial).toContain('Account & billing');
+    expect(clientCommercial).toContain('Record customer payment');
+    expect(clientCommercial).toContain('Invoices & balances');
+    expect(clientCommercial).toContain('Service expiry & renewal');
+    expect(clientCommercial).toContain('Customer payment history');
+    expect(clientCommercial).toContain('Service commercial history');
+    expect(clientCommercial).toContain('Customer 360 commercial pulse');
+    expect(clientCommercial).toContain('Executive intelligence brief');
+    expect(clientCommercial).toContain('Management priorities');
+    expect(clientCommercial).toContain('Evidence:');
+    expect(clientCommercial).toContain('executiveBrief.controls');
+    expect(clientCommercial).toContain('Customer quick actions');
+    expect(clientCommercial).toContain('Issue invoice');
+    expect(clientCommercial).toContain('Add service');
+    expect(clientCommercial).toContain('Project dates');
+    expect(clientCommercial).toContain('Create project');
+    expect(clientCommercial).toContain('SMS customer');
+    expect(clientCommercial).toContain('Payment reminder');
+    expect(clientCommercial).toContain('Renewal reminder');
+    expect(clientCommercial).toContain('Project renewal reminder');
+    expect(clientCommercial).toContain("setPendingReminder('project_renewal_sms')");
+    expect(clientCommercial).toContain('/api/admin/client-projects/');
+    expect(clientCommercial).toContain("setPendingReminder('payment_sms')");
+    expect(clientCommercial).toContain("setPendingReminder('renewal_sms')");
+    expect(clientCommercial).toContain("fetch('/api/admin/finance/collections'");
+    expect(clientCommercial).toContain('/renewal-reminder');
+    expect(clientCommercial).toContain('Duplicate reminders are blocked for 12 hours');
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-client-action', 'new-project')");
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-sms-recipient'");
+    expect(clients).toContain("sessionStorage.getItem('lw-client-action')");
+    expect(clients).toContain("pendingClientAction === 'new-project'");
+    expect(clients).toContain('client-new-project-name');
+    expect(clientCommercialApi).toContain('nextCollectionInvoice');
+    expect(clientCommercialApi).toContain('collectionTarget');
+    expect(clientCommercial).toContain('Create project');
+    expect(clientCommercial).toContain('SMS customer');
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-client-action', 'new-project')");
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-sms-recipient'");
+    expect(clients).toContain("sessionStorage.getItem('lw-client-action')");
+    expect(clients).toContain("pendingClientAction === 'new-project'");
+    expect(clients).toContain('client-new-project-name');
+    expect(clientCommercial).toContain('Direct profitability');
+    expect(clientCommercial).toContain('Project profitability & completion forecast');
+    expect(clientCommercial).toContain('% budget used');
+    expect(clientCommercial).toContain('budgetRemaining');
+    expect(clientCommercial).toContain('Service margins');
+    expect(clientCommercial).toContain('Forecasts are decision support');
+    expect(clientCommercial).toContain('Actual cost');
+    expect(clientCommercial).toContain('Progress / burn');
+    expect(clientCommercial).toContain('EAC');
+    expect(clientCommercial).toContain('ETC');
+    expect(clientCommercial).toContain('Forecast variance');
+    expect(clientCommercial).toContain('Forecast margin');
+    expect(clientCommercial).toContain('Cost +');
+    expect(clientCommercial).toContain('vs issued revenue');
+
+    expect(clientCommercial).toContain('Drill down');
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-finance-project-id'");
+    expect(clientCommercial).toContain("sessionStorage.setItem('lw-finance-service-id'");
+    expect(finance).toContain("sessionStorage.getItem('lw-finance-project-id')");
+    expect(finance).toContain("sessionStorage.getItem('lw-finance-service-id')");
+    expect(finance).toContain('Customer finance drill-down');
+    expect(finance).toContain('scopedCustomerServices');
+    expect(finance).toContain('scopedCustomerInvoices');
+    expect(finance).toContain('scopedCustomerReceipts');
+    expect(finance).toContain('scopedCustomerExpenses');
+    expect(finance).toContain('Attributed direct expenses');
+    expect(finance).toContain('Show all customer finance');
+    expect(clientCommercial).toContain('30 / 90 day commercial forecast');
+    expect(clientCommercial).toContain('Receivables due');
+    expect(clientCommercial).toContain('Account health');
+    expect(clientCommercial).toContain('Recommended next actions');
+    expect(clientCommercial).toContain('Recent customer activity');
+    expect(clientCommercial).toContain('Payments, invoices, collections, client announcements and support conversations');
+    expect(clientCommercial).toContain('Customer communications');
+    expect(clientCommercial).toContain('Next collection follow-up');
+    expect(clientCommercial).toContain('Next promise to pay');
+    expect(clientCommercial).toContain('SLA breaches');
+    expect(clientCommercial).toContain('Reply internally');
+    expect(clientCommercial).toContain('lw-reply-message-id');
+    expect(clientCommercial).toContain('lw-open-message-id');
+    expect(clientCommercial).toContain('runCustomerAction');
+    expect(clientCommercial).toContain('Delivery portfolio');
+    expect(clientCommercial).toContain('Support pressure');
+    expect(clientCommercial).toContain('Due in 30 days');
+    expect(clientCommercial).toContain('lightworld-client-project-commercial-pulse');
+    expect(clientCommercial).toContain('lightworld-client-open-support-pulse');
+    expect(clientCommercial).toContain('lightworld-client-service-history');
+    expect(clientCommercialApi).toContain('activeProjects');
+    expect(clientCommercialApi).toContain('atRiskProjects');
+    expect(clientCommercialApi).toContain('urgentTickets');
+    expect(clientCommercialApi).toContain('overdueInvoices');
+    expect(clientCommercialApi).toContain('renewalsDue30');
+    expect(clientCommercialApi).toContain('expiredServices');
+    expect(clientCommercialApi).toContain('nextRenewal');
+    expect(clientCommercialApi).toContain('nextProjectRenewal');
+    expect(clientCommercialApi).toContain('projectRenewalsDue30');
+    expect(clientCommercialApi).toContain('overdueProjectRenewals');
+    expect(clientCommercialApi).toContain('project_renewal_overdue');
+    expect(clientCommercialApi).toContain('accountHealth');
+    expect(clientCommercialApi).toContain('executiveBrief');
+    expect(clientCommercialApi).toContain('executivePriorities');
+    expect(clientCommercialApi).toContain('negativeMarginRows');
+    expect(clientCommercialApi).toContain('budgetPressureRows');
+    expect(clientCommercialApi).toContain('overBudgetRows');
+    expect(clientCommercialApi).toContain('Decision support only');
+    expect(clientCommercialApi).toContain('riskSignals');
+    expect(clientCommercialApi).toContain('nextActions');
+    expect(clientCommercialApi).toContain('recentActivity');
+    expect(clientCommercialApi).toContain('communicationThreads');
+    expect(clientCommercialApi).toContain('commitments');
+    expect(clientCommercialApi).toContain('slaBreachedTickets');
+    expect(clientCommercialApi).toContain('nextCollectionFollowUp');
+    expect(clientCommercialApi).toContain('nextPaymentPromise');
+    expect(clientCommercialApi).toContain('financeExpense.findMany');
+    expect(clientCommercialApi).toContain('profitabilityRows');
+    expect(clientCommercialApi).toContain('directCost');
+    expect(clientCommercialApi).toContain('marginPercent');
+    expect(clientCommercialApi).toContain('budgetUtilizationPercent');
+    expect(clientCommercialApi).toContain('budgetRemaining');
+    expect(clientCommercialApi).toContain('forecastCostAtCompletion');
+    expect(clientCommercialApi).toContain('forecastCostToComplete');
+    expect(clientCommercialApi).toContain('forecastBudgetVariance');
+    expect(clientCommercialApi).toContain('forecastBudgetVariancePercent');
+    expect(clientCommercialApi).toContain('forecastMargin');
+    expect(clientCommercialApi).toContain('costProgressGapPercent');
+    expect(clientCommercialApi).toContain('forecastMaturity');
+    expect(clientCommercialApi).toContain('forecastOverBudgetRows');
+    expect(clientCommercialApi).toContain('costAheadOfProgressRows');
+    expect(clientCommercialApi).toContain('forecast_budget_overrun');
+    expect(clientCommercialApi).toContain('cost_ahead_of_progress');
+    expect(clientCommercialApi).toContain('EAC = actual direct cost');
+
+    expect(clientCommercialApi).toContain('buildForecast');
+    expect(clientCommercialApi).toContain('next30Days');
+    expect(clientCommercialApi).toContain('next90Days');
+    expect(clientCommercialApi).toContain('serviceRenewals');
+    expect(clientCommercialApi).toContain('projectRenewals');
+    expect(clientCommercialApi).toContain('contactMessage.findMany');
+    expect(clientCommercialApi).toContain("mode: 'insensitive'");
+    expect(clientCommercialApi).toContain('financeCollectionActivity.findMany');
+    expect(clientCommercialApi).toContain('clientAnnouncement.findMany');
+    expect(clientCommercialApi).toContain('clientTicketMessage.findMany');
+    expect(clientCommercialApi).toContain('overdue_receivables');
+    expect(clientCommercialApi).toContain('urgent_support');
+    expect(clientCommercialApi).toContain('delivery_risk');
+    expect(clientCommercial).toContain('lw-finance-section');
+    expect(clientCommercial).toContain('/statement');
+    expect(clientCommercial).toContain("fetch('/api/admin/finance/payments'");
+    expect(adminStatement).toContain("'finance.manage'");
+    expect(adminStatement).toContain('admin.client_account_statement_downloaded');
+    expect(adminStatement).toContain('buildCustomerAccountStatement');
+    expect(clientStatement).toContain('buildCustomerAccountStatement');
+    expect(customerStatement).toContain('Credit Note');
+    expect(customerStatement).toContain('Closing balances');
+    expect(clientCommercialApi).toContain("'finance.manage'");
+    expect(clientCommercialApi).toContain('invoiceBalance');
+    expect(clientCommercialApi).toContain('paymentUnallocated');
+    expect(projectCreateApi).toContain('nextRenewalDate');
+    expect(projectCreateApi).toContain('renewalAmount');
+    expect(projectUpdateApi).toContain('nextRenewalDate');
+    expect(projectUpdateApi).toContain('renewalCurrency');
+    expect(financeMeta).toContain('nextRenewalDate: true');
+    expect(financeMeta).toContain('renewalAmount: true');
+    expect(financeMeta).toContain('renewalNoticeDays: true');
+    expect(financeMeta).toContain('renewalAmount: project.renewalAmount.toFixed(2)');
+    expect(projectRenewalReminder).toContain("'finance.manage'");
+    expect(projectRenewalReminder).toContain("'communications.manage'");    expect(projectRenewalReminder).toContain("'project_renewal'");
+    expect(projectRenewalReminder).toContain("'project_expired'");
+    expect(projectRenewalReminder).toContain('12 * 60 * 60 * 1000');
+    expect(projectRenewalReminder).toContain("'admin.project_renewal_reminder_sent'");
+    expect(projectRenewalTemplateMigration).toContain("'project_renewal'");
+    expect(projectRenewalTemplateMigration).toContain("'project_expired'");
+    expect(dashboard).toContain('netCashflow');
+    expect(dashboard).toContain('netProfit');
+    expect(dashboard).toContain('agedDebtors');
+    expect(dashboard).toContain('agedCreditors');
+    expect(dashboard).toContain('cashBalances');
+    expect(dashboard).toContain('SUM(line."debit" - line."credit")');
+    expect(dashboard).toContain('cashPosition');
+    expect(dashboard).toContain('renewalExposure');
+    expect(dashboard).toContain('latestPromises');
+    expect(dashboard).toContain('DISTINCT ON (activity."invoiceId")');
+    expect(dashboard).toContain('dueFollowUps');
+    expect(dashboard).toContain('followUpDueInvoices');
+    expect(dashboard).toContain('brokenPromises');
+    expect(dashboard).toContain('promiseAmounts');
+    expect(dashboard).toContain('trendPeriods');
+    expect(dashboard).toContain('trends');
+    expect(dashboard).toContain('earnedInvoiceRevenue');
+    expect(dashboard).toContain('invoice.subtotal.minus(invoice.discount)');
+    expect(dashboard).toContain('supplierExpenseBase');
+    expect(dashboard).toContain('bill.taxRecoverable');
+    expect(dashboard).toContain('note.subtotal.negated()');
+    expect(dashboard).not.toContain('take: 20000');
+    expect(dashboard).not.toContain('take: 10000');
+    expect(invoices).toContain('const subtotal = lines.reduce');
+    expect(invoices).toContain('Discount cannot exceed invoice subtotal');
+    expect(schema).toContain('model InvoiceAccessLink');
+    expect(schema).toContain('accessLinks          InvoiceAccessLink[]');
+    expect(invoiceAccessMigration).toContain('CREATE TABLE "InvoiceAccessLink"');
+    expect(invoiceAccessLink).toContain('randomBytes(32).toString');
+    expect(invoiceAccessLink).toContain('hashInvoiceAccessToken');
+    expect(invoiceAccessLink).toContain('https://lightworldtech.com');
+    expect(invoiceAccessApi).toContain("'admin.finance_invoice_secure_link_rotated'");
+    expect(invoiceAccessApi).toContain("status: 'revoked'");
+    expect(invoiceSendApi).toContain("'communications.manage'");
+    expect(invoiceSendApi).toContain('sendTransactionalMail');
+    expect(invoiceSendApi).toContain("'admin.finance_invoice_emailed'");
+    expect(publicInvoiceApi).toContain('hashInvoiceAccessToken');
+    expect(publicInvoiceApi).toContain("'X-Robots-Tag'");
+    expect(publicInvoiceApi).toContain('hubtelConfiguration');
+    expect(publicInvoicePay).toContain('initiateHubtelCheckout');
+    expect(publicInvoicePay).toContain("consumePublicRateLimit");
+    expect(publicInvoicePage).toContain('Print / Save PDF');
+    expect(publicInvoicePage).toContain('Pay securely');
+    expect(financeDetails).toContain('Invoice document & delivery');
+    expect(financeDetails).toContain('Create & copy secure link');
+    expect(financeDetails).toContain('Email invoice');
+    expect(receipts).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes)');
+    expect(receipts).toContain('postManualCustomerReceipt');
+    expect(receiptPosting).toContain('postCustomerPaymentJournal');
+    expect(bills).toContain('postVendorBillJournal');
+    expect(expenses).toContain('postExpenseJournal');
+    expect(vendorPayments).toContain('invoiceBalance(bill.total, bill.allocations)');
+    expect(vendorPayments).toContain('postVendorPaymentJournal');
+    expect(vendorPayments).toContain('getFinanceApprovalPolicy');
+    expect(vendorPayments).toContain('pendingApproval: true');
+    expect(vendorPayments).toContain('createOutflowApproval');
+    expect(invoices).toContain('postInvoiceJournal');
+    expect(invoices).toContain('renewalForDate');
+    expect(invoices).toContain('pg_advisory_xact_lock');
+    expect(invoices).toContain('A renewal invoice already exists for this service and renewal date');
+    expect(renewals).toContain('Renewal billing queue');
+    expect(renewals).toContain('projects: RenewalProject[]');
+    expect(renewals).toContain('Project renewals needing action');
+    expect(renewals).toContain('Project renewal value in view');
+    expect(renewals).toContain('Project renewal queue');
+    expect(renewals).toContain('lightworld-project-renewal-queue');
+    expect(renewals).toContain("'notice_window'");
+    expect(renewals).toContain("'overdue'");
+    expect(renewals).toContain('/api/admin/client-projects/');
+    expect(renewals).toContain('Send project renewal reminder?');
+    expect(renewals).toContain('duplicate sends are blocked for 12 hours');
+    expect(renewals).toContain('auto-renew never means auto-charge');
+    expect(renewals).toContain('exportFileName="lightworld-renewal-billing-queue"');
+    expect(renewals).toContain('Complete renewal');
+    expect(renewals).toContain('paid_ready_to_complete');
+    expect(renewals).toContain('This does not charge the customer again');
+    expect(renewals).toContain('Next 7 days');
+    expect(renewals).toContain('Next 14 days');
+    expect(renewals).toContain('Next 30 days');
+    expect(renewals).toContain('Next 60 days');
+    expect(renewals).toContain('Completed renewals · last');
+    expect(renewals).toContain('lightworld-completed-renewals');
+    expect(finance).toContain('lw-finance-section');
+    expect(finance).toContain('lw-client-organization-id');
+    expect(clients).toContain("sessionStorage.getItem('lw-client-organization-id')");
+    expect(collections).toContain('initialQuery');
+    expect(renewalCycleMigration).toContain('ADD COLUMN "renewalForDate"');
+    expect(renewalCompletionMigration).toContain('ADD COLUMN "renewalCompletedAt"');
+    expect(renewalCompletionMigration).toContain('ClientServiceChange_sourceInvoiceId_key');
+    expect(renewalCompletionApi).toContain('The renewal invoice must be fully paid');
+    expect(renewalCompletionApi).toContain('pg_advisory_xact_lock');
+    expect(renewalCompletionApi).toContain('sourceInvoiceId: invoice.id');
+    expect(renewalCompletionApi).toContain("invoice.service.status === 'expired' ? 'active'");
+    expect(renewalCompletionApi).toContain('financeCollectionActivity.updateMany');
+    expect(serviceRenewalLib).toContain('calculateRenewedServiceDates');
+    expect(serviceRenewalLib).toContain('Custom and one-time billing cycles require manual renewal dates');
+    expect(serviceRenewalTest).toContain('clamps month-end dates instead of overflowing');
+    expect(invoices).toContain('computeTaxComponents');
+    expect(invoices).toContain('Standard Ghana VAT is disabled');
+    expect(bills).toContain('computeTaxComponents');
+    expect(bills).toContain('taxRecoverable');
+    expect(renewalReminder).toContain("'finance.manage'");
+    expect(renewalReminder).toContain("'communications.manage'");
+    expect(renewalReminder).toContain("'service_renewal'");
+    expect(renewalReminder).toContain("'service_expired'");
+    expect(renewalReminder).toContain('12 * 60 * 60 * 1000');
     expect(renewalReminder).toContain('queueSingleSms');
     expect(renewalReminder).toContain("'admin.finance_service_renewal_reminder_sent'");
     expect(recordDetails).toContain("type === 'invoice'");
@@ -18,7 +1152,7 @@
     expect(financeDetails).toContain('Pay supplier');
     expect(financeDetails).toContain('max-w-6xl');
     expect(accounting).toContain('Chart of accounts');
-    expect(accounting).toContain('Posted journals');
+    expect(accounting).toContain('Journal register');
     expect(accounting).toContain('Trial balance');
     expect(accounting).toContain('General ledger');
     expect(accounting).toContain('lg:grid-cols-[minmax(280px,2fr)_minmax(150px,1fr)_minmax(150px,1fr)_120px_minmax(140px,auto)]');
@@ -31,8 +1165,8 @@
     expect(accounting).toContain('Control difference');
     expect(accounting).toContain('Opening balance');
     expect(accounting).toContain('Closing balance');
-    expect(accounting).toContain('Reverse posted journal?');
-    expect(accounting).toContain('Post reversal');
+    expect(accounting).toContain('Request journal reversal?');
+    expect(accounting).toContain('Submit reversal for approval');
     expect(accounting).toContain('Financial statements');
     expect(accounting).toContain('FinanceFinancialStatements');
     expect(cashbookWorkspace).toContain('lg:grid-cols-[150px_150px_110px_minmax(150px,170px)_minmax(140px,auto)]');
@@ -41,3 +1175,1830 @@
     expect(accounting).toContain('Cashbook & treasury');
     expect(accounting).toContain('FinanceCashbookWorkspace');
     expect(accounting).toContain('FinanceLedgerInitialization');
+    expect(accounting).toContain('FinanceReconciliationWorkspace');
+    expect(accounting).toContain('FinanceCloseWorkspace');
+    expect(accounting).toContain('Reconciliation');
+    expect(accounting).toContain('Month-end close');
+    expect(accounting).toContain('Tax control');
+    expect(accounting).toContain('FinanceTaxWorkspace');
+    expect(accounting).toContain('Approvals');
+    expect(accounting).toContain('FinanceOutflowApprovals');
+    expect(accounting).toContain('initialView');
+    expect(accounting).toContain('FinanceAccountingView');
+    expect(accountsApi).toContain("'finance.manage'");
+    expect(periodsApi).toContain('Accounting periods cannot overlap');
+    expect(periodActionApi).toContain('Only a super admin can reopen a closed accounting period');
+    expect(periodActionApi).toContain('Period cannot be closed because an unbalanced journal was detected');
+    expect(journalsApi).toContain('isBalancedJournal');
+    expect(journalsApi).toContain('No accounting period covers this posting date');
+    expect(journalsApi).toContain('The accounting period for this posting date is closed');
+    expect(journalReversalApi).toContain("sourceType: 'reversal'");
+    expect(journalReversalApi).toContain("data: { status: 'reversed' }");
+    expect(journalReversalApi).toContain('Reversal date cannot be earlier than the original journal date');
+    expect(journalReversalApi).toContain('The accounting period for the reversal date is closed');
+    expect(trialBalanceApi).toContain('closing');
+    expect(trialBalanceApi).toContain('balanced: difference.eq(0)');
+    expect(generalLedgerApi).toContain('runningBalance');
+    expect(generalLedgerApi).toContain('accountNormalSide');
+    expect(generalLedgerApi).toContain('openingBalance');
+    expect(generalLedgerApi).toContain("status: { in: ['posted', 'reversed'] }");
+    expect(trialBalanceApi).toContain("status: { in: ['posted', 'reversed'] }");
+    expect(financialStatementsApi).toContain('profitLoss');
+    expect(financialStatementsApi).toContain('balanceSheet');
+    expect(financialStatementsApi).toContain('cashFlow');
+    expect(financialStatementsApi).toContain('currentEarnings');
+    expect(financialStatementsApi).toContain('classifyCashFlow');
+    expect(cashbookApi).toContain("systemKey: { in: systemKeys }");
+    expect(cashbookApi).toContain("status: { in: ['posted', 'reversed'] }");
+    expect(cashbookApi).toContain('internalTransfer: cashLegs > 1');
+    expect(cashbookApi).toContain('runningBalance');
+    expect(cashbookWorkspace).toContain('Cashbook & treasury');
+    expect(cashbookWorkspace).toContain('Internal transfer');
+    expect(cashbookWorkspace).toContain('exportFileName="lightworld-cashbook"');
+    expect(financialStatements).toContain('Profit & Loss');
+    expect(financialStatements).toContain('Balance Sheet');
+    expect(financialStatements).toContain('Cash Flow Statement');
+    expect(financialStatements).toContain('Currencies are kept separate');
+    expect(ledgerInitialization).toContain('Historical ledger initialization required');
+    expect(ledgerInitialization).toContain('Initialize journals');
+    expect(ledgerInitialization).toContain('preview.canBackfill');
+    expect(ledgerBackfillApi).toContain('getSuperAdminContext(request)');
+    expect(ledgerBackfillApi).toContain('Only a super admin can initialize historical ledger journals');
+    expect(ledgerBackfillApi).toContain('remaining: after.candidates.length');
+    expect(financeLedger).toContain("sourceType: 'client_invoice'");
+    expect(financeLedger).toContain("sourceType: 'client_payment'");
+    expect(financeLedger).toContain("sourceType: 'vendor_bill'");
+    expect(financeLedger).toContain("sourceType: 'vendor_payment'");
+    expect(financeLedger).toContain("sourceType: 'finance_expense'");
+    expect(financeLedger).toContain("sourceType: 'finance_expense_payment'");
+    expect(financeLedger).toContain("sourceType: 'credit_note'");
+    expect(financeLedger).toContain("sourceType: 'customer_refund'");
+    expect(financeLedger).toContain("'customer_deposits'");
+    expect(financeLedger).toContain("'vat_payable'");
+    expect(financeLedger).toContain("'nhil_payable'");
+    expect(financeLedger).toContain("'getfund_payable'");
+    expect(financeLedger).toContain("'vat_input'");
+    expect(financeLedger).toContain("'nhil_input'");
+    expect(financeLedger).toContain("'getfund_input'");
+    expect(financeLedger).toContain('taxRecoverable');
+    expect(financeLedger).toContain('financeMonthClose.findFirst');
+    expect(financeLedger).toContain('Automatic journal is not balanced');
+    expect(sourceIntegrityMigration).toContain('FinanceJournalEntry_source_event_unique');
+    expect(sourceIntegrityMigration).toContain("WHERE \"sourceId\" <> ''");
+    expect(sourceIntegrityMigration).toContain("'FY 2026'");
+    expect(financeControlsMigration).toContain('finance_credit_note_number_seq');
+    expect(financeControlsMigration).toContain('FinanceCreditNote_total_consistent');
+    expect(financeControlsMigration).toContain('FinanceReconciliationLine_matchedJournalLineId_key');
+    expect(financeControlsMigration).toContain('FinanceCustomerRefund_positive_amount');
+    expect(monthCloseMigration).toContain('FinanceMonthClose_valid_status');
+    expect(taxMigration).toContain('FinanceTaxProfile');
+    expect(taxMigration).toContain("'VAT Payable'");
+    expect(taxMigration).toContain("'NHIL Payable'");
+    expect(taxMigration).toContain("'GETFund Levy Payable'");
+    expect(taxMigration).toContain("'VAT Input Tax'");
+    expect(taxMigration).toContain("'NHIL Input Tax'");
+    expect(taxMigration).toContain("'GETFund Input Levy'");
+    expect(financeVendorBillTaxRepair).toContain('ADD COLUMN IF NOT EXISTS "taxRecoverable"');
+    expect(projectCommercialMigration).toContain('"expiryDate"');
+    expect(projectCommercialMigration).toContain('"nextRenewalDate"');
+    expect(projectCommercialMigration).toContain('"renewalAmount"');
+    expect(projectCommercialMigration).toContain('ClientProject_valid_renewal_cycle');
+    expect(approvalMigration).toContain('FinanceApprovalPolicy');
+    expect(approvalMigration).toContain('FinanceOutflowApproval');
+    expect(approvalMigration).toContain("DEFAULT false");
+    expect(approvalMigration).toContain('finance_outflow_approval_number_seq');
+    expect(approvalMigration).toContain('FinanceOutflowApproval_valid_status');
+    expect(approvalPolicyApi).toContain('eligibleApprovers < 2');
+    expect(approvalPolicyApi).toContain('Only a super admin can change finance approval policy');
+    expect(approvalsApi).toContain('currentAdminId');
+    expect(approvalDecisionApi).toContain('Maker-checker prevents you from deciding your own outflow request');
+    expect(approvalDecisionApi).toContain('executeOutflowApproval');
+    expect(approvalLib).toContain("'finance.manage'");
+    expect(approvalLib).toContain("'finance.approve'");
+    expect(approvalLib).toContain('approval.requestedByAdminId === actor.id');
+    expect(approvalLib).toContain('invoiceBalance(bill.total, bill.allocations)');
+    expect(approvalLib).toContain('refundableBalance');
+    expect(approvalWorkspace).toContain('Finance maker-checker approval');
+    expect(approvalWorkspace).toContain('Pending cash-out approvals');
+    expect(approvalWorkspace).toContain('Approval history');
+    expect(approvalWorkspace).toContain('Enable maker-checker');
+    expect(finance).toContain('Supplier payment submitted for approval');
+    expect(customerCredits).toContain('Customer refund submitted for approval');
+    expect(taxProfileApi).toContain('getSuperAdminContext(request)');
+    expect(taxProfileApi).toContain('Only a super admin can change the statutory tax profile');
+    expect(taxReportApi).toContain('standardSales');
+    expect(taxReportApi).toContain('recoverablePurchases');
+    expect(taxReportApi).toContain('nonRecoverablePurchases');
+    expect(taxReportApi).toContain('legacyOutputTax');
+    expect(taxWorkspace).toContain('Ghana VAT, NHIL & GETFund control');
+    expect(taxWorkspace).toContain('Tax control report');
+    expect(taxWorkspace).toContain('VAT registration number');
+    expect(periodsApi).toContain('endDate.setUTCHours(23, 59, 59, 999)');
+    expect(accountingMigration).toContain('FinanceJournalLine_one_sided');
+    expect(accountingMigration).toContain('finance_journal_number_seq');
+    expect(accountingMigration).toContain("'accounts_receivable'");
+    expect(accountingMigration).toContain("'accounts_payable'");
+    expect(accountingMigration).toContain("'service_revenue'");
+    expect(portalApi).toContain('accountSummary');
+    expect(portalApi).toContain('organization.invoices.map');
+    expect(portalApi).toContain('payableInvoiceByService');
+    expect(portalApi).toContain('payableInvoice: payableInvoiceByService.get(service.id) || null');
+    expect(creditNotesApi).toContain('postCreditNoteJournal');
+    expect(creditNotesApi).toContain('remainingRevenue');
+    expect(creditNotesApi).toContain('remainingTax');
+    expect(creditNotesApi).toContain('remainingCreditable');
+    expect(refundsApi).toContain('refundableBalance');
+    expect(refundsApi).toContain('postCustomerRefundJournal');
+    expect(refundsApi).toContain('getFinanceApprovalPolicy');
+    expect(refundsApi).toContain('pendingApproval: true');
+    expect(refundsApi).toContain('pendingRefundApprovals');
+    expect(customerCredits).toContain('Customer credits & refunds');
+    expect(customerCredits).toContain('Issue credit note');
+    expect(customerCredits).toContain('Refund customer credit');
+    expect(customerCredits).toContain('VAT reversal');
+    expect(customerCredits).toContain('Legacy tax reversal');
+    expect(creditNotesApi).toContain('invoice.taxTreatment');
+    expect(creditNotesApi).toContain('vatAmount');
+    expect(creditNotesApi).toContain('nhilAmount');
+    expect(creditNotesApi).toContain('getfundAmount');
+    expect(reconciliationApi).toContain('Statement lines do not reconcile to the supplied closing balance');
+    expect(reconciliationApi).toContain('A reconciliation batch already covers part of this account and statement period');
+    expect(reconciliationDetailApi).toContain('suggestions');
+    expect(reconciliationMatchApi).toContain('This ledger line is already matched to another statement line');
+    expect(reconciliationMatchApi).toContain('Ledger posting date falls outside this statement period');
+    expect(reconciliationFinalizeApi).toContain('Ledger opening balance does not agree with the statement opening balance');
+    expect(reconciliationFinalizeApi).toContain('Every bank/mobile-money ledger movement in the statement period must be matched');
+    expect(reconciliationFinalizeApi).toContain('Ledger closing balance does not agree with the statement closing balance');
+    expect(reconciliationWorkspace).toContain('Bank & mobile-money reconciliation');
+    expect(reconciliationWorkspace).toContain('Finalize reconciliation');
+    expect(financeClose).toContain('cash_reconciliation_coverage');
+    expect(financeClose).toContain('source_journals');
+    expect(closeReadinessApi).toContain('canClose');
+    expect(monthCloseApi).toContain('A month cannot be closed before its calendar end has passed');
+    expect(monthCloseApi).toContain('Only a super admin can reopen a closed month');
+    expect(closeWorkspace).toContain('Month-end close control centre');
+    expect(closeWorkspace).toContain('Close month');
+    expect(customerStatement).toContain('Client Account Statement');
+    expect(customerStatement).toContain('Running balance');
+    expect(customerStatement).toContain("'Credit Note'");
+    expect(customerStatement).toContain("'Refund'");
+    expect(statement).toContain('Content-Disposition');
+    expect(statement).toContain('getActiveClientContext(request)');
+    expect(portal).toContain('Account & billing');
+    expect(portal).toContain('Download statement');
+    expect(portal).toContain('/api/client/account/statement');
+    expect(portal).toContain('Invoice history');
+    expect(portal).toContain('Payment / receipt history');
+  });
+
+  test('supports human-approved scheduled newsletter delivery in bounded batches', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260926141500_newsletter_campaign_scheduling/migration.sql');
+    const campaignApi = source('src/app/api/admin/newsletter/campaigns/[id]/route.ts');
+    const sendApi = source('src/app/api/admin/newsletter/campaigns/[id]/send/route.ts');
+    const dispatcher = source('src/lib/newsletter-dispatch.ts');
+    const internalDispatcher = source('src/app/api/internal/sms/dispatch/route.ts');
+    const campaigns = source('src/components/admin/AdminCampaigns.tsx');
+    const overview = source('src/app/api/admin/sms/overview/route.ts');
+    const health = source('src/app/api/admin/health/route.ts');
+
+    expect(schema).toContain('scheduledAt DateTime?');
+    expect(migration).toContain('NewsletterCampaign_status_scheduledAt_idx');
+    expect(campaignApi).toContain('Mark the campaign Ready before scheduling delivery');
+    expect(campaignApi).toContain('Scheduled delivery time must be in the future');
+    expect(sendApi).toContain('dispatchNewsletterCampaignBatch');
+    expect(dispatcher).toContain('AUTO_NEWSLETTER_CAMPAIGN_DISPATCH');
+    expect(dispatcher).toContain('NEWSLETTER_CAMPAIGN_BATCH_SIZE');
+    expect(dispatcher).toContain('NEWSLETTER_CAMPAIGNS_PER_RUN');
+    expect(dispatcher).toContain("status: { in: ['ready', 'sending'] }");
+    expect(internalDispatcher).toContain('dispatchDueNewsletterCampaigns');
+    expect(campaigns).toContain('Schedule approved campaign');
+    expect(campaigns).toContain('Remove schedule');
+    expect(campaigns).toContain('protected dispatcher sends bounded batches automatically');
+    expect(overview).toContain('newsletterCampaigns');
+    expect(health).toContain('newsletterCampaigns');
+  });
+
+  test('adds responsive operational filters to Messages and Newsletter', () => {
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    const newsletter = source('src/components/admin/AdminNewsletter.tsx');
+
+    expect(messages).toContain('Search sender, email, phone, subject or message');
+    expect(messages).toContain('Filter messages by read status');
+    expect(messages).toContain('visibleMessages');
+    expect(messages).toContain('Select all visible messages');
+    expect(messages).toContain('lg:grid-cols-[minmax(260px,2fr)_170px_auto]');
+
+    expect(newsletter).toContain('Search subscriber email');
+    expect(newsletter).toContain('Filter subscribers by status');
+    expect(newsletter).toContain('Search recipient, subject or error');
+    expect(newsletter).toContain('Filter delivery activity by status');
+    expect(newsletter).toContain('visibleSubscribers');
+    expect(newsletter).toContain('visibleDeliveries');
+    expect(newsletter).toContain('lg:min-w-[480px]');
+  });
+
+  test('uses desktop workspace splits for SMS and campaigns from lg', () => {
+    const sms = source('src/components/admin/AdminSms.tsx');
+    const campaigns = source('src/components/admin/AdminCampaigns.tsx');
+
+    expect(sms).toContain('lg:grid-cols-4');
+    expect(sms).toContain('lg:grid-cols-[minmax(0,1fr)_minmax(280px,.8fr)]');
+    expect(sms).toContain('lg:grid-cols-[minmax(0,1fr)_320px]');
+    expect(campaigns).toContain('lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]');
+    expect(campaigns).toContain('xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)]');
+  });
+
+  test('keeps Support Desk filters responsive and aligned on desktop', () => {
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+
+    expect(support).toContain('sm:grid-cols-2 lg:grid-cols-[minmax(220px,2fr)_repeat(4,minmax(105px,1fr))_minmax(135px,1.2fr)_auto]');
+    expect(support).toContain('lg:items-center');
+    expect(support).toContain('lg:flex-row lg:items-center lg:justify-between');
+    expect(support).toContain('lg:min-w-[680px] xl:min-w-[760px]');
+  });
+
+  test('provides CSV export from the shared table primitive', () => {
+    const table = source('src/components/ui/table.tsx');
+
+    expect(table).toContain('Export CSV');
+    expect(table).toContain('downloadTableCsv');
+    expect(table).toContain('data-export-ignore');
+    expect(table).toContain('overscroll-x-contain');
+  });
+
+  test('implements Hubtel invoice payments and templated SMS operations safely', () => {
+    const schema = source('prisma/schema.prisma');
+    const hubtel = source('src/lib/hubtel.ts');
+    const payment = source('src/lib/hubtel-payment.ts');
+    const callback = source('src/app/api/payments/hubtel/callback/route.ts');
+    const sms = source('src/lib/sms.ts');
+    const smsAdmin = source('src/components/admin/AdminSms.tsx');
+    const smsOverview = source('src/app/api/admin/sms/overview/route.ts');
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(schema).toContain('model HubtelPaymentIntent');
+    expect(schema).toContain('model SmsTemplate');
+    expect(schema).toContain('model SmsCampaign');
+    expect(schema).toContain('model SmsMessage');
+    expect(hubtel).toContain('https://smsc.hubtel.com/v1/messages/send');
+    expect(hubtel).toContain('HUBTEL_CHECKOUT_INITIATE_URL');
+    expect(hubtel).toContain('HUBTEL_TRANSACTION_STATUS_URL');
+    expect(payment).toContain('checkHubtelPaymentStatus');
+    expect(payment).toContain("source: 'hubtel'");
+    expect(payment).toContain("status: 'recording'");
+    expect(callback).toContain('finalizeHubtelPayment');
+    expect(sms).toContain('dispatchDueSms');
+    expect(sms).toContain('queueDueServiceRenewalReminders');
+    expect(sms).toContain('queueDueProjectRenewalReminders');
+    expect(sms).toContain('AUTO_PROJECT_RENEWAL_SMS');
+    expect(sms).toContain('PROJECT_RENEWAL_SMS_BATCH_SIZE');
+    expect(sms).toContain('project.renewalNoticeDays');
+    expect(sms).toContain("createdBy: 'System project renewal scheduler'");
+    expect(sms).toContain('AUTO_SERVICE_RENEWAL_SMS');
+    expect(sms).toContain('AUTO_SERVICE_RENEWAL_EMAIL');
+    expect(sms).toContain('SERVICE_RENEWAL_EMAIL_BATCH_SIZE');
+    expect(sms).toContain('sendDueServiceRenewalEmailReminders');
+    expect(sms).toContain("'system.service_renewal_email_sent'");
+    expect(sms).toContain('AUTO_PROJECT_RENEWAL_EMAIL');
+    expect(sms).toContain('PROJECT_RENEWAL_EMAIL_BATCH_SIZE');
+    expect(sms).toContain('sendDueProjectRenewalEmailReminders');
+    expect(sms).toContain("'system.project_renewal_email_sent'");
+    expect(sms).toContain('renewalEmailIdentity');
+    expect(sms).toContain('SERVICE_RENEWAL_SMS_BATCH_SIZE');
+    expect(sms).toContain('service.renewalNoticeDays');
+    expect(sms).toContain("createdBy: 'System renewal scheduler'");
+    expect(sms).toContain('HUBTEL_SMS_BATCH_SIZE');
+    expect(sms).toContain('AUTO_COLLECTION_REMINDER_SMS');
+    expect(sms).toContain('COLLECTION_REMINDER_SMS_BATCH_SIZE');
+    expect(sms).toContain('COLLECTION_REMINDER_SMS_INTERVAL_DAYS');
+    expect(sms).toContain('COLLECTION_REMINDER_SMS_MIN_DAYS_OVERDUE');
+    expect(sms).toContain("createdBy: 'System collections scheduler'");
+    expect(sms).toContain("type: 'sms_reminder_scheduled'");
+    expect(sms).toContain('promisesDeferred');
+    expect(sms).toContain('COLLECTION_REMINDER_MAX_AUTOMATED_CYCLES');
+    expect(sms).toContain('automatedCollectionCycleCount');
+    expect(sms).toContain("type: 'automation_hold'");
+    expect(sms).toContain('manualReviewRequired');
+    expect(smsOverview).toContain('maxAutomatedCycles');
+    expect(smsAdmin).toContain('human review after');
+    expect(sms).toContain('AUTO_COLLECTION_REMINDER_EMAIL');
+    expect(sms).toContain('COLLECTION_REMINDER_EMAIL_BATCH_SIZE');
+    expect(sms).toContain('COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS');
+    expect(sms).toContain("createdBy: 'System collections email scheduler'");
+    expect(sms).toContain('sendDueCollectionEmailReminders');
+    expect(sms).toContain('collectionEmailQueue');
+    expect(sms).toContain('createDueRenewalInvoiceDrafts');
+    expect(smsOverview).toContain('AUTO_SERVICE_RENEWAL_EMAIL');
+    expect(smsOverview).toContain('AUTO_PROJECT_RENEWAL_EMAIL');
+    expect(smsOverview).toContain('AUTO_RENEWAL_DRAFT_INVOICES');
+    expect(smsOverview).toContain('RENEWAL_DRAFT_INVOICE_BATCH_SIZE');
+    expect(smsAdmin).toContain('SMS, campaigns, scheduling & OTP');
+    expect(smsAdmin).toContain('Reusable SMS templates');
+    expect(smsAdmin).toContain('Scheduled campaigns');
+    expect(smsAdmin).toContain('Communication automation readiness');
+    expect(smsAdmin).toContain('Dispatcher ready');
+    expect(smsAdmin).toContain('Overdue collections');
+    expect(smsOverview).toContain('dispatcherConfigured');
+    expect(smsOverview).toContain('AUTO_COLLECTION_REMINDER_SMS');
+    expect(smsOverview).toContain('AUTO_COLLECTION_REMINDER_EMAIL');
+    expect(smsOverview).toContain('COLLECTION_REMINDER_EMAIL_INTERVAL_DAYS');
+    expect(smsAdmin).toContain('Service renewal email');
+    expect(smsAdmin).toContain('Project renewal email');
+    expect(smsAdmin).toContain('Collection email');
+    expect(smsOverview).toContain('COLLECTION_REMINDER_SMS_INTERVAL_DAYS');
+    expect(smsAdmin).toContain("sessionStorage.getItem('lw-sms-recipient')");
+    expect(smsAdmin).toContain('lw-single-sms-recipient');
+    expect(smsAdmin).toContain('lw-single-sms-content');
+    expect(portal).toContain('Pay with Hubtel');
+    expect(portal).toContain('Pay service with Hubtel');
+    expect(portal).toContain('No outstanding invoice for this service.');
+    expect(portal).toContain('/api/client/payments/hubtel/status?reference=');
+    expect(layout).toContain("label: 'SMS & OTP'");
+  });
+
+  test('uses recent successful dispatcher runs in overall system health', () => {
+    const health = source('src/app/api/admin/health/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(health).toContain("id: 'communications-dispatcher'");
+    expect(health).toContain('AUTOMATION_RUNTIME_MAX_AGE_MINUTES');
+    expect(health).toContain('lastSuccessAgeMinutes');
+    expect(health).toContain("runtimeState.status === 'healthy'");
+    expect(health).toContain('runtimeHealthy');
+    expect(health).toContain('collectionEmail');
+    expect(health).toContain('no recent successful dispatcher run');
+    expect(dashboard).toContain('Automation {health?.communications?.automationEnabled');
+    expect(dashboard).toContain("collectionEmail: boolean");
+  });
+
+  test('persists communications automation runtime health without unbounded run logs', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260926122500_automation_runtime_state/migration.sql');
+    const dispatcher = source('src/app/api/internal/sms/dispatch/route.ts');
+    const overview = source('src/app/api/admin/sms/overview/route.ts');
+    const smsAdmin = source('src/components/admin/AdminSms.tsx');
+
+    expect(schema).toContain('model AutomationRuntimeState');
+    expect(schema).toContain('consecutiveFailures');
+    expect(migration).toContain('CREATE TABLE "AutomationRuntimeState"');
+    expect(dispatcher).toContain("runtimeId = 'communications-dispatcher'");
+    expect(dispatcher).toContain("status: 'running'");
+    expect(dispatcher).toContain("status: 'healthy'");
+    expect(dispatcher).toContain("status: 'failed'");
+    expect(dispatcher).toContain('consecutiveFailures: { increment: 1 }');
+    expect(dispatcher).toContain('resultJson');
+    expect(overview).toContain("id: 'communications-dispatcher'");
+    expect(overview).toContain('lastSuccessAt');
+    expect(smsAdmin).toContain('Last successful run');
+    expect(smsAdmin).toContain('Consecutive failures');
+    expect(smsAdmin).toContain('Dispatcher healthy');
+  });
+
+  test('supports filtered super-admin governance audit exports', () => {
+    const governance = source('src/components/admin/AdminGovernance.tsx');
+    const auditExport = source('src/app/api/admin/governance/audit-export/route.ts');
+
+    expect(governance).toContain('Export audit CSV');
+    expect(governance).toContain('/api/admin/governance/audit-export?');
+    expect(governance).toContain('exportFileName="lightworld-governance-visible-audit"');
+    expect(auditExport).toContain('getSuperAdminContext');
+    expect(auditExport).toContain('take: 5000');
+    expect(auditExport).toContain("'admin.governance_audit_exported'");
+    expect(auditExport).toContain("'Content-Type': 'text/csv; charset=utf-8'");
+    expect(auditExport).toContain("'Cache-Control': 'private, no-store, max-age=0'");
+  });
+
+  test('surfaces renewal draft invoices as a distinct finance review state', () => {
+    const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
+    expect(renewals).toContain("'draft_review'");
+    expect(renewals).toContain('Drafts to review');
+    expect(renewals).toContain('draftReviewCount');
+    expect(renewals).toContain("invoice.status === 'draft'");
+    expect(renewals).toContain("const invoiceState = invoice");
+    expect(renewals).toContain("projectRows.filter((row) => row.state === 'draft_review')");
+  });
+
+  test('completes fully paid project renewals idempotently and advances project dates', () => {
+    const completion = source('src/app/api/admin/finance/invoices/[id]/complete-project-renewal/route.ts');
+    const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
+
+    expect(completion).toContain("'lightworld-project-renewal-completion:' + id");
+    expect(completion).toContain('invoiceBalance');
+    expect(completion).toContain("derivedStatus !== 'paid'");
+    expect(completion).toContain('supportsAutomaticRenewalCycle(invoice.project.renewalCycle)');
+    expect(completion).toContain('calculateRenewedServiceDates');
+    expect(completion).toContain('nextRenewalDate: dates.nextDueDate');
+    expect(completion).toContain('renewalCompletedAt: completedAt');
+    expect(completion).toContain("'admin.finance_project_renewal_completed'");
+    expect(completion).toContain('financeCollectionActivity.updateMany');
+    expect(renewals).toContain('Complete paid project renewal?');
+    expect(renewals).toContain('/complete-project-renewal');
+    expect(renewals).toContain('Completed project renewals');
+    expect(renewals).toContain('lightworld-completed-project-renewals');
+  });
+
+  test('supports project renewal billing with safe draft automation and manual preparation', () => {
+    const automation = source('src/lib/renewal-draft-automation.ts');
+    const sms = source('src/lib/sms.ts');
+    const overview = source('src/app/api/admin/sms/overview/route.ts');
+    const health = source('src/app/api/admin/health/route.ts');
+    const renewals = source('src/components/admin/FinanceRenewalBillingWorkspace.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(automation).toContain('createDueProjectRenewalInvoiceDrafts');
+    expect(automation).toContain("AUTO_PROJECT_RENEWAL_DRAFT_INVOICES === 'true'");
+    expect(automation).toContain("action: 'system.finance_project_renewal_draft_created'");
+    expect(automation).toContain('projectId: project.id');
+    expect(automation).toContain("status: 'draft'");
+    expect(sms).toContain('projectRenewalDraftQueue');
+    expect(overview).toContain('projectRenewalDrafts');
+    expect(health).toContain('projectRenewalDrafts');
+    expect(renewals).toContain('onPrepareProjectInvoice');
+    expect(renewals).toContain('candidate.projectId === project.id');
+    expect(finance).toContain('prepareProjectRenewalInvoice');
+    expect(finance).toContain('Prepared from the project renewal workflow');
+  });
+
+  test('excludes selection and action controls from admin CSV exports', () => {
+    const files = [
+      'src/components/admin/AdminBlog.tsx',
+      'src/components/admin/AdminTeam.tsx',
+      'src/components/admin/AdminServices.tsx',
+      'src/components/admin/AdminPortfolio.tsx',
+      'src/components/admin/AdminTestimonials.tsx',
+      'src/components/admin/AdminNewsletter.tsx',
+    ];
+    for (const file of files) {
+      expect(source(file)).toContain('data-export-ignore');
+    }
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    expect(messages).toContain('<TableHead data-export-ignore');
+    expect(messages).toContain('<TableCell data-export-ignore');
+    expect(messages).toContain('data-export-ignore className="text-right"');
+  });
+
+  test('provides export controls across remaining admin data tables', () => {
+    expect(source('src/components/admin/AdminBlog.tsx')).toContain('exportFileName="lightworld-blog-posts"');
+    expect(source('src/components/admin/AdminTeam.tsx')).toContain('exportFileName="lightworld-team-members"');
+    expect(source('src/components/admin/AdminServices.tsx')).toContain('exportFileName="lightworld-services"');
+    expect(source('src/components/admin/AdminPortfolio.tsx')).toContain('exportFileName="lightworld-portfolio-projects"');
+    expect(source('src/components/admin/AdminTestimonials.tsx')).toContain('exportFileName="lightworld-testimonials"');
+    expect(source('src/components/admin/AdminMessages.tsx')).toContain('exportFileName="lightworld-customer-messages"');
+    expect(source('src/components/admin/AdminCampaigns.tsx')).toContain('exportFileName="lightworld-campaign-deliveries"');
+    const newsletter = source('src/components/admin/AdminNewsletter.tsx');
+    expect(newsletter).toContain('exportFileName="lightworld-newsletter-subscribers"');
+    expect(newsletter).toContain('exportFileName="lightworld-newsletter-deliveries"');
+  });
+
+  test('adds transparent CRM execution and conversion metrics', () => {
+    const route = source('src/app/api/admin/leads/route.ts');
+    const crm = source('src/components/admin/AdminCRM.tsx');
+
+    expect(route).toContain('winRatePct');
+    expect(route).toContain('avgOpenAgeDays');
+    expect(route).toContain('oldestOpenAgeDays');
+    expect(route).toContain('followUpCoveragePct');
+    expect(route).toContain('staleOpen');
+    expect(route).toContain('unassignedOpen');
+    expect(route).toContain('Win rate uses only won/lost decisions.');
+    expect(crm).toContain('Pipeline discipline & conversion');
+    expect(crm).toContain('Follow-up coverage');
+    expect(crm).toContain('Dormant ');
+    expect(crm).toContain('Unassigned');
+  });
+
+  test('supports permission-aware global operational search and record deep links', () => {
+    const layout = source('src/components/admin/AdminLayout.tsx');
+    const search = source('src/app/api/admin/search/route.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+    const clients = source('src/components/admin/AdminClients.tsx');
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+    const messages = source('src/components/admin/AdminMessages.tsx');
+
+    expect(search).toContain("hasAdminPermission(actor.role, actor.permissions, 'clients.manage')");
+    expect(search).toContain("hasAdminPermission(actor.role, actor.permissions, 'finance.manage')");
+    expect(search).toContain("hasAdminPermission(actor.role, actor.permissions, 'crm.manage')");
+    expect(search).toContain('db.clientOrganization.findMany');
+    expect(search).toContain('db.clientProject.findMany');
+    expect(search).toContain('db.clientAgreement.findMany');
+    expect(search).toContain('db.clientInvoice.findMany');
+    expect(search).toContain('db.clientPayment.findMany');
+    expect(search).toContain('db.clientSupportTicket.findMany');
+    expect(search).toContain('db.lead.findMany');
+    expect(search).toContain('db.proposal.findMany');
+    expect(search).toContain('db.contactMessage.findMany');
+    expect(layout).toContain("fetch('/api/admin/search?q='");
+    expect(layout).toContain('Operational records');
+    expect(layout).toContain("sessionStorage.setItem('lw-client-organization-id'");
+    expect(layout).toContain("sessionStorage.setItem('lw-client-action', 'agreements')");
+    expect(clients).toContain("pendingClientAction === 'agreements'");
+    expect(clients).toContain("document.getElementById('client-agreements')");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-project-id'");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-record-type', 'invoice')");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-record-type', 'receipt')");
+    expect(layout).toContain("sessionStorage.setItem('lw-support-ticket-id'");
+    expect(layout).toContain("sessionStorage.setItem('lw-open-lead-id'");
+    expect(layout).toContain("sessionStorage.setItem('lw-open-proposal-id'");
+    expect(layout).toContain("sessionStorage.setItem('lw-open-message-id'");
+    expect(finance).toContain("sessionStorage.getItem('lw-finance-record-type')");
+    expect(crm).toContain("sessionStorage.getItem('lw-open-lead-id')");
+    expect(support).toContain("sessionStorage.getItem('lw-support-ticket-id')");
+    expect(messages).toContain("sessionStorage.getItem('lw-open-message-id')");
+  });
+
+  test('surfaces agreement expiry and notice-window exceptions to operators', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(notifications).toContain('db.clientAgreement.findMany');
+    expect(notifications).toContain('renewalNoticeDays');
+    expect(notifications).toContain('Agreement notice window open');
+    expect(notifications).toContain('Active agreements past expiry');
+    expect(notifications).toContain("action: 'admin-clients-agreements'");
+    expect(layout).toContain("action === 'admin-clients-agreements'");
+    expect(layout).toContain("sessionStorage.setItem('lw-client-action', 'agreements')");
+  });
+
+  test('surfaces agreement approval exceptions in notifications and executive portfolio', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const portfolioApi = source('src/app/api/admin/clients/portfolio-intelligence/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(notifications).toContain("approvalStatus: 'pending'");
+    expect(notifications).toContain("approvalStatus: 'rejected'");
+    expect(notifications).toContain('Agreements awaiting approval');
+    expect(notifications).toContain('Agreement approvals rejected');
+    expect(portfolioApi).toContain('pendingAgreementApprovals');
+    expect(portfolioApi).toContain('rejectedAgreementApprovals');
+    expect(portfolioApi).toContain('Resolve rejected agreement approvals');
+    expect(clients).toContain('Pending approvals');
+    expect(clients).toContain('Rejected approvals');
+    expect(clients).toContain('Pending agreement approvals');
+    expect(clients).toContain('Rejected agreement approvals');
+  });
+
+  test('tracks agreement obligations as accountable operational commitments', () => {
+    const schema = source('prisma/schema.prisma');
+    const clientsApi = source('src/app/api/admin/clients/route.ts');
+    const createApi = source('src/app/api/admin/client-agreements/[id]/obligations/route.ts');
+    const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const portfolioApi = source('src/app/api/admin/clients/portfolio-intelligence/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(schema).toContain('model ClientAgreementObligation');
+    expect(schema).toContain('obligations       ClientAgreementObligation[]');
+    expect(clientsApi).toContain('obligations: {');
+    expect(clientsApi).toContain("orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }]");
+    expect(createApi).toContain("'admin.client_agreement_obligation_created'");
+    expect(updateApi).toContain("'admin.client_agreement_obligation_updated'");
+    expect(updateApi).toContain("completedAt: new Date()");
+    expect(notifications).toContain('Team agreement obligations overdue');
+    expect(notifications).toContain('Team agreement obligations due soon');
+    expect(portfolioApi).toContain('overdueAgreementObligations');
+    expect(portfolioApi).toContain('agreementObligationsDue30');
+    expect(portfolioApi).toContain('Resolve overdue agreement obligations');
+    expect(clients).toContain('Agreement obligations');
+    expect(clients).toContain('Add obligation');
+    expect(clients).toContain('Overdue agreement obligations');
+    expect(clients).toContain('Agreement obligations due 30d');
+  });
+
+  test('assigns agreement obligations to accountable client operators', () => {
+    const schema = source('prisma/schema.prisma');
+    const clientsApi = source('src/app/api/admin/clients/route.ts');
+    const operatorsApi = source('src/app/api/admin/client-operators/route.ts');
+    const createApi = source('src/app/api/admin/client-agreements/[id]/obligations/route.ts');
+    const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(schema).toContain('ownerAdminId String?');
+    expect(schema).toContain('AgreementObligationOwner');
+    expect(operatorsApi).toContain("normalizeAdminPermissions(admin.permissions).includes('clients.manage')");
+    expect(createApi).toContain('Selected obligation owner is not an active client operator');
+    expect(createApi).toContain('ownerAdminId: ownerAdmin?.id || null');
+    expect(updateApi).toContain('ownerAssignment');
+    expect(clientsApi).toContain('ownerAdmin: { select: { id: true, name: true, email: true, role: true } }');
+    expect(clients).toContain("fetch('/api/admin/client-operators'");
+    expect(clients).toContain('Accountable Lightworld owner');
+    expect(clients).toContain('External / fallback owner');
+    expect(clients).toContain('No staff owner');
+  });
+
+  test('provides an accountable cross-client agreement obligation work queue', () => {
+    const queueApi = source('src/app/api/admin/agreement-obligations/queue/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(queueApi).toContain("const scopes = new Set(['all', 'mine', 'unassigned', 'overdue', 'due_30', 'pending_review', 'owner'])");
+    expect(queueApi).toContain("ownerAdminId: actor.id");
+    expect(queueApi).toContain("ownerAdminId: null");
+    expect(queueApi).toContain("dueDate: { lt: now }");
+    expect(queueApi).toContain("dueDate: { gte: now, lte: horizon30 }");
+    expect(queueApi).toContain("summary: { total, mine, unassigned, overdue, due30, pendingReview }");
+    expect(queueApi).toContain("db.clientAgreementObligation.groupBy");
+    expect(queueApi).toContain("normalizeAdminPermissions(admin.permissions).includes('clients.manage')");
+    expect(queueApi).toContain("team,");
+    expect(clients).toContain('Agreement obligation work queue');
+    expect(clients).toContain("new URLSearchParams({ scope })");
+    expect(clients).toContain("fetch('/api/admin/agreement-obligations/queue?' + query.toString()");
+    expect(clients).toContain('Mine for your workload');
+    expect(clients).toContain('No open obligations match this workload view.');
+    expect(clients).toContain("fetchObligationQueue('owner', member.id)");
+    expect(clients).toContain("aria-label={'Reassign ' + item.title}");
+    expect(clients).toContain("aria-label={'Update status for ' + item.title}");
+    expect(clients).toContain('Open agreement');
+    expect(clients).toContain("document.getElementById('agreement-' + item.agreement.id)");
+    expect(clients).toContain("id={'agreement-' + agreement.id}");
+  });
+
+  test('routes personal agreement obligation alerts into the accountable work queue', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(notifications).toContain('myOverdueAgreementObligations');
+    expect(notifications).toContain('myAgreementObligationsDue7');
+    expect(notifications).toContain('Your agreement obligations are overdue');
+    expect(notifications).toContain('Your agreement obligations due this week');
+    expect(notifications).toContain("ownerAdminId: admin.id");
+    expect(notifications).toContain("action: 'admin-clients-obligations-mine'");
+    expect(notifications).toContain('Team agreement obligations overdue');
+    expect(notifications).toContain("action: 'admin-clients-obligations-overdue'");
+    expect(notifications).toContain("action: 'admin-clients-obligations-due'");
+    expect(notifications).toContain('pendingObligationCompletionReviews');
+    expect(notifications).toContain('Agreement completion reviews waiting');
+    expect(notifications).toContain("action: 'admin-clients-obligations-review'");
+    expect(layout).toContain("action === 'admin-clients-obligations-review'");
+    expect(layout).toContain("? 'pending_review'");
+    expect(clients).toContain("'pending_review', 'all'");
+    expect(layout).toContain("sessionStorage.setItem('lw-client-obligation-scope', scope)");
+    expect(layout).toContain("sessionStorage.setItem('lw-client-action', 'obligations')");
+    expect(clients).toContain("sessionStorage.getItem('lw-client-obligation-scope')");
+    expect(clients).toContain("pendingClientAction === 'obligations'");
+    expect(clients).toContain('id="client-obligation-queue"');
+  });
+
+  test('requires reasoned waiver and rejection governance for agreement obligations', () => {
+    const schema = source('prisma/schema.prisma');
+    const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(schema).toContain('waiverReason String');
+    expect(schema).toContain('waivedAt DateTime?');
+    expect(schema).toContain('waivedBy String');
+    expect(updateApi).toContain('A rejection reason is required');
+    expect(updateApi).toContain('A waiver reason is required');
+    expect(updateApi).toContain("status: 'waived'");
+    expect(updateApi).toContain('waivedAt: new Date()');
+    expect(updateApi).toContain("waiverReason: ''");
+    expect(clients).toContain('Waiver reason');
+    expect(clients).toContain('Rejection reason');
+    expect(clients).toContain('Waive with reason');
+    expect(clients).toContain('rejectObligationCompletion');
+    expect(clients).toContain('waiveAgreementObligation');
+    expect(clients).toContain('Waived by');
+    expect(clients).not.toContain("reviewNotes: 'Returned for correction.'");
+    expect(clients).not.toContain("reviewNotes: 'Returned for correction from review queue.'");
+  });
+
+  test('preserves proposal to project to agreement commercial lineage', () => {
+    const clientsApi = source('src/app/api/admin/clients/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(clientsApi).toContain("proposal: { select: { id: true, title: true, status: true, version: true } }");
+    expect(clients).toContain('type ProposalLineage');
+    expect(clients).toContain('Commercial lineage');
+    expect(clients).toContain('Originating proposal:');
+    expect(clients).toContain('Open originating proposal');
+    expect(clients).toContain("sessionStorage.setItem('lw-open-proposal-id'");
+    expect(clients).toContain("navigate('admin-proposals')");
+  });
+
+  test('keeps dashboard and governance tables exportable', () => {
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const governance = source('src/components/admin/AdminGovernance.tsx');
+
+    expect(dashboard).toContain('exportFileName="lightworld-dashboard-recent-blog-posts"');
+    expect(dashboard).toContain('exportFileName="lightworld-dashboard-recent-messages"');
+    expect(governance).toContain('exportFileName="lightworld-admin-accounts"');
+    expect(governance).toContain('exportFileName="lightworld-governance-visible-audit"');
+  });
+
+  test('supports audited enterprise exports and bounded message bulk actions', () => {
+    const crm = source('src/components/admin/AdminCRM.tsx');
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    const crmExport = source('src/app/api/admin/leads/export/route.ts');
+    const messageExport = source('src/app/api/admin/messages/export/route.ts');
+    const messageBulk = source('src/app/api/admin/messages/bulk/route.ts');
+    const permissions = source('src/lib/admin-permissions.ts');
+
+    expect(crm).toContain("fetch('/api/admin/leads/export?'");
+    expect(messages).toContain("fetch('/api/admin/messages/export'");
+    expect(messages).toContain("fetch('/api/admin/messages/bulk'");
+    expect(messages).toContain('Select all visible messages');
+    expect(crmExport).toContain("'admin.crm_exported'");
+    expect(messageExport).toContain("'admin.messages_exported'");
+    expect(messageBulk).toContain('.max(100)');
+    expect(messageBulk).toContain("'admin.messages_bulk_updated'");
+    expect(permissions).toContain("pathname.startsWith('/api/admin/messages')");
+  });
+
+  test('reports nested backups and evidence-backed isolated restore verification', () => {
+    const route = source('src/app/api/admin/operations/backup-status/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const settings = source('src/components/admin/AdminSettings.tsx');
+    const postgresBackup = source('ops/backup-postgresql.sh');
+    const uploadsBackup = source('ops/backup-uploads.sh');
+    const restore = source('ops/verify-backup-restore.sh');
+
+    expect(route).toContain('getSuperAdminContext(request)');
+    expect(route).toContain("path.join(directory, 'postgresql')");
+    expect(route).toContain("path.join(directory, 'uploads')");
+    expect(route).toContain("'restore-verification.json'");
+    expect(route).toContain("status: stale ? 'stale' : 'verified'");
+    expect(postgresBackup).toContain('chown root:"$APP_GROUP" "$FINAL"');
+    expect(postgresBackup).toContain('chmod 0640 "$FINAL"');
+    expect(uploadsBackup).toContain('chmod 0640 "$FINAL"');
+    expect(restore).toContain('lightworld_restore_verify');
+    expect(restore).toContain('--no-owner --no-privileges --exit-on-error');
+    expect(restore).toContain("SELECT count(*) FROM pg_tables WHERE schemaname='public'");
+    expect(restore).toContain('isolated_ephemeral_postgresql_restore');
+    expect(dashboard).toContain('Fresh backups and a recent isolated restore rehearsal are verified.');
+    expect(dashboard).toContain('public tables restored');
+    expect(settings).toContain("label: 'Backup & recovery'");
+  });
+
+  test('implements administrator TOTP MFA end to end', () => {
+    const schema = source('prisma/schema.prisma');
+    const auth = source('src/app/api/admin/auth/route.ts');
+    const security = source('src/app/api/admin/security/totp/route.ts');
+    const login = source('src/components/admin/AdminLogin.tsx');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(schema).toContain('totpEnabled');
+    expect(schema).toContain('totpRecoveryCodes');
+    expect(auth).toContain('requiresTotp: true');
+    expect(auth).toContain('verifyTotpCode');
+    expect(auth).toContain('verifyRecoveryCode');
+    expect(security).toContain("action: z.literal('confirm')");
+    expect(security).toContain("action: z.literal('disable')");
+    expect(security).toContain('authVersion: { increment: 1 }');
+    expect(login).toContain('Two-factor authentication');
+    expect(login).toContain('Verify & Sign In');
+    expect(layout).toContain('AdminSecurityDialog');
+  });
+
+  test('invalidates administrator sessions on sensitive governance changes', () => {
+    const route = source('src/app/api/admin/governance/[id]/route.ts');
+    const governance = source('src/components/admin/AdminGovernance.tsx');
+
+    expect(route).toContain('revokeSessions: z.boolean().optional()');
+    expect(route).toContain("parsed.data.revokeSessions === true");
+    expect(route).toContain("'admin.sessions_revoked'");
+    expect(route).toContain('parsed.data.active !== undefined');
+    expect(governance).toContain('Revoke sessions');
+    expect(governance).toContain('Force this administrator to sign in again');
+  });
+
+  test('surfaces executive client exceptions on the main dashboard', () => {
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(dashboard).toContain("hasAdminPermission(adminRole, adminPermissions, 'finance.manage')");
+    expect(dashboard).toContain("fetch('/api/admin/clients/portfolio-intelligence'");
+    expect(dashboard).toContain('Executive exceptions');
+    expect(dashboard).toContain('Accounts needing intervention');
+    expect(dashboard).toContain('Overdue invoices');
+    expect(dashboard).toContain('Renewals due in 30 days');
+    expect(dashboard).toContain('Operational risk');
+    expect(dashboard).toContain("sessionStorage.setItem('lw-finance-section', section)");
+    expect(dashboard).toContain("sessionStorage.setItem('lw-client-organization-id', organizationId)");
+  });
+
+  test('enforces automated collection reminder intervals per invoice', () => {
+    const sms = source('src/lib/sms.ts');
+
+    expect(sms).toContain('recentInvoiceReminder');
+    expect(sms).toContain("invoiceId: invoice.id");
+    expect(sms).toContain("type: 'sms_reminder_scheduled'");
+    expect(sms).toContain('createdAt: { gte: duplicateCutoff }');
+    expect(sms).toContain('duplicateMessage || recentInvoiceReminder');
+  });
+
+  test('shows project renewal invoices and payment options in the client portal', () => {
+    const portalApi = source('src/app/api/client/portal/route.ts');
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(portalApi).toContain('payableInvoiceByProject');
+    expect(portalApi).toContain('renewalAmount: project.renewalAmount.toFixed(2)');
+    expect(portalApi).toContain('payableInvoice: payableInvoiceByProject.get(project.id) || null');
+    expect(portal).toContain('Service / project');
+    expect(portal).toContain("invoice.service?.name || invoice.project?.name || 'General account'");
+    expect(portal).toContain('Project payment due');
+    expect(portal).toContain('Pay project with Hubtel');
+    expect(portal).toContain('project.payableInvoice.renewalForDate');
+  });
+
+  test('shows project expiry and renewal terms in the client portal', () => {
+    const portal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(portal).toContain('Project commercial schedule');
+    expect(portal).toContain('project.expiryDate');
+    expect(portal).toContain('project.nextRenewalDate');
+    expect(portal).toContain('project.renewalCycle');
+    expect(portal).toContain('project.renewalAmount');
+    expect(portal).toContain('project.renewalCurrency');
+    expect(portal).toContain('Auto-renew records the intended renewal workflow');
+  });
+
+  test('notifies the configured team mailbox after persisting a public contact lead', () => {
+    const contact = source('src/app/api/contact/route.ts');
+
+    expect(contact).toContain('CONTACT_NOTIFICATION_EMAIL');
+    expect(contact).toContain('sendTransactionalMail');
+    expect(contact).toContain('Contact lead notification failed');
+    expect(contact).toContain('notificationSent: notification.sent');
+    expect(contact).toContain('await tx.contactMessage.create');
+    expect(contact).toContain('await tx.lead.create');
+  });
+
+  test('adds permission-scoped business activity to the main dashboard', () => {
+    const activity = source('src/app/api/admin/activity/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(activity).toContain("hasAdminPermission(admin.role, admin.permissions, 'finance.manage')");
+    expect(activity).toContain("hasAdminPermission(admin.role, admin.permissions, 'clients.manage')");
+    expect(activity).toContain('db.clientPayment.findMany');
+    expect(activity).toContain('db.clientInvoice.findMany');
+    expect(activity).toContain('db.financeCollectionActivity.findMany');
+    expect(activity).toContain('db.clientSupportTicket.findMany');
+    expect(dashboard).toContain("fetch('/api/admin/activity'");
+    expect(dashboard).toContain("sessionStorage.setItem('lw-support-ticket-id', activity.targetId)");
+    expect(dashboard).toContain("activity.type === 'collection' ? 'collections' : 'customers'");
+  });
+
+  test('includes Hubtel automation readiness in authenticated operational health', () => {
+    const health = source('src/app/api/admin/health/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(health).toContain('hubtelConfiguration');
+    expect(health).toContain('AUTO_SERVICE_RENEWAL_SMS');
+    expect(health).toContain('AUTO_PROJECT_RENEWAL_SMS');
+    expect(health).toContain('AUTO_COLLECTION_REMINDER_SMS');
+    expect(health).toContain('AUTO_RENEWAL_DRAFT_INVOICES');
+    expect(health).toContain('smsAutomationEnabled');
+    expect(health).toContain('dispatcherConfigured');
+    expect(health).toContain('automationHealthy');
+    expect(dashboard).toContain('communications: {');
+    expect(dashboard).toContain("Automation {health?.communications?.automationEnabled");
+    expect(dashboard).toContain("health.communications.status === 'healthy'");
+  });
+
+  test('counts only genuinely unpaid overdue supplier bills', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('overdueBillCount');
+    expect(notifications).toContain('invoiceBalance(bill.total, bill.allocations).gt(0)');
+    expect(notifications).toContain('past the due date with an outstanding balance');
+  });
+
+  test('suppresses stale collection alerts after invoice settlement', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('liveCollectionInvoices');
+    expect(notifications).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0)');
+    expect(notifications).toContain('invoice.collectionActivities.some');
+    expect(notifications).toContain("activity.type === 'promise_to_pay'");
+    expect(notifications).toContain('latestPromise?.promisedDate');
+  });
+
+  test('keeps executive priorities and operational alerts live', () => {
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(dashboard).toContain('Management priority accounts');
+    expect(dashboard).toContain('Open Customer 360');
+    expect(dashboard).toContain("item.metrics.overdueInvoices");
+    expect(dashboard).toContain("item.metrics.slaBreaches");
+    expect(dashboard).toContain("item.metrics.overBudget");
+    expect(layout).toContain('window.setInterval(refresh, 60_000)');
+    expect(layout).toContain("document.addEventListener('visibilitychange', refresh)");
+    expect(layout).toContain("document.visibilityState === 'visible'");
+  });
+
+  test('keeps public product cards aligned and the preloader rings continuously animated', () => {
+    const products = source('src/components/pages/ProductsPage.tsx');
+    const preloader = source('src/components/ui/preloader.tsx');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(products).toContain('grid-rows-[58px_minmax(96px,1fr)_auto]');
+    expect(products).toContain("alt={product.title + ' product direction'}");
+    expect(preloader).toContain('Continuous rotating border accents');
+    expect(preloader).toContain("duration: 1.8, repeat: Infinity, ease: 'linear'");
+    expect(preloader).toContain("duration: 2.7, repeat: Infinity, ease: 'linear'");
+    expect(preloader).toContain('const PRELOAD_CEILING = 96');
+    expect(preloader).toContain("document.readyState === 'complete'");
+    expect(preloader).toContain('commit(completionStart + (100 - completionStart) * eased)');
+    expect(preloader).toContain('aria-label="Loading website"');
+    expect(preloader).toContain('scaleX(${progress / 100})');
+    expect(dashboard).toContain("WELCOME BACK, {(adminName || 'Admin').toUpperCase()}");
+    expect(notifications).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).gt(0)');
+    expect(notifications).toContain('past the due date with an outstanding balance');
+  });
+
+  test('mounts the real public preloader and gives existing page heroes visible shared motion graphics', () => {
+    const shell = source('src/components/layout/PublicShell.tsx');
+    const preloader = source('src/components/ui/preloader.tsx');
+    const styles = source('src/app/globals.css');
+    const about = source('src/components/pages/AboutPage.tsx');
+    const services = source('src/components/pages/ServicesPage.tsx');
+    const products = source('src/components/pages/ProductsPage.tsx');
+
+    expect(shell).toContain("import Preloader from '@/components/ui/preloader'");
+    expect(shell).toContain('<Preloader />');
+    expect(preloader).toContain('const pathname = usePathname()');
+    expect(preloader).toContain("document.addEventListener('click', onClick, true)");
+    expect(preloader).toContain("window.addEventListener('popstate', onPopState)");
+    expect(preloader).toContain('startCycle(false, ROUTE_MIN_VISIBLE_MS)');
+    expect(preloader).toContain('markReady()');
+    expect(preloader).not.toContain('hasShownInDocument');
+    expect(preloader).not.toContain("sessionStorage.getItem('lw-preloader-shown')");
+    expect(preloader).toContain('{progress}');
+    expect(preloader).toContain('scaleX(${progress / 100})');
+    expect(styles).toContain('animation: lw-hero-grid-flow 18s linear infinite');
+    expect(styles).toContain('animation: lw-hero-radar 20s linear infinite');
+    expect(styles).toContain('animation: lw-hero-beam 9s ease-in-out infinite');
+    expect(styles).toContain('@keyframes lw-hero-radar');
+    expect(styles).toContain('@media (prefers-reduced-motion: reduce)');
+    expect(about).toContain('lw-hero-grid');
+    expect(services).toContain('lw-hero-grid');
+    expect(products).toContain('lw-hero-grid');
+  });
+
+  test('surfaces automated renewal drafts for mandatory human finance review', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain("'System renewal draft scheduler'");
+    expect(notifications).toContain("'System project renewal draft scheduler'");
+    expect(notifications).toContain('Renewal invoice drafts awaiting review');
+    expect(notifications).toContain("action: 'admin-finance-renewals'");
+  });
+
+  test('notifies communications admins when automation runtime is failed or stale', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain("id: 'communications-dispatcher'");
+    expect(notifications).toContain('AUTOMATION_RUNTIME_MAX_AGE_MINUTES');
+    expect(notifications).toContain("id: 'automation-runtime-health'");
+    expect(notifications).toContain('Automation dispatcher failed');
+    expect(notifications).toContain('Automation dispatcher stale');
+    expect(notifications).toContain("action: 'admin-sms'");
+  });
+
+  test('treats project renewal drafting as dispatcher-backed automation for stale-run alerts', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    expect(notifications).toContain("AUTO_PROJECT_RENEWAL_DRAFT_INVOICES === 'true'");
+    expect(notifications).toContain("'automation-runtime-health'");
+  });
+
+  test('counts service and project renewal drafts before raising finance review alerts', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    expect(notifications).toContain('collectionInvoices, renewalDrafts');
+    expect(notifications).toContain("'System renewal draft scheduler'");
+    expect(notifications).toContain("'System project renewal draft scheduler'");
+    expect(notifications).toContain('Renewal invoice drafts awaiting review');
+  });
+
+  test('surfaces automation communication failures to operators', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('AUTO_SERVICE_RENEWAL_EMAIL');
+    expect(notifications).toContain('AUTO_PROJECT_RENEWAL_EMAIL');
+    expect(notifications).toContain('AUTO_NEWSLETTER_CAMPAIGN_DISPATCH');
+    expect(notifications).toContain("'sms-delivery-failures'");
+    expect(notifications).toContain("'renewal-email-failures'");
+    expect(notifications).toContain("'collection-email-failures'");
+    expect(notifications).toContain("'system.service_renewal_email_failed'");
+    expect(notifications).toContain("'system.project_renewal_email_failed'");
+    expect(notifications).toContain("type: 'email_reminder_failed'");
+  });
+
+  test('alerts finance when fully paid renewal invoices still need cycle completion', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    expect(notifications).toContain('renewalCompletionCandidates');
+    expect(notifications).toContain('renewalCompletedAt: null');
+    expect(notifications).toContain('invoiceBalance(invoice.total, invoice.allocations, invoice.creditNotes).eq(0)');
+    expect(notifications).toContain('Paid renewals awaiting completion');
+    expect(notifications).toContain("action: 'admin-finance-renewals'");
+  });
+
+  test('routes finance notifications directly to operational exception queues', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(notifications).toContain('Project renewals due');
+    expect(notifications).toContain('Client services expired');
+    expect(notifications).toContain('Collection follow-ups due');
+    expect(notifications).toContain('Payment promises overdue');
+    expect(notifications).toContain("action: 'admin-finance-collections'");
+    expect(notifications).toContain("action: 'admin-finance-renewals'");
+    expect(notifications).toContain("action: 'admin-finance-suppliers'");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'collections')");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'renewals')");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'suppliers')");
+  });
+
+  test('uses one resilient JSON parser across core admin workspaces', () => {    const helper = source('src/lib/client-api.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+    const sms = source('src/components/admin/AdminSms.tsx');
+    const media = source('src/components/admin/AdminMedia.tsx');
+    const mediaField = source('src/components/admin/AdminMediaField.tsx');
+    const security = source('src/components/admin/AdminSecurityDialog.tsx');
+    const campaigns = source('src/components/admin/AdminCampaigns.tsx');
+    const governance = source('src/components/admin/AdminGovernance.tsx');
+    const support = source('src/components/admin/AdminSupportDesk.tsx');
+
+    expect(helper).toContain('response.text()');
+    expect(helper).toContain('invalid JSON response');
+    expect(helper).toContain('empty server response');
+    for (const workspace of [layout, sms, media, mediaField, security, campaigns, governance, support]) {
+      expect(workspace).toContain("from '@/lib/client-api'");
+      expect(workspace).toContain('readJsonResponse(response)');
+    }
+    expect(layout).not.toContain('const payload = await response.json();');
+    expect(sms).not.toContain('const payload = await response.json();');
+  });
+
+  test('measures assistant project-scope conversion into submitted leads by first-party session', () => {
+    const analytics = source('src/app/api/admin/analytics/route.ts');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(analytics).toContain('scopeStartedBySession');
+    expect(analytics).toContain('assistantLeadSessions');
+    expect(analytics).toContain('event.createdAt >= scopeStartedAt');
+    expect(analytics).toContain('assistantLeadConversionRate');
+    expect(dashboard).toContain('AI Scope → Lead');
+    expect(dashboard).toContain('assistantLeadConversionRate');
+  });
+
+  test('captures privacy-bounded assistant quality feedback', () => {
+    const analyticsClient = source('src/lib/analytics-client.ts');
+    const analyticsApi = source('src/app/api/analytics/route.ts');
+    const adminAnalytics = source('src/app/api/admin/analytics/route.ts');
+    const floating = source('src/components/layout/FloatingWidgets.tsx');
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+
+    expect(analyticsClient).toContain("'assistant_feedback'");
+    expect(analyticsApi).toContain("'assistant_feedback'");
+    expect(floating).toContain('Was this helpful?');
+    expect(floating).toContain("trackEvent('assistant_feedback'");
+    expect(floating).toContain("handleAssistantFeedback(msg.id, 'helpful')");
+    expect(floating).toContain("handleAssistantFeedback(msg.id, 'not_helpful')");
+    expect(floating).toContain('messageId: messageId.slice(0, 80)');
+    expect(adminAnalytics).toContain('assistantHelpfulnessRate');
+    expect(adminAnalytics).toContain('assistantHelpful');
+    expect(adminAnalytics).toContain('assistantNotHelpful');
+    expect(dashboard).toContain('Assistant Helpful');
+  });
+
+  test('exposes authenticated deployment provenance to administrators', () => {
+    const route = source('src/app/api/admin/operations/release-status/route.ts');
+    const settings = source('src/components/admin/AdminSettings.tsx');
+
+    expect(route).toContain('getActiveAdminContext(request)');
+    expect(route).toContain("path.join(process.cwd(), 'RELEASE_SHA')");
+    expect(route).toContain('/^[a-f0-9]{40}$/');
+    expect(route).toContain("provenance: sha ? 'verified_artifact' : 'unavailable'");
+    expect(route).toContain("'Cache-Control': 'private, no-store, max-age=0'");
+    expect(settings).toContain("fetchJson<{ data: ReleaseStatus }>('/api/admin/operations/release-status'");
+    expect(settings).toContain('Deployed release');
+    expect(settings).toContain('Runtime started');
+  });
+
+  test('keeps Admin Settings resilient to invalid gateway responses', () => {
+    const settings = source('src/components/admin/AdminSettings.tsx');
+
+    expect(settings).toContain("fetchJson<SettingsData>('/api/settings'");
+    expect(settings).toContain("fetchJson('/api/settings'");
+    expect(settings).not.toContain('setSettings(await res.json())');
+    expect(settings).not.toContain("if (!res.ok) throw new Error('Failed to fetch')");
+  });
+
+  test('consolidates production readiness inside Settings', () => {
+    const settings = source('src/components/admin/AdminSettings.tsx');
+
+    expect(settings).toContain('Production readiness');
+    expect(settings).toContain("fetchJson<{ data: HealthData }>('/api/admin/health'");
+    expect(settings).toContain("'/api/admin/operations/backup-status'");
+    expect(settings).toContain('Hubtel SMS');
+    expect(settings).toContain('Hubtel OTP');
+    expect(settings).toContain('Hubtel payments');
+    expect(settings).toContain('Automation dispatcher');
+    expect(settings).toContain('Automation runtime');
+    expect(settings).toContain('Backup & recovery');
+    expect(settings).toContain('Disk capacity');
+    expect(settings).toContain('health.disk.usedPercent');
+    expect(settings).toContain("navigate('admin-sms')");
+  });
+
+  test('supports dashboard drill-downs and a real authenticated health signal', () => {
+    const dashboard = source('src/components/admin/AdminDashboard.tsx');
+    const messages = source('src/components/admin/AdminMessages.tsx');
+    const health = source('src/app/api/admin/health/route.ts');
+
+    expect(dashboard).toContain("sessionStorage.setItem('lw-open-message-id'");
+    expect(dashboard).toContain("sessionStorage.setItem('lw-crm-status-filter'");
+    expect(dashboard).toContain("fetch('/api/admin/health'");
+    expect(dashboard).toContain('Analytics drill-down');
+    expect(messages).toContain("sessionStorage.getItem('lw-open-message-id')");
+    expect(messages).toContain('max-w-5xl');
+    expect(health).toContain('getActiveAdminContext(request)');
+    expect(health).toContain('await db.$queryRaw');
+    expect(health).toContain('getServerDiskHealth');
+    expect(health).toContain("disk.status === 'healthy'");
+    expect(dashboard).toContain("Disk {health?.disk?.usedPercent ?? '—'}%");
+  });
+
+  test('alerts administrators when production disk capacity needs attention', () => {
+    const diskHealth = source('src/lib/server-disk-health.ts');
+    const health = source('src/app/api/admin/health/route.ts');
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(diskHealth).toContain("SERVER_DISK_MINIMUM_FREE_BYTES = 2 * 1024 ** 3");
+    expect(diskHealth).toContain("SERVER_DISK_WARNING_FREE_BYTES = 5 * 1024 ** 3");
+    expect(diskHealth).toContain("statfs(SERVER_DISK_PATH, { bigint: true })");
+    expect(health).toContain("getServerDiskHealth");
+    expect(notifications).toContain("id: 'production-disk-capacity'");
+    expect(notifications).toContain("'Production disk critically low'");
+    expect(notifications).toContain("'Production disk capacity warning'");
+    expect(notifications).toContain("action: 'admin-settings'");
+  });
+
+  test('keeps blog admin contracts aligned with wrapped API responses', () => {
+    const blog = source('src/components/admin/AdminBlog.tsx');
+    const editor = source('src/components/admin/AdminBlogEditor.tsx');
+
+    expect(blog).toContain('payload.data || []');
+    expect(blog).toContain("params.set('published', 'true')");
+    expect(blog).toContain("params.set('featured', 'true')");
+    expect(editor).toContain('const post = payload.data || payload');
+  });
+
+  test('validates and atomically persists CMS settings', () => {
+    const settings = source('src/app/api/settings/route.ts');
+
+    expect(settings).toContain('settingsPayloadSchema');
+    expect(settings).toContain('.record(');
+    expect(settings).toContain('await db.$transaction(updates)');
+  });
+
+  test('does not expose inactive CMS detail records to anonymous callers', () => {
+    for (const path of [
+      'src/app/api/team/[id]/route.ts',
+      'src/app/api/testimonials/[id]/route.ts',
+      'src/app/api/process-steps/[id]/route.ts',
+    ]) {
+      const value = source(path);
+      expect(value).toContain('const adminRequest = await isAdminRequest(request)');
+      expect(value).toContain('active: true');
+    }
+  });
+
+  test('governs customer contracts and statements of work as first-class commercial records', () => {
+    const schema = source('prisma/schema.prisma');
+    const clientsApi = source('src/app/api/admin/clients/route.ts');
+    const createAgreement = source('src/app/api/admin/clients/[id]/agreements/route.ts');
+    const updateAgreement = source('src/app/api/admin/client-agreements/[id]/route.ts');
+    const approvalAgreement = source('src/app/api/admin/client-agreements/[id]/approval/route.ts');
+    const attachmentUpload = source('src/app/api/admin/client-agreements/[id]/attachments/route.ts');
+    const attachmentAccess = source('src/app/api/agreement-attachments/[id]/route.ts');
+    const attachmentSecurity = source('src/lib/agreement-attachment.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+    const clientPortalApi = source('src/app/api/client/portal/route.ts');
+    const clientPortal = source('src/components/client/ClientPortalPage.tsx');
+
+    expect(schema).toContain('model ClientAgreement');
+    expect(schema).toContain('model ClientAgreementAttachment');
+    expect(schema).toContain('model ClientAgreementChange');
+    expect(schema).toContain('beforeState Json');
+    expect(schema).toContain('afterState  Json');
+    expect(schema).toContain('approvalStatus');
+    expect(schema).toContain('approvalDecisionBy');
+    expect(schema).toContain('approvalDecisionAt');
+    expect(schema).toContain('approvalNotes');
+    expect(schema).toContain('renewalNoticeDays');
+    expect(schema).toContain('visibleToClient Boolean');
+    expect(clientsApi).toContain('agreements: {');
+    expect(clientsApi).toContain('attachments: { orderBy:');
+    expect(clientsApi).toContain('changes: { orderBy:');
+    expect(createAgreement).toContain('Selected project does not belong to this client');
+    expect(createAgreement).toContain('New agreements must be approved before they can be activated');
+    expect(updateAgreement).toContain('db.$transaction');
+    expect(updateAgreement).toContain('tx.clientAgreementChange.create');
+    expect(updateAgreement).toContain('admin.client_agreement_updated');
+    expect(updateAgreement).toContain("existing.approvalStatus !== 'approved'");
+    expect(approvalAgreement).toContain("z.enum(['approved', 'rejected'])");
+    expect(approvalAgreement).toContain('approval_decision');
+    expect(approvalAgreement).toContain('admin.client_agreement_approval_decided');
+    expect(attachmentUpload).toContain('MAX_AGREEMENT_ATTACHMENT_BYTES');
+    expect(attachmentUpload).toContain('detectAgreementAttachment');
+    expect(attachmentUpload).toContain("'clients.manage'");
+    expect(attachmentUpload).toContain('admin.client_agreement_attachment_added');
+    expect(attachmentAccess).toContain('isSafeAgreementAttachmentStorageName');
+    expect(attachmentAccess).toContain('admin.client_agreement_attachment_downloaded');
+    expect(attachmentAccess).toContain('admin.client_agreement_attachment_deleted');
+    expect(attachmentAccess).toContain('admin.client_agreement_attachment_visibility_changed');
+    expect(attachmentAccess).toContain('getActiveClientContext');
+    expect(attachmentAccess).toContain('client.user.organizationId !== attachment.agreement.organizationId');
+    expect(attachmentAccess).toContain('!attachment.visibleToClient');
+    expect(attachmentSecurity).toContain("String.fromCharCode(...bytes.slice(0, 5)) === '%PDF-'");
+    expect(clients).toContain('Agreements & SOW register');
+    expect(clients).toContain('Secure document vault');
+    expect(clients).toContain('multiple');
+    expect(clients).toContain('Notice window open');
+    expect(clients).toContain("fetch('/api/admin/clients/' + selected.id + '/agreements'");
+    expect(clients).toContain("fetch('/api/admin/client-agreements/' + agreementId + '/attachments'");
+    expect(clients).toContain("fetch('/api/agreement-attachments/' + attachmentId");
+    expect(clients).toContain('Shared with client');
+    expect(clients).toContain('Internal only');
+    expect(clients).toContain('Agreement change history');
+    expect(clients).toContain('change.fields.split');
+    expect(clients).toContain('Approval governance');
+    expect(clients).toContain('Approve for activation');
+    expect(clients).toContain("disabled={agreement.approvalStatus !== 'approved'}");
+    expect(clientPortalApi).toContain('attachments: { some: { visibleToClient: true } }');
+    expect(clientPortalApi).toContain('where: { visibleToClient: true }');
+    expect(clientPortalApi).toContain('agreements: organization.agreements');
+    expect(clientPortal).toContain('Agreements & signed documents');
+    expect(clientPortal).toContain("['Agreements', '#agreements']");
+    expect(clientPortal).toContain("href={'/api/agreement-attachments/' + attachment.id}");
+  });
+
+  test('governs procurement from requisition approval through PO receipt', () => {
+    const schema = source('prisma/schema.prisma');
+    const procurementApi = source('src/app/api/admin/finance/procurement/route.ts');
+    const procurementActionApi = source('src/app/api/admin/finance/procurement/[id]/route.ts');
+    const procurementReceiptApi = source('src/app/api/admin/finance/procurement/[id]/receipts/route.ts');
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('model FinancePurchaseRequest');
+    expect(schema).toContain('model FinancePurchaseRequestLine');
+    expect(schema).toContain('model FinancePurchaseOrder');
+    expect(schema).toContain('model FinancePurchaseReceipt');
+    expect(schema).toContain('model FinancePurchaseReceiptLine');
+    expect(schema).toContain('purchaseRequests FinancePurchaseRequest[]');
+    expect(schema).toContain('purchaseOrders   FinancePurchaseOrder[]');
+    expect(procurementApi).toContain("'finance.manage'");
+    expect(procurementApi).toContain('admin.finance_purchase_request_submitted');
+    expect(procurementApi).toContain('estimatedAmount');
+    expect(procurementActionApi).toContain("'finance.approve'");
+    expect(procurementActionApi).toContain('A requisition must be approved by a different finance operator');
+    expect(procurementActionApi).toContain('admin.finance_purchase_request_approved');
+    expect(procurementActionApi).toContain('admin.finance_purchase_order_issued');
+    expect(procurementActionApi).toContain('Direct full-receipt confirmation is disabled');
+    expect(procurementReceiptApi).toContain('admin.finance_purchase_receipt_recorded');
+    expect(procurementReceiptApi).toContain("status: 'partially_received'");
+    expect(procurementReceiptApi).toContain("status: 'received'");
+    expect(procurementReceiptApi).toContain('Accepted quantity exceeds the remaining purchase order quantity');
+    expect(procurement).toContain('Procurement control');
+    expect(procurement).toContain('Submit for approval');
+    expect(procurement).toContain('Issue purchase order');
+    expect(procurement).toContain('Record receipt');
+    expect(procurement).toContain('Goods / service receipt quantities');
+    expect(procurement).toContain('lightworld-purchase-requisitions');
+    expect(procurement).toContain('lightworld-purchase-orders');
+    expect(procurementApi).toContain('approvalAgingCutoff');
+    expect(procurementApi).toContain('overdueOrders');
+    expect(procurementApi).toContain('awaitingBill');
+    expect(procurementApi).toContain('Procurement exceptions are deterministic');
+    expect(procurement).toContain('Procurement exception queue');
+    expect(procurement).toContain('aged >48h');
+    expect(procurement).toContain('Awaiting matched bill');
+    expect(procurement).toContain('Overdue');
+    expect(procurementApi).toContain('supplierPerformance');
+    expect(procurementApi).toContain('onTimeRate');
+    expect(procurementApi).toContain('averageDeliveryDays');
+    expect(procurementApi).toContain('commitmentsByCurrency');
+    expect(procurement).toContain('Supplier delivery & quality performance');
+    expect(procurement).toContain('lightworld-supplier-procurement-performance');
+    expect(procurement).toContain('Quality acceptance uses inspected accepted versus rejected quantities');
+    expect(finance).toContain("['procurement', 'Procurement']");
+    expect(finance).toContain('FinanceProcurementWorkspace');
+  });
+
+  test('matches received purchase orders to supplier bills before posting', () => {
+    const schema = source('prisma/schema.prisma');
+    const billsApi = source('src/app/api/admin/finance/bills/route.ts');
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('purchaseOrderId String?');
+    expect(schema).toContain('bill         FinanceVendorBill?');
+    expect(billsApi).toContain('Purchase order must be received before a supplier bill can be matched');
+    expect(billsApi).toContain('Purchase order has no line-level receipt evidence for three-way matching');
+    expect(billsApi).toContain('Supplier bill vendor does not match the purchase order supplier');
+    expect(billsApi).toContain('Supplier bill currency does not match the purchase order currency');
+    expect(billsApi).toContain('Supplier bill net amount does not match the purchase order commitment');
+    expect(billsApi).toContain('purchaseOrderId: matchedPurchaseOrder?.id || null');
+    expect(procurement).toContain('Prepare matched bill');
+    expect(finance).toContain('Matched to a received purchase order');
+    expect(finance).toContain('purchaseOrderId: order.id');
+  });
+
+  test('stores supplier invoice PDF evidence with payables', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927061000_supplier_bill_evidence/migration.sql');
+    const billsApi = source('src/app/api/admin/finance/bills/route.ts');
+    const uploadApi = source('src/app/api/admin/finance/bills/[id]/attachments/route.ts');
+    const attachmentApi = source('src/app/api/admin/finance/bill-attachments/[id]/route.ts');
+    const attachmentLib = source('src/lib/vendor-bill-attachment.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('model FinanceVendorBillAttachment');
+    expect(schema).toContain('attachments    FinanceVendorBillAttachment[]');
+    expect(migration).toContain('CREATE TABLE "FinanceVendorBillAttachment"');
+    expect(billsApi).toContain("attachments: { orderBy: { createdAt: 'desc' } }");
+    expect(uploadApi).toContain("'finance.manage'");
+    expect(uploadApi).toContain('MAX_VENDOR_BILL_ATTACHMENT_BYTES');
+    expect(uploadApi).toContain('admin.finance_supplier_bill_attachment_added');
+    expect(uploadApi).toContain('Upload a valid PDF supplier invoice.');
+    expect(attachmentApi).toContain('admin.finance_supplier_bill_attachment_downloaded');
+    expect(attachmentApi).toContain('Evidence for a paid supplier bill cannot be deleted');
+    expect(attachmentApi).toContain("'Cache-Control': 'private, no-store, max-age=0'");
+    expect(attachmentLib).toContain("join(uploadStorageDirectory(), 'vendor-bills')");
+    expect(finance).toContain('Supplier invoice PDF evidence');
+    expect(finance).toContain('Evidence missing');
+    expect(finance).toContain('Add PDF');
+    expect(finance).toContain('uploadBillEvidence');
+    expect(finance).toContain("'/api/admin/finance/bills/' + created.id + '/attachments'");
+    expect(finance).toContain("'/api/admin/finance/bill-attachments/' + attachment.id");
+  });
+
+  test('stores supplier payment proof and exposes supplier payment history', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927070000_supplier_payment_evidence/migration.sql');
+    const paymentsApi = source('src/app/api/admin/finance/vendor-payments/route.ts');
+    const uploadApi = source('src/app/api/admin/finance/vendor-payments/[id]/attachments/route.ts');
+    const attachmentApi = source('src/app/api/admin/finance/vendor-payment-attachments/[id]/route.ts');
+    const attachmentLib = source('src/lib/vendor-payment-attachment.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('model FinanceVendorPaymentAttachment');
+    expect(schema).toContain('attachments   FinanceVendorPaymentAttachment[]');
+    expect(migration).toContain('CREATE TABLE "FinanceVendorPaymentAttachment"');
+    expect(paymentsApi).toContain("attachments: { orderBy: { createdAt: 'desc' } }");
+    expect(uploadApi).toContain('admin.finance_supplier_payment_attachment_added');
+    expect(uploadApi).toContain('Upload a valid PDF, JPG, PNG or WebP payment proof.');
+    expect(attachmentApi).toContain('admin.finance_supplier_payment_attachment_downloaded');
+    expect(attachmentLib).toContain("join(uploadStorageDirectory(), 'vendor-payments')");
+    expect(finance).toContain('Supplier payment history & proof');
+    expect(finance).toContain('Proof missing');
+    expect(finance).toContain('Add proof');
+    expect(finance).toContain('uploadSupplierPaymentEvidence');
+    expect(finance).toContain('lightworld-supplier-payments');
+  });
+
+  test('schedules approved future outflows without posting cash before the effective date', () => {
+    const migration = source('prisma/migrations/20260927165000_scheduled_treasury_outflows/migration.sql');
+    const approvalsApi = source('src/app/api/admin/finance/approvals/route.ts');
+    const decisionApi = source('src/app/api/admin/finance/approvals/[id]/route.ts');
+    const approvalLib = source('src/lib/finance-approvals.ts');
+    const workspace = source('src/components/admin/FinanceOutflowApprovals.tsx');
+
+    expect(migration).toContain("'scheduled'");
+    expect(approvalsApi).toContain("['pending', 'scheduled', 'approved', 'rejected', 'cancelled']");
+    expect(decisionApi).toContain("action: z.enum(['approve', 'reject', 'cancel', 'execute'])");
+    expect(decisionApi).toContain("status: 'scheduled'");
+    expect(decisionApi).toContain('Scheduled outflow cannot execute before its effective date');
+    expect(decisionApi).toContain("admin.finance_outflow_scheduled");
+    expect(decisionApi).toContain("admin.finance_scheduled_outflow_executed");
+    expect(source('src/app/api/admin/finance/treasury-runs/route.ts')).toContain("status: { in: ['pending', 'scheduled'] }");
+    expect(source('src/app/api/admin/finance/vendor-payments/route.ts')).toContain("status: { in: ['pending', 'scheduled'] }");
+    expect(approvalLib).toContain('isFutureFinanceDate');
+    expect(approvalLib).toContain("approval.status === 'scheduled' && options.allowScheduled === true");
+    expect(workspace).toContain('Scheduled treasury outflows');
+    expect(workspace).toContain('Approve & schedule');
+    expect(workspace).toContain('Execute due payment');
+    expect(workspace).toContain('It will not post cash until its effective date and explicit execution.');
+  });
+
+  test('requires supplier payment proof before maker-checker approval', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927071500_outflow_approval_evidence/migration.sql');
+    const approvalsApi = source('src/app/api/admin/finance/approvals/route.ts');
+    const uploadApi = source('src/app/api/admin/finance/approvals/[id]/attachments/route.ts');
+    const downloadApi = source('src/app/api/admin/finance/approval-attachments/[id]/route.ts');
+    const approvalLib = source('src/lib/finance-approvals.ts');
+    const approvals = source('src/components/admin/FinanceOutflowApprovals.tsx');
+
+    expect(schema).toContain('model FinanceOutflowApprovalAttachment');
+    expect(schema).toContain('attachments        FinanceOutflowApprovalAttachment[]');
+    expect(migration).toContain('CREATE TABLE "FinanceOutflowApprovalAttachment"');
+    expect(approvalsApi).toContain("attachments: { orderBy: { createdAt: 'desc' } }");
+    expect(uploadApi).toContain('admin.finance_outflow_approval_attachment_added');
+    expect(downloadApi).toContain('admin.finance_outflow_approval_attachment_downloaded');
+    expect(approvalLib).toContain('Payment proof is required before a non-cash supplier payment can be approved');
+    expect(approvalLib).toContain('create: approval.attachments.map');
+    expect(approvals).toContain('Payment proof');
+    expect(approvals).toContain('Proof required');
+    expect(approvals).toContain('Attach payment proof before approval');
+    expect(approvals).toContain('uploadApprovalProof');
+  });
+
+  test('exports supplier account statements for vendor reconciliation', () => {
+    const statement = source('src/lib/supplier-statement.ts');
+    const statementApi = source('src/app/api/admin/finance/vendors/[id]/statement/route.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(statement).toContain('buildSupplierAccountStatement');
+    expect(statement).toContain("type: 'Supplier Bill'");
+    expect(statement).toContain("type: 'Supplier Payment'");
+    expect(statement).toContain('Opening balances');
+    expect(statement).toContain('Closing balances');
+    expect(statement).toContain('Running payable');
+    expect(statement).toContain('vendorBillStatusFromBalance');
+    expect(statementApi).toContain('admin.finance_supplier_account_statement_downloaded');
+    expect(statementApi).toContain('Statement start date cannot be after end date');
+    expect(statementApi).toContain("'Content-Type': 'text/csv; charset=utf-8'");
+    expect(finance).toContain('Supplier account statements');
+    expect(finance).toContain('Download statement');
+    expect(finance).toContain('downloadSupplierStatement');
+    expect(finance).toContain('supplierStatementFrom');
+    expect(finance).toContain('supplierStatementTo');
+  });
+
+  test('filters supplier creditors by vendor-level aging band', () => {
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(finance).toContain('payableAgingBucket');
+    expect(finance).toContain('supplierAgingFilter');
+    expect(finance).toContain('supplierBillsByAging');
+    expect(finance).toContain('supplierAgingByCurrency');
+    expect(finance).toContain('Supplier payables aging');
+    expect(finance).toContain('Amounts are never converted or combined across currencies.');
+    expect(finance).toContain('lightworld-supplier-payables-aging');
+    expect(finance).toContain('Filter supplier bills by aging band');
+    expect(finance).toContain('Current / not due');
+    expect(finance).toContain('1–30 days overdue');
+    expect(finance).toContain('31–60 days overdue');
+    expect(finance).toContain('61–90 days overdue');
+    expect(finance).toContain('90+ days overdue');
+    expect(finance).toContain('No open supplier bills match the selected aging/due filters.');
+  });
+
+  test('adds governed treasury payment runs without bypassing maker-checker or posted cash controls', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927183500_treasury_payment_runs/migration.sql');
+    const finance = source('src/lib/finance.ts');
+    const treasuryRoute = source('src/app/api/admin/finance/treasury-runs/route.ts');
+    const submitRoute = source('src/app/api/admin/finance/treasury-runs/[id]/submit/route.ts');
+    const approvalLib = source('src/lib/finance-approvals.ts');
+    const approvalRoute = source('src/app/api/admin/finance/approvals/[id]/route.ts');
+    const treasuryUi = source('src/components/admin/FinanceTreasuryWorkspace.tsx');
+    const adminFinance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('model FinanceTreasuryPaymentRun');
+    expect(schema).toContain('model FinanceTreasuryPaymentRunLine');
+    expect(migration).toContain('finance_treasury_run_number_seq');
+    expect(migration).toContain("CHECK (\"status\" IN ('draft','submitted','executed','needs_attention','cancelled'))");
+    expect(finance).toContain("formatNumber('TRY'");
+    expect(treasuryRoute).toContain("status: { in: ['draft', 'submitted'] }");
+    expect(treasuryRoute).toContain('attachments: { some: {} }');
+    expect(treasuryRoute).toContain('parseApprovalAllocations');
+    expect(submitRoute).toContain('Enable finance maker-checker approval before submitting a treasury payment run');
+    expect(submitRoute).toContain('createOutflowApproval(actor');
+    expect(submitRoute).toContain("status: 'submitted'");
+    expect(approvalLib).toContain("data: { status: 'executed', paymentId: created.id }");
+    expect(approvalLib).toContain("data: { status: 'executed' }");
+    expect(approvalRoute).toContain("data: { status: 'needs_attention' }");
+    expect(treasuryUi).toContain('Planning reservation only. Posted cash remains unchanged until supplier-payment approval executes.');
+    expect(treasuryUi).toContain('Open maker-checker approvals');
+    expect(treasuryUi).toContain('Submit treasury payment run?');
+    expect(treasuryUi).not.toContain('window.confirm');
+    expect(adminFinance).toContain("['treasury', 'Treasury']");
+    expect(adminFinance).toContain('<FinanceTreasuryWorkspace');
+  });
+
+
+  test('adds conservative 13-week treasury cash visibility without treating overdue receivables as cash', () => {
+    const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
+    const executive = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+
+    expect(dashboardApi).toContain('TREASURY_WEEKS = 13');
+    expect(dashboardApi).toContain('overdueReceivablesExcluded');
+    expect(dashboardApi).toContain('openingLiquidity.minus(raw.overduePayables)');
+    expect(dashboardApi).toContain('scheduledReceivables13Weeks');
+    expect(dashboardApi).toContain('committedPayables13Weeks');
+    expect(dashboardApi).toContain('This is cash visibility, not a guarantee of collections.');
+    expect(executive).toContain('13-week treasury cash visibility');
+    expect(executive).toContain('lightworld-13-week-treasury-visibility');
+    expect(executive).toContain('First projected negative date');
+    expect(executive).toContain('overdue AR excluded');
+  });
+
+  test('adds a committed supplier cash requirement schedule with due-window drill-downs', () => {
+    const dashboardApi = source('src/app/api/admin/finance/dashboard/route.ts');
+    const executive = source('src/components/admin/FinanceExecutiveDashboard.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(dashboardApi).toContain('payablesScheduleBucket');
+    expect(dashboardApi).toContain('Committed supplier cash requirement based only on current open bill balances and contractual due dates.');
+    expect(dashboardApi).toContain('dueWithin30');
+    expect(dashboardApi).toContain('dueWithin90');
+    expect(executive).toContain('Committed supplier cash schedule');
+    expect(executive).toContain('AP due next 30 days');
+    expect(finance).toContain('lightworld-supplier-cash-schedule');
+    expect(finance).toContain('supplierDueFilter');
+    expect(finance).toContain('Filter supplier bills by due window');
+  });
+
+  test('applies supplier payment-term defaults with audited due-date overrides', () => {
+    const schema = source('prisma/schema.prisma');
+    const vendorsApi = source('src/app/api/admin/finance/vendors/route.ts');
+    const vendorUpdateApi = source('src/app/api/admin/finance/vendors/[id]/route.ts');
+    const financeMeta = source('src/app/api/admin/finance/meta/route.ts');
+    const billsApi = source('src/app/api/admin/finance/bills/route.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('paymentTermsDays Int');
+    expect(vendorsApi).toContain('paymentTermsDays');
+    expect(vendorUpdateApi).toContain('beforePaymentTermsDays');
+    expect(vendorUpdateApi).toContain('afterPaymentTermsDays');
+    expect(financeMeta).toContain('paymentTermsDays: true');
+    expect(billsApi).toContain('defaultDueDate');
+    expect(billsApi).toContain('dueDateOverride');
+    expect(billsApi).toContain('supplierPaymentTermsDays');
+    expect(finance).toContain('Default payment terms (days)');
+    expect(finance).toContain('Payment terms for ');
+    expect(finance).toContain('supplierDefaultDueDate');
+    expect(finance).toContain('This bill due date overrides the supplier default and will be recorded in the audit trail.');
+  });
+
+  test('alerts finance when non-cash supplier payment proof is missing', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('supplierPaymentProofCutoff');
+    expect(notifications).toContain('financeVendorPayment.count');
+    expect(notifications).toContain("method: { not: 'cash' }");
+    expect(notifications).toContain('attachments: { none: {} }');
+    expect(notifications).toContain("'finance-supplier-payment-proof-missing'");
+    expect(notifications).toContain('Supplier payment proof missing');
+    expect(notifications).toContain("action: 'admin-finance-suppliers'");
+  });
+
+  test('governs supplier quotation comparison before purchase order award', () => {
+    const schema = source('prisma/schema.prisma');
+    const quoteApi = source('src/app/api/admin/finance/procurement/[id]/quotes/route.ts');
+    const actionApi = source('src/app/api/admin/finance/procurement/[id]/route.ts');
+    const evidenceUploadApi = source('src/app/api/admin/finance/procurement/quotes/[id]/attachment/route.ts');
+    const evidenceDownloadApi = source('src/app/api/admin/finance/procurement/quote-attachments/[id]/route.ts');
+    const procurementAttachment = source('src/lib/procurement-attachment.ts');
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+
+    expect(schema).toContain('model FinanceSupplierQuote');
+    expect(schema).toContain('supplierQuotes     FinanceSupplierQuote[]');
+    expect(quoteApi).toContain('Supplier quote currency must match the requisition currency');
+    expect(quoteApi).toContain('The requisition requester cannot select the winning supplier quote');
+    expect(quoteApi).toContain('Expired supplier quotes cannot be selected');
+    expect(quoteApi).toContain('Single-source supplier awards require a written justification');
+    expect(quoteApi).toContain('Selecting a higher-priced supplier quote requires a written justification');
+    expect(quoteApi).toContain('lowestValidTotal');
+    expect(quoteApi).toContain('selectionReason');
+    expect(quoteApi).toContain('admin.finance_supplier_quote_recorded');
+    expect(quoteApi).toContain('admin.finance_supplier_quote_selected');
+    expect(actionApi).toContain('Select the winning supplier quote before issuing the purchase order');
+    expect(actionApi).toContain('Attach the selected supplier quotation PDF before issuing the purchase order');
+    expect(actionApi).toContain('selectedQuote?.total || item.estimatedAmount');
+    expect(schema).toContain('model FinanceSupplierQuoteAttachment');
+    expect(evidenceUploadApi).toContain('admin.finance_supplier_quote_attachment_added');
+    expect(evidenceUploadApi).toContain('Quotation file content does not match its declared type');
+    expect(evidenceDownloadApi).toContain('Cache-Control');
+    expect(evidenceDownloadApi).toContain('X-Content-Type-Options');
+    expect(procurementAttachment).toContain('MAX_PROCUREMENT_ATTACHMENT_BYTES');
+    expect(procurementAttachment).toContain("join(uploadStorageDirectory(), 'procurement')");
+    expect(procurement).toContain('Compare supplier quotes');
+    expect(procurement).toContain('Record quote');
+    expect(procurement).toContain('Award rationale — required for single-source or higher-priced selection');
+    expect(procurement).toContain('Award rationale:');
+    expect(procurement).toContain('Quotation evidence');
+    expect(procurement).toContain('Attach PDF');
+    expect(procurement).toContain('Attach the selected supplier quotation PDF before PO issue.');
+    expect(procurement).toContain('Select the winning supplier quote before PO issue');
+  });
+
+  test('routes procurement exceptions into the finance notification centre', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+    const layout = source('src/components/admin/AdminLayout.tsx');
+
+    expect(notifications).toContain('procurementApprovalCutoff');
+    expect(notifications).toContain('Procurement deliveries overdue');
+    expect(notifications).toContain('Procurement approvals aging');
+    expect(notifications).toContain('Received POs awaiting supplier bills');
+    expect(notifications).toContain("action: 'admin-finance-procurement'");
+    expect(layout).toContain("action === 'admin-finance-procurement'");
+    expect(layout).toContain("sessionStorage.setItem('lw-finance-section', 'procurement')");
+  });
+
+  test('requires evidence and independent review before closing agreement obligations', () => {
+    const schema = source('prisma/schema.prisma');
+    const updateApi = source('src/app/api/admin/agreement-obligations/[id]/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(schema).toContain('completionSubmittedAt');
+    expect(schema).toContain('completionSubmittedByAdminId');
+    expect(schema).toContain('reviewedByAdminId');
+    expect(schema).toContain('reviewNotes');
+    expect(updateApi).toContain('Completion evidence is required before review');
+    expect(updateApi).toContain('Completion must be reviewed by a different authorized operator');
+    expect(updateApi).toContain("status: 'pending_review'");
+    expect(updateApi).toContain("reviewAction === 'approve'");
+    expect(updateApi).toContain("reviewAction === 'reject'");
+    expect(clients).toContain('Submit completion for review');
+    expect(clients).toContain('Approve completion');
+    expect(clients).toContain('Reject completion');
+    expect(clients).toContain("['pending_review', 'Pending review'");
+    expect(clients).toContain("item.completionSubmittedByAdminId !== obligationQueue.actor?.id");
+    const queueApi = source('src/app/api/admin/agreement-obligations/queue/route.ts');
+    expect(queueApi).toContain("'pending_review'");
+    expect(queueApi).toContain('pendingReview');
+    expect(queueApi).toContain('completionSubmittedByAdminId');
+  });
+  test('keeps purchase requisitions supplier-neutral until sourcing', () => {
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+    const procurementApi = source('src/app/api/admin/finance/procurement/route.ts');
+
+    expect(procurementApi).toContain('vendorId: z.string().trim().nullable().optional()');
+    expect(procurement).toContain('Preferred supplier (optional)');
+    expect(procurement).toContain('Source after approval');
+    expect(procurement).toContain('the awarded supplier is determined through the quotation workflow');
+    expect(procurement).not.toContain('<Label>Supplier</Label><select required');
+  });
+
+  test('preserves procurement planning estimates and shows award variance', () => {
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+    const quoteSelection = source('src/app/api/admin/finance/procurement/[id]/quotes/route.ts');
+
+    expect(quoteSelection).toContain('requisitionEstimate: requisition.estimatedAmount.toFixed(2)');
+    expect(quoteSelection).toContain('awardVariance: quote.total.minus(requisition.estimatedAmount).toFixed(2)');
+    expect(quoteSelection).toContain('awardVariancePercent: requisition.estimatedAmount.gt(0)');
+    expect(quoteSelection).not.toContain('estimatedAmount: quote.total');
+    expect(procurement).toContain('Estimate / award');
+    expect(procurement).toContain('Planning baseline');
+    expect(procurement).toContain('Saving ');
+    expect(procurement).toContain('Over estimate ');
+    expect(procurement).toContain('This baseline is preserved after sourcing');
+  });
+
+  test('records procurement receiving quality and supplier acceptance performance', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927052000_procurement_receiving_quality/migration.sql');
+    const receipts = source('src/app/api/admin/finance/procurement/[id]/receipts/route.ts');
+    const procurementApi = source('src/app/api/admin/finance/procurement/route.ts');
+    const procurement = source('src/components/admin/FinanceProcurementWorkspace.tsx');
+
+    expect(schema).toContain('rejectedQuantity');
+    expect(schema).toContain('inspectionNotes');
+    expect(migration).toContain('ADD COLUMN "rejectedQuantity" DECIMAL(12,3)');
+    expect(receipts).toContain('Accepted quantity exceeds the remaining purchase order quantity');
+    expect(receipts).toContain('rejectedQuantity');
+    expect(receipts).toContain('inspectionNotes');
+    expect(procurementApi).toContain('qualityAcceptanceRate');
+    expect(procurementApi).toContain('acceptedQuantity');
+    expect(procurementApi).toContain('rejectedQuantity');
+    expect(procurement).toContain('Supplier delivery & quality performance');
+    expect(procurement).toContain('Quality acceptance');
+    expect(procurement).toContain('Reject / damaged');
+    expect(procurement).toContain('Inspection note for this line');
+  });
+
+  test('governs customer credit limits and blocks over-limit invoice issuance', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927045500_customer_credit_control/migration.sql');
+    const creditPolicy = source('src/app/api/admin/clients/[id]/credit-policy/route.ts');
+    const invoices = source('src/app/api/admin/finance/invoices/route.ts');
+    const commercialApi = source('src/app/api/admin/clients/[id]/commercial/route.ts');
+    const financeMeta = source('src/app/api/admin/finance/meta/route.ts');
+    const commercial = source('src/components/admin/ClientCommercialAccount.tsx');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(schema).toContain('paymentTermsDays');
+    expect(schema).toContain('creditLimitCurrency');
+    expect(schema).toContain('creditLimit        Decimal');
+    expect(schema).toContain('creditHold         Boolean');
+    expect(schema).toContain('creditHoldReason');
+    expect(migration).toContain('ADD COLUMN "creditLimit" DECIMAL(18,2)');
+    expect(creditPolicy).toContain("'finance.manage'");
+    expect(creditPolicy).toContain("'admin.client_credit_policy_approval_requested'");
+    expect(creditPolicy).toContain("'admin.client_credit_terms_updated'");
+    expect(creditPolicy).toContain('A credit hold requires a reason');
+    expect(invoices).toContain("effectiveStatus === 'issued'");
+    expect(invoices).toContain("'lightworld-credit-control:' + organization.id + ':' + currency");
+    expect(invoices).toContain('invoiceBalance(row.total, row.allocations, row.creditNotes)');
+    expect(invoices).toContain('projected.gt(organization.creditLimit)');
+    expect(invoices).toContain("'admin.finance_invoice_credit_blocked'");
+    expect(commercialApi).toContain('creditLimit: organization.creditLimit.toFixed(2)');
+    expect(commercialApi).toContain("key: 'credit_hold'");
+    expect(commercialApi).toContain("key: 'credit_limit_critical'");
+    expect(commercialApi).toContain("key: 'credit_limit_watch'");
+    expect(commercialApi).toContain('creditUtilizationPercent');
+    expect(commercialApi).toContain('Resolve customer credit hold');
+    expect(financeMeta).toContain('paymentTermsDays: true');
+    expect(financeMeta).toContain('creditLimit: organization.creditLimit.toFixed(2)');
+    expect(commercial).toContain('Credit control');
+    expect(commercial).toContain('Draft invoices remain available for review');
+    expect(commercial).toContain("'/api/admin/clients/' + encodeURIComponent(organizationId) + '/credit-policy'");
+    expect(commercial).toContain('Current {creditPolicy.creditLimitCurrency');
+    expect(commercial).toContain('Save credit policy');
+    expect(finance).toContain('const addDays = (dateValue: string, days: number)');
+    expect(finance).toContain('organization?.paymentTermsDays ?? 30');
+    expect(finance).toContain('Payment terms <strong className="text-foreground">{organization.paymentTermsDays} days</strong>');
+    expect(finance).toContain('Draft invoices remain available for review.');
+  });
+
+  test('surfaces cross-client credit exposure in the executive portfolio', () => {
+    const portfolioApi = source('src/app/api/admin/clients/portfolio-intelligence/route.ts');
+    const clients = source('src/components/admin/AdminClients.tsx');
+
+    expect(portfolioApi).toContain('creditLimitCurrency: true');
+    expect(portfolioApi).toContain('const outstandingByCurrency = new Map<string, Prisma.Decimal>()');
+    expect(portfolioApi).toContain('creditUtilizationPercent');
+    expect(portfolioApi).toContain('creditHolds: rows.reduce');
+    expect(portfolioApi).toContain("id: row.id + ':credit'");
+    expect(portfolioApi).toContain('Resolve customer credit hold');
+    expect(portfolioApi).toContain('Reduce critical credit exposure');
+    expect(clients).toContain("{ label: 'Credit holds'");
+    expect(clients).toContain("{ label: 'Credit ≥75%'");
+    expect(clients).toContain("'Credit utilization %'");
+    expect(clients).toContain("row.creditPolicy.utilizationPercent + '% credit used'");
+  });
+
+  test('notifies finance about critical customer credit exposure', () => {
+    const notifications = source('src/app/api/admin/notifications/route.ts');
+
+    expect(notifications).toContain('creditLimitCurrency: true');
+    expect(notifications).toContain('const creditHoldCount');
+    expect(notifications).toContain('const criticalCreditAccounts');
+    expect(notifications).toContain('account.creditLimit.mul(0.9)');
+    expect(notifications).toContain("id: 'finance-customer-credit-holds'");
+    expect(notifications).toContain("id: 'finance-customer-credit-critical'");
+    expect(notifications).toContain("action: 'admin-clients'");
+    expect(notifications).toContain('financeCreditPolicyApproval.findMany');
+    expect(notifications).toContain('creditApproval24hCutoff');
+    expect(notifications).toContain('creditApproval48hCutoff');
+    expect(notifications).toContain("'finance-credit-policy-approvals-overdue'");
+    expect(notifications).toContain("'finance-credit-policy-approvals-aging'");
+    expect(notifications).toContain("'finance-credit-policy-approvals'");
+    expect(notifications).toContain("action: 'admin-finance-approvals'");
+  });
+
+  test('uses maker-checker approval for sensitive customer credit policy changes', () => {
+    const schema = source('prisma/schema.prisma');
+    const migration = source('prisma/migrations/20260927052000_credit_policy_approval_workflow/migration.sql');
+    const creditPolicy = source('src/app/api/admin/clients/[id]/credit-policy/route.ts');
+    const decision = source('src/app/api/admin/finance/credit-approvals/[id]/route.ts');
+    const commercialApi = source('src/app/api/admin/clients/[id]/commercial/route.ts');
+    const commercial = source('src/components/admin/ClientCommercialAccount.tsx');
+    const approvalsApi = source('src/app/api/admin/finance/approvals/route.ts');
+    const approvalWorkspace = source('src/components/admin/FinanceOutflowApprovals.tsx');
+
+    expect(schema).toContain('model FinanceCreditPolicyApproval');
+    expect(migration).toContain('CREATE TABLE "FinanceCreditPolicyApproval"');
+    expect(creditPolicy).toContain('financeCreditPolicyApproval.findFirst');
+    expect(creditPolicy).toContain('financeCreditPolicyApproval.create');
+    expect(creditPolicy).toContain('approvalRequired: true');
+    expect(creditPolicy).toContain('admin.client_credit_policy_approval_requested');
+    expect(decision).toContain("'finance.approve'");
+    expect(decision).toContain('Maker-checker prevents you from approving your own credit policy request');
+    expect(decision).toContain('financeCreditPolicyApproval.update');
+    expect(decision).toContain('admin.client_credit_policy_approval_approved');
+    expect(commercialApi).toContain('financeCreditPolicyApproval.findMany');
+    expect(commercialApi).toContain('currentAdminId: actor.id');
+    expect(commercial).toContain('Pending credit approvals');
+    expect(commercial).toContain('Approve & apply');
+    expect(commercial).toContain('independent maker–checker approval');
+    expect(approvalsApi).toContain('financeCreditPolicyApproval.findMany');
+    expect(approvalsApi).toContain('creditApprovals: creditApprovals.map');
+    expect(approvalWorkspace).toContain('Pending customer credit approvals');
+    expect(approvalWorkspace).toContain('Customer credit approval history');
+    expect(approvalWorkspace).toContain("'/api/admin/finance/credit-approvals/'");
+    expect(approvalWorkspace).toContain('function approvalAge');
+    expect(approvalWorkspace).toContain("age.hours >= 48");
+    expect(approvalWorkspace).toContain("age.hours >= 24");
+  });
+
+  test('requires supplier invoice evidence before allocating a supplier payment', () => {
+    const paymentsApi = source('src/app/api/admin/finance/vendor-payments/route.ts');
+    const finance = source('src/components/admin/AdminFinance.tsx');
+
+    expect(paymentsApi).toContain('attachments: { select: { id: true }, take: 1 }');
+    expect(paymentsApi).toContain('Supplier invoice evidence is required before payment can be allocated to');
+    expect(finance).toContain('evidence verified');
+    expect(finance).toContain('evidence required');
+    expect(finance).toContain('Allocated supplier bills must have at least one uploaded invoice PDF');
+  });
+
+});
