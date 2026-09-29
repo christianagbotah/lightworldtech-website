@@ -1242,6 +1242,10 @@ model FinanceVendorBill {
   rejectedBy     String              @default("")
   rejectedAt     DateTime?
   rejectionReason String              @default("")
+  voidedByAdminId String              @default("")
+  voidedBy       String              @default("")
+  voidedAt       DateTime?
+  voidReason     String              @default("")
   purchaseOrderId String?             @unique
   purchaseOrder   FinancePurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
   allocations    FinanceVendorPaymentAllocation[]
