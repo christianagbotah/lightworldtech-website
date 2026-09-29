@@ -1030,7 +1030,7 @@ export default function FinanceAccountingWorkspace({
 
             {!openPeriods.length && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">No accounting period is open. Create an open period before preparing a journal.</div>}
 
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setJournalDialog(false)}>Cancel</Button><Button disabled={saving || !openPeriods.length || journalTotals.debit <= 0 || Math.abs(journalTotals.debit - journalTotals.credit) >= 0.005}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Post journal</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setJournalDialog(false)}>Cancel</Button><Button disabled={saving || !openPeriods.length || journalTotals.debit <= 0 || Math.abs(journalTotals.debit - journalTotals.credit) >= 0.005}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Submit for approval</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -1038,7 +1038,7 @@ export default function FinanceAccountingWorkspace({
       <Dialog open={Boolean(reversalJournal)} onOpenChange={(open) => { if (!open) setReversalJournal(null); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Reverse posted journal?</DialogTitle>
+            <DialogTitle>Request journal reversal?</DialogTitle>
             <DialogDescription>
               The original journal will remain posted while an equal-and-opposite reversal draft waits for an independent checker. No ledger lines are edited or deleted.
             </DialogDescription>
@@ -1052,7 +1052,7 @@ export default function FinanceAccountingWorkspace({
               </div>
               <div><Label>Reversal date</Label><Input required type="date" value={reversalForm.entryDate} min={reversalJournal.entryDate.slice(0, 10)} onChange={(event) => setReversalForm({ ...reversalForm, entryDate: event.target.value })} /></div>
               <div><Label>Reason</Label><Textarea required rows={3} value={reversalForm.reason} onChange={(event) => setReversalForm({ ...reversalForm, reason: event.target.value })} placeholder="Explain why this posted journal must be reversed." /></div>
-              <DialogFooter><Button type="button" variant="outline" onClick={() => setReversalJournal(null)}>Cancel</Button><Button type="submit" variant="destructive" disabled={saving}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Post reversal</Button></DialogFooter>
+              <DialogFooter><Button type="button" variant="outline" onClick={() => setReversalJournal(null)}>Cancel</Button><Button type="submit" variant="destructive" disabled={saving}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Submit reversal for approval</Button></DialogFooter>
             </form>
           )}
         </DialogContent>
