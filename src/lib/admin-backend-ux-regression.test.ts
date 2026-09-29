@@ -1334,7 +1334,9 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(reconciliationFinalizeApi).toContain('Every bank/mobile-money ledger movement in the statement period must be matched');
     expect(reconciliationFinalizeApi).toContain('Ledger closing balance does not agree with the statement closing balance');
     expect(reconciliationWorkspace).toContain('Bank & mobile-money reconciliation');
-    expect(reconciliationWorkspace).toContain('Finalize reconciliation');
+    expect(reconciliationWorkspace).toContain('Certify reconciliation');
+    expect(reconciliationWorkspace).toContain('Independent checker required');
+    expect(reconciliationWorkspace).toContain('Segregation of duties');
     expect(financeClose).toContain('cash_reconciliation_coverage');
     expect(financeClose).toContain('source_journals');
     expect(closeReadinessApi).toContain('canClose');
