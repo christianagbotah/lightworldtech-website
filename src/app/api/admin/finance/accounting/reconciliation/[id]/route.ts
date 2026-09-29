@@ -143,10 +143,27 @@ export async function GET(
   );
   const expectedClosing = batch.openingBalance.plus(movement);
 
+  const matcherIds = [...new Set(
+    batch.lines
+      .map((line) => line.matchedByAdminId)
+      .filter(Boolean),
+  )];
+  const governanceComplete = Boolean(batch.importedByAdminId) &&
+    batch.lines.every((line) => line.status !== 'matched' || Boolean(line.matchedByAdminId));
+  const canFinalize =
+    hasAdminPermission(actor.role, actor.permissions, 'finance.approve') &&
+    batch.status === 'open' &&
+    governanceComplete &&
+    batch.importedByAdminId !== actor.id &&
+    !matcherIds.includes(actor.id);
+
   return NextResponse.json({
     success: true,
     data: {
       ...batch,
+      governanceComplete,
+      canFinalize,
+      matcherCount: matcherIds.length,
       openingBalance: batch.openingBalance.toFixed(2),
       closingBalance: batch.closingBalance.toFixed(2),
       statementMovement: movement.toFixed(2),
