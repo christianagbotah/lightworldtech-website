@@ -88,8 +88,19 @@ type Journal = {
   sourceType: string;
   sourceId: string;
   status: string;
-  postedAt: string;
+  createdByAdminId: string;
+  createdBy: string;
+  approvedByAdminId: string;
+  approvedBy: string;
+  approvedAt: string | null;
+  rejectedByAdminId: string;
+  rejectedBy: string;
+  rejectedAt: string | null;
+  rejectionReason: string;
+  postedAt: string | null;
   postedBy: string;
+  mine: boolean;
+  canApprove: boolean;
   totalDebit: string;
   totalCredit: string;
   lines: JournalLine[];
@@ -233,6 +244,8 @@ export default function FinanceAccountingWorkspace({
   const [journalDialog, setJournalDialog] = useState(false);
   const [reversalJournal, setReversalJournal] = useState<Journal | null>(null);
   const [reversalForm, setReversalForm] = useState({ entryDate: today(), reason: '' });
+  const [journalDecision, setJournalDecision] = useState<{ journal: Journal; action: 'approve' | 'reject' } | null>(null);
+  const [journalDecisionNotes, setJournalDecisionNotes] = useState('');
   const [periodAction, setPeriodAction] = useState<{ period: Period; action: 'close' | 'reopen' } | null>(null);
 
   const now = new Date();
@@ -443,7 +456,7 @@ export default function FinanceAccountingWorkspace({
           })),
         }),
       });
-      toast.success('Balanced journal posted');
+      toast.success('Balanced journal submitted for independent approval');
       setJournalDialog(false);
       setJournalForm({
         entryDate: today(),
@@ -477,13 +490,45 @@ export default function FinanceAccountingWorkspace({
           body: JSON.stringify(reversalForm),
         },
       );
-      toast.success('Journal reversed with a new balancing entry');
+      toast.success('Journal reversal submitted for independent approval');
       setReversalJournal(null);
       setReversalForm({ entryDate: today(), reason: '' });
       setLedger(null);
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Unable to reverse journal');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const decideJournal = async () => {
+    if (!journalDecision) return;
+    if (journalDecision.action === 'reject' && journalDecisionNotes.trim().length < 3) {
+      toast.error('Enter a meaningful rejection reason');
+      return;
+    }
+    setSaving(true);
+    try {
+      await api<Journal>(
+        '/api/admin/finance/accounting/journals/' + encodeURIComponent(journalDecision.journal.id) + '/decision',
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: journalDecision.action,
+            notes: journalDecisionNotes.trim(),
+          }),
+        },
+      );
+      toast.success(journalDecision.action === 'approve' ? 'Journal approved and posted' : 'Journal draft rejected');
+      setJournalDecision(null);
+      setJournalDecisionNotes('');
+      setLedger(null);
+      await load();
+      if (view === 'general-ledger' && ledgerAccountId) await loadLedger();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to decide journal draft');
     } finally {
       setSaving(false);
     }
