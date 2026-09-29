@@ -66,6 +66,26 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     );
   }
 
+  const nextStatus = parsed.data.status || existing.status;
+  const nextContractValue = parsed.data.contractValue !== undefined
+    ? new Prisma.Decimal(parsed.data.contractValue)
+    : existing.contractValue;
+  const nextContractValueBasis = parsed.data.contractValueBasis || existing.contractValueBasis;
+
+  if (
+    nextStatus === 'active' &&
+    nextContractValue.gt(0) &&
+    nextContractValueBasis === 'unspecified'
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Record whether the contract value is tax-inclusive or tax-exclusive before activating this agreement',
+      },
+      { status: 409 },
+    );
+  }
+
   if (parsed.data.projectId) {
     const project = await db.clientProject.findFirst({
       where: { id: parsed.data.projectId, organizationId: existing.organizationId },
