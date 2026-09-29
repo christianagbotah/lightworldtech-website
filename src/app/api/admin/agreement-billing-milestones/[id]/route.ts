@@ -41,6 +41,8 @@ export async function PATCH(
             organizationId: true,
             currency: true,
             contractValue: true,
+            status: true,
+            approvalStatus: true,
           },
         },
         invoices: {
@@ -57,6 +59,17 @@ export async function PATCH(
     );
 
     const hasLiveInvoice = existing.invoices.length > 0;
+    if (
+      parsed.data.visibleToClient === true &&
+      (existing.agreement.status !== 'active' || existing.agreement.approvalStatus !== 'approved')
+    ) {
+      return {
+        milestone: null,
+        error: 'Only milestones on approved active agreements can be shared with the client',
+        status: 409,
+      };
+    }
+
     const nextAmount = parsed.data.amount !== undefined
       ? new Prisma.Decimal(parsed.data.amount).toDecimalPlaces(2)
       : existing.amount;
