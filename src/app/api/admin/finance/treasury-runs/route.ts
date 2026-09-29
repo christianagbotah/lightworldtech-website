@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     where: {
       currency,
       dueDate: { lte: parsed.data.dueThrough },
-      status: { notIn: ['paid', 'void'] },
+      status: { notIn: ['draft', 'rejected', 'paid', 'void'] },
       ...(parsed.data.vendorId ? { vendorId: parsed.data.vendorId } : {}),
       vendor: { active: true },
       attachments: { some: {} },

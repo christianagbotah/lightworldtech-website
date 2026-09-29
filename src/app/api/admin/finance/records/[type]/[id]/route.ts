@@ -119,7 +119,7 @@ async function clientPosition(organizationId: string) {
 async function vendorPosition(vendorId: string) {
   const [bills, payments] = await Promise.all([
     db.financeVendorBill.findMany({
-      where: { vendorId, status: { not: 'void' } },
+      where: { vendorId, status: { notIn: ['draft', 'rejected', 'void'] } },
       include: { allocations: true },
       orderBy: { issueDate: 'desc' },
       take: 3000,
@@ -533,7 +533,7 @@ export async function GET(
       vendorPosition(bill.vendorId),
       auditTrail('FinanceVendorBill', bill.id),
       db.financeVendorBill.findMany({
-        where: { vendorId: bill.vendorId, id: { not: bill.id }, status: { not: 'void' } },
+        where: { vendorId: bill.vendorId, id: { not: bill.id }, status: { notIn: ['draft', 'rejected', 'void'] } },
         orderBy: [{ issueDate: 'desc' }, { createdAt: 'desc' }],
         take: 8,
         include: { allocations: true },

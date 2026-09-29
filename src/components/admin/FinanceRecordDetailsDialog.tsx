@@ -1039,7 +1039,7 @@ export default function FinanceRecordDetailsDialog({
               </div>
 
               <div className="flex flex-wrap justify-end gap-2">
-                {Number(data.bill.balance) > 0 && data.bill.derivedStatus !== 'void' && (
+                {Number(data.bill.balance) > 0 && !['draft', 'rejected', 'void'].includes(data.bill.derivedStatus) && (
                   <Button type="button" onClick={() => onPaySupplier(data.bill)}>
                     <ArrowUpRight className="mr-2 size-4" /> Pay supplier
                   </Button>
@@ -1059,6 +1059,18 @@ export default function FinanceRecordDetailsDialog({
                   <DetailItem label="Due date" value={date(data.bill.dueDate)} />
                   <DetailItem label="Supplier email" value={data.bill.vendor.email || '—'} />
                   <DetailItem label="Supplier phone" value={data.bill.vendor.phone || '—'} />
+                  <DetailItem label="Prepared by" value={data.bill.createdBy || 'Legacy / not recorded'} />
+                  <DetailItem
+                    label="Approval"
+                    value={data.bill.approvedAt
+                      ? (data.bill.approvedBy || 'Finance approver') + ' · ' + date(data.bill.approvedAt, true)
+                      : data.bill.status === 'draft'
+                        ? 'Pending second-person approval'
+                        : '—'}
+                  />
+                  {data.bill.rejectedAt && (
+                    <DetailItem label="Rejected by" value={(data.bill.rejectedBy || 'Finance approver') + ' · ' + date(data.bill.rejectedAt, true)} />
+                  )}
                 </CardContent>
               </Card>
 
@@ -1084,7 +1096,21 @@ export default function FinanceRecordDetailsDialog({
               <Card className="min-w-0 border-border/60">
                 <CardHeader className="pb-3"><CardTitle className="text-base">Notes & lifecycle</CardTitle></CardHeader>
                 <CardContent className="grid gap-3 lg:grid-cols-2">
-                  <div className="rounded-xl bg-muted/25 p-3"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Notes</p><p className="mt-1 whitespace-pre-wrap text-sm">{data.bill.notes || 'No supplier bill notes.'}</p></div>
+                  <div className="space-y-3">
+                    {data.bill.status === 'draft' && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em]">Awaiting payable approval</p>
+                        <p className="mt-1 text-xs">This draft has not posted a payable, expense or tax journal yet.</p>
+                      </div>
+                    )}
+                    {data.bill.rejectedAt && (
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-100">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em]">Supplier bill rejected</p>
+                        <p className="mt-1 whitespace-pre-wrap text-sm">{data.bill.rejectionReason || 'No rejection reason recorded.'}</p>
+                      </div>
+                    )}
+                    <div className="rounded-xl bg-muted/25 p-3"><p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Notes</p><p className="mt-1 whitespace-pre-wrap text-sm">{data.bill.notes || 'No supplier bill notes.'}</p></div>
+                  </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <DetailItem label="Created" value={date(data.bill.createdAt, true)} />
                     <DetailItem label="Last updated" value={date(data.bill.updatedAt, true)} />

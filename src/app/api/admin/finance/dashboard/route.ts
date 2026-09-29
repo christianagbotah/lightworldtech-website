@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
       take: 5000,
     }),
     db.financeVendorBill.findMany({
-      where: { status: { not: 'void' } },
+      where: { status: { notIn: ['draft', 'rejected', 'void'] } },
       include: { vendor: { select: { id: true, name: true } }, allocations: true },
       orderBy: { dueDate: 'asc' },
       take: 5000,
