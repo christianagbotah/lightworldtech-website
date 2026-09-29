@@ -64,13 +64,11 @@ export async function GET(request: NextRequest) {
         },
         agreements: {
           where: {
+            approvalStatus: 'approved',
+            status: { not: 'draft' },
             OR: [
               { attachments: { some: { visibleToClient: true } } },
-              {
-                status: 'active',
-                approvalStatus: 'approved',
-                billingMilestones: { some: { visibleToClient: true } },
-              },
+              { billingMilestones: { some: { visibleToClient: true } } },
             ],
           },
           orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
@@ -85,6 +83,12 @@ export async function GET(request: NextRequest) {
             expiryDate: true,
             signedAt: true,
             project: { select: { id: true, name: true } },
+            supersedesAgreement: {
+              select: { id: true, title: true, referenceNumber: true, status: true, approvalStatus: true },
+            },
+            supersededByAgreement: {
+              select: { id: true, title: true, referenceNumber: true, status: true, approvalStatus: true },
+            },
             billingMilestones: {
               where: { visibleToClient: true },
               orderBy: [{ order: 'asc' }, { dueDate: 'asc' }, { createdAt: 'asc' }],
@@ -388,13 +392,28 @@ export async function GET(request: NextRequest) {
         })),
         tickets: organization.tickets,
         announcements: organization.announcements,
-        agreements: organization.agreements.map((agreement) => ({
-          ...agreement,
-          billingMilestones: agreement.billingMilestones.map((milestone) => ({
-            ...milestone,
-            amount: milestone.amount.toFixed(2),
-          })),
-        })),
+        agreements: organization.agreements.map((agreement) => {
+          const visibleLineage = (
+            related: typeof agreement.supersedesAgreement | typeof agreement.supersededByAgreement,
+          ) => related && related.approvalStatus === 'approved' && related.status !== 'draft'
+            ? {
+                id: related.id,
+                title: related.title,
+                referenceNumber: related.referenceNumber,
+                status: related.status,
+              }
+            : null;
+
+          return {
+            ...agreement,
+            supersedesAgreement: visibleLineage(agreement.supersedesAgreement),
+            supersededByAgreement: visibleLineage(agreement.supersededByAgreement),
+            billingMilestones: agreement.billingMilestones.map((milestone) => ({
+              ...milestone,
+              amount: milestone.amount.toFixed(2),
+            })),
+          };
+        }),
         account: {
           summary: accountSummary,
           services,

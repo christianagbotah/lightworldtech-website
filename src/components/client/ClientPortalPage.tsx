@@ -268,6 +268,8 @@ type ClientAgreement = {
   expiryDate: string | null;
   signedAt: string | null;
   project: { id: string; name: string } | null;
+  supersedesAgreement: { id: string; title: string; referenceNumber: string; status: string } | null;
+  supersededByAgreement: { id: string; title: string; referenceNumber: string; status: string } | null;
   billingMilestones: Array<{
     id: string;
     title: string;
@@ -1592,6 +1594,27 @@ export default function ClientPortalPage() {
                       </div>
                       <Badge className={accountStatusClass(agreement.status)}>{statusLabel(agreement.status)}</Badge>
                     </div>
+
+                    {(agreement.supersedesAgreement || agreement.supersededByAgreement) && (
+                      <div className="mt-4 rounded-2xl border border-indigo-200/70 bg-indigo-50/50 p-3 text-xs dark:border-indigo-900/35 dark:bg-indigo-950/10">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-indigo-700 dark:text-indigo-300">Agreement history</p>
+                        {agreement.supersedesAgreement && (
+                          <p className="mt-1 text-slate-600 dark:text-white/45">
+                            This agreement replaces <strong className="text-slate-900 dark:text-white/75">{agreement.supersedesAgreement.title}</strong>
+                            {agreement.supersedesAgreement.referenceNumber ? ' · ' + agreement.supersedesAgreement.referenceNumber : ''}.
+                          </p>
+                        )}
+                        {agreement.supersededByAgreement && (
+                          <p className="mt-1 text-slate-600 dark:text-white/45">
+                            This agreement has been superseded by <strong className="text-slate-900 dark:text-white/75">{agreement.supersededByAgreement.title}</strong>
+                            {agreement.supersededByAgreement.referenceNumber ? ' · ' + agreement.supersededByAgreement.referenceNumber : ''}.
+                          </p>
+                        )}
+                        <p className="mt-1 text-[10px] leading-4 text-slate-500 dark:text-white/35">
+                          Draft or unapproved replacement agreements are never shown in the client portal.
+                        </p>
+                      </div>
+                    )}
 
                     <div className="mt-4 grid gap-2 text-xs sm:grid-cols-3">
                       <div className="rounded-xl bg-slate-50 p-3 dark:bg-white/[0.035]">
