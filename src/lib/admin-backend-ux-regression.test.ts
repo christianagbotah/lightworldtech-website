@@ -2434,7 +2434,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(clients).toContain('change.fields.split');
     expect(clients).toContain('Approval governance');
     expect(clients).toContain('Approve for activation');
-    expect(clients).toContain("disabled={agreement.approvalStatus !== 'approved'}");
+    expect(clients).toContain('disabled={basisRequired}');
+    expect(clients).toContain("agreement.approvalStatus !== 'approved' || basisRequired");
+    expect(clients).toContain('Choose Tax-exclusive or Tax-inclusive below before approval or activation');
+    expect(approvalAgreement).toContain('tax-inclusive or tax-exclusive before approving this agreement');
+    expect(updateAgreement).toContain('tax-inclusive or tax-exclusive before activating this agreement');
     expect(clientPortalApi).toContain('attachments: { some: { visibleToClient: true } }');
     expect(clientPortalApi).toContain('where: { visibleToClient: true }');
     expect(clientPortalApi).toContain('agreements: organization.agreements');
