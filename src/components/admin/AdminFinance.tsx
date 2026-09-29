@@ -1330,7 +1330,15 @@ export default function AdminFinance() {
         }
       }
 
-      toast.success(evidenceUploaded ? 'Supplier bill and invoice evidence recorded' : 'Supplier bill recorded');
+      toast.success(
+        created.status === 'draft'
+          ? evidenceUploaded
+            ? 'Supplier bill draft saved with evidence and sent for approval'
+            : 'Supplier bill draft saved for approval — attach supplier invoice evidence before posting'
+          : evidenceUploaded
+            ? 'Supplier bill and invoice evidence recorded'
+            : 'Supplier bill recorded',
+      );
       setBillForm({
         purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
         issueDate: today(), dueDate: inDays(30), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
