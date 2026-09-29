@@ -118,6 +118,9 @@ type Agreement = {
   notes: string; signedAt: string | null;
   project: { id: string; name: string; proposal: ProposalLineage | null } | null;
   approvalStatus: string; approvalDecisionBy: string; approvalDecisionAt: string | null; approvalNotes: string;
+  supersedesAgreementId: string | null;
+  supersedesAgreement: { id: string; title: string; referenceNumber: string; status: string } | null;
+  supersededByAgreement: { id: string; title: string; referenceNumber: string; status: string } | null;
   attachments: AgreementAttachment[]; changes: AgreementChange[]; obligations: AgreementObligation[];
   billingMilestones: AgreementBillingMilestone[];
 };
@@ -742,6 +745,30 @@ export default function AdminClients() {
     }
 
     useAppStore.getState().navigate('admin-finance');
+  };
+
+  const createAgreementReplacement = async (agreementId: string) => {
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/client-agreements/' + agreementId + '/replacement', {
+        method: 'POST',
+      });
+      const payload = await readJsonResponse<any>(response, 'Invalid server response');
+      if (!response.ok) throw new Error(payload?.error || 'Could not create replacement agreement draft');
+      await fetchOrganizations();
+      toast.success('Replacement agreement draft created. Review, approve and activate it before the current agreement is superseded.');
+      window.setTimeout(() => {
+        document.getElementById('agreement-' + payload.data.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 0);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not create replacement agreement draft');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openAgreementLineage = (agreementId: string) => {
+    document.getElementById('agreement-' + agreementId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const createAgreement = async (event: FormEvent) => {
@@ -1875,6 +1902,45 @@ export default function AdminClients() {
                       <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 xl:grid-cols-3"><p><span className="text-muted-foreground">Value:</span> {money(agreement.contractValue, agreement.currency)}</p><p><span className="text-muted-foreground">Value basis:</span> {pretty(agreement.contractValueBasis || 'unspecified')}</p><p><span className="text-muted-foreground">Owner:</span> {agreement.owner || 'Unassigned'}</p><p><span className="text-muted-foreground">Signed:</span> {agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'Not recorded'}</p><p><span className="text-muted-foreground">Effective:</span> {agreement.effectiveDate ? new Date(agreement.effectiveDate).toLocaleDateString() : 'Not set'}</p><p><span className="text-muted-foreground">Expiry:</span> {agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString() : 'Open-ended'}</p><p><span className="text-muted-foreground">Notice:</span> {agreement.renewalNoticeDays} days</p></div>
                       {agreement.notes && <p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{agreement.notes}</p>}
 
+                      {(agreement.supersedesAgreement || agreement.supersededByAgreement) && (
+                        <div className="mt-4 rounded-xl border border-indigo-200/70 bg-indigo-50/40 p-3 dark:border-indigo-900/40 dark:bg-indigo-950/15">
+                          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-indigo-800 dark:text-indigo-200">Agreement lineage</p>
+                          <div className="mt-2 space-y-2">
+                            {agreement.supersedesAgreement && (
+                              <button
+                                type="button"
+                                onClick={() => openAgreementLineage(agreement.supersedesAgreement!.id)}
+                                className="flex w-full items-center justify-between gap-3 rounded-lg border border-border/60 bg-background p-2.5 text-left transition hover:border-indigo-300"
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Replaces</p>
+                                  <p className="truncate text-xs font-semibold">{agreement.supersedesAgreement.title}</p>
+                                  <p className="text-[10px] text-muted-foreground">{agreement.supersedesAgreement.referenceNumber || 'No reference'} · {pretty(agreement.supersedesAgreement.status)}</p>
+                                </div>
+                                <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300">Open predecessor</span>
+                              </button>
+                            )}
+                            {agreement.supersededByAgreement && (
+                              <button
+                                type="button"
+                                onClick={() => openAgreementLineage(agreement.supersededByAgreement!.id)}
+                                className="flex w-full items-center justify-between gap-3 rounded-lg border border-border/60 bg-background p-2.5 text-left transition hover:border-indigo-300"
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Replacement</p>
+                                  <p className="truncate text-xs font-semibold">{agreement.supersededByAgreement.title}</p>
+                                  <p className="text-[10px] text-muted-foreground">{agreement.supersededByAgreement.referenceNumber || 'Reference pending'} · {pretty(agreement.supersededByAgreement.status)}</p>
+                                </div>
+                                <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300">Open replacement</span>
+                              </button>
+                            )}
+                          </div>
+                          <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                            The predecessor remains active until an approved replacement is activated. Billing milestones, obligations, attachments and invoices are not cloned into a replacement draft.
+                          </p>
+                        </div>
+                      )}
+
                       {agreement.project && (
                         <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-3">
                           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -2484,10 +2550,15 @@ export default function AdminClients() {
                           <option value="tax_exclusive">Tax-exclusive</option>
                           <option value="tax_inclusive">Tax-inclusive</option>
                         </select>
-                        <select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active" disabled={agreement.approvalStatus !== 'approved' || basisRequired}>Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded">Superseded</option></select>
+                        <select value={agreement.status} onChange={(e) => void patchAgreement(agreement.id, { status: e.target.value })} className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"><option value="draft">Draft</option><option value="active" disabled={agreement.approvalStatus !== 'approved' || basisRequired}>Active</option><option value="expired">Expired</option><option value="terminated">Terminated</option><option value="superseded" disabled={agreement.status !== 'superseded'}>Superseded · replacement managed</option></select>
                         {agreement.status === 'active' && agreement.approvalStatus === 'approved' && (
                           <Button type="button" size="sm" onClick={() => prepareAgreementBilling(agreement)}>
                             <CircleDollarSign className="mr-2 size-3.5" /> Prepare billing
+                          </Button>
+                        )}
+                        {agreement.status === 'active' && agreement.approvalStatus === 'approved' && !agreement.supersededByAgreement && (
+                          <Button type="button" size="sm" variant="outline" disabled={saving} onClick={() => void createAgreementReplacement(agreement.id)}>
+                            <FileText className="mr-2 size-3.5" /> Create replacement draft
                           </Button>
                         )}
                         {agreement.documentUrl && <Button type="button" size="sm" variant="outline" onClick={() => window.open(agreement.documentUrl, '_blank', 'noopener,noreferrer')}><FileText className="mr-2 size-3.5" /> Open legacy link</Button>}

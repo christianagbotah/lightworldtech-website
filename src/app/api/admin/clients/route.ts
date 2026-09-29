@@ -46,6 +46,12 @@ export async function GET(request: NextRequest) {
               proposal: { select: { id: true, title: true, status: true, version: true } },
             },
           },
+          supersedesAgreement: {
+            select: { id: true, title: true, referenceNumber: true, status: true },
+          },
+          supersededByAgreement: {
+            select: { id: true, title: true, referenceNumber: true, status: true },
+          },
           attachments: { orderBy: { createdAt: 'desc' } },
           changes: { orderBy: { createdAt: 'desc' }, take: 50 },
           billingMilestones: {
