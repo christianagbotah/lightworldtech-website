@@ -592,6 +592,9 @@ model ClientAgreement {
   obligations       ClientAgreementObligation[]
   billingMilestones ClientAgreementBillingMilestone[]
   invoices          ClientInvoice[]
+  supersedesAgreementId String?             @unique
+  supersedesAgreement   ClientAgreement?    @relation("AgreementSupersession", fields: [supersedesAgreementId], references: [id], onDelete: SetNull)
+  supersededByAgreement ClientAgreement?    @relation("AgreementSupersession")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
