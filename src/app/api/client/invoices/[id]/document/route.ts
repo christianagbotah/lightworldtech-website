@@ -55,6 +55,8 @@ export async function GET(
       },
       service: { select: { name: true, planName: true } },
       project: { select: { name: true } },
+      agreement: { select: { title: true, referenceNumber: true } },
+      billingMilestone: { select: { title: true, visibleToClient: true } },
       lines: { orderBy: { order: 'asc' } },
       allocations: true,
       creditNotes: { where: { status: 'posted' } },
@@ -74,6 +76,23 @@ export async function GET(
     '</td><td class="num">' + esc(money(line.amount, invoice.currency)) + '</td></tr>'
   ).join('');
 
+  const sharedBillingContext = invoice.billingMilestone?.visibleToClient
+    ? {
+        milestone: invoice.billingMilestone.title,
+        agreement: invoice.agreement
+          ? invoice.agreement.title + (invoice.agreement.referenceNumber ? ' · ' + invoice.agreement.referenceNumber : '')
+          : '',
+      }
+    : null;
+
+  const billingContextHtml = sharedBillingContext
+    ? '<div class="box" style="margin:18px 0;background:#fffbeb;border-color:#fde68a"><strong>Billing context</strong>' +
+      '<p class="muted" style="margin-bottom:0">' +
+      (sharedBillingContext.agreement ? 'Agreement: ' + esc(sharedBillingContext.agreement) + '<br>' : '') +
+      'Billing milestone: ' + esc(sharedBillingContext.milestone) +
+      '</p></div>'
+    : '';
+
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(invoice.invoiceNumber)} · Lightworld Technologies</title>
@@ -83,6 +102,7 @@ body{font-family:Arial,sans-serif;color:#0f172a;margin:0;background:#f8fafc}.pag
 <p style="font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#b7791f;font-weight:700">Lightworld Technologies Ltd</p>
 <h1>Invoice ${esc(invoice.invoiceNumber)}</h1>
 <p class="muted">${esc(invoice.service?.name || invoice.project?.name || 'Customer account')}</p>
+${billingContextHtml}
 <div class="meta">
 <div class="box"><strong>Bill to</strong><p>${esc(invoice.organization.name)}</p><p class="muted">${esc(invoice.organization.primaryContactName)}<br>${esc(invoice.organization.primaryEmail)}<br>${esc(invoice.organization.primaryPhone)}</p></div>
 <div class="box"><strong>Invoice details</strong><p>Issued: ${esc(formatDate(invoice.issueDate))}<br>Due: ${esc(formatDate(invoice.dueDate))}<br>Status: ${esc(invoice.status.replaceAll('_',' '))}</p></div>
