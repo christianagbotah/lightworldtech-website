@@ -507,6 +507,10 @@ export async function GET(
       where: { id },
       include: {
         vendor: true,
+        purchaseOrder: { select: { id: true, poNumber: true, status: true } },
+        replacesBill: { select: { id: true, payableNumber: true, status: true } },
+        replacementBill: { select: { id: true, payableNumber: true, status: true } },
+        attachments: { orderBy: { createdAt: 'desc' } },
         allocations: {
           orderBy: { createdAt: 'asc' },
           include: {
