@@ -52,6 +52,8 @@ describe('agreement billing control', () => {
     expect(control).toContain('Prepare next draft');
     expect(control).toContain('overbilling exception');
     expect(control).toContain('No unprepared value');
+    expect(control).toContain('setRefreshNonce((value) => value + 1)');
+    expect(control).toContain('disabled={loading}');
     expect(finance).toContain('prepareAgreementControlInvoice');
     expect(finance).toContain('unitPrice: row.remainingToPrepare');
     expect(finance).toContain("agreementId: row.id");
