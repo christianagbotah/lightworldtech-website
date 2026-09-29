@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance';
 import { hasAdminPermission } from '@/lib/admin-permissions';
-import { getFinanceApprovalPolicy } from '@/lib/finance-approvals';
 import { isBalancedJournal } from '@/lib/finance';
 
 const schema = z.object({
@@ -66,8 +65,6 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const policy = await getFinanceApprovalPolicy();
-
   const result = await db.$transaction(async (tx) => {
     await tx.$queryRawUnsafe(
       'SELECT pg_advisory_xact_lock(hashtext($1))',
@@ -101,12 +98,7 @@ export async function PATCH(
     if (!['manual', 'reversal'].includes(journal.sourceType)) {
       return { entry: null, error: 'Only manual and reversal journal drafts use this approval workflow', status: 409 };
     }
-    if (
-      policy?.enabled &&
-      policy.requireSecondApprover &&
-      journal.createdByAdminId &&
-      journal.createdByAdminId === actor.id
-    ) {
+    if (journal.createdByAdminId && journal.createdByAdminId === actor.id) {
       return {
         entry: null,
         error: 'Maker-checker prevents the journal preparer from deciding their own draft',
