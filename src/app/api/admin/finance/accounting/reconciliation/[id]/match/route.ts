@@ -68,6 +68,7 @@ export async function POST(
         status: 'unmatched',
         matchedJournalLineId: null,
         matchedAt: null,
+        matchedByAdminId: '',
         matchedBy: '',
       },
     });
@@ -159,6 +160,7 @@ export async function POST(
       status: 'matched',
       matchedJournalLineId: journalLine.id,
       matchedAt: new Date(),
+      matchedByAdminId: actor.id,
       matchedBy: actor.name || actor.email,
     },
   });
