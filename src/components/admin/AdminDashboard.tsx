@@ -6,7 +6,7 @@ import {
   FileText, Briefcase, Users, Mail, FolderOpen, MessageSquare,
   Plus, ExternalLink, Inbox, Activity, ArrowUpRight, ArrowDownRight,
   Pencil, Eye, CheckCircle2, Clock, Settings, TrendingUp, BarChart3, Timer, MousePointerClick, GitBranch,
-  Database, HardDrive, ShieldAlert, CircleDollarSign, CalendarClock, LifeBuoy, FolderKanban, ReceiptText
+  Database, HardDrive, ShieldAlert, CircleDollarSign, CalendarClock, LifeBuoy, FolderKanban, ReceiptText, BrainCircuit
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/table';
 import { useAppStore } from '@/lib/store';
 import { hasAdminPermission } from '@/lib/admin-permissions';
+import { deriveExecutiveCopilotBrief, type ExecutiveCopilotAction } from '@/lib/executive-copilot';
 
 interface Stats {
   totalPosts: number;
@@ -351,6 +352,17 @@ export default function AdminDashboard() {
     navigate('admin-support');
   };
 
+  const openCopilotAction = (action: ExecutiveCopilotAction) => {
+    if (action.target === 'clients') return openClientAccount(action.organizationId);
+    if (action.target === 'collections' || action.target === 'renewals') return openFinanceWorkspace(action.target);
+    if (action.target === 'support') return openSupportDesk();
+    if (action.target === 'crm') return openCrm();
+    if (action.target === 'messages') return navigate('admin-messages');
+    if (action.target === 'settings') return navigate('admin-settings');
+    if (action.target === 'recovery') return setBackupOpen(true);
+    if (action.target === 'analytics') return setAnalyticsOpen(true);
+  };
+
   const openBusinessActivity = (activity: BusinessActivity) => {
     if (activity.type === 'support') {
       sessionStorage.setItem('lw-support-ticket-id', activity.targetId);
@@ -444,6 +456,19 @@ export default function AdminDashboard() {
   const trafficData = analytics?.daily?.slice(-14) || [];
   const maxTraffic = Math.max(1, ...trafficData.map((item) => item.pageViews));
 
+  const executiveCopilot = deriveExecutiveCopilotBrief({
+    canSite,
+    canCrm,
+    canFinance,
+    canClients,
+    isSuperAdmin: adminRole === 'super_admin',
+    stats,
+    analytics,
+    health,
+    backup,
+    portfolio,
+  });
+
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
@@ -485,6 +510,70 @@ export default function AdminDashboard() {
           </button>
         </div>
       </motion.div>
+
+      <Card className="overflow-hidden border-amber-200/70 bg-gradient-to-br from-amber-50/70 via-background to-background dark:border-amber-900/50 dark:from-amber-950/15">
+        <CardHeader className="border-b border-border/50 pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                <BrainCircuit className="size-5" />
+              </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <CardTitle className="text-base">Executive Copilot</CardTitle>
+                  <Badge variant="outline" className="border-emerald-300 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">Evidence-grounded</Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{executiveCopilot.summary}</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Next best actions</span>
+          </div>
+        </CardHeader>
+        <CardContent className="p-5">
+          {executiveCopilot.actions.length ? (
+            <div className="grid gap-3 lg:grid-cols-3">
+              {executiveCopilot.actions.slice(0, 3).map((action, index) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={() => openCopilotAction(action)}
+                  className="group flex min-h-40 flex-col rounded-xl border border-border/60 bg-background/80 p-4 text-left transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Priority {index + 1}</span>
+                    <Badge
+                      variant="outline"
+                      className={action.priority === 'critical'
+                        ? 'border-rose-300 text-rose-700 dark:border-rose-900 dark:text-rose-300'
+                        : action.priority === 'high'
+                          ? 'border-amber-300 text-amber-700 dark:border-amber-900 dark:text-amber-300'
+                          : action.priority === 'medium'
+                            ? 'border-sky-300 text-sky-700 dark:border-sky-900 dark:text-sky-300'
+                            : 'border-emerald-300 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300'}
+                    >
+                      {action.priority}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-foreground">{action.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{action.detail}</p>
+                  <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+                    <span className="text-[10px] leading-4 text-muted-foreground">{action.evidence}</span>
+                    <ArrowUpRight className="size-4 shrink-0 text-amber-700 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 dark:text-amber-300" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-4 text-sm text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-100">
+              No current evidence requires escalation. Continue normal operating review and monitor new exceptions as records change.
+            </div>
+          )}
+          {executiveCopilot.actions.length > 3 && (
+            <p className="mt-3 text-[11px] text-muted-foreground">+{executiveCopilot.actions.length - 3} additional evidence-backed action(s) are currently lower priority.</p>
+          )}
+          <p className="mt-4 border-t border-border/50 pt-3 text-[10px] leading-4 text-muted-foreground">{executiveCopilot.methodology}</p>
+        </CardContent>
+      </Card>
 
       {/* Consented first-party analytics — last 30 days */}
       {canSite && (

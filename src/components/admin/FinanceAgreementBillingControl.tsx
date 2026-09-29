@@ -130,13 +130,14 @@ export default function FinanceAgreementBillingControl({
   onOpenCustomer,
 }: Props) {
   const [data, setData] = useState<AgreementBillingData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | AgreementBillingRow['state']>('all');
   const [refreshNonce, setRefreshNonce] = useState(0);
+  const requestKey = [organizationId, refreshKey, refreshNonce].join(':');
+  const [loadedKey, setLoadedKey] = useState('');
+  const loading = loadedKey !== requestKey;
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
     const params = new URLSearchParams();
     if (organizationId) params.set('organizationId', organizationId);
 
@@ -153,13 +154,13 @@ export default function FinanceAgreementBillingControl({
         if (active) toast.error(error instanceof Error ? error.message : 'Unable to load agreement billing control');
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) setLoadedKey(requestKey);
       });
 
     return () => {
       active = false;
     };
-  }, [organizationId, refreshKey, refreshNonce]);
+  }, [organizationId, requestKey]);
 
   const rows = useMemo(
     () => (data?.rows || []).filter((row) => filter === 'all' || row.state === filter),
