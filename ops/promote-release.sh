@@ -12,7 +12,7 @@ LIVE_UNIT="lightworldtech-app.service"
 CANDIDATE_UNIT="lightworldtech-candidate.service"
 LEGACY_PM2_UNIT="pm2-lightworld.service"
 PORT=3007
-CANDIDATE_PORT=3017
+CANDIDATE_PORT="${LIGHTWORLD_CANDIDATE_PORT:-3027}"
 LOCK_FILE="$OPS/promote-release.lock"
 
 fail() {

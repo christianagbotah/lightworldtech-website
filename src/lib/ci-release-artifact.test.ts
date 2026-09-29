@@ -93,5 +93,8 @@ describe('CI-built release artifacts', () => {
     expect(promote).toContain('set -Eeuo pipefail');
     expect(promote).toContain('trap cleanup_candidate EXIT');
     expect(promote).toContain('trap - EXIT');
+    expect(promote).toContain('LIGHTWORLD_CANDIDATE_PORT');
+    expect(promote).toContain('3027');
+    expect(promote).toContain('Candidate port $CANDIDATE_PORT is already occupied');
   });
 });
