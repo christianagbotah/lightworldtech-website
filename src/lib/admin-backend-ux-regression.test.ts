@@ -1193,7 +1193,11 @@ describe('admin backend and responsive UX regression coverage', () => {
     expect(journalsApi).toContain('No accounting period covers this posting date');
     expect(journalsApi).toContain('The accounting period for this posting date is closed');
     expect(journalReversalApi).toContain("sourceType: 'reversal'");
-    expect(journalReversalApi).toContain("data: { status: 'reversed' }");
+    expect(journalReversalApi).toContain("status: 'draft'");
+    expect(journalReversalApi).toContain('pendingApproval: true');
+    const journalDecisionApi = source('src/app/api/admin/finance/accounting/journals/[id]/decision/route.ts');
+    expect(journalDecisionApi).toContain("data: { status: 'reversed' }");
+    expect(journalDecisionApi).toContain('journal.createdByAdminId === actor.id');
     expect(journalReversalApi).toContain('Reversal date cannot be earlier than the original journal date');
     expect(journalReversalApi).toContain('The accounting period for the reversal date is closed');
     expect(trialBalanceApi).toContain('closing');
