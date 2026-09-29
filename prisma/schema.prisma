@@ -1880,11 +1880,13 @@ model FinanceReconciliationBatch {
   statementTo      DateTime
   openingBalance   Decimal                     @db.Decimal(18, 2)
   closingBalance   Decimal                     @db.Decimal(18, 2)
-  status           String                      @default("open")
-  importedBy       String                      @default("Admin")
-  reconciledAt     DateTime?
-  reconciledBy     String                      @default("")
-  notes            String                      @default("")
+  status                String                      @default("open")
+  importedByAdminId     String                      @default("")
+  importedBy            String                      @default("Admin")
+  reconciledAt          DateTime?
+  reconciledByAdminId   String                      @default("")
+  reconciledBy          String                      @default("")
+  notes                 String                      @default("")
   lines            FinanceReconciliationLine[]
 
   createdAt DateTime @default(now())
@@ -1892,6 +1894,7 @@ model FinanceReconciliationBatch {
 
   @@index([accountSystemKey, currency, statementTo])
   @@index([status, statementTo])
+  @@index([importedByAdminId, status])
 }
 
 model FinanceReconciliationLine {
@@ -1907,6 +1910,7 @@ model FinanceReconciliationLine {
   matchedJournalLineId String?                    @unique
   matchedJournalLine   FinanceJournalLine?        @relation(fields: [matchedJournalLineId], references: [id], onDelete: SetNull)
   matchedAt            DateTime?
+  matchedByAdminId     String                     @default("")
   matchedBy            String                     @default("")
   notes                String                     @default("")
 
@@ -1914,6 +1918,7 @@ model FinanceReconciliationLine {
   updatedAt DateTime @updatedAt
 
   @@index([batchId, status])
+  @@index([matchedByAdminId, status])
   @@index([transactionDate, amount])
 }
 
