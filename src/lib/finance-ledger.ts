@@ -432,6 +432,69 @@ export async function postVendorBillJournal(tx: Tx, input: {
   });
 }
 
+export async function postVendorBillVoidJournal(tx: Tx, input: {
+  billId: string;
+  payableNumber: string;
+  voidDate: Date;
+  currency: string;
+  total: Prisma.Decimal;
+  taxableAmount?: Prisma.Decimal;
+  vatAmount?: Prisma.Decimal;
+  nhilAmount?: Prisma.Decimal;
+  getfundAmount?: Prisma.Decimal;
+  taxRecoverable?: boolean;
+  category: string;
+  postedBy: string;
+}) {
+  const vat = input.vatAmount || new Prisma.Decimal(0);
+  const nhil = input.nhilAmount || new Prisma.Decimal(0);
+  const getfund = input.getfundAmount || new Prisma.Decimal(0);
+  const inputTax = vat.plus(nhil).plus(getfund);
+  const recoverable = input.taxRecoverable !== false;
+  const expenseAmount = recoverable
+    ? (input.taxableAmount && input.taxableAmount.gt(0)
+      ? input.taxableAmount
+      : Prisma.Decimal.max(new Prisma.Decimal(0), input.total.minus(inputTax)))
+    : input.total;
+
+  return postSourceJournal(tx, {
+    sourceType: 'vendor_bill_void',
+    sourceId: input.billId,
+    entryDate: input.voidDate,
+    currency: input.currency,
+    description: 'Void supplier bill ' + input.payableNumber,
+    reference: input.payableNumber,
+    postedBy: input.postedBy,
+    lines: [
+      {
+        systemKey: 'accounts_payable',
+        description: 'Reverse supplier payable',
+        debit: input.total,
+      },
+      {
+        systemKey: expenseSystemKey(input.category),
+        description: 'Reverse supplier cost · ' + input.category.replaceAll('_', ' '),
+        credit: expenseAmount,
+      },
+      {
+        systemKey: 'vat_input',
+        description: 'Reverse recoverable VAT input tax',
+        credit: recoverable ? vat : new Prisma.Decimal(0),
+      },
+      {
+        systemKey: 'nhil_input',
+        description: 'Reverse recoverable NHIL input tax',
+        credit: recoverable ? nhil : new Prisma.Decimal(0),
+      },
+      {
+        systemKey: 'getfund_input',
+        description: 'Reverse recoverable GETFund input levy',
+        credit: recoverable ? getfund : new Prisma.Decimal(0),
+      },
+    ],
+  });
+}
+
 export async function postVendorPaymentJournal(tx: Tx, input: {
   paymentId: string;
   paymentNumber: string;
