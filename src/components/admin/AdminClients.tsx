@@ -783,7 +783,13 @@ export default function AdminClients() {
       const payload = await readJsonResponse<any>(response, 'Invalid server response');
       if (!response.ok) throw new Error(payload?.error || 'Could not update agreement');
       await fetchOrganizations();
-      toast.success('Agreement updated');
+      if (payload?.governance?.approvalReset) {
+        toast.warning('Material commercial terms changed. Agreement returned to pending approval.');
+      } else if (payload?.governance?.legacyBasisCorrectionOnly) {
+        toast.success('Legacy contract value basis corrected and audited');
+      } else {
+        toast.success('Agreement updated');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update agreement');
     }
@@ -2465,7 +2471,13 @@ export default function AdminClients() {
                         <select
                           value={agreement.contractValueBasis || 'unspecified'}
                           onChange={(e) => void patchAgreement(agreement.id, { contractValueBasis: e.target.value })}
-                          className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs"
+                          disabled={agreement.status === 'active' && agreement.contractValueBasis !== 'unspecified'}
+                          title={
+                            agreement.status === 'active' && agreement.contractValueBasis !== 'unspecified'
+                              ? 'Active agreement commercial basis is locked; supersede the agreement for material changes'
+                              : undefined
+                          }
+                          className="h-9 rounded-lg border border-input bg-background px-2.5 text-xs disabled:cursor-not-allowed disabled:opacity-60"
                           aria-label={'Contract value basis for ' + agreement.title}
                         >
                           <option value="unspecified">Basis unspecified</option>
