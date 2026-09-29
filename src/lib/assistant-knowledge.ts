@@ -24,6 +24,7 @@ import {
   isLeadershipIntent,
   isMediaKitIntent,
   isNewsroomIntent,
+  isSecurityDisclosureIntent,
   isTrustIntent,
 } from '@/lib/assistant-intents';
 
@@ -352,6 +353,16 @@ export async function answerConcierge(
         ? companyName + ' leadership currently listed in the CMS: ' + list(leaders) + '.'
         : companyProfile.leadership.map((person) => person.name + ' — ' + person.role).join('; ') + '.',
       cta: { label: 'View leadership', href: '/team' },
+    };
+  }
+
+  if (isSecurityDisclosureIntent(q)) {
+    return {
+      intent: 'trust',
+      reply:
+        'Lightworld has a responsible vulnerability-disclosure page for good-faith security reports. It explains safe testing boundaries, what to include in a report, where to send it, and links to the published security.txt record. The page does not promise a bug bounty, certification or fixed response deadline.',
+      suggestions: ['Open the disclosure policy', 'What security practices do you use?', 'How do you handle privacy?'],
+      cta: { label: 'Report a security issue', href: '/security' },
     };
   }
 
