@@ -103,6 +103,8 @@ type Journal = {
   canApprove: boolean;
   totalDebit: string;
   totalCredit: string;
+  createdAt: string;
+  updatedAt: string;
   lines: JournalLine[];
 };
 
@@ -997,7 +999,7 @@ export default function FinanceAccountingWorkspace({
 
       <Dialog open={journalDialog} onOpenChange={setJournalDialog}>
         <DialogContent className="max-h-[94vh] w-[calc(100vw-1rem)] max-w-4xl overflow-y-auto">
-          <DialogHeader><DialogTitle>Post balanced journal</DialogTitle><DialogDescription>Debits must equal credits exactly. Posted journals flow immediately to the General Ledger and Trial Balance.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>Prepare balanced journal</DialogTitle><DialogDescription>Debits must equal credits exactly. The draft will require an independent checker before it enters the General Ledger or Trial Balance.</DialogDescription></DialogHeader>
           <form onSubmit={postJournal} className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div><Label>Posting date</Label><Input required type="date" value={journalForm.entryDate} onChange={(event) => setJournalForm({ ...journalForm, entryDate: event.target.value })} /></div>
@@ -1026,7 +1028,7 @@ export default function FinanceAccountingWorkspace({
               <div className={Math.abs(journalTotals.debit - journalTotals.credit) < 0.005 && journalTotals.debit > 0 ? 'rounded-xl bg-emerald-50 p-3 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-200' : 'rounded-xl bg-amber-50 p-3 text-amber-800 dark:bg-amber-950/20 dark:text-amber-200'}><p className="text-[10px] uppercase tracking-[0.1em]">Control difference</p><p className="mt-1 font-semibold">{money(Math.abs(journalTotals.debit - journalTotals.credit), journalForm.currency)}</p></div>
             </div>
 
-            {!openPeriods.length && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">No accounting period is open. Create an open period before posting.</div>}
+            {!openPeriods.length && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">No accounting period is open. Create an open period before preparing a journal.</div>}
 
             <DialogFooter><Button type="button" variant="outline" onClick={() => setJournalDialog(false)}>Cancel</Button><Button disabled={saving || !openPeriods.length || journalTotals.debit <= 0 || Math.abs(journalTotals.debit - journalTotals.credit) >= 0.005}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Post journal</Button></DialogFooter>
           </form>
@@ -1038,7 +1040,7 @@ export default function FinanceAccountingWorkspace({
           <DialogHeader>
             <DialogTitle>Reverse posted journal?</DialogTitle>
             <DialogDescription>
-              The original journal will remain in history and a new journal with equal opposite entries will be posted. No ledger lines are edited or deleted.
+              The original journal will remain posted while an equal-and-opposite reversal draft waits for an independent checker. No ledger lines are edited or deleted.
             </DialogDescription>
           </DialogHeader>
           {reversalJournal && (
@@ -1052,6 +1054,59 @@ export default function FinanceAccountingWorkspace({
               <div><Label>Reason</Label><Textarea required rows={3} value={reversalForm.reason} onChange={(event) => setReversalForm({ ...reversalForm, reason: event.target.value })} placeholder="Explain why this posted journal must be reversed." /></div>
               <DialogFooter><Button type="button" variant="outline" onClick={() => setReversalJournal(null)}>Cancel</Button><Button type="submit" variant="destructive" disabled={saving}>{saving && <Loader2 className="mr-2 size-4 animate-spin" />}Post reversal</Button></DialogFooter>
             </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(journalDecision)} onOpenChange={(open) => {
+        if (!open) {
+          setJournalDecision(null);
+          setJournalDecisionNotes('');
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{journalDecision?.action === 'approve' ? 'Approve and post journal?' : 'Reject journal draft?'}</DialogTitle>
+            <DialogDescription>
+              {journalDecision?.action === 'approve'
+                ? 'Approval posts this balanced draft into the ledger. You cannot edit posted lines afterward; corrections require a governed reversal.'
+                : 'Rejecting leaves the draft in the audit history and prevents it from entering the ledger.'}
+            </DialogDescription>
+          </DialogHeader>
+          {journalDecision && (
+            <div className="space-y-4">
+              <div className="rounded-xl bg-muted/35 p-3">
+                <p className="font-mono text-xs font-semibold">{journalDecision.journal.journalNumber}</p>
+                <p className="mt-1 text-sm">{journalDecision.journal.description}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {money(journalDecision.journal.totalDebit, journalDecision.journal.currency)} · {date(journalDecision.journal.entryDate)} · prepared by {journalDecision.journal.createdBy}
+                </p>
+              </div>
+              <div>
+                <Label>{journalDecision.action === 'reject' ? 'Rejection reason' : 'Approval note (optional)'}</Label>
+                <Textarea
+                  rows={3}
+                  value={journalDecisionNotes}
+                  onChange={(event) => setJournalDecisionNotes(event.target.value)}
+                  placeholder={journalDecision.action === 'reject' ? 'Explain why this journal must be corrected before resubmission.' : 'Optional checker note…'}
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => {
+                  setJournalDecision(null);
+                  setJournalDecisionNotes('');
+                }}>Cancel</Button>
+                <Button
+                  type="button"
+                  variant={journalDecision.action === 'reject' ? 'destructive' : 'default'}
+                  disabled={saving || (journalDecision.action === 'reject' && journalDecisionNotes.trim().length < 3)}
+                  onClick={() => void decideJournal()}
+                >
+                  {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                  {journalDecision.action === 'approve' ? 'Approve & post' : 'Reject draft'}
+                </Button>
+              </DialogFooter>
+            </div>
           )}
         </DialogContent>
       </Dialog>
