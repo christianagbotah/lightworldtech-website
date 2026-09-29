@@ -213,6 +213,8 @@ type AccountInvoice = {
   }>;
   service: { id: string; name: string; planName: string } | null;
   project: { id: string; name: string } | null;
+  agreement: { id: string; title: string; referenceNumber: string } | null;
+  billingMilestone: { id: string; title: string; visibleToClient: boolean } | null;
   lines: Array<{
     id: string;
     description: string;
@@ -261,10 +263,20 @@ type ClientAgreement = {
   agreementType: string;
   status: string;
   referenceNumber: string;
+  currency: string;
   effectiveDate: string | null;
   expiryDate: string | null;
   signedAt: string | null;
   project: { id: string; name: string } | null;
+  billingMilestones: Array<{
+    id: string;
+    title: string;
+    amount: string;
+    dueDate: string | null;
+    order: number;
+    readinessStatus: string;
+    invoices: Array<{ id: string; invoiceNumber: string; status: string }>;
+  }>;
   attachments: Array<{
     id: string;
     originalName: string;
@@ -1465,6 +1477,16 @@ export default function ClientPortalPage() {
                                 Renewal cycle · {new Date(invoice.renewalForDate).toLocaleDateString()}
                               </p>
                             )}
+                            {invoice.billingMilestone?.visibleToClient && (
+                              <p className="mt-1 text-[10px] text-sky-700 dark:text-sky-300">
+                                Billing milestone · {invoice.billingMilestone.title}
+                              </p>
+                            )}
+                            {invoice.billingMilestone?.visibleToClient && invoice.agreement && (
+                              <p className="mt-1 text-[10px] text-slate-400">
+                                Agreement · {invoice.agreement.title}{invoice.agreement.referenceNumber ? ' · ' + invoice.agreement.referenceNumber : ''}
+                              </p>
+                            )}
                           </td>
                           <td className="px-4 py-3"><Badge className={accountStatusClass(invoice.derivedStatus)}>{statusLabel(invoice.derivedStatus)}</Badge></td>
                           <td className="px-4 py-3 text-xs">{new Date(invoice.dueDate).toLocaleDateString()}</td>
@@ -1549,7 +1571,7 @@ export default function ClientPortalPage() {
             <div>
               <h2 className="text-xl font-semibold tracking-[-0.02em]">Agreements & signed documents</h2>
               <p className="mt-1 text-xs text-slate-500 dark:text-white/35">
-                Only documents explicitly shared with your organization by Lightworld appear here.
+                Only documents and billing milestones explicitly shared with your organization by Lightworld appear here.
               </p>
             </div>
           </div>
@@ -1586,6 +1608,57 @@ export default function ClientPortalPage() {
                       </div>
                     </div>
 
+                    {agreement.billingMilestones.length > 0 && (
+                      <div className="mt-4 rounded-2xl border border-amber-200/70 bg-amber-50/55 p-4 dark:border-amber-900/35 dark:bg-amber-950/10">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-300">Shared billing plan</p>
+                            <p className="mt-1 text-[10px] leading-5 text-slate-500 dark:text-white/35">
+                              Milestones below have been explicitly shared by Lightworld. An amount becomes payable only when an issued invoice is published to your account.
+                            </p>
+                          </div>
+                          <Badge variant="outline">{agreement.billingMilestones.length} milestone{agreement.billingMilestones.length === 1 ? '' : 's'}</Badge>
+                        </div>
+                        <div className="mt-3 space-y-2">
+                          {agreement.billingMilestones.map((milestone) => {
+                            const linkedInvoice = milestone.invoices[0]
+                              ? data.account.invoices.find((invoice) => invoice.id === milestone.invoices[0].id) || null
+                              : null;
+                            return (
+                              <div key={milestone.id} className="rounded-xl border border-amber-200/60 bg-white/75 p-3 dark:border-amber-900/30 dark:bg-white/[0.025]">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-semibold">{milestone.title}</p>
+                                    <p className="mt-1 text-[10px] text-slate-500 dark:text-white/35">
+                                      {milestone.dueDate ? 'Planned ' + new Date(milestone.dueDate).toLocaleDateString() : 'Billing date to be confirmed'}
+                                      {' · '}
+                                      {milestone.readinessStatus === 'ready_to_bill' ? 'Billing-ready' : 'Scheduled'}
+                                    </p>
+                                  </div>
+                                  <p className="shrink-0 text-sm font-semibold">{accountMoney(milestone.amount, agreement.currency)}</p>
+                                </div>
+                                {linkedInvoice ? (
+                                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-amber-200/50 pt-2 text-[10px] dark:border-amber-900/30">
+                                    <div>
+                                      <span className="font-mono font-semibold">{linkedInvoice.invoiceNumber}</span>
+                                      <span className="ml-2 text-slate-500 dark:text-white/35">
+                                        {accountMoney(linkedInvoice.balance, linkedInvoice.currency)} balance
+                                      </span>
+                                    </div>
+                                    <Badge className={accountStatusClass(linkedInvoice.derivedStatus)}>{statusLabel(linkedInvoice.derivedStatus)}</Badge>
+                                  </div>
+                                ) : (
+                                  <p className="mt-3 border-t border-amber-200/50 pt-2 text-[10px] text-slate-500 dark:border-amber-900/30 dark:text-white/35">
+                                    No issued invoice has been published for this milestone yet.
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="mt-4 space-y-2">
                       {agreement.attachments.map((attachment) => (
                         <div key={attachment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/70 p-3 dark:border-white/[0.07]">
@@ -1608,7 +1681,7 @@ export default function ClientPortalPage() {
           ) : (
             <Card className="mt-4 border-dashed border-slate-300 dark:border-white/10">
               <CardContent className="p-5 text-sm text-slate-500 dark:text-white/35">
-                No agreement documents have been shared with your organization yet.
+                No agreement documents or billing milestones have been shared with your organization yet.
               </CardContent>
             </Card>
           )}
