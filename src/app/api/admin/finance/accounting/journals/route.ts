@@ -30,7 +30,7 @@ const createSchema = z.object({
   lines: z.array(lineSchema).min(2).max(200),
 });
 
-function serialize(entry: any) {
+function serialize(entry: any, actor?: { id: string; role: string; permissions: string[] }) {
   const debit = entry.lines.reduce(
     (sum: Prisma.Decimal, line: any) => sum.plus(line.debit),
     new Prisma.Decimal(0),
@@ -42,6 +42,12 @@ function serialize(entry: any) {
   return {
     ...entry,
     totalDebit: debit.toFixed(2),
+    mine: actor ? entry.createdByAdminId === actor.id : false,
+    canApprove: actor
+      ? hasAdminPermission(actor.role, actor.permissions, 'finance.approve') &&
+        entry.status === 'draft' &&
+        entry.createdByAdminId !== actor.id
+      : false,
     totalCredit: credit.toFixed(2),
     lines: entry.lines.map((line: any) => ({
       ...line,
@@ -94,7 +100,7 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ success: true, data: entries.map(serialize) });
+  return NextResponse.json({ success: true, data: entries.map((entry) => serialize(entry, actor)) });
 }
 
 export async function POST(request: NextRequest) {
@@ -187,40 +193,40 @@ export async function POST(request: NextRequest) {
   }
 
   const journalNumber = await nextJournalNumber(entryDate);
-  const entry = await db.$transaction(async (tx) => {
-    return tx.financeJournalEntry.create({
-      data: {
-        journalNumber,
-        entryDate,
-        currency,
-        description: parsed.data.description,
-        reference: parsed.data.reference,
-        sourceType: 'manual',
-        sourceId: '',
-        status: 'posted',
-        postedAt: new Date(),
-        postedBy: actor.name || actor.email,
-        lines: {
-          create: parsed.data.lines.map((line) => ({
-            accountId: line.accountId,
-            description: line.description,
-            debit: new Prisma.Decimal(line.debit),
-            credit: new Prisma.Decimal(line.credit),
-          })),
-        },
+  const entry = await db.financeJournalEntry.create({
+    data: {
+      journalNumber,
+      entryDate,
+      currency,
+      description: parsed.data.description,
+      reference: parsed.data.reference,
+      sourceType: 'manual',
+      sourceId: '',
+      status: 'draft',
+      createdByAdminId: actor.id,
+      createdBy: actor.name || actor.email,
+      postedAt: null,
+      postedBy: '',
+      lines: {
+        create: parsed.data.lines.map((line) => ({
+          accountId: line.accountId,
+          description: line.description,
+          debit: new Prisma.Decimal(line.debit),
+          credit: new Prisma.Decimal(line.credit),
+        })),
       },
-      include: {
-        lines: {
-          orderBy: { createdAt: 'asc' },
-          include: { account: { select: { id: true, code: true, name: true, type: true } } },
-        },
+    },
+    include: {
+      lines: {
+        orderBy: { createdAt: 'asc' },
+        include: { account: { select: { id: true, code: true, name: true, type: true } } },
       },
-    });
+    },
   });
 
   await recordAdminAudit({
     admin: actor,
-    action: 'admin.finance_journal_posted',
+    action: 'admin.finance_journal_draft_created',
     entity: 'FinanceJournalEntry',
     entityId: entry.id,
     details: {
@@ -235,5 +241,8 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ success: true, data: serialize(entry) }, { status: 201 });
+  return NextResponse.json(
+    { success: true, pendingApproval: true, data: serialize(entry, actor) },
+    { status: 202 },
+  );
 }
