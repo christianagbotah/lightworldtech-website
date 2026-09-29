@@ -267,6 +267,7 @@ export default function Footer({ settings = {} }: { settings?: SiteSettings }) {
             <span>© {new Date().getFullYear()} {companyName}</span>
             <Link href="/privacy" className="transition hover:text-white/55">Privacy</Link>
             <Link href="/terms" className="transition hover:text-white/55">Terms</Link>
+            <Link href="/security" className="transition hover:text-white/55">Security</Link>
           </div>
 
           <div className="flex items-center gap-2">
