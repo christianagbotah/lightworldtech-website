@@ -813,36 +813,78 @@ export default function FinanceAccountingWorkspace({
         <Card className="min-w-0 border-border/60">
           <CardHeader className="pb-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div><CardTitle className="flex items-center gap-2 text-base"><BookOpen className="size-4 text-amber-700" /> Posted journals</CardTitle><p className="mt-1 text-xs text-muted-foreground">Every posted journal is balanced before it enters the ledger.</p></div>
-              <Button type="button" size="sm" onClick={() => setJournalDialog(true)}><Plus className="mr-2 size-4" /> Post journal</Button>
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="size-4 text-amber-700" /> Journal register</CardTitle>
+                <p className="mt-1 text-xs text-muted-foreground">Manual journals and reversals require an independent checker before they enter the posted ledger.</p>
+              </div>
+              <Button type="button" size="sm" onClick={() => setJournalDialog(true)}><Plus className="mr-2 size-4" /> Prepare journal</Button>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <Table exportFileName="lightworld-journal-register" className="min-w-[800px]">
-              <TableHeader><TableRow><TableHead>Journal</TableHead><TableHead>Date</TableHead><TableHead>Description</TableHead><TableHead>Reference</TableHead><TableHead>Status</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Debit</TableHead><TableHead className="text-right">Credit</TableHead><TableHead>Posted by</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
+            <Table exportFileName="lightworld-journal-register" className="min-w-[980px]">
+              <TableHeader><TableRow><TableHead>Journal</TableHead><TableHead>Date</TableHead><TableHead>Description</TableHead><TableHead>Reference</TableHead><TableHead>Status</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Debit</TableHead><TableHead className="text-right">Credit</TableHead><TableHead>Prepared / posted by</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
               <TableBody>
-                {journals.map((journal) => (
-                  <TableRow key={journal.id}>
-                    <TableCell><p className="font-mono text-xs font-semibold">{journal.journalNumber}</p><p className="text-[10px] text-muted-foreground">{pretty(journal.sourceType)}</p></TableCell>
-                    <TableCell className="text-xs">{date(journal.entryDate)}</TableCell>
-                    <TableCell className="max-w-[300px] whitespace-normal">{journal.description}</TableCell>
-                    <TableCell className="font-mono text-xs">{journal.reference || '—'}</TableCell>
-                    <TableCell><Badge className={journal.status === 'reversed' ? 'border-0 bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200' : 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'}>{pretty(journal.status)}</Badge></TableCell>
-                    <TableCell>{journal.currency}</TableCell>
-                    <TableCell className="text-right">{money(journal.totalDebit, journal.currency)}</TableCell>
-                    <TableCell className="text-right">{money(journal.totalCredit, journal.currency)}</TableCell>
-                    <TableCell><p className="text-xs">{journal.postedBy}</p><p className="text-[10px] text-muted-foreground">{date(journal.postedAt, true)}</p></TableCell>
-                    <TableCell className="text-right">
-                      {journal.status === 'posted' && journal.sourceType !== 'reversal' ? (
-                        <Button type="button" size="sm" variant="outline" onClick={() => {
-                          setReversalJournal(journal);
-                          setReversalForm({ entryDate: today(), reason: '' });
-                        }}>Reverse</Button>
-                      ) : <span className="text-xs text-muted-foreground">—</span>}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!journals.length && <TableRow><TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">No journals have been posted yet.</TableCell></TableRow>}
+                {journals.map((journal) => {
+                  const statusClass =
+                    journal.status === 'draft'
+                      ? 'border-0 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                      : journal.status === 'rejected'
+                        ? 'border-0 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-200'
+                        : journal.status === 'reversed'
+                          ? 'border-0 bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
+                          : 'border-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
+                  return (
+                    <TableRow key={journal.id}>
+                      <TableCell><p className="font-mono text-xs font-semibold">{journal.journalNumber}</p><p className="text-[10px] text-muted-foreground">{pretty(journal.sourceType)}</p></TableCell>
+                      <TableCell className="text-xs">{date(journal.entryDate)}</TableCell>
+                      <TableCell className="max-w-[300px] whitespace-normal">
+                        <p>{journal.description}</p>
+                        {journal.rejectionReason && <p className="mt-1 text-[10px] text-rose-700 dark:text-rose-300">Rejected: {journal.rejectionReason}</p>}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{journal.reference || '—'}</TableCell>
+                      <TableCell><Badge className={statusClass}>{pretty(journal.status)}</Badge></TableCell>
+                      <TableCell>{journal.currency}</TableCell>
+                      <TableCell className="text-right">{money(journal.totalDebit, journal.currency)}</TableCell>
+                      <TableCell className="text-right">{money(journal.totalCredit, journal.currency)}</TableCell>
+                      <TableCell>
+                        <p className="text-xs">{journal.status === 'draft' || journal.status === 'rejected' ? journal.createdBy : journal.postedBy}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {journal.status === 'draft' || journal.status === 'rejected'
+                            ? 'Prepared ' + date(journal.createdAt, true)
+                            : 'Posted ' + date(journal.postedAt, true)}
+                        </p>
+                        {journal.approvedBy && <p className="text-[10px] text-muted-foreground">Checker: {journal.approvedBy}</p>}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          {journal.status === 'draft' && journal.canApprove && (
+                            <>
+                              <Button type="button" size="sm" onClick={() => {
+                                setJournalDecision({ journal, action: 'approve' });
+                                setJournalDecisionNotes('');
+                              }}>Approve & post</Button>
+                              <Button type="button" size="sm" variant="outline" onClick={() => {
+                                setJournalDecision({ journal, action: 'reject' });
+                                setJournalDecisionNotes('');
+                              }}>Reject</Button>
+                            </>
+                          )}
+                          {journal.status === 'draft' && !journal.canApprove && (
+                            <span className="text-xs text-muted-foreground">{journal.mine ? 'Awaiting checker' : 'Approval required'}</span>
+                          )}
+                          {journal.status === 'posted' && journal.sourceType !== 'reversal' && (
+                            <Button type="button" size="sm" variant="outline" onClick={() => {
+                              setReversalJournal(journal);
+                              setReversalForm({ entryDate: today(), reason: '' });
+                            }}>Request reversal</Button>
+                          )}
+                          {!['draft', 'posted'].includes(journal.status) && <span className="text-xs text-muted-foreground">—</span>}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!journals.length && <TableRow><TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">No journal entries exist yet.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>
