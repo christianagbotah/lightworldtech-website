@@ -38,6 +38,8 @@ export async function GET(
           },
           service: { select: { name: true, planName: true } },
           project: { select: { name: true } },
+          agreement: { select: { title: true, referenceNumber: true } },
+          billingMilestone: { select: { title: true, visibleToClient: true } },
           lines: { orderBy: { order: 'asc' } },
           allocations: {
             orderBy: { createdAt: 'asc' },
@@ -90,6 +92,14 @@ export async function GET(
     now,
   });
   const hubtel = hubtelConfiguration();
+  const billingContext = invoice.billingMilestone?.visibleToClient
+    ? {
+        milestone: invoice.billingMilestone.title,
+        agreement: invoice.agreement
+          ? invoice.agreement.title + (invoice.agreement.referenceNumber ? ' · ' + invoice.agreement.referenceNumber : '')
+          : '',
+      }
+    : null;
 
   await db.invoiceAccessLink.update({
     where: { id: link.id },
@@ -113,6 +123,7 @@ export async function GET(
       service: invoice.service?.name || '',
       planName: invoice.service?.planName || '',
       project: invoice.project?.name || '',
+      billingContext,
       subtotal: invoice.subtotal.toFixed(2),
       discount: invoice.discount.toFixed(2),
       taxTreatment: invoice.taxTreatment,
