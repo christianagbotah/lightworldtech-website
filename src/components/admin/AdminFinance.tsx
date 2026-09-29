@@ -490,7 +490,7 @@ export default function AdminFinance() {
   });
   const [vendorForm, setVendorForm] = useState({ name: '', email: '', phone: '', taxId: '', paymentTermsDays: '30', notes: '' });
   const [billForm, setBillForm] = useState({
-    purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
+    purchaseOrderId: '', replacesBillId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
     issueDate: today(), dueDate: inDays(30), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
   });
   const [billEvidenceFile, setBillEvidenceFile] = useState<File | null>(null);
@@ -1104,6 +1104,59 @@ export default function AdminFinance() {
     setDialog('receipt');
   };
 
+  const prepareSupplierBillReplacement = async (billId: string) => {
+    try {
+      const record = await api<any>(
+        '/api/admin/finance/records/bill/' + encodeURIComponent(billId),
+      );
+      const bill = record?.bill;
+      if (!bill || !['void', 'rejected'].includes(String(bill.status))) {
+        toast.error('Only a voided or rejected supplier bill can be replaced');
+        return;
+      }
+      if (bill.replacementBill) {
+        toast.error('A replacement supplier bill already exists: ' + bill.replacementBill.payableNumber);
+        return;
+      }
+
+      const vendor = data?.vendors.find((item) => item.id === bill.vendorId);
+      if (!vendor) {
+        toast.error('Supplier terms are unavailable for this replacement');
+        return;
+      }
+
+      const issueDate = today();
+      const reason = String(bill.voidReason || bill.rejectionReason || '').trim() || 'No correction reason recorded';
+
+      setFinanceRecord(null);
+      setSection('suppliers');
+      setBillForm({
+        purchaseOrderId: String(bill.purchaseOrder?.id || bill.purchaseOrderId || ''),
+        replacesBillId: String(bill.id || ''),
+        vendorId: String(bill.vendorId || bill.vendor?.id || ''),
+        vendorReference: '',
+        category: String(bill.category || 'operating_expense'),
+        currency: String(bill.currency || 'GHS').toUpperCase(),
+        issueDate,
+        dueDate: addDays(issueDate, vendor.paymentTermsDays ?? 30),
+        taxableAmount: String(bill.taxableAmount || ''),
+        taxTreatment: String(bill.taxTreatment || 'none'),
+        taxRecoverable: bill.taxRecoverable !== false,
+        notes:
+          'Replacement for ' +
+          String(bill.payableNumber || '') +
+          '. Correction reason: ' +
+          reason +
+          '. Review the corrected supplier reference, tax treatment, amount and dates, then attach fresh supplier invoice evidence before posting.',
+      });
+      setBillEvidenceFile(null);
+      setDialog('bill');
+      toast.success('Corrected supplier bill replacement prepared for review');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to prepare supplier bill replacement');
+    }
+  };
+
   const prepareSupplierPaymentFromBill = (bill: any) => {
     const balance = String(bill.balance || '0');
     setFinanceRecord(null);
@@ -1340,7 +1393,7 @@ export default function AdminFinance() {
             : 'Supplier bill recorded',
       );
       setBillForm({
-        purchaseOrderId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
+        purchaseOrderId: '', replacesBillId: '', vendorId: '', vendorReference: '', category: 'operating_expense', currency: 'GHS',
         issueDate: today(), dueDate: inDays(30), taxableAmount: '', taxTreatment: 'none', taxRecoverable: true, notes: '',
       });
       setBillEvidenceFile(null);
@@ -1685,6 +1738,7 @@ export default function AdminFinance() {
           onPrepareBill={(order) => {
             setBillForm({
               purchaseOrderId: order.id,
+              replacesBillId: '',
               vendorId: order.vendorId,
               vendorReference: '',
               category: 'operating_expense',
@@ -2339,6 +2393,7 @@ export default function AdminFinance() {
         onOpenRecord={(selection) => setFinanceRecord(selection)}
         onRecordReceipt={prepareReceiptFromInvoice}
         onPaySupplier={prepareSupplierPaymentFromBill}
+        onPrepareBillReplacement={prepareSupplierBillReplacement}
       />
 
       <Dialog open={dialog === 'service'} onOpenChange={(open) => !open && setDialog(null)}>
@@ -2768,7 +2823,7 @@ export default function AdminFinance() {
         onOpenChange={(open) => {
           if (!open) {
             setDialog(null);
-            setBillForm((current) => ({ ...current, purchaseOrderId: '' }));
+            setBillForm((current) => ({ ...current, purchaseOrderId: '', replacesBillId: '' }));
             setBillEvidenceFile(null);
           }
         }}
@@ -2778,6 +2833,12 @@ export default function AdminFinance() {
             <DialogTitle>Record supplier bill</DialogTitle>
           </DialogHeader>
           <form onSubmit={submitBill} className="space-y-4">
+            {billForm.replacesBillId && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
+                <p className="font-semibold">Corrected supplier bill replacement</p>
+                <p className="mt-1">The predecessor remains in audit history. Attach the corrected supplier invoice PDF; previous evidence is not copied.</p>
+              </div>
+            )}
             {billForm.purchaseOrderId && (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-200">
                 Matched to a received purchase order. Supplier, currency and net amount are enforced server-side against the PO before posting.
@@ -2785,7 +2846,7 @@ export default function AdminFinance() {
             )}
             <div>
               <Label>Supplier</Label>
-              <select required disabled={Boolean(billForm.purchaseOrderId)} value={billForm.vendorId} onChange={(e) => {
+              <select required disabled={Boolean(billForm.purchaseOrderId || billForm.replacesBillId)} value={billForm.vendorId} onChange={(e) => {
                 const vendor = data.vendors.find((item) => item.id === e.target.value);
                 setBillForm({
                   ...billForm,
