@@ -66,7 +66,11 @@ export async function GET(request: NextRequest) {
           where: {
             OR: [
               { attachments: { some: { visibleToClient: true } } },
-              { billingMilestones: { some: { visibleToClient: true } } },
+              {
+                status: 'active',
+                approvalStatus: 'approved',
+                billingMilestones: { some: { visibleToClient: true } },
+              },
             ],
           },
           orderBy: [{ status: 'asc' }, { expiryDate: 'asc' }, { updatedAt: 'desc' }],
@@ -200,8 +204,22 @@ export async function GET(request: NextRequest) {
         ensureCurrency(invoice.currency).outstanding.plus(balance);
       ensureCurrency(invoice.currency).credit =
         ensureCurrency(invoice.currency).credit.plus(refundableCredit);
+      const clientVisibleBillingMilestone =
+        invoice.billingMilestone?.visibleToClient
+          ? {
+              id: invoice.billingMilestone.id,
+              title: invoice.billingMilestone.title,
+            }
+          : null;
+      const clientVisibleAgreement =
+        clientVisibleBillingMilestone && invoice.agreement
+          ? invoice.agreement
+          : null;
+
       return {
         ...invoice,
+        agreement: clientVisibleAgreement,
+        billingMilestone: clientVisibleBillingMilestone,
         subtotal: invoice.subtotal.toFixed(2),
         discount: invoice.discount.toFixed(2),
         tax: invoice.tax.toFixed(2),
