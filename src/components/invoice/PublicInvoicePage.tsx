@@ -24,6 +24,7 @@ type InvoiceData = {
   service: string;
   planName: string;
   project: string;
+  billingContext: { milestone: string; agreement: string } | null;
   subtotal: string;
   discount: string;
   taxTreatment: string;
@@ -197,6 +198,13 @@ export default function PublicInvoicePage({ token }: { token: string }) {
                 {data.contactName && <p className="mt-1 text-sm text-slate-600">{data.contactName}</p>}
                 {data.service && <p className="mt-3 text-sm"><span className="text-slate-500">Service:</span> {data.service}{data.planName ? ' · ' + data.planName : ''}</p>}
                 {data.project && <p className="mt-1 text-sm"><span className="text-slate-500">Project:</span> {data.project}</p>}
+                {data.billingContext && (
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-800">Billing context</p>
+                    {data.billingContext.agreement && <p className="mt-1"><span className="text-slate-500">Agreement:</span> {data.billingContext.agreement}</p>}
+                    <p className="mt-1"><span className="text-slate-500">Billing milestone:</span> {data.billingContext.milestone}</p>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
