@@ -70,6 +70,16 @@ export async function POST(request: NextRequest) {
         status: 'open',
         reopenedAt: new Date(),
         reopenedBy: actor.name || actor.email,
+        requestedByAdminId: '',
+        requestedBy: '',
+        requestedAt: null,
+        approvedByAdminId: '',
+        approvedBy: '',
+        approvedAt: null,
+        rejectedByAdminId: '',
+        rejectedBy: '',
+        rejectedAt: null,
+        rejectionReason: '',
         notes: parsed.data.notes || existing.notes,
       },
     });
@@ -92,6 +102,16 @@ export async function POST(request: NextRequest) {
 
   if (existing?.status === 'closed') {
     return NextResponse.json({ success: true, data: existing });
+  }
+  if (existing?.status === 'pending_approval') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'A month-close request is already awaiting independent approval',
+        data: existing,
+      },
+      { status: 409 },
+    );
   }
 
   if (range.to.getTime() >= Date.now()) {
@@ -135,21 +155,33 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const closed = await db.financeMonthClose.upsert({
+  const requestedAt = new Date();
+  const pending = await db.financeMonthClose.upsert({
     where: { monthStart: range.from },
     create: {
       monthStart: range.from,
       monthEnd: range.to,
-      status: 'closed',
-      closedAt: new Date(),
-      closedBy: actor.name || actor.email,
+      status: 'pending_approval',
+      requestedByAdminId: actor.id,
+      requestedBy: actor.name || actor.email,
+      requestedAt,
       notes: parsed.data.notes,
     },
     update: {
       monthEnd: range.to,
-      status: 'closed',
-      closedAt: new Date(),
-      closedBy: actor.name || actor.email,
+      status: 'pending_approval',
+      requestedByAdminId: actor.id,
+      requestedBy: actor.name || actor.email,
+      requestedAt,
+      approvedByAdminId: '',
+      approvedBy: '',
+      approvedAt: null,
+      rejectedByAdminId: '',
+      rejectedBy: '',
+      rejectedAt: null,
+      rejectionReason: '',
+      closedAt: null,
+      closedBy: '',
       reopenedAt: null,
       reopenedBy: '',
       notes: parsed.data.notes,
@@ -158,9 +190,9 @@ export async function POST(request: NextRequest) {
 
   await recordAdminAudit({
     admin: actor,
-    action: 'admin.finance_month_closed',
+    action: 'admin.finance_month_close_requested',
     entity: 'FinanceMonthClose',
-    entityId: closed.id,
+    entityId: pending.id,
     details: {
       month: parsed.data.month,
       accountingPeriodId: period.id,
@@ -176,5 +208,8 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ success: true, data: closed });
+  return NextResponse.json(
+    { success: true, pendingApproval: true, data: pending },
+    { status: 202 },
+  );
 }
