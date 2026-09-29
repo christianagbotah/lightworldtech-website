@@ -13,6 +13,7 @@ const updateSchema = z.object({
   readinessStatus: z.enum(['planned', 'ready_to_bill']).optional(),
   readinessNote: z.string().trim().max(4000).optional(),
   evidenceUrl: z.string().trim().url().or(z.literal('')).optional(),
+  visibleToClient: z.boolean().optional(),
 });
 
 export async function PATCH(
