@@ -11,6 +11,7 @@ import {
   isLeadershipIntent,
   isMediaKitIntent,
   isNewsroomIntent,
+  isSecurityDisclosureIntent,
   isTrustIntent,
 } from './assistant-intents';
 
@@ -26,6 +27,18 @@ describe('assistant leadership intent', () => {
 
   test('does not treat a service question as leadership intent', () => {
     expect(isLeadershipIntent('What services does Lightworld offer?')).toBe(false);
+  });
+});
+
+describe('assistant security disclosure intent', () => {
+  test('routes vulnerability reporting to the dedicated disclosure policy', () => {
+    expect(isSecurityDisclosureIntent('I found a security vulnerability')).toBe(true);
+    expect(isSecurityDisclosureIntent('How do I report a security issue?')).toBe(true);
+    expect(isSecurityDisclosureIntent('Where is your security.txt?')).toBe(true);
+  });
+
+  test('does not capture a general security-practices question', () => {
+    expect(isSecurityDisclosureIntent('What security practices do you use?')).toBe(false);
   });
 });
 
