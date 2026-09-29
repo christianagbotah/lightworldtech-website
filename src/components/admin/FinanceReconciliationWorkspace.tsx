@@ -50,9 +50,14 @@ type Batch = {
   openingBalance: string;
   closingBalance: string;
   status: 'open' | 'reconciled';
+  importedByAdminId: string;
   importedBy: string;
   reconciledAt: string | null;
+  reconciledByAdminId: string;
   reconciledBy: string;
+  governanceComplete: boolean;
+  canFinalize: boolean;
+  matcherCount: number;
   notes: string;
   statementMovement: string;
   expectedClosing: string;
@@ -86,6 +91,8 @@ type DetailLine = {
   amount: string;
   status: 'unmatched' | 'matched';
   matchedJournalLineId: string | null;
+  matchedByAdminId: string;
+  matchedBy: string;
   matchedJournalLine: null | {
     id: string;
     debit: string;
@@ -492,7 +499,7 @@ export default function FinanceReconciliationWorkspace() {
           <DialogHeader>
             <DialogTitle>Reconciliation review</DialogTitle>
             <DialogDescription>
-              Match each statement transaction to one posted ledger movement. A ledger line cannot be matched twice.
+              Match each statement transaction to one posted ledger movement. Final certification requires an independent finance checker who did not import the statement or match any of its lines.
             </DialogDescription>
           </DialogHeader>
 
@@ -505,6 +512,27 @@ export default function FinanceReconciliationWorkspace() {
                 <div className="rounded-xl border border-border/60 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Statement closing</p><p className="mt-1 font-semibold">{money(selected.closingBalance, selected.currency)}</p></div>
                 <div className="rounded-xl border border-border/60 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Matched</p><p className="mt-1 font-semibold">{selected.matchedCount} / {selected.lineCount}</p></div>
                 <div className="rounded-xl border border-border/60 p-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Status</p><p className="mt-1 font-semibold">{pretty(selected.status)}</p></div>
+              </div>
+
+              <div className={selected.governanceComplete
+                ? 'rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/10'
+                : 'rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/40 dark:bg-amber-950/10'}>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em]">Segregation of duties</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Imported by {selected.importedBy || 'Unknown'} · {selected.matcherCount} matcher{selected.matcherCount === 1 ? '' : 's'} recorded.
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {selected.governanceComplete
+                        ? selected.canFinalize
+                          ? 'You are eligible to perform the independent final certification.'
+                          : 'An independent finance approver who did not import or match this batch must finalize it.'
+                        : 'This legacy batch does not contain complete operator identities and must be recreated before finalization.'}
+                    </p>
+                  </div>
+                  <Badge variant="outline">{selected.governanceComplete ? 'Audit identities complete' : 'Legacy identity gap'}</Badge>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -529,6 +557,7 @@ export default function FinanceReconciliationWorkspace() {
                                 <p className="font-mono text-xs font-semibold">{line.matchedJournalLine.entry.journalNumber}</p>
                                 <p className="mt-1 truncate text-xs">{line.matchedJournalLine.entry.description}</p>
                                 <p className="mt-1 text-[10px] text-muted-foreground">{date(line.matchedJournalLine.entry.entryDate)} · {line.matchedJournalLine.entry.reference || pretty(line.matchedJournalLine.entry.sourceType)}</p>
+                                <p className="mt-1 text-[10px] text-muted-foreground">Matched by {line.matchedBy || 'Unknown operator'}</p>
                               </div>
                               <Button type="button" size="sm" variant="outline" onClick={() => void unmatch(line.id)} disabled={saving || selected.status === 'reconciled'}>
                                 <Unlink className="mr-1.5 size-3.5" /> Unmatch
@@ -576,16 +605,16 @@ export default function FinanceReconciliationWorkspace() {
                 <div>
                   <p className="font-semibold">Final reconciliation control</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Finalization requires every line matched and the General Ledger closing balance to equal the statement closing balance.
+                    Finalization requires every line matched, the General Ledger closing balance to equal the statement closing balance, and an independent finance checker who did not import or match the batch.
                   </p>
                 </div>
                 <Button
                   type="button"
                   onClick={() => void finalize()}
-                  disabled={saving || selected.status === 'reconciled' || selected.unmatchedCount > 0 || Math.abs(Number(selected.statementDifference)) > 0.01}
+                  disabled={saving || selected.status === 'reconciled' || selected.unmatchedCount > 0 || Math.abs(Number(selected.statementDifference)) > 0.01 || !selected.canFinalize}
                 >
                   {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <CheckCircle2 className="mr-2 size-4" />}
-                  {selected.status === 'reconciled' ? 'Reconciled' : 'Finalize reconciliation'}
+                  {selected.status === 'reconciled' ? 'Reconciled' : selected.canFinalize ? 'Certify reconciliation' : 'Independent checker required'}
                 </Button>
               </div>
             </div>
