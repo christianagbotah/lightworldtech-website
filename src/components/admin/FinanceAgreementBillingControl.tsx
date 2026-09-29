@@ -108,6 +108,7 @@ export default function FinanceAgreementBillingControl({
   const [data, setData] = useState<AgreementBillingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | AgreementBillingRow['state']>('all');
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -134,7 +135,7 @@ export default function FinanceAgreementBillingControl({
     return () => {
       active = false;
     };
-  }, [organizationId, refreshKey]);
+  }, [organizationId, refreshKey, refreshNonce]);
 
   const rows = useMemo(
     () => (data?.rows || []).filter((row) => filter === 'all' || row.state === filter),
@@ -164,8 +165,17 @@ export default function FinanceAgreementBillingControl({
               </Badge>
             )}
             {draftPendingCount > 0 && <Badge variant="outline">{draftPendingCount} draft pending</Badge>}
-            <Button type="button" size="sm" variant="outline" onClick={() => setFilter('all')}>
-              <RefreshCw className="mr-1.5 size-3.5" /> Show all
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={loading}
+              onClick={() => {
+                setFilter('all');
+                setRefreshNonce((value) => value + 1);
+              }}
+            >
+              <RefreshCw className={loading ? 'mr-1.5 size-3.5 animate-spin' : 'mr-1.5 size-3.5'} /> Refresh
             </Button>
           </div>
         </div>
