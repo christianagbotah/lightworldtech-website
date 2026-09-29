@@ -21,6 +21,7 @@ const schema = z.object({
   taxRecoverable: z.boolean().default(true),
   notes: z.string().trim().max(8000).default(''),
   purchaseOrderId: z.string().trim().nullable().optional(),
+  replacesBillId: z.string().trim().nullable().optional(),
 }).refine((value) => value.dueDate.getTime() >= value.issueDate.getTime(), {
   message: 'Due date cannot be earlier than issue date',
   path: ['dueDate'],
@@ -70,6 +71,8 @@ export async function GET(request: NextRequest) {
     include: {
       vendor: { select: { id: true, name: true } },
       purchaseOrder: { select: { id: true, poNumber: true, status: true, total: true } },
+      replacesBill: { select: { id: true, payableNumber: true, status: true } },
+      replacementBill: { select: { id: true, payableNumber: true, status: true } },
       attachments: { orderBy: { createdAt: 'desc' } },
       allocations: {
         include: {
@@ -105,10 +108,79 @@ export async function POST(request: NextRequest) {
   ).toDecimalPlaces(2);
   const currency = normalizeCurrency(parsed.data.currency);
 
+  let predecessor: {
+    id: string;
+    payableNumber: string;
+    vendorId: string;
+    currency: string;
+    status: string;
+    purchaseOrderId: string | null;
+    replacementBill: { id: string; payableNumber: string; status: string } | null;
+  } | null = null;
+
+  if (parsed.data.replacesBillId) {
+    predecessor = await db.financeVendorBill.findUnique({
+      where: { id: parsed.data.replacesBillId },
+      select: {
+        id: true,
+        payableNumber: true,
+        vendorId: true,
+        currency: true,
+        status: true,
+        purchaseOrderId: true,
+        replacementBill: { select: { id: true, payableNumber: true, status: true } },
+      },
+    });
+    if (!predecessor) {
+      return NextResponse.json({ success: false, error: 'Supplier bill predecessor was not found' }, { status: 400 });
+    }
+    if (!['void', 'rejected'].includes(predecessor.status)) {
+      return NextResponse.json(
+        { success: false, error: 'Only a voided or rejected supplier bill can be replaced' },
+        { status: 409 },
+      );
+    }
+    if (predecessor.replacementBill) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'A replacement supplier bill already exists: ' + predecessor.replacementBill.payableNumber,
+          existingBill: predecessor.replacementBill,
+        },
+        { status: 409 },
+      );
+    }
+    if (predecessor.vendorId !== parsed.data.vendorId) {
+      return NextResponse.json(
+        { success: false, error: 'Replacement supplier bill must retain the same supplier' },
+        { status: 400 },
+      );
+    }
+    if (normalizeCurrency(predecessor.currency) !== currency) {
+      return NextResponse.json(
+        { success: false, error: 'Replacement supplier bill must retain the same currency' },
+        { status: 400 },
+      );
+    }
+    if (
+      predecessor.purchaseOrderId &&
+      parsed.data.purchaseOrderId &&
+      predecessor.purchaseOrderId !== parsed.data.purchaseOrderId
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Replacement supplier bill must retain the original purchase order' },
+        { status: 400 },
+      );
+    }
+  }
+
+  const requestedPurchaseOrderId =
+    parsed.data.purchaseOrderId || predecessor?.purchaseOrderId || null;
+
   let matchedPurchaseOrder: Awaited<ReturnType<typeof db.financePurchaseOrder.findUnique>> = null;
-  if (parsed.data.purchaseOrderId) {
+  if (requestedPurchaseOrderId) {
     matchedPurchaseOrder = await db.financePurchaseOrder.findUnique({
-      where: { id: parsed.data.purchaseOrderId },
+      where: { id: requestedPurchaseOrderId },
     });
     if (!matchedPurchaseOrder) {
       return NextResponse.json({ success: false, error: 'Purchase order not found' }, { status: 404 });
@@ -138,7 +210,7 @@ export async function POST(request: NextRequest) {
       where: { purchaseOrderId: matchedPurchaseOrder.id },
       select: { id: true, payableNumber: true },
     });
-    if (existingBill) {
+    if (existingBill && existingBill.id !== predecessor?.id) {
       return NextResponse.json({ success: false, error: 'This purchase order is already matched to supplier bill ' + existingBill.payableNumber }, { status: 409 });
     }
   }
@@ -185,6 +257,35 @@ export async function POST(request: NextRequest) {
   const makerCheckerRequired = Boolean(policy?.enabled && policy.requireSecondApprover);
   const initialStatus = makerCheckerRequired ? 'draft' : 'unpaid';
   const bill = await db.$transaction(async (tx) => {
+    if (predecessor) {
+      await tx.$queryRawUnsafe(
+        'SELECT pg_advisory_xact_lock(hashtext($1))',
+        'lightworld-supplier-bill-replacement:' + predecessor.id,
+      );
+
+      const current = await tx.financeVendorBill.findUnique({
+        where: { id: predecessor.id },
+        select: {
+          id: true,
+          status: true,
+          purchaseOrderId: true,
+          replacementBill: { select: { id: true, payableNumber: true } },
+        },
+      });
+      if (!current || !['void', 'rejected'].includes(current.status)) {
+        throw new Error('Supplier bill predecessor is no longer eligible for replacement');
+      }
+      if (current.replacementBill) {
+        throw new Error('A replacement supplier bill already exists: ' + current.replacementBill.payableNumber);
+      }
+      if (current.purchaseOrderId) {
+        await tx.financeVendorBill.update({
+          where: { id: current.id },
+          data: { purchaseOrderId: null },
+        });
+      }
+    }
+
     const created = await tx.financeVendorBill.create({
       data: {
         payableNumber,
@@ -206,6 +307,7 @@ export async function POST(request: NextRequest) {
         total,
         notes: parsed.data.notes,
         purchaseOrderId: matchedPurchaseOrder?.id || null,
+        replacesBillId: predecessor?.id || null,
         status: initialStatus,
         createdByAdminId: actor.id,
         createdBy: actor.name || actor.email,
@@ -213,6 +315,8 @@ export async function POST(request: NextRequest) {
       include: {
         vendor: { select: { id: true, name: true } },
         purchaseOrder: { select: { id: true, poNumber: true, status: true, total: true } },
+        replacesBill: { select: { id: true, payableNumber: true, status: true } },
+        replacementBill: { select: { id: true, payableNumber: true, status: true } },
         attachments: { orderBy: { createdAt: 'desc' } },
         allocations: true,
       },
@@ -257,6 +361,7 @@ export async function POST(request: NextRequest) {
       nhilAmount: bill.nhilAmount.toFixed(2),
       getfundAmount: bill.getfundAmount.toFixed(2),
       purchaseOrderId: bill.purchaseOrderId,
+      replacesBillId: bill.replacesBillId,
       supplierPaymentTermsDays: vendor.paymentTermsDays,
       defaultDueDate: defaultDueDate.toISOString().slice(0, 10),
       dueDateOverride,
