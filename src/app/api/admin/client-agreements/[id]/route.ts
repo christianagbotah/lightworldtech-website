@@ -6,6 +6,8 @@ import { getActiveAdminContext, recordAdminAudit } from '@/lib/admin-governance'
 import { hasAdminPermission } from '@/lib/admin-permissions';
 import { normalizeCurrency } from '@/lib/finance';
 
+class SupersessionConflictError extends Error {}
+
 const updateSchema = z.object({
   title: z.string().trim().min(2).max(220).optional(),
   agreementType: z.enum(['contract', 'statement_of_work', 'service_agreement', 'nda', 'license', 'other']).optional(),
@@ -191,6 +193,30 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     );
   }
 
+  const activatingReplacement =
+    parsed.data.status === 'active' &&
+    existing.status !== 'active' &&
+    Boolean(existing.supersedesAgreementId);
+
+  if (activatingReplacement && existing.supersedesAgreementId) {
+    const predecessor = await db.clientAgreement.findUnique({
+      where: { id: existing.supersedesAgreementId },
+      select: { id: true, organizationId: true, status: true },
+    });
+    if (!predecessor || predecessor.organizationId !== existing.organizationId) {
+      return NextResponse.json(
+        { success: false, error: 'Replacement agreement predecessor is missing or belongs to another client' },
+        { status: 409 },
+      );
+    }
+    if (predecessor.status !== 'active') {
+      return NextResponse.json(
+        { success: false, error: 'The predecessor agreement must still be active when its replacement is activated' },
+        { status: 409 },
+      );
+    }
+  }
+
   const data = {
     ...parsed.data,
     ...(parsed.data.currency ? { currency: normalizeCurrency(parsed.data.currency) } : {}),
@@ -207,8 +233,32 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   };
 
   const beforeState = snapshot(existing);
-  const agreement = await db.$transaction(async (tx) => {
-    const updated = await tx.clientAgreement.update({ where: { id }, data });
+  let supersededAgreementId: string | null = null;
+  let agreement;
+  try {
+    agreement = await db.$transaction(async (tx) => {
+      if (activatingReplacement && existing.supersedesAgreementId) {
+        const predecessorUpdate = await tx.clientAgreement.updateMany({
+          where: { id: existing.supersedesAgreementId, status: 'active' },
+          data: { status: 'superseded' },
+        });
+        if (predecessorUpdate.count !== 1) {
+          throw new SupersessionConflictError('Predecessor agreement is no longer active');
+        }
+        supersededAgreementId = existing.supersedesAgreementId;
+        await tx.clientAgreementChange.create({
+          data: {
+            agreementId: existing.supersedesAgreementId,
+            changedBy: actor.name || actor.email,
+            changeType: 'superseded_by_replacement',
+            fields: 'status,supersededByAgreementId',
+            beforeState: { status: 'active', supersededByAgreementId: null },
+            afterState: { status: 'superseded', supersededByAgreementId: existing.id },
+          },
+        });
+      }
+
+      const updated = await tx.clientAgreement.update({ where: { id }, data });
     const afterState = snapshot(updated);
     const fields = Object.keys(afterState).filter(
       (key) => JSON.stringify(beforeState[key as keyof typeof beforeState]) !== JSON.stringify(afterState[key as keyof typeof afterState]),
@@ -231,9 +281,31 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           afterState,
         },
       });
+      }
+      return updated;
+    });
+  } catch (error) {
+    if (error instanceof SupersessionConflictError) {
+      return NextResponse.json(
+        { success: false, error: 'The predecessor agreement changed before replacement activation. Refresh and review the agreement lineage.' },
+        { status: 409 },
+      );
     }
-    return updated;
-  });
+    throw error;
+  }
+
+  if (supersededAgreementId) {
+    await recordAdminAudit({
+      admin: actor,
+      action: 'admin.client_agreement_superseded_by_replacement',
+      entity: 'ClientAgreement',
+      entityId: supersededAgreementId,
+      details: {
+        organizationId: agreement.organizationId,
+        replacementAgreementId: agreement.id,
+      },
+    });
+  }
 
   await recordAdminAudit({
     admin: actor,
@@ -246,6 +318,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       materialCommercialChange,
       approvalReset: requiresReapproval,
       legacyBasisCorrectionOnly,
+      supersededAgreementId,
     },
   });
 
@@ -256,6 +329,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       materialCommercialChange,
       approvalReset: requiresReapproval,
       legacyBasisCorrectionOnly,
+      supersededAgreementId,
     },
   });
 }
