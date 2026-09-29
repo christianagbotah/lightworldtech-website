@@ -49,7 +49,7 @@ Production runs the website as the dedicated Linux user `lightworld` under the h
 Every successful **push to `main`** now does more than prove that the application builds. After migrations, TypeScript, regression tests and the Next.js production build succeed, CI:
 
 1. writes the exact GitHub commit into `.next/standalone/RELEASE_SHA`;
-2. starts that standalone runtime on port 3017 against the CI database;
+2. starts that standalone runtime on port 3017 against the CI database (CI-only smoke port; production candidate promotion uses its own configurable port);
 3. smoke-checks public routes plus the unauthenticated admin/client/upload boundaries;
 4. packages `.next/standalone`, the Prisma schema/migrations and exact production ops scripts;
 5. records the exact Prisma CLI version used by the locked build;
@@ -69,7 +69,7 @@ sudo /home/lightworld/shared/lightworldtech/ops/deploy-release-artifact.sh \
 
 The artifact deployer refuses malformed SHAs, verifies the transferred archive checksum, verifies the embedded `RELEASE_SHA`, synchronizes the exact version-controlled production ops scripts, applies only the repository's Prisma migrations using the CI-recorded Prisma version, and finally calls the normal candidate-first promotion script.
 
-Promotion remains serialized with an exclusive lock. Before port 3007 is touched, the extracted release is started as `lightworld` in a transient systemd candidate unit on port 3017 and must pass route and authorization-boundary smoke checks. The verified previous live release is protected by `/home/lightworld/webapps/lightworldtech-previous`. If the live switch or post-switch smoke checks fail, promotion restores that rollback target.
+Promotion remains serialized with an exclusive lock. Before port 3007 is touched, the extracted release is started as `lightworld` in a transient systemd candidate unit on the dedicated production candidate port (default `3027`, configurable with `LIGHTWORLD_CANDIDATE_PORT`) and must pass route and authorization-boundary smoke checks. The verified previous live release is protected by `/home/lightworld/webapps/lightworldtech-previous`. If the live switch or post-switch smoke checks fail, promotion restores that rollback target.
 
 ### Break-glass fallback: rebuild a verified SHA on the VPS
 
