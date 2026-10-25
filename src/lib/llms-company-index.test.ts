@@ -23,6 +23,8 @@ describe('governed llms company index', () => {
 
     expect(route).toContain("absolute('/media-kit')");
     expect(route).toContain("absolute('/trust')");
+    expect(route).toContain("absolute('/security')");
+    expect(route).toContain("absolute('/.well-known/security.txt')");
     expect(route).toContain("absolute('/estimate')");
     expect(route).toContain("absolute('/contact')");
     expect(route).toContain("absolute('/sitemap.xml')");

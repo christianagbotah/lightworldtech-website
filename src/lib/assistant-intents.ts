@@ -4,10 +4,16 @@ export function isLeadershipIntent(message: string): boolean {
   return /managing director|\bmd\b|robert? yaw essuon|who\s+(leads|runs|heads)|\b(leads|leader|leaders|leadership)\b|management|executive/.test(q);
 }
 
+export function isSecurityDisclosureIntent(message: string): boolean {
+  const q = message.trim().toLowerCase();
+
+  return /report.*(security|vulnerab)|found.*(security|vulnerab)|security (issue|bug|vulnerability)|vulnerab(ility|ilities)|responsible disclosure|security\.txt/.test(q);
+}
+
 export function isTrustIntent(message: string): boolean {
   const q = message.trim().toLowerCase();
 
-  return /trust center|security practice|security controls?|privacy practice|privacy controls?|responsible ai|data handling|protect.*data|secure.*(website|system|platform)|report.*(security|vulnerab)|vulnerab/.test(q);
+  return /trust center|security practice|security controls?|privacy practice|privacy controls?|responsible ai|data handling|protect.*data|secure.*(website|system|platform)/.test(q);
 }
 
 export function isMediaKitIntent(message: string): boolean {

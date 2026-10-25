@@ -175,6 +175,9 @@ export default async function TrustPage() {
                 <Link href="/terms" className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold transition hover:border-emerald-300 dark:border-white/[0.08]">
                   Website Terms <ArrowRight className="size-3.5" />
                 </Link>
+                <Link href="/security" className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold transition hover:border-emerald-300 dark:border-white/[0.08]">
+                  Vulnerability disclosure <ArrowRight className="size-3.5" />
+                </Link>
               </div>
             </div>
 
