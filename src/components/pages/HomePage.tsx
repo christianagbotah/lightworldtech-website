@@ -304,9 +304,9 @@ function CapabilityConsole() {
   );
 }
 
-export default function HomePage({ settings = {} }: { settings?: SiteSettings }) {
+export default function HomePage({ settings = {}, initialWork = [] }: { settings?: SiteSettings; initialWork?: typeof work }) {
   const [homeCapabilities, setHomeCapabilities] = useState(capabilities);
-  const [homeWork, setHomeWork] = useState(work);
+  const [homeWork, setHomeWork] = useState(initialWork.length > 0 ? initialWork : work);
 
   useEffect(() => {
     fetch('/api/services?active=true')
@@ -743,7 +743,7 @@ export default function HomePage({ settings = {} }: { settings?: SiteSettings })
         <div className="container-main">
           <Reveal className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Selected capabilities</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600 dark:text-amber-300">Selected client work</p>
               <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">Built to solve, not to decorate.</h2>
             </div>
             <Link href="/portfolio" className="group inline-flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-white/50">

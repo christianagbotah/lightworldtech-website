@@ -79,9 +79,10 @@ const capabilityExamples: PortfolioItem[] = [
   },
 ];
 
-export default function PortfolioPage({ settings = {} }: { settings?: SiteSettings }) {
-  const [items, setItems] = useState<PortfolioItem[]>(capabilityExamples);
-  const [usingCms, setUsingCms] = useState(false);
+export default function PortfolioPage({ settings = {}, initialProjects = [] }: { settings?: SiteSettings; initialProjects?: PortfolioItem[] }) {
+  // Render the approved CMS projects in server HTML instead of showing generic examples until hydration.
+  const [items, setItems] = useState<PortfolioItem[]>(initialProjects.length > 0 ? initialProjects : capabilityExamples);
+  const [usingCms, setUsingCms] = useState(initialProjects.length > 0);
   const [cmsUnavailable, setCmsUnavailable] = useState(false);
   const [active, setActive] = useState('All');
 
