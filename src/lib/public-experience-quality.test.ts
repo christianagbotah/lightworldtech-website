@@ -17,6 +17,11 @@ describe('public experience quality', () => {
     expect(page).toContain('<PortfolioPage settings={settings} initialProjects={initialProjects} />');
     expect(client).toContain('initialProjects.length > 0 ? initialProjects : capabilityExamples');
     expect(client).toContain('useState(initialProjects.length > 0)');
+    const homeRoute = source('src/app/page.tsx');
+    const homePage = source('src/components/pages/HomePage.tsx');
+    expect(homeRoute).toContain('db.portfolioProject.findMany({');
+    expect(homeRoute).toContain('<HomePage settings={settings} initialWork={initialWork} />');
+    expect(homePage).toContain('initialWork.length > 0 ? initialWork : work');
   });
 
   test('published client portfolio images are non-empty optimized assets', () => {
